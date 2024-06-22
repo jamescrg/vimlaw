@@ -1,0 +1,73 @@
+
+/* ------------------------------------------------------------------------- */
+/* search form */
+/* ------------------------------------------------------------------------- */
+
+.search-form {
+  margin: 20px 20px;
+  padding: 0;
+	text-align: center;
+}
+
+.search-text {
+  border: 1px solid var(--warm-gray-350);
+  background: var(--warm-gray-50);
+  margin: 0;
+  padding: 0.5rem;
+  width: 80%;
+}
+
+.input-group {
+  margin: 0 auto;
+  max-width: 800px;
+	width: 100%;
+}
+
+.search-icon {
+  margin: -3px 10px 0 10px;
+}
+
+.input-group-text {
+  background: var(--warm-gray-200);
+  border: 1px solid var(--warm-gray-350);
+}
+
+/* ------------------------------------------------------------------------- */
+/* search results */
+/* ------------------------------------------------------------------------- */
+
+.search-results-title {
+	font-size: 1.5em;
+	padding: 12px;
+}
+
+.search-results {
+	background: #f4f4f4;
+	border-radius: 5px;
+	margin-bottom: 40px;
+	padding: 15px;
+}
+
+.matter-name {
+  width: 250px;
+}
+
+.matter-status {
+  width: 150px;
+}
+
+.contact-folder {
+	width: 150px;
+}
+
+.contact-name {
+	width: 250px;
+}
+
+.contact-phone1 {
+	width: 150px;
+}
+
+.contact-email {
+	text-align: right;
+}

@@ -1,0 +1,95 @@
+
+{% extends "base.html" %}
+
+{% load phone_number %}
+
+{% block "content" %}
+
+<div class="section-title">
+  <div class="section-title-left">
+    <h1>
+      {{ intake.name }}
+    </h1>
+
+    <div class="section-title-left-right">
+    </div>
+  </div>
+
+    <div class="section-title-right">
+      {% if contact %}
+        <a href="/contacts/{{ contact.id }}">View in Contacts</a>
+      {% else %}
+        <a href="/contacts/{{ intake.id }}/add_intake">Add to Contacts</a>
+      {% endif %}
+    </div>
+</div>
+
+<div class="intake-section details">
+
+    <div
+      hx-get="/intakes/{{ intake.id }}/data"
+      hx-trigger="load, dbUpdate from:body"
+      style="overflow-x:auto"
+    >
+
+    </div>
+
+    <div class="add-note">
+      <a
+        href="#"
+        type="button"
+        class="btn-icon"
+        hx-get="/intakes/{{ intake.id }}/add-note"
+        hx-target="#htmx-modal-container"
+        hx-trigger="click"
+        data-bs-toggle="modal"
+        data-bs-target="#htmx-modal-container"
+      >
+        Add Note
+      </a>
+    </div>
+
+</div>
+
+{% if notes %}
+
+  <div class="intake-section">
+
+    <table class="intake-notes">
+
+        <td class="strong">Date
+        <td class="strong">Time
+        <td class="strong">User
+        <td class="strong">Type
+        <td class="strong">Details
+
+      {% for note in notes %}
+
+        <tr>
+          <td class="note-date">{{ note.date|date:'Y-m-d' }}
+          <td class="note-date">{{ note.time|time:'g:i A' }}
+          <td class="note-username">{{ note.user.username }}
+          <td class="note-type">
+            <a
+              href="#"
+              type="button"
+              class="btn-icon"
+              hx-get="/intakes/{{ note.id }}/edit-note"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container"
+            >
+              {{ note.type }}
+            </a>
+          <td class="note-details">{{ note.details|safe }}
+
+      {% endfor %}
+
+      </table>
+
+  </div>
+
+{% endif %}
+
+{% endblock "content" %}

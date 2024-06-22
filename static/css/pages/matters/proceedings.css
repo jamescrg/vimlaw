@@ -1,0 +1,35 @@
+
+
+/*------------------------------------------------
+Display
+------------------------------------------------*/
+
+#proceedings {
+  margin: 10px 0 5px 0;
+  width: 100%;
+}
+	
+#proceedings .date-filed {
+  width: 120px;
+}
+
+#proceedings .case-no	{
+  width: 200px;
+}
+
+#proceedings .status {
+  width: 120px;
+}
+
+
+/*------------------------------------------------
+Form
+------------------------------------------------*/
+
+#id_case_number {
+  width: 250px;
+}
+
+#id_status {
+  width: 140px;
+}

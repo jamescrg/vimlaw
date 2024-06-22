@@ -1,0 +1,114 @@
+
+{% extends "matters/detail.html" %}
+{% block "subcontent" %}
+
+<div class="section-title">
+  <div class="section-title-left">
+    <h2>Pending Events</h2>
+
+    <div class="section-title-left-right">
+      <button
+        hx-get="/events/add/{{ matter.id }}/matters"
+        hx-target="#htmx-modal-container"
+        data-bs-toggle="modal"
+        data-bs-target="#htmx-modal-container"
+      >
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="matter-section-data">
+<div style="overflow-x:auto">
+<table id="events" class="table">
+
+  <th>Date
+  <th>Party
+  <th>Description
+  <th>Status
+
+  {% if pending_events %}
+  {% for event in pending_events %}
+
+    <tr>
+
+      <td class="date">
+          {{ event.date|date:"Y-m-d" }}
+
+      <td class="party">
+          {{ event.party }}
+
+      <td class="description
+        {% if event.date < third_day and event.status == 'Pending' %} soon {% endif %}">
+
+          <a
+            href="#"
+            hx-get="/events/{{ event.id }}/edit/matters"
+            hx-target="#htmx-modal-container"
+            hx-trigger="click"
+            data-bs-toggle="modal"
+            data-bs-target="#htmx-modal-container"
+          >
+              {{ event.description }}
+          </a>
+
+      <td class="status">
+
+          {{ event.status }}
+
+  {% endfor %}
+  {% endif %}
+
+</table>
+</div>
+</div>
+
+{% if past_events %}
+<br>
+<div class="section-title">
+
+  <div class="section-title-left">
+    <h2>Past Events</h2>
+  </div>
+</div>
+
+<div class="matter-section-data">
+<div style="overflow-x:auto">
+<table id="events" class="table">
+
+  <th>Date
+  <th>Party
+  <th>Description
+  <th>Status
+
+  {% for event in past_events %}
+
+    <tr>
+
+      <td class="date">
+          {{ event.date|date:"Y-m-d" }}
+
+      <td class="party">
+          {{ event.party }}
+
+      <td class="description
+        {% if event.date < third_day and event.status == 'Pending' %} soon {% endif %}">
+
+          <a class="event " href="/events/{{ event.id }}/edit/matters">
+              {{ event.description }}
+          </a>
+
+      <td class="status">
+
+          {{ event.status }}
+
+  {% endfor %}
+  {% endif %}
+
+</table>
+</div>
+</div>
+
+{% endblock "subcontent" %}

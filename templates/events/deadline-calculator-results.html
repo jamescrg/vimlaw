@@ -1,0 +1,22 @@
+
+<table>
+
+  <tr>
+    <td>Deadline
+    <td {% if not results.next_workday %} class="strong" {% endif %}> {{ results.deadline|date:"Y-m-d" }}
+
+  <tr>
+    <td>Weekday
+    <td>{{ results.deadline_weekday }}
+
+  {% if results.next_workday %}
+
+    <tr>
+      <td>Next Business Day
+      <td class="strong">{{ results.next_workday|date:"Y-m-d" }}
+
+  {% endif %}
+
+</table>
+
+

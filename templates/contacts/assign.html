@@ -1,0 +1,62 @@
+
+{% extends "base.html" %}
+{% block "content" %}
+
+<div class="col-sm-12">
+
+	<div class="section-title">
+    Assign Contact to Matter
+	</div>
+
+  <form action="{{ action }}" method="post" role="form">
+
+    {% csrf_token %}
+
+    <table>
+
+      <tr>
+
+        <th>Matter:
+
+        <td>
+
+          <select  style="width: 350px;" name="matter_id">
+
+            {% for matter in matters %}
+
+              <option value="{{ matter.id }}">{{ matter.name }}
+
+            {% endfor %}
+
+          </select>
+
+      <tr>
+        <th>Role:
+
+        <td>
+
+          <select  style="width: 350px;" name="role_id">
+
+            {% for role in roles %}
+
+              <option value="{{ role.id }}">{{ role.name }}
+
+            {% endfor %}
+
+          </select>
+
+      <tr>
+
+        <td>
+
+        <td>
+
+            <input type="submit" value="Submit">
+
+  </table>
+
+  </form>
+
+</div>
+
+{% endblock "content" %}

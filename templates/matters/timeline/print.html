@@ -1,0 +1,44 @@
+
+{% extends "print.html" %}
+
+{% block "content" %}
+
+<div class="page-title">
+
+  {{ matter.name }} - Case Timeline
+
+</div>
+
+<table id="facts" class="table facts">
+
+  <tr>
+
+    <th>
+      Date
+
+    <th>
+      Description
+
+    <th>
+      Citation
+
+		{% if facts %}
+    {% for fact in facts %}
+
+      <tr>
+
+        <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+          {{ fact.date|date:'Y-m-d' }}
+
+        <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+          {{ fact.description }}
+
+        <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+          {{ fact.citation|slice:":25"|default_if_none:'' }}
+
+    {% endfor %}
+    {% endif %}
+
+</table>
+
+{% endblock "content" %}

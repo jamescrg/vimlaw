@@ -1,0 +1,94 @@
+
+<div id="tasks-table" style="overflow-x:auto">
+<table class="table tasks-table">
+  <tr>
+
+    <th class="status">
+      <button
+        class="btn-task-sort btn-task-status"
+        hx-target="#tasks-table"
+        hx-swap="outerHTML"
+        hx-post="/agenda/filter/sort/status">
+          <i class="bi bi-chevron-expand"></i>
+      </button>
+
+    <th class="matter">
+      Matter
+      <button
+        class="btn-task-sort"
+        hx-target="#tasks-table"
+        hx-swap="outerHTML"
+        hx-post="/agenda/filter/sort/matter">
+        <i class="bi bi-chevron-expand"></i>
+      </button>
+
+    <th class="description">
+      Description
+      <button
+        class="btn-task-sort"
+        hx-target="#tasks-table"
+        hx-swap="outerHTML"
+        hx-post="/agenda/filter/sort/description">
+        <i class="bi bi-chevron-expand"></i>
+      </button>
+
+    <th class="">
+      User
+      <button
+        class="btn-task-sort"
+        hx-target="#tasks-table"
+        hx-swap="outerHTML"
+        hx-post="/agenda/filter/sort/user">
+        <i class="bi bi-chevron-expand"></i>
+      </button>
+
+    <th class="date">
+      Date
+      <button
+        class="btn-task-sort"
+        hx-target="#tasks-table"
+        hx-swap="outerHTML"
+        hx-post="/agenda/filter/sort/date_due">
+        <i class="bi bi-chevron-expand"></i>
+      </button>
+
+  {% for task in tasks %}
+
+    <tr>
+
+      <td id="task-status" class="status">
+        {% include "agenda/task-status.html" %}
+
+      <td id="task-matter" class="matter">
+        <a href="/matters/{{ task.matter.id }}">
+          {{ task.matter.name }}
+        </a>
+
+      <td id="task-description" class="description">
+        {% if task.priority %}
+          <span class="priority">
+            <i class="bi bi-exclamation-lg"></i>
+          </span>
+        {% endif %}
+        <a href="#"
+          hx-get="/agenda/{{ task.id }}/edit"
+          hx-target="#htmx-modal-container"
+          hx-trigger="click"
+          data-bs-toggle="modal"
+          data-bs-target="#htmx-modal-container"
+          hx-swap="innerHTML"
+        >
+          {{ task.description }}
+        </a>
+
+      <td id="task-user" class="user">
+        {{ task.user }}
+
+      <td id="task-date" class="date">
+        {{ task.date_due|date:'Y-m-d' }}
+
+
+  {% endfor %}
+
+</table>
+</div>

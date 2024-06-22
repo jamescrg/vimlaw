@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block "content" %}
+
+
+  <div class="section-title">
+
+    <div class="section-title-left">
+
+      <h1>
+        Pending Events
+      </h1>
+
+    <div class="section-title-left-right">
+      <button
+        type="button"
+        class="btn-icon"
+        hx-get="/events/add"
+        hx-target="#htmx-modal-container"
+        hx-trigger="click"
+        data-bs-toggle="modal"
+        data-bs-target="#htmx-modal-container"
+      >
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </div>
+
+  </div>
+  </div>
+
+    <div style="overflow-x:auto">
+    <table class="table events">
+
+      <tr>
+        <th class="date">
+          Date
+
+        <th class="matter">
+          Matter
+
+        <th class="party">
+          Party
+
+        <th class="description">
+          Description
+
+        {% for event in events %}
+
+            <tr>
+
+                <td class="date">
+                    {{ event.date|date:"Y-m-d" }}
+
+                <td class="matter">
+
+                    <a href="/matters/{{ event.matter.id }}/events">
+                        {{ event.matter.name }}
+                    </a>
+
+                <td class="party">
+                    {{event.party}}
+
+                <td class="description
+                  {% if event.date < third_day and event.status == 'Pending' %} soon {% endif %}">
+
+                  <a
+                    href="#"
+                    type="button"
+                    class="btn-icon"
+                    hx-get="/events/{{ event.id }}/edit"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container"
+                  >
+                    {{ event.description }}
+                  </a>
+
+        {% endfor %}
+
+  </table>
+  </div>
+
+{% endblock "content" %}

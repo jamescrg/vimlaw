@@ -1,0 +1,46 @@
+
+
+/*------------------------------------------------
+Display
+------------------------------------------------*/
+
+#facts {
+  margin: 10px 0 5px 0;
+  width: 100%;
+}
+
+#facts .time {
+  width: 120px;
+}
+
+#facts .citation {
+  width: 250px;
+}
+
+
+/*------------------------------------------------
+Form
+------------------------------------------------*/
+
+#id_fact {
+  border: none;
+  width: 700px;
+}
+
+#id_description {
+  width: 600px;
+}
+
+
+#id_citation {
+  width: 240px;
+}
+
+#id_emphasis {
+  width: 120px;
+}
+
+.print-link {
+  margin-top: 15px;
+  text-align: right;
+}

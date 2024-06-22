@@ -1,0 +1,9 @@
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+
+class CustomUser(AbstractUser):
+    google_contacts_credentials = models.TextField(null=True, blank=True)
+    google_calendar_credentials = models.TextField(null=True, blank=True)
+    user_rate = models.IntegerField()
+    symbol = models.CharField(max_length=100, null=True, blank=True)

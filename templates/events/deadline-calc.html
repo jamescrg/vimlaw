@@ -1,0 +1,43 @@
+
+
+  <div id="deadline-calculator">
+
+    <form
+      hx-boost="true"
+      hx-post="/events/deadline-results"
+      hx-target="#calc-results"
+      hx-swap="innerHTML"
+    >
+
+      {% csrf_token %}
+
+        <div class="row">
+
+          <div class="col">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Initial Date"
+              name="initial_date"
+              value="{{ today }}">
+          </div>
+
+          <div class="col">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Number of Days"
+              name="days"
+            >
+          </div>
+
+          <button style="display: none;" class="submit" type="submit">Submit</button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <div id="calc-results"></div>
+
+{% endif %}

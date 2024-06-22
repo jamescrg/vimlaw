@@ -1,0 +1,156 @@
+
+
+/*------------------------------------------------
+Matter Form
+------------------------------------------------*/
+
+#id_name {
+  width: 400px;
+}
+
+#id_description {
+  width: 400px;
+}
+
+#id_practice_area {
+  width: 250px;
+}
+
+#id_firm {
+  width: 250px;
+}
+
+#id_firm_file_no {
+  width: 250px;
+}
+
+#id_ref_no {
+  width: 250px;
+}
+
+#id_firm_rate {
+  width: 80px;
+}
+
+.delete {
+  float: right;
+}
+
+.delete li {
+  margin-bottom: 15px;
+}
+
+
+/*------------------------------------------------
+Matter List
+------------------------------------------------*/
+
+#matter-list {
+  clear: both;
+  width: 100%;
+}
+
+#matter-list th a {
+  color: inherit;
+}
+
+#matter-list td {
+  vertical-align: top;
+}
+
+.matter-name {
+  width: 300px;
+}
+
+.ref-no {
+  width: 150px;
+}
+
+/* inline form for updating description / status */
+.edit-status {
+  background: inherit;
+  border: none;
+  display: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.edit-status-input {
+  background: inherit;
+  border: none!important;
+  margin: 0;
+  padding: 0;
+  width: 100%!important;
+}
+
+
+/*------------------------------------------------
+Matter Details
+------------------------------------------------*/
+
+.matter-section {
+  background: var(--warm-gray-100);
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem 1.5rem 0.5rem;
+}
+
+.matter-section-data {
+  margin-left: 1rem;
+}
+
+
+.tables {
+  display: flex;
+  align-items: flex-start;
+}
+
+.tables table {
+  margin-right: 20px;
+}
+
+.description {
+  margin: 0 0 20px 5px;
+}
+
+.matter-data {
+}
+
+.matter-detail-quicklinks a {
+  margin-left: 15px;
+}
+
+
+/*------------------------------------------------
+Menu of submodules
+------------------------------------------------*/
+
+.sub-modules {
+  background: var(--warm-gray-200);
+  margin-bottom: 0;
+  padding: 7px 20px;
+}
+
+.sub-modules li {
+  display: inline;
+  margin-right: 30px;
+}
+
+.sub-modules .active {
+  font-weight: 600;
+}
+
+
+/*------------------------------------------------
+Submodules
+------------------------------------------------*/
+
+.subsection-heading {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 5px 5px;
+}
+
+.subsection-title {
+  font-size: 1.2em;
+}

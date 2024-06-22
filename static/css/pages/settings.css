@@ -1,0 +1,27 @@
+
+.theme-select {
+  max-width: 200px;
+}
+
+.setting-label {
+  padding-bottom: 1rem;
+  width: 200px;
+}
+
+.setting-control {
+  padding-bottom: 1rem;
+}
+
+.options,
+.options td {
+  border: none;
+}
+
+.options {
+  margin-left: 1rem;
+}
+
+.username {
+  margin-left: 1rem;
+  font-weight: 600;
+}

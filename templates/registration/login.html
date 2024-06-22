@@ -1,0 +1,39 @@
+{% extends "registration/base.html" %}
+
+{% block title %}Log In{% endblock title %}
+
+{% block "content" %}
+
+<div class="auth-card">
+
+    <div class="auth-title">
+      {{ site_handle }}
+    </div>
+
+    <div class="auth-subtitle">
+        Log in to your account
+    </div>
+
+    <form id="login-form" class="account-form" method="post">
+
+      {% csrf_token %}
+
+      {{ form.as_p }}
+
+      <div class="flex-container login-bottom">
+
+        <div class="login-bottom-left">
+          <button type="submit">Submit</button>
+        </div>
+
+        <div class="login-bottom-right">
+          <a href="/accounts/password_reset">Forgot Password?</a>
+        </div>
+
+      </div>
+
+    </form>
+
+</div>
+
+{% endblock "content" %}

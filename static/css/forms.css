@@ -1,0 +1,126 @@
+
+/* form defaults */
+
+  input,
+  select,
+  textarea {
+    border: solid 1px var(--warm-gray-300);
+    border-radius: 3px;
+    padding: 0.25rem;
+    outline: none;
+  }
+
+  select {
+    background: white;
+    max-width: 200px;
+  }
+
+  input[type=date] { max-width: 140px; }
+  input[type=time] { max-width: 140px; }
+  input[type=password] { max-width: 200px; }
+
+  textarea {
+    height: 100px;
+    max-width: 550px;
+  }
+
+  .form-control:focus {
+    border: solid 1px var(--warm-gray-300);
+    box-shadow: none;
+    outline: none;
+  }
+
+  .asteriskField { display: none; }
+
+  .helptext {
+    display: block;
+    margin-bottom: 10px;
+    margin-left: 15px;
+  }
+
+  .submit {
+    background: var(--lime-900);
+    border: solid 1px var(--warm-gray-600);
+    border-radius: 5px;
+    color: var(--warm-gray-200);
+    margin-top: 0.55rem;
+    padding: 4px 10px;
+  }
+
+  .deadline-calculator {
+    margin-bottom: 1.5rem;
+  }
+
+  .deadline-calculator-button {
+    margin-bottom: 0.5rem;
+  }
+
+  .deadline-calculator-form {
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .deadline-calculator-results {
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .days {
+    width: 50px;
+  }
+
+  .initial-date {
+    width:
+  }
+
+  .numeric {
+    text-align: right;
+    width: 50px;
+  }
+
+/* responsive layout */
+
+  .form-responsive {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .form-responsive > label {
+    font-weight: 600;
+  }
+
+  .form-responsive > div {
+    margin-block-end: 1rem;
+
+  }
+
+  @media screen and (min-width: 800px) and (max-width: 1199px) {
+    .form-responsive {
+      grid-template-columns: 1fr 3fr;
+    }
+
+    .modal-md .form-responsive {
+      grid-template-columns: 1fr 2fr;
+    }
+
+    .modal-lg .form-responsive {
+      grid-template-columns: 1fr 4fr;
+    }
+  }
+
+  @media screen and (min-width: 1200px) {
+
+    .form-responsive {
+      grid-template-columns: 1fr 4fr;
+    }
+
+    .modal-md .form-responsive {
+      grid-template-columns: 1fr 2fr;
+    }
+
+    .modal-lg .form-responsive {
+      grid-template-columns: 1fr 4fr;
+    }
+  }

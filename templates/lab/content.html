@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body
+   hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+  >
+
+  <p>
+  This is the lab.
+  </p>
+
+  <p>
+  {{ text }}
+  </p>
+
+  <button hx-post="/lab/results" hx-target="#test-div">
+    Click Me
+  </button>
+
+  <form hx-post="/lab/results" hx-target="#test-div">
+    <input type="text" name="weather">
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="test-div">
+    Some prelim text
+  </div>
+
+
+  <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+</body>
+</html>

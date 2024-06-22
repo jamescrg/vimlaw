@@ -1,0 +1,25 @@
+{% extends "registration/base.html" %}
+
+{% block title %}Sign Up{% endblock title %}
+
+{% block "content" %}
+
+<div class="auth-card">
+
+  <div class="auth-title">{{ site_handle }}</div>
+    <div class="auth-subtitle">
+    </div>
+
+    <form class="account-form" method="post">
+
+      {% csrf_token %}
+
+      {{ form.as_p }}
+
+      <button type="submit">Sign Up</button>
+
+    </form>
+
+</div>
+
+{% endblock "content" %}

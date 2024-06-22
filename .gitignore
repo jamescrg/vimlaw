@@ -1,0 +1,10 @@
+__init__.py
+*.pyc
+config/settings_local.py
+static/bootstrap*
+static/admin
+tags*
+.coverage
+.env
+gunicorn.conf.py
+gunicorn_cl.conf.py

@@ -1,0 +1,98 @@
+
+.activity-filter-bar {
+
+}
+
+/*------------------------------------------------
+Filter form
+------------------------------------------------*/
+
+#matter {
+  width: auto
+}
+
+
+/*------------------------------------------------
+Time entry form
+------------------------------------------------*/
+
+#id_matter {
+  width: auto;
+}
+
+#id_actions {
+  height: 100px;
+  max-width: 500px;
+  vertical-align: top;
+  width: 100%;
+}
+
+#id_hours	{
+  max-width: 80px;
+}
+
+#id_firm_rate {
+  max-width: 80px;
+}
+
+#id_comp	{
+  max-width: 80px;
+}
+
+#id_entered	{
+  max-width: 80px;
+}
+
+
+/*------------------------------------------------
+Expense entry form
+------------------------------------------------*/
+
+#id_amount {
+  max-width: 120px;
+}
+
+/*------------------------------------------------
+Time entry list table
+------------------------------------------------*/
+
+.activity{
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+
+.activity .date {
+  width: 120px;
+}
+
+.activity .user {
+  width: 60px;
+}
+
+.activity .matter {
+  width: 240px;
+}
+
+.activity .hours {
+  text-align: right;
+  width: 60px;
+}
+
+.activity .hours a {
+  color: inherit;
+}
+
+.activity .rate {
+  text-align: right;
+  width: 80px;
+}
+
+.activity .fee {
+  text-align: right;
+  width: 120px;
+}
+
+.total {
+  font-weight: 600;
+}

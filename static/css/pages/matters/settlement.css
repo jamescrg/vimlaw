@@ -1,0 +1,36 @@
+
+
+/*------------------------------------------------
+Display
+------------------------------------------------*/
+
+#settlement {
+  margin: 10px 0 5px 0;
+  width: 100%;
+}
+
+#settlement .date, 
+#settlement .type,
+#settlement .medium {
+  width: 120px;
+}
+
+#settlement .amount {
+  text-align: right;
+  width: 120px;
+}
+
+
+/*------------------------------------------------
+Form
+------------------------------------------------*/
+
+#id_medium,
+#id_type,
+#id_amount {
+  width: 140px;
+}
+
+#id_notes {
+  width: 400px;
+}

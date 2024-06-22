@@ -1,0 +1,23 @@
+
+{% extends "base.html" %}
+{% block "content" %}
+
+<div class="row">
+
+<table>
+  {% for contact in contacts %}
+  <tr>
+    <td>{{ contact.name }}</td>
+    <td>
+      <a href="/contacts/{{ contact.id }}/toggle_google_sync">
+          <span class="material-icons">sync</span>
+      </a>
+    </td>
+  </tr>
+
+  {% endfor %}
+</table>
+
+</div>
+
+{% endblock "content" %}

@@ -1,0 +1,136 @@
+
+
+/* ------------------------------------------------------------------------- */
+/* printed page setup */
+/* ------------------------------------------------------------------------- */
+
+@page
+{
+  margin: auto 1in;
+  size: letter;
+}
+
+body {
+  font-family: Times, serif;
+  font-size: 12pt;
+}
+
+.container {
+  max-width: 7in;
+  text-align: left;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: solid 1px #c0c0c0;
+  padding: 6pt;
+}
+
+.page-title {
+  font-size: 16pt;
+  padding-bottom: 12pt;
+}
+
+.section {
+  margin-bottom: 18pt;
+  padding: 0 12pt 0 0;
+  text-align: left;
+}
+
+.section-title {
+  background: #c0c0c0;
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 24pt 0 12pt 0;
+  padding: 8pt 0 6pt 2pt;
+}
+
+
+/* ------------------------------------------------------------------------- */
+/* details */
+/* ------------------------------------------------------------------------- */
+
+
+.details {
+  display: flex;
+}
+
+.matter-data-tables {
+  align-items: flex-start;
+  display: flex;
+  width: auto;
+}
+
+.matter-data-tables table {
+  margin-right: 12pt;
+}
+
+.description {
+  margin: 0 0 24pt 0;
+}
+
+.matter-data {
+  width: 100%;
+}
+
+
+
+/* ------------------------------------------------------------------------- */
+/* contacts */
+/* ------------------------------------------------------------------------- */
+
+.contacts {
+  padding-bottom: 0;
+}
+
+.contact-group-heading {
+  margin: 18pt 0 6pt 0;
+}
+
+.contact-list	{
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------------- */
+/* timeline */
+/* ------------------------------------------------------------------------- */
+
+.facts {
+  width: 100%;
+}
+
+.facts th {
+  text-align: left;
+}
+
+.facts .date {
+  padding-right: 20pt;
+  text-align: left;
+}
+
+.facts .description {
+  padding-right: 20pt;
+  text-align: left;
+}
+
+.facts .citation {
+  padding-right: 20pt;
+  text-align: left;
+}
+
+/* ------------------------------------------------------------------------- */
+/* settlement */
+/* ------------------------------------------------------------------------- */
+
+.settlement {
+  width: 100%;
+}
+
+.settlement .amount {
+  text-align: right;
+}
+

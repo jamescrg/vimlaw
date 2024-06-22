@@ -1,0 +1,203 @@
+
+{% extends "base.html" %}
+
+{% block "content" %}
+
+  <div class="section-title">
+
+    <div class="section-title-left">
+      <h1>
+        {{ matter.name }}
+      </h1>
+      <div
+        class="section-title-left-right"
+      >
+
+        <button
+          hx-get="/matters/{{ matter.id }}/edit"
+          hx-target="#htmx-modal-container"
+          data-bs-toggle="modal"
+          data-bs-target="#htmx-modal-container"
+        >
+          <i class="bi bi-pencil"></i>
+        </button>
+
+        <a href="/matters/{{ matter.id }}/print">
+          <i class="bi bi-printer"></i>
+        </a>
+
+        <button
+          hx-get="/activity/add/{{ matter.id }}"
+          hx-target="#htmx-modal-container"
+          data-bs-toggle="modal"
+          data-bs-target="#htmx-modal-container"
+        >
+          <i class="bi bi-clock"></i>
+        </button>
+
+        <button
+          hx-get="/activity/add_expense/{{ matter.id }}"
+          hx-target="#htmx-modal-container"
+          data-bs-toggle="modal"
+          data-bs-target="#htmx-modal-container"
+        >
+          <i class="bi bi-currency-dollar"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+<div class="section flex-start-space">
+
+  <div class="matter-data">
+
+    <div class="description">
+
+      <!-- -------------------------------------------------------- -->
+      <!-- normal display, show matter link -->
+      <!-- -------------------------------------------------------- -->
+
+      <button class="button-link show-status-form-button" onclick="showStatusForm()">
+        {{ matter.description }}
+      </button>
+
+
+      <!-- -------------------------------------------------------- -->
+      <!-- edit status form -->
+      <!-- -------------------------------------------------------- -->
+
+      <form
+        class="edit-status"
+        action="/matters/{{ matter.id }}/edit-description"
+        method="post">
+
+        {% csrf_token %}
+
+        <input
+          type="text"
+          class="edit-status-input"
+          name="description"
+          onchange="submit()"
+          onblur="hideStatusForm()"
+          value="{{ matter.description }}"
+          required>
+
+        <input type="hidden" name="return" value="detail">
+
+      </form>
+
+    </div>
+
+    <div class="tables">
+
+      <table>
+
+        <tr>
+          <td class="strong">Matter No.
+          <td>{{ matter.id }}
+
+          <tr>
+            <td class="strong">File No.
+            <td>{{ matter.firm_file_no|slice:'0:5'|default:'' }}
+
+          <tr>
+            <td class="strong">Ref No.
+            <td>{{ matter.ref_no|default:'' }}
+
+        </table>
+
+        <table>
+
+          <tr>
+            <td class="strong">Open Date
+            <td>{{ matter.date_start|date:'Y-m-d' }}
+
+          <tr>
+            <td class="strong">Practice Area
+            <td>{{ matter.practice_area }}
+
+          <tr>
+            <td class="strong">Firm Rate
+            <td>${{ matter.firm_rate }}
+
+        </table>
+
+        {% if proceeding %}
+
+        <table>
+
+          <tr>
+            <td class="strong">Forum
+            <td>{{ proceeding.forum }}
+
+          <tr>
+            <td class="strong">Case No.
+            <td>{{ proceeding.case_number }}
+
+          <tr>
+            <td class="strong">Filed
+            <td>{{ proceeding.date_filed|date:'Y-m-d' }}
+
+          <tr>
+            <td class="strong">Status
+            <td>{{ proceeding.status }}
+
+      </table>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+  <div class="matter-detail-quicklinks">
+
+
+  </div>
+
+</div>
+
+
+<ul class="sub-modules">
+
+  <li {% if submodule == 'rates' %} class="active" {% endif %}>
+    <a href="/matters/{{ matter.id }}/rates">Rates</a>
+  </li>
+
+  <li {% if submodule == 'activity' %} class="active" {% endif %}>
+    <a href="/matters/{{ matter.id }}/activity">Activity</a>
+  </li>
+
+  <li {% if submodule == 'events' %} class="active" {% endif %}>
+    <a href="/matters/{{ matter.id }}/events">Events</a>
+  </li>
+
+  <li {% if submodule == 'contacts' %} class="active" {% endif %}>
+    <a href="/matters/{{ matter.id }}/contacts">Contacts</a>
+  </li>
+
+  <li {% if submodule == 'proceedings' %} class="active" {% endif %}>
+    <a href="/matters/{{ matter.id }}/proceedings">Proceedings</a>
+  </li>
+
+  <li {% if submodule == 'settlement' %} class="active" {% endif %}>
+    <a href="/matters/{{ matter.id }}/settlement">Settlement</a>
+  </li>
+
+  <li {% if submodule == 'timeline' %} class="active" {% endif %}>
+    <a href="/matters/{{ matter.id }}/timeline">Timeline</a>
+  </li>
+
+</ul>
+
+
+<div class="matter-section">
+
+  {% block "subcontent" %}
+
+  {% endblock "subcontent" %}
+
+</div>
+
+
+{% endblock "content" %}

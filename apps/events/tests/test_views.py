@@ -1,0 +1,72 @@
+import pytest
+
+from django.urls import reverse
+from pytest_django.asserts import assertTemplateUsed
+
+from apps.events.models import Event
+from apps.folders.models import Folder
+from apps.matters.models import Relationship
+
+
+pytestmark = pytest.mark.django_db
+
+
+def test_index(client):
+    response = client.get("/events/")
+    assert response.status_code == 200
+    response = client.get(reverse("events"))
+    assert response.status_code == 200
+    assert response.context["page"] == "events"
+
+
+def test_add_get(client):
+    # test without a selected folder
+    response = client.get("/events/add")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "events/form.html")
+
+
+def test_add_post(client, matter, event_data):
+    response = client.post("/events/add", event_data)
+    assert response.status_code == 302
+    found = Event.objects.filter(description=event_data["description"]).first()
+    assert found
+
+
+def test_edit_get(client, event):
+    response = client.get(f"/events/{event.id}/edit/test")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "events/form.html")
+
+
+def test_edit_post(client, user, matter, event):
+    data = {
+        "user_id": user.id,
+        "matter": matter.id,
+        "date": "2022-12-28",
+        "party": "Opposing",
+        "description": "File Answer",
+        "status": "Complete",
+    }
+    response = client.post(f"/events/{event.id}/edit", data)
+    assert response.status_code == 302
+    found = Event.objects.filter(status="Complete").exists()
+    assert found
+
+
+def test_delete(client, event):
+    response = client.get(f"/events/{event.id}/delete")
+    assert response.status_code == 302
+    found = Event.objects.filter(pk=event.id).exists()
+    assert not found
+
+
+def test_add_with_results(client):
+    deadline_data = {
+        "initial_date": "12/28/2022",
+        "days": "2",
+    }
+    response = client.post("/events/add_with_results", deadline_data)
+    assert response.context["results"]["deadline_weekday"] == "Friday"
+    assert response.status_code == 200
+    assertTemplateUsed("events/form.html")

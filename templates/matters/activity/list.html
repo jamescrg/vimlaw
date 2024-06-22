@@ -1,0 +1,42 @@
+
+{% extends "matters/detail.html" %}
+{% block "subcontent" %}
+
+<div class="section-title">
+  <div class="section-title-left">
+    <h2>Last 30 Days</h2>
+  </div>
+
+  <a href="/activity/filter/matter/{{ matter.id }}">Jump to Activity: All</a>
+
+</div>
+
+<div class="matter-section-data">
+<div style="overflow-x:auto">
+<table id="activity" class="table">
+
+  {% if entries %}
+  {% for entry in entries %}
+
+    <tr>
+
+      <td class="date">
+
+        {{ entry.date|date:'Y-m-d' }}
+
+      <td>
+
+        <a href="/activity/{{ entry.id }}/edit">{{ entry.actions }}</a>
+
+      <td class="hours">
+
+        {{ entry.hours }}
+
+  {% endfor %}
+  {% endif %}
+
+</table>
+</div>
+</div>
+
+{% endblock "subcontent" %}

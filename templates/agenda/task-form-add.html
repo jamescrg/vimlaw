@@ -1,0 +1,35 @@
+
+<form
+  class="task-form-add"
+  action="/agenda/add"
+  method="post"
+>
+
+  {% csrf_token %}
+
+  <select name="matter">
+
+    {% for matter in matters %}
+
+      <option
+        value="{{ matter.id }}"
+        {% if agenda_matter == matter.id %}
+          selected
+        {% endif %}
+      >
+        {{ matter.name }}
+      </option>
+
+    {% endfor %}
+
+  </select>
+
+  <input
+    type="text"
+    class="tasks-input-description"
+    name="description"
+    required
+    onchange="submit()"
+  >
+
+</form>

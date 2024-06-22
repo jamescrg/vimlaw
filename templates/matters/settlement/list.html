@@ -1,0 +1,86 @@
+
+
+{% extends "matters/detail.html" %}
+{% block "subcontent" %}
+{% load humanize %}
+
+<div class="section-title">
+  <div class="section-title-left">
+    <h2>Demand / Offer History</h2>
+    <div class="section-title-left-right">
+      <button
+        hx-get="/matters/{{ matter.id }}/settlement/add"
+        hx-target="#htmx-modal-container"
+        data-bs-toggle="modal"
+        data-bs-target="#htmx-modal-container"
+      >
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="matter-section-data">
+<div style="overflow-x:auto">
+<table id="settlement" class="table">
+
+  {% if entries %}
+
+    <tr>
+
+      <th>
+        Date
+
+      <th>
+        Medium
+
+      <th>
+        Type
+
+      <th>
+        Notes
+
+      <th class="amount">
+        Amount
+
+  {% for entry in entries %}
+
+    <tr>
+
+      <td class="date {% if entry.type == 'Authorization' %}strong{% endif %}">
+        {{ entry.date|date:'Y-m-d' }}
+
+      <td class="medium {% if entry.type == 'Authorization' %}strong{% endif %}">
+        {{ entry.medium }}
+
+      <td class="type {% if entry.type == 'Authorization' %}strong{% endif %}">
+
+        <a
+          href="#"
+          hx-get="/matters/{{ entry.matter.id  }}/settlement/{{ entry.id }}/edit"
+          hx-target="#htmx-modal-container"
+          hx-trigger="click"
+          data-bs-toggle="modal"
+          data-bs-target="#htmx-modal-container"
+        >
+          {{ entry.type }}
+        </a>
+
+      <td class="notes {% if entry.type == 'Authorization' %}strong{% endif %}">
+        {{ entry.notes }}
+
+      <td class="amount {% if entry.type == 'Authorization' %}strong{% endif %}">
+        {% if entry.amount|floatformat:2|intcomma %}
+          ${{ entry.amount|floatformat:2|intcomma }}
+        {% else %}
+          NA
+        {% endif %}
+
+  {% endfor %}
+  {% endif %}
+
+</table>
+</div>
+</div>
+
+{% endblock "subcontent" %}

@@ -1,0 +1,239 @@
+
+{% extends "base.html" %}
+{% block "content" %}
+{% load humanize %}
+
+
+<div class="section-title">
+
+  <div class="section-title-left">
+
+    <h1>
+      Time
+    </h1>
+
+    <div class="section-title-left-right">
+      <button
+        hx-get="/activity/add"
+        hx-target="#htmx-modal-container"
+        data-bs-toggle="modal"
+        data-bs-target="#htmx-modal-container"
+      >
+        <i class="bi bi-plus-lg"></i>
+      </button>
+
+      <button
+        hx-get="/activity/filter"
+        hx-target="#htmx-modal-container"
+        data-bs-toggle="modal"
+        data-bs-target="#htmx-modal-container"
+      >
+          <i class="bi bi-funnel"></i>
+      </button>
+
+
+      <a href="/activity/filter/unentered">
+        Unentered
+      </a>
+
+      <a href="/activity/filter/today">
+        Today
+      </a>
+
+    </div>
+  </div>
+
+  <div class="section-title-right">
+    <a href="/activity/export">
+      <i class="bi bi-cloud-download"></i>
+    </a>
+  </div>
+</div>
+
+<div style="overflow-x:auto">
+<table class="table activity">
+
+  <tr>
+
+    <th class="date">
+      Date
+
+    <th class="user">
+      User
+
+    <th class="matter">
+      Matter
+
+    <th class="actions">
+      Actions
+
+    <th class="numeric hours">
+      Hours
+
+    <th class="numeric rate">
+      Rate
+
+    <th class="numeric fee">
+      Fee
+
+  {% for entry in entries %}
+
+    <tr>
+
+      <td class="date">
+
+        {{ entry.date|date:'Y-m-d' }}
+
+      <td class="user">
+        {{ entry.user.symbol }}
+
+      <td class="matter">
+
+        <a href="/matters/{{ entry.matter.id }}">
+          {{ entry.matter.name }}
+        </a>
+
+      <td class="actions">
+
+        <a
+          href="#"
+          hx-get="/activity/{{ entry.id }}/edit"
+          hx-target="#htmx-modal-container"
+          hx-trigger="click"
+          data-bs-toggle="modal"
+          data-bs-target="#htmx-modal-container"
+        >
+          {{ entry.actions }}
+        </a>
+
+      <td class="hours {% if not entry.entered %}urgent{% endif %}">
+
+        <a href="/activity/{{ entry.id }}/toggle-entered">
+          {{ entry.hours|floatformat:1 }}
+        </a>
+
+      <td class="rate">
+
+        {% if entry.comp %}
+          comp
+        {% else %}
+          ${{ entry.firm_rate }}
+        {% endif %}
+
+      <td class="fee">
+
+        {% if entry.comp %}
+          comp
+        {% else %}
+        ${{ entry.fee|floatformat:2|intcomma }}
+        {% endif %}
+
+  {% endfor %}
+
+  <tr>
+    <td>
+    <td>
+    <td>
+    <td>
+    <td class="numeric total">{{ summary.total_hours|floatformat:1 }}
+    <td>
+    <td class="numeric total">${{ summary.total_fees|floatformat:2|intcomma }}
+
+
+</table>
+
+<div class="section-title">
+
+  <div class="section-title-left">
+
+    <h1>
+      Expenses
+    </h1>
+
+    <div class="section-title-left-right">
+      <button
+        hx-get="/activity/add_expense"
+        hx-target="#htmx-modal-container"
+        data-bs-toggle="modal"
+        data-bs-target="#htmx-modal-container"
+      >
+        <i class="bi bi-plus-lg"></i>
+      </button>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<div style="overflow-x:auto">
+<table class="table activity">
+
+  <tr>
+
+    <th class="date">
+      Date
+
+    <th class="user">
+      User
+
+    <th class="matter">
+      Matter
+
+    <th class="actions">
+      Description
+
+    <th class="numeric hours">
+      Amount
+
+  {% for entry in expense_entries %}
+
+    <tr>
+
+      <td class="date">
+
+        {{ entry.date|date:'Y-m-d' }}
+
+      <td class="user">
+
+        {{ entry.user.symbol }}
+
+      <td class="matter">
+
+        <a href="/matters/{{ entry.matter.id }}">
+          {{ entry.matter.name }}
+        </a>
+
+      <td class="actions">
+
+        <a
+          href="#"
+          hx-get="/activity/{{ entry.id }}/edit_expense"
+          hx-target="#htmx-modal-container"
+          hx-trigger="click"
+          data-bs-toggle="modal"
+          data-bs-target="#htmx-modal-container"
+        >
+          {{ entry.category }} - {{ entry.description }}
+        </a>
+
+      <td class="hours {% if not entry.entered %}urgent{% endif %}">
+
+        <a href="/activity/{{ entry.id }}/toggle-entered-expense">
+          ${{ entry.amount|floatformat:2|intcomma }}
+        </a>
+
+  {% endfor %}
+
+  <tr>
+    <td>
+    <td>
+    <td>
+    <td>
+    <td class="numeric total">${{ summary.total_expenses|floatformat:2|intcomma }}
+
+</table>
+</div>
+
+{% endblock "content" %}

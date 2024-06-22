@@ -1,0 +1,77 @@
+
+.contact-group-heading {
+  margin: 15px 0 0 5px;
+}
+
+.contacts	{
+  margin: 10px 0 10px 0;
+  width: 100%;
+}
+
+#contacts .name {
+  width: 250px;
+}
+
+.contacts .phone1 {
+  width: 150px;
+}
+
+.contacts .relationship	{
+  width: 200px;
+}
+
+.contacts .email	{
+  width: 400px;
+}
+
+
+/* ------------------------------------------------------------------------- */
+/* assign a contact */
+/* ------------------------------------------------------------------------- */
+
+.assign-search {
+  margin: 1rem 0 0 1rem;
+}
+
+#assign-search-input {
+  margin: 0;
+  max-width: 400px;
+  width: 100%;
+}
+
+.search-results {
+  padding-left: 7px;
+}
+
+.assign-results {
+  padding: 0;
+}
+
+.assign-results li {
+  background: var(--warm-gray-50);
+  border: solid 1px var(--warm-gray-300);
+  border-top: none;
+  max-width: 400px;
+  width: 100%;
+}
+
+.assign-results li:hover {
+  background: var(--warm-gray-100);
+}
+
+.assign-results li > a {
+  display: block;
+  padding: 7px;
+  width: 100%;
+}
+
+.assign-role {
+  margin: 1rem 0 0 1rem;
+  max-width: 700px;
+}
+
+.role {
+  margin-left: 0;
+  width: 350px;
+}
+

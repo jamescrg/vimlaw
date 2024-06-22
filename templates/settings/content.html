@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block "content" %}
+
+<div class="section">
+
+  {% if user.username == 'james' %}
+  <div class="section-title">
+    <h1>
+      Google Account
+    </h1>
+  </div>
+
+  <p class="section-text">Connect a Google account to syncronize contacts and/or view calendar events on your home page.
+  </p>
+
+
+  <table class="options">
+    <tr>
+      <td class="setting-label">Google Contacts
+      <td class="setting-control">
+        {% if contacts_token %}
+
+          <a class="btn btn-primary btn-slim" href="/settings/google/logout/contacts">Disconnect</a>
+
+        {% else %}
+
+          <a class="btn btn-primary btn-slim" href="/settings/google/login/contacts">Connect</a>
+
+        {% endif %}
+
+    <tr>
+      <td class="setting-label">Google Calendar
+      <td class="setting-control">
+
+        {% if calendar_token %}
+
+          <a class="btn btn-primary btn-slim" href="/settings/google/logout/calendar">Disconnect</a>
+
+        {% else %}
+
+          <a class="btn btn-primary btn-slim" href="/settings/google/login/calendar">Connect</a>
+
+        {% endif %}
+
+    </table>
+
+  </div>
+  {% endif %}
+
+  <div class="section">
+
+    <div class="section-title">
+      <h1>
+        Log Out
+      </h1>
+    </div>
+
+    <p class="section-text">Log out of all sessions on all devices.
+    </p>
+
+    <p class="section-text">Logged in as: <span class="username">{{ user.username }}</span>
+    </p>
+
+    <table class="options">
+      <tr>
+        <td class="setting-label">Session:
+        <td>
+        <a class="btn btn-primary" href="{% url 'logout' %}">Logout</a>
+        <!-- <form method="post" action="{% url 'logout' %}"> -->
+        <!--     {% csrf_token %} -->
+        <!--     <button type="submit">logout</button> -->
+        <!-- </form> -->
+    </table>
+
+  </div>
+
+{% endblock "content" %}

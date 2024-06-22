@@ -1,0 +1,141 @@
+
+{% extends "base.html" %}
+{% block "content" %}
+{% load humanize %}
+
+<div class="section-title">
+
+  <div class="section-title-left">
+
+    <h1>
+      Account History
+    </h1>
+
+  </div>
+
+  <div class="section-title-right">
+    <a href="/trust">Return to Account Summary</a>
+  </div>
+
+</div>
+
+<div class="contact-section">
+
+    <div style="float: right;">
+
+      <a href="/trust/history/30days"
+      {% if interval == '30days' %} class="strong" {% endif %}>
+        30 days
+      </a>
+      &nbsp;|&nbsp;
+      <a href="/trust/history/60days"
+      {% if interval == '60days' %} class="strong" {% endif %}>
+        60 days
+      </a>
+
+      &nbsp;|&nbsp;
+      <a href="/trust/history/all"
+      {% if interval == 'all' %} class="strong" {% endif %}>
+        All
+      </a>
+
+    </div>
+
+    <table id="balances">
+        <tr>
+
+            <td>Pending Balance
+
+            <td>${{ pending_account_balance|intcomma }}
+
+        <tr>
+
+            <td>Confirmed Balance
+
+            <td><strong>${{ confirmed_account_balance|intcomma }}</strong>
+
+    </table>
+
+<div class="contact-section-data">
+<div style="overflow-x:auto">
+<table id="transactions" class="table">
+{% if transactions %}
+
+    <tr>
+
+      <th>Date
+
+      <th>Client
+
+      <th>Description
+
+      <th class="amount">Withdrawal
+
+      <th class="amount">Deposit
+
+      <th class="check">E
+
+      <th class="check">C
+
+    {% for transaction in transactions %}
+
+      <tr>
+
+        <td class="date">
+          {{ transaction.date|date:'Y-m-d' }}
+
+        <td class="client">
+          <a href="/trust/client/{{ transaction.contact_id }}">
+            {{ transaction.contact.name }}
+          </a>
+
+        <td class="note">
+
+          <a href="/trust/{{ transaction.id }}/edit">
+            {{ transaction.description }}
+          </a>
+
+
+        <td class="amount darkred">
+          {% if transaction.type == 'Withdrawal' %} ${{ transaction.amount|intcomma }} {% endif %}
+
+        <td class="amount">
+          {% if transaction.type == 'Deposit' %} ${{ transaction.amount|intcomma }} {% endif %}
+
+        <td class="check">
+
+          <a href="/trust/{{ transaction.id }}/entered">
+
+            {% if transaction.entered %}
+              <i class="bi bi-check-square"></i>
+            {% else %}
+              <i class="bi bi-square"></i>
+            {% endif %}
+
+          </a>
+
+
+        <td class="check">
+
+          <a href="/trust/{{ transaction.id }}/confirmed">
+
+            {% if transaction.confirmed %}
+              <i class="bi bi-check-square"></i>
+            {% else %}
+              <i class="bi bi-square"></i>
+            {% endif %}
+
+          </a>
+
+
+  {% endfor %}
+{% endif %}
+
+</table>
+</div>
+</div>
+
+</div>
+
+{% endblock "content" %}
+

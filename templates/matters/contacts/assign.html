@@ -1,0 +1,34 @@
+
+{% extends "matters/detail.html" %}
+
+{% block "subcontent" %}
+
+<div class="section-title">
+
+  <div class="section-title-left">
+    <h2>
+      Assign Contact
+    </h2>
+  </div>
+
+</div>
+
+<div class="assign-search">
+
+  <input
+    type="search"
+    id="assign-search-input"
+    hx-post="/matters/{{ matter.id }}/contacts/assign/results"
+    name="search_text"
+    hx-trigger="keyup changed delay:500ms, search"
+    hx-target="#search-results"
+    autocomplete="off"
+    placeholder="Search for a contact to assign . . ."
+    autofocus>
+
+  <div id="search-results">
+  </div>
+
+</div>
+
+{% endblock "subcontent" %}
