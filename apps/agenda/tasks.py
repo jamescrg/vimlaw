@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 
 from apps.matters.models import Matter
 from apps.agenda.models import Task
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from apps.agenda.filter import Filter
 
 def get_table_data(request):

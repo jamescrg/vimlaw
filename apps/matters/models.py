@@ -1,6 +1,6 @@
 from django.db import models
 from apps.contacts.models import Contact
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 class Matter(models.Model):

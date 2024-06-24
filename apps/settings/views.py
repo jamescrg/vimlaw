@@ -1,16 +1,11 @@
-import json
-
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.shortcuts import get_object_or_404
 
-import google.oauth2.credentials
 import google_auth_oauthlib.flow
-from apiclient.discovery import build
 
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 @login_required

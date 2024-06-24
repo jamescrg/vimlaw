@@ -8,7 +8,7 @@ from apps.matters.models import Matter
 from apps.matters.models import Proceeding
 from apps.matters.models import Rate
 from apps.matters.forms import RateForm
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 @login_required

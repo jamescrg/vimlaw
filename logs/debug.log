@@ -1,0 +1,263 @@
+2024-06-24 09:49:49,797 Watching for file changes with StatReloader
+2024-06-24 09:49:57,377 Internal Server Error: /accounts/login/
+Traceback (most recent call last):
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/base.py", line 220, in _get_response
+    response = response.render()
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/response.py", line 114, in render
+    self.content = self.rendered_content
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/response.py", line 92, in rendered_content
+    return template.render(context, self._request)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/backends/django.py", line 62, in render
+    return self.template.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 173, in render
+    with context.bind_template(self):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 117, in __enter__
+    return next(self.gen)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/context.py", line 254, in bind_template
+    updates.update(processor(self.request))
+  File "/Users/tumpa/PycharmProjects/law-admin/config/context.py", line 13, in site_handle
+    "site_handle": settings_local.SITE_NAME,
+AttributeError: module 'config.settings_local' has no attribute 'SITE_NAME'
+2024-06-24 09:49:57,431 Not Found: /favicon.ico
+2024-06-24 09:50:41,433 /Users/tumpa/PycharmProjects/law-admin/config/settings_local.py changed, reloading.
+2024-06-24 09:50:41,778 Watching for file changes with StatReloader
+2024-06-24 09:50:44,670 Not Found: /images/icons/plus.ico
+2024-06-24 09:55:32,953 /Users/tumpa/PycharmProjects/law-admin/accounts/models.py changed, reloading.
+2024-06-24 09:55:33,263 Watching for file changes with StatReloader
+2024-06-24 09:55:39,460 /Users/tumpa/PycharmProjects/law-admin/accounts/models.py changed, reloading.
+2024-06-24 09:55:39,743 Watching for file changes with StatReloader
+2024-06-24 09:55:45,191 /Users/tumpa/PycharmProjects/law-admin/accounts/models.py changed, reloading.
+2024-06-24 09:55:45,470 Watching for file changes with StatReloader
+2024-06-24 09:55:59,241 Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+psycopg2.errors.UndefinedTable: relation "app_event" does not exist
+LINE 1: ...app_event"."status", "app_event"."google_id" FROM "app_event...
+                                                             ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/contrib/auth/decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "/Users/tumpa/PycharmProjects/law-admin/apps/agenda/views.py", line 62, in index
+    return render(request, "agenda/content.html", context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/backends/django.py", line 62, in render
+    return self.template.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 175, in render
+    return self._render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/defaulttags.py", line 322, in render
+    return nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader_tags.py", line 208, in render
+    return template.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 177, in render
+    return self._render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/defaulttags.py", line 322, in render
+    return nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/defaulttags.py", line 194, in render
+    len_values = len(values)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/query.py", line 376, in __len__
+    self._fetch_all()
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/query.py", line 1867, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/query.py", line 87, in __iter__
+    results = compiler.execute_sql(
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/sql/compiler.py", line 1398, in execute_sql
+    cursor.execute(sql, params)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 103, in execute
+    return super().execute(sql, params)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+django.db.utils.ProgrammingError: relation "app_event" does not exist
+LINE 1: ...app_event"."status", "app_event"."google_id" FROM "app_event...
+                                                             ^
+
+2024-06-24 09:56:21,259 Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+psycopg2.errors.UndefinedTable: relation "app_event" does not exist
+LINE 1: ...app_event"."status", "app_event"."google_id" FROM "app_event...
+                                                             ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/contrib/auth/decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "/Users/tumpa/PycharmProjects/law-admin/apps/agenda/views.py", line 62, in index
+    return render(request, "agenda/content.html", context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/backends/django.py", line 62, in render
+    return self.template.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 175, in render
+    return self._render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/defaulttags.py", line 322, in render
+    return nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/loader_tags.py", line 208, in render
+    return template.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 177, in render
+    return self._render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/defaulttags.py", line 322, in render
+    return nodelist.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/base.py", line 966, in render_annotated
+    return self.render(context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/template/defaulttags.py", line 194, in render
+    len_values = len(values)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/query.py", line 376, in __len__
+    self._fetch_all()
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/query.py", line 1867, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/query.py", line 87, in __iter__
+    results = compiler.execute_sql(
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/models/sql/compiler.py", line 1398, in execute_sql
+    cursor.execute(sql, params)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 103, in execute
+    return super().execute(sql, params)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+django.db.utils.ProgrammingError: relation "app_event" does not exist
+LINE 1: ...app_event"."status", "app_event"."google_id" FROM "app_event...
+                                                             ^
+
+2024-06-24 10:02:15,727 /Users/tumpa/PycharmProjects/law-admin/apps/settings/views.py changed, reloading.
+2024-06-24 10:02:16,157 Watching for file changes with StatReloader
+2024-06-24 10:03:13,706 Watching for file changes with StatReloader
+2024-06-24 10:03:36,622 Internal Server Error: /settings/
+Traceback (most recent call last):
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/tumpa/PycharmProjects/law-admin/venv/lib/python3.9/site-packages/django/contrib/auth/decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "/Users/tumpa/PycharmProjects/law-admin/apps/settings/views.py", line 13, in index
+    f = open("/home/james/.google/cla_contacts_token.json", "r")
+FileNotFoundError: [Errno 2] No such file or directory: '/home/james/.google/cla_contacts_token.json'
+2024-06-24 10:14:20,974 /Users/tumpa/PycharmProjects/law-admin/config/settings.py changed, reloading.

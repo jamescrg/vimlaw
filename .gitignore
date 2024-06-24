@@ -8,3 +8,5 @@ tags*
 .env
 gunicorn.conf.py
 gunicorn_cl.conf.py
+.idea
+logs

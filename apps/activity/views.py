@@ -17,7 +17,7 @@ import config.appdata as appdata
 
 from apps.activity.filter import Filter
 from apps.matters.models import Rate
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 @login_required

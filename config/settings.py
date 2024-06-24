@@ -11,12 +11,13 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-from . import settings_local
+
 from django.forms.renderers import TemplatesSetting
+
+from . import settings_local
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -33,7 +34,6 @@ ENV = settings_local.ENV
 # urls to which the application will respond
 ALLOWED_HOSTS = settings_local.ALLOWED_HOSTS
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     # "crispy_forms",
     # "crispy_bootstrap5",
     "django.forms",
-    "accounts",
+    "apps.accounts",
     "apps.activity",
     "apps.agenda",
     "apps.contacts",
@@ -107,7 +107,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -120,7 +119,6 @@ DATABASES = {
         "HOST": "localhost",
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -140,7 +138,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -154,13 +151,11 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [str(BASE_DIR.joinpath("static"))]
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -186,13 +181,11 @@ EMAIL_HOST_PASSWORD = settings_local.EMAIL_HOST_PASSWORD
 SERVER_EMAIL = settings_local.SERVER_EMAIL
 ADMINS = settings_local.ADMINS
 
-
 # set cookies (sessions) to last for two months
 # default is two weeks, multiplying by four to get two months
 SESSION_COOKIE_AGE = 1209600 * 4
 
 SESSION_SAVE_EVERY_REQUEST = True
-
 
 LOGGING = {
     # The version number of our log
@@ -213,6 +206,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.FileHandler",
             "filename": "/var/log/gunicorn/cla.django.log",
+            # "filename": "logs/debug.log",  # Log file location for Mac
             "formatter": "timestamped",
         },
     },
@@ -226,6 +220,7 @@ LOGGING = {
         },
     },
 }
+
 
 # CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 # CRISPY_TEMPLATE_PACK = "bootstrap5"
