@@ -2,12 +2,14 @@ import json
 from datetime import timedelta
 
 import google.oauth2.credentials
-from apiclient.discovery import build
+from googleapiclient.discovery import build
+
+CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
 
 
 def check_credentials():
     try:
-        credential_file = open("/home/james/.google/cla_calendar_token.json", "r")
+        credential_file = open(CALENDAR_TOKEN_PATH, "r")
         credentials = credential_file.read()
         credential_file.close()
     except FileNotFoundError:
@@ -20,7 +22,7 @@ def check_credentials():
 
 
 def build_service():
-    f = open("/home/james/.google/cla_calendar_token.json", "r")
+    f = open(CALENDAR_TOKEN_PATH, "r")
     google_calendar_token = f.read()
     f.close()
 
