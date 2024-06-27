@@ -5,12 +5,16 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.shortcuts import render
 
+from utils import prepare_path
+
 CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
 CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
 GOOGLE_TOKEN_PATH = "google/google_tokens.json"
 
 
 def _token_exists(file_path):
+    prepare_path(file_path)
+
     try:
         with open(file_path, "r") as file:
             data = json.load(file)
@@ -91,8 +95,9 @@ def google_store(request):
 
     path = CONTACTS_TOKEN_PATH if app == "contacts" else CALENDAR_TOKEN_PATH
 
+    prepare_path(path)
     with open(path, "w") as file:
-        json.dump(google_credentials, file)
+        file.write(google_credentials)
 
     return redirect("/settings")
 
@@ -101,6 +106,7 @@ def google_store(request):
 def google_logout(request, app):
     path = CONTACTS_TOKEN_PATH if app == "contacts" else CALENDAR_TOKEN_PATH
 
+    prepare_path(path)
     with open(path, "w") as file:
         file.write("")
 

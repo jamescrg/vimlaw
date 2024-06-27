@@ -1,13 +1,19 @@
 import json
+import os
 from datetime import timedelta
 
 import google.oauth2.credentials
 from googleapiclient.discovery import build
 
+from utils import prepare_path
+
 CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
+CALENDAR_ID = os.environ.get("CALENDAR_ID")
 
 
 def check_credentials():
+    prepare_path(CALENDAR_TOKEN_PATH)
+
     try:
         credential_file = open(CALENDAR_TOKEN_PATH, "r")
         credentials = credential_file.read()
@@ -22,6 +28,8 @@ def check_credentials():
 
 
 def build_service():
+    prepare_path(CALENDAR_TOKEN_PATH)
+
     f = open(CALENDAR_TOKEN_PATH, "r")
     google_calendar_token = f.read()
     f.close()
@@ -55,10 +63,8 @@ def add_event(event):
             },
         }
 
-        calendar_id = "c_gu3p3ov90qi79he0i1p8k1qo0o@group.calendar.google.com"
-
         google_event = (
-            service.events().insert(calendarId=calendar_id, body=new_event).execute()
+            service.events().insert(calendarId=CALENDAR_ID, body=new_event).execute()
         )
 
         if google_event:
@@ -74,13 +80,11 @@ def add_event(event):
 def delete_event(event):
     service = build_service()
 
-    calendar_id = "c_gu3p3ov90qi79he0i1p8k1qo0o@group.calendar.google.com"
-
     if service:
         result = (
             service.events()
             .delete(
-                calendarId=calendar_id,
+                calendarId=CALENDAR_ID,
                 eventId=event.google_id,
             )
             .execute()
@@ -109,12 +113,10 @@ def edit_event(event):
             },
         }
 
-        calendar_id = "c_gu3p3ov90qi79he0i1p8k1qo0o@group.calendar.google.com"
-
         result = (
             service.events()
             .update(
-                calendarId=calendar_id,
+                calendarId=CALENDAR_ID,
                 eventId=event.google_id,
                 body=revised_event,
             )

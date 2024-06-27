@@ -18,13 +18,20 @@ execution of core functionality.
     - [Troubleshoot Dependency Installation](#troubleshoot-dependency-installation)
     - [Troubleshoot Running Migrations](#troubleshoot-running-migrations)
 - [Steps After Squashing Migrations](#steps-after-squashing-migrations)
+    - [Step 1: Ensure squashing was done correctly](#step-1-ensure-squashing-was-done-correctly)
+    - [Step 2: Removing the old migration history](#step-2-removing-the-old-migration-history)
+    - [Step 3: Faking Django content type migrations](#step-3-faking-django-content-type-migrations)
+    - [Step 4: Faking the squashed migrations](#step-4-faking-the-squashed-migrations)
+- [Google Calendar/Contact Integration](#google-calendarcontact-integration)
+    - [Step 1: Create a Google Cloud Project](#step-1-create-a-google-cloud-project)
+    - [Step 2: Add the credentials file to the project](#step-2-add-the-credentials-file-to-the-project)
+    - [Step 3: Set up the environment variables](#step-3-set-up-the-environment-variables)
 
 ## Getting Started
 
 Make sure to have the following installed on your machine:
 
-- Python 3.9, not 3.10 or higher
-    - Some dependencies are not yet compatible with Python 3.10 or higher
+- Python 3.10 or higher
 - PostgreSQL
 
 ### Setting up PostgreSQL
@@ -279,3 +286,37 @@ was successful and the database is in a consistent state.
 You should have no further issues with the migrations and new
 changes to the models can be made, as before, by running the
 `makemigrations` and `migrate` commands.
+
+### Google Calendar/Contact Integration
+
+To integrate Google Calendar and Contacts into the application,
+you will need to finish a few additional steps.
+
+#### Step 1: Create a Google Cloud Project
+
+Create a new project in the Google Cloud Console and enable the
+Google Calendar and Google Contacts APIs.
+
+After finishing a project, you will be able to download
+the credentials file in JSON format.
+
+#### Step 2: Add the credentials file to the project
+
+There is an empty directory in the project root directory called `/google`.
+
+Add the credentials file to the `/google` directory and
+rename it to `google_tokens.json`.
+
+#### Step 3: Set up the environment variables
+
+In the `.env` file, there is an additional environment variable
+that needs to be set up for the Calendar integration.
+
+The variable is `CALENDAR_ID` and it should be set to the
+string value of the Google Calendar ID found in the Calendar
+settings.
+
+---
+
+After finishing these steps, the Google Calendar and Contacts
+integration should be set up and working correctly.
