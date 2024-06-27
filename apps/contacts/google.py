@@ -3,10 +3,14 @@ import json
 import google.oauth2.credentials
 from googleapiclient.discovery import build
 
+from utils import prepare_path
+
 CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
 
 
 def check_credentials():
+    prepare_path(CONTACTS_TOKEN_PATH)
+
     try:
         credential_file = open(CONTACTS_TOKEN_PATH, "r")
     except FileNotFoundError:
@@ -20,6 +24,8 @@ def check_credentials():
 
 
 def build_service():
+    prepare_path(CONTACTS_TOKEN_PATH)
+
     try:
         f = open(CONTACTS_TOKEN_PATH, "r")
         google_contacts_token = f.read()
