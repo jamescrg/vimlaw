@@ -18,7 +18,6 @@ def check_credentials():
 
 
 def build_service():
-
     try:
         f = open("/home/james/.google/cla_contacts_token.json", "r")
         google_contacts_token = f.read()
