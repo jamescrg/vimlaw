@@ -1,7 +1,7 @@
 import json
 
 import google.oauth2.credentials
-from google.discovery import build
+from googleapiclient.discovery import build
 
 CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
 

@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 
 import google.oauth2.credentials
-from apiclient.discovery import build
+from googleapiclient.discovery import build
 
 CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
 
