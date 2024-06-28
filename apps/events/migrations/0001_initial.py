@@ -9,24 +9,39 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('matters', '0001_initial'),
+        ("matters", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Event',
+            name="Event",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_id', models.IntegerField(null=True)),
-                ('date', models.DateField(null=True)),
-                ('party', models.CharField(blank=True, max_length=50, null=True)),
-                ('description', models.CharField(max_length=255, null=True)),
-                ('status', models.CharField(max_length=50, null=True)),
-                ('google_id', models.CharField(blank=True, max_length=255, null=True)),
-                ('matter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user_id", models.IntegerField(null=True)),
+                ("date", models.DateField(null=True)),
+                ("party", models.CharField(blank=True, max_length=50, null=True)),
+                ("description", models.CharField(max_length=255, null=True)),
+                ("status", models.CharField(max_length=50, null=True)),
+                ("google_id", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matters.matter",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_event',
+                "db_table": "app_event",
             },
         ),
     ]

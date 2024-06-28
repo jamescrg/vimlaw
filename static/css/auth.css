@@ -1,135 +1,130 @@
 
 body {
-	background: var(--warm-gray-300);
-	color: var(--warm-gray-700);
-	font-family: 'Open Sans', sans-serif;
+    background: var(--warm-gray-300);
+    color: var(--warm-gray-700);
+    font-family: 'Open Sans', sans-serif;
 }
 
 a {
-	color: var(--lime-800);
-	text-decoration: none;
+    color: var(--lime-800);
+    text-decoration: none;
 }
 
-a:hover	{
-	color: var(--green);
-	text-decoration: none;
+a:hover {
+    color: var(--lime-600);
+    text-decoration: none;
 }
 
 .vertical-center {
-	align-items: center;
-	display: flex;
-	min-height: 80%;  /* Fallback for browsers do NOT support vh unit */
-	min-height: 80vh; /* These two lines are counted as one :-)       */
+    align-items: center;
+    display: flex;
+    min-height: 80%;
 }
 
-.auth-card{
-	background: var(--warm-gray-100);
-	border-radius: 3px;
-	margin: 0 auto;
-	padding: 20px;
-	width: 400px;
+@supports (height: 80vh) {
+    .vertical-center {
+        min-height: 80vh; /* Override with 80vh if supported */
+    }
 }
 
-.auth-title{
-	color: var(--lime-800);
-	font-size: 1.5em;
-  font-weight: 500;
-	margin-bottom: 5px;
-	text-align: center;
+.auth-card {
+    background: var(--warm-gray-100);
+    border-radius: 3px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 400px;
 }
 
-.auth-subtitle{
-  font-size: 1em;
-	margin-bottom: 30px;
-	text-align: center;
+.auth-title {
+    color: var(--lime-800);
+    font-size: 1.5em;
+    font-weight: 500;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.auth-subtitle {
+    font-size: 1em;
+    margin-bottom: 30px;
+    text-align: center;
 }
 
 .prompt {
-  margin-bottom: 30px;
+    margin-bottom: 30px;
 }
 
 .reset-confirm p {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .account-form p {
-  margin: 30px 0 0 0;
-  padding: 0;
+    margin: 30px 0 0 0;
+    padding: 0;
 }
 
 .account-form label {
-  display: block;
-  font-size: 1em;
-  font-weight: normal;
+    display: block;
+    font-size: 1em;
+    font-weight: normal;
 }
 
 .account-form input {
-  border: solid 1px var(--warm-gray-350);
-  border-radius: 5px;
-  display: block;
-  font-size: 1em;
-  margin-top: 5px;
-  padding: 7px;
-  width: 100%;
+    border: solid 1px var(--warm-gray-350);
+    border-radius: 5px;
+    display: block;
+    font-size: 1em;
+    margin-top: 5px;
+    padding: 7px;
+    width: 100%;
 }
 
 .account-form ul {
-  padding-left: 2px;
+    padding-left: 2px;
 }
 
 .account-form ul li {
-  color: var(--red-dark);
-  margin-top: 5px;
+    color: var(--red-600);
+    margin-top: 5px;
 }
 
 .account-form button {
-  background: var(--warm-gray-600);
-  border: solid 1px var(--warm-gray-600);
-  color: var(--warm-gray-200);
-  border-radius: 5px;
-  font-size: 1em;
-  margin-top: 40px;
-  padding: 7px 10px;
+    background: var(--warm-gray-600);
+    border: solid 1px var(--warm-gray-600);
+    color: var(--warm-gray-200);
+    border-radius: 5px;
+    font-size: 1em;
+    margin-top: 40px;
+    padding: 7px 10px;
 }
 
 input {
-  filter: none;
+    filter: none;
 }
 
 input:focus {
-  outline: none;
-}
-
-.forgot {
-  text-align: right;
-}
-
-.helptext {
-  color: var(--red-dark);
-  display: inline-block;
-  margin: 5px 0 0 2px;
+    outline: none;
 }
 
 .login-bottom {
-  align-items: flex-end;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+    align-items: flex-end;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .login-bottom-right {
-  margin-bottom: 2px;
+    margin-bottom: 2px;
 }
 
 .reset-confirm {
-  margin-top: 30px;
+    margin-top: 30px;
 }
 
 .reset-complete {
-  text-align: center;
+    text-align: center;
 }
 
 .spam-folder {
-  color: var(--red-dark);
-  font-weight: 600;
+    color: var(--red-600);
+    font-weight: 600;
 }

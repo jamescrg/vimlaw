@@ -86,22 +86,3 @@ Transaction Form
 ------------------------------------------------*/
 
 
-#id_type {
-  width: 140px;
-}
-
-#id_description {
-  width: 550px;
-}
-
-#id_amount {
-  width: 140px;
-}
-
-#id_entered {
-  width: 70px;
-}
-
-#id_confirmed {
-  width: 70px;
-}

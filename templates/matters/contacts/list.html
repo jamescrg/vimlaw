@@ -1,64 +1,62 @@
-
 {% extends "matters/detail.html" %}
 
-{% load phone_number %}
 
-{% block "subcontent" %}
+{% block subcontent %}
 
-<div class="section-title">
+    <div class="section-title">
 
-  <div class="section-title-left">
-    <h2>Related Contacts</h2>
-	</div>
+        <div class="section-title-left">
+            <h2>Related Contacts</h2>
+        </div>
 
-  <a href="/matters/{{ matter.id }}/contacts/assign">Assign Contact</a>
-
-</div>
-
-<div class="matter-section-data">
-
-{% if relationship_groups %}
-
-  {% for group, relationships in relationship_groups.items %}
-
-  {% if relationships %}
-
-    <div class="contact-group-heading">
-
-      <strong>{{ group }}</strong>
+        <a href="/matters/{{ matter.id }}/contacts/assign">Assign Contact</a>
 
     </div>
 
-    <div style="overflow-x:auto">
-    <table class="table contacts">
+    <div class="matter-section-data">
 
-      {% for relationship in relationships %}
+        {% if relationship_groups %}
 
-        <tr>
+            {% for group, relationships in relationship_groups.items %}
 
-          <td class="relationship">
-            <a href="/matters/assign/{{ relationship.id }}/edit">
-            {{ relationship.role.name }}
-            </a>
+                {% if relationships %}
 
-          <td class="name">
-              <a href="/contacts/{{ relationship.contact.id }}">
-                {{ relationship.contact.name }}</a>
+                    <div class="contact-group-heading">
 
-          <td class="phone1">{{ relationship.contact.phone1|default:'' }}
+                        <strong>{{ group }}</strong>
 
-          <td class="email">{{ relationship.contact.email|default:'' }}
+                    </div>
 
-      {% endfor %}
+                    <div style="overflow-x:auto">
+                        <table class="table contacts">
 
-    </table>
+                            {% for relationship in relationships %}
+
+                                <tr>
+
+                                <td class="relationship">
+                                    <a href="/matters/assign/{{ relationship.id }}/edit">
+                                        {{ relationship.role.name }}
+                                    </a>
+
+                                <td class="name">
+                                    <a href="/contacts/{{ relationship.contact.id }}">
+                                        {{ relationship.contact.name }}</a>
+
+                                <td class="phone1">{{ relationship.contact.phone1|default:'' }}
+
+                                <td class="email">{{ relationship.contact.email|default:'' }}
+
+                            {% endfor %}
+
+                        </table>
+                    </div>
+
+                {% endif %}
+            {% endfor %}
+
+        {% endif %}
+
     </div>
 
-  {% endif %}
-  {% endfor %}
-
-{% endif %}
-
-</div>
-
-{% endblock "subcontent" %}
+{% endblock subcontent %}

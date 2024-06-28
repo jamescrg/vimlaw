@@ -28,85 +28,95 @@
           Status
         </label>
 
-        <select name="status" class="form-control">
+          <label>
+              <select name="status" class="form-control">
+      
+                <option value="" {% if not filter.status %} selected {% endif %}>
+                    All
+                </option>
+                <option value="Pending" {% if filter.status == 'Pending' %} selected {% endif %}>
+                    Pending
+                </option>
+                <option value="Open" {% if filter.status == 'Open' %} selected {% endif %}>
+                    Open
+                </option>
+                <option value="Closed" {% if filter.status == 'Closed' %} selected {% endif %}>
+                    Closed
+                </option>
+      
+              </select>
+          </label>
 
-          <option value="" {% if not filter.status %} selected {% endif %}>
-              All
-          </option>
-          <option value="Pending" {% if filter.status == 'Pending' %} selected {% endif %}>
-              Pending
-          </option>
-          <option value="Open" {% if filter.status == 'Open' %} selected {% endif %}>
-              Open
-          </option>
-          <option value="Closed" {% if filter.status == 'Closed' %} selected {% endif %}>
-              Closed
-          </option>
-
-        </select>
-
-        <label class="control-label">
+          <label class="control-label">
           Practice Area
         </label>
 
-        <select name="area" class="form-control">
+          <label>
+              <select name="area" class="form-control">
+      
+                <option value="" {% if not filter.area %}selected{% endif %}>
+                  All
+                </option>
+      
+              {% for area in areas %}
+      
+                <option value="{{ area }}" {% if filter.area == area %}selected{% endif %}>
+                    {{ area }}
+                </option>
+      
+              {% endfor %}
+      
+              </select>
+          </label>
 
-          <option value="" {% if not filter.area %}selected{% endif %}>
-            All
-          </option>
-
-        {% for area in areas %}
-
-          <option value="{{ area }}" {% if filter.area == area %}selected{% endif %}>
-              {{ area }}
-          </option>
-
-        {% endfor %}
-
-        </select>
-
-        <label class="control-label">
+          <label class="control-label">
           From
         </label>
 
-        <input type="date" name="date_from" class="form-control"
-          value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
+          <label>
+              <input type="date" name="date_from" class="form-control"
+                value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
+          </label>
 
-        <label class="control-label">
+          <label class="control-label">
           To
         </label>
 
-        <input type="date" name="date_to" class="form-control"
-          value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
+          <label>
+              <input type="date" name="date_to" class="form-control"
+                value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
+          </label>
 
-        <label class="control-label">
+          <label class="control-label">
           Firm
         </label>
 
-        <select name="firm" class="form-control">
+          <label>
+              <select name="firm" class="form-control">
+      
+                <option value="" {% if not filter.firm %}selected{% endif %}>
+                  All
+                </option>
+      
+                {% for firm in firms %}
+      
+                  <option value="{{ firm }}"
+                    {% if filter.firm == firm %}selected{% endif %}>
+      
+                    {{ firm }}
+      
+                  </option>
+      
+                {% endfor %}
+      
+              </select>
+          </label>
 
-          <option value="" {% if not filter.firm %}selected{% endif %}>
-            All
-          </option>
-
-          {% for firm in firms %}
-
-            <option value="{{ firm }}"
-              {% if filter.firm == firm %}selected{% endif %}>
-
-              {{ firm }}
-
-            </option>
-
-          {% endfor %}
-
-        </select>
-
-        <label class="control-label">
+          <label class="control-label">
           Order By
         </label>
 
-        <select name="order" id="order" class="form-control">
+          <label for="order"></label><select name="order" id="order" class="form-control">
 
           <option value="name" {% if filter.order == 'name' %}selected{% endif %}>
               Name, Ascending

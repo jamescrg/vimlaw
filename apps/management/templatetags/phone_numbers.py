@@ -3,7 +3,7 @@ from django import template
 register = template.Library()
 
 
-@register.filter
+@register.filter("phone_number")
 def phone_number(original):
     if original:
         new = (

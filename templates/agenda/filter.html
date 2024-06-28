@@ -22,7 +22,7 @@
         {% csrf_token %}
 
         <label>Status</label>
-        <select name="status" id="status">
+          <label for="status"></label><select name="status" id="status">
 
           <option value="" {% if filter.status == "All" %}selected{% endif %}>
             All
@@ -39,15 +39,19 @@
         </select>
 
         <label>From:</label>
-        <input type="date" name="date_from"
-          value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
+          <label>
+              <input type="date" name="date_from"
+                value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
+          </label>
 
-        <label>To:</label>
-        <input type="date" name="date_to"
-          value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
+          <label>To:</label>
+          <label>
+              <input type="date" name="date_to"
+                value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
+          </label>
 
-        <label>Matter:</label>
-        <select name="matter" id="matter">
+          <label>Matter:</label>
+          <label for="matter"></label><select name="matter" id="matter">
 
           <option value="">All</option>
 
@@ -65,7 +69,7 @@
 
         <label>User
         </label>
-        <select name="user" id="user">
+          <label for="user"></label><select name="user" id="user">
 
           <option value="">All</option>
 
@@ -82,7 +86,7 @@
         </select>
 
         <label>Sort By:</label>
-        <select name="order_field" id="order_field">
+          <label for="order_field"></label><select name="order_field" id="order_field">
 
           <option value="date_due" {% if filter.order_field == "date_due" %}selected{% endif %}>
             Date Due
@@ -103,7 +107,7 @@
         </select>
 
         <label>Sort Direction:</label>
-        <select name="order_direction" id="order_direction">
+          <label for="order_direction"></label><select name="order_direction" id="order_direction">
 
           <option value="ascending" {% if filter.order_field == "ascending" %}selected{% endif %}>
             Ascending

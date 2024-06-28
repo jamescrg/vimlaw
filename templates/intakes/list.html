@@ -1,16 +1,12 @@
-
 {% extends "base.html" %}
 
-{% load phone_number %}
 
 {% block content %}
-
-<div
-  hx-get="/intakes/list/data"
-  hx-trigger="load, intakeAdded from:body"
->
-
-</div>
+    <div
+            hx-get="/intakes/list/data"
+            hx-trigger="load, intakeAdded from:body"
+    >
+    </div>
 
 
 {% endblock content %}

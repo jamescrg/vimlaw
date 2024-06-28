@@ -10,116 +10,235 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contacts', '0001_initial'),
+        ("contacts", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Matter',
+            name="Matter",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_id', models.IntegerField(null=True)),
-                ('name', models.CharField(max_length=50, null=True)),
-                ('description', models.CharField(max_length=255, null=True)),
-                ('status', models.CharField(max_length=50, null=True)),
-                ('date_start', models.DateField(null=True)),
-                ('date_end', models.DateField(blank=True, null=True)),
-                ('firm', models.CharField(max_length=50, null=True)),
-                ('firm_file_no', models.CharField(blank=True, max_length=500, null=True)),
-                ('ref_no', models.CharField(blank=True, max_length=50, null=True)),
-                ('practice_area', models.CharField(max_length=50, null=True)),
-                ('hourly_rate', models.IntegerField(blank=True, null=True)),
-                ('firm_rate', models.IntegerField(null=True)),
-                ('client', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='client_matters', to='contacts.contact')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user_id", models.IntegerField(null=True)),
+                ("name", models.CharField(max_length=50, null=True)),
+                ("description", models.CharField(max_length=255, null=True)),
+                ("status", models.CharField(max_length=50, null=True)),
+                ("date_start", models.DateField(null=True)),
+                ("date_end", models.DateField(blank=True, null=True)),
+                ("firm", models.CharField(max_length=50, null=True)),
+                (
+                    "firm_file_no",
+                    models.CharField(blank=True, max_length=500, null=True),
+                ),
+                ("ref_no", models.CharField(blank=True, max_length=50, null=True)),
+                ("practice_area", models.CharField(max_length=50, null=True)),
+                ("hourly_rate", models.IntegerField(blank=True, null=True)),
+                ("firm_rate", models.IntegerField(null=True)),
+                (
+                    "client",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="client_matters",
+                        to="contacts.contact",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_matter',
+                "db_table": "app_matter",
             },
         ),
         migrations.CreateModel(
-            name='Role',
+            name="Role",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50)),
             ],
             options={
-                'db_table': 'app_matter_role',
+                "db_table": "app_matter_role",
             },
         ),
         migrations.CreateModel(
-            name='SettlementEntry',
+            name="SettlementEntry",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_id', models.IntegerField()),
-                ('date', models.DateField(null=True)),
-                ('medium', models.CharField(blank=True, max_length=50, null=True)),
-                ('type', models.CharField(max_length=150, null=True)),
-                ('amount', models.CharField(max_length=50, null=True)),
-                ('notes', models.CharField(blank=True, max_length=50, null=True)),
-                ('matter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user_id", models.IntegerField()),
+                ("date", models.DateField(null=True)),
+                ("medium", models.CharField(blank=True, max_length=50, null=True)),
+                ("type", models.CharField(max_length=150, null=True)),
+                ("amount", models.CharField(max_length=50, null=True)),
+                ("notes", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matters.matter",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_settlement',
+                "db_table": "app_settlement",
             },
         ),
         migrations.CreateModel(
-            name='Relationship',
+            name="Relationship",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contacts.contact')),
-                ('matter', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
-                ('role', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='matters.role')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contacts.contact",
+                    ),
+                ),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="matters.matter"
+                    ),
+                ),
+                (
+                    "role",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="matters.role"
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_matter_relationship',
+                "db_table": "app_matter_relationship",
             },
         ),
         migrations.CreateModel(
-            name='Rate',
+            name="Rate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('matter_rate', models.IntegerField()),
-                ('matter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("matter_rate", models.IntegerField()),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matters.matter",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_matter_rate',
+                "db_table": "app_matter_rate",
             },
         ),
         migrations.CreateModel(
-            name='Proceeding',
+            name="Proceeding",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_id', models.IntegerField()),
-                ('date_filed', models.DateField(null=True)),
-                ('forum', models.CharField(max_length=150, null=True)),
-                ('case_number', models.CharField(max_length=50, null=True)),
-                ('status', models.CharField(max_length=50, null=True)),
-                ('matter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user_id", models.IntegerField()),
+                ("date_filed", models.DateField(null=True)),
+                ("forum", models.CharField(max_length=150, null=True)),
+                ("case_number", models.CharField(max_length=50, null=True)),
+                ("status", models.CharField(max_length=50, null=True)),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matters.matter",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_proceeding',
+                "db_table": "app_proceeding",
             },
         ),
         migrations.AddField(
-            model_name='matter',
-            name='contacts',
-            field=models.ManyToManyField(through='matters.Relationship', to='contacts.contact'),
+            model_name="matter",
+            name="contacts",
+            field=models.ManyToManyField(
+                through="matters.Relationship", to="contacts.contact"
+            ),
         ),
         migrations.CreateModel(
-            name='Fact',
+            name="Fact",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_id', models.IntegerField()),
-                ('date', models.DateField(null=True)),
-                ('description', models.CharField(max_length=150, null=True)),
-                ('citation', models.CharField(blank=True, max_length=155, null=True)),
-                ('emphasis', models.CharField(blank=True, max_length=50, null=True)),
-                ('matter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user_id", models.IntegerField()),
+                ("date", models.DateField(null=True)),
+                ("description", models.CharField(max_length=150, null=True)),
+                ("citation", models.CharField(blank=True, max_length=155, null=True)),
+                ("emphasis", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matters.matter",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_fact',
+                "db_table": "app_fact",
             },
         ),
     ]

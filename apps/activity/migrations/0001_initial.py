@@ -10,46 +10,96 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('matters', '0001_initial'),
+        ("matters", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TimeEntry',
+            name="TimeEntry",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(null=True)),
-                ('actions', models.TextField(null=True)),
-                ('hours', models.DecimalField(decimal_places=1, default=0, max_digits=3)),
-                ('contractor_rate', models.IntegerField(blank=True, null=True)),
-                ('firm_rate', models.IntegerField(null=True)),
-                ('comp', models.IntegerField(blank=True, null=True)),
-                ('entered', models.IntegerField(blank=True, null=True)),
-                ('invoice', models.IntegerField(null=True)),
-                ('matter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(null=True)),
+                ("actions", models.TextField(null=True)),
+                (
+                    "hours",
+                    models.DecimalField(decimal_places=1, default=0, max_digits=3),
+                ),
+                ("contractor_rate", models.IntegerField(blank=True, null=True)),
+                ("firm_rate", models.IntegerField(null=True)),
+                ("comp", models.IntegerField(blank=True, null=True)),
+                ("entered", models.IntegerField(blank=True, null=True)),
+                ("invoice", models.IntegerField(null=True)),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matters.matter",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_activity',
+                "db_table": "app_activity",
             },
         ),
         migrations.CreateModel(
-            name='ExpenseEntry',
+            name="ExpenseEntry",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(null=True)),
-                ('description', models.TextField(null=True)),
-                ('amount', models.DecimalField(decimal_places=2, default=0, max_digits=6)),
-                ('comp', models.IntegerField(blank=True, null=True)),
-                ('category', models.CharField(blank=True, max_length=100, null=True)),
-                ('entered', models.IntegerField(blank=True, null=True)),
-                ('invoice', models.IntegerField(null=True)),
-                ('matter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='matters.matter')),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(null=True)),
+                ("description", models.TextField(null=True)),
+                (
+                    "amount",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=6),
+                ),
+                ("comp", models.IntegerField(blank=True, null=True)),
+                ("category", models.CharField(blank=True, max_length=100, null=True)),
+                ("entered", models.IntegerField(blank=True, null=True)),
+                ("invoice", models.IntegerField(null=True)),
+                (
+                    "matter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matters.matter",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_expenses',
+                "db_table": "app_expenses",
             },
         ),
     ]

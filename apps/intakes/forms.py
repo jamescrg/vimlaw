@@ -91,7 +91,7 @@ class IntakeForm(forms.ModelForm):
         if email:
             try:
                 validate_email(email)
-            except:
+            except (ValidationError, AttributeError):
                 raise ValidationError("Invalid email address.")
         return email
 

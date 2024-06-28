@@ -1,25 +1,25 @@
 <li id="add-folder-item" class="list-group-item">
 
-  <i class="bi bi-folder"></i>
+    <i class="bi bi-folder"></i>
 
-  <div class="edit-folder">
+    <div class="edit-folder">
 
-    <form class="folder-form"
-      action="/folders/insert/{{ page }}"
-      method="post">
+        <form class="folder-form"
+              action="/folders/insert/{{ page }}"
+              method="post">
 
-      {% csrf_token %}
+            {% csrf_token %}
 
-      <input id="add-folder-input"
-        class="form-horizontal"
-        type="text"
-        name="name"
-        onchange="submit()"
-        onblur="hideAddFolderForm()"
-        value="">
+            <label for="add-folder-input"></label><input id="add-folder-input"
+                                                         class="form-horizontal"
+                                                         type="text"
+                                                         name="name"
+                                                         onchange="submit()"
+                                                         onblur="hideAddFolderForm()"
+                                                         value="">
 
-    </form>
+        </form>
 
-  </div>
+    </div>
 
 </li>

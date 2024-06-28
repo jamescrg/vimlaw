@@ -1,154 +1,123 @@
-
 /* intake list and details */
 
-  .add-to-contacts {
-    float: right;
-    margin: 15px 5px 0 0;
-  }
-
-  .intake-section {
+.intake-section {
     margin-bottom: 55px;
-  }
+}
 
-  .intake-details {
+.intake-details {
     width: 100%;
-  }
+}
 
-  .intake-details .strong {
+.intake-details .strong {
     width: 170px;
-  }
+}
 
-  .intake-date {
-      width: 120px
-  }
+.intake-date {
+    width: 120px
+}
 
-  .intake-name {
+.intake-name {
     width: 300px;
-  }
+}
 
-  .intake-phone {
+.intake-phone {
     width: 180px
-  }
+}
 
-  .intake-email {
+.intake-email {
     width: 180px
-  }
+}
 
-  .intake-status {
-      width: 120px
-  }
+.intake-status {
+    width: 120px
+}
 
-  .intake-source {
-      width: 120px
-  }
+.intake-source {
+    width: 120px
+}
 
-  #intake-list th a {
+#intake-list th a {
     color: inherit;
-  }
+}
 
-  .add-note {
+.add-note {
     float: right;
     margin: 15px 5px 25px 0;
-  }
+}
 
 
-  #id_details {
-    min-height: 300px;
-    resize: both;
-    width: 600px;
-  }
-
-  .intake-notes {
+.intake-notes {
     width: 100%;
-  }
+}
 
-  .note-date {
+.note-date {
     width: 120px;
-  }
+}
 
-  .note-username {
+.note-username {
     width: 120px;
-  }
+}
 
-  .note-type {
+.note-type {
     width: 120px;
-  }
+}
 
 /* markdown formatting */
 
-  .note-details h1 {
+.note-details h1 {
     font-size: 1.5em;
     font-weight: 600;
-  }
+}
 
-  .note-details h2 {
+.note-details h2 {
     font-size: 1.1em;
     font-weight: 600;
-  }
+}
 
-  .note-details h3 {
+.note-details h3 {
     font-size: 1.0em;
     font-weight: 600;
-  }
+}
 
-  .note-details strong {
+.note-details strong {
     font-weight: 600;
-  }
+}
 
-  .note-details ul {
+.note-details ul {
     padding: inherit;
-  }
+}
 
-  .note-details ul li {
+.note-details ul li {
     list-style-type: disc;
     padding-left: 5px;
-  }
+}
 
-  .note-details ol {
+.note-details ol {
     padding: inherit;
-  }
+}
 
-  .note-details ol li {
+.note-details ol li {
     list-style-type: decimal;
     padding-left: 5px;
-  }
+}
 
-  .note-details p {
+.note-details p {
     font-size: 1.05em;
-  }
+}
 
-  .note-details a {
+.note-details a {
     text-decoration: underline;
-  }
+}
 
-  code{
+code {
     background: inherit;
     color: inherit;
     display: block;
-    font-family: 'Courier Prime';
+    font-family: 'Courier Prime', monospace;
     font-size: 1.03em;
     margin-left: 20px;
     white-space: pre-wrap;
-  }
+}
 
 /* intake form */
 
-  #id_name {
-    max-width: 400px;
-    width: 100%;
-  }
-
-  #id_address {
-    max-width: 400px;
-    width: 100%;
-  }
-
-  #id_phone {
-    max-width: 400px;
-    width: 100%;
-  }
-
-  #id_email {
-    max-width: 400px;
-    width: 100%;
-  }

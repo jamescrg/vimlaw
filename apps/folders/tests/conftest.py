@@ -1,5 +1,4 @@
 import pytest
-
 from django.test import Client
 
 from apps.accounts.models import CustomUser
@@ -20,7 +19,7 @@ def client(user):
 
 
 @pytest.fixture
-def folders(user):
+def folders(user, folder):
     folder_names = [
         "Current",
         "Tomorrow",

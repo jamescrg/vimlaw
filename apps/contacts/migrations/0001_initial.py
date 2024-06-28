@@ -10,37 +10,70 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('intakes', '0001_initial'),
-        ('folders', '0001_initial'),
+        ("intakes", "0001_initial"),
+        ("folders", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Contact',
+            name="Contact",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=100)),
-                ('company', models.CharField(blank=True, max_length=100, null=True)),
-                ('address', models.CharField(blank=True, max_length=255, null=True)),
-                ('phone1', models.CharField(blank=True, max_length=50, null=True)),
-                ('phone1_label', models.CharField(blank=True, max_length=10, null=True)),
-                ('phone2', models.CharField(blank=True, max_length=50, null=True)),
-                ('phone2_label', models.CharField(blank=True, max_length=10, null=True)),
-                ('phone3', models.CharField(blank=True, max_length=50, null=True)),
-                ('phone3_label', models.CharField(blank=True, max_length=10, null=True)),
-                ('email', models.CharField(blank=True, max_length=100, null=True)),
-                ('website', models.CharField(blank=True, max_length=255, null=True)),
-                ('map', models.CharField(blank=True, max_length=255, null=True)),
-                ('notes', models.CharField(blank=True, max_length=255, null=True)),
-                ('google_id', models.CharField(blank=True, max_length=255, null=True)),
-                ('client_status', models.CharField(default='Nonclient', max_length=100)),
-                ('folder', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='folders.folder')),
-                ('intake', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='intakes.intake')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=100)),
+                ("company", models.CharField(blank=True, max_length=100, null=True)),
+                ("address", models.CharField(blank=True, max_length=255, null=True)),
+                ("phone1", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "phone1_label",
+                    models.CharField(blank=True, max_length=10, null=True),
+                ),
+                ("phone2", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "phone2_label",
+                    models.CharField(blank=True, max_length=10, null=True),
+                ),
+                ("phone3", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "phone3_label",
+                    models.CharField(blank=True, max_length=10, null=True),
+                ),
+                ("email", models.CharField(blank=True, max_length=100, null=True)),
+                ("website", models.CharField(blank=True, max_length=255, null=True)),
+                ("map", models.CharField(blank=True, max_length=255, null=True)),
+                ("notes", models.CharField(blank=True, max_length=255, null=True)),
+                ("google_id", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "client_status",
+                    models.CharField(default="Nonclient", max_length=100),
+                ),
+                (
+                    "folder",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="folders.folder",
+                    ),
+                ),
+                (
+                    "intake",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="intakes.intake",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_contact',
+                "db_table": "app_contact",
             },
         ),
     ]

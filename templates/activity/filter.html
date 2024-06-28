@@ -25,51 +25,59 @@
           From:
         </label>
 
-          <input type="date" name="date_from"
-            value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
+          <label>
+              <input type="date" name="date_from"
+                value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
+          </label>
 
-        <label>To:</label>
-          <input type="date" name="date_to"
-            value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
+          <label>To:</label>
+          <label>
+              <input type="date" name="date_to"
+                value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
+          </label>
 
           <label>Firm:</label>
-          <select name="firm">
-
-            <option value="">All</option>
-
-            {% for firm in firms %}
-
-              <option value="{{ firm }}"
-                {% if filter.firm == firm %}selected{% endif %}>
-
-                {{ firm }}
-
-              </option>
-
-            {% endfor %}
-
-          </select>
+          <label>
+              <select name="firm">
+    
+                <option value="">All</option>
+    
+                {% for firm in firms %}
+    
+                  <option value="{{ firm }}"
+                    {% if filter.firm == firm %}selected{% endif %}>
+    
+                    {{ firm }}
+    
+                  </option>
+    
+                {% endfor %}
+    
+              </select>
+          </label>
 
           <label>User:</label>
-          <select name="user">
-
-            <option value="All">All</option>
-
-            {% for user in users %}
-
-              <option value="{{ user.id }}"
-                {% if filter.user == user.id %}selected{% endif %}>
-
-                {{ user.username }}
-
-              </option>
-
-            {% endfor %}
-
-          </select>
+          <label>
+              <select name="user">
+    
+                <option value="All">All</option>
+    
+                {% for user in users %}
+    
+                  <option value="{{ user.id }}"
+                    {% if filter.user == user.id %}selected{% endif %}>
+    
+                    {{ user.username }}
+    
+                  </option>
+    
+                {% endfor %}
+    
+              </select>
+          </label>
 
           <label>Matter:</label>
-          <select name="matter" id="matter">
+          <label for="matter"></label><select name="matter" id="matter">
 
             <option value="">All</option>
 
@@ -86,12 +94,12 @@
           </select>
 
           <label>Keyword:</label>
-          <input  id="keyword" type="text" name="keyword"
-          value="{{ filter.keyword|default:'' }}">
+          <label for="keyword"></label><input id="keyword" type="text" name="keyword"
+                                              value="{{ filter.keyword|default:'' }}">
 
           <label>Comp:</label>
 
-            <select id="comp" name="comp">
+          <label for="comp"></label><select id="comp" name="comp">
 
               <option value="">All</option>
 
@@ -107,7 +115,7 @@
 
           <label>Billing Status:</label>
 
-          <select id="entered" name="entered">
+          <label for="entered"></label><select id="entered" name="entered">
 
             <option value="">All</option>
 
@@ -123,7 +131,7 @@
 
           <label>View Rate:</label>
 
-          <select id="view_rate" name="view_rate">
+          <label for="view_rate"></label><select id="view_rate" name="view_rate">
 
             <option value="Firm" {% if filter.view_rate == 'Firm' %} selected {% endif %}>
               Firm
@@ -136,7 +144,7 @@
           </select>
 
           <label>Sort By:</label>
-            <select name="order" id="order">
+          <label for="order"></label><select name="order" id="order">
 
               <option value="date, descending" {% if filter.order == 'date, descending' %}selected{% endif %}>
                   Date, Descending

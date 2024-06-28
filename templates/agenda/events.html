@@ -2,89 +2,89 @@
 
 {% if show_events %}
 
-<div class="events">
+    <div class="events">
 
-  <div class="section-title">
-    <div class="section-title-left">
-      <h1>
-        Events
-      </h1>
-      <div class="section-title-left-right">
-        <button
-          type="button"
-          class="btn-icon"
-          hx-get="/events/add/agenda"
-          hx-target="#htmx-modal-container"
-          hx-trigger="click"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
-        >
-          <i class="bi bi-plus-lg"></i>
-        </button>
-      </div>
+        <div class="section-title">
+            <div class="section-title-left">
+                <h1>
+                    Events
+                </h1>
+                <div class="section-title-left-right">
+                    <button
+                            type="button"
+                            class="btn-icon"
+                            hx-get="/events/add/agenda"
+                            hx-target="#htmx-modal-container"
+                            hx-trigger="click"
+                            data-bs-toggle="modal"
+                            data-bs-target="#htmx-modal-container"
+                    >
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
 
-    </div>
+            </div>
 
-    <div class="section-title-right">
-      <a href="/agenda/toggle-events">
-        <i class="bi bi-x-lg"></i></a>
-      </a>
-    </div>
+            <div class="section-title-right">
+                <a href="/agenda/toggle-events">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
 
-  </div>
+        </div>
 
-  <div style="overflow-x:auto">
-    <table class="table events-table">
+        <div style="overflow-x:auto">
+            <table class="table events-table">
 
-	    <tr>
-		    <th class="date">
-			    Date
+                <tr>
+                    <th class="date">
+                        Date
 
-		    <th class="matter">
-			    Matter
+                    <th class="matter">
+                        Matter
 
-		    <th class="party">
-			    Party
+                    <th class="party">
+                        Party
 
-		    <th class="description">
-			    Description
+                    <th class="description">
+                        Description
 
-          {% for event in events %}
+                        {% for event in events %}
 
-      <tr>
-        <td class="date">
-          {{ event.date|date:"Y-m-d" }}
+                            <tr>
+                            <td class="date">
+                                {{ event.date|date:"Y-m-d" }}
 
-        <td class="matter">
-          <a href="/matters/{{ event.matter.id }}">
-            {{ event.matter.name }}
-          </a>
+                            <td class="matter">
+                                <a href="/matters/{{ event.matter.id }}">
+                                    {{ event.matter.name }}
+                                </a>
 
-        <td class="party">
-          {{ event.party }}
+                            <td class="party">
+                                {{ event.party }}
 
-          <td class="description
+                            <td class="description
             {% if event.date < three_days_out %} soon {% endif %}">
 
-            <a
-              href="#"
-              type="button"
-              class="btn-icon"
-              hx-get="/events/{{ event.id }}/edit/agenda"
-              hx-target="#htmx-modal-container"
-              hx-trigger="click"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container"
-            >
-              {{ event.description }}
-            </a>
+                            <a
+                                    href="#"
+                                    type="button"
+                                    class="btn-icon"
+                                    hx-get="/events/{{ event.id }}/edit/agenda"
+                                    hx-target="#htmx-modal-container"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#htmx-modal-container"
+                            >
+                                {{ event.description }}
+                            </a>
 
-          {% endfor %}
+                        {% endfor %}
 
-    </table>
-  </div>
+            </table>
+        </div>
 
 
-</div>
+    </div>
 
-  {% endif %}
+{% endif %}

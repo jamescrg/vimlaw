@@ -1,50 +1,49 @@
-
-{% load phone_number %}
+{% load phone_numbers %}
 
 <table class="intake-details">
 
-  <tr>
-    <td class="strong">Name
-    <td>
-      <a
-        href="#"
-        type="button"
-        class="btn-icon"
-        hx-get="/intakes/{{ intake.id }}/edit"
-        hx-target="#htmx-modal-container"
-        hx-trigger="click"
-        data-bs-toggle="modal"
-        data-bs-target="#htmx-modal-container"
-      >
-        {{ intake.name }}
-      </a>
+    <tr>
+        <td class="strong">Name
+        <td>
+            <a
+                    href="#"
+                    type="button"
+                    class="btn-icon"
+                    hx-get="/intakes/{{ intake.id }}/edit"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container"
+            >
+                {{ intake.name }}
+            </a>
 
-  <tr>
-    <td class="strong">Address
-      <td>{% if intake.address %}{{ intake.address|linebreaks }}{% endif %}
+    <tr>
+        <td class="strong">Address
+        <td>{% if intake.address %}{{ intake.address|linebreaks }}{% endif %}
 
-  <tr>
-    <td class="strong">Phone
-    <td>{{ intake.phone|phone_number|default:'' }}
+    <tr>
+        <td class="strong">Phone
+        <td>{{ intake.phone|phone_number|default:'' }}
 
-  <tr>
-    <td class="strong">Email
-    <td>{{ intake.email|default:'' }}
+    <tr>
+        <td class="strong">Email
+        <td>{{ intake.email|default:'' }}
 
-  <tr>
-    <td class="strong">Date
-    <td>{{ intake.date|date:'Y-m-d' }}
+    <tr>
+        <td class="strong">Date
+        <td>{{ intake.date|date:'Y-m-d' }}
 
-  <tr>
-    <td class="strong">Status
-    <td>{{ intake.status }}
+    <tr>
+        <td class="strong">Status
+        <td>{{ intake.status }}
 
-  <tr>
-    <td class="strong">Practice Area
-    <td>{{ intake.practice_area }}
+    <tr>
+        <td class="strong">Practice Area
+        <td>{{ intake.practice_area }}
 
-  <tr>
-    <td class="strong">Source
-    <td>{{ intake.source|default:'' }}
+    <tr>
+        <td class="strong">Source
+        <td>{{ intake.source|default:'' }}
 
 </table>

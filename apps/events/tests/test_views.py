@@ -1,12 +1,8 @@
 import pytest
-
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from apps.events.models import Event
-from apps.folders.models import Folder
-from apps.matters.models import Relationship
-
 
 pytestmark = pytest.mark.django_db
 

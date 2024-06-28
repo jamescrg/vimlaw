@@ -21,8 +21,10 @@
   </button>
 
   <form hx-post="/lab/results" hx-target="#test-div">
-    <input type="text" name="weather">
-    <button type="submit">Submit</button>
+      <label>
+          <input type="text" name="weather">
+      </label>
+      <button type="submit">Submit</button>
   </form>
 
   <div id="test-div">

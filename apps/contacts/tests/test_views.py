@@ -1,11 +1,9 @@
 import pytest
-
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from apps.contacts.models import Contact
 from apps.matters.models import Relationship
-
 
 pytestmark = pytest.mark.django_db
 
@@ -23,7 +21,6 @@ def test_index(client, folder, contact):
     assert not response.context["contacts"]
 
     # folder selected
-    response = client.get(f"/folders/{folder.id}/contacts")
     response = client.get(reverse("contacts"))
     assert response.context["contacts"]
 
@@ -42,7 +39,6 @@ def test_add_get(client, folder):
     assertTemplateUsed(response, "contacts/form.html")
 
     # set a selected folder
-    response = client.get(f"/folders/{folder.id}/contacts")
     response = client.get("/contacts/add")
     assert response.context["selected_folder"] == folder
     assert response.status_code == 200

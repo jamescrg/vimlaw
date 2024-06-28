@@ -36,15 +36,3 @@ form
     width: auto;
 }
 
-#id_party {
-  width: 140px;
-}
-
-#id_description {
-  max-width: 500px;
-  width: 100%
-}
-
-#id_status {
-  width: 140px;
-}

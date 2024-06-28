@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
+# noinspection PyPackageRequirements
 import environ
 from django.forms.renderers import TemplatesSetting
 
@@ -65,6 +66,7 @@ INSTALLED_APPS = [
     "apps.settings",
     "apps.trust",
     "apps.invoicing",
+    "apps.management",
 ]
 
 MIDDLEWARE = [
@@ -103,7 +105,7 @@ TEMPLATES = [
             ],
             "loaders": default_loaders if DEBUG else cached_loaders,
             "libraries": {
-                "phone_number": "config.templatetags.phone_numbers",
+                "phone_number": "apps.management.templatetags.phone_numbers",
             },
         },
     },

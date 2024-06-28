@@ -8,11 +8,11 @@ def test_string(event):
 
 
 def test_content(event):
-    expectedValues = {
+    expected_values = {
         "date": "2022-12-28",
         "party": "Client",
         "description": "File Answer",
         "status": "Pending",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(event, key) == val

@@ -15,17 +15,23 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Folder',
+            name="Folder",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('page', models.CharField(max_length=50, null=True)),
-                ('name', models.CharField(max_length=50, null=True)),
-                ('selected', models.IntegerField(blank=True, null=True)),
-                ('active', models.IntegerField(blank=True, null=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("page", models.CharField(max_length=50, null=True)),
+                ("name", models.CharField(max_length=50, null=True)),
+                ("selected", models.IntegerField(blank=True, null=True)),
+                ("active", models.IntegerField(blank=True, null=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_folder',
+                "db_table": "app_folder",
             },
         ),
     ]

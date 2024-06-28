@@ -1,13 +1,12 @@
-
 function getPage() {
 
-    var path = window.location.pathname;
+    const path = window.location.pathname;
 
-    var pathArray = path.split('/');
+    const pathArray = path.split('/');
 
-    var page = pathArray[1]
+    let page = pathArray[1];
 
-    if (page == '') {
+    if (page === '') {
         page = 'agenda';
     }
 
@@ -17,12 +16,13 @@ function getPage() {
 
 function highlightNavLink() {
 
-    var mainNav = document.querySelector('#nav-main');
-    var navLinks = mainNav.querySelectorAll('.nav-link');
+    const mainNav = document.querySelector('#nav-main');
+    const navLinks = mainNav.querySelectorAll('.nav-link');
 
+    let link;
     for (link of navLinks) {
 
-        if (link.id == 'nav-'+getPage()) {
+        if (link.id === 'nav-' + getPage()) {
 
             link.classList.add('active');
 
@@ -32,16 +32,5 @@ function highlightNavLink() {
 
 }
 
-function checkDev() {
-
-    path = window.location.hostname;
-    var pathArray = path.split('.');
-    dev = pathArray['0'];
-    if (dev == 'dev') {
-        var devItem = document.querySelector('.dev-flag');
-        devItem.style.display = "inline";
-    }
-
-}
 
 highlightNavLink();

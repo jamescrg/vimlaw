@@ -7,29 +7,33 @@
 
   {% csrf_token %}
 
-  <select name="matter">
+    <label>
+        <select name="matter">
 
-    {% for matter in matters %}
+          {% for matter in matters %}
 
-      <option
-        value="{{ matter.id }}"
-        {% if agenda_matter == matter.id %}
-          selected
-        {% endif %}
+            <option
+              value="{{ matter.id }}"
+              {% if agenda_matter == matter.id %}
+                selected
+              {% endif %}
+            >
+              {{ matter.name }}
+            </option>
+
+          {% endfor %}
+
+        </select>
+    </label>
+
+    <label>
+        <input
+        type="text"
+        class="tasks-input-description"
+        name="description"
+        required
+        onchange="submit()"
       >
-        {{ matter.name }}
-      </option>
-
-    {% endfor %}
-
-  </select>
-
-  <input
-    type="text"
-    class="tasks-input-description"
-    name="description"
-    required
-    onchange="submit()"
-  >
+    </label>
 
 </form>

@@ -8,13 +8,13 @@ def test_intake_string(intake):
 
 
 def test_intake_content(intake):
-    expectedValues = {
+    expected_values = {
         "name": "Mohandas Gandhi",
         "address": "225 Paper Street, Porbandar, India",
         "phone": "123.456.7890",
         "email": "gandhi@gandhi.com",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(intake, key) == val
 
 
@@ -23,7 +23,7 @@ def test_note_string(note):
 
 
 def test_note_content(note, user, intake):
-    expectedValues = {
+    expected_values = {
         "user": user,
         "intake": intake,
         "date": "2022-12-28",
@@ -31,5 +31,5 @@ def test_note_content(note, user, intake):
         "type": "General",
         "details": "",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(note, key) == val
