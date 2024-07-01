@@ -1,14 +1,9 @@
-
-.activity-filter-bar {
-
-}
-
 /*------------------------------------------------
 Filter form
 ------------------------------------------------*/
 
 #matter {
-  width: auto
+    width: auto
 }
 
 
@@ -17,30 +12,12 @@ Time entry form
 ------------------------------------------------*/
 
 #id_matter {
-  width: auto;
+    width: auto;
 }
 
-#id_actions {
-  height: 100px;
-  max-width: 500px;
-  vertical-align: top;
-  width: 100%;
-}
-
-#id_hours	{
-  max-width: 80px;
-}
 
 #id_firm_rate {
-  max-width: 80px;
-}
-
-#id_comp	{
-  max-width: 80px;
-}
-
-#id_entered	{
-  max-width: 80px;
+    max-width: 80px;
 }
 
 
@@ -48,51 +25,48 @@ Time entry form
 Expense entry form
 ------------------------------------------------*/
 
-#id_amount {
-  max-width: 120px;
-}
 
 /*------------------------------------------------
 Time entry list table
 ------------------------------------------------*/
 
-.activity{
-  margin-bottom: 2rem;
-  width: 100%;
+.activity {
+    margin-bottom: 2rem;
+    width: 100%;
 }
 
 
 .activity .date {
-  width: 120px;
+    width: 120px;
 }
 
 .activity .user {
-  width: 60px;
+    width: 60px;
 }
 
 .activity .matter {
-  width: 240px;
+    width: 240px;
 }
 
 .activity .hours {
-  text-align: right;
-  width: 60px;
+    text-align: right;
+    width: 60px;
 }
 
 .activity .hours a {
-  color: inherit;
+    color: inherit;
 }
 
 .activity .rate {
-  text-align: right;
-  width: 80px;
+    text-align: right;
+    width: 80px;
 }
 
 .activity .fee {
-  text-align: right;
-  width: 120px;
+    text-align: right;
+    width: 120px;
 }
 
 .total {
-  font-weight: 600;
+    font-weight: 600;
 }

@@ -1,6 +1,6 @@
 from django.db import models
 from apps.contacts.models import Contact
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 class Matter(models.Model):
@@ -18,10 +18,7 @@ class Matter(models.Model):
     firm_rate = models.IntegerField(null=True)
     contacts = models.ManyToManyField(Contact, through="Relationship")
     client = models.ForeignKey(
-        Contact,
-        related_name="client_matters",
-        on_delete=models.SET_NULL,
-        null=True
+        Contact, related_name="client_matters", on_delete=models.SET_NULL, null=True
     )
 
     def __str__(self):

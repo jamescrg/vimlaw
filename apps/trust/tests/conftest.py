@@ -2,7 +2,7 @@ import pytest
 
 from django.test import Client
 
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
 from apps.folders.models import Folder
 from apps.trust.models import Transaction

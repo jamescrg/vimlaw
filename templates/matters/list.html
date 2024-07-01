@@ -1,7 +1,7 @@
 
 {% extends "base.html" %}
 
-{% block "content" %}
+{% block content %}
 
   <div class="section-title">
 
@@ -96,14 +96,16 @@
 
             {% csrf_token %}
 
-            <input
-                type="text"
-                class="edit-status-input"
-                name="description"
-                onchange="submit()"
-                onblur="hideStatusForm()"
-                value="{{ matter.description }}"
-                required>
+              <label>
+                  <input
+                      type="text"
+                      class="edit-status-input"
+                      name="description"
+                      onchange="submit()"
+                      onblur="hideStatusForm()"
+                      value="{{ matter.description }}"
+                      required>
+              </label>
 
           </form>
 
@@ -116,4 +118,4 @@
   </table>
   </div>
 
-{% endblock "content" %}
+{% endblock content %}

@@ -1,10 +1,9 @@
 import pytest
-
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
+
 from apps.intakes.models import Intake
 from apps.intakes.models import Note
-
 
 pytestmark = pytest.mark.django_db
 
@@ -58,7 +57,6 @@ def test_intake_edit_post(client, intake):
     }
     response = client.post(f"/intakes/{intake.id}/edit", data)
     assert response.status_code == 302
-    intakes = Intake.objects.all()
     found = Intake.objects.filter(name="Desmond Tutu").exists()
     assert found
 
@@ -79,7 +77,6 @@ def test_filter_new(client):
 
 
 def test_filter_update(client):
-    response = client.get("/intakes/filter")
     data = {
         "status": "Pending",
         "date_from": "",
@@ -105,7 +102,6 @@ def test_filter_quick(client):
 def test_filter_order(client):
     response = client.get("/intakes/sort/date")
     assert response.status_code == 302
-    response = client.get("/intakes")
     assert True
 
 

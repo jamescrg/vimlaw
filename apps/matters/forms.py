@@ -2,6 +2,7 @@ from django import forms
 
 from .models import Matter, Proceeding, SettlementEntry, Fact, Rate
 
+
 class MatterForm(forms.ModelForm):
     class Meta:
         model = Matter
@@ -48,7 +49,6 @@ class MatterForm(forms.ModelForm):
             "date_start": "Open Date",
             "firm_file_no": "File Number",
             "ref_no": "Client Reference",
-            "firm_file_no": "Clio Matter",
             "practice_area": "Practice Area",
             "firm_rate": "Firm Rate",
         }

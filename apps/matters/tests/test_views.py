@@ -1,10 +1,8 @@
 import pytest
-
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from apps.matters.models import Matter
-
 
 pytestmark = pytest.mark.django_db
 
@@ -82,7 +80,6 @@ def test_filter_new(client):
 
 
 def test_filter_update(client):
-    response = client.get("/matters/filter")
     data = {
         "status": "Open",
         "date_from": "",
@@ -107,7 +104,6 @@ def test_filter_quick(client):
 def test_filter_order(client):
     response = client.get("/matters/sort/random")
     assert response.status_code == 302
-    response = client.get("/matters")
     assert client.session["matters_filter"]["order"] == "random"
 
 

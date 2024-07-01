@@ -10,7 +10,7 @@ from apps.matters.models import Matter
 from apps.agenda.models import Task
 from apps.agenda.forms import TaskForm
 from apps.events.models import Event
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from apps.agenda.tasks import get_table_data
 from apps.agenda.filter import Filter
 
@@ -79,8 +79,7 @@ def add(request):
 
     task.user_id = request.user.id
 
-    matter = get_object_or_404(
-        Matter, pk=request.POST.get("matter"))
+    matter = get_object_or_404(Matter, pk=request.POST.get("matter"))
     task.matter = matter
 
     task.status = "Pending"

@@ -8,9 +8,9 @@ def test_string(task):
 
 
 def test_content(task):
-    expectedValues = {
+    expected_values = {
         "title": "Read about Mohandas Gandhi",
         "status": "Pending",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(task, key) == val

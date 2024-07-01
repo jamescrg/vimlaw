@@ -2,7 +2,7 @@ import pytest
 
 from django.test import Client
 
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from apps.events.models import Event
 from apps.matters.models import Matter
 

@@ -1,7 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.http import HttpResponse
 
 
 @login_required
@@ -25,13 +24,14 @@ def results(request):
 def email_test(request):
     """Test whether I can send an email"""
     from django.core.mail import send_mail
-    from config import settings_local
+
+    # from config import settings_local
 
     send_mail(
         "Test Message",
         "This is the message body.",
-        settings_local.SERVER_EMAIL,
-        settings_local.TEST_EMAIL_RECIPIENT,
+        # settings_local.SERVER_EMAIL,
+        # settings_local.TEST_EMAIL_RECIPIENT,
         fail_silently=False,
     )
 

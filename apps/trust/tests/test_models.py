@@ -8,7 +8,7 @@ def test_string(transaction):
 
 
 def test_content(transaction, contact):
-    expectedValues = {
+    expected_values = {
         "contact": contact,
         "date": "2022-12-29",
         "type": "Deposit",
@@ -17,5 +17,5 @@ def test_content(transaction, contact):
         "entered": 0,
         "confirmed": 0,
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(transaction, key) == val

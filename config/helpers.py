@@ -1,9 +1,10 @@
-from datetime import datetime, date, time, timezone
+from datetime import datetime, timezone
+
+import pytz
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
-import pytz
 
 
 def dump_model(instance):
@@ -43,8 +44,8 @@ def timestamp_to_eastern(timestamp):
 
 
 def dictfetchall(cursor):
-    "Returns all rows from a cursor as a dict"
-    "This is currently necessary for the trust app."
+    """Returns all rows from a cursor as a dict"""
+    # This is currently necessary for the trust app.
     desc = cursor.description
     return [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 

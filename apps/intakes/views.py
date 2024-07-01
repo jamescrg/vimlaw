@@ -1,19 +1,16 @@
 from datetime import date, datetime
 
 import markdown
-from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
 from apps.intakes.filter import Filter
 from apps.intakes.forms import IntakeForm, NoteForm
-from apps.intakes.models import Intake, Note
-from config import settings_local
-from config.helpers import format_phone
 from apps.intakes.intakes import get_table_data
+from apps.intakes.models import Intake, Note
+from config.helpers import format_phone
 
 
 @login_required

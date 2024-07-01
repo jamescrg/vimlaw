@@ -1,14 +1,13 @@
-from . import settings
-from . import settings_local
+import os
 
 
 def env(request):
     return {
-        "env": settings.ENV,
+        "env": os.environ.get("ENV"),
     }
 
 
 def site_handle(request):
     return {
-        "site_handle": settings_local.SITE_NAME,
+        "site_handle": os.environ.get("SITE_NAME"),
     }

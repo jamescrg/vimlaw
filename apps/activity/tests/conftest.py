@@ -2,7 +2,7 @@ import pytest
 
 from django.test import Client
 
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
 from apps.activity.models import TimeEntry
 

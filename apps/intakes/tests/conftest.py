@@ -2,7 +2,7 @@ import pytest
 
 from django.test import Client
 
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
 from apps.intakes.models import Intake
 from apps.intakes.models import Note

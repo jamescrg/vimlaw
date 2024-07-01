@@ -1,137 +1,138 @@
-{% load phone_number %}
+{% load phone_numbers %}
 
 <div class="section-title">
-  <div class="section-title-left">
-    <h1>
-      {{ selected_contact.name }}
-    </h1>
-    <div class="section-title-left-right">
-      <a href="/contacts/{{ selected_contact.id }}/toggle_google_sync">
-        {% if selected_contact.google_id %}
-          <i class="bi bi-cloud-slash"></i>
-        {% else %}
-          <i class="bi bi-cloud-upload"></i>
-        {% endif %}
-      </a>
+    <div class="section-title-left">
+        <h1>
+            {{ selected_contact.name }}
+        </h1>
+        <div class="section-title-left-right">
+            <a href="/contacts/{{ selected_contact.id }}/toggle_google_sync">
+                {% if selected_contact.google_id %}
+                    <i class="bi bi-cloud-slash"></i>
+                {% else %}
+                    <i class="bi bi-cloud-upload"></i>
+                {% endif %}
+            </a>
+        </div>
     </div>
-  </div>
-  <div class="section-title-right">
-      <a href="/contacts/{{ selected_contact.id }}/edit">
-        <i class="bi bi-pencil"></i></a>
-  </div>
+    <div class="section-title-right">
+        <a href="/contacts/{{ selected_contact.id }}/edit">
+            <i class="bi bi-pencil"></i></a>
+    </div>
 </div>
 
 <div class="contact">
 
-	<div class="contact-item">
+    <div class="contact-item">
 
-    <div class="strong">{{ selected_contact.name }}</div>
+        <div class="strong">{{ selected_contact.name }}</div>
 
-		{% if selected_contact.company %}
-      <div>{{ selected_contact.company }}</div>
+        {% if selected_contact.company %}
+            <div>{{ selected_contact.company }}</div>
+        {% endif %}
+
+        {% if selected_contact.address %}
+            <div id="contact-address">{{ selected_contact.address|linebreaks }}</div>
+        {% endif %}
+
+    </div>
+
+    {% if selected_contact.phone1 %}
+
+        <div class="contact-item">
+            {{ selected_contact.phone1|phone_number }} - {{ selected_contact.phone1_label|lower }}
+        </div>
+
     {% endif %}
 
-		{% if selected_contact.address %}
-      <div id="contact-address">{{ selected_contact.address|linebreaks }}</div>
+    {% if selected_contact.phone2 %}
+
+        <div class="contact-item">
+            {{ selected_contact.phone2|phone_number }} - {{ selected_contact.phone2_label|lower }}
+        </div>
+
     {% endif %}
 
-	</div>
+    {% if selected_contact.phone3 %}
 
-	{% if selected_contact.phone1 %}
+        <div class="contact-item">
+            {{ selected_contact.phone3|phone_number }} - {{ selected_contact.phone3_label|lower }}
+        </div>
 
-    <div class="contact-item">
-      {{ selected_contact.phone1|phone_number }} - {{ selected_contact.phone1_label|lower }}
-    </div>
+    {% endif %}
 
-  {% endif %}
+    {% if selected_contact.email != null %}
 
-	{% if selected_contact.phone2 %}
+        <div class="contact-item">
+            {{ selected_contact.email }}
+        </div>
 
-    <div class="contact-item">
-      {{ selected_contact.phone2|phone_number }} - {{ selected_contact.phone2_label|lower }}
-    </div>
+    {% endif %}
 
-  {% endif %}
+    {% if selected_contact.website %}
 
-	{% if selected_contact.phone3  %}
+        <div class="contact-item">
+            <a href="{{ selected_contact.website }}">
+                {{ selected_contact.website }}
+            </a>
+        </div>
 
-    <div class="contact-item">
-      {{ selected_contact.phone3|phone_number }} - {{ selected_contact.phone3_label|lower }}
-    </div>
+    {% endif %}
 
-  {% endif %}
+    {% if selected_contact.map %}
 
-	{% if selected_contact.email != null %}
+        <div class="contact-item">
+            <a href="{{ selected_contact.map }}"> Map </a>
+        </div>
 
-    <div class="contact-item">
-      {{ selected_contact.email }}
-    </div>
+    {% endif %}
 
-  {% endif %}
+    {% if selected_contact.notes %}
 
-	{% if selected_contact.website %}
+        <div class="contact-item">
+            {{ selected_contact.notes|linebreaks }}
+        </div>
 
-    <div class="contact-item">
-      <a href="{{ selected_contact.website }}">
-        {{ selected_contact.website  }}
-      </a>
-    </div>
+    {% endif %}
 
-  {% endif %}
+    {% if relationships %}
 
-	{% if selected_contact.map %}
+        <div id="contact-matters">
 
-    <div class="contact-item">
-      <a href="{{ selected_contact.map }}"> Map </a>
-    </div>
+            <div class="related">Related Matters</div>
 
-  {% endif %}
+            <ul>
 
-	{% if selected_contact.notes %}
+                {% for relationship in relationships %}
 
-    <div class="contact-item">
-      {{ selected_contact.notes|linebreaks }}
-    </div>
+                    <li>
+                    <a href="/matters/{{ relationship.matter.id }}">{{ relationship.matter.name }}</a> -
+                    {{ relationship.matter.status }}
 
-  {% endif %}
+                {% endfor %}
 
-  {% if relationships %}
+            </ul>
 
-    <div id="contact-matters">
+        </div>
 
-      <div class="related">Related Matters</div>
-
-      <ul>
-
-        {% for relationship in relationships %}
-
-        <li>
-          <a href="/matters/{{ relationship.matter.id }}">{{ relationship.matter.name }}</a> - {{ relationship.matter.status }}
-
-        {% endfor %}
-
-      </ul>
-
-    </div>
-
-  {% endif %}
+    {% endif %}
 
     <div class="contact-item">
     </div>
 
-	{% if selected_contact.intake %}
+    {% if selected_contact.intake %}
 
-    <div class="contact-item">
-      <a href="/intakes/{{ selected_contact.intake.id }}">View Intake</a>
+        <div class="contact-item">
+            <a href="/intakes/{{ selected_contact.intake.id }}">View Intake</a>
+        </div>
+
+    {% endif %}
+
+    <div class="assign-remove">
+
+        <a href="/contacts/{{ selected_contact.id }}/assign">Assign</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="/contacts/{{ selected_contact.id }}/remove">Remove</a>
+
     </div>
-
-  {% endif %}
-
-  <div class="assign-remove">
-
-    <a href="/contacts/{{ selected_contact.id }}/assign">Assign</a>&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="/contacts/{{ selected_contact.id }}/remove">Remove</a>
-
-  </div>
 
 </div>

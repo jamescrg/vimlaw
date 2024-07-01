@@ -97,11 +97,11 @@ def get_clients_asymmetric():
         client_balance = get_asymmetric_client_balance(contact.id)
 
         if client_balance > 0:
-            id = contact.id
-            new_contact = {}
-            new_contact["id"] = id
-            new_contact["name"] = contact.name
-            new_contact["bal"] = client_balance
+            new_contact = {
+                "id": contact.id,
+                "name": contact.name,
+                "bal": client_balance,
+            }
             current_contacts.append(new_contact)
 
     # sort the list of dicts by the 'name' of each dict

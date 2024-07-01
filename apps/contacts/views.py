@@ -172,9 +172,7 @@ def edit(request, id):
 
     else:
         if selected_folder:
-            form = ContactForm(
-                instance=contact,
-                initial={"folder": selected_folder.id})
+            form = ContactForm(instance=contact, initial={"folder": selected_folder.id})
         else:
             form = ContactForm(instance=contact)
 
@@ -335,5 +333,3 @@ def google_list(request):
     }
 
     return render(request, "contacts/google.html", context)
-
-

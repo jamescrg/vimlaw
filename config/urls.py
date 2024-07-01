@@ -25,7 +25,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("accounts/", include("accounts.urls")),
+    path("accounts/", include("apps.accounts.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     # --------------------------------------
     # folders
@@ -39,7 +39,6 @@ urlpatterns = [
     # --------------------------------------
     path("", agenda.index, name="home-index"),
     path("agenda/", include("apps.agenda.urls")),
-
     # --------------------------------------
     # intakes
     # --------------------------------------
@@ -207,7 +206,6 @@ urlpatterns = [
         matters_timeline.print,
         name="matters-timeline-print",
     ),
-
     # --------------------------------------
     # contacts
     # --------------------------------------
@@ -217,17 +215,26 @@ urlpatterns = [
     path("contacts/<int:id>/edit", contacts.edit, name="contacts-edit"),
     path("contacts/<int:id>/delete", contacts.delete, name="contacts-delete"),
     path("contacts/<int:id>/assign", contacts.assign, name="contacts-assign"),
-    path("contacts/<int:id>/assign/store", contacts.assign_store,
-        name="contacts-assign-store",),
+    path(
+        "contacts/<int:id>/assign/store",
+        contacts.assign_store,
+        name="contacts-assign-store",
+    ),
     path("contacts/<int:id>/remove", contacts.remove, name="contacts-remove"),
-    path("contacts/<int:id>/remove/store", contacts.remove_store,
-        name="contacts-remove-store",),
-    path("contacts/<int:id>/add_intake", contacts.add_intake,
-         name="contacts-add-intake"),
-    path("contacts/<int:id>/toggle_google_sync", contacts.toggle_google_sync,
-         name="contacts-toggle-google-sync"),
+    path(
+        "contacts/<int:id>/remove/store",
+        contacts.remove_store,
+        name="contacts-remove-store",
+    ),
+    path(
+        "contacts/<int:id>/add_intake", contacts.add_intake, name="contacts-add-intake"
+    ),
+    path(
+        "contacts/<int:id>/toggle_google_sync",
+        contacts.toggle_google_sync,
+        name="contacts-toggle-google-sync",
+    ),
     path("contacts/google_list", contacts.google_list, name="contacts-google"),
-
     # --------------------------------------
     # events
     # --------------------------------------
@@ -260,11 +267,23 @@ urlpatterns = [
     path("activity/add", activity.add, name="activity-add"),
     path("activity/add_expense", activity.add_expense, name="activity-add-expense"),
     path("activity/add/<int:id>", activity.add, name="activity-add"),
-    path("activity/add_expense/<int:id>", activity.add_expense, name="activity-add-expense"),
+    path(
+        "activity/add_expense/<int:id>",
+        activity.add_expense,
+        name="activity-add-expense",
+    ),
     path("activity/<int:id>/edit", activity.edit, name="activity-edit"),
-    path("activity/<int:id>/edit_expense", activity.edit_expense, name="activity-edit-expense"),
+    path(
+        "activity/<int:id>/edit_expense",
+        activity.edit_expense,
+        name="activity-edit-expense",
+    ),
     path("activity/<int:id>/delete", activity.delete, name="activity-delete"),
-    path("activity/<int:id>/delete_expense", activity.delete_expense, name="activity-delete-expense"),
+    path(
+        "activity/<int:id>/delete_expense",
+        activity.delete_expense,
+        name="activity-delete-expense",
+    ),
     path(
         "activity/<int:id>/toggle-entered",
         activity.toggle_entered,

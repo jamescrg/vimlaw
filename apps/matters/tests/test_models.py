@@ -11,13 +11,13 @@ def test_string(matter):
 
 
 def test_content(matter):
-    expectedValues = {
+    expected_values = {
         "name": "Sample Test Matter",
         "description": "Awaiting response from OC",
         "status": "Open",
         "practice_area": "General",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(matter, key) == val
 
 
@@ -29,10 +29,10 @@ def test_role_string(role):
 
 
 def test_role_content(role):
-    expectedValues = {
+    expected_values = {
         "name": "Client",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(role, key) == val
 
 
@@ -41,19 +41,19 @@ def test_role_content(role):
 # -----------------------------------------------------
 def test_relationship_string(relationship):
     string_representation = (
-        f"matter: {relationship.matter.id}, "
-        f"contact: {relationship.contact.id}, role: {relationship.role.id}"
+        f"matter: {relationship.matter_id}, "
+        f"contact: {relationship.contact_id}, role: {relationship.role_id}"
     )
     assert str(relationship) == string_representation
 
 
 def test_relationship_content(relationship, matter, contact, role):
-    expectedValues = {
+    expected_values = {
         "matter": matter,
         "contact": contact,
         "role": role,
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(relationship, key) == val
 
 
@@ -65,7 +65,7 @@ def test_proceeding_string(proceeding):
 
 
 def test_proceeding_content(proceeding, user, matter):
-    expectedValues = {
+    expected_values = {
         "user_id": user.id,
         "matter": matter,
         "date_filed": "2020-08-07",
@@ -73,7 +73,7 @@ def test_proceeding_content(proceeding, user, matter):
         "case_number": "20CV141360",
         "status": "Concluded",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(proceeding, key) == val
 
 
@@ -85,7 +85,7 @@ def test_entry_string(entry):
 
 
 def test_entry_content(entry, user, matter):
-    expectedValues = {
+    expected_values = {
         "user_id": user.id,
         "matter": matter,
         "date": "2020-08-07",
@@ -94,7 +94,7 @@ def test_entry_content(entry, user, matter):
         "amount": "10000",
         "notes": "With full release",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(entry, key) == val
 
 
@@ -106,7 +106,7 @@ def test_fact_string(fact):
 
 
 def test_fact_content(fact, user, matter):
-    expectedValues = {
+    expected_values = {
         "user_id": user.id,
         "matter": matter,
         "date": "2020-08-07",
@@ -114,5 +114,5 @@ def test_fact_content(fact, user, matter):
         "citation": "Evidence",
         "emphasis": "Yes",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(fact, key) == val

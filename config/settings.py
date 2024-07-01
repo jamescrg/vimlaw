@@ -10,29 +10,34 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
 from pathlib import Path
-from . import settings_local
+
+# noinspection PyPackageRequirements
+import environ
 from django.forms.renderers import TemplatesSetting
+
+env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+environ.Env.read_env(os.path.join(BASE_DIR, "config/.env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = settings_local.SECRET_KEY
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = settings_local.DEBUG
+DEBUG = env("DEBUG")
 
 # check dev v. production environment
-ENV = settings_local.ENV
+ENV = env("ENV")
 
 # urls to which the application will respond
-ALLOWED_HOSTS = settings_local.ALLOWED_HOSTS
-
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 # Application definition
 
@@ -48,7 +53,7 @@ INSTALLED_APPS = [
     # "crispy_forms",
     # "crispy_bootstrap5",
     "django.forms",
-    "accounts",
+    "apps.accounts",
     "apps.activity",
     "apps.agenda",
     "apps.contacts",
@@ -61,6 +66,7 @@ INSTALLED_APPS = [
     "apps.settings",
     "apps.trust",
     "apps.invoicing",
+    "apps.management",
 ]
 
 MIDDLEWARE = [
@@ -99,7 +105,7 @@ TEMPLATES = [
             ],
             "loaders": default_loaders if DEBUG else cached_loaders,
             "libraries": {
-                "phone_number": "config.templatetags.phone_numbers",
+                "phone_number": "apps.management.templatetags.phone_numbers",
             },
         },
     },
@@ -107,20 +113,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": settings_local.DB_NAME,
-        "USER": settings_local.DB_USER,
-        "PASSWORD": settings_local.DB_PASSWORD,
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
         "HOST": "localhost",
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -140,13 +144,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "US/Eastern"
+TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 
@@ -154,13 +157,11 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [str(BASE_DIR.joinpath("static"))]
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -178,21 +179,19 @@ INTERNAL_IPS = [
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = settings_local.EMAIL_HOST
+EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_HOST_USER = settings_local.EMAIL_HOST_USER
-EMAIL_HOST_PASSWORD = settings_local.EMAIL_HOST_PASSWORD
-SERVER_EMAIL = settings_local.SERVER_EMAIL
-ADMINS = settings_local.ADMINS
-
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+SERVER_EMAIL = env("SERVER_EMAIL")
+ADMINS = env("ADMINS")
 
 # set cookies (sessions) to last for two months
 # default is two weeks, multiplying by four to get two months
 SESSION_COOKIE_AGE = 1209600 * 4
 
 SESSION_SAVE_EVERY_REQUEST = True
-
 
 LOGGING = {
     # The version number of our log
@@ -212,7 +211,7 @@ LOGGING = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": "/var/log/gunicorn/cla.django.log",
+            "filename": env("LOGFILE"),
             "formatter": "timestamped",
         },
     },
@@ -226,6 +225,7 @@ LOGGING = {
         },
     },
 }
+
 
 # CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 # CRISPY_TEMPLATE_PACK = "bootstrap5"

@@ -1,4 +1,3 @@
-
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.shortcuts import redirect
@@ -8,14 +7,13 @@ from apps.matters.models import Matter
 from apps.matters.models import Proceeding
 from apps.matters.models import Rate
 from apps.matters.forms import RateForm
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 @login_required
 def index(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(
-        matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     rates = Rate.objects.filter(matter=matter)
 
@@ -33,8 +31,7 @@ def index(request, id):
 @login_required
 def add(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(
-        matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
@@ -77,8 +74,7 @@ def add(request, id):
 @login_required
 def edit(request, id, rate_id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(
-        matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     rate = get_object_or_404(Rate, pk=rate_id)
 

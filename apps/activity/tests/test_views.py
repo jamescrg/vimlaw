@@ -1,11 +1,10 @@
 from datetime import date
 
 import pytest
-
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
-from apps.activity.models import TimeEntry
 
+from apps.activity.models import TimeEntry
 
 pytestmark = pytest.mark.django_db
 
@@ -70,13 +69,11 @@ def test_filter(client):
 
 
 def test_filter_update(client):
-    response = client.get("/activity/filter")
     data = {
         "date_from": "",
         "date_to": "",
         "firm": "Campbell & Brannon",
         "matter": "",
-        "order": "date, descending",
         "keyword": "",
         "comp": "",
         "entered": "No",
@@ -97,7 +94,6 @@ def test_filter_quick(client):
 
 
 def test_filter_matter(client, matter):
-    response = client.get("/activity/filter")
     response = client.get(f"/activity/filter/matter/{matter.id}")
     assert response.status_code == 302
     response = client.get("/activity/filter")

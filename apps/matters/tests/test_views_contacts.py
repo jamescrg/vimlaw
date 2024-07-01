@@ -1,12 +1,7 @@
 import pytest
-
-from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.contacts.models import Contact
-from apps.folders.models import Folder
 from apps.matters.models import Relationship
-
 
 pytestmark = pytest.mark.django_db
 

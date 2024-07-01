@@ -15,7 +15,9 @@ def index(request, id):
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     pending_events = Event.objects.filter(matter=id, status="Pending").order_by("date")
     third_day = date.today() + timedelta(days=3)
-    past_events = Event.objects.filter(matter=id).exclude(status="Pending").order_by("-date")
+    past_events = (
+        Event.objects.filter(matter=id).exclude(status="Pending").order_by("-date")
+    )
 
     context = {
         "page": "matters",

@@ -4,30 +4,6 @@
 Matter Form
 ------------------------------------------------*/
 
-#id_name {
-  width: 400px;
-}
-
-#id_description {
-  width: 400px;
-}
-
-#id_practice_area {
-  width: 250px;
-}
-
-#id_firm {
-  width: 250px;
-}
-
-#id_firm_file_no {
-  width: 250px;
-}
-
-#id_ref_no {
-  width: 250px;
-}
-
 #id_firm_rate {
   width: 80px;
 }
@@ -145,12 +121,3 @@ Menu of submodules
 Submodules
 ------------------------------------------------*/
 
-.subsection-heading {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 0 5px 5px;
-}
-
-.subsection-title {
-  font-size: 1.2em;
-}

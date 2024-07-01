@@ -1,6 +1,6 @@
 
 {% extends "base.html" %}
-{% block "content" %}
+{% block content %}
 
 <div class="col-sm-12">
 
@@ -20,32 +20,36 @@
 
         <td>
 
-          <select  style="width: 350px;" name="matter_id">
+            <label>
+                <select  style="width: 350px;" name="matter_id">
 
-            {% for matter in matters %}
+                  {% for matter in matters %}
 
-              <option value="{{ matter.id }}">{{ matter.name }}
+                    <option value="{{ matter.id }}">{{ matter.name }}
 
-            {% endfor %}
+                  {% endfor %}
 
-          </select>
+                </select>
+            </label>
 
-      <tr>
+        <tr>
         <th>Role:
 
         <td>
 
-          <select  style="width: 350px;" name="role_id">
+            <label>
+                <select  style="width: 350px;" name="role_id">
 
-            {% for role in roles %}
+                  {% for role in roles %}
 
-              <option value="{{ role.id }}">{{ role.name }}
+                    <option value="{{ role.id }}">{{ role.name }}
 
-            {% endfor %}
+                  {% endfor %}
 
-          </select>
+                </select>
+            </label>
 
-      <tr>
+        <tr>
 
         <td>
 
@@ -59,4 +63,4 @@
 
 </div>
 
-{% endblock "content" %}
+{% endblock content %}

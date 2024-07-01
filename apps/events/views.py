@@ -75,8 +75,9 @@ def add(request, matter_id=None, origin="events"):
                 }
             )
 
-    form.fields["matter"].queryset = Matter.objects.filter(
-            status="Open").order_by("name")
+    form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+        "name"
+    )
 
     google_connected = google.check_credentials()
 

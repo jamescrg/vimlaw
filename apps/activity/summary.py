@@ -28,16 +28,17 @@ def calculate_summary(entries, expense_entries):
     payable_fees = total_fees - comp_fees
     payable_contractor_fees = total_contractor_fees - comp_contractor_fees
 
-    summary = {}
-    summary["total_hours"] = total_hours
-    summary["total_fees"] = total_fees
-    summary["comp_hours"] = comp_hours
-    summary["comp_fees"] = comp_fees
-    summary["payable_hours"] = payable_hours
-    summary["payable_fees"] = payable_fees
-    summary["total_contractor_fees"] = total_contractor_fees
-    summary["comp_contractor_fees"] = comp_contractor_fees
-    summary["payable_contractor_fees"] = payable_contractor_fees
-    summary["total_expenses"] = total_expenses
+    summary = {
+        "total_hours": total_hours,
+        "total_fees": total_fees,
+        "comp_hours": comp_hours,
+        "comp_fees": comp_fees,
+        "payable_hours": payable_hours,
+        "payable_fees": payable_fees,
+        "total_contractor_fees": total_contractor_fees,
+        "comp_contractor_fees": comp_contractor_fees,
+        "payable_contractor_fees": payable_contractor_fees,
+        "total_expenses": total_expenses,
+    }
 
     return summary

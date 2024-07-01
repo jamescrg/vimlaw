@@ -13,14 +13,14 @@ def test_string(folder):
 
 def test_content(user, folder):
     folder = Folder.objects.get(name="Current")
-    expectedValues = {
+    expected_values = {
         "user": user,
         "page": "agenda",
         "name": "Current",
         "selected": 0,
         "active": 0,
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(folder, key) == val
 
 

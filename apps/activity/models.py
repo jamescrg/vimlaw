@@ -1,11 +1,10 @@
 from django.db import models
 from apps.matters.models import Matter
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 class TimeEntry(models.Model):
-    user = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
     date = models.DateField(null=True)
     actions = models.TextField(null=True)
@@ -28,8 +27,7 @@ class TimeEntry(models.Model):
 
 
 class ExpenseEntry(models.Model):
-    user = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
     date = models.DateField(null=True)
     description = models.TextField(null=True)

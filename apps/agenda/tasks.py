@@ -4,8 +4,9 @@ from django.shortcuts import get_object_or_404
 
 from apps.matters.models import Matter
 from apps.agenda.models import Task
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from apps.agenda.filter import Filter
+
 
 def get_table_data(request):
 
@@ -44,8 +45,7 @@ def get_table_data(request):
     tasks = tasks.order_by("-priority", order)
 
     table_data["tasks"] = tasks
-    table_data["matters"] = Matter.objects.filter(
-        status="Open").order_by("name")
+    table_data["matters"] = Matter.objects.filter(status="Open").order_by("name")
     table_data["users"] = CustomUser.objects.all().order_by("username")
 
     return table_data

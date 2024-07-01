@@ -8,10 +8,10 @@ def test_string(contact):
 
 
 def test_content(contact):
-    expectedValues = {
+    expected_values = {
         "name": "Mohandas Gandhi",
         "company": "Gandhi, PC",
         "phone1": "406.363.1234",
     }
-    for key, val in expectedValues.items():
+    for key, val in expected_values.items():
         assert getattr(contact, key) == val

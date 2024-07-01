@@ -1,7 +1,7 @@
 
 {% extends "base.html" %}
 
-{% block "content" %}
+{% block content %}
 
   <div class="section-title">
 
@@ -73,16 +73,18 @@
 
         {% csrf_token %}
 
-        <input
-          type="text"
-          class="edit-status-input"
-          name="description"
-          onchange="submit()"
-          onblur="hideStatusForm()"
-          value="{{ matter.description }}"
-          required>
+          <label>
+              <input
+                type="text"
+                class="edit-status-input"
+                name="description"
+                onchange="submit()"
+                onblur="hideStatusForm()"
+                value="{{ matter.description }}"
+                required>
+          </label>
 
-        <input type="hidden" name="return" value="detail">
+          <input type="hidden" name="return" value="detail">
 
       </form>
 
@@ -193,11 +195,11 @@
 
 <div class="matter-section">
 
-  {% block "subcontent" %}
+  {% block subcontent %}
 
-  {% endblock "subcontent" %}
+  {% endblock subcontent %}
 
 </div>
 
 
-{% endblock "content" %}
+{% endblock content %}

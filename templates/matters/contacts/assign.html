@@ -1,7 +1,7 @@
 
 {% extends "matters/detail.html" %}
 
-{% block "subcontent" %}
+{% block subcontent %}
 
 <div class="section-title">
 
@@ -15,7 +15,7 @@
 
 <div class="assign-search">
 
-  <input
+    <label for="assign-search-input"></label><input
     type="search"
     id="assign-search-input"
     hx-post="/matters/{{ matter.id }}/contacts/assign/results"
@@ -31,4 +31,4 @@
 
 </div>
 
-{% endblock "subcontent" %}
+{% endblock subcontent %}

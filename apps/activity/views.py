@@ -17,7 +17,7 @@ import config.appdata as appdata
 
 from apps.activity.filter import Filter
 from apps.matters.models import Rate
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 
 
 @login_required
@@ -62,7 +62,6 @@ def index(request):
         user = get_object_or_404(CustomUser, pk=filter["user"])
         entries = entries.filter(user=user)
         expense_entries = expense_entries.filter(user=user)
-
 
     if filter["keyword"]:
         expense_entries = expense_entries.filter(actions__icontains=filter["keyword"])
@@ -341,8 +340,7 @@ def edit(request, id):
         matter_rates = {}
         for matter in matter_list:
             try:
-                rate = Rate.objects.filter(
-                    matter=matter, user=request.user).get()
+                rate = Rate.objects.filter(matter=matter, user=request.user).get()
                 matter_rates.update({matter.id: rate.matter_rate})
             except ObjectDoesNotExist:
                 matter_rates.update({matter.id: request.user.user_rate})

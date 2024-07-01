@@ -1,4 +1,3 @@
-
 from datetime import date
 
 
@@ -48,7 +47,7 @@ class Filter:
         # this prevents the current date from lagging back to when the gunicorn
         # server first started and the Filter class was first initialized
         # self.quick_filters["today"]["date_to"] = date.today(
-            # ).strftime("%Y-%m-%d")
+        # ).strftime("%Y-%m-%d")
 
         # set the current user for the "mine" quickfilter
         self.quick_filters["current_user"]["user"] = request.user.id
