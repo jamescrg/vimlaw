@@ -3,10 +3,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path, include
 
 from apps.activity import views as activity
-from apps.agenda import views as agenda
 from apps.contacts import views as contacts
 from apps.events import views as events
-from apps.intakes import views as intakes
 from apps.invoicing import views as invoicing
 from apps.lab import views as lab
 from apps.matters import views as matters
@@ -30,29 +28,8 @@ urlpatterns = [
     path("", include("apps.folders.urls")),
     # Agenda App
     path("", include("apps.agenda.urls")),
-    # --------------------------------------
-    # intakes
-    # --------------------------------------
-    path("intakes/", intakes.index, name="intakes-list"),
-    path("intakes/list/data", intakes.list_data, name="intakes-list-data"),
-    path("intakes/<int:id>", intakes.detail, name="intakes-detail"),
-    path("intakes/<int:id>/data", intakes.detail_data, name="intakes-detail-data"),
-    path("intakes/add", intakes.add, name="intakes-add"),
-    path("intakes/<int:id>/edit", intakes.edit, name="intakes-edit"),
-    path("intakes/<int:id>/delete", intakes.delete, name="intakes-delete"),
-    path("intakes/filter", intakes.filter, name="intakes-filter"),
-    path("intakes/filter/update", intakes.filter_update, name="intakes-filter-update"),
-    path(
-        "intakes/filter/<str:quick_filter>",
-        intakes.filter_quick,
-        name="intakes-filter-quick",
-    ),
-    path("intakes/sort/<str:order>", intakes.order, name="intakes-sort-by"),
-    path("intakes/<int:id>/add-note", intakes.add_note, name="intakes-add_note"),
-    path("intakes/<int:id>/edit-note", intakes.edit_note, name="intakes-edit_note"),
-    path(
-        "intakes/<int:id>/delete-note", intakes.delete_note, name="intakes-delete_note"
-    ),
+    # Intakes App
+    path("", include("apps.intakes.urls")),
     # --------------------------------------
     # matters
     # --------------------------------------
