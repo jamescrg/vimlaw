@@ -2,11 +2,6 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path, include
 
-from apps.invoicing import views as invoicing
-from apps.lab import views as lab
-from apps.search import views as search
-from apps.settings import views as settings
-from apps.trust import views as trust
 
 urlpatterns = [
     # Admin
@@ -29,36 +24,14 @@ urlpatterns = [
     path("", include("apps.activity.urls")),
     # Trust App
     path("", include("apps.trust.urls")),
-    # --------------------------------------
-    # search
-    # --------------------------------------
-    path("search/", search.index, name="search"),
-    path("search/results", search.results, name="search-results"),
-    # --------------------------------------
-    # settings
-    # --------------------------------------
-    path("settings/", settings.index, name="settings"),
-    path(
-        "settings/google/login/<str:app>",
-        settings.google_login,
-        name="settings-google-login",
-    ),
-    path("settings/google/store", settings.google_store, name="settings-google-store"),
-    path(
-        "settings/google/logout/<str:app>",
-        settings.google_logout,
-        name="settings-google-logout",
-    ),
-    # --------------------------------------
-    # invoicing
-    # --------------------------------------
-    path("invoicing/", invoicing.index, name="invoicing"),
-    # --------------------------------------
-    # lab
-    # --------------------------------------
-    path("lab/", lab.index, name="lab"),
-    path("lab/results", lab.results, name="lab-results"),
-    path("lab/email", lab.email_test, name="email-test"),
+    # Search App
+    path("", include("apps.search.urls")),
+    # Settings App
+    path("", include("apps.settings.urls")),
+    # Invoicing App
+    path("", include("apps.invoicing.urls")),
+    # Lab App
+    path("", include("apps.lab.urls")),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
