@@ -2,8 +2,6 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path, include
 
-from apps.activity import views as activity
-from apps.events import views as events
 from apps.invoicing import views as invoicing
 from apps.lab import views as lab
 from apps.search import views as search
@@ -27,55 +25,8 @@ urlpatterns = [
     path("", include("apps.contacts.urls")),
     # Events App
     path("", include("apps.events.urls")),
-    # --------------------------------------
-    # activity
-    # --------------------------------------
-    path("activity/", activity.index, name="activity-list"),
-    path("activity/add", activity.add, name="activity-add"),
-    path("activity/add_expense", activity.add_expense, name="activity-add-expense"),
-    path("activity/add/<int:id>", activity.add, name="activity-add"),
-    path(
-        "activity/add_expense/<int:id>",
-        activity.add_expense,
-        name="activity-add-expense",
-    ),
-    path("activity/<int:id>/edit", activity.edit, name="activity-edit"),
-    path(
-        "activity/<int:id>/edit_expense",
-        activity.edit_expense,
-        name="activity-edit-expense",
-    ),
-    path("activity/<int:id>/delete", activity.delete, name="activity-delete"),
-    path(
-        "activity/<int:id>/delete_expense",
-        activity.delete_expense,
-        name="activity-delete-expense",
-    ),
-    path(
-        "activity/<int:id>/toggle-entered",
-        activity.toggle_entered,
-        name="activity-toggle-entered",
-    ),
-    path(
-        "activity/<int:id>/toggle-entered-expense",
-        activity.toggle_entered_expense,
-        name="activity-toggle-entered-expense",
-    ),
-    path("activity/filter", activity.filter, name="activity-filter"),
-    path(
-        "activity/filter/update", activity.filter_update, name="activity-filter-update"
-    ),
-    path(
-        "activity/filter/<str:quick_filter>",
-        activity.filter_quick,
-        name="activity-filter-quick",
-    ),
-    path(
-        "activity/filter/matter/<int:id>",
-        activity.filter_matter,
-        name="activity-filter-matter",
-    ),
-    path("activity/export", activity.export, name="activity-export"),
+    # Activity App
+    path("", include("apps.activity.urls")),
     # --------------------------------------
     # trust
     # --------------------------------------
