@@ -28,11 +28,8 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),
     # Folders App
     path("", include("apps.folders.urls")),
-    # --------------------------------------
-    # agenda
-    # --------------------------------------
-    path("", agenda.index, name="home-index"),
-    path("agenda/", include("apps.agenda.urls")),
+    # Agenda App
+    path("", include("apps.agenda.urls")),
     # --------------------------------------
     # intakes
     # --------------------------------------
