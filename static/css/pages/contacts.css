@@ -55,3 +55,28 @@
 /* contacts form */
 /* ------------------------------------------------------------------------- */
 
+#id_name,
+#id_email,
+#id_company,
+#id_notes {
+  max-width: 400px;
+  width: 100%
+}
+
+#id_address {
+  max-width: 400px;
+  height: 100px;
+  width: 100%
+}
+
+#id_folder_id,
+#id_phone1,
+#id_phone2,
+#id_phone3,
+#id_phone1_label,
+#id_phone2_label,
+#id_phone3_label {
+  max-width: 250px;
+  width: 100%
+}
+

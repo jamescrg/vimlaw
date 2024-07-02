@@ -25,3 +25,13 @@ Display
 Form
 ------------------------------------------------*/
 
+#id_medium,
+#id_type,
+#id_amount {
+  width: 140px;
+}
+
+#id_notes {
+  width: 400px;
+}
+

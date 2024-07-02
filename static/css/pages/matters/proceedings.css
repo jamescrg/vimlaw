@@ -26,3 +26,11 @@ Display
 Form
 ------------------------------------------------*/
 
+#id_case_number {
+  width: 250px;
+}
+
+#id_status {
+  width: 140px;
+}
+
