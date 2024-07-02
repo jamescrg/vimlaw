@@ -4,6 +4,30 @@
 Matter Form
 ------------------------------------------------*/
 
+#id_name {
+  width: 400px;
+}
+
+#id_description {
+  width: 400px;
+}
+
+#id_practice_area {
+  width: 250px;
+}
+
+#id_firm {
+  width: 250px;
+}
+
+#id_firm_file_no {
+  width: 250px;
+}
+
+#id_ref_no {
+  width: 250px;
+}
+
 #id_firm_rate {
   width: 80px;
 }
@@ -15,6 +39,7 @@ Matter Form
 .delete li {
   margin-bottom: 15px;
 }
+
 
 
 /*------------------------------------------------
@@ -49,6 +74,10 @@ Matter List
   display: none;
   margin: 0;
   padding: 0;
+  width: 100%;
+}
+
+.edit-status > label {
   width: 100%;
 }
 
@@ -121,3 +150,12 @@ Menu of submodules
 Submodules
 ------------------------------------------------*/
 
+.subsection-heading {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 5px 5px;
+}
+
+.subsection-title {
+  font-size: 1.2em;
+}

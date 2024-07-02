@@ -14,7 +14,7 @@ function showStatusForm() {
     input.focus();
 
     // move the cursor to the end
-    const currentValue = input.value; //store the value of the element
+    let currentValue = input.value; //store the value of the element
     input.value = ''; //clear the value of the element
     input.value = currentValue;
 }
@@ -24,7 +24,7 @@ function hideStatusForm() {
     /**
      * Hide a matter's "edit status" form.
      */
-    const parentElement = event.target.parentElement.parentElement;
+    const parentElement = event.target.parentElement.parentElement.parentElement;
 
     setTimeout(function () {
 

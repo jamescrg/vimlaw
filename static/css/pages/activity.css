@@ -12,18 +12,39 @@ Time entry form
 ------------------------------------------------*/
 
 #id_matter {
-    width: auto;
+  width: auto;
 }
 
+#id_actions {
+  height: 100px;
+  max-width: 500px;
+  vertical-align: top;
+  width: 100%;
+}
+
+#id_hours {
+  max-width: 80px;
+}
 
 #id_firm_rate {
-    max-width: 80px;
+  max-width: 80px;
 }
 
+#id_comp  {
+  max-width: 80px;
+}
+
+#id_entered {
+  max-width: 80px;
+}
 
 /*------------------------------------------------
 Expense entry form
 ------------------------------------------------*/
+
+#id_amount {
+  max-width: 120px;
+}
 
 
 /*------------------------------------------------

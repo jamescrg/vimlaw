@@ -1,3 +1,9 @@
+
+
+/*------------------------------------------------
+Events
+------------------------------------------------*/
+
 .toggle-events {
     font-weight: 600;
     margin-right: 10px;
@@ -24,6 +30,30 @@
     width: 250px;
 }
 
+.add-event {
+
+    #id_matter {
+        width: auto;
+    }
+
+    #id_party {
+        width: 140px;
+    }
+
+    #id_description {
+        max-width: 500px;
+        width: 100%
+    }
+
+    #id_status {
+        width: 140px;
+    }
+
+}
+
+/*------------------------------------------------
+Tasks
+------------------------------------------------*/
 
 .tasks-background {
     background: var(--warm-gray-100);
@@ -34,7 +64,6 @@
 .tasks-table {
     margin-top: 15px;
 }
-
 
 .btn-task-sort {
     border: none;
@@ -68,6 +97,29 @@
     width: 155px;
 }
 
+.tasks-table .menu {
+  width: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+/*------------------------------------------------
+Tasks Table Inputs
+------------------------------------------------*/
+
+.input-padding {
+  padding: 5px;
+}
+
+.task-select,
+.task-select:hover {
+  background: var(--warm-gray-50);
+  border: solid 1px var(--warm-gray-200);
+  border-radius: 4px;
+  color: inherit;
+  font-size: inherit;
+  margin: 0;
+}
 
 .tasks-table input[type="text"],
 .tasks-table input[type="date"] {
@@ -84,6 +136,9 @@
     max-width: 100px;
 }
 
+/*------------------------------------------------
+Task Add Form Quick
+------------------------------------------------*/
 
 .task-form-add {
     background: inherit;
@@ -113,3 +168,11 @@
   width: 85%;
 }
 
+/*------------------------------------------------
+Task Edit Form
+------------------------------------------------*/
+
+#id_description {
+  max-width: 500px;
+  width: 100%
+}
