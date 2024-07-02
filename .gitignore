@@ -8,7 +8,9 @@ config/.env
 gunicorn.conf.py
 gunicorn_cl.conf.py
 .idea
+.idea/
 logs
 venv/
+.venv/
 google/*
 !google/.gitkeep
