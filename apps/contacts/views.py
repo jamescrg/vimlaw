@@ -1,18 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.folders.models import Folder
-from apps.contacts.models import Contact
-from apps.matters.models import Matter
-from apps.matters.models import Relationship
-from apps.matters.models import Role
-from apps.contacts.forms import ContactForm
-from apps.intakes.models import Intake
 import apps.contacts.google as google
+from apps.contacts.forms import ContactForm
+from apps.contacts.models import Contact
+from apps.folders.models import Folder
+from apps.intakes.models import Intake
+from apps.matters.models import Matter, Relationship, Role
 from config.helpers import format_phone
 
 

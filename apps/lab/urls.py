@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.lab.views import index, results, email_test
+from apps.lab.views import email_test, index, results
 
 urlpatterns = [
     path("lab/", index, name="lab"),

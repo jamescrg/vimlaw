@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.settings.views import index, google_logout, google_login, google_store
+from apps.settings.views import google_login, google_logout, google_store, index
 
 urlpatterns = [
     path("settings/", index, name="settings"),

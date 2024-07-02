@@ -1,10 +1,9 @@
 import pytest
-
 from django.test import Client
 
 from apps.accounts.models import CustomUser
-from apps.matters.models import Matter
 from apps.activity.models import TimeEntry
+from apps.matters.models import Matter
 
 
 @pytest.fixture

@@ -1,11 +1,10 @@
 from dateutil import parser
-
 from django.shortcuts import get_object_or_404
 
-from apps.matters.models import Matter
-from apps.agenda.models import Task
 from apps.accounts.models import CustomUser
 from apps.agenda.filter import Filter
+from apps.agenda.models import Task
+from apps.matters.models import Matter
 
 
 def get_table_data(request):
@@ -17,12 +16,12 @@ def get_table_data(request):
     filter = Filter(request).values
 
     if filter["date_from"]:
-        if type(filter["date_from"]) == str:
+        if isinstance(filter["date_from"], str):
             filter["date_from"] = parser.parse(filter["date_from"])
         tasks = tasks.filter(date_due__gte=filter["date_from"])
 
     if filter["date_to"]:
-        if type(filter["date_to"]) == str:
+        if isinstance(filter["date_to"], str):
             filter["date_to"] = parser.parse(filter["date_to"])
         tasks = tasks.filter(date_due__lte=filter["date_to"])
 

@@ -1,14 +1,12 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.trust.models import Transaction
-from apps.trust.forms import TransactionForm
-from apps.contacts.models import Contact
 import apps.trust.trust as trust
+from apps.contacts.models import Contact
+from apps.trust.forms import TransactionForm
+from apps.trust.models import Transaction
 
 
 def trust_redirect(request, transaction):

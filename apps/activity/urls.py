@@ -1,20 +1,20 @@
 from django.urls import path
 
 from apps.activity.views import (
-    index,
     add,
     add_expense,
+    delete,
+    delete_expense,
     edit,
     edit_expense,
-    delete_expense,
-    delete,
-    toggle_entered_expense,
-    toggle_entered,
-    filter,
-    filter_update,
-    filter_quick,
-    filter_matter,
     export,
+    filter,
+    filter_matter,
+    filter_quick,
+    filter_update,
+    index,
+    toggle_entered,
+    toggle_entered_expense,
 )
 
 urlpatterns = [

@@ -1,21 +1,16 @@
 from datetime import date
+
 from dateutil import parser
-
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
+import config.appdata as appdata
+from apps.contacts.models import Contact
 from apps.events.models import Event
 from apps.matters.filter import Filter
 from apps.matters.forms import MatterForm
 from apps.matters.load_contacts import load_contacts
-from apps.matters.models import Fact
-from apps.matters.models import Matter
-from apps.matters.models import Proceeding
-from apps.matters.models import SettlementEntry
-from apps.contacts.models import Contact
-import config.appdata as appdata
+from apps.matters.models import Fact, Matter, Proceeding, SettlementEntry
 
 
 @login_required

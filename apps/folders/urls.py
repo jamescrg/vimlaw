@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.folders.views import select, insert, update, delete
+from apps.folders.views import delete, insert, select, update
 
 urlpatterns = [
     path("folders/<int:id>/<str:page>", select, name="folder-select"),

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.events.views import index, add, deadline_results, edit, delete
+from apps.events.views import add, deadline_results, delete, edit, index
 
 urlpatterns = [
     path("events/", index, name="events"),

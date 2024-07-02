@@ -1,5 +1,4 @@
 from dateutil import parser
-from django.contrib.auth.decorators import login_required
 
 from apps.intakes.filter import Filter
 from apps.intakes.models import Intake

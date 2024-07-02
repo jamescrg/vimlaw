@@ -2,7 +2,6 @@ import pytest
 
 from apps.activity.forms import TimeEntryForm
 
-
 pytestmark = pytest.mark.django_db
 
 

@@ -1,6 +1,3 @@
-from datetime import date
-
-
 class Filter:
     values = {
         "date_from": None,

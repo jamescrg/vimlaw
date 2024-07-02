@@ -9,7 +9,7 @@ Display
   width: 100%;
 }
 
-#settlement .date, 
+#settlement .date,
 #settlement .type,
 #settlement .medium {
   width: 120px;
@@ -34,4 +34,3 @@ Form
 #id_notes {
   width: 400px;
 }
-

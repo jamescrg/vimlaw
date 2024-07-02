@@ -1,7 +1,6 @@
 from django import forms
 
-from .models import TimeEntry
-from .models import ExpenseEntry
+from .models import ExpenseEntry, TimeEntry
 
 
 class TimeEntryForm(forms.ModelForm):

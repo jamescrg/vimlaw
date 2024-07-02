@@ -1,20 +1,20 @@
 from django.urls import path
 
 from apps.intakes.views import (
-    index,
-    list_data,
+    add,
+    add_note,
+    delete,
+    delete_note,
     detail,
     detail_data,
-    add,
     edit,
-    delete,
-    filter_update,
+    edit_note,
     filter,
     filter_quick,
+    filter_update,
+    index,
+    list_data,
     order,
-    add_note,
-    edit_note,
-    delete_note,
 )
 
 urlpatterns = [

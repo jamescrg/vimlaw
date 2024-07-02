@@ -30,7 +30,7 @@
 
           <label>
               <select name="status" class="form-control">
-      
+
                 <option value="" {% if not filter.status %} selected {% endif %}>
                     All
                 </option>
@@ -43,7 +43,7 @@
                 <option value="Closed" {% if filter.status == 'Closed' %} selected {% endif %}>
                     Closed
                 </option>
-      
+
               </select>
           </label>
 
@@ -53,19 +53,19 @@
 
           <label>
               <select name="area" class="form-control">
-      
+
                 <option value="" {% if not filter.area %}selected{% endif %}>
                   All
                 </option>
-      
+
               {% for area in areas %}
-      
+
                 <option value="{{ area }}" {% if filter.area == area %}selected{% endif %}>
                     {{ area }}
                 </option>
-      
+
               {% endfor %}
-      
+
               </select>
           </label>
 
@@ -93,22 +93,22 @@
 
           <label>
               <select name="firm" class="form-control">
-      
+
                 <option value="" {% if not filter.firm %}selected{% endif %}>
                   All
                 </option>
-      
+
                 {% for firm in firms %}
-      
+
                   <option value="{{ firm }}"
                     {% if filter.firm == firm %}selected{% endif %}>
-      
+
                     {{ firm }}
-      
+
                   </option>
-      
+
                 {% endfor %}
-      
+
               </select>
           </label>
 

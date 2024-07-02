@@ -1,14 +1,11 @@
 import pytest
-
 from django.test import Client
 
 from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
 from apps.folders.models import Folder
-from apps.matters.models import Matter
-from apps.matters.models import Role
-from apps.matters.models import Relationship
 from apps.intakes.models import Intake
+from apps.matters.models import Matter, Relationship, Role
 
 
 @pytest.fixture

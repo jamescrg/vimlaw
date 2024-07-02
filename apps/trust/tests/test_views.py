@@ -4,7 +4,6 @@ from pytest_django.asserts import assertTemplateUsed
 
 from apps.trust.models import Transaction
 
-
 pytestmark = pytest.mark.django_db
 
 

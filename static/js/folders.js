@@ -58,4 +58,3 @@ function hideAddFolderForm() {
         hide(elementId);
     }, 500);
 }
-

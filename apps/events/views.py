@@ -1,15 +1,13 @@
 from datetime import date, timedelta
+
 from dateutil import parser
-
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.models import Matter
-from apps.events.models import Event
-from apps.events.forms import EventForm
 import apps.events.google as google
+from apps.events.forms import EventForm
+from apps.events.models import Event
+from apps.matters.models import Matter
 
 
 @login_required

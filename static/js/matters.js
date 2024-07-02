@@ -38,4 +38,3 @@ function hideStatusForm() {
 
     }, 500);
 }
-

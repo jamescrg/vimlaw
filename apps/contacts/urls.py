@@ -1,18 +1,18 @@
 from django.urls import path
 
 from apps.contacts.views import (
-    index,
-    select,
     add,
-    edit,
-    delete,
+    add_intake,
     assign,
     assign_store,
+    delete,
+    edit,
+    google_list,
+    index,
     remove,
     remove_store,
-    add_intake,
+    select,
     toggle_google_sync,
-    google_list,
 )
 
 urlpatterns = [

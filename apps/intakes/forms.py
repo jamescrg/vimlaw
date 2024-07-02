@@ -2,8 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
-from .models import Intake
-from .models import Note
+from .models import Intake, Note
 
 
 class IntakeForm(forms.ModelForm):

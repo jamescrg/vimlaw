@@ -1,23 +1,25 @@
 from django.urls import path
 
-from apps.matters import views_activity as matters_activity
-from apps.matters import views_contacts as matters_contacts
-from apps.matters import views_events as matters_events
-from apps.matters import views_proceedings as matters_proceedings
-from apps.matters import views_rates as matters_rates
-from apps.matters import views_settlement as matters_settlement
-from apps.matters import views_timeline as matters_timeline
+from apps.matters import (
+    views_activity as matters_activity,
+    views_contacts as matters_contacts,
+    views_events as matters_events,
+    views_proceedings as matters_proceedings,
+    views_rates as matters_rates,
+    views_settlement as matters_settlement,
+    views_timeline as matters_timeline,
+)
 from apps.matters.views import (
-    index,
-    detail,
     add,
-    edit,
     delete,
-    filter,
-    filter_update,
-    filter_quick,
-    order,
+    detail,
+    edit,
     edit_description,
+    filter,
+    filter_quick,
+    filter_update,
+    index,
+    order,
     print,
 )
 

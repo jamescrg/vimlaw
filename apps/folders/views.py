@@ -1,16 +1,11 @@
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 
 from apps.folders.models import Folder
 
 
 @login_required
 def select(request, id, page):
-    user_id = request.user.id
-
     if page == "contacts":
         request.session["contacts_selected_folder_id"] = id
         if "selected_contact_id" in request.session:

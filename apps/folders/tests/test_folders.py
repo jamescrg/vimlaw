@@ -2,7 +2,6 @@ import pytest
 
 from apps.contacts.models import Folder
 
-
 pytestmark = pytest.mark.django_db
 
 

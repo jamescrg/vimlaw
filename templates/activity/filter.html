@@ -39,40 +39,40 @@
           <label>Firm:</label>
           <label>
               <select name="firm">
-    
+
                 <option value="">All</option>
-    
+
                 {% for firm in firms %}
-    
+
                   <option value="{{ firm }}"
                     {% if filter.firm == firm %}selected{% endif %}>
-    
+
                     {{ firm }}
-    
+
                   </option>
-    
+
                 {% endfor %}
-    
+
               </select>
           </label>
 
           <label>User:</label>
           <label>
               <select name="user">
-    
+
                 <option value="All">All</option>
-    
+
                 {% for user in users %}
-    
+
                   <option value="{{ user.id }}"
                     {% if filter.user == user.id %}selected{% endif %}>
-    
+
                     {{ user.username }}
-    
+
                   </option>
-    
+
                 {% endfor %}
-    
+
               </select>
           </label>
 

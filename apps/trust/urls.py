@@ -1,14 +1,14 @@
 from django.urls import path
 
 from apps.trust.views import (
-    index,
-    history,
-    client,
     add,
-    edit,
+    client,
     delete,
-    toggle_entered,
+    edit,
+    history,
+    index,
     toggle_confirmed,
+    toggle_entered,
 )
 
 urlpatterns = [
