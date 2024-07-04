@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Matter
-from .models import Rate
+
+from .models import Matter, Rate
 
 
 class MatterAdmin(admin.ModelAdmin):

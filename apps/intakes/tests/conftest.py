@@ -1,11 +1,9 @@
 import pytest
-
 from django.test import Client
 
 from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
-from apps.intakes.models import Intake
-from apps.intakes.models import Note
+from apps.intakes.models import Intake, Note
 
 
 @pytest.fixture

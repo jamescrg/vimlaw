@@ -1,24 +1,26 @@
 from django.urls import path
 
 from apps.trust.views import (
-    index,
-    history,
-    client,
     add,
-    edit,
+    client,
     delete,
-    toggle_entered,
+    edit,
+    history,
+    index,
     toggle_confirmed,
+    toggle_entered,
 )
+
+app_name = "trust"
 
 urlpatterns = [
     path("trust/", index, name="trust"),
-    path("trust/history/", history, name="trust-history"),
-    path("trust/history/<str:interval>/", history, name="trust-history-interval"),
-    path("trust/client/<int:id>", client, name="trust-client"),
-    path("trust/<int:contact_id>/add", add, name="trust-add"),
-    path("trust/<int:id>/edit", edit, name="trust-edit"),
-    path("trust/<int:id>/delete", delete, name="trust-delete"),
-    path("trust/<int:id>/entered", toggle_entered, name="trust-entered"),
-    path("trust/<int:id>/confirmed", toggle_confirmed, name="trust-confirmed"),
+    path("trust/history/", history, name="history"),
+    path("trust/history/<str:interval>/", history, name="history-interval"),
+    path("trust/client/<int:id>", client, name="client"),
+    path("trust/<int:contact_id>/add", add, name="add"),
+    path("trust/<int:id>/edit", edit, name="edit"),
+    path("trust/<int:id>/delete", delete, name="delete"),
+    path("trust/<int:id>/entered", toggle_entered, name="entered"),
+    path("trust/<int:id>/confirmed", toggle_confirmed, name="confirmed"),
 ]

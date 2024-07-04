@@ -1,6 +1,7 @@
 from django.db import models
-from apps.matters.models import Matter
+
 from apps.accounts.models import CustomUser
+from apps.matters.models import Matter
 
 
 class TimeEntry(models.Model):

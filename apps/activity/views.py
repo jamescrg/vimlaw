@@ -1,23 +1,17 @@
 from datetime import date
-from dateutil import parser
 
+from dateutil import parser
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.models import Matter
-from apps.activity.models import TimeEntry
-from apps.activity.forms import TimeEntryForm
-from apps.activity.models import ExpenseEntry
-from apps.activity.forms import ExpenseEntryForm
-from apps.activity.summary import calculate_summary
 import config.appdata as appdata
-
-from apps.activity.filter import Filter
-from apps.matters.models import Rate
 from apps.accounts.models import CustomUser
+from apps.activity.filter import Filter
+from apps.activity.forms import ExpenseEntryForm, TimeEntryForm
+from apps.activity.models import ExpenseEntry, TimeEntry
+from apps.activity.summary import calculate_summary
+from apps.matters.models import Matter, Rate
 
 
 @login_required
@@ -38,13 +32,13 @@ def index(request):
     expense_entries = ExpenseEntry.objects.all()
 
     if filter["date_from"]:
-        if type(filter["date_from"]) == str:
+        if isinstance(filter["date_from"], str):
             filter["date_from"] = parser.parse(filter["date_from"])
         entries = entries.filter(date__gte=filter["date_from"])
         expense_entries = expense_entries.filter(date__gte=filter["date_from"])
 
     if filter["date_to"]:
-        if type(filter["date_to"]) == str:
+        if isinstance(filter["date_to"], str):
             filter["date_to"] = parser.parse(filter["date_to"])
         entries = entries.filter(date__lte=filter["date_to"])
         expense_entries = expense_entries.filter(date__lte=filter["date_to"])
@@ -64,7 +58,9 @@ def index(request):
         expense_entries = expense_entries.filter(user=user)
 
     if filter["keyword"]:
-        expense_entries = expense_entries.filter(actions__icontains=filter["keyword"])
+        expense_entries = expense_entries.filter(
+            description__icontains=filter["keyword"]
+        )
 
     if filter["comp"]:
         if filter["comp"] == "Yes":
@@ -436,6 +432,7 @@ def toggle_entered_expense(request, id):
 @login_required
 def export(request):
     import csv
+
     from django.http import HttpResponse
 
     # Create the HttpResponse object with the appropriate CSV header.

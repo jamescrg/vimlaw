@@ -1,44 +1,49 @@
-
 {% extends "print.html" %}
 
 {% block content %}
 
-<div class="page-title">
+    <div class="page-title">
 
-  {{ matter.name }} - Case Timeline
+        {{ matter.name }} - Case Timeline
 
-</div>
+    </div>
 
-<table id="facts" class="table facts">
+    <table id="facts" class="table facts">
 
-  <tr>
+        <tr>
 
-    <th>
-      Date
+            <th>
+                Date
+            </th>
 
-    <th>
-      Description
+            <th>
+                Description
+            </th>
 
-    <th>
-      Citation
+            <th>
+                Citation
+            </th>
 
-		{% if facts %}
-    {% for fact in facts %}
+        </tr>
 
-      <tr>
+        {% if facts %}
+            {% for fact in facts %}
+                <tr>
+                    <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+                        {{ fact.date|date:'Y-m-d' }}
+                    </td>
 
-        <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-          {{ fact.date|date:'Y-m-d' }}
+                    <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+                        {{ fact.description }}
+                    </td>
 
-        <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-          {{ fact.description }}
+                    <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+                        {{ fact.citation|slice:":25"|default_if_none:'' }}
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endif %}
 
-        <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-          {{ fact.citation|slice:":25"|default_if_none:'' }}
-
-    {% endfor %}
-    {% endif %}
-
-</table>
+    </table>
 
 {% endblock content %}

@@ -1,66 +1,66 @@
 <div class="modal-dialog modal-lg">
-  <div class="modal-content">
+    <div class="modal-content">
 
-    <!-- TODO matters/events heading and add link -->
-    <!-- TODO components -->
+        <!-- TODO matters/events heading and add link -->
+        <!-- TODO components -->
 
-    <div class="modal-header">
-      <h1 class="modal-title">
-        {% if not edit %}
-            Add Event
-        {% else %}
-            Edit Event
-        {% endif %}
-      </h1>
-      <div>
-        <a href="#" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg"></i>
-        </a>
-      </div>
+        <div class="modal-header">
+            <h1 class="modal-title">
+                {% if not edit %}
+                    Add Event
+                {% else %}
+                    Edit Event
+                {% endif %}
+            </h1>
+            <div>
+                <a href="#" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="modal-body">
+
+            {% include "events/deadline-calculator.html" %}
+
+            {% if results %}
+                <div id="calculator-results">
+                </div>
+            {% endif %}
+
+            {% if not google_connected %}
+                <div class="warn">
+                    Not connected to a Google calendar. You may still add an event, but it will not be posted to your
+                    Google account. Contact an administrator to establish a connection.
+                </div>
+            {% endif %}
+
+            <form
+                    action="{{ action }}"
+                    class="form-responsive add-event"
+                    method="post"
+                    role="form"
+            >
+                {% csrf_token %}
+                {{ form }}
+                <br/>
+                <div class="flex-center-space">
+                    <div>
+                        <button type="submit" class="submit">Submit</button>
+                    </div>
+
+                    <div>
+                        {% if edit %}
+                            <a
+                                    onclick="return confirm('Are you sure you want to delete this record?')"
+                                    href={% url 'events:delete-origin' id=event.id origin='agenda:agenda' %}
+                            >
+                                Delete Event
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <div class="modal-body">
-
-      {% include "events/deadline-calculator.html" %}
-
-      {% if results %}
-        <div id="calculator-results">
-        </div>
-      {% endif %}
-
-      {% if not google_connected %}
-        <div class="warn">
-          Not connected to a Google calendar. You may still add an event, but it will not be posted to your Google account. Contact an administrator to establish a connection.
-        </div>
-      {% endif %}
-
-      <form
-        action="{{ action }}"
-        class="form-responsive add-event"
-        method="post"
-        role="form"
-      >
-        {% csrf_token %}
-        {{ form }}
-        <div>
-        </div>
-        <div class="flex-center-space">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-
-          <div>
-            {% if edit %}
-              <a
-                onclick="return confirm('Are you sure you want to delete this record?')"
-                href="/events/{{event.id}}/delete/{{ origin }}"
-              >
-                    Delete Event
-              </a>
-          {% endif %}
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>

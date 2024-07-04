@@ -6,7 +6,7 @@
             {{ selected_contact.name }}
         </h1>
         <div class="section-title-left-right">
-            <a href="/contacts/{{ selected_contact.id }}/toggle_google_sync">
+            <a href={% url 'contacts:toggle-google-sync' id=selected_contact.id %}>
                 {% if selected_contact.google_id %}
                     <i class="bi bi-cloud-slash"></i>
                 {% else %}
@@ -16,8 +16,7 @@
         </div>
     </div>
     <div class="section-title-right">
-        <a href="/contacts/{{ selected_contact.id }}/edit">
-            <i class="bi bi-pencil"></i></a>
+        <a href={% url 'contacts:edit' id=selected_contact.id %}><i class="bi bi-pencil"></i></a>
     </div>
 </div>
 
@@ -106,8 +105,11 @@
                 {% for relationship in relationships %}
 
                     <li>
-                    <a href="/matters/{{ relationship.matter.id }}">{{ relationship.matter.name }}</a> -
-                    {{ relationship.matter.status }}
+                        <a href={% url 'matters:detail' id=relationship.matter.id %}>
+                            {{ relationship.matter.name }}
+                        </a> -
+                        {{ relationship.matter.status }}
+                    </li>
 
                 {% endfor %}
 
@@ -123,15 +125,15 @@
     {% if selected_contact.intake %}
 
         <div class="contact-item">
-            <a href="/intakes/{{ selected_contact.intake.id }}">View Intake</a>
+            <a href={% url 'intakes:detail' id=selected_contact.intake.id %}>View Intake</a>
         </div>
 
     {% endif %}
 
     <div class="assign-remove">
 
-        <a href="/contacts/{{ selected_contact.id }}/assign">Assign</a>&nbsp;&nbsp;|&nbsp;&nbsp;
-        <a href="/contacts/{{ selected_contact.id }}/remove">Remove</a>
+        <a href={% url 'contacts:assign' id=selected_contact.id %}>Assign</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href={% url 'contacts:remove' id=selected_contact.id %}>Remove</a>
 
     </div>
 

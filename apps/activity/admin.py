@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import TimeEntry
-from .models import ExpenseEntry
+
+from .models import ExpenseEntry, TimeEntry
 
 
 class TimeEntryAdmin(admin.ModelAdmin):

@@ -2,7 +2,6 @@ import pytest
 
 from apps.agenda.forms import TaskForm
 
-
 pytestmark = pytest.mark.django_db
 
 

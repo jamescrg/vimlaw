@@ -1,138 +1,136 @@
-
 <div class="modal-dialog modal-md">
-  <div class="modal-content">
+    <div class="modal-content">
 
-    <div class="modal-header">
-      <h1 class="modal-title">
-        Filter Matters
-      </h1>
-      <div>
-        <a href="#" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg"></i>
-        </a>
-      </div>
-    </div>
-
-    <div class="modal-body">
-
-      <form
-        action="/matters/filter/update"
-        method="post"
-        class="form-responsive"
-      >
-
-        {% csrf_token %}
-
-
-        <label class="control-label">
-          Status
-        </label>
-
-          <label>
-              <select name="status" class="form-control">
-      
-                <option value="" {% if not filter.status %} selected {% endif %}>
-                    All
-                </option>
-                <option value="Pending" {% if filter.status == 'Pending' %} selected {% endif %}>
-                    Pending
-                </option>
-                <option value="Open" {% if filter.status == 'Open' %} selected {% endif %}>
-                    Open
-                </option>
-                <option value="Closed" {% if filter.status == 'Closed' %} selected {% endif %}>
-                    Closed
-                </option>
-      
-              </select>
-          </label>
-
-          <label class="control-label">
-          Practice Area
-        </label>
-
-          <label>
-              <select name="area" class="form-control">
-      
-                <option value="" {% if not filter.area %}selected{% endif %}>
-                  All
-                </option>
-      
-              {% for area in areas %}
-      
-                <option value="{{ area }}" {% if filter.area == area %}selected{% endif %}>
-                    {{ area }}
-                </option>
-      
-              {% endfor %}
-      
-              </select>
-          </label>
-
-          <label class="control-label">
-          From
-        </label>
-
-          <label>
-              <input type="date" name="date_from" class="form-control"
-                value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
-          </label>
-
-          <label class="control-label">
-          To
-        </label>
-
-          <label>
-              <input type="date" name="date_to" class="form-control"
-                value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
-          </label>
-
-          <label class="control-label">
-          Firm
-        </label>
-
-          <label>
-              <select name="firm" class="form-control">
-      
-                <option value="" {% if not filter.firm %}selected{% endif %}>
-                  All
-                </option>
-      
-                {% for firm in firms %}
-      
-                  <option value="{{ firm }}"
-                    {% if filter.firm == firm %}selected{% endif %}>
-      
-                    {{ firm }}
-      
-                  </option>
-      
-                {% endfor %}
-      
-              </select>
-          </label>
-
-          <label class="control-label">
-          Order By
-        </label>
-
-          <label for="order"></label><select name="order" id="order" class="form-control">
-
-          <option value="name" {% if filter.order == 'name' %}selected{% endif %}>
-              Name, Ascending
-          </option>
-
-          <option value="description"
-            {% if filter.order == 'description' %}selected{% endif %}>
-            Description, Ascending
-          </option>
-
-        </select>
-        <div></div>
-        <div>
-        <button type="submit" class="submit">Submit</button>
+        <div class="modal-header">
+            <h1 class="modal-title">
+                Filter Matters
+            </h1>
+            <div>
+                <a href="#" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
         </div>
-      </form>
+
+        <div class="modal-body">
+
+            <form
+                    method="post"
+                    class="form-responsive"
+                    action={% url 'matters:filter-update' %}
+            >
+
+                {% csrf_token %}
+
+                <label class="control-label">
+                    Status
+                </label>
+
+                <label>
+                    <select name="status" class="form-control">
+
+                        <option value="" {% if not filter.status %} selected {% endif %}>
+                            All
+                        </option>
+                        <option value="Pending" {% if filter.status == 'Pending' %} selected {% endif %}>
+                            Pending
+                        </option>
+                        <option value="Open" {% if filter.status == 'Open' %} selected {% endif %}>
+                            Open
+                        </option>
+                        <option value="Closed" {% if filter.status == 'Closed' %} selected {% endif %}>
+                            Closed
+                        </option>
+
+                    </select>
+                </label>
+
+                <label class="control-label">
+                    Practice Area
+                </label>
+
+                <label>
+                    <select name="area" class="form-control">
+
+                        <option value="" {% if not filter.area %}selected{% endif %}>
+                            All
+                        </option>
+
+                        {% for area in areas %}
+
+                            <option value="{{ area }}" {% if filter.area == area %}selected{% endif %}>
+                                {{ area }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+                </label>
+
+                <label class="control-label">
+                    From
+                </label>
+
+                <label>
+                    <input type="date" name="date_from" class="form-control"
+                           value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}"/>
+                </label>
+
+                <label class="control-label">
+                    To
+                </label>
+
+                <label>
+                    <input type="date" name="date_to" class="form-control"
+                           value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}"/>
+                </label>
+
+                <label class="control-label">
+                    Firm
+                </label>
+
+                <label>
+                    <select name="firm" class="form-control">
+
+                        <option value="" {% if not filter.firm %}selected{% endif %}>
+                            All
+                        </option>
+
+                        {% for firm in firms %}
+
+                            <option value="{{ firm }}"
+                                    {% if filter.firm == firm %}selected{% endif %}>
+
+                                {{ firm }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+                </label>
+
+                <label class="control-label">
+                    Order By
+                </label>
+
+                <label for="order"></label><select name="order" id="order" class="form-control">
+
+                <option value="name" {% if filter.order == 'name' %}selected{% endif %}>
+                    Name, Ascending
+                </option>
+
+                <option value="description"
+                        {% if filter.order == 'description' %}selected{% endif %}>
+                    Description, Ascending
+                </option>
+
+            </select>
+                <br/>
+                <div>
+                    <button type="submit" class="submit">Submit</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 </div>

@@ -1,10 +1,8 @@
 import pytest
-
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from apps.agenda.models import Task
-
 
 pytestmark = pytest.mark.django_db
 

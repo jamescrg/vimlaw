@@ -1,77 +1,84 @@
-
-
 <nav class="navbar navbar-expand-lg">
-
-	<div class="container">
-
-    <button class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent"
-      aria-expanded="false"
-      aria-label="Toggle navigation">
+    <div class="container">
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
 
       <span class="navbar-toggler-icon">
         <i class="bi bi-house-door-fill"></i>
       </span>
-      <span class="navbar-toggler-chevron">
+            <span class="navbar-toggler-chevron">
         <i class="bi bi-chevron-down"></i>
       </span>
 
-    </button>
+        </button>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-      <ul class="nav navbar-nav">
+            <ul class="nav navbar-nav">
 
-        {% if env and env == 'dev' %}
-          <li class="nav-item dev-flag">
-            {{ env }}
-        {% endif %}
+                {% if env and env == 'dev' %}
+                    <li class="nav-item dev-flag">
+                        {{ env }}
+                    </li>
+                {% endif %}
 
-        <li class="nav-item {% if page == 'agenda' %}nav-active{% endif %}" >
-          <a id="nav-agenda" class="nav-link" href="/agenda">Agenda</a>
+                <li class="nav-item {% if page == 'agenda' %}nav-active{% endif %}">
+                    <a id="nav-agenda" class="nav-link" href={% url 'agenda:agenda' %}>Agenda</a>
+                </li>
 
-        <li class="nav-item {% if page == 'matters' %}nav-active{% endif %}" >
-          <a id="nav-matters" class="nav-link" href="/matters">Matters</a>
+                <li class="nav-item {% if page == 'matters' %}nav-active{% endif %}">
+                    <a id="nav-matters" class="nav-link" href={% url 'matters:list' %}>Matters</a>
+                </li>
 
-        <li class="nav-item {% if page == 'contacts' %}nav-active{% endif %}" >
-          <a id="nav-contacts" class="nav-link" href="/contacts">Contacts</a>
+                <li class="nav-item {% if page == 'contacts' %}nav-active{% endif %}">
+                    <a id="nav-contacts" class="nav-link" href={% url 'contacts:contacts' %}>Contacts</a>
+                </li>
 
-        <li class="nav-item {% if page == 'events' %}nav-active{% endif %}" >
-          <a id="nav-events" class="nav-link" href="/events">Events</a>
+                <li class="nav-item {% if page == 'events' %}nav-active{% endif %}">
+                    <a id="nav-events" class="nav-link" href={% url 'events:events' %}>Events</a>
+                </li>
 
-        <li class="nav-item {% if page == 'activity' %}nav-active{% endif %}" >
-          <a id="nav-activity" class="nav-link" href="/activity">Activity</a>
+                <li class="nav-item {% if page == 'activity' %}nav-active{% endif %}">
+                    <a id="nav-activity" class="nav-link" href={% url 'activity:list' %}>Activity</a>
+                </li>
 
-        <!-- <li class="nav-item {% if page == 'invoicing' %}nav-active{% endif %}" > -->
-        <!--   <a id="nav-invoicing" class="nav-link" href="/invoicing">Invoicing</a> -->
+                <!-- <li class="nav-item {% if page == 'invoicing' %}nav-active{% endif %}" > -->
+                <!--   <a id="nav-invoicing" class="nav-link" href="/invoicing">Invoicing</a> -->
+                <!-- </li> -->
 
-        <li class="nav-item {% if page == 'trust' %}nav-active{% endif %}" >
-          <a id="nav-trust" class="nav-link" href="/trust">Trust</a>
+                <li class="nav-item {% if page == 'trust' %}nav-active{% endif %}">
+                    <a id="nav-trust" class="nav-link" href={% url 'trust:trust' %}>Trust</a>
+                </li>
 
-        <li class="nav-item {% if page == 'intakes' %}nav-active{% endif %}" >
-          <a id="nav-intakes" class="nav-link" href="/intakes">Intakes</a>
+                <li class="nav-item {% if page == 'intakes' %}nav-active{% endif %}">
+                    <a id="nav-intakes" class="nav-link" href={% url 'intakes:list' %}>Intakes</a>
+                </li>
 
-			</ul>
+            </ul>
 
-			<ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto">
 
-        <li {% if page == 'search' %} class="nav-active" {% endif %}>
-          <a class="nav-link" href="/search">
-            <i class="bi bi-search"></i>
-          </a>
+                <li {% if page == 'search' %} class="nav-active" {% endif %}>
+                    <a class="nav-link" href={% url 'search:search' %}>
+                        <i class="bi bi-search"></i>
+                    </a>
+                </li>
 
-        <li {% if page == 'settings' %} class="nav-active" {% endif %}>
-          <a class="nav-link settings-link" href="/settings">
-              <i class="bi bi-person-circle"></i>
-          </a>
+                <li {% if page == 'settings' %} class="nav-active" {% endif %}>
+                    <a class="nav-link settings-link" href={% url 'settings:settings' %}>
+                        <i class="bi bi-person-circle"></i>
+                    </a>
+                </li>
 
-			</ul>
+            </ul>
 
-		</div>
+        </div>
 
-	</div>
+    </div>
 
 </nav>

@@ -1,0 +1,35 @@
+exclude: .*migrations\/.*
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: [ --profile, black, --combine-as, --trailing-comma ]
+        language_version: python3.12
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+
+  - repo: https://github.com/Riverside-Healthcare/djLint
+    rev: v1.19.16
+    hooks:
+      - id: djlint-django
+        language_version: python3.12
+        args: [ --profile, django ]

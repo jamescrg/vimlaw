@@ -1,14 +1,12 @@
-
 {% extends "base.html" %}
 {% block content %}
 
-{% if show_events %}
+    {% if show_events %}
 
-  {% include "agenda/events.html" %}
+        {% include "agenda/events.html" %}
 
-{% endif %}
+    {% endif %}
 
-  {% include "agenda/tasks.html" %}
-
+    {% include "agenda/tasks.html" %}
 
 {% endblock content %}

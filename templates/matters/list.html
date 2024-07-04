@@ -1,121 +1,123 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
-  <div class="section-title">
+    <div class="section-title">
 
-    <div class="section-title-left">
+        <div class="section-title-left">
 
-      <h1>
-          {{ filter.status }} Matters ({{ number_matters }})
-      </h1>
+            <h1>
+                {{ filter.status }} Matters ({{ number_matters }})
+            </h1>
 
-      <div class="section-title-left-right">
+            <div class="section-title-left-right">
 
-        <button
-          hx-get="/matters/add"
-          hx-target="#htmx-modal-container"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
-        >
-          <i class="bi bi-plus-lg"></i>
-      </button>
+                <button
+                        hx-get="/matters/add"
+                        hx-target="#htmx-modal-container"
+                        data-bs-toggle="modal"
+                        data-bs-target="#htmx-modal-container"
+                >
+                    <i class="bi bi-plus-lg"></i>
+                </button>
 
-        <button
-          hx-get="/matters/filter"
-          hx-target="#htmx-modal-container"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
-        >
-          <i class="bi bi-funnel"></i>
-        </button>
+                <button
+                        hx-get="/matters/filter"
+                        hx-target="#htmx-modal-container"
+                        data-bs-toggle="modal"
+                        data-bs-target="#htmx-modal-container"
+                >
+                    <i class="bi bi-funnel"></i>
+                </button>
 
-        <a href="/matters/filter/open">
-          Open
-        </a>
+                <a href={% url 'matters:filter-quick' 'open' %}>
+                    Open
+                </a>
 
-      </div>
+            </div>
 
+        </div>
+        <div class="card-title-right">
+        </div>
     </div>
 
-    <div class="card-title-right">
+    <div class="table-container">
+        <table id="matter-list" class="table">
+            <tr>
+                <th class="matter-name">
+                    <a href={% url 'matters:sort-by' 'name' %}>
+                        Matter
+                        <i class="bi bi-chevron-expand"></i>
+                    </a>
+                </th>
+
+                <th>
+
+                    <a href={% url 'matters:sort-by' 'description' %}>
+                        Description / Status
+                        <i class="bi bi-chevron-expand"></i>
+                    </a>
+                </th>
+
+                <th>
+                    Ref. No.
+                </th>
+
+            </tr>
+
+            {% if matters %}
+
+                {% for matter in matters %}
+
+                    <tr>
+
+                        <td class="matter-name">
+                            <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name }}</a>
+                        </td>
+
+                        <td>
+
+                            <!-- -------------------------------------------------------- -->
+                            <!-- normal display, show matter link -->
+                            <!-- -------------------------------------------------------- -->
+
+                            <button class="button-link show-status-form-button" onclick="showStatusForm()">
+                                {{ matter.description }}
+                            </button>
+
+                            <!-- -------------------------------------------------------- -->
+                            <!-- edit status form -->
+                            <!-- -------------------------------------------------------- -->
+
+                            <form
+                                    class="edit-status"
+                                    method="post"
+                                    action={% url 'matters:edit-description' id=matter.id %}>
+
+                                {% csrf_token %}
+
+                                <label>
+                                    <input
+                                            type="text"
+                                            class="edit-status-input"
+                                            name="description"
+                                            onchange="submit()"
+                                            onblur="hideStatusForm()"
+                                            value="{{ matter.description }}"
+                                            required/>
+                                </label>
+
+                            </form>
+                        </td>
+                        <td class="ref-no">
+                            {{ matter.ref_no|default:'' }}
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            {% endif %}
+
+        </table>
     </div>
-
-  </div>
-
-  <div style="overflow-x:auto">
-  <table id="matter-list" class="table">
-
-    <tr>
-      <th class="matter-name">
-
-        <a href="/matters/sort/name">
-          Matter
-          <i class="bi bi-chevron-expand"></i>
-        </a>
-
-      <th>
-
-        <a href="/matters/sort/description">
-          Description / Status
-          <i class="bi bi-chevron-expand"></i>
-        </a>
-
-      <th>
-
-        Ref. No.
-
-      {% if matters %}
-
-      {% for matter in matters %}
-
-      <tr>
-
-        <td class="matter-name">
-          <a href="/matters/{{ matter.id }}">{{ matter.name }}</a>
-
-        <td>
-
-          <!-- -------------------------------------------------------- -->
-          <!-- normal display, show matter link -->
-          <!-- -------------------------------------------------------- -->
-
-          <button class="button-link show-status-form-button" onclick="showStatusForm()">
-              {{ matter.description }}
-          </button>
-
-          <!-- -------------------------------------------------------- -->
-          <!-- edit status form -->
-          <!-- -------------------------------------------------------- -->
-
-          <form
-            class="edit-status"
-            action="/matters/{{ matter.id }}/edit-description"
-            method="post">
-
-            {% csrf_token %}
-
-              <label>
-                  <input
-                      type="text"
-                      class="edit-status-input"
-                      name="description"
-                      onchange="submit()"
-                      onblur="hideStatusForm()"
-                      value="{{ matter.description }}"
-                      required>
-              </label>
-
-          </form>
-
-        <td class="ref-no">
-          {{ matter.ref_no|default:'' }}
-
-    {% endfor %}
-    {% endif %}
-
-  </table>
-  </div>
 
 {% endblock content %}

@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.urls import path, include
+from django.urls import include, path
 
+from apps.agenda.views import index
 
 urlpatterns = [
+    path("", index, name="home-index"),
     # Admin
     path("admin/", admin.site.urls),
     # Accounts App

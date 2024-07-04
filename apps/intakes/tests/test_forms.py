@@ -1,9 +1,6 @@
 import pytest
 
-
-from apps.intakes.forms import IntakeForm
-from apps.intakes.forms import NoteForm
-
+from apps.intakes.forms import IntakeForm, NoteForm
 
 pytestmark = pytest.mark.django_db
 

@@ -1,14 +1,10 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.models import Matter
-from apps.matters.models import Proceeding
-from apps.matters.models import SettlementEntry
 from apps.matters.forms import SettlementEntryForm
+from apps.matters.models import Matter, Proceeding, SettlementEntry
 
 
 @login_required

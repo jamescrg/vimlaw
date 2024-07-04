@@ -6,9 +6,7 @@
 {% block content %}
 
     <div class="page-title">
-
         {{ matter.name }} - Case Detail Sheet
-
     </div>
 
     <div class="section details">
@@ -26,33 +24,38 @@
                 <table>
 
                     <tr>
-                        <td class="strong">Matter No.
-                        <td>{{ matter.id }}
+                        <td class="strong">Matter No.</td>
+                        <td>{{ matter.id }}</td>
+                    </tr>
 
                     <tr>
-                        <td class="strong">File No.
-                        <td>{{ matter.firm_file_no|slice:'0:5'|default:'' }}
+                        <td class="strong">File No.</td>
+                        <td>{{ matter.firm_file_no|slice:'0:5'|default:'' }}</td>
+                    </tr>
 
                     <tr>
-                        <td class="strong">Ref No.
-                        <td>{{ matter.ref_no|default:'' }}
+                        <td class="strong">Ref No.</td>
+                        <td>{{ matter.ref_no|default:'' }}</td>
+                    </tr>
 
                 </table>
 
                 <table>
 
                     <tr>
-                        <td class="strong">Open Date
-                        <td>{{ matter.date_start|date:'Y-m-d' }}
+                        <td class="strong">Open Date</td>
+                        <td>{{ matter.date_start|date:'Y-m-d' }}</td>
+                    </tr>
 
                     <tr>
-                        <td class="strong">Practice Area
-                        <td>{{ matter.practice_area }}
+                        <td class="strong">Practice Area</td>
+                        <td>{{ matter.practice_area }}</td>
+                    </tr>
 
                     <tr>
-                        <td class="strong">Firm Rate
-                        <td>${{ matter.firm_rate }}
-
+                        <td class="strong">Firm Rate</td>
+                        <td>${{ matter.firm_rate }}</td>
+                    </tr>
                 </table>
 
                 {% if proceeding %}
@@ -60,16 +63,19 @@
                     <table>
 
                         <tr>
-                            <td class="strong">Forum
-                            <td>{{ proceeding.forum }}
+                            <td class="strong">Forum</td>
+                            <td>{{ proceeding.forum }}</td>
+                        </tr>
 
                         <tr>
-                            <td class="strong">Case No.
-                            <td><strong>{{ proceeding.case_number }}</strong>
+                            <td class="strong">Case No.</td>
+                            <td><strong>{{ proceeding.case_number }}</strong></td>
+                        </tr>
 
                         <tr>
-                            <td class="strong">Filed
-                            <td>{{ proceeding.date_filed|date:'Y-m-d' }}
+                            <td class="strong">Filed</td>
+                            <td>{{ proceeding.date_filed|date:'Y-m-d' }}</td>
+                        </tr>
 
                     </table>
 
@@ -94,9 +100,7 @@
                 {% if relationships %}
 
                     <div class="contact-group-heading">
-
                         <strong>{{ group }}</strong>
-
                     </div>
 
                     <table class="table contact-list">
@@ -105,17 +109,22 @@
 
                             <tr>
 
-                            <td class="relationship">
-                                {{ relationship.role.name }}
+                                <td class="relationship">
+                                    {{ relationship.role.name }}
+                                </td>
 
-                            <td class="name">
-                                {{ relationship.contact.name }}
+                                <td class="name">
+                                    {{ relationship.contact.name }}
+                                </td>
 
-                            <td class="phone1">
-                                {{ relationship.contact.phone1|phone_number|default:'' }}
+                                <td class="phone1">
+                                    {{ relationship.contact.phone1|phone_number|default:'' }}
+                                </td>
 
-                            <td class="email">
-                            {{ relationship.contact.email|default:'na' }}
+                                <td class="email">
+                                    {{ relationship.contact.email|default:'na' }}
+                                </td>
+                            </tr>
 
                         {% endfor %}
 
@@ -182,35 +191,46 @@
 
                 <th>
                     Date Filed
+                </th>
 
                 <th>
                     Case No
+                </th>
 
                 <th>
                     Forum and Description
+                </th>
 
                 <th>
                     Status
+                </th>
+            </tr>
 
-                    {% if proceedings %}
-                        {% for proceeding in proceedings %}
+            {% if proceedings %}
+                {% for proceeding in proceedings %}
 
-                            <tr>
+                    <tr>
 
-                            <td class="date-filed">
-                                {{ proceeding.date_filed|date:'Y-m-d' }}
+                        <td class="date-filed">
+                            {{ proceeding.date_filed|date:'Y-m-d' }}
+                        </td>
 
-                            <td class="case-no">
-                                {{ proceeding.case_number }}
+                        <td class="case-no">
+                            {{ proceeding.case_number }}
+                        </td>
 
-                            <td class="forum">
-                                {{ proceeding.forum }}
+                        <td class="forum">
+                            {{ proceeding.forum }}
+                        </td>
 
-                            <td class="status">
+                        <td class="status">
                             {{ proceeding.status }}
+                        </td>
 
-                        {% endfor %}
-                    {% endif %}
+                    </tr>
+
+                {% endfor %}
+            {% endif %}
 
         </table>
 
@@ -228,29 +248,38 @@
 
                 <th>
                     Date
+                </th>
 
                 <th>
                     Description
+                </th>
 
                 <th>
                     Citation
+                </th>
+            </tr>
 
-                    {% if facts %}
-                        {% for fact in facts %}
+            {% if facts %}
+                {% for fact in facts %}
 
-                            <tr>
+                    <tr>
 
-                            <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-                                {{ fact.date|date:'Y-m-d' }}
+                        <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+                            {{ fact.date|date:'Y-m-d' }}
+                        </td>
 
-                            <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-                                {{ fact.description }}
+                        <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+                            {{ fact.description }}
+                        </td>
 
-                            <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+                        <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
                             {{ fact.citation|slice:":25"|default_if_none:'' }}
+                        </td>
 
-                        {% endfor %}
-                    {% endif %}
+                    </tr>
+
+                {% endfor %}
+            {% endif %}
 
         </table>
 
@@ -268,48 +297,60 @@
 
                 <th>
                     Date
+                </th>
 
                 <th>
                     Medium
+                </th>
 
                 <th>
                     Type
+                </th>
 
                 <th>
                     Notes
+                </th>
 
                 <th class="amount">
                     Amount
+                </th>
 
-                    {% if entries %}
-                        {% for entry in entries %}
+            </tr>
 
-                            <tr>
+            {% if entries %}
+                {% for entry in entries %}
 
-                            <td class="date {% if entry.type == 'Authorization' %}strong{% endif %}">
-                                {{ entry.date|date:'Y-m-d' }}
+                    <tr>
 
-                            <td class="medium {% if entry.type == 'Authorization' %}strong{% endif %}">
-                                {{ entry.medium }}
+                        <td class="date {% if entry.type == 'Authorization' %}strong{% endif %}">
+                            {{ entry.date|date:'Y-m-d' }}
+                        </td>
 
-                            <td class="type {% if entry.type == 'Authorization' %}strong{% endif %}">
-                                {{ entry.type }}
+                        <td class="medium {% if entry.type == 'Authorization' %}strong{% endif %}">
+                            {{ entry.medium }}
+                        </td>
 
-                            <td class="notes {% if entry.type == 'Authorization' %}strong{% endif %}">
-                                {{ entry.notes }}
+                        <td class="type {% if entry.type == 'Authorization' %}strong{% endif %}">
+                            {{ entry.type }}
+                        </td>
 
-                            <td class="amount {% if entry.type == 'Authorization' %}strong{% endif %}">
+                        <td class="notes {% if entry.type == 'Authorization' %}strong{% endif %}">
+                            {{ entry.notes }}
+                        </td>
+
+                        <td class="amount {% if entry.type == 'Authorization' %}strong{% endif %}">
                             {% if entry.amount|floatformat:2|intcomma %}
                                 ${{ entry.amount|floatformat:2|intcomma }}
                             {% else %}
                                 NA
                             {% endif %}
+                        </td>
 
-                        {% endfor %}
-                    {% endif %}
+                    </tr>
 
+                {% endfor %}
+            {% endif %}
         </table>
-
     </div>
 
 {% endblock content %}

@@ -12,21 +12,28 @@
             </p>
             <table class="options">
                 <tr>
-                    <td class="setting-label">Google Contacts
+                    <td class="setting-label">Google Contacts</td>
                     <td class="setting-control">
                         {% if contacts_token %}
-                            <a class="btn btn-primary btn-slim" href="/settings/google/logout/contacts">Disconnect</a>
+                            <a class="btn btn-primary btn-slim"
+                               href={% url 'settings:google-logout' 'contacts' %}>
+                                Disconnect
+                            </a>
                         {% else %}
-                            <a class="btn btn-primary btn-slim" href="/settings/google/login/contacts">Connect</a>
+                            <a class="btn btn-primary btn-slim" href={% url 'settings:google-login' 'contacts' %}>Connect</a>
                         {% endif %}
+                    </td>
+                </tr>
                 <tr>
-                    <td class="setting-label">Google Calendar
+                    <td class="setting-label">Google Calendar</td>
                     <td class="setting-control">
                         {% if calendar_token %}
-                            <a class="btn btn-primary btn-slim" href="/settings/google/logout/calendar">Disconnect</a>
+                            <a class="btn btn-primary btn-slim" href={% url 'settings:google-logout' 'calendar' %}>Disconnect</a>
                         {% else %}
-                            <a class="btn btn-primary btn-slim" href="/settings/google/login/calendar">Connect</a>
+                            <a class="btn btn-primary btn-slim" href={% url 'settings:google-login' 'calendar' %}>Connect</a>
                         {% endif %}
+                    </td>
+                </tr>
             </table>
             </div>
         {% endif %}
@@ -40,14 +47,15 @@
         <p class="section-text">Logged in as: <span class="username">{{ user.username }}</span></p>
         <table class="options">
             <tr>
-                <td class="setting-label">Session: </td>
+                <td class="setting-label">Session:</td>
                 <td>
-                    <a class="btn btn-primary" href="{% url 'logout' %}">Logout</a>
-                    <!-- <form method="post" action="{% url 'logout' %}"> -->
+                    <a class="btn btn-primary" href="{% url 'accounts:logout' %}">Logout</a>
+                    <!-- <form method="post" action="{% url 'accounts:logout' %}"> -->
                     <!--     {% csrf_token %} -->
                     <!--     <button type="submit">logout</button> -->
                     <!-- </form> -->
                 </td>
+            </tr>
         </table>
     </div>
 

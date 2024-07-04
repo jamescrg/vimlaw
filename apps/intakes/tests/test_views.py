@@ -2,8 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.intakes.models import Intake
-from apps.intakes.models import Note
+from apps.intakes.models import Intake, Note
 
 pytestmark = pytest.mark.django_db
 

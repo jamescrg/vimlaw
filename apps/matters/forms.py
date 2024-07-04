@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Matter, Proceeding, SettlementEntry, Fact, Rate
+from .models import Fact, Matter, Proceeding, Rate, SettlementEntry
 
 
 class MatterForm(forms.ModelForm):

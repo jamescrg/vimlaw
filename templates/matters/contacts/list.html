@@ -1,6 +1,5 @@
 {% extends "matters/detail.html" %}
 
-
 {% block subcontent %}
 
     <div class="section-title">
@@ -9,7 +8,9 @@
             <h2>Related Contacts</h2>
         </div>
 
-        <a href="/matters/{{ matter.id }}/contacts/assign">Assign Contact</a>
+        <a href={% url 'matters:contacts-assign' id=matter.id %}>
+            Assign Contact
+        </a>
 
     </div>
 
@@ -27,25 +28,29 @@
 
                     </div>
 
-                    <div style="overflow-x:auto">
+                    <div class="table-container">
                         <table class="table contacts">
 
                             {% for relationship in relationships %}
 
                                 <tr>
 
-                                <td class="relationship">
-                                    <a href="/matters/assign/{{ relationship.id }}/edit">
-                                        {{ relationship.role.name }}
-                                    </a>
+                                    <td class="relationship">
+                                        <a href={% url 'matters:contacts-assign-edit' id=relationship.id %}>
+                                            {{ relationship.role.name }}
+                                        </a>
+                                    </td>
 
-                                <td class="name">
-                                    <a href="/contacts/{{ relationship.contact.id }}">
-                                        {{ relationship.contact.name }}</a>
+                                    <td class="name">
+                                        <a href={% url 'contacts:select' id=relationship.contact.id %}>
+                                            {{ relationship.contact.name }}</a>
+                                    </td>
 
-                                <td class="phone1">{{ relationship.contact.phone1|default:'' }}
+                                    <td class="phone1">{{ relationship.contact.phone1|default:'' }}</td>
 
-                                <td class="email">{{ relationship.contact.email|default:'' }}
+                                    <td class="email">{{ relationship.contact.email|default:'' }}</td>
+
+                                </tr>
 
                             {% endfor %}
 
