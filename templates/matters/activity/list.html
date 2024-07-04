@@ -1,42 +1,38 @@
-
 {% extends "matters/detail.html" %}
 {% block subcontent %}
 
-<div class="section-title">
-  <div class="section-title-left">
-    <h2>Last 30 Days</h2>
-  </div>
+    <div class="section-title">
+        <div class="section-title-left">
+            <h2>Last 30 Days</h2>
+        </div>
+        <a href={% url 'activity:filter-matter' id=matter.id %}>Jump to Activity: All</a>
+    </div>
 
-  <a href="/activity/filter/matter/{{ matter.id }}">Jump to Activity: All</a>
+    <div class="matter-section-data">
+        <div class="table-container">
+            <table id="activity" class="table">
+                {% if entries %}
+                    {% for entry in entries %}
 
-</div>
+                        <tr>
+                            <td class="date">
+                                {{ entry.date|date:'Y-m-d' }}
+                            </td>
 
-<div class="matter-section-data">
-<div style="overflow-x:auto">
-<table id="activity" class="table">
+                            <td>
+                                <a href={% url 'activity:edit' id=entry.id %}>{{ entry.actions }}</a>
+                            </td>
 
-  {% if entries %}
-  {% for entry in entries %}
+                            <td class="hours">
+                                {{ entry.hours }}
+                            </td>
+                        </tr>
 
-    <tr>
+                    {% endfor %}
+                {% endif %}
 
-      <td class="date">
-
-        {{ entry.date|date:'Y-m-d' }}
-
-      <td>
-
-        <a href="/activity/{{ entry.id }}/edit">{{ entry.actions }}</a>
-
-      <td class="hours">
-
-        {{ entry.hours }}
-
-  {% endfor %}
-  {% endif %}
-
-</table>
-</div>
-</div>
+            </table>
+        </div>
+    </div>
 
 {% endblock subcontent %}

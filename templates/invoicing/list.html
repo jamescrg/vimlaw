@@ -1,63 +1,70 @@
 {% extends "base.html" %}
 {% block content %}
 
+    <div class="section-title">
 
-  <div class="section-title">
+        <div class="section-title-left">
 
-    <div class="section-title-left">
+            <h1>
+                Invoices
+            </h1>
 
-      <h1>
-        Invoices
-      </h1>
+            <div class="section-title-left-right">
+                <button
+                        type="button"
+                        class="btn-icon"
+                        hx-get="/invoicing/add"
+                        hx-target="#htmx-modal-container"
+                        hx-trigger="click"
+                        data-bs-toggle="modal"
+                        data-bs-target="#htmx-modal-container"
+                >
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
 
-    <div class="section-title-left-right">
-      <button
-        type="button"
-        class="btn-icon"
-        hx-get="/invoicing/add"
-        hx-target="#htmx-modal-container"
-        hx-trigger="click"
-        data-bs-toggle="modal"
-        data-bs-target="#htmx-modal-container"
-      >
-        <i class="bi bi-plus-lg"></i>
-      </button>
+        </div>
     </div>
 
-  </div>
-  </div>
+    <div class="table-container">
+        <table class="table events">
+            <tr>
+                <th class="date">
+                    Date Issued
+                </th>
 
-    <div style="overflow-x:auto">
-    <table class="table events">
+                <th class="matter">
+                    Matter
+                </th>
 
-      <tr>
-        <th class="date">
-          Date Issued
+                <th class="party">
+                    Amount
+                </th>
 
-        <th class="matter">
-          Matter
+            </tr>
 
-        <th class="party">
-          Amount
+            {% for invoice in invoices %}
 
-        {% for invoice in invoices %}
+                <tr>
 
-          <tr>
+                    <td class="date">
+                        {{ invoice.date|date:"Y-m-d" }}
+                    </td>
 
-            <td class="date">
-                {{ invoice.date|date:"Y-m-d" }}
+                    <td class="matter">
 
-            <td class="matter">
+                        <a href={% url 'matters:detail' id=invoice.matter.id %}>
+                            {{ invoice.matter.name }}
+                        </a>
+                    </td>
 
-                <a href="/matters/{{ invoice.matter.id }}/invoices">
-                    {{ invoice.matter.name }}
-                </a>
+                    <td class="amount"></td>
 
-            <td class="amount">
+                </tr>
 
-        {% endfor %}
+            {% endfor %}
 
-  </table>
-  </div>
+        </table>
+    </div>
 
 {% endblock content %}

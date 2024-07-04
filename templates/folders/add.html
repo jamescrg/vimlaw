@@ -5,7 +5,7 @@
     <div class="edit-folder">
 
         <form class="folder-form"
-              action="/folders/insert/{{ page }}"
+              action="{% url 'folders:insert' page %}"
               method="post">
 
             {% csrf_token %}
@@ -16,7 +16,7 @@
                                                          name="name"
                                                          onchange="submit()"
                                                          onblur="hideAddFolderForm()"
-                                                         value="">
+                                                         value="" />
 
         </form>
 

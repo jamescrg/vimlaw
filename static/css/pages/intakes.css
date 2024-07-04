@@ -1,9 +1,9 @@
 /* intake list and details */
 
- .add-to-contacts {
-   float: right;
-   margin: 15px 5px 0 0;
- }
+.add-to-contacts {
+    float: right;
+    margin: 15px 5px 0 0;
+}
 
 .intake-section {
     margin-bottom: 55px;
@@ -50,11 +50,11 @@
     margin: 15px 5px 25px 0;
 }
 
- #id_details {
-   min-height: 300px;
-   resize: both;
-   width: 600px;
- }
+#id_details {
+    min-height: 300px;
+    resize: both;
+    width: 600px;
+}
 
 .intake-notes {
     width: 100%;
@@ -131,22 +131,26 @@ code {
 
 /* intake form */
 
- #id_name {
-   max-width: 400px;
-   width: 100%;
- }
+#id_name {
+    max-width: 400px;
+    width: 100%;
+}
 
- #id_address {
-   max-width: 400px;
-   width: 100%;
- }
+#id_address {
+    max-width: 400px;
+    width: 100%;
+}
 
- #id_phone {
-   max-width: 400px;
-   width: 100%;
- }
+#id_phone {
+    max-width: 400px;
+    width: 100%;
+}
 
- #id_email {
-   max-width: 400px;
-   width: 100%;
- }
+#id_email {
+    max-width: 400px;
+    width: 100%;
+}
+
+.intake-contact {
+    float: right;
+}

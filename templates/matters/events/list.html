@@ -20,7 +20,7 @@
     </div>
 
     <div class="matter-section-data">
-        <div style="overflow-x:auto">
+        <div class="table-container">
             <table id="events" class="table">
                 <tr>
                     <th>Date</th>
@@ -69,7 +69,7 @@
     </div>
 
     {% if past_events %}
-        <br>
+        <br/>
         <div class="section-title">
 
             <div class="section-title-left">
@@ -78,7 +78,7 @@
         </div>
 
         <div class="matter-section-data">
-        <div style="overflow-x:auto">
+        <div class="table-container">
         <table id="events" class="table">
         <tr>
             <th>Date</th>
@@ -102,7 +102,13 @@
                 <td class="description
         {% if event.date < third_day and event.status == 'Pending' %} soon {% endif %}">
 
-                    <a class="event " href="/events/{{ event.id }}/edit/matters">
+                    <a href="#"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"
+                       data-bs-toggle="modal"
+                       data-bs-target="#htmx-modal-container"
+                       hx-get={% url 'events:edit-origin' id=event.id origin='matters' %}
+                    >
                         {{ event.description }}
                     </a>
                 </td>

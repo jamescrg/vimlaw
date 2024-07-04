@@ -26,44 +26,53 @@
             </div>
 
             <div class="section-title-right">
-                <a href="/agenda/toggle-events">
+                <a href={% url 'agenda:toggle-events' %}>
                     <i class="bi bi-x-lg"></i>
                 </a>
             </div>
 
         </div>
 
-        <div style="overflow-x:auto">
+        <div class="table-container">
             <table class="table events-table">
 
                 <tr>
                     <th class="date">
                         Date
+                    </th>
 
                     <th class="matter">
                         Matter
+                    </th>
 
                     <th class="party">
                         Party
+                    </th>
 
                     <th class="description">
                         Description
+                    </th>
 
-                        {% for event in events %}
+                </tr>
 
-                            <tr>
-                            <td class="date">
-                                {{ event.date|date:"Y-m-d" }}
+                {% for event in events %}
 
-                            <td class="matter">
-                                <a href="/matters/{{ event.matter.id }}">
-                                    {{ event.matter.name }}
-                                </a>
+                    <tr>
+                        <td class="date">
+                            {{ event.date|date:"Y-m-d" }}
+                        </td>
 
-                            <td class="party">
-                                {{ event.party }}
+                        <td class="matter">
+                            <a href={% url 'matters:detail' id=event.matter.id %}>
+                                {{ event.matter.name }}
+                            </a>
+                        </td>
 
-                            <td class="description
+                        <td class="party">
+                            {{ event.party }}
+                        </td>
+
+                        <td class="description
             {% if event.date < three_days_out %} soon {% endif %}">
 
                             <a
@@ -78,12 +87,13 @@
                             >
                                 {{ event.description }}
                             </a>
+                        </td>
+                    </tr>
 
-                        {% endfor %}
+                {% endfor %}
 
             </table>
         </div>
-
 
     </div>
 

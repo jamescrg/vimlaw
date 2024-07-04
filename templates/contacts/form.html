@@ -1,61 +1,60 @@
-
 <div class="col-sm-9 col-sm-push-3">
 
-	<div class="section-title">
+    <div class="section-title">
 
-    <div class="section-title-left">
-      <h1>
-      {% if not edit %}
-        Add Contact
-      {% else %}
-        Edit Contact
-      {% endif %}
-      </h1>
+        <div class="section-title-left">
+            <h1>
+                {% if not edit %}
+                    Add Contact
+                {% else %}
+                    Edit Contact
+                {% endif %}
+            </h1>
+        </div>
+
     </div>
 
-	</div>
+    <div class="section">
 
-  <div class="section">
+        {% if not google_connected %}
 
-    {% if not google_connected %}
+            <div class="warn">
+                Not connected to a Google contacts account. You may still add a contact, but it will not be posted to
+                your Google account. Contact an administrator to establish a connection.
+            </div>
 
-      <div class="warn">
-        Not connected to a Google contacts account. You may still add a contact, but it will not be posted to your Google account. Contact an administrator to establish a connection.
-      </div>
+        {% endif %}
 
-    {% endif %}
+        <form action="{{ action }}" method="post" role="form" class="form-responsive">
+            {% csrf_token %}
+            {{ form }}
 
-    <form action="{{ action }}" method="post" role="form" class="form-responsive">
-      {% csrf_token %}
-      {{ form }}
-
-      <div>
-      </div>
-      <div class="flex-center-space">
-        <div>
-          <button type="submit" class="submit">Submit</button>
-        </div>
-        <div>
-          {% if edit %}
-            <a
-              onclick="return confirm('Are you sure you want to delete this record?')"
-              href="/contacts/{{ contact.id }}/delete">
-              Delete Contact
-            </a>
+            <br/>
+            <div class="flex-center-space">
+                <div>
+                    <button type="submit" class="submit">Submit</button>
+                </div>
+                <div>
+                    {% if edit %}
+                        <a
+                                onclick="return confirm('Are you sure you want to delete this record?')"
+                                href={% url 'contacts:delete' id=contact.id %}>
+                            Delete Contact
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% if edit %}
+                <br/>
+                <div class="flex-center-space">
+                    <br/>
+                    <div>
+                        <a href={% url 'trust:add' id=contact.id %}>
+                            Add Trust Deposit
+                        </a>
+                    </div>
+                </div>
             {% endif %}
-        </div>
-      </div>
-      {% if edit %}
-        <div>
-        </div>
-        <div class="flex-center-space">
-          <div>
-          </div>
-          <div>
-            <a href="/trust/{{ contact.id }}/add">Add Trust Deposit</a>
-          </div>
-        </div>
-      {% endif %}
-    </form>
-  </div>
+        </form>
+    </div>
 </div>
