@@ -58,7 +58,6 @@ def index(request):
         expense_entries = expense_entries.filter(user=user)
 
     if filter["keyword"]:
-        # TODO: Fix filter
         expense_entries = expense_entries.filter(
             description__icontains=filter["keyword"]
         )
