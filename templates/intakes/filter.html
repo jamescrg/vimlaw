@@ -1,134 +1,134 @@
-
 <div class="modal-dialog modal-md">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h1 class="modal-title">
-        Filter Intakes
-      </h1>
-      <div>
-        <a href="#" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg"></i>
-        </a>
-      </div>
-    </div>
-    <div class="modal-body">
-
-      <form
-        action="/intakes/filter/update"
-        method="post"
-        class="form-responsive"
-      >
-
-        {% csrf_token %}
-
-        <label>
-          Status
-        </label>
-          <label>
-              <select name="status">
-                <option value="" {% if not filter.status %} selected {% endif %}>
-                    All
-                </option>
-                <option value="Open" {% if filter.status == 'Open' %} selected {% endif %}>
-                    Open
-                </option>
-                <option value="Closed" {% if filter.status == 'Closed' %} selected {% endif %}>
-                    Declined
-                </option>
-                <option value="Accepted" {% if filter.status == 'Accepted' %} selected {% endif %}>
-                    Accepted
-                </option>
-                <option value="Pending" {% if filter.status == 'Pending' %} selected {% endif %}>
-                    Pending
-                </option>
-              </select>
-          </label>
-
-          <label>
-          Practice Area
-        </label>
-          <label>
-              <select name="area">
-
-                <option value="" {% if not filter.area %}selected{% endif %}>
-                  All
-                </option>
-
-              {% for area in areas %}
-
-                <option value="{{ area }}" {% if filter.area == area %}selected{% endif %}>
-                    {{ area }}
-                </option>
-
-              {% endfor %}
-
-              </select>
-          </label>
-
-          <label>
-          From
-        </label>
-          <label>
-              <input type="date" name="date_from"
-                value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}">
-          </label>
-
-          <label>
-          To
-        </label>
-          <label>
-              <input type="date" name="date_to"
-                value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}">
-          </label>
-
-          <label>
-          Order By:
-        </label>
-          <label for="order"></label><select name="order" id="order">
-          <option value="name" {% if filter.order == 'name' %}selected{% endif %}>
-              Name, Ascending
-          </option>
-          <option value="date"
-          {% if filter.order == 'date' %}selected{% endif %}>
-              Date, Descending
-          </option>
-        </select>
-
-        <label>
-        Source
-        </label>
-          <label>
-              <select name="source">
-                <option value="" {% if not filter.source %} selected {% endif %}>
-                    All
-                </option>
-                <option value="Unknown" {% if filter.source == 'Unknown' %} selected {% endif %}>
-                    Unknown
-                </option>
-                <option value="Internet" {% if filter.source == 'Internet' %} selected {% endif %}>
-                    Internet
-                </option>
-                <option value="Agent" {% if filter.source == 'Agent' %} selected {% endif %}>
-                    Agent
-                </option>
-                <option value="Attorney - Internal" {% if filter.source == 'Attorney - Internal' %} selected {% endif %}>
-                    Attorney - Internal
-                </option>
-                <option value="Attorney - External" {% if filter.source == 'Attorney - External' %} selected {% endif %}>
-                    Attorney - External
-                </option>
-                <option value="Other" {% if filter.source == 'Other' %} selected {% endif %}>
-                    Other
-                </option>
-              </select>
-          </label>
-
-          <div></div>
-        <div>
-          <button type="submit" class="submit">Submit</button>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h1 class="modal-title">
+                Filter Intakes
+            </h1>
+            <div>
+                <a href="#" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
         </div>
+        <div class="modal-body">
 
-      </form>
+            <form
+                    method="post"
+                    class="form-responsive"
+                    action={% url 'intakes:filter-update' %}
+            >
+
+                {% csrf_token %}
+
+                <label>
+                    Status
+                </label>
+                <label>
+                    <select name="status">
+                        <option value="" {% if not filter.status %} selected {% endif %}>
+                            All
+                        </option>
+                        <option value="Open" {% if filter.status == 'Open' %} selected {% endif %}>
+                            Open
+                        </option>
+                        <option value="Closed" {% if filter.status == 'Closed' %} selected {% endif %}>
+                            Declined
+                        </option>
+                        <option value="Accepted" {% if filter.status == 'Accepted' %} selected {% endif %}>
+                            Accepted
+                        </option>
+                        <option value="Pending" {% if filter.status == 'Pending' %} selected {% endif %}>
+                            Pending
+                        </option>
+                    </select>
+                </label>
+
+                <label>
+                    Practice Area
+                </label>
+                <label>
+                    <select name="area">
+
+                        <option value="" {% if not filter.area %}selected{% endif %}>
+                            All
+                        </option>
+
+                        {% for area in areas %}
+
+                            <option value="{{ area }}" {% if filter.area == area %}selected{% endif %}>
+                                {{ area }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+                </label>
+
+                <label>
+                    From
+                </label>
+                <label>
+                    <input type="date" name="date_from"
+                           value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}"/>
+                </label>
+
+                <label>
+                    To
+                </label>
+                <label>
+                    <input type="date" name="date_to"
+                           value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}"/>
+                </label>
+
+                <label>
+                    Order By:
+                </label>
+                <label for="order"></label><select name="order" id="order">
+                <option value="name" {% if filter.order == 'name' %}selected{% endif %}>
+                    Name, Ascending
+                </option>
+                <option value="date"
+                        {% if filter.order == 'date' %}selected{% endif %}>
+                    Date, Descending
+                </option>
+            </select>
+
+                <label>
+                    Source
+                </label>
+                <label>
+                    <select name="source">
+                        <option value="" {% if not filter.source %} selected {% endif %}>
+                            All
+                        </option>
+                        <option value="Unknown" {% if filter.source == 'Unknown' %} selected {% endif %}>
+                            Unknown
+                        </option>
+                        <option value="Internet" {% if filter.source == 'Internet' %} selected {% endif %}>
+                            Internet
+                        </option>
+                        <option value="Agent" {% if filter.source == 'Agent' %} selected {% endif %}>
+                            Agent
+                        </option>
+                        <option value="Attorney - Internal" {% if filter.source == 'Attorney - Internal' %}
+                                selected {% endif %}>
+                            Attorney - Internal
+                        </option>
+                        <option value="Attorney - External" {% if filter.source == 'Attorney - External' %}
+                                selected {% endif %}>
+                            Attorney - External
+                        </option>
+                        <option value="Other" {% if filter.source == 'Other' %} selected {% endif %}>
+                            Other
+                        </option>
+                    </select>
+                </label>
+
+                <div>
+                    <button type="submit" class="submit">Submit</button>
+                </div>
+
+            </form>
+        </div>
     </div>
-  </div>
 </div>

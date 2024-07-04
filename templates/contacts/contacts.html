@@ -1,30 +1,29 @@
-
 <div id="contacts" class="col-md-3">
 
-  <div class="section-title">
-    <div class="section-title-left">
-      <h1>
-        Contacts
-      </h1>
-      <div class="section-title-left-right">
-          <a href="/contacts/add">
-            <i class="bi bi-plus-lg"></i>
-          </a>
-      </div>
-      </div>
+    <div class="section-title">
+        <div class="section-title-left">
+            <h1>
+                Contacts
+            </h1>
+            <div class="section-title-left-right">
+                <a href={% url 'contacts:add' %}>
+                    <i class="bi bi-plus-lg"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
-  {% if contacts %}
+    {% if contacts %}
 
-    {% include "contacts/list.html" %}
+        {% include "contacts/list.html" %}
 
-  {% else %}
+    {% else %}
 
-  <ul class="list-group">
-    <li class="list-group-item">No contacts selected.</li>
-  </ul>
+        <ul class="list-group">
+            <li class="list-group-item">No contacts selected.</li>
+        </ul>
 
-  {% endif %}
+    {% endif %}
 
 </div>
 
@@ -32,7 +31,7 @@
 
     {% if selected_contact %}
 
-      {% include "contacts/contact.html" %}
+        {% include "contacts/contact.html" %}
 
     {% endif %}
 

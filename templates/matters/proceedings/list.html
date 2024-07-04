@@ -1,76 +1,87 @@
-
 {% extends "matters/detail.html" %}
 
 {% block subcontent %}
 
-<div class="section-title">
-  <div class="section-title-left">
-    <h2>Proceedings</h2>
-    <div class="section-title-left-right">
-      <button
-        hx-get="/matters/{{ matter.id }}/proceedings/add"
-        hx-target="#htmx-modal-container"
-        data-bs-toggle="modal"
-        data-bs-target="#htmx-modal-container"
-      >
-        <i class="bi bi-plus-lg"></i>
-      </button>
+    <div class="section-title">
+        <div class="section-title-left">
+            <h2>Proceedings</h2>
+            <div class="section-title-left-right">
+                <button
+                        hx-get="/matters/{{ matter.id }}/proceedings/add"
+                        hx-target="#htmx-modal-container"
+                        data-bs-toggle="modal"
+                        data-bs-target="#htmx-modal-container"
+                >
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<div class="matter-section-data">
-<div style="overflow-x:auto">
-<table id="proceedings" class="table">
+    <div class="matter-section-data">
+        <div class="table-container">
+            <table id="proceedings" class="table">
 
-  {% if proceedings %}
-    <tr>
+                {% if proceedings %}
+                    <tr>
 
-      <th>
-        Date Filed
+                        <th>
+                            Date Filed
+                        </th>
 
-      <th>
-        Case No
+                        <th>
+                            Case No
+                        </th>
 
-      <th>
-        Forum and Description
+                        <th>
+                            Forum and Description
+                        </th>
 
-      <th>
-        Status
+                        <th>
+                            Status
+                        </th>
 
-    {% for proceeding in proceedings %}
+                    </tr>
 
-      <tr>
+                    {% for proceeding in proceedings %}
 
-        <td class="date-filed">
-          {{ proceeding.date_filed|date:'Y-m-d' }}
+                        <tr>
 
-        <td class="case-no">
-          {{ proceeding.case_number }}
+                            <td class="date-filed">
+                                {{ proceeding.date_filed|date:'Y-m-d' }}
+                            </td>
 
-        <td class="forum">
-          <a
-            href="#"
-            type="button"
-            class="btn-icon"
-            hx-get="/matters/{{ matter.id }}/proceedings/{{ proceeding.id }}/edit"
-            hx-target="#htmx-modal-container"
-            hx-trigger="click"
-            data-bs-toggle="modal"
-            data-bs-target="#htmx-modal-container"
-          >
-            {{ proceeding.forum }}
-          </a>
+                            <td class="case-no">
+                                {{ proceeding.case_number }}
+                            </td>
 
-        <td class="status">
-          {{ proceeding.status }}
+                            <td class="forum">
+                                <a
+                                        href="#"
+                                        type="button"
+                                        class="btn-icon"
+                                        hx-get="/matters/{{ matter.id }}/proceedings/{{ proceeding.id }}/edit"
+                                        hx-target="#htmx-modal-container"
+                                        hx-trigger="click"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#htmx-modal-container"
+                                >
+                                    {{ proceeding.forum }}
+                                </a>
+                            </td>
 
-    {% endfor %}
+                            <td class="status">
+                                {{ proceeding.status }}
+                            </td>
 
-  {% endif %}
+                        </tr>
 
-</table>
-</div>
-</div>
+                    {% endfor %}
+
+                {% endif %}
+
+            </table>
+        </div>
+    </div>
 
 {% endblock subcontent %}

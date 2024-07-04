@@ -58,7 +58,10 @@ def index(request):
         expense_entries = expense_entries.filter(user=user)
 
     if filter["keyword"]:
-        expense_entries = expense_entries.filter(actions__icontains=filter["keyword"])
+        # TODO: Fix filter
+        expense_entries = expense_entries.filter(
+            description__icontains=filter["keyword"]
+        )
 
     if filter["comp"]:
         if filter["comp"] == "Yes":

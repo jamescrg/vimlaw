@@ -3,7 +3,7 @@
 <table class="intake-details">
 
     <tr>
-        <td class="strong">Name
+        <td class="strong">Name</td>
         <td>
             <a
                     href="#"
@@ -17,33 +17,42 @@
             >
                 {{ intake.name }}
             </a>
+        </td>
+    </tr>
 
     <tr>
-        <td class="strong">Address
-        <td>{% if intake.address %}{{ intake.address|linebreaks }}{% endif %}
+        <td class="strong">Address</td>
+        <td>{% if intake.address %}{{ intake.address|linebreaks }}{% endif %}</td>
+    </tr>
 
     <tr>
-        <td class="strong">Phone
-        <td>{{ intake.phone|phone_number|default:'' }}
+        <td class="strong">Phone</td>
+        <td>{{ intake.phone|phone_number|default:'' }}</td>
+    </tr>
 
     <tr>
-        <td class="strong">Email
-        <td>{{ intake.email|default:'' }}
+        <td class="strong">Email</td>
+        <td>{{ intake.email|default:'' }}</td>
+    </tr>
 
     <tr>
-        <td class="strong">Date
-        <td>{{ intake.date|date:'Y-m-d' }}
+        <td class="strong">Date</td>
+        <td>{{ intake.date|date:'Y-m-d' }}</td>
+    </tr>
 
     <tr>
-        <td class="strong">Status
-        <td>{{ intake.status }}
+        <td class="strong">Status</td>
+        <td>{{ intake.status }}</td>
+    </tr>
 
     <tr>
-        <td class="strong">Practice Area
-        <td>{{ intake.practice_area }}
+        <td class="strong">Practice Area</td>
+        <td>{{ intake.practice_area }}</td>
+    </tr>
 
     <tr>
-        <td class="strong">Source
-        <td>{{ intake.source|default:'' }}
+        <td class="strong">Source</td>
+        <td>{{ intake.source|default:'' }}</td>
+    </tr>
 
 </table>

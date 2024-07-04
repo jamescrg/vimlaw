@@ -1,49 +1,43 @@
-
 {% extends "base.html" %}
 {% block content %}
 
-<div class="col-sm-12">
+    <div class="col-sm-12">
+        <div class="section-title">
+            Remove Contact from Matter
+        </div>
+        <form action="{{ action }}" method="post" role="form">
+            {% csrf_token %}
+            <table>
+                <tr>
 
-	<div class="section-title">
-    Remove Contact from Matter
-	</div>
+                    <th>Matter:</th>
 
-	<form action="{{ action }}" method="post" role="form">
+                    <td>
 
-    {% csrf_token %}
+                        <label>
+                            <select class="select-field" name="relationship_id">
 
-    <table>
+                                {% for relationship in relationships %}
 
-      <tr>
+                                    <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
 
-        <th>Matter:
+                                {% endfor %}
 
-        <td>
+                            </select>
+                        </label>
+                    </td>
+                </tr>
 
-            <label>
-                <select  style="width: 350px;" name="relationship_id">
+                <tr>
+                    <td></td>
 
-                  {% for relationship in relationships %}
+                    <td>
+                        <input type="submit" value="Submit"/>
+                    </td>
+                </tr>
 
-                    <option value="{{ relationship.id }}">{{ relationship.matter.name }}
-
-                  {% endfor %}
-
-                </select>
-            </label>
-
-        <tr>
-
-        <td>
-
-        <td>
-
-            <input type="submit" value="Submit">
-
-  </table>
-
-  </form>
-
-</div>
+            </table>
+        </form>
+    </div>
 
 {% endblock content %}

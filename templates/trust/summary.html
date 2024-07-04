@@ -1,67 +1,72 @@
-
 {% extends "base.html" %}
 {% block content %}
-{% load humanize %}
+    {% load humanize %}
 
-<div class="section-title">
+    <div class="section-title">
+        <div class="section-title-left">
+            <h1>
+                Account Summary
+            </h1>
+        </div>
+        <div class="section-title-right">
+            <a href={% url 'trust:history' %}>View Account History</a>
+        </div>
 
-  <div class="section-title-left">
+    </div>
 
-    <h1>
-      Account Summary
-    </h1>
+    <table id="summary">
 
-  </div>
+        <tr>
 
-  <div class="section-title-right">
-      <a href="/trust/history">View Account History</a>
-  </div>
+            <th>
+                Client
+            </th>
 
-</div>
+            <th class="numeric">
+                Pending Balance
+            </th>
 
-<table id="summary">
+            <th class="numeric">
+                Confirmed Balance
+            </th>
 
-	<tr>
+        </tr>
 
-		<th>
-			Client
+        {% if contacts %}
+            {% for contact in contacts %}
 
-		<th class="numeric">
-			Pending Balance
+                <tr>
 
-		<th class="numeric">
-			Confirmed Balance
+                    <td class="name">
+                        <a href={% url 'trust:client' id=contact.id %}>{{ contact.name }}</a>
+                    </td>
 
-	{% if contacts %}
-  {% for contact in contacts %}
+                    <td class="numeric {% if contact.pending_client_balance != contact.confirmed_client_balance %}green{% endif %}">
+                        ${{ contact.pending_client_balance|intcomma }}
+                    </td>
 
-		<tr>
+                    <td class="numeric">
+                        ${{ contact.confirmed_client_balance|intcomma }}
+                    </td>
 
-			<td class="name">
-        <a href="/trust/client/{{ contact.id }}">{{ contact.name }}</a>
+                </tr>
 
-      <td class="numeric {% if contact.pending_client_balance != contact.confirmed_client_balance %}green{% endif %}">
-        ${{ contact.pending_client_balance|intcomma }}
+            {% endfor %}
+        {% endif %}
 
-			<td class="numeric">
-        ${{ contact.confirmed_client_balance|intcomma }}
+        {% if contacts %}
+            <tr>
+                <td class="total">Total</td>
+                <td class="numeric total">
+                    ${{ pending_account_balance|intcomma }}
+                </td>
+                <td class="numeric total">
+                    ${{ confirmed_account_balance|intcomma }}
+                </td>
+            </tr>
 
-  {% endfor %}
-{% endif %}
+        {% endif %}
 
-	{% if contacts %}
-<tr>
-
-	<td class="total">Total
-
-	<td class="numeric total">
-		${{ pending_account_balance|intcomma }}
-
-	<td class="numeric total">
-		${{ confirmed_account_balance|intcomma }}
-
-  {% endif %}
-
-</table>
+    </table>
 
 {% endblock content %}

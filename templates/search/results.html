@@ -1,123 +1,132 @@
-
 <div class="row row-center">
 
-	<div class="search-results-title">
-		Matters
-	</div>
-
-  {% if matters %}
-
-    <div style="overflow-x:auto">
-    <table class="table">
-
-      {% for matter in matters %}
-
-        <tr>
-          <td class="-matter-name">
-              <a href="/matters/{{ matter.id }}">
-                {{ matter.name }}
-              </a>
-
-            <td>
-              {{ matter.description }}
-
-            <td class="matter-status">
-              {{ matter.status }}
-
-      {% endfor %}
-
-    </table>
+    <div class="search-results-title">
+        Matters
     </div>
 
-  {% endif %}
+    {% if matters %}
 
-	<div class="search-results-title">
-		Proceedings
-	</div>
+        <div class="table-container">
+            <table class="table">
 
-  {% if proceedings %}
+                {% for matter in matters %}
 
-    <div style="overflow-x:auto">
-    <table class="table">
+                    <tr>
+                        <td class="-matter-name">
+                            <a href={% url 'matters:detail' id=matter.id %}>
+                                {{ matter.name }}
+                            </a>
+                        </td>
 
-      {% for proceeding in proceedings %}
+                        <td>
+                            {{ matter.description }}
+                        </td>
 
-        <tr>
-          <td class="">
-              <a href="/matters/{{ proceeding.matter.id }}/proceedings">
-                {{ proceeding.matter.name }}
-              </a>
+                        <td class="matter-status">
+                            {{ matter.status }}
+                        </td>
 
-            <td>
-              {{ proceeding.case_number }}
+                    </tr>
 
-            <td class="matter-status">
-              {{ proceeding.status }}
+                {% endfor %}
 
-      {% endfor %}
+            </table>
+        </div>
 
-    </table>
+    {% endif %}
+
+    <div class="search-results-title">
+        Proceedings
     </div>
 
-  {% endif %}
+    {% if proceedings %}
 
-	<div class="search-results-title">
-		Contacts
-	</div>
+        <div class="table-container">
+            <table class="table">
 
-  {% if contacts %}
+                {% for proceeding in proceedings %}
 
-    <div style="overflow-x:auto">
-    <table class="table">
+                    <tr>
+                        <td>
+                            <a href={% url 'matters:proceedings' id=proceeding.matter.id %}>
+                                {{ proceeding.matter.name }}
+                            </a>
+                        </td>
 
-      {% for contact in contacts %}
+                        <td>
+                            {{ proceeding.case_number }}
+                        </td>
 
-        <tr>
-          <td class="contact-folder">
-            {% if contact.folder %}
-              <a href="/folders/{{ contact.folder.id }}/contacts">
-                {{ contact.folder.name }}
-              </a>
-            {% else %}
-              <a href="/folders/0/contacts">Uncategorized</a>
-            {% endif %}
+                        <td class="matter-status">
+                            {{ proceeding.status }}
+                        </td>
+                    </tr>
 
-          <td class="contact-name">
-            <a href="/contacts/{{ contact.id }}">{{ contact.name }}</a>
+                {% endfor %}
 
-          <td class="contact-phone1">{{ contact.phone1 }}
-          <td class="contact-email">{{ contact.email }}
-        </tr>
+            </table>
+        </div>
 
-      {% endfor %}
+    {% endif %}
 
-    </table>
+    <div class="search-results-title">
+        Contacts
     </div>
 
-  {% endif %}
+    {% if contacts %}
 
-	<div class="search-results-title">
-		Intakes
-	</div>
+        <div class="table-container">
+            <table class="table">
 
-  {% if intakes %}
+                {% for contact in contacts %}
 
-    <div style="overflow-x:auto">
-    <table class="table">
+                    <tr>
+                        <td class="contact-folder">
+                            {% if contact.folder %}
+                                <a href={% url 'folders:list' id=contact.folder.id page='contacts' %}>
+                                    {{ contact.folder.name }}
+                                </a>
+                            {% else %}
+                                <a href={% url 'folders:list' id=0 page='contacts' %}>Uncategorized</a>
+                            {% endif %}
+                        </td>
 
-      {% for intake in intakes %}
+                        <td class="contact-name">
+                            <a href={% url 'contacts:select' id=contact.id %}>{{ contact.name }}</a>
+                        </td>
 
-        <tr>
-          <td class="intake-name">
-            <a href="/intakes/{{ intake.id }}">{{ intake.name }}</a>
-          <td class="intake-phone">{{ intake.phone }}
-          <td class="intake-email">{{ intake.email }}
-        </tr>
+                        <td class="contact-phone1">{{ contact.phone1 }}</td>
+                        <td class="contact-email">{{ contact.email }}</td>
+                    </tr>
 
-      {% endfor %}
+                {% endfor %}
 
-    </table>
+            </table>
+        </div>
+
+    {% endif %}
+
+    <div class="search-results-title">
+        Intakes
     </div>
 
-  {% endif %}
+    {% if intakes %}
+
+        <div class="table-container">
+            <table class="table">
+                {% for intake in intakes %}
+                    <tr>
+                        <td class="intake-name">
+                            <a href={% url 'intakes:detail' id=intake.id %}>{{ intake.name }}</a>
+                        </td>
+                        <td class="intake-phone">{{ intake.phone }}</td>
+                        <td class="intake-email">{{ intake.email }}</td>
+                    </tr>
+
+                {% endfor %}
+
+            </table>
+        </div>
+
+    {% endif %}
 </div>

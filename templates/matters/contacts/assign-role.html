@@ -18,7 +18,7 @@
 
                 <a
                         class="confirm"
-                        href="/matters/assign/{{ relationship.id }}/delete">
+                        href="{% url 'matters:contacts-assign-delete' relationship.id %}">
                     Remove Assignment
                 </a>
 
@@ -26,7 +26,6 @@
         {% endif %}
 
     </div>
-
 
     <div class="matter-section-data">
 
@@ -39,10 +38,12 @@
                 <tr>
 
                     <td>
-
                         {{ contact.name }}
-                        <input type="hidden" name="contact_id" value="{{ contact.id }}">
-                        <input type="hidden" name="matter_id" value="{{ matter.id }}">
+                        <input type="hidden" name="contact_id" value="{{ contact.id }}"/>
+                        <input type="hidden" name="matter_id" value="{{ matter.id }}"/>
+                    </td>
+
+                </tr>
 
                 <tr>
 
@@ -68,12 +69,16 @@
 
                                             {% endif %}
                                     >{{ role.name }}
+                                    </option>
 
                                 {% endfor %}
 
                             </select>
                         </label>
 
+                    </td>
+
+                </tr>
 
             </table>
 

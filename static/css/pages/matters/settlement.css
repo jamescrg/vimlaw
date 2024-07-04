@@ -34,3 +34,7 @@ Form
 #id_notes {
   width: 400px;
 }
+
+.table-container {
+  overflow-x: auto;
+}
