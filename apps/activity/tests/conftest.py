@@ -8,14 +8,21 @@ from apps.matters.models import Matter
 
 @pytest.fixture
 def user():
-    user = CustomUser.objects.create_user("Ollie", "ollie@gmail.com", "clawboy")
+    user = CustomUser.objects.create(
+        username="Ollie", email="ollie@gmail.com", user_rate=100
+    )
+    user.set_password("clawboy")
+    user.save()
+
     return user
 
 
 @pytest.fixture
 def client(user):
     client = Client()
-    client.login(username="Ollie", password="clawboy")
+    logged_in = client.login(username="Ollie", password="clawboy")
+    assert logged_in
+
     return client
 
 
@@ -50,9 +57,13 @@ def entry(user, matter):
 
 @pytest.fixture
 def entry_data(entry):
-    entry_data = entry.__dict__
-    keys = "_state id".split()
-    for key in keys:
-        del entry_data[key]
-    entry_data["matter"] = entry_data["matter_id"]
+    exclude_keys = {"_state", "id", "matter_id"}
+
+    entry_data = {
+        key: value for key, value in entry.__dict__.items() if key not in exclude_keys
+    }
+    entry_data["matter"] = entry.matter_id
+
+    entry_data = {k: v if v is not None else "" for k, v in entry_data.items()}
+
     return entry_data
