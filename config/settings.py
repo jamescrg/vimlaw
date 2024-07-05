@@ -153,12 +153,16 @@ TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+if DEBUG is False:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+else:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, "static"),
+    ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -205,7 +209,7 @@ LOGGING = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": env("LOGFILE"),
+            "filename": BASE_DIR / "logs/debug.log",
             "formatter": "timestamped",
         },
     },
