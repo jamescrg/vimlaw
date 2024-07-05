@@ -4,12 +4,12 @@ pytestmark = pytest.mark.django_db
 
 
 def test_string(task):
-    assert str(task) == f"{task.title} : {task.id}"
+    assert str(task) == f"{task.description} : {task.id}"
 
 
 def test_content(task):
     expected_values = {
-        "title": "Read about Mohandas Gandhi",
+        "description": "Read about Mohandas Gandhi",
         "status": "Pending",
     }
     for key, val in expected_values.items():
