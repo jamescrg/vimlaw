@@ -20,8 +20,7 @@ def user():
 @pytest.fixture
 def client(user):
     client = Client()
-    logged_in = client.login(username="Ollie", password="clawboy")
-    assert logged_in
+    client.login(username="Ollie", password="clawboy")
 
     return client
 

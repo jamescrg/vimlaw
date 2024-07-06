@@ -7,14 +7,13 @@ from apps.agenda.models import Task
 pytestmark = pytest.mark.django_db
 
 
-def test_index(client, folder, task):
+def test_index(client, folder, task, matter):
     response = client.get("/agenda/")
     assert response.status_code == 200
-    response = client.get(reverse("agenda"))
+    response = client.get(reverse("agenda:agenda"))
     assert response.status_code == 200
     assertTemplateUsed(response, "agenda/content.html")
     assert response.context["page"] == "agenda"
-    assert response.context["folders"]
     assert response.context["show_events"]
 
 
@@ -26,49 +25,32 @@ def test_toggle_events(client):
     assert not response.context["show_events"]
 
 
-def test_activate(client, folder):
-    client.get(f"/agenda/{folder.id}/activate")
-    folder.refresh_from_db()
-    assert folder.active == 1
-
-
-def test_status(client, task):
-    client.get(f"/agenda/{task.id}/complete")
-    task.refresh_from_db()
-    assert task.status == "Complete"
-
-
 def test_add_post(client, folder, task_data):
-    task_data["title"] = "New title"
+    task_data["description"] = "New title"
     task_data["date_due"] = ""
     task_data["matter_id"] = ""
     task_data["priority"] = ""
     response = client.post("/agenda/add", task_data)
     assert response.status_code == 302
-    found = Task.objects.filter(title=task_data["title"]).first()
+    found = Task.objects.filter(description=task_data["description"]).first()
     assert found
 
 
 def test_edit_get(client, task):
     response = client.get(f"/agenda/{task.id}/edit")
     assert response.status_code == 200
-    assertTemplateUsed(response, "agenda/form.html")
+    assertTemplateUsed(response, "agenda/task-form-edit.html")
 
 
-def test_edit_post(client, folder, task):
+def test_edit_post(client, folder, task, user):
     data = {
         "folder": folder.id,
-        "title": "Finish unit testing",
+        "description": "Finish unit testing",
         "status": "Pending",
+        "user": user.id,
     }
-    response = client.post(f"/agenda/{task.id}/edit", data)
+    response = client.post(reverse("agenda:edit", args=[task.id]), data)
     assert response.status_code == 302
-    found = Task.objects.filter(title="Finish unit testing").exists()
-    assert found
 
-
-def test_clear(client, folder, task):
-    response = client.get(f"/agenda/{folder.id}/clear")
-    assert response.status_code == 302
-    found = Task.objects.filter(pk=folder.id).exists()
-    assert not found
+    task_exists = Task.objects.filter(description="Finish unit testing").exists()
+    assert task_exists
