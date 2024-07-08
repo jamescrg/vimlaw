@@ -7,7 +7,12 @@ from apps.folders.models import Folder
 
 @pytest.fixture
 def user():
-    user = CustomUser.objects.create_user("Ollie", "ollie@gmail.com", "clawboy")
+    user = CustomUser.objects.create(
+        username="Ollie", email="ollie@gmail.com", user_rate=100
+    )
+    user.set_password("clawboy")
+    user.save()
+
     return user
 
 
@@ -19,13 +24,14 @@ def client(user):
 
 
 @pytest.fixture
-def folders(user, folder):
+def folders(user):
     folder_names = [
         "Current",
         "Tomorrow",
         "Today",
         "Admin",
     ]
+
     folders = []
     for name in folder_names:
         folder = Folder.objects.create(
@@ -35,12 +41,15 @@ def folders(user, folder):
             selected=0,
             active=0,
         )
+
         folder.save()
         folders.append(folder)
+
     return folders
 
 
 @pytest.fixture
-def folder(folders):
+def folder_data(folders):
     folder = folders[0]
+
     return folder
