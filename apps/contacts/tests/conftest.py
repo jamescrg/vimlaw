@@ -10,14 +10,21 @@ from apps.matters.models import Matter, Relationship, Role
 
 @pytest.fixture
 def user():
-    user = CustomUser.objects.create_user("Ollie", "ollie@gmail.com", "clawboy")
+    user = CustomUser.objects.create(
+        username="Ollie", email="ollie@gmail.com", user_rate=100
+    )
+    user.set_password("clawboy")
+    user.save()
+
     return user
 
 
 @pytest.fixture
 def client(user):
     client = Client()
+
     client.login(username="Ollie", password="clawboy")
+
     return client
 
 
@@ -49,8 +56,10 @@ def contact(user, folder):
         email="gandhi@gandhi.com",
         website="gandhi.com",
         notes="The Mahatma",
+        client_status="Current",
     )
     contact.save()
+
     return contact
 
 

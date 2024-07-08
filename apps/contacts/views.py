@@ -68,8 +68,10 @@ def index(request):
 @login_required
 def select(request, id):
     contact = get_object_or_404(Contact, pk=id)
+
     request.session["contacts_selected_folder_id"] = contact.folder.id
     request.session["selected_contact_id"] = id
+
     return redirect("/contacts/")
 
 
