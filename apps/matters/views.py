@@ -142,6 +142,8 @@ def edit(request, id):
                     return redirect("/matters")
             else:
                 return redirect("/matters")
+        else:
+            print(form.errors)
 
     else:
         form = MatterForm(instance=matter)
