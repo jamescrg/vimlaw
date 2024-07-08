@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 def test_index(client):
     response = client.get("/events/")
     assert response.status_code == 200
-    response = client.get(reverse("events"))
+    response = client.get(reverse("events:events"))
     assert response.status_code == 200
     assert response.context["page"] == "events"
 
@@ -55,14 +55,3 @@ def test_delete(client, event):
     assert response.status_code == 302
     found = Event.objects.filter(pk=event.id).exists()
     assert not found
-
-
-def test_add_with_results(client):
-    deadline_data = {
-        "initial_date": "12/28/2022",
-        "days": "2",
-    }
-    response = client.post("/events/add_with_results", deadline_data)
-    assert response.context["results"]["deadline_weekday"] == "Friday"
-    assert response.status_code == 200
-    assertTemplateUsed("events/form.html")

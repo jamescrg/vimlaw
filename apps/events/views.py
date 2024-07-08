@@ -168,7 +168,7 @@ def edit(request, id, origin="events"):
 
 
 @login_required
-def delete(request, id, origin="events"):
+def delete(request, id, origin="events:events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":
         request.session["origin"] = origin
