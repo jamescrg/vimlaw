@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 def test_index(client):
     response = client.get("/intakes/")
     assert response.status_code == 200
-    response = client.get(reverse("intakes-list"))
+    response = client.get(reverse("intakes:list"))
     assert response.status_code == 200
     assertTemplateUsed(response, "intakes/list.html")
     assert response.context["page"] == "intakes"
