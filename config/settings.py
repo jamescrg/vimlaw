@@ -17,6 +17,8 @@ from pathlib import Path
 import environ
 from django.forms.renderers import TemplatesSetting
 
+from utils.prepare_path import prepare_path
+
 env = environ.Env(DEBUG=(bool, False), ADMINS=(list, []))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -190,6 +192,8 @@ ADMINS = env("ADMINS")
 SESSION_COOKIE_AGE = 1209600 * 4
 
 SESSION_SAVE_EVERY_REQUEST = True
+
+prepare_path(f"{BASE_DIR}/logs/debug.log")
 
 LOGGING = {
     # The version number of our log
