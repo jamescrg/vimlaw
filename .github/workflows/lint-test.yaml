@@ -1,7 +1,23 @@
 name: Linting and Testing Pull Requests
+
 on:
   pull_request:
     branches: [ "dev" ]
+
+env:
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  DEBUG: ${{ variables.DEBUG }}
+  ENV: ${{ variables.ENV }}
+  ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+  SITE_NAME: ${{ variables.SITE_NAME }}
+  DB_NAME: ${{ secrets.DB_NAME }}
+  DB_USER: ${{ secrets.DB_USER }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  ADMINS: ${{ variables.ADMINS }}
+  EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+  EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+  EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+  SERVER_EMAIL: ${{ secrets.SERVER_EMAIL }}
 
 jobs:
   lint-and-test:
@@ -22,5 +38,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Lint code
+        run: pre-commit run --all-files
+
       - name: Run tests
         run: pytest
+        env:
