@@ -4,22 +4,6 @@ on:
   push:
     branches: [ "dev" ]
 
-env:
-  SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  DEBUG: ${{ vars.DEBUG }}
-  ENV: ${{ vars.ENV }}
-  ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-  SITE_NAME: ${{ vars.SITE_NAME }}
-  DB_NAME: ${{ secrets.DB_NAME }}
-  DB_USER: ${{ secrets.DB_USER }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  ADMINS: ${{ vars.ADMINS }}
-  EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
-  EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-  EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-  SERVER_EMAIL: ${{ secrets.SERVER_EMAIL }}
-
-
 concurrency:
   group: staging-deploy
   cancel-in-progress: true
@@ -32,57 +16,9 @@ jobs:
     steps:
       - name: Configure SSH
         env:
-          SSH_PRIVATE_KEY: "-----BEGIN OPENSSH PRIVATE KEY-----
-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
------END OPENSSH PRIVATE KEY-----"
-          SSH_HOST: stage.lawadmin.app
-          SSH_USER: james
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/github
