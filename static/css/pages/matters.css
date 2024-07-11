@@ -64,7 +64,7 @@ Matter List
 }
 
 .ref-no {
-  width: 150px;
+  width: fit-content;
 }
 
 /* inline form for updating description / status */
