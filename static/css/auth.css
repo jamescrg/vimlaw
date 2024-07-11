@@ -27,12 +27,19 @@ a:hover {
     }
 }
 
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+}
+
 .auth-card {
     background: var(--warm-gray-100);
     border-radius: 3px;
-    margin: 0 auto;
     padding: 20px;
-    width: 400px;
+    width: 500px;
 }
 
 .auth-title {
@@ -64,7 +71,6 @@ a:hover {
 
 .account-form label {
     display: block;
-    font-size: 1em;
     font-weight: normal;
 }
 
@@ -72,7 +78,6 @@ a:hover {
     border: solid 1px var(--warm-gray-350);
     border-radius: 5px;
     display: block;
-    font-size: 1em;
     margin-top: 5px;
     padding: 7px;
     width: 100%;
@@ -85,6 +90,7 @@ a:hover {
 .account-form ul li {
     color: var(--red-600);
     margin-top: 5px;
+    font-size: 0.8rem;
 }
 
 .account-form button {
@@ -113,7 +119,10 @@ input:focus {
 }
 
 .login-bottom-right {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 2px;
+    font-size: 0.8rem;
 }
 
 .reset-confirm {
@@ -127,4 +136,12 @@ input:focus {
 .spam-folder {
     color: var(--red-600);
     font-weight: 600;
+}
+
+.auth-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 1rem;
 }

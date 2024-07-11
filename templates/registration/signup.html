@@ -4,22 +4,22 @@
 
 {% block content %}
 
-<div class="auth-card">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-title">{{ site_handle }}</div>
+            <div class="auth-subtitle">
+            </div>
+            <form class="account-form" method="post">
 
-  <div class="auth-title">{{ site_handle }}</div>
-    <div class="auth-subtitle">
+                {% csrf_token %}
+
+                {{ form.as_p }}
+                <div class="auth-buttons">
+                    <a href={% url 'accounts:login' %}>Cancel</a>
+                    <button type="submit">Sign Up</button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <form class="account-form" method="post">
-
-      {% csrf_token %}
-
-      {{ form.as_p }}
-
-      <button type="submit">Sign Up</button>
-
-    </form>
-
-</div>
 
 {% endblock content %}

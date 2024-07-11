@@ -8,6 +8,12 @@ class CustomUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ("username", "email")
 
+    # Remove default help text
+    def __init__(self, *args, **kwargs):
+        super(CustomUserCreationForm, self).__init__(*args, **kwargs)
+
+        self.fields["password1"].help_text = None
+
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
