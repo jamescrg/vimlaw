@@ -44,9 +44,6 @@
     <div class="table-container">
         <table id="matter-list" class="table">
             <tr>
-                <th>
-                    Matter ID
-                </th>
                 <th class="matter-name">
                     <a href={% url 'matters:sort-by' 'name' %}>
                         Matter
@@ -60,7 +57,9 @@
                         <i class="bi bi-chevron-expand"></i>
                     </a>
                 </th>
-
+                <th>
+                    Matter ID
+                </th>
             </tr>
 
             {% if matters %}
@@ -68,9 +67,6 @@
                 {% for matter in matters %}
 
                     <tr>
-                        <td class="ref-no">
-                            #{{ matter.id }}
-                        </td>
                         <td class="matter-name">
                             <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name }}</a>
                         </td>
@@ -108,6 +104,10 @@
                                 </label>
 
                             </form>
+                        </td>
+
+                        <td class="ref-no">
+                            {{ matter.id }}
                         </td>
 
                     </tr>
