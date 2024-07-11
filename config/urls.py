@@ -10,6 +10,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Accounts App
     path("accounts/", include("apps.accounts.urls")),
+    path("accounts/", include("django.contrib.auth.urls")),
     # Folders App
     path("", include("apps.folders.urls")),
     # Agenda App
