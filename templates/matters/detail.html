@@ -12,9 +12,9 @@
                     class="section-title-left-right"
             >
 
-                <a href="/matters/{{ matter.id }}/edit">
+                <a href={% url 'matters:edit' id=matter.id %}>
                     <i class="bi bi-pencil"></i>
-                </button>
+                </a>
                 <a href={% url 'matters:print' id=matter.id %}>
                     <i class="bi bi-printer"></i>
                 </a>
