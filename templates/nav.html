@@ -21,12 +21,6 @@
 
             <ul class="nav navbar-nav">
 
-                {% if env and env == 'dev' %}
-                    <li class="nav-item dev-flag">
-                        {{ env }}
-                    </li>
-                {% endif %}
-
                 <li class="nav-item {% if page == 'agenda' %}nav-active{% endif %}">
                     <a id="nav-agenda" class="nav-link" href={% url 'agenda:agenda' %}>Agenda</a>
                 </li>
