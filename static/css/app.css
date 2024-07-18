@@ -55,7 +55,6 @@ a:hover {
 }
 
 .section-title button {
-    color: var(--lime-800);
 }
 
 .section-title a {
@@ -247,6 +246,10 @@ li {
     color: var(--warm-gray-500);
     font-size: 1rem;
     font-weight: 600;
+}
+
+.filter-icon {
+  color: var(--warm-gray-600);
 }
 
 .btn-icon {
