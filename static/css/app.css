@@ -15,7 +15,7 @@ body {
 
 a,
 a:hover {
-    color: var(--blue-old-school);
+    color: var(--lime-800);
     outline: none;
     text-decoration: none;
 }
@@ -123,12 +123,17 @@ strong {
 }
 
 .soon a {
-    color: var(--red-900);
+    color: var(--orange-900);
 }
 
 .warn {
+    color: var(--orange-900);
     margin-bottom: 20px;
     padding: 10px;
+}
+
+.urgent {
+    color: var(--orange-900);
 }
 
 
@@ -231,13 +236,13 @@ li {
 .button-link {
     background: none;
     border: none;
-    color: var(--blue-old-school);
+    color: var(--lime-800);
     margin: 0;
     padding: 0;
 }
 
 .button-link:hover {
-    color: var(--blue-old-school);
+    color: var(--lime-800);
 }
 
 
@@ -263,11 +268,11 @@ li {
 }
 
 .bi-funnel {
-  color: var(--yellow-600);
+  color: var(--warm-gray-500);
 }
 
 .bi-plus-lg {
-    color: var(--green-800);
+    color: var(--lime-800);
 }
 
 .bi-x-lg {

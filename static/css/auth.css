@@ -33,7 +33,7 @@ body {
 }
 
 .auth-title {
-    color: var(--blue-old-school);
+    color: var(--lime-800);
     font-size: 1.5em;
     font-weight: 500;
     margin-bottom: 5px;
