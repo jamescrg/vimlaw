@@ -83,6 +83,7 @@ Matter List
 
 .edit-status-input {
   background: inherit;
+  color: var(--warm-gray-600);
   border: none!important;
   margin: 0;
   padding: 0;

@@ -16,11 +16,13 @@
 }
 
 .navbar-toggler-icon {
+  background: var(--lime-900);
   font-size: 1.8rem;
   color: var(--warm-gray-600);
 }
 
 .navbar-toggler-chevron {
+  background: var(--lime-900);
   font-size: 1rem;
   color: var(--warm-gray-600);
 }

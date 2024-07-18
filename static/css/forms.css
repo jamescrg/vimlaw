@@ -38,7 +38,7 @@ textarea {
 }
 
 .submit {
-    background: var(--warm-gray-600);
+    background: var(--lime-900);
     border: solid 1px var(--warm-gray-600);
     border-radius: 5px;
     color: var(--warm-gray-200);
