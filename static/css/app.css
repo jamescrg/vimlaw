@@ -205,7 +205,7 @@ li {
 .btn-primary,
 .btn-primary:hover,
 .btn-primary:focus {
-    background: var(--lime-900);
+    background: var(--warm-gray-600);
     border: none;
     color: var(--warm-gray-300);
 }

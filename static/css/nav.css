@@ -17,12 +17,12 @@
 
 .navbar-toggler-icon {
   font-size: 1.8rem;
-  color: var(--lime-700);
+  color: var(--warm-gray-600);
 }
 
 .navbar-toggler-chevron {
   font-size: 1rem;
-  color: var(--lime-700);
+  color: var(--warm-gray-600);
 }
 
 .navbar-toggler {
