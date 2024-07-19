@@ -33,7 +33,7 @@
                         {% if edit %}
                             <a
                                     onclick="return confirm('Are you sure you want to delete this record?')"
-                                    href={% url 'matters:rates-delete' id=matter.id rate_id=rate.id %}
+                                    href={% url 'matters:rates-delete' matter_id=matter.id rate_id=rate.id %}
                             >
                                 Delete Rate
                             </a>

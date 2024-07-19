@@ -94,7 +94,7 @@ def edit(request, id, entry_id):
 
 
 @login_required
-def delete(request, id, entry_id):
+def delete(request, matter_id, entry_id):
     entry = get_object_or_404(SettlementEntry, pk=entry_id)
     entry.delete()
-    return redirect(f"/matters/{id}/settlement")
+    return redirect(f"/matters/{matter_id}/settlement")

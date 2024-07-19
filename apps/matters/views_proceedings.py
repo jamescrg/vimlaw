@@ -95,7 +95,7 @@ def edit(request, id, proceeding_id):
 
 
 @login_required
-def delete(request, id, proceeding_id):
+def delete(request, matter_id, proceeding_id):
     proceeding = get_object_or_404(Proceeding, pk=proceeding_id)
     proceeding.delete()
-    return redirect(f"/matters/{id}/proceedings")
+    return redirect(f"/matters/{matter_id}/proceedings")
