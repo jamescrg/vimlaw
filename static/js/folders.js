@@ -51,11 +51,8 @@ function showAddFolderForm() {
 
 function hideAddFolderForm() {
 
-    const parentElement = event.target.parentElement.parentElement.parentElement;
-
     setTimeout(function () {
         const elementId = 'add-folder-item';
         hide(elementId);
-    }, 500);
+    }, 0);
 }
-

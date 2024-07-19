@@ -4,7 +4,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_string(contact):
-    assert str(contact) == f"{contact.name} : {contact.id}"
+    assert str(contact) == contact.name
 
 
 def test_content(contact):

@@ -1,44 +1,42 @@
-
 <form
-  id="deadline-calculator-form"
-  class="deadline-calculator-form"
-  style="display: none;"
-  hx-boost="true"
-  hx-post="/events/deadline-results"
-  hx-target="#deadline-calculator-results"
-  hx-swap="innerHTML"
+        id="deadline-calculator-form"
+        class="deadline-calculator-form hide"
+        hx-boost="true"
+        hx-post="/events/deadline-results"
+        hx-target="#deadline-calculator-results"
+        hx-swap="innerHTML"
 >
 
-  {% csrf_token %}
+    {% csrf_token %}
 
     <div class="row">
 
-      <div class="col-md-3">
-        <label for="initial_date" class="form-label">Start Date</label>
-          <label>
-              <input
-                type="date"
-                class="form-control"
-                placeholder="Initial Date"
-                name="initial_date"
-                value="{{ today }}">
-          </label>
-      </div>
+        <div class="col-md-4">
+            <label for="initial_date" class="form-label">Start</label>
+            <label>
+                <input
+                        type="date"
+                        class="form-control"
+                        placeholder="Initial Date"
+                        name="initial_date"
+                        value="{{ today }}"/>
+            </label>
+        </div>
 
-      <div class="col-md-9">
-        <label for="days" class="form-label">Days</label>
-          <label>
-              <input
-                type="text"
-                class="form-control days"
-                placeholder=""
-                name="days"
-              >
-          </label>
-      </div>
-
-      <button style="display: none;" class="submit" type="submit">Submit</button>
-  </div>
+        <div class="col-md-8">
+            <label for="days" class="form-label">Days</label>
+            <label>
+                <input
+                        type="text"
+                        class="form-control days"
+                        placeholder=""
+                        name="days"
+                />
+            </label>
+        </div>
+        <div>
+            <button class="hide submit" type="submit">Submit</button>
+        </div>
+    </div>
 
 </form>
-

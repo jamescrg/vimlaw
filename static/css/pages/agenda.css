@@ -11,7 +11,7 @@ Events
 }
 
 .events {
-    margin-bottom: 30px;
+    margin-bottom: 1.5rem;
 }
 
 .events-table {
@@ -57,7 +57,7 @@ Tasks
 
 .tasks-background {
     background: var(--warm-gray-100);
-    padding: 0 1rem;
+    padding: 0.1rem 1rem;
 }
 
 
@@ -165,7 +165,7 @@ Task Add Form Quick
 }
 
 .task-input-description-label {
-  width: 85%;
+  width: 80%;
 }
 
 /*------------------------------------------------

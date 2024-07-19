@@ -1,141 +1,144 @@
-
 {% extends "base.html" %}
 {% block content %}
-{% load humanize %}
+    {% load humanize %}
 
-<div class="section-title">
+    <div class="section-title">
 
-  <div class="section-title-left">
+        <div class="section-title-left">
 
-    <h1>
-      Account History
-    </h1>
+            <h1>
+                Account History
+            </h1>
 
-  </div>
+        </div>
 
-  <div class="section-title-right">
-    <a href="/trust">Return to Account Summary</a>
-  </div>
-
-</div>
-
-<div class="contact-section">
-
-    <div style="float: right;">
-
-      <a href="/trust/history/30days"
-      {% if interval == '30days' %} class="strong" {% endif %}>
-        30 days
-      </a>
-      &nbsp;|&nbsp;
-      <a href="/trust/history/60days"
-      {% if interval == '60days' %} class="strong" {% endif %}>
-        60 days
-      </a>
-
-      &nbsp;|&nbsp;
-      <a href="/trust/history/all"
-      {% if interval == 'all' %} class="strong" {% endif %}>
-        All
-      </a>
+        <div class="section-title-right">
+            <a href={% url 'trust:trust' %}>Return to Account Summary</a>
+        </div>
 
     </div>
 
-    <table id="balances">
-        <tr>
+    <div class="section">
 
-            <td>Pending Balance
+        <div class="transaction-filter">
+            <a {% if interval == '30days' %} class="strong" {% endif %}
+                                             href={% url 'trust:history-interval' interval='30days' %}>
+                30 days
+            </a>
+            &nbsp;|&nbsp;
+            <a {% if interval == '60days' %} class="strong" {% endif %}
+                                             href={% url 'trust:history-interval' interval='60days' %}>
+                60 days
+            </a>
 
-            <td>${{ pending_account_balance|intcomma }}
+            &nbsp;|&nbsp;
+            <a {% if interval == 'all' %} class="strong" {% endif %}
+                                          href={% url 'trust:history-interval' interval='all' %}>
+                All
+            </a>
 
-        <tr>
+        </div>
 
-            <td>Confirmed Balance
+        <table id="balances">
+            <tr>
+                <td>Pending Balance</td>
+                <td>${{ pending_account_balance|intcomma }}</td>
+            </tr>
 
-            <td><strong>${{ confirmed_account_balance|intcomma }}</strong>
+            <tr>
+                <td>Confirmed Balance</td>
+                <td><strong>${{ confirmed_account_balance|intcomma }}</strong></td>
+            </tr>
 
-    </table>
+        </table>
 
-<div class="contact-section-data">
-<div style="overflow-x:auto">
-<table id="transactions" class="table">
-{% if transactions %}
+        <div class="contact-section-data">
+            <div class="table-container">
+                <table id="transactions" class="table">
+                    {% if transactions %}
 
-    <tr>
+                        <tr>
 
-      <th>Date
+                            <th>Date</th>
 
-      <th>Client
+                            <th>Client</th>
 
-      <th>Description
+                            <th>Description</th>
 
-      <th class="amount">Withdrawal
+                            <th class="amount">Withdrawal</th>
 
-      <th class="amount">Deposit
+                            <th class="amount">Deposit</th>
 
-      <th class="check">E
+                            <th class="check">E</th>
 
-      <th class="check">C
+                            <th class="check">C</th>
 
-    {% for transaction in transactions %}
+                        </tr>
 
-      <tr>
+                        {% for transaction in transactions %}
 
-        <td class="date">
-          {{ transaction.date|date:'Y-m-d' }}
+                            <tr>
 
-        <td class="client">
-          <a href="/trust/client/{{ transaction.contact_id }}">
-            {{ transaction.contact.name }}
-          </a>
+                                <td class="date">
+                                    {{ transaction.date|date:'Y-m-d' }}
+                                </td>
 
-        <td class="note">
+                                <td class="client">
+                                    <a href={% url 'trust:client' id=transaction.contact_id %}>
+                                        {{ transaction.contact.name }}
+                                    </a>
+                                </td>
 
-          <a href="/trust/{{ transaction.id }}/edit">
-            {{ transaction.description }}
-          </a>
+                                <td class="note">
+                                    <a
+                                            href="#"
+                                            hx-get="/trust/{{ transaction.id }}/edit"
+                                            hx-target="#htmx-modal-container"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#htmx-modal-container"
+                                    >
+                                        {{ transaction.description }}
+                                    </a>
+                                </td>
 
+                                <td class="amount urgent">
+                                    {% if transaction.type == 'Withdrawal' %} $
+                                        {{ transaction.amount|intcomma }} {% endif %}
+                                </td>
 
-        <td class="amount darkred">
-          {% if transaction.type == 'Withdrawal' %} ${{ transaction.amount|intcomma }} {% endif %}
+                                <td class="amount">
+                                    {% if transaction.type == 'Deposit' %} $
+                                        {{ transaction.amount|intcomma }} {% endif %}
+                                </td>
 
-        <td class="amount">
-          {% if transaction.type == 'Deposit' %} ${{ transaction.amount|intcomma }} {% endif %}
+                                <td class="check">
+                                    <a href={% url 'trust:entered' id=transaction.id %}>
+                                        {% if transaction.entered %}
+                                            <i class="bi bi-check-square"></i>
+                                        {% else %}
+                                            <i class="bi bi-square"></i>
+                                        {% endif %}
+                                    </a>
+                                </td>
+                                <td class="check">
+                                    <a href={% url 'trust:confirmed' id=transaction.id %}>
+                                        {% if transaction.confirmed %}
+                                            <i class="bi bi-check-square"></i>
+                                        {% else %}
+                                            <i class="bi bi-square"></i>
+                                        {% endif %}
+                                    </a>
+                                </td>
 
-        <td class="check">
+                            </tr>
 
-          <a href="/trust/{{ transaction.id }}/entered">
+                        {% endfor %}
+                    {% endif %}
 
-            {% if transaction.entered %}
-              <i class="bi bi-check-square"></i>
-            {% else %}
-              <i class="bi bi-square"></i>
-            {% endif %}
+                </table>
+            </div>
+        </div>
 
-          </a>
-
-
-        <td class="check">
-
-          <a href="/trust/{{ transaction.id }}/confirmed">
-
-            {% if transaction.confirmed %}
-              <i class="bi bi-check-square"></i>
-            {% else %}
-              <i class="bi bi-square"></i>
-            {% endif %}
-
-          </a>
-
-
-  {% endfor %}
-{% endif %}
-
-</table>
-</div>
-</div>
-
-</div>
+    </div>
 
 {% endblock content %}
-

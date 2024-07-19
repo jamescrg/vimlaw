@@ -1,19 +1,13 @@
-
 <ul class="list-group">
 
-	{% if contacts %}
-
-		{% for contact in contacts %}
-
-			<li class="list-group-item">
-				<a href="/contacts/{{ contact.id }}"
-          {% if selected_contact and selected_contact.id == contact.id %}
-          class="strong" {% endif %}>
-          {{ contact.name }}</a>
-			</li>
-
-		{% endfor %}
-
-	{% endif %}
+    {% if contacts %}
+        {% for contact in contacts %}
+            <li class="list-group-item">
+                <a {% if selected_contact and selected_contact.id == contact.id %}
+                    class="strong" {% endif %} href={% url 'contacts:select' id=contact.id %}>
+                    {{ contact.name }}</a>
+            </li>
+        {% endfor %}
+    {% endif %}
 
 </ul>

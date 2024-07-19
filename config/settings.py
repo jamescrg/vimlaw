@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+# Pipeline test, this was not here before
+
 import os
 from pathlib import Path
 
@@ -17,7 +19,9 @@ from pathlib import Path
 import environ
 from django.forms.renderers import TemplatesSetting
 
-env = environ.Env(DEBUG=(bool, False))
+from utils.prepare_path import prepare_path
+
+env = environ.Env(DEBUG=(bool, False), ADMINS=(list, []))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -153,25 +157,23 @@ TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
+STATIC_URL = "static/"
 
-STATIC_URL = "/static/"
-STATICFILES_DIRS = [str(BASE_DIR.joinpath("static"))]
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+if DEBUG is False:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+else:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, "static"),
+    ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
-LOGIN_REDIRECT_URL = "agenda"
-LOGOUT_REDIRECT_URL = "agenda"
+LOGIN_REDIRECT_URL = "agenda:agenda"
+LOGOUT_REDIRECT_URL = "agenda:agenda"
 
 INTERNAL_IPS = [
     "127.0.0.1",
@@ -193,6 +195,8 @@ SESSION_COOKIE_AGE = 1209600 * 4
 
 SESSION_SAVE_EVERY_REQUEST = True
 
+prepare_path(f"{BASE_DIR}/logs/debug.log")
+
 LOGGING = {
     # The version number of our log
     "version": 1,
@@ -211,7 +215,7 @@ LOGGING = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": env("LOGFILE"),
+            "filename": BASE_DIR / "logs/debug.log",
             "formatter": "timestamped",
         },
     },

@@ -1,64 +1,62 @@
-
 <div class="folders">
 
-  <div class="section-title">
+    <div class="section-title">
 
-  <div class="section-title-left">
-    <h1>
-        Folders
-    </h1>
+        <div class="section-title-left">
+            <h1>
+                Folders
+            </h1>
 
-    <div class="section-title-left-right">
-      <button id="add-folder-button" class="button-link" onclick="showAddFolderForm()">
-        <i class="bi bi-plus-lg"></i>
-      </button>
-    </div>
-  </div>
-
-  </div>
-
-  {% include "folders/add.html" %}
-  <ul class="list-group">
-
-    {% if folders %}
-    {% for folder in folders %}
-
-      <li class="list-group-item folder-item">
-
-        <button class="button-icon edit-folder-button"
-          onclick="showEditFolderForm()">
-          <i class="bi bi-folder"></i>
-        </button>
-
-        <div class="show-folder">
-
-          <a href="/folders/{{ folder.id }}/{{ page }}"
-
-            {# agenda #}
-            {% if selected_folders and folder in selected_folders %}
-              class="strong"
-            {% endif %}
-
-            {# contacts #}
-            {% if selected_folder and selected_folder.id == folder.id %}
-              class="strong"
-            {% endif %}
-            >
-
-            {{ folder.name }}
-
-          </a>
-
+            <div class="section-title-left-right">
+                <button id="add-folder-button" class="button-link" onclick="showAddFolderForm()">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
         </div>
 
-        {% include "folders/edit.html" %}
+    </div>
 
-      </li>
+    {% include "folders/add.html" %}
+    <ul class="list-group">
 
-    {% endfor %}
-    {% endif %}
+        {% if folders %}
+            {% for folder in folders %}
 
+                <li class="list-group-item folder-item">
 
-  </ul>
+                    <button class="button-icon edit-folder-button"
+                            onclick="showEditFolderForm()">
+                        <i class="bi bi-folder"></i>
+                    </button>
+
+                    <div class="show-folder">
+
+                        <a href="{% url 'folders:list' id=folder.id page=page %}"
+
+                                {# agenda #}
+                                {% if selected_folders and folder in selected_folders %}
+                           class="strong"
+                                {% endif %}
+
+                                {# contacts #}
+                                {% if selected_folder and selected_folder.id == folder.id %}
+                           class="strong"
+                                {% endif %}
+                        >
+
+                            {{ folder.name }}
+
+                        </a>
+
+                    </div>
+
+                    {% include "folders/edit.html" %}
+
+                </li>
+
+            {% endfor %}
+        {% endif %}
+
+    </ul>
 
 </div>

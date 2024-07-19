@@ -7,7 +7,7 @@ import google.oauth2.credentials
 # noinspection PyPackageRequirements
 from googleapiclient.discovery import build
 
-from utils import prepare_path
+from utils.prepare_path import prepare_path
 
 CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
 CALENDAR_ID = os.environ.get("CALENDAR_ID")

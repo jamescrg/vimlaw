@@ -3,4 +3,3 @@ omit = *migration*, *__init__.py*
 
 [report]
 show_missing = True
-

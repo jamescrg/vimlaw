@@ -2,10 +2,9 @@ import json
 
 import google_auth_oauthlib.flow
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
-from utils import prepare_path
+from utils.prepare_path import prepare_path
 
 CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
 CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"

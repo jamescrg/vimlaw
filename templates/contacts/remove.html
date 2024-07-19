@@ -1,49 +1,44 @@
+<div class="modal-dialog modal-md">
+    <div class="modal-content">
 
-{% extends "base.html" %}
-{% block content %}
+        <div class="modal-header">
+            <h1 class="modal-title">
+              Remove Contact from Matter
+            </h1>
+            <div>
+                <a href="#" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
 
-<div class="col-sm-12">
+        <div class="modal-body">
+            <form action="{{ action }}"
+              class="form-responsive"
+              method="post" role="form">
 
-	<div class="section-title">
-    Remove Contact from Matter
-	</div>
+                {% csrf_token %}
 
-	<form action="{{ action }}" method="post" role="form">
+              <label>
+                Matter:
+              </label>
 
-    {% csrf_token %}
+              <label>
+                  <select class="select-field" name="relationship_id">
 
-    <table>
+                      {% for relationship in relationships %}
 
-      <tr>
+                          <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
 
-        <th>Matter:
+                      {% endfor %}
 
-        <td>
-
-            <label>
-                <select  style="width: 350px;" name="relationship_id">
-
-                  {% for relationship in relationships %}
-
-                    <option value="{{ relationship.id }}">{{ relationship.matter.name }}
-
-                  {% endfor %}
-
-                </select>
-            </label>
-
-        <tr>
-
-        <td>
-
-        <td>
-
-            <input type="submit" value="Submit">
-
-  </table>
-
-  </form>
-
+                  </select>
+              </label>
+              <br />
+              <div>
+                  <button type="submit" class="submit">Submit</button>
+              </div>
+        </form>
+        </div>
+    </div>
 </div>
-
-{% endblock content %}

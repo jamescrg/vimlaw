@@ -1,29 +1,30 @@
 <div class="edit-folder">
 
-	<form class="folder-form"
-    action="/folders/update/{{ folder.id }}/{{ page }}"
-    method="post">
+    <form class="folder-form"
+          method="post"
+          action={% url 'folders:update' id=folder.id page=page %}
+    >
 
-    {% csrf_token %}
+        {% csrf_token %}
 
         <label>
             <input
-              class="form-horizontal edit-folder-input"
-              type="text"
-              name="name"
-              onchange="submit()"
-              onblur="hideEditFolderForm()"
-              value="{{ folder.name }}"
-              >
+                    class="form-horizontal edit-folder-input"
+                    type="text"
+                    name="name"
+                    onchange="submit()"
+                    onblur="hideEditFolderForm()"
+                    value="{{ folder.name }}"
+            />
         </label>
 
     </form>
 
-  <a
-    onclick="return confirm('Are you sure you want to delete this record?')"
-    href="/folders/delete/{{ folder.id }}/{{ page }}"
-  >
-    <i class="bi bi-trash"></i>
-  </a>
+    <a
+            onclick="return confirm('Are you sure you want to delete this record?')"
+            href={% url 'folders:delete' id=folder.id page=page %}
+    >
+        <i class="bi bi-trash"></i>
+    </a>
 
 </div>

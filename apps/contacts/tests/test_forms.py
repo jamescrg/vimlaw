@@ -2,7 +2,6 @@ import pytest
 
 from apps.contacts.forms import ContactForm
 
-
 pytestmark = pytest.mark.django_db
 
 

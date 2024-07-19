@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 def test_index(client, matter):
     response = client.get("/matters/")
     assert response.status_code == 200
-    response = client.get(reverse("matters-list"))
+    response = client.get(reverse("matters:list"))
     assert response.status_code == 200
 
 
@@ -32,7 +32,8 @@ def test_add_get(client, folder):
 
 def test_add_post(client, user, matter_data):
     response = client.post("/matters/add", matter_data)
-    assert response.status_code == 302
+    assert response.status_code == 200
+
     found = Matter.objects.filter(name=matter_data["name"]).first()
     assert found
 
@@ -55,11 +56,11 @@ def test_edit_post(client, user, matter):
         "firm_file_no": "123",
         "ref_no": "125",
         "practice_area": "General",
-        "hourly_rate": 300,
-        "firm_rate": 300,
+        "client": matter.client.id,
     }
     response = client.post(f"/matters/{matter.id}/edit", data)
     assert response.status_code == 302
+
     found = Matter.objects.filter(description="New description").exists()
     assert found
 

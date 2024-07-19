@@ -1,7 +1,8 @@
 from django.db import models
+
+from apps.accounts.models import CustomUser
 from apps.folders.models import Folder
 from apps.intakes.models import Intake
-from apps.accounts.models import CustomUser
 
 
 class Contact(models.Model):

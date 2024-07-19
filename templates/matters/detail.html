@@ -1,205 +1,192 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
-  <div class="section-title">
+    <div class="section-title">
 
-    <div class="section-title-left">
-      <h1>
-        {{ matter.name }}
-      </h1>
-      <div
-        class="section-title-left-right"
-      >
+        <div class="section-title-left">
+            <h1>
+                {{ matter.name }}
+            </h1>
+            <div
+                    class="section-title-left-right"
+            >
 
-        <button
-          hx-get="/matters/{{ matter.id }}/edit"
-          hx-target="#htmx-modal-container"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
-        >
-          <i class="bi bi-pencil"></i>
-        </button>
+                <a href={% url 'matters:edit' id=matter.id %}>
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <a href={% url 'matters:print' id=matter.id %}>
+                    <i class="bi bi-printer"></i>
+                </a>
 
-        <a href="/matters/{{ matter.id }}/print">
-          <i class="bi bi-printer"></i>
-        </a>
+                <button
+                        hx-get="/activity/add/{{ matter.id }}"
+                        hx-target="#htmx-modal-container"
+                        data-bs-toggle="modal"
+                        data-bs-target="#htmx-modal-container"
+                >
+                    <i class="bi bi-clock"></i>
+                </button>
 
-        <button
-          hx-get="/activity/add/{{ matter.id }}"
-          hx-target="#htmx-modal-container"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
-        >
-          <i class="bi bi-clock"></i>
-        </button>
-
-        <button
-          hx-get="/activity/add_expense/{{ matter.id }}"
-          hx-target="#htmx-modal-container"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
-        >
-          <i class="bi bi-currency-dollar"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-<div class="section flex-start-space">
-
-  <div class="matter-data">
-
-    <div class="description">
-
-      <!-- -------------------------------------------------------- -->
-      <!-- normal display, show matter link -->
-      <!-- -------------------------------------------------------- -->
-
-      <button class="button-link show-status-form-button" onclick="showStatusForm()">
-        {{ matter.description }}
-      </button>
-
-
-      <!-- -------------------------------------------------------- -->
-      <!-- edit status form -->
-      <!-- -------------------------------------------------------- -->
-
-      <form
-        class="edit-status"
-        action="/matters/{{ matter.id }}/edit-description"
-        method="post">
-
-        {% csrf_token %}
-
-          <label>
-              <input
-                type="text"
-                class="edit-status-input"
-                name="description"
-                onchange="submit()"
-                onblur="hideStatusForm()"
-                value="{{ matter.description }}"
-                required>
-          </label>
-
-          <input type="hidden" name="return" value="detail">
-
-      </form>
-
+                <button
+                        hx-get="/activity/add_expense/{{ matter.id }}"
+                        hx-target="#htmx-modal-container"
+                        data-bs-toggle="modal"
+                        data-bs-target="#htmx-modal-container"
+                >
+                    <i class="bi bi-currency-dollar"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="tables">
+    <div class="section flex-start-space">
 
-      <table>
+        <div class="matter-data">
 
-        <tr>
-          <td class="strong">Matter No.
-          <td>{{ matter.id }}
+            <div class="description">
+                <!-- -------------------------------------------------------- -->
+                <!-- normal display, show matter link -->
+                <!-- -------------------------------------------------------- -->
+                <button class="button-link show-status-form-button" onclick="showStatusForm()">
+                    {{ matter.description }}
+                </button>
+                <!-- -------------------------------------------------------- -->
+                <!-- edit status form -->
+                <!-- -------------------------------------------------------- -->
+                <form
+                        class="edit-status"
+                        method="post"
+                        action={% url 'matters:edit-description' id=matter.id %}
+                >
 
-          <tr>
-            <td class="strong">File No.
-            <td>{{ matter.firm_file_no|slice:'0:5'|default:'' }}
+                    {% csrf_token %}
 
-          <tr>
-            <td class="strong">Ref No.
-            <td>{{ matter.ref_no|default:'' }}
+                    <label>
+                        <input
+                                type="text"
+                                class="edit-status-input"
+                                name="description"
+                                onchange="submit()"
+                                onblur="hideStatusForm()"
+                                value="{{ matter.description }}"
+                                required/>
+                    </label>
 
-        </table>
+                    <input type="hidden" name="return" value="detail"/>
 
-        <table>
+                </form>
 
-          <tr>
-            <td class="strong">Open Date
-            <td>{{ matter.date_start|date:'Y-m-d' }}
+            </div>
 
-          <tr>
-            <td class="strong">Practice Area
-            <td>{{ matter.practice_area }}
+            <div class="tables">
 
-          <tr>
-            <td class="strong">Firm Rate
-            <td>${{ matter.firm_rate }}
+                <table>
 
-        </table>
+                    <tr>
+                        <td class="strong">Matter No.</td>
+                        <td>{{ matter.id }}</td>
+                    </tr>
 
-        {% if proceeding %}
+                    <tr>
+                        <td class="strong">File No.</td>
+                        <td>{{ matter.firm_file_no|slice:'0:5'|default:'' }}</td>
+                    </tr>
 
-        <table>
+                    <tr>
+                        <td class="strong">Ref No.</td>
+                        <td>{{ matter.ref_no|default:'' }}</td>
+                    </tr>
 
-          <tr>
-            <td class="strong">Forum
-            <td>{{ proceeding.forum }}
+                </table>
 
-          <tr>
-            <td class="strong">Case No.
-            <td>{{ proceeding.case_number }}
+                <table>
 
-          <tr>
-            <td class="strong">Filed
-            <td>{{ proceeding.date_filed|date:'Y-m-d' }}
+                    <tr>
+                        <td class="strong">Open Date</td>
+                        <td>{{ matter.date_start|date:'Y-m-d' }}</td>
+                    </tr>
 
-          <tr>
-            <td class="strong">Status
-            <td>{{ proceeding.status }}
+                    <tr>
+                        <td class="strong">Practice Area</td>
+                        <td>{{ matter.practice_area }}</td>
+                    </tr>
 
-      </table>
+                </table>
 
-      {% endif %}
+                {% if proceeding %}
+
+                    <table>
+
+                        <tr>
+                            <td class="strong">Forum</td>
+                            <td>{{ proceeding.forum }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="strong">Case No.</td>
+                            <td>{{ proceeding.case_number }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="strong">Filed</td>
+                            <td>{{ proceeding.date_filed|date:'Y-m-d' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="strong">Status</td>
+                            <td>{{ proceeding.status }}</td>
+                        </tr>
+
+                    </table>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <div class="matter-detail-quicklinks">
+
+        </div>
 
     </div>
 
-  </div>
+    <ul class="sub-modules">
 
-  <div class="matter-detail-quicklinks">
+        <li {% if submodule == 'rates' %} class="active" {% endif %}>
+            <a href={% url 'matters:rates' id=matter.id %}>Rates</a>
+        </li>
 
+        <li {% if submodule == 'activity' %} class="active" {% endif %}>
+            <a href={% url 'matters:activity' id=matter.id %}>Activity</a>
+        </li>
 
-  </div>
+        <li {% if submodule == 'events' %} class="active" {% endif %}>
+            <a href={% url 'matters:events' id=matter.id %}>Events</a>
+        </li>
 
-</div>
+        <li {% if submodule == 'contacts' %} class="active" {% endif %}>
+            <a href={% url 'matters:contacts' id=matter.id %}>Contacts</a>
+        </li>
 
+        <li {% if submodule == 'proceedings' %} class="active" {% endif %}>
+            <a href={% url 'matters:proceedings' id=matter.id %}>Proceedings</a>
+        </li>
 
-<ul class="sub-modules">
+        <li {% if submodule == 'settlement' %} class="active" {% endif %}>
+            <a href={% url 'matters:settlement' id=matter.id %}>Settlement</a>
+        </li>
 
-  <li {% if submodule == 'rates' %} class="active" {% endif %}>
-    <a href="/matters/{{ matter.id }}/rates">Rates</a>
-  </li>
+        <li {% if submodule == 'timeline' %} class="active" {% endif %}>
+            <a href={% url 'matters:timeline' id=matter.id %}>Timeline</a>
+        </li>
 
-  <li {% if submodule == 'activity' %} class="active" {% endif %}>
-    <a href="/matters/{{ matter.id }}/activity">Activity</a>
-  </li>
+    </ul>
 
-  <li {% if submodule == 'events' %} class="active" {% endif %}>
-    <a href="/matters/{{ matter.id }}/events">Events</a>
-  </li>
-
-  <li {% if submodule == 'contacts' %} class="active" {% endif %}>
-    <a href="/matters/{{ matter.id }}/contacts">Contacts</a>
-  </li>
-
-  <li {% if submodule == 'proceedings' %} class="active" {% endif %}>
-    <a href="/matters/{{ matter.id }}/proceedings">Proceedings</a>
-  </li>
-
-  <li {% if submodule == 'settlement' %} class="active" {% endif %}>
-    <a href="/matters/{{ matter.id }}/settlement">Settlement</a>
-  </li>
-
-  <li {% if submodule == 'timeline' %} class="active" {% endif %}>
-    <a href="/matters/{{ matter.id }}/timeline">Timeline</a>
-  </li>
-
-</ul>
-
-
-<div class="matter-section">
-
-  {% block subcontent %}
-
-  {% endblock subcontent %}
-
-</div>
-
+    <div class="matter-section">
+        {% block subcontent %}
+        {% endblock subcontent %}
+    </div>
 
 {% endblock content %}

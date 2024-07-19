@@ -1,18 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.folders.models import Folder
-from apps.contacts.models import Contact
-from apps.matters.models import Matter
-from apps.matters.models import Relationship
-from apps.matters.models import Role
-from apps.contacts.forms import ContactForm
-from apps.intakes.models import Intake
 import apps.contacts.google as google
+from apps.contacts.forms import ContactForm
+from apps.contacts.models import Contact
+from apps.folders.models import Folder
+from apps.intakes.models import Intake
+from apps.matters.models import Matter, Relationship, Role
 from config.helpers import format_phone
 
 
@@ -72,8 +68,10 @@ def index(request):
 @login_required
 def select(request, id):
     contact = get_object_or_404(Contact, pk=id)
+
     request.session["contacts_selected_folder_id"] = contact.folder.id
     request.session["selected_contact_id"] = id
+
     return redirect("/contacts/")
 
 
@@ -285,13 +283,13 @@ def add_intake(request, id):
         # create a contact and load it with the intake data, then save it
         contact = Contact()
         contact.user_id = request.user.id
-        contact.folder_id = 313
         contact.name = intake.name
         contact.address = intake.address
         contact.phone1 = intake.phone
         contact.phone1_label = "Mobile"
         contact.email = intake.email
         contact.intake = intake
+        contact.client_status = "Current"
 
         # add to google account
         if google.check_credentials():

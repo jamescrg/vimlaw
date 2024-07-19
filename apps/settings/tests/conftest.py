@@ -1,19 +1,21 @@
 import pytest
-
 from django.test import Client
 
 from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
 from apps.folders.models import Folder
-from apps.matters.models import Matter
-from apps.matters.models import Role
-from apps.matters.models import Relationship
 from apps.intakes.models import Intake
+from apps.matters.models import Matter, Relationship, Role
 
 
 @pytest.fixture
 def user():
-    user = CustomUser.objects.create_user("Ollie", "ollie@gmail.com", "clawboy")
+    user = CustomUser.objects.create(
+        username="Ollie", email="ollie@gmail.com", user_rate=100
+    )
+    user.set_password("clawboy")
+    user.save()
+
     return user
 
 

@@ -11,40 +11,7 @@ Filter form
 Time entry form
 ------------------------------------------------*/
 
-#id_matter {
-  width: auto;
-}
-
-#id_actions {
-  height: 100px;
-  max-width: 500px;
-  vertical-align: top;
-  width: 100%;
-}
-
-#id_hours {
-  max-width: 80px;
-}
-
-#id_firm_rate {
-  max-width: 80px;
-}
-
-#id_comp  {
-  max-width: 80px;
-}
-
-#id_entered {
-  max-width: 80px;
-}
-
-/*------------------------------------------------
-Expense entry form
-------------------------------------------------*/
-
-#id_amount {
-  max-width: 120px;
-}
+/* see forms.css (also shows on matters app) */
 
 
 /*------------------------------------------------
@@ -52,7 +19,7 @@ Time entry list table
 ------------------------------------------------*/
 
 .activity {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     width: 100%;
 }
 

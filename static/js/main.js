@@ -46,5 +46,3 @@ htmx.on("htmx:beforeSwap", (e) => {
 htmx.on("hidden.bs.modal", () => {
     document.getElementById("htmx-modal-container").innerHTML = ""
 })
-
-

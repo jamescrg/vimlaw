@@ -1,49 +1,48 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
 
-{% extends "base.html" %}
-{% block content %}
+        <div class="modal-header">
+            <h1 class="modal-title">
+              {% if edit %}
+                  Edit Transaction
+              {% else %}
+                  Add Transaction
+              {% endif %}
 
-<h1>
+            </h1>
+            <div>
+                <a href="#" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
 
-    {% if edit %}
-      Edit Transaction
-    {% else %}
-	    Add Transaction
-    {% endif %}
+        <div class="modal-body">
 
-</h1>
+            <form id="transaction" action="{{ action }}" class="form-responsive" method="post">
 
-<form id="transaction" action="{{ action }}" method="post">
+                {% csrf_token %}
 
-  {% csrf_token %}
+                {{ form }}
 
-	{% if edit %}
+                <br/>
+                <div class="flex-center-space">
+                    <div>
+                        <button type="submit" class="submit">Submit</button>
+                    </div>
 
-    <div class="delete">
-
-      <a
-        onclick="return confirm('Are you sure you want to delete this record?')"
-        href="/trust/{{ transaction.id }}/delete"
-      >
-        Delete Transaction
-      </a>
-
+                    <div>
+                        {% if edit %}
+                            <a
+                                    onclick="return confirm('Are you sure you want to delete this record?')"
+                                    href={% url 'trust:delete' id=transaction.id %}
+                            >
+                                Delete Transaction
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-
-  {% endif %}
-
-
-	<table>
-
-    {{ form.as_table }}
-
-		<tr>
-
-			<td>
-
-			<td>
-        <input type="submit" value="Submit">
-
-	</table>
-</form>
-
-{% endblock content %}
+</div>

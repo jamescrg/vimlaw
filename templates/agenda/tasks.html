@@ -2,59 +2,58 @@
 
 <div class="tasks">
 
-  <div class="section-title">
+    <div class="section-title">
 
-    <div class="section-title-left">
-      <h1>
-        Tasks
-      </h1>
+        <div class="section-title-left">
+            <h1>
+                Tasks
+            </h1>
 
-      <div
-        class="section-title-left-right"
-        hx-target="#tasks-table"
-        hx-swap="#outerHTML"
-      >
-        <button
-          hx-get="/agenda/filter"
-          hx-target="#htmx-modal-container"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
-        >
-            <i class="bi bi-funnel"></i>
-        </button>
-        <button hx-get="filter/all">
-          All
-        </button>
-        <button hx-get="filter/current_user">
-          {{ request.user.username|title }}
-        </button>
-        {% if request.user.id != 4 %}
-          <button hx-get="filter/paralegal">
-            Paralegal
-          </button>
-        {% endif %}
+            <div
+                    class="section-title-left-right"
+                    hx-target="#tasks-table"
+                    hx-swap="#outerHTML"
+            >
+                <button
+                        hx-get="/agenda/filter"
+                        hx-target="#htmx-modal-container"
+                        data-bs-toggle="modal"
+                        data-bs-target="#htmx-modal-container"
+                >
+                    <i class="bi bi-funnel"></i>
+                </button>
+                <button hx-get="filter/all">
+                    All
+                </button>
+                <button hx-get="filter/current_user">
+                    {{ request.user.username|title }}
+                </button>
+                {% if request.user.id != 4 %}
+                    <button hx-get="filter/paralegal">
+                        Paralegal
+                    </button>
+                {% endif %}
 
-      </div>
+            </div>
+
+        </div>
+
+        <div class="section-title-right">
+            {% if not show_events %}
+                <a href={% url 'agenda:toggle-events' %}>
+                    <i class="bi bi-calendar2"></i>
+                </a>
+            {% endif %}
+        </div>
 
     </div>
 
-    <div class="section-title-right">
-    {% if not show_events %}
-      <a href="/agenda/toggle-events">
-        <i class="bi bi-calendar2"></i>
-      </a>
-    {% endif %}
+    <div id="tasks" class="tasks-background">
+
+        {% include "agenda/task-form-add.html" %}
+
+        {% include "agenda/tasks-table.html" %}
+
     </div>
-
-  </div>
-
-  <div id="tasks" class="tasks-background">
-
-    {% include "agenda/task-form-add.html" %}
-
-    {% include "agenda/tasks-table.html" %}
-
-  </div>
 
 </div>
-

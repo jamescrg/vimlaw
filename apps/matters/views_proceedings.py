@@ -1,13 +1,10 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.models import Matter
-from apps.matters.models import Proceeding
 from apps.matters.forms import ProceedingForm
+from apps.matters.models import Matter, Proceeding
 
 
 @login_required
@@ -98,7 +95,7 @@ def edit(request, id, proceeding_id):
 
 
 @login_required
-def delete(request, id, proceeding_id):
+def delete(request, matter_id, proceeding_id):
     proceeding = get_object_or_404(Proceeding, pk=proceeding_id)
     proceeding.delete()
-    return redirect(f"/matters/{id}/proceedings")
+    return redirect(f"/matters/{matter_id}/proceedings")

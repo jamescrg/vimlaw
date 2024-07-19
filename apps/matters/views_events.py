@@ -1,12 +1,10 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 
-from apps.matters.models import Matter
-from apps.matters.models import Proceeding
 from apps.events.models import Event
+from apps.matters.models import Matter, Proceeding
 
 
 @login_required

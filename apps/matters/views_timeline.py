@@ -1,14 +1,10 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.models import Matter
-from apps.matters.models import Proceeding
-from apps.matters.models import Fact
 from apps.matters.forms import FactForm
+from apps.matters.models import Fact, Matter, Proceeding
 
 
 @login_required
@@ -98,10 +94,10 @@ def edit(request, id, fact_id):
 
 
 @login_required
-def delete(request, id, fact_id):
+def delete(request, matter_id, fact_id):
     fact = get_object_or_404(Fact, pk=fact_id)
     fact.delete()
-    return redirect(f"/matters/{id}/timeline")
+    return redirect(f"/matters/{matter_id}/timeline")
 
 
 @login_required

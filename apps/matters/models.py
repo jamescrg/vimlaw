@@ -1,6 +1,7 @@
 from django.db import models
-from apps.contacts.models import Contact
+
 from apps.accounts.models import CustomUser
+from apps.contacts.models import Contact
 
 
 class Matter(models.Model):
@@ -14,8 +15,6 @@ class Matter(models.Model):
     firm_file_no = models.CharField(max_length=500, null=True, blank=True)
     ref_no = models.CharField(max_length=50, blank=True, null=True)
     practice_area = models.CharField(max_length=50, null=True)
-    hourly_rate = models.IntegerField(blank=True, null=True)
-    firm_rate = models.IntegerField(null=True)
     contacts = models.ManyToManyField(Contact, through="Relationship")
     client = models.ForeignKey(
         Contact, related_name="client_matters", on_delete=models.SET_NULL, null=True

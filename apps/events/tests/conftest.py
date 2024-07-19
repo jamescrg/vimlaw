@@ -1,5 +1,4 @@
 import pytest
-
 from django.test import Client
 
 from apps.accounts.models import CustomUser
@@ -9,7 +8,12 @@ from apps.matters.models import Matter
 
 @pytest.fixture
 def user():
-    user = CustomUser.objects.create_user("Ollie", "ollie@gmail.com", "clawboy")
+    user = CustomUser.objects.create(
+        username="Ollie", email="ollie@gmail.com", user_rate=100
+    )
+    user.set_password("clawboy")
+    user.save()
+
     return user
 
 

@@ -1,6 +1,7 @@
 from django.db import models
-from apps.folders.models import Folder
+
 from apps.accounts.models import CustomUser
+from apps.folders.models import Folder
 from apps.matters.models import Matter
 
 

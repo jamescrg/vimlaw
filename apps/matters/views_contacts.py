@@ -1,14 +1,9 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
-from apps.matters.models import Matter
-from apps.matters.models import Proceeding
-from apps.matters.models import Relationship
-from apps.matters.models import Role
 from apps.matters.load_contacts import load_contacts
+from apps.matters.models import Matter, Proceeding, Relationship, Role
 
 
 @login_required
@@ -63,8 +58,8 @@ def assign_results(request, id):
 
 
 @login_required
-def assign_role(request, id, contact_id):
-    matter = get_object_or_404(Matter, pk=id)
+def assign_role(request, matter_id, contact_id):
+    matter = get_object_or_404(Matter, pk=matter_id)
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     contact = get_object_or_404(Contact, pk=contact_id)
     roles = Role.objects.all().order_by("name")

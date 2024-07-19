@@ -2,7 +2,6 @@ import pytest
 
 from apps.trust.forms import TransactionForm
 
-
 pytestmark = pytest.mark.django_db
 
 

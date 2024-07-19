@@ -7,4 +7,3 @@ function toggleCalculator() {
         div.style.display = 'block';
     }
 }
-

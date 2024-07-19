@@ -12,8 +12,10 @@ pytestmark = pytest.mark.django_db
 def test_index(client):
     response = client.get("/activity/")
     assert response.status_code == 200
-    response = client.get(reverse("activity-list"))
+
+    response = client.get(reverse("activity:list"))
     assert response.status_code == 200
+
     assertTemplateUsed(response, "activity/list.html")
     assert response.context["page"] == "activity"
     assert "summary" in response.context
@@ -27,7 +29,7 @@ def test_add_get(client):
 
 
 def test_add_post(client, entry_data):
-    response = client.post("/activity/add", entry_data)
+    response = client.post(reverse("activity:add"), entry_data)
     assert response.status_code == 302
     found = TimeEntry.objects.filter(actions=entry_data["actions"]).first()
     assert found
@@ -79,6 +81,7 @@ def test_filter_update(client):
         "entered": "No",
         "view_rate": "Firm",
         "order": "date, descending",
+        "user": "All",
     }
     response = client.post("/activity/filter/update", data)
     assert response.status_code == 302

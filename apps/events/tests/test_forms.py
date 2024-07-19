@@ -2,7 +2,6 @@ import pytest
 
 from apps.events.forms import EventForm
 
-
 pytestmark = pytest.mark.django_db
 
 

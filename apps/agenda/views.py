@@ -2,17 +2,15 @@ from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
-from django.shortcuts import render
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.models import Matter
-from apps.agenda.models import Task
-from apps.agenda.forms import TaskForm
-from apps.events.models import Event
 from apps.accounts.models import CustomUser
-from apps.agenda.tasks import get_table_data
 from apps.agenda.filter import Filter
+from apps.agenda.forms import TaskForm
+from apps.agenda.models import Task
+from apps.agenda.tasks import get_table_data
+from apps.events.models import Event
+from apps.matters.models import Matter
 
 
 @login_required
@@ -98,17 +96,15 @@ def add(request):
 
     request.session["agenda_matter"] = matter.id
 
-    return redirect("agenda")
+    return redirect("/agenda")
 
 
 @login_required
 def edit(request, id):
-    user_id = request.user.id
-
     if request.method == "POST":
         try:
             task = Task.objects.filter(pk=id).get()
-        except:
+        except (Task.DoesNotExist, ValueError):
             raise Http404("Record not found.")
 
         form = TaskForm(request.POST, instance=task)
@@ -116,7 +112,7 @@ def edit(request, id):
             task = form.save(commit=False)
             task.save()
 
-        return redirect("agenda")
+        return redirect("/agenda")
 
     else:
         task = get_object_or_404(Task, pk=id)

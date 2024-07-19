@@ -1,11 +1,10 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 from django.db.models import Q
+from django.shortcuts import render
 
 from apps.contacts.models import Contact
-from apps.matters.models import Matter
-from apps.matters.models import Proceeding
 from apps.intakes.models import Intake
+from apps.matters.models import Matter, Proceeding
 
 
 @login_required

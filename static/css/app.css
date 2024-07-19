@@ -13,14 +13,6 @@ body {
     min-height: 100%;
 }
 
-.dev-flag {
-    color: var(--red-800);
-    margin-top: 1rem;
-    margin-right: 1rem;
-}
-
-/* links */
-
 a,
 a:hover {
     color: var(--lime-800);
@@ -28,11 +20,19 @@ a:hover {
     text-decoration: none;
 }
 
-/* sections */
+.content {
+    padding-bottom: 90px;
+    padding-top: 30px;
+}
+
+
+/* ==========================================================================
+   sections
+   ========================================================================== */
 
 .section {
     background: var(--warm-gray-100);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     padding: 1rem 1rem 1.5rem;
 }
 
@@ -98,7 +98,9 @@ a:hover {
     border: none;
 }
 
-/* typography */
+/* ==========================================================================
+   typography
+   ========================================================================== */
 
 h1 {
     font-weight: normal;
@@ -121,7 +123,7 @@ strong {
 }
 
 .soon a {
-    color: var(--red-900);
+  color: var(--orange-800);
 }
 
 .warn {
@@ -129,7 +131,14 @@ strong {
     padding: 10px;
 }
 
-/* tables */
+.urgent {
+  color: var(--orange-800);
+}
+
+/* ==========================================================================
+   tables
+   ========================================================================== */
+
 
 .table {
     color: inherit;
@@ -165,7 +174,10 @@ th {
     font-weight: 500;
 }
 
-/* lists */
+
+/* ==========================================================================
+   lists
+   ========================================================================== */
 
 li {
     list-style-type: none;
@@ -185,7 +197,9 @@ li {
     padding: 0.5rem 0 0.5rem 1rem;
 }
 
-/* buttons */
+/* ==========================================================================
+   buttons
+   ========================================================================== */
 
 .btn {
     font-size: 1em;
@@ -196,6 +210,7 @@ li {
 .btn-primary:focus {
     background: var(--lime-900);
     border: none;
+    box-shadow: none;
     color: var(--warm-gray-300);
 }
 
@@ -229,9 +244,10 @@ li {
     color: var(--lime-800);
 }
 
-/* dropdowns */
 
-/* icons */
+/* ==========================================================================
+   icons
+   ========================================================================== */
 
 .icon,
 .icon:hover {
@@ -274,7 +290,9 @@ li {
     color: var(--warm-gray-400);
 }
 
-/* utilities */
+/* ==========================================================================
+   utilities
+   ========================================================================== */
 
 .flex-start-space {
     align-items: start;
@@ -290,14 +308,13 @@ li {
     justify-content: space-between;
 }
 
-/* layout */
-
-.content {
-    padding-bottom: 90px;
-    padding-top: 30px;
+.overflow-x {
+  overflow-x: auto;
 }
 
-/* modals */
+/* ==========================================================================
+   modals
+   ========================================================================== */
 
 .modal-content {
     background: var(--warm-gray-100);
@@ -307,3 +324,40 @@ li {
     padding: 0.5rem 1rem;
 }
 
+.hide {
+    display: none;
+}
+
+/* ==========================================================================
+   filter-bar
+   ========================================================================== */
+
+.filter-bar {
+    align-items: center;
+    background: var(--warm-gray-100);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+}
+
+.filter-bar a,
+.filter-bar button {
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: var(--lime-800);
+    padding: 2px 7px;
+}
+
+.filter-bar a {
+    padding: 4px 7px 5px 7px;
+}
+
+.filter-bar-left {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}

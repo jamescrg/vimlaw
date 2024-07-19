@@ -3,37 +3,35 @@
 {% block title %}Log In{% endblock title %}
 
 {% block content %}
+    <div class="auth-container">
+        <div class="auth-card">
 
-<div class="auth-card">
+            <div class="auth-title">
+                {{ site_handle }}
+            </div>
 
-    <div class="auth-title">
-      {{ site_handle }}
-    </div>
+            <div class="auth-subtitle">
+                Log in to your account
+            </div>
 
-    <div class="auth-subtitle">
-        Log in to your account
-    </div>
+            <form id="login-form" class="account-form" method="post">
 
-    <form id="login-form" class="account-form" method="post">
+                {% csrf_token %}
 
-      {% csrf_token %}
+                {{ form.as_p }}
 
-      {{ form.as_p }}
+                <div class="flex-container login-bottom">
+                    <div class="login-bottom-right">
+                        <a href={% url 'accounts:password_reset' %}>Forgot Password?</a>
+                        {#<a href={% url 'accounts:signup' %}>Don't have an account? Sign up</a>#}
+                    </div>
+                    <div class="login-bottom-left">
+                        <button type="submit">Submit</button>
+                    </div>
+                </div>
 
-      <div class="flex-container login-bottom">
-
-        <div class="login-bottom-left">
-          <button type="submit">Submit</button>
+            </form>
         </div>
-
-        <div class="login-bottom-right">
-          <a href="/apps/accounts/password_reset">Forgot Password?</a>
-        </div>
-
-      </div>
-
-    </form>
-
-</div>
+    </div>
 
 {% endblock content %}

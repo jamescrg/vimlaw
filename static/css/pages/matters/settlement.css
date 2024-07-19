@@ -9,7 +9,7 @@ Display
   width: 100%;
 }
 
-#settlement .date, 
+#settlement .date,
 #settlement .type,
 #settlement .medium {
   width: 120px;
@@ -35,3 +35,6 @@ Form
   width: 400px;
 }
 
+.table-container {
+  overflow-x: auto;
+}

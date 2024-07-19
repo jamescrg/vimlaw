@@ -1,28 +1,36 @@
 import pytest
-
 from django.test import Client
 
 from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
 from apps.folders.models import Folder
-from apps.matters.models import Matter
-from apps.matters.models import Role
-from apps.matters.models import Relationship
-from apps.matters.models import Proceeding
-from apps.matters.models import SettlementEntry
-from apps.matters.models import Fact
+from apps.matters.models import (
+    Fact,
+    Matter,
+    Proceeding,
+    Relationship,
+    Role,
+    SettlementEntry,
+)
 
 
 @pytest.fixture
 def user():
-    user = CustomUser.objects.create_user("Ollie", "ollie@gmail.com", "clawboy")
+    user = CustomUser.objects.create(
+        username="Ollie", email="ollie@gmail.com", user_rate=100
+    )
+    user.set_password("clawboy")
+    user.save()
+
     return user
 
 
 @pytest.fixture
 def client(user):
     client = Client()
+
     client.login(username="Ollie", password="clawboy")
+
     return client
 
 
@@ -60,7 +68,7 @@ def contact(user, folder):
 
 
 @pytest.fixture
-def matter(user):
+def matter(user, contact):
     matter = Matter.objects.create(
         user_id=user.id,
         name="Sample Test Matter",
@@ -72,19 +80,20 @@ def matter(user):
         firm_file_no="123",
         ref_no="125",
         practice_area="General",
-        hourly_rate=300,
-        firm_rate=300,
+        client=contact,
     )
-    matter.save()
     return matter
 
 
 @pytest.fixture
-def matter_data(matter):
-    matter_data = matter.__dict__
-    keys = "_state id".split()
-    for key in keys:
-        del matter_data[key]
+def matter_data(matter, contact):
+    exclude_keys = {"_state", "id"}
+    matter_data = {
+        key: value for key, value in matter.__dict__.items() if key not in exclude_keys
+    }
+
+    matter_data["client"] = contact
+
     return matter_data
 
 
@@ -165,14 +174,13 @@ def fact(user, matter):
         citation="Evidence",
         emphasis="Yes",
     )
-    fact.save()
     return fact
 
 
 @pytest.fixture
 def fact_data(fact):
-    fact_data = fact.__dict__
-    keys = "_state id".split()
-    for key in keys:
-        del fact_data[key]
+    exclude_keys = {"_state", "id"}
+    fact_data = {
+        key: value for key, value in fact.__dict__.items() if key not in exclude_keys
+    }
     return fact_data

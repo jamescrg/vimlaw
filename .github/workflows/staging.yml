@@ -1,0 +1,37 @@
+name: Deploy to the Staging Server
+
+on:
+  push:
+    branches: [ "dev" ]
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+          SSH_HOST: ${{ secrets.SSH_HOST_STAGING }}
+          SSH_USER: ${{ secrets.SSH_USER_STAGING }}
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/github
+          chmod 600 ~/.ssh/github
+          cat >>~/.ssh/config <<END
+          Host target
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/github
+            LogLevel ERROR
+            StrictHostKeyChecking no
+          END
+
+      - name: Deploy to Staging
+        run: |
+          ssh target "cd /www/lawadmin/ && source venv/bin/activate && git pull && pip install -r requirements.txt && python manage.py migrate && sudo systemctl restart lawadmin.service"
