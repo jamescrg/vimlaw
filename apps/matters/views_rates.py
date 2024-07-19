@@ -100,7 +100,7 @@ def edit(request, id, rate_id):
 
 
 @login_required
-def delete(request, id, rate_id):
+def delete(request, matter_id, rate_id):
     rate = get_object_or_404(Rate, pk=rate_id)
     rate.delete()
-    return redirect(f"/matters/{id}/rates")
+    return redirect(f"/matters/{matter_id}/rates")
