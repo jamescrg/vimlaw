@@ -58,8 +58,8 @@ def assign_results(request, id):
 
 
 @login_required
-def assign_role(request, id, contact_id):
-    matter = get_object_or_404(Matter, pk=id)
+def assign_role(request, matter_id, contact_id):
+    matter = get_object_or_404(Matter, pk=matter_id)
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     contact = get_object_or_404(Contact, pk=contact_id)
     roles = Role.objects.all().order_by("name")

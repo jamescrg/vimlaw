@@ -59,7 +59,7 @@ urlpatterns = [
         name="contacts-assign-results",
     ),
     path(
-        "matters/<int:id>/assign/<int:contact_id>",
+        "matters/<int:matter_id>/assign/<int:contact_id>",
         matters_contacts.assign_role,
         name="contacts-assign-role",
     ),
@@ -96,7 +96,7 @@ urlpatterns = [
         name="rates-edit",
     ),
     path(
-        "matters/<int:id>/rates/<int:rate_id>/delete",
+        "matters/<int:matter_id>/rates/<int:rate_id>/delete",
         matters_rates.delete,
         name="rates-delete",
     ),
@@ -121,7 +121,7 @@ urlpatterns = [
         name="proceedings-edit",
     ),
     path(
-        "matters/<int:id>/proceedings/<int:proceeding_id>/delete",
+        "matters/<int:matter_id>/proceedings/<int:proceeding_id>/delete",
         matters_proceedings.delete,
         name="proceedings-delete",
     ),
@@ -142,7 +142,7 @@ urlpatterns = [
         name="settlement-edit",
     ),
     path(
-        "matters/<int:id>/settlement/<int:entry_id>/delete",
+        "matters/<int:matter_id>/settlement/<int:entry_id>/delete",
         matters_settlement.delete,
         name="settlement-delete",
     ),
@@ -159,7 +159,7 @@ urlpatterns = [
         name="timeline-edit",
     ),
     path(
-        "matters/<int:id>/timeline/<int:fact_id>/delete",
+        "matters/<int:matter_id>/timeline/<int:fact_id>/delete",
         matters_timeline.delete,
         name="timeline-delete",
     ),

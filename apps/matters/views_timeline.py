@@ -94,10 +94,10 @@ def edit(request, id, fact_id):
 
 
 @login_required
-def delete(request, id, fact_id):
+def delete(request, matter_id, fact_id):
     fact = get_object_or_404(Fact, pk=fact_id)
     fact.delete()
-    return redirect(f"/matters/{id}/timeline")
+    return redirect(f"/matters/{matter_id}/timeline")
 
 
 @login_required

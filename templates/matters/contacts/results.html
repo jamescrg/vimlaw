@@ -7,7 +7,7 @@
         {% for contact in contacts %}
 
             <li>
-                <a href={% url 'matters:contacts-assign-role' id=matter.id contact_id=contact.id %}>
+                <a href={% url 'matters:contacts-assign-role' matter_id=matter.id contact_id=contact.id %}>
                     {{ contact.name }}
                 </a>
             </li>
