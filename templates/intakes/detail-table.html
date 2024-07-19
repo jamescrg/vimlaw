@@ -3,26 +3,8 @@
 <table class="intake-details">
 
     <tr>
-        <td class="strong">Name</td>
-        <td>
-            <a
-                    href="#"
-                    type="button"
-                    class="btn-icon"
-                    hx-get="/intakes/{{ intake.id }}/edit"
-                    hx-target="#htmx-modal-container"
-                    hx-trigger="click"
-                    data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container"
-            >
-                {{ intake.name }}
-            </a>
-        </td>
-    </tr>
-
-    <tr>
-        <td class="strong">Address</td>
-        <td>{% if intake.address %}{{ intake.address|linebreaks }}{% endif %}</td>
+        <td class="strong">Email</td>
+        <td>{{ intake.email|default:'' }}</td>
     </tr>
 
     <tr>
@@ -31,18 +13,22 @@
     </tr>
 
     <tr>
-        <td class="strong">Email</td>
-        <td>{{ intake.email|default:'' }}</td>
+        <td class="strong">Address</td>
+        <td>{% if intake.address %}{{ intake.address|linebreaks }}{% endif %}</td>
     </tr>
 
-    <tr>
-        <td class="strong">Date</td>
-        <td>{{ intake.date|date:'Y-m-d' }}</td>
-    </tr>
+</table>
+
+<table class="intake-details">
 
     <tr>
         <td class="strong">Status</td>
         <td>{{ intake.status }}</td>
+    </tr>
+
+    <tr>
+        <td class="strong">Date Opened</td>
+        <td>{{ intake.date|date:'Y-m-d' }}</td>
     </tr>
 
     <tr>
