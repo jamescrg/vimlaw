@@ -13,38 +13,31 @@
         </div>
 
         <div class="modal-body">
-        <form action="{{ action }}" method="post" role="form">
-            {% csrf_token %}
-            <table>
-                <tr>
+            <form action="{{ action }}"
+              class="form-responsive"
+              method="post" role="form">
 
-                    <th>Matter:</th>
+                {% csrf_token %}
 
-                    <td>
+              <label>
+                Matter:
+              </label>
 
-                        <label>
-                            <select class="select-field" name="relationship_id">
+              <label>
+                  <select class="select-field" name="relationship_id">
 
-                                {% for relationship in relationships %}
+                      {% for relationship in relationships %}
 
-                                    <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
+                          <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
 
-                                {% endfor %}
+                      {% endfor %}
 
-                            </select>
-                        </label>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td></td>
-
-                    <td>
-                        <input type="submit" value="Submit"/>
-                    </td>
-                </tr>
-
-            </table>
+                  </select>
+              </label>
+              <br />
+              <div>
+                  <button type="submit" class="submit">Submit</button>
+              </div>
         </form>
         </div>
     </div>

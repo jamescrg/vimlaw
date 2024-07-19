@@ -19,40 +19,29 @@
 
         <div class="modal-body">
 
-            <form id="transaction" action="{{ action }}" method="post">
+            <form id="transaction" action="{{ action }}" class="form-responsive" method="post">
 
                 {% csrf_token %}
 
-                {% if edit %}
+                {{ form }}
 
-                    <div class="delete">
-
-                        <a
-                                onclick="return confirm('Are you sure you want to delete this record?')"
-                                href={% url 'trust:delete' id=transaction.id %}
-                        >
-                            Delete Transaction
-                        </a>
-
+                <br/>
+                <div class="flex-center-space">
+                    <div>
+                        <button type="submit" class="submit">Submit</button>
                     </div>
 
-                {% endif %}
-
-                <table>
-
-                    {{ form.as_table }}
-
-                    <tr>
-
-                        <td></td>
-
-                        <td>
-                            <input type="submit" value="Submit"/>
-                        </td>
-
-                    </tr>
-
-                </table>
+                    <div>
+                        {% if edit %}
+                            <a
+                                    onclick="return confirm('Are you sure you want to delete this record?')"
+                                    href={% url 'trust:delete' id=transaction.id %}
+                            >
+                                Delete Transaction
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
             </form>
         </div>
     </div>

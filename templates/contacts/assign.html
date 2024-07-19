@@ -13,62 +13,43 @@
         </div>
 
         <div class="modal-body">
-            <form action="{{ action }}" method="post" role="form">
+            <form action="{{ action }}"
+              class="form-responsive"
+              method="post" role="form">
 
                 {% csrf_token %}
 
-                <table>
+                <label class="control-label">Matter:</label>
+                <label>
+                    <select class="select-field" name="matter_id">
 
-                    <tr>
+                        {% for matter in matters %}
 
-                        <th>Matter:</th>
-                        <td>
-                            <label>
-                                <select class="select-field" name="matter_id">
+                            <option value="{{ matter.id }}">{{ matter.name }}</option>
 
-                                    {% for matter in matters %}
+                        {% endfor %}
 
-                                        <option value="{{ matter.id }}">{{ matter.name }}</option>
+                    </select>
+                </label>
+                <label class="control-label">
+                  Role:
+                </label>
 
-                                    {% endfor %}
+                <label>
+                    <select class="select-field" name="role_id">
 
-                                </select>
-                            </label>
-                        </td>
+                        {% for role in roles %}
 
-                    </tr>
+                            <option value="{{ role.id }}">{{ role.name }}</option>
 
-                    <tr>
-                        <th>Role:
-                        </th>
+                        {% endfor %}
 
-                        <td>
-
-                            <label>
-                                <select class="select-field" name="role_id">
-
-                                    {% for role in roles %}
-
-                                        <option value="{{ role.id }}">{{ role.name }}</option>
-
-                                    {% endfor %}
-
-                                </select>
-                            </label>
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td></td>
-
-                        <td>
-                            <input type="submit" value="Submit"/>
-                        </td>
-
-                    </tr>
-                </table>
+                    </select>
+                </label>
+                <br />
+                <div>
+                  <button type="submit" class="submit">Submit</button>
+                </div>
             </form>
         </div>
     </div>
