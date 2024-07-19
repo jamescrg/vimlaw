@@ -1,50 +1,59 @@
-{% extends "base.html" %}
-{% block content %}
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
 
-    <h1>
+        <div class="modal-header">
+            <h1 class="modal-title">
+              {% if edit %}
+                  Edit Transaction
+              {% else %}
+                  Add Transaction
+              {% endif %}
 
-        {% if edit %}
-            Edit Transaction
-        {% else %}
-            Add Transaction
-        {% endif %}
-
-    </h1>
-
-    <form id="transaction" action="{{ action }}" method="post">
-
-        {% csrf_token %}
-
-        {% if edit %}
-
-            <div class="delete">
-
-                <a
-                        onclick="return confirm('Are you sure you want to delete this record?')"
-                        href={% url 'trust:delete' id=transaction.id %}
-                >
-                    Delete Transaction
+            </h1>
+            <div>
+                <a href="#" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
                 </a>
-
             </div>
+        </div>
 
-        {% endif %}
+        <div class="modal-body">
 
-        <table>
+            <form id="transaction" action="{{ action }}" method="post">
 
-            {{ form.as_table }}
+                {% csrf_token %}
 
-            <tr>
+                {% if edit %}
 
-                <td></td>
+                    <div class="delete">
 
-                <td>
-                    <input type="submit" value="Submit"/>
-                </td>
+                        <a
+                                onclick="return confirm('Are you sure you want to delete this record?')"
+                                href={% url 'trust:delete' id=transaction.id %}
+                        >
+                            Delete Transaction
+                        </a>
 
-            </tr>
+                    </div>
 
-        </table>
-    </form>
+                {% endif %}
 
-{% endblock content %}
+                <table>
+
+                    {{ form.as_table }}
+
+                    <tr>
+
+                        <td></td>
+
+                        <td>
+                            <input type="submit" value="Submit"/>
+                        </td>
+
+                    </tr>
+
+                </table>
+            </form>
+        </div>
+    </div>
+</div>

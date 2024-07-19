@@ -45,6 +45,16 @@ Summary and History Views
     text-align: right;
 }
 
+.transaction-filter,
+.trust-contact-links {
+  float: right;
+  text-align: right;
+}
+
+.trust-contact-links a {
+  margin-left: 1rem;
+}
+
 #transactions {
     border-collapse: collapse;
     margin: 10px 0 5px 0;
