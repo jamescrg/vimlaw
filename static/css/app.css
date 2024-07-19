@@ -15,7 +15,7 @@ body {
 
 a,
 a:hover {
-    color: var(--lime-800);
+    color: var(--blue-old);
     outline: none;
     text-decoration: none;
 }
@@ -214,7 +214,7 @@ li {
 .btn-primary,
 .btn-primary:hover,
 .btn-primary:focus {
-    background: var(--lime-900);
+    background: var(--warm-gray-600);
     border: none;
     color: var(--warm-gray-300);
 }
@@ -240,13 +240,13 @@ li {
 .button-link {
     background: none;
     border: none;
-    color: var(--lime-800);
+    color: var(--blue-old);
     margin: 0;
     padding: 0;
 }
 
 .button-link:hover {
-    color: var(--lime-800);
+    color: var(--blue-old);
 }
 
 
@@ -261,10 +261,6 @@ li {
     font-weight: 600;
 }
 
-.filter-icon {
-  color: var(--yellow-600);
-}
-
 .btn-icon {
     background: none;
     border: none;
@@ -272,23 +268,24 @@ li {
 }
 
 .bi-funnel {
-  color: var(--warm-gray-500);
+  color: var(--yellow-600);
 }
 
 .bi-plus-lg {
-    color: var(--lime-800);
+    color: var(--lime-700);
 }
 
 .bi-x-lg {
-    color: var(--warm-gray-600);
+    color: var(--warm-gray-400);
     font-size: 0.9rem;
 }
 
+.bi-calendar2,
 .bi-cloud-download,
 .bi-cloud-slash,
 .bi-cloud-upload,
 .bi-pencil {
-  color: var(--warm-gray-500)
+  color: var(--warm-gray-400)
 }
 
 .bi-folder {
