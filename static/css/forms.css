@@ -46,41 +46,41 @@ textarea {
     padding: 4px 10px;
 }
 
-.deadline-calculator {
-    margin-bottom: 1.5rem;
+.add-event {
+  margin-top: 1rem;
+  border-top: solid 1px var(--warm-gray-200);
+  padding-top: 1rem;
 }
 
-.deadline-calculator-button {
-    margin-bottom: 0.5rem;
-}
 
 .deadline-calculator-form {
-    margin-bottom: 1rem;
-    margin-top: 1rem;
-    padding-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.deadline-calculator-form label {
+  font-weight: 600;
+  margin-right: 1rem;
 }
 
 .deadline-calculator-results {
-    margin-bottom: 1rem;
-    margin-top: 1rem;
-    padding-bottom: 1rem;
+  margin-top: 1rem;
 }
 
 .days {
-    width: 50px;
+  width: 50px;
 }
 
 
 .numeric {
-    text-align: right;
-    width: 50px;
+  text-align: right;
+  width: 50px;
 }
 
 /* responsive layout */
 
 .form-responsive {
-    display: grid;
-    gap: 0.5rem;
+  display: grid;
+  gap: 0.5rem;
 }
 
 .form-responsive > label {
@@ -88,8 +88,7 @@ textarea {
 }
 
 .form-responsive > div {
-    margin-block-end: 1rem;
-
+  margin-block-end: 1rem;
 }
 
 @media screen and (min-width: 800px) and (max-width: 1199px) {
@@ -119,4 +118,44 @@ textarea {
     .modal-lg .form-responsive {
         grid-template-columns: 1fr 4fr;
     }
+}
+
+
+/*------------------------------------------------
+Time entry form
+------------------------------------------------*/
+
+#id_matter {
+  width: auto;
+}
+
+#id_actions {
+  height: 100px;
+  max-width: 500px;
+  vertical-align: top;
+  width: 100%;
+}
+
+#id_hours {
+  max-width: 80px;
+}
+
+#id_firm_rate {
+  max-width: 80px;
+}
+
+#id_comp  {
+  max-width: 80px;
+}
+
+#id_entered {
+  max-width: 80px;
+}
+
+/*------------------------------------------------
+Expense entry form
+------------------------------------------------*/
+
+#id_amount {
+  max-width: 120px;
 }

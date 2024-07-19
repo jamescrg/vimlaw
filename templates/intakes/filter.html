@@ -83,15 +83,17 @@
                 <label>
                     Order By:
                 </label>
-                <label for="order"></label><select name="order" id="order">
-                <option value="name" {% if filter.order == 'name' %}selected{% endif %}>
-                    Name, Ascending
-                </option>
-                <option value="date"
-                        {% if filter.order == 'date' %}selected{% endif %}>
-                    Date, Descending
-                </option>
-            </select>
+                    <label for="order">
+                          <select name="order" id="order">
+                              <option value="name" {% if filter.order == 'name' %}selected{% endif %}>
+                                  Name, Ascending
+                              </option>
+                              <option value="date"
+                                      {% if filter.order == 'date' %}selected{% endif %}>
+                                  Date, Descending
+                              </option>
+                          </select>
+                    </label>
 
                 <label>
                     Source
@@ -124,6 +126,7 @@
                     </select>
                 </label>
 
+                <br />
                 <div>
                     <button type="submit" class="submit">Submit</button>
                 </div>

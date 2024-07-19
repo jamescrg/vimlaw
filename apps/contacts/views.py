@@ -283,13 +283,13 @@ def add_intake(request, id):
         # create a contact and load it with the intake data, then save it
         contact = Contact()
         contact.user_id = request.user.id
-        contact.folder_id = 313
         contact.name = intake.name
         contact.address = intake.address
         contact.phone1 = intake.phone
         contact.phone1_label = "Mobile"
         contact.email = intake.email
         contact.intake = intake
+        contact.client_status = "Current"
 
         # add to google account
         if google.check_credentials():

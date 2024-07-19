@@ -132,8 +132,25 @@
 
     <div class="assign-remove">
 
-        <a href={% url 'contacts:assign' id=selected_contact.id %}>Assign</a>&nbsp;&nbsp;|&nbsp;&nbsp;
-        <a href={% url 'contacts:remove' id=selected_contact.id %}>Remove</a>
+        <a
+                href="#"
+                hx-get="/contacts/{{ selected_contact.id }}/assign"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container"
+        >
+            Assign
+        </a>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <a
+                href="#"
+                hx-get="/contacts/{{ selected_contact.id }}/remove"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container"
+        >
+            Remove
+        </a>
 
     </div>
 

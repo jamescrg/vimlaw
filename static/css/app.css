@@ -32,7 +32,7 @@ a:hover {
 
 .section {
     background: var(--warm-gray-100);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     padding: 1rem 1rem 1.5rem;
 }
 
@@ -123,7 +123,7 @@ strong {
 }
 
 .soon a {
-    color: var(--red-900);
+  color: var(--orange-800);
 }
 
 .warn {
@@ -131,7 +131,14 @@ strong {
     padding: 10px;
 }
 
-/* tables */
+.urgent {
+  color: var(--orange-800);
+}
+
+/* ==========================================================================
+   tables
+   ========================================================================== */
+
 
 .table {
     color: inherit;
@@ -203,6 +210,7 @@ li {
 .btn-primary:focus {
     background: var(--lime-900);
     border: none;
+    box-shadow: none;
     color: var(--warm-gray-300);
 }
 
@@ -318,4 +326,38 @@ li {
 
 .hide {
     display: none;
+}
+
+/* ==========================================================================
+   filter-bar
+   ========================================================================== */
+
+.filter-bar {
+    align-items: center;
+    background: var(--warm-gray-100);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+}
+
+.filter-bar a,
+.filter-bar button {
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: var(--lime-800);
+    padding: 2px 7px;
+}
+
+.filter-bar a {
+    padding: 4px 7px 5px 7px;
+}
+
+.filter-bar-left {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
 }

@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<div class="row">
+  <div class="col-md-4">
     <div class="section-title">
         <div class="section-title-left">
             <h1>
@@ -9,15 +11,45 @@
             </h1>
 
             <div class="section-title-left-right">
+            <a
+                    href="#"
+                    type="button"
+                    class="btn-icon"
+                    hx-get="/intakes/{{ intake.id }}/edit"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container"
+            >
+              <i class="bi bi-pencil"></i>
+            </a>
+
+            {% if contact %}
+                <a href={% url 'contacts:select' id=contact.id %}>
+                  <i class="bi bi-person-check"></i>
+                </a>
+            {% else %}
+                <a href={% url 'contacts:add-intake' id=intake.id %}>
+                  <i class="bi bi-person-plus"></i>
+                </a>
+            {% endif %}
+
             </div>
         </div>
 
         <div class="section-title-right">
-            {% if contact %}
-                <a href={% url 'contacts:select' id=contact.id %}>View in Contacts</a>
-            {% else %}
-                <a href={% url 'contacts:add-intake' id=intake.id %}>Add to Contacts</a>
-            {% endif %}
+ <a
+                    href="#"
+                    type="button"
+                    class="btn-icon"
+                    hx-get="/intakes/{{ intake.id }}/add-note"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container"
+            >
+              <i class="bi bi-journal-plus"></i>
+            </a>
         </div>
     </div>
 
@@ -30,64 +62,53 @@
 
         </div>
 
-        <div class="add-note">
-            <a
-                    href="#"
-                    type="button"
-                    class="btn-icon"
-                    hx-get="/intakes/{{ intake.id }}/add-note"
-                    hx-target="#htmx-modal-container"
-                    hx-trigger="click"
-                    data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container"
-            >
-                Add Note
-            </a>
-        </div>
-
     </div>
+
+  </div>
+
+  <div class="col-md-8 intake-notes">
 
     {% if notes %}
 
-        <div class="intake-section">
+        {% for note in notes %}
 
-            <table class="intake-notes">
+        <div class="section-title">
+          <div class="section-title-left">
+              {{ note.date|date:'Y-m-d' }}
+              {{ note.time|time:'g:i A' }}
+               -
+              {{ note.user.username }}
+               -
+              {{ note.type }}
+            </div>
+            <div class="section-title-right">
+                  <a
+                          href="#"
+                          type="button"
+                          class="btn-icon"
+                          hx-get="/intakes/{{ note.id }}/edit-note"
+                          hx-target="#htmx-modal-container"
+                          hx-trigger="click"
+                          data-bs-toggle="modal"
+                          data-bs-target="#htmx-modal-container"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </a>
+            </div>
+          </div>
 
-                <td class="strong">Date</td>
-                <td class="strong">Time</td>
-                <td class="strong">User</td>
-                <td class="strong">Type</td>
-                <td class="strong">Details</td>
+          <div class="section">
 
-                {% for note in notes %}
+              {{ note.details|safe }}
 
-                    <tr>
-                        <td class="note-date">{{ note.date|date:'Y-m-d' }}</td>
-                        <td class="note-date">{{ note.time|time:'g:i A' }}</td>
-                        <td class="note-username">{{ note.user.username }}</td>
-                        <td class="note-type">
-                            <a
-                                    href="#"
-                                    type="button"
-                                    class="btn-icon"
-                                    hx-get="/intakes/{{ note.id }}/edit-note"
-                                    hx-target="#htmx-modal-container"
-                                    hx-trigger="click"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#htmx-modal-container"
-                            >
-                                {{ note.type }}
-                            </a></td>
-                        <td class="note-details">{{ note.details|safe }}</td>
+            </div>
 
-                    </tr>
-
-                {% endfor %}
-
-            </table>
-
-        </div>
+          {% endfor %}
 
     {% endif %}
+
+  </div>
+
+</div>
 
 {% endblock content %}

@@ -18,17 +18,19 @@
 
     </div>
 
-    <div class="contact-section">
+    <div class="section">
         <div class="contact-section-heading">
-            <div class="intake-contact">
-                <ul>
-                    <li class="intake-contact-item">
-                        <a href={% url 'contacts:select' id=client.id %}>View Contact</a>
-                    </li>
-                    <li>
-                        <a href={% url 'trust:add' contact_id=client.id %}>Add Transaction</a>
-                    </li>
-                </ul>
+            <div class="trust-contact-links">
+                    <a href={% url 'contacts:select' id=client.id %}>View Contact</a>
+                    <a
+                            href="#"
+                            hx-get="/trust/{{ client.id }}/add"
+                            hx-target="#htmx-modal-container"
+                            data-bs-toggle="modal"
+                            data-bs-target="#htmx-modal-container"
+                    >
+                        Add Transaction
+                    </a>
             </div>
             <table class="balances">
 
@@ -85,12 +87,18 @@
                                 </td>
 
                                 <td class="note">
-                                    <a href={% url 'trust:edit' id=transaction.id %}>
+                                    <a
+                                            href="#"
+                                            hx-get="/trust/{{ transaction.id }}/edit"
+                                            hx-target="#htmx-modal-container"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#htmx-modal-container"
+                                    >
                                         {{ transaction.description }}
                                     </a>
                                 </td>
 
-                                <td class="amount darkred">
+                                <td class="amount urgent">
                                     {% if transaction.type == 'Withdrawal' %} $
                                         {{ transaction.amount|intcomma }} {% endif %}
                                 </td>

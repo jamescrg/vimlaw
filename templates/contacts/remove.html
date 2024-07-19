@@ -1,43 +1,44 @@
-{% extends "base.html" %}
-{% block content %}
+<div class="modal-dialog modal-md">
+    <div class="modal-content">
 
-    <div class="col-sm-12">
-        <div class="section-title">
-            Remove Contact from Matter
+        <div class="modal-header">
+            <h1 class="modal-title">
+              Remove Contact from Matter
+            </h1>
+            <div>
+                <a href="#" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
         </div>
-        <form action="{{ action }}" method="post" role="form">
-            {% csrf_token %}
-            <table>
-                <tr>
 
-                    <th>Matter:</th>
+        <div class="modal-body">
+            <form action="{{ action }}"
+              class="form-responsive"
+              method="post" role="form">
 
-                    <td>
+                {% csrf_token %}
 
-                        <label>
-                            <select class="select-field" name="relationship_id">
+              <label>
+                Matter:
+              </label>
 
-                                {% for relationship in relationships %}
+              <label>
+                  <select class="select-field" name="relationship_id">
 
-                                    <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
+                      {% for relationship in relationships %}
 
-                                {% endfor %}
+                          <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
 
-                            </select>
-                        </label>
-                    </td>
-                </tr>
+                      {% endfor %}
 
-                <tr>
-                    <td></td>
-
-                    <td>
-                        <input type="submit" value="Submit"/>
-                    </td>
-                </tr>
-
-            </table>
+                  </select>
+              </label>
+              <br />
+              <div>
+                  <button type="submit" class="submit">Submit</button>
+              </div>
         </form>
+        </div>
     </div>
-
-{% endblock content %}
+</div>
