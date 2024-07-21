@@ -4,6 +4,8 @@
 
     <div class="events">
 
+        <div class="section">
+
         <div class="section-title">
             <div class="section-title-left">
                 <h1>
@@ -33,66 +35,67 @@
 
         </div>
 
-        <div class="table-container">
+          <div class="table-container">
             <table class="table events-table">
 
-                <tr>
-                    <th class="date">
-                        Date
-                    </th>
+              <tr>
+                <th class="date">
+                  Date
+                </th>
 
-                    <th class="matter">
-                        Matter
-                    </th>
+                <th class="matter">
+                  Matter
+                </th>
 
-                    <th class="party">
-                        Party
-                    </th>
+                <th class="party">
+                  Party
+                </th>
 
-                    <th class="description">
-                        Description
-                    </th>
+                <th class="description">
+                  Description
+                </th>
 
-                </tr>
+              </tr>
 
-                {% for event in events %}
+              {% for event in events %}
 
-                    <tr>
-                        <td class="date">
-                            {{ event.date|date:"Y-m-d" }}
-                        </td>
+              <tr>
+                <td class="date">
+                  {{ event.date|date:"Y-m-d" }}
+                </td>
 
-                        <td class="matter">
-                            <a href={% url 'matters:detail' id=event.matter.id %}>
-                                {{ event.matter.name }}
-                            </a>
-                        </td>
+                <td class="matter">
+                  <a href={% url 'matters:detail' id=event.matter.id %}>
+                    {{ event.matter.name }}
+                  </a>
+                </td>
 
-                        <td class="party">
-                            {{ event.party }}
-                        </td>
+                <td class="party">
+                  {{ event.party }}
+                </td>
 
-                        <td class="description
-            {% if event.date < three_days_out %} soon {% endif %}">
+                <td class="description
+                           {% if event.date < three_days_out %} soon {% endif %}">
 
-                            <a
-                                    href="#"
-                                    type="button"
-                                    class="btn-icon"
-                                    hx-get="/events/{{ event.id }}/edit/agenda"
-                                    hx-target="#htmx-modal-container"
-                                    hx-trigger="click"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#htmx-modal-container"
-                            >
-                                {{ event.description }}
-                            </a>
-                        </td>
-                    </tr>
+                  <a
+                      href="#"
+                      type="button"
+                      class="btn-icon"
+                      hx-get="/events/{{ event.id }}/edit/agenda"
+                      hx-target="#htmx-modal-container"
+                      hx-trigger="click"
+                      data-bs-toggle="modal"
+                      data-bs-target="#htmx-modal-container"
+                      >
+                      {{ event.description }}
+                  </a>
+                </td>
+              </tr>
 
-                {% endfor %}
+              {% endfor %}
 
             </table>
+          </div>
         </div>
 
     </div>
