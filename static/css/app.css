@@ -21,8 +21,8 @@ a:hover {
 }
 
 .content {
-    padding-bottom: 90px;
-    padding-top: 30px;
+    padding-bottom: 3rem;
+    padding-top: 1.5rem;
 }
 
 
@@ -32,18 +32,17 @@ a:hover {
 
 .section {
     background: var(--warm-gray-100);
+    border-radius: 3px;
     margin-bottom: 1.5rem;
     padding: 1rem 1rem 1.5rem;
 }
 
 .section-title {
-    background: var(--warm-gray-100);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    /* padding: 1rem 1rem 0 1rem; */
-    padding: 0.5rem 1rem 0.5rem 1rem;
+    padding: 0 0 1rem 0;
 }
 
 .section-title a,
@@ -142,10 +141,10 @@ strong {
 
 .table {
     color: inherit;
+    margin-bottom: 0;
 }
 
 table {
-    background: var(--warm-gray-100);
     border-collapse: collapse;
 }
 
@@ -194,7 +193,7 @@ li {
     border-left: none;
     border-right: none;
     color: inherit;
-    padding: 0.5rem 0 0.5rem 1rem;
+    padding: 0.5rem 0 0.5rem 0.5rem;
 }
 
 /* ==========================================================================
@@ -335,6 +334,7 @@ li {
 .filter-bar {
     align-items: center;
     background: var(--warm-gray-100);
+    border-radius: 3px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;

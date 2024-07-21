@@ -55,12 +55,6 @@ Events
 Tasks
 ------------------------------------------------*/
 
-.tasks-background {
-    background: var(--warm-gray-100);
-    padding: 0.1rem 1rem;
-}
-
-
 .tasks-table {
     margin-top: 15px;
     margin-bottom: 1rem;
@@ -142,9 +136,6 @@ Task Add Form Quick
 ------------------------------------------------*/
 
 .task-form-add {
-    background: inherit;
-    margin: 0;
-    padding: 0;
 }
 
 .task-form-add input,

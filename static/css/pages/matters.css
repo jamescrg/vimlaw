@@ -96,8 +96,9 @@ Matter Details
 
 .matter-section {
   background: var(--warm-gray-100);
+  border-radius: 0 0 3px 3px;
   margin-bottom: 1rem;
-  padding: 0.5rem 1rem 1.5rem 0.5rem;
+  padding: 1rem;
 }
 
 .matter-section-data {
@@ -132,6 +133,7 @@ Menu of submodules
 
 .sub-modules {
   background: var(--warm-gray-200);
+  border-radius: 3px 3px 0 0;
   margin-bottom: 0;
   padding: 7px 20px;
 }
