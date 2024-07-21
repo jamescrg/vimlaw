@@ -67,6 +67,10 @@ Tasks
     font-weight: 600;
 }
 
+.priority {
+  color: var(--orange-800);
+}
+
 .btn-task-status {
     color: var(--warm-gray-400);
 }

@@ -5,13 +5,9 @@
     margin: 15px 5px 0 0;
 }
 
-.intake-section {
-    margin-bottom: 55px;
-}
-
 .intake-details {
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .intake-details .strong {
@@ -60,6 +56,17 @@
 .intake-notes p {
   margin: 0;
   padding: 0;
+}
+
+.note-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.note-title td {
+  border: none;
+  padding-left: 0 !important;
+  padding-right: 1rem;
 }
 
 .note-date {

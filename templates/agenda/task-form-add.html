@@ -7,7 +7,7 @@
     {% csrf_token %}
 
     <label>
-        <select name="matter">
+        <select name="matter" tabindex="1">
 
             {% for matter in matters %}
 
@@ -30,7 +30,9 @@
                 type="text"
                 class="tasks-input-description"
                 name="description"
+                tabindex="2"
                 required
+                autofocus
                 onchange="submit()"
         />
     </label>
