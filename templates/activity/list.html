@@ -28,226 +28,230 @@
       </div>
     </div>
 
-    <div class="section-title">
+    <div class="section">
+      <div class="section-title">
 
         <div class="section-title-left">
 
-            <h1>
-                Time
-            </h1>
+          <h1>
+            Time
+          </h1>
 
-            <div class="section-title-left-right">
-                <button
-                        hx-get="/activity/add"
-                        hx-target="#htmx-modal-container"
-                        data-bs-toggle="modal"
-                        data-bs-target="#htmx-modal-container"
+          <div class="section-title-left-right">
+            <button
+                hx-get="/activity/add"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container"
                 >
-                    <i class="bi bi-plus-lg"></i>
-                </button>
+                <i class="bi bi-plus-lg"></i>
+            </button>
 
-            </div>
+          </div>
         </div>
 
+      </div>
+
+      <div class="table-container">
+        <table class="table activity">
+          <tr>
+            <th class="date">
+              Date
+            </th>
+
+            <th class="user">
+              User
+            </th>
+
+            <th class="matter">
+              Matter
+            </th>
+
+            <th class="actions">
+              Actions
+            </th>
+
+            <th class="numeric hours">
+              Hours
+            </th>
+
+            <th class="numeric rate">
+              Rate
+            </th>
+
+            <th class="numeric fee">
+              Fee
+            </th>
+          </tr>
+
+          {% for entry in entries %}
+
+          <tr>
+
+            <td class="date">
+              {{ entry.date|date:'Y-m-d' }}
+            </td>
+
+            <td class="user">
+              {{ entry.user.symbol }}
+            </td>
+
+            <td class="matter">
+
+              <a href={% url 'matters:detail' id=entry.matter.id %}>
+                {{ entry.matter.name }}
+              </a>
+            </td>
+
+            <td class="actions">
+              <a
+                  href="#"
+                  hx-get={% url 'activity:edit' id=entry.id %}
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container"
+                  >
+                  {{ entry.actions }}
+              </a>
+            </td>
+
+            <td class="hours {% if not entry.entered %}urgent{% endif %}">
+              <a href={% url 'activity:toggle-entered' id=entry.id %}>
+                {{ entry.hours|floatformat:1 }}
+              </a>
+            </td>
+
+            <td class="rate">
+
+              {% if entry.comp %}
+              comp
+              {% else %}
+              ${{ entry.firm_rate }}
+              {% endif %}
+            </td>
+
+            <td class="fee">
+              {% if entry.comp %}
+              comp
+              {% else %}
+              ${{ entry.fee|floatformat:2|intcomma }}
+              {% endif %}
+            </td>
+
+          </tr>
+
+          {% endfor %}
+
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="numeric total">{{ summary.total_hours|floatformat:1 }}</td>
+            <td></td>
+            <td class="numeric total">${{ summary.total_fees|floatformat:2|intcomma }}
+            </td>
+          </tr>
+        </table>
+
+      </div>
     </div>
 
-    <div class="table-container">
-        <table class="table activity">
-            <tr>
-                <th class="date">
-                    Date
-                </th>
-
-                <th class="user">
-                    User
-                </th>
-
-                <th class="matter">
-                    Matter
-                </th>
-
-                <th class="actions">
-                    Actions
-                </th>
-
-                <th class="numeric hours">
-                    Hours
-                </th>
-
-                <th class="numeric rate">
-                    Rate
-                </th>
-
-                <th class="numeric fee">
-                    Fee
-                </th>
-            </tr>
-
-            {% for entry in entries %}
-
-                <tr>
-
-                    <td class="date">
-                        {{ entry.date|date:'Y-m-d' }}
-                    </td>
-
-                    <td class="user">
-                        {{ entry.user.symbol }}
-                    </td>
-
-                    <td class="matter">
-
-                        <a href={% url 'matters:detail' id=entry.matter.id %}>
-                            {{ entry.matter.name }}
-                        </a>
-                    </td>
-
-                    <td class="actions">
-                        <a
-                                href="#"
-                                hx-get={% url 'activity:edit' id=entry.id %}
-                                        hx-target="#htmx-modal-container"
-                                hx-trigger="click"
-                                data-bs-toggle="modal"
-                                data-bs-target="#htmx-modal-container"
-                        >
-                            {{ entry.actions }}
-                        </a>
-                    </td>
-
-                    <td class="hours {% if not entry.entered %}urgent{% endif %}">
-                        <a href={% url 'activity:toggle-entered' id=entry.id %}>
-                            {{ entry.hours|floatformat:1 }}
-                        </a>
-                    </td>
-
-                    <td class="rate">
-
-                        {% if entry.comp %}
-                            comp
-                        {% else %}
-                            ${{ entry.firm_rate }}
-                        {% endif %}
-                    </td>
-
-                    <td class="fee">
-                        {% if entry.comp %}
-                            comp
-                        {% else %}
-                            ${{ entry.fee|floatformat:2|intcomma }}
-                        {% endif %}
-                    </td>
-
-                </tr>
-
-            {% endfor %}
-
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="numeric total">{{ summary.total_hours|floatformat:1 }}</td>
-                <td></td>
-                <td class="numeric total">${{ summary.total_fees|floatformat:2|intcomma }}
-                </td>
-            </tr>
-        </table>
-
-      </div>
-
+    <div class="section">
       <div class="section-title">
-          <div class="section-title-left">
-              <h1>
-                  Expenses
-              </h1>
-              <div class="section-title-left-right">
-                  <button
-                          data-bs-toggle="modal"
-                          hx-target="#htmx-modal-container"
-                          data-bs-target="#htmx-modal-container"
-                          hx-get={% url 'activity:add-expense' %}
-                  >
-                      <i class="bi bi-plus-lg"></i>
-                  </button>
-              </div>
+        <div class="section-title-left">
+          <h1>
+            Expenses
+          </h1>
+          <div class="section-title-left-right">
+            <button
+                data-bs-toggle="modal"
+                hx-target="#htmx-modal-container"
+                data-bs-target="#htmx-modal-container"
+                hx-get={% url 'activity:add-expense' %}
+                >
+                <i class="bi bi-plus-lg"></i>
+            </button>
           </div>
+        </div>
 
       </div>
 
-    <div class="table-container">
+      <div class="table-container">
         <table class="table activity">
 
-            <tr>
+          <tr>
 
-                <th class="date">
-                    Date
-                </th>
+            <th class="date">
+              Date
+            </th>
 
-                <th class="user">
-                    User
-                </th>
+            <th class="user">
+              User
+            </th>
 
-                <th class="matter">
-                    Matter
-                </th>
+            <th class="matter">
+              Matter
+            </th>
 
-                <th class="actions">
-                    Description
-                </th>
+            <th class="actions">
+              Description
+            </th>
 
-                <th class="numeric hours">
-                    Amount
-                </th>
+            <th class="numeric hours">
+              Amount
+            </th>
 
-            </tr>
+          </tr>
 
-            {% for entry in expense_entries %}
+          {% for entry in expense_entries %}
 
-                <tr>
+          <tr>
 
-                    <td class="date">
-                        {{ entry.date|date:'Y-m-d' }}
-                    </td>
+            <td class="date">
+              {{ entry.date|date:'Y-m-d' }}
+            </td>
 
-                    <td class="user">
-                        {{ entry.user.symbol }}
-                    </td>
+            <td class="user">
+              {{ entry.user.symbol }}
+            </td>
 
-                    <td class="matter">
-                        <a href={% url 'matters:detail' id=entry.matter.id %}>
-                            {{ entry.matter.name }}
-                        </a>
-                    </td>
+            <td class="matter">
+              <a href={% url 'matters:detail' id=entry.matter.id %}>
+                {{ entry.matter.name }}
+              </a>
+            </td>
 
-                    <td class="actions">
-                        <a
-                                href="#"
-                                hx-get="/activity/{{ entry.id }}/edit_expense"
-                                hx-target="#htmx-modal-container"
-                                hx-trigger="click"
-                                data-bs-toggle="modal"
-                                data-bs-target="#htmx-modal-container"
-                        >
-                            {{ entry.category }} - {{ entry.description }}
-                        </a>
-                    </td>
+            <td class="actions">
+              <a
+                  href="#"
+                  hx-get="/activity/{{ entry.id }}/edit_expense"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container"
+                  >
+                  {{ entry.category }} - {{ entry.description }}
+              </a>
+            </td>
 
-                    <td class="hours {% if not entry.entered %}urgent{% endif %}">
-                        <a href={% url 'activity:toggle-entered-expense' id=entry.id %}>
-                            ${{ entry.amount|floatformat:2|intcomma }}
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="numeric total">${{ summary.total_expenses|floatformat:2|intcomma }}</td>
-            </tr>
+            <td class="hours {% if not entry.entered %}urgent{% endif %}">
+              <a href={% url 'activity:toggle-entered-expense' id=entry.id %}>
+                ${{ entry.amount|floatformat:2|intcomma }}
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="numeric total">${{ summary.total_expenses|floatformat:2|intcomma }}</td>
+          </tr>
         </table>
+      </div>
     </div>
 
 {% endblock content %}

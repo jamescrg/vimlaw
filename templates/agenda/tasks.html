@@ -1,6 +1,6 @@
 {% load humanize %}
 
-<div class="tasks">
+<div class="section">
 
     <div class="section-title">
 
@@ -48,12 +48,8 @@
 
     </div>
 
-    <div id="tasks" class="tasks-background">
+    {% include "agenda/task-form-add.html" %}
 
-        {% include "agenda/task-form-add.html" %}
-
-        {% include "agenda/tasks-table.html" %}
-
-    </div>
+    {% include "agenda/tasks-table.html" %}
 
 </div>
