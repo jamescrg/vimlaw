@@ -1,103 +1,56 @@
-
-
 {% if show_events %}
-
-    <div class="events">
-
-        <div class="section">
-
-        <div class="section-title">
-            <div class="section-title-left">
-                <h1>
-                    Events
-                </h1>
-                <div class="section-title-left-right">
-                    <button
-                            type="button"
-                            class="btn-icon"
-                            hx-get="/events/add/agenda"
-                            hx-target="#htmx-modal-container"
-                            hx-trigger="click"
-                            data-bs-toggle="modal"
-                            data-bs-target="#htmx-modal-container"
-                    >
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                </div>
-
-            </div>
-
-            <div class="section-title-right">
-                <a href={% url 'agenda:toggle-events' %}>
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </div>
-
-        </div>
-
-          <div class="table-container">
-            <table class="table events-table">
-
-              <tr>
-                <th class="date">
-                  Date
-                </th>
-
-                <th class="matter">
-                  Matter
-                </th>
-
-                <th class="party">
-                  Party
-                </th>
-
-                <th class="description">
-                  Description
-                </th>
-
-              </tr>
-
-              {% for event in events %}
-
-              <tr>
-                <td class="date">
-                  {{ event.date|date:"Y-m-d" }}
-                </td>
-
-                <td class="matter">
-                  <a href={% url 'matters:detail' id=event.matter.id %}>
-                    {{ event.matter.name }}
-                  </a>
-                </td>
-
-                <td class="party">
-                  {{ event.party }}
-                </td>
-
-                <td class="description
-                           {% if event.date < three_days_out %} soon {% endif %}">
-
-                  <a
-                      href="#"
-                      type="button"
-                      class="btn-icon"
-                      hx-get="/events/{{ event.id }}/edit/agenda"
-                      hx-target="#htmx-modal-container"
-                      hx-trigger="click"
-                      data-bs-toggle="modal"
-                      data-bs-target="#htmx-modal-container"
-                      >
-                      {{ event.description }}
-                  </a>
-                </td>
-              </tr>
-
-              {% endfor %}
-
-            </table>
+  <div class="events">
+    <div class="section">
+      <div class="section-title">
+        <div class="section-title-left">
+          <h1>Events</h1>
+          <div class="section-title-left-right">
+            <button type="button"
+                    class="btn-icon"
+                    hx-get="/events/add/agenda"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">
+              <i class="bi bi-plus-lg"></i>
+            </button>
           </div>
         </div>
-
+        <div class="section-title-right">
+          <a href={% url 'agenda:toggle-events' %}>
+            <i class="bi bi-x-lg"></i>
+          </a>
+        </div>
+      </div>
+      <div class="table-container">
+        <table class="table events-table">
+          <tr>
+            <th class="date">Date</th>
+            <th class="matter">Matter</th>
+            <th class="party">Party</th>
+            <th class="description">Description</th>
+          </tr>
+          {% for event in events %}
+            <tr>
+              <td class="date">{{ event.date|date:"Y-m-d" }}</td>
+              <td class="matter">
+                <a href={% url 'matters:detail' id=event.matter.id %}>{{ event.matter.name }}</a>
+              </td>
+              <td class="party">{{ event.party }}</td>
+              <td class="description {% if event.date < three_days_out %}soon{% endif %}">
+                <a href="#"
+                   type="button"
+                   class="btn-icon"
+                   hx-get="/events/{{ event.id }}/edit/agenda"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container">{{ event.description }}</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
     </div>
-
+  </div>
 {% endif %}

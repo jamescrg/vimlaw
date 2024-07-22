@@ -1,44 +1,32 @@
 <div class="modal-dialog modal-md">
-    <div class="modal-content">
-
-        <div class="modal-header">
-            <h1 class="modal-title">
-              Remove Contact from Matter
-            </h1>
-            <div>
-                <a href="#" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="modal-body">
-            <form action="{{ action }}"
-              class="form-responsive"
-              method="post" role="form">
-
-                {% csrf_token %}
-
-              <label>
-                Matter:
-              </label>
-
-              <label>
-                  <select class="select-field" name="relationship_id">
-
-                      {% for relationship in relationships %}
-
-                          <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
-
-                      {% endfor %}
-
-                  </select>
-              </label>
-              <br />
-              <div>
-                  <button type="submit" class="submit">Submit</button>
-              </div>
-        </form>
-        </div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Remove Contact from Matter</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
     </div>
+    <div class="modal-body">
+      <form action="{{ action }}"
+            class="form-responsive"
+            method="post"
+            role="form">
+        {% csrf_token %}
+        <label>Matter:</label>
+        <label>
+          <select class="select-field" name="relationship_id">
+            {% for relationship in relationships %}
+              <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <br />
+        <div>
+          <button type="submit" class="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

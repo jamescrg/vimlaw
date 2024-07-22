@@ -1,16 +1,10 @@
 <a href="#"
-  hx-get="/agenda/{{ task.id }}/task-status"
-  hx-target="closest #task-status"
-  hx-swap="innerHTML"
-  >
-
+   hx-get="/agenda/{{ task.id }}/task-status"
+   hx-target="closest #task-status"
+   hx-swap="innerHTML">
   {% if task.status == "Complete" %}
-
     <i class="bi bi-check-square"></i>
-
   {% else %}
-
     <i class="bi bi-square"></i>
-
   {% endif %}
 </a>

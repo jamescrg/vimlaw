@@ -1,162 +1,96 @@
 <div class="modal-dialog modal-md">
-    <div class="modal-content">
-
-        <div class="modal-header">
-            <h1 class="modal-title">
-                Filter Time Entries
-            </h1>
-            <div>
-                <a href="#" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="modal-body">
-            <form
-                    method="post"
-                    class="form-responsive"
-                    action={% url 'activity:filter-update' %}
-
-            >
-                {% csrf_token %}
-
-                <label>
-                    From:
-                </label>
-
-                <label>
-                    <input type="date" name="date_from"
-                           value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}"/>
-                </label>
-
-                <label>To:</label>
-                <label>
-                    <input type="date" name="date_to"
-                           value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}"/>
-                </label>
-
-                <label>Firm:</label>
-                <label>
-                    <select name="firm">
-
-                        <option value="">All</option>
-
-                        {% for firm in firms %}
-
-                            <option value="{{ firm }}"
-                                    {% if filter.firm == firm %}selected{% endif %}>
-
-                                {{ firm }}
-
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-                </label>
-
-                <label>User:</label>
-                <label>
-                    <select name="user">
-
-                        <option value="All">All</option>
-
-                        {% for user in users %}
-
-                            <option value="{{ user.id }}"
-                                    {% if filter.user == user.id %}selected{% endif %}>
-
-                                {{ user.username }}
-
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-                </label>
-
-                <label>Matter:</label>
-                <label for="matter">
-                    <select name="matter" id="matter">
-
-                          <option value="">All</option>
-
-                          {% for matter in matters %}
-
-                              <option value="{{ matter.id }}"
-                                      {% if matter.id == filter.matter %} selected {% endif %}>
-
-                                  {{ matter.name }}
-
-                              </option>
-
-                          {% endfor %}
-                      </select>
-                </label>
-
-                <label>Keyword:</label>
-                <label for="keyword">
-                  <input id="keyword" type="text" name="keyword"
-                      value="{{ filter.keyword|default:'' }}"/>
-                </label>
-
-                <label>Comp:</label>
-
-                <label for="comp">
-
-                  <select id="comp" name="comp">
-
-                      <option value="">All</option>
-
-                      <option value="No" {% if filter.comp == 'No' %} selected {% endif %}>
-                          Only Comped
-                      </option>
-
-                      <option value="Yes" {% if filter.comp == 'Yes' %} selected {% endif %}>
-                          Only Charged
-                      </option>
-
-                  </select>
-                </label>
-
-                <label>Entry Status:</label>
-
-                <label for="entered">
-                  <select id="entered" name="entered">
-
-                        <option value="">All</option>
-
-                        <option value="No" {% if filter.entered == 'No' %} selected {% endif %}>
-                            Only Non Entered
-                        </option>
-
-                        <option value="Yes" {% if filter.entered == 'Yes' %} selected {% endif %}>
-                            Only Entered
-                        </option>
-
-                    </select>
-                </label>
-
-                <label>Sort By:</label>
-                <label for="order">
-                  <select name="order" id="order">
-
-                      <option value="date, descending" {% if filter.order == 'date, descending' %}selected{% endif %}>
-                          Date, Descending
-                      </option>
-
-                      <option value="date, ascending" {% if filter.order == 'date, ascending' %}selected{% endif %}>
-                          Date, Ascending
-                      </option>
-
-                  </select>
-                </label>
-                <br/>
-                <div>
-                    <button type="submit" class="submit">Submit</button>
-                </div>
-            </form>
-        </div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Filter Time Entries</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
     </div>
+    <div class="modal-body">
+      <form method="post"
+            class="form-responsive"
+            action="{% url 'activity:filter-update' %}">
+        {% csrf_token %}
+        <label>From:</label>
+        <label>
+          <input type="date"
+                 name="date_from"
+                 value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}" />
+        </label>
+        <label>To:</label>
+        <label>
+          <input type="date"
+                 name="date_to"
+                 value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}" />
+        </label>
+        <label>Firm:</label>
+        <label>
+          <select name="firm">
+            <option value="">All</option>
+            {% for firm in firms %}
+              <option value="{{ firm }}" {% if filter.firm == firm %}selected{% endif %}>{{ firm }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>User:</label>
+        <label>
+          <select name="user">
+            <option value="All">All</option>
+            {% for user in users %}
+              <option value="{{ user.id }}"
+                      {% if filter.user == user.id %}selected{% endif %}>{{ user.username }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Matter:</label>
+        <label for="matter">
+          <select name="matter" id="matter">
+            <option value="">All</option>
+            {% for matter in matters %}
+              <option value="{{ matter.id }}"
+                      {% if matter.id == filter.matter %}selected{% endif %}>{{ matter.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Keyword:</label>
+        <label for="keyword">
+          <input id="keyword"
+                 type="text"
+                 name="keyword"
+                 value="{{ filter.keyword|default:'' }}" />
+        </label>
+        <label>Comp:</label>
+        <label for="comp">
+          <select id="comp" name="comp">
+            <option value="">All</option>
+            <option value="No" {% if filter.comp == 'No' %}selected{% endif %}>Only Comped</option>
+            <option value="Yes" {% if filter.comp == 'Yes' %}selected{% endif %}>Only Charged</option>
+          </select>
+        </label>
+        <label>Entry Status:</label>
+        <label for="entered">
+          <select id="entered" name="entered">
+            <option value="">All</option>
+            <option value="No" {% if filter.entered == 'No' %}selected{% endif %}>Only Non Entered</option>
+            <option value="Yes" {% if filter.entered == 'Yes' %}selected{% endif %}>Only Entered</option>
+          </select>
+        </label>
+        <label>Sort By:</label>
+        <label for="order">
+          <select name="order" id="order">
+            <option value="date, descending"
+                    {% if filter.order == 'date, descending' %}selected{% endif %}>Date, Descending</option>
+            <option value="date, ascending"
+                    {% if filter.order == 'date, ascending' %}selected{% endif %}>Date, Ascending</option>
+          </select>
+        </label>
+        <br />
+        <div>
+          <button type="submit" class="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

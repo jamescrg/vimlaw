@@ -1,138 +1,94 @@
 {% extends "base.html" %}
 {% block content %}
-    {% load humanize %}
-
-    <div class="section">
-      <div class="section-title">
-
-        <div class="section-title-left">
-
-          <h1>
-            {{ client.name }}
-          </h1>
-
-        </div>
-
-        <div class="section-title-right">
-          <a href={% url 'trust:trust' %}>Return to Account Summary</a>
-        </div>
-
+  {% load humanize %}
+  <div class="section">
+    <div class="section-title">
+      <div class="section-title-left">
+        <h1>{{ client.name }}</h1>
       </div>
-
-        <div class="contact-section-heading">
-          <div class="trust-contact-links">
-            <a href={% url 'contacts:select' id=client.id %}>View Contact</a>
-            <a
-                href="#"
-                hx-get="/trust/{{ client.id }}/add"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container"
-                >
-                Add Transaction
-            </a>
-          </div>
-          <table class="balances">
-
+      <div class="section-title-right">
+        <a href={% url 'trust:trust' %}>Return to Account Summary</a>
+      </div>
+    </div>
+    <div class="contact-section-heading">
+      <div class="trust-contact-links">
+        <a href={% url 'contacts:select' id=client.id %}>View Contact</a>
+        <a href="#"
+           hx-get="/trust/{{ client.id }}/add"
+           hx-target="#htmx-modal-container"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">Add Transaction</a>
+      </div>
+      <table class="balances">
+        <tr>
+          <td>Pending Balance</td>
+          <td>${{ pending_client_balance|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>Confirmed Balance</td>
+          <td>
+            <strong>${{ confirmed_client_balance|intcomma }}</strong>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="contact-section-data">
+      <div class="table-container">
+        <table id="transactions" class="table">
+          {% if transactions %}
             <tr>
-              <td>
-                Pending Balance
-              </td>
-              <td>
-                ${{ pending_client_balance|intcomma }}
-              </td>
+              <th>Date</th>
+              <th>Description</th>
+              <th class="amount">Withdrawal</th>
+              <th class="amount">Deposit</th>
+              <th class="check">E</th>
+              <th class="check">C</th>
             </tr>
-
-            <tr>
-              <td>
-                Confirmed Balance
-              </td>
-              <td>
-                <strong>${{ confirmed_client_balance|intcomma }}</strong>
-              </td>
-            </tr>
-
-          </table>
-
-        </div>
-
-        <div class="contact-section-data">
-
-          <div class="table-container">
-            <table id="transactions" class="table">
-              {% if transactions %}
-
+            {% for transaction in transactions %}
               <tr>
-
-                <th>Date</th>
-
-                <th>Description</th>
-
-                <th class="amount">Withdrawal</th>
-
-                <th class="amount">Deposit</th>
-
-                <th class="check">E</th>
-
-                <th class="check">C</th>
-
-              </tr>
-
-              {% for transaction in transactions %}
-
-              <tr>
-
-                <td class="date">
-                  {{ transaction.date|date:'Y-m-d' }}
-                </td>
-
+                <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
                 <td class="note">
-                  <a
-                      href="#"
-                      hx-get="/trust/{{ transaction.id }}/edit"
-                      hx-target="#htmx-modal-container"
-                      data-bs-toggle="modal"
-                      data-bs-target="#htmx-modal-container"
-                      >
-                      {{ transaction.description }}
-                  </a>
+                  <a href="#"
+                     hx-get="/trust/{{ transaction.id }}/edit"
+                     hx-target="#htmx-modal-container"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container">{{ transaction.description }}</a>
                 </td>
-
                 <td class="amount urgent">
-                  {% if transaction.type == 'Withdrawal' %} $
-                  {{ transaction.amount|intcomma }} {% endif %}
+                  {% if transaction.type == 'Withdrawal' %}
+                    $
+                    {{ transaction.amount|intcomma }}
+                  {% endif %}
                 </td>
-
                 <td class="amount">
-                  {% if transaction.type == 'Deposit' %} $
-                  {{ transaction.amount|intcomma }} {% endif %}
+                  {% if transaction.type == 'Deposit' %}
+                    $
+                    {{ transaction.amount|intcomma }}
+                  {% endif %}
                 </td>
-
                 <td class="check">
                   <a href={% url 'trust:entered' id=transaction.id %}>
                     {% if transaction.entered %}
-                    <i class="bi bi-check-square"></i>
+                      <i class="bi bi-check-square"></i>
                     {% else %}
-                    <i class="bi bi-square"></i>
+                      <i class="bi bi-square"></i>
                     {% endif %}
                   </a>
                 </td>
-
                 <td class="check">
                   <a href={% url 'trust:confirmed' id=transaction.id %}>
                     {% if transaction.confirmed %}
-                    <i class="bi bi-check-square"></i>
+                      <i class="bi bi-check-square"></i>
                     {% else %}
-                    <i class="bi bi-square"></i>
+                      <i class="bi bi-square"></i>
                     {% endif %}
                   </a>
                 </td>
               </tr>
-              {% endfor %}
-              {% endif %}
-            </table>
-          </div>
-        </div>
+            {% endfor %}
+          {% endif %}
+        </table>
       </div>
-
+    </div>
+  </div>
 {% endblock content %}

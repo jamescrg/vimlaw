@@ -1,126 +1,85 @@
 <div class="modal-dialog modal-md">
-    <div class="modal-content">
-
-        <div class="modal-header">
-            <h1 class="modal-title">
-                Filter Tasks
-            </h1>
-            <div>
-                <a href="#" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="modal-body">
-
-            <form
-                    method="post"
-                    class="form-responsive"
-                    action={% url 'agenda:filter-update' %}
-            >
-                {% csrf_token %}
-
-                <label>Status</label>
-                <label for="status"><select name="status" id="status">
-
-                <option value="" {% if filter.status == "All" %}selected{% endif %}>
-                    All
-                </option>
-
-                <option value="Pending" {% if filter.status == "Pending" %}selected{% endif %}>
-                    Pending
-                </option>
-
-                <option value="Complete" {% if filter.status == "Complete" %}selected{% endif %}>
-                    Complete
-                </option>
-            </select>
-                </label>
-
-                <label for="date_from">From:</label>
-                <input type="date" name="date_from" id="date_from"
-                       value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}"/>
-
-                <label>To:</label>
-                <label>
-                    <input type="date" name="date_to"
-                           value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}"/>
-                </label>
-
-                <label>Matter:</label>
-                <label for="matter"><select name="matter" id="matter">
-
-                <option value="">All</option>
-
-                {% for matter in matters %}
-
-                    <option value="{{ matter.id }}"
-                            {% if matter.id == filter.matter %} selected {% endif %}>
-
-                        {{ matter.name }}
-
-                    </option>
-
-                {% endfor %}
-            </select></label>
-
-                <label>User
-                </label>
-                <label for="user"><select name="user" id="user">
-
-                <option value="">All</option>
-
-                {% for user in users %}
-
-                    <option value="{{ user.id }}"
-                            {% if user.id == filter.user %} selected {% endif %}>
-
-                        {{ user.username }}
-
-                    </option>
-
-                {% endfor %}
-            </select></label>
-
-                <label>Sort By:</label>
-                <label for="order_field"><select name="order_field" id="order_field">
-
-                <option value="date_due" {% if filter.order_field == "date_due" %}selected{% endif %}>
-                    Date Due
-                </option>
-
-                <option value="description" {% if filter.order_field == "description" %}selected{% endif %}>
-                    Description
-                </option>
-
-                <option value="user" {% if filter.order_field == "user" %}selected{% endif %}>
-                    User
-                </option>
-
-                <option value="matter" {% if filter.order_field == "matter" %}selected{% endif %}>
-                    Matter
-                </option>
-
-            </select></label>
-
-                <label>Sort Direction:</label>
-                <label for="order_direction"><select name="order_direction" id="order_direction">
-
-                <option value="ascending" {% if filter.order_field == "ascending" %}selected{% endif %}>
-                    Ascending
-                </option>
-
-                <option value="descending" {% if filter.order_field == "descending" %}selected{% endif %}>
-                    Descending
-                </option>
-
-            </select></label>
-                <br/>
-                <div>
-                    <button type="submit" class="submit">Submit</button>
-                </div>
-            </form>
-        </div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Filter Tasks</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
     </div>
+    <div class="modal-body">
+      <form method="post"
+            class="form-responsive"
+            action="{% url 'agenda:filter-update' %}">
+        {% csrf_token %}
+        <label>Status</label>
+        <label for="status">
+          <select name="status" id="status">
+            <option value="" {% if filter.status == "All" %}selected{% endif %}>All</option>
+            <option value="Pending"
+                    {% if filter.status == "Pending" %}selected{% endif %}>Pending</option>
+            <option value="Complete"
+                    {% if filter.status == "Complete" %}selected{% endif %}>Complete</option>
+          </select>
+        </label>
+        <label for="date_from">From:</label>
+        <input type="date"
+               name="date_from"
+               id="date_from"
+               value="{% if filter.date_from %}{{ filter.date_from }}{% endif %}" />
+        <label>To:</label>
+        <label>
+          <input type="date"
+                 name="date_to"
+                 value="{% if filter.date_to %}{{ filter.date_to }}{% endif %}" />
+        </label>
+        <label>Matter:</label>
+        <label for="matter">
+          <select name="matter" id="matter">
+            <option value="">All</option>
+            {% for matter in matters %}
+              <option value="{{ matter.id }}"
+                      {% if matter.id == filter.matter %}selected{% endif %}>{{ matter.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>User</label>
+        <label for="user">
+          <select name="user" id="user">
+            <option value="">All</option>
+            {% for user in users %}
+              <option value="{{ user.id }}"
+                      {% if user.id == filter.user %}selected{% endif %}>{{ user.username }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Sort By:</label>
+        <label for="order_field">
+          <select name="order_field" id="order_field">
+            <option value="date_due"
+                    {% if filter.order_field == "date_due" %}selected{% endif %}>Date Due</option>
+            <option value="description"
+                    {% if filter.order_field == "description" %}selected{% endif %}>Description</option>
+            <option value="user" {% if filter.order_field == "user" %}selected{% endif %}>User</option>
+            <option value="matter"
+                    {% if filter.order_field == "matter" %}selected{% endif %}>Matter</option>
+          </select>
+        </label>
+        <label>Sort Direction:</label>
+        <label for="order_direction">
+          <select name="order_direction" id="order_direction">
+            <option value="ascending"
+                    {% if filter.order_field == "ascending" %}selected{% endif %}>Ascending</option>
+            <option value="descending"
+                    {% if filter.order_field == "descending" %}selected{% endif %}>Descending</option>
+          </select>
+        </label>
+        <br />
+        <div>
+          <button type="submit" class="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

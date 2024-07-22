@@ -1,11 +1,8 @@
 <div id="contacts" class="col-md-3">
-
   <div class="section">
     <div class="section-title">
       <div class="section-title-left">
-        <h1>
-          Contacts
-        </h1>
+        <h1>Contacts</h1>
         <div class="section-title-left-right">
           <a href={% url 'contacts:add' %}>
             <i class="bi bi-plus-lg"></i>
@@ -13,28 +10,17 @@
         </div>
       </div>
     </div>
-
     {% if contacts %}
-
-    {% include "contacts/list.html" %}
-
+      {% include "contacts/list.html" %}
     {% else %}
-
-    <ul class="list-group">
-      <li class="list-group-item">No contacts selected.</li>
-    </ul>
-
+      <ul class="list-group">
+        <li class="list-group-item">No contacts selected.</li>
+      </ul>
     {% endif %}
   </div>
-
 </div>
-
 <div id="contact" class="col-md-6">
-
-    {% if selected_contact %}
-
-        {% include "contacts/contact.html" %}
-
-    {% endif %}
-
+  {% if selected_contact %}
+    {% include "contacts/contact.html" %}
+  {% endif %}
 </div>

@@ -1,17 +1,9 @@
-
 <div class="deadline-calculator">
-
   <div class="deadline-calculator-button">
-    <button id="calc-dead" class="button-link"
-      onclick="toggleCalculator()">Calculate Deadline</button>
+    <button id="calc-dead" class="button-link" onclick="toggleCalculator()">Calculate Deadline</button>
   </div>
-
   {# this form is set to display: none by default #}
   {# it is revealed by the above js function #}
   {% include "events/deadline-calculator-form.html" %}
-
-  <div id="deadline-calculator-results" class="deadline-calculator-results">
-    {# results to be loaded here #}
-  </div>
-
+  <div id="deadline-calculator-results" class="deadline-calculator-results">{# results to be loaded here #}</div>
 </div>

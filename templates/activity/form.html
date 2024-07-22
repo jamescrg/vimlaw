@@ -1,7 +1,6 @@
 <!-- -------------------------------------------------------- -->
 <!-- Javascript Rate Picker -->
 <!-- -------------------------------------------------------- -->
-
 <script type="text/javascript">
 
     const contract_rates = [];
@@ -17,54 +16,42 @@
     {% endfor %}
 
 </script>
-
 <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-        <div class="modal-header">
-            <h1 class="modal-title">
-                {% if edit %}
-                    Edit Time Entry
-                {% else %}
-                    Add Time Entry
-                {% endif %}
-            </h1>
-            <div>
-                <a href="#" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="modal-body">
-
-            <form
-                    action="{{ action }}"
-                    class="form-responsive"
-                    method="post"
-                    role="form"
-            >
-                {% csrf_token %}
-                {{ form }}
-
-                <div class="flex-center-space">
-                    <div>
-                        <button type="submit" class="submit">Submit</button>
-                    </div>
-
-                    <div>
-                        {% if edit %}
-                            <a
-                                    class="confirm"
-                                    onclick="return confirm('Are you sure you want to delete this record?')"
-                                    href={% url 'activity:delete' id=entry.id %}
-                            >
-                                Delete Entry
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </form>
-        </div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if edit %}
+          Edit Time Entry
+        {% else %}
+          Add Time Entry
+        {% endif %}
+      </h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
     </div>
+    <div class="modal-body">
+      <form action="{{ action }}"
+            class="form-responsive"
+            method="post"
+            role="form">
+        {% csrf_token %}
+        {{ form }}
+        <div class="flex-center-space">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
+          <div>
+            {% if edit %}
+              <a class="confirm"
+                 onclick="return confirm('Are you sure you want to delete this record?')"
+                 href="{% url 'activity:delete' id=entry.id %}">Delete Entry</a>
+            {% endif %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
