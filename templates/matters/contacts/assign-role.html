@@ -1,89 +1,49 @@
 {% extends "matters/detail.html" %}
-
 {% block subcontent %}
-
-    <div class="section-title">
-        <div class="section-title-left">
-            <h1>
-                {% if edit %}
-                    Edit Contact Role
-                {% else %}
-                    Assign Contact Role
-                {% endif %}
-            </h1>
-        </div>
-
+  <div class="section-title">
+    <div class="section-title-left">
+      <h1>
         {% if edit %}
-            <div class="subsection-add">
-
-                <a
-                        class="confirm"
-                        href="{% url 'matters:contacts-assign-delete' relationship.id %}">
-                    Remove Assignment
-                </a>
-
-            </div>
+          Edit Contact Role
+        {% else %}
+          Assign Contact Role
         {% endif %}
-
+      </h1>
     </div>
-
-    <div class="matter-section-data">
-
-        <form class="assign-role" action="{{ action }}" method="post" role="form">
-
-            {% csrf_token %}
-
-            <table>
-
-                <tr>
-
-                    <td>
-                        {{ contact.name }}
-                        <input type="hidden" name="contact_id" value="{{ contact.id }}"/>
-                        <input type="hidden" name="matter_id" value="{{ matter.id }}"/>
-                    </td>
-
-                </tr>
-
-                <tr>
-
-                    <td>
-
-                        <label>
-                            <select name="role_id" class="role" onchange="submit()">
-
-                                <option>Select a role . . .</option>
-
-                                {% for role in roles %}
-
-                                    <option
-                                            value="{{ role.id }}"
-                                            {% if relationship %}
-
-                                            roleid="{{ role.id }}"
-                                            relationshipid="{{ relationship.role.id }}"
-
-                                                {% if relationship.role.id == role.id %}
-                                            selected
-                                                {% endif %}
-
-                                            {% endif %}
-                                    >{{ role.name }}
-                                    </option>
-
-                                {% endfor %}
-
-                            </select>
-                        </label>
-
-                    </td>
-
-                </tr>
-
-            </table>
-
-        </form>
-
-    </div>
-    <div class="matter-section-data"></div>
+    {% if edit %}
+      <div class="subsection-add">
+        <a class="confirm"
+           href="{% url 'matters:contacts-assign-delete' relationship.id %}">Remove Assignment</a>
+      </div>
+    {% endif %}
+  </div>
+  <div class="matter-section-data">
+    <form class="assign-role" action="{{ action }}" method="post" role="form">
+      {% csrf_token %}
+      <table>
+        <tr>
+          <td>
+            {{ contact.name }}
+            <input type="hidden" name="contact_id" value="{{ contact.id }}" />
+            <input type="hidden" name="matter_id" value="{{ matter.id }}" />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label>
+              <select name="role_id" class="role" onchange="submit()">
+                <option>Select a role . . .</option>
+                {% for role in roles %}
+                  <option value="{{ role.id }}"
+                          {% if relationship %}  roleid="{{ role.id }}" relationshipid="{{ relationship.role.id }}"  {% if relationship.role.id == role.id %}selected{% endif %}
+                          {% endif %}>{{ role.name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+  <div class="matter-section-data"></div>
 {% endblock subcontent %}

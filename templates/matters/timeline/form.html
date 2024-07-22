@@ -1,45 +1,36 @@
 <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h1 class="modal-title">
-                {% if edit %}
-                    Edit Fact
-                {% else %}
-                    Add Fact
-                {% endif %}
-            </h1>
-            <div>
-                <a href="#" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="modal-body">
-            <form
-                    action="{{ action }}"
-                    method="post"
-                    class="form-responsive"
-            >
-                {% csrf_token %}
-                {{ form }}
-                <br/>
-                <div class="flex-center-space">
-                    <div>
-                        <button type="submit" class="submit">Submit</button>
-                    </div>
-                    <div>
-                        {% if edit %}
-                            <a
-                                    onclick="return confirm('Are you sure you want to delete this record?')"
-                                    href={% url 'matters:timeline-delete' matter_id=matter.id fact_id=fact.id %}
-                            >
-                                Delete Fact
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </form>
-        </div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if edit %}
+          Edit Fact
+        {% else %}
+          Add Fact
+        {% endif %}
+      </h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
     </div>
+    <div class="modal-body">
+      <form action="{{ action }}" method="post" class="form-responsive">
+        {% csrf_token %}
+        {{ form }}
+        <br />
+        <div class="flex-center-space">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
+          <div>
+            {% if edit %}
+              <a onclick="return confirm('Are you sure you want to delete this record?')"
+                 href="{% url 'matters:timeline-delete' matter_id=matter.id fact_id=fact.id %}">Delete Fact</a>
+            {% endif %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

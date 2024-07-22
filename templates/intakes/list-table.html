@@ -1,43 +1,30 @@
 {% load phone_numbers %}
-
 <div class="section">
   <div class="section-title">
     <div class="section-title-left">
-      <h1>
-        {{ filter.status }} Intakes ({{ number_intakes }})
-      </h1>
+      <h1>{{ filter.status }} Intakes ({{ number_intakes }})</h1>
       <div class="section-title-left-right">
-
-        <button
-            hx-get="/intakes/add"
-            hx-target="#htmx-modal-container"
-            data-bs-toggle="modal"
-            data-bs-target="#htmx-modal-container"
-            >
-            <i class="bi bi-plus-lg"></i>
+        <button hx-get="/intakes/add"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-plus-lg"></i>
         </button>
-
-        <button
-            hx-get="/intakes/filter"
-            hx-target="#htmx-modal-container"
-            data-bs-toggle="modal"
-            data-bs-target="#htmx-modal-container"
-            >
-            <i class="bi bi-funnel"></i>
+        <button hx-get="/intakes/filter"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-funnel"></i>
         </button>
         <a href={% url 'intakes:filter-quick' 'open' %}>Open</a>
         <a href={% url 'intakes:filter-quick' 'pending' %}>Pending</a>
         <a href={% url 'intakes:filter-quick' 'recent' %}>Recent</a>
       </div>
-
     </div>
-
   </div>
-
   <div class="table-container">
     <table id="intake-list" class="table">
       <tr>
-
         <th class="intake-date">
           <a href={% url 'intakes:sort-by' '-date' %}>
             Date
@@ -50,49 +37,26 @@
             <i class="bi bi-chevron-expand"></i>
           </a>
         </th>
-        <th class="intake-phone">
-          Phone
-        </th>
-
-        <th class="intake-email">
-          Email
-        </th>
-
-        <th class="intake-status">
-          Status
-        </th>
-
-        <th class="intake-source">
-          Source
-        </th>
+        <th class="intake-phone">Phone</th>
+        <th class="intake-email">Email</th>
+        <th class="intake-status">Status</th>
+        <th class="intake-source">Source</th>
       </tr>
-
       {% if intakes %}
-      {% for intake in intakes %}
-
-      <tr>
-        <td class="intake-date">
-          {{ intake.date|date:"Y-m-d" }}
-        </td>
-        <td class="intake-name">
-          <a href={% url 'intakes:detail' id=intake.id %}>{{ intake.name }}</a>
-        </td>
-        <td class="intake-phone">
-          {{ intake.phone|phone_number|default:'' }}
-        </td>
-        <td class="intake-email">
-          {{ intake.email|default:'' }}
-        </td>
-        <td class="intake-status">
-          {{ intake.status }}
-        </td>
-        <td class="intake-source">
-          {% if intake.source %}
-          {{ intake.source|slice:':14' }}
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
+        {% for intake in intakes %}
+          <tr>
+            <td class="intake-date">{{ intake.date|date:"Y-m-d" }}</td>
+            <td class="intake-name">
+              <a href={% url 'intakes:detail' id=intake.id %}>{{ intake.name }}</a>
+            </td>
+            <td class="intake-phone">{{ intake.phone|phone_number|default:'' }}</td>
+            <td class="intake-email">{{ intake.email|default:'' }}</td>
+            <td class="intake-status">{{ intake.status }}</td>
+            <td class="intake-source">
+              {% if intake.source %}{{ intake.source|slice:':14' }}{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
       {% endif %}
     </table>
   </div>

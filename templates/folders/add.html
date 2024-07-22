@@ -1,25 +1,18 @@
 <li id="add-folder-item" class="list-group-item">
-
-    <i class="bi bi-folder"></i>
-
-    <div class="edit-folder">
-
-        <form class="folder-form"
-              action="{% url 'folders:insert' page %}"
-              method="post">
-
-            {% csrf_token %}
-
-            <label for="add-folder-input"></label><input id="add-folder-input"
-                                                         class="form-horizontal"
-                                                         type="text"
-                                                         name="name"
-                                                         onchange="submit()"
-                                                         onblur="hideAddFolderForm()"
-                                                         value="" />
-
-        </form>
-
-    </div>
-
+  <i class="bi bi-folder"></i>
+  <div class="edit-folder">
+    <form class="folder-form"
+          action="{% url 'folders:insert' page %}"
+          method="post">
+      {% csrf_token %}
+      <label for="add-folder-input"></label>
+      <input id="add-folder-input"
+             class="form-horizontal"
+             type="text"
+             name="name"
+             onchange="submit()"
+             onblur="hideAddFolderForm()"
+             value="" />
+    </form>
+  </div>
 </li>

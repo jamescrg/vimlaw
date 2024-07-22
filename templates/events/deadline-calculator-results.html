@@ -1,16 +1,16 @@
 <table>
+  <tr>
+    <td>Deadline</td>
+    <td {% if not results.next_workday %}class="strong"{% endif %}>{{ results.deadline|date:"Y-m-d" }}</td>
+  </tr>
+  <tr>
+    <td>Weekday</td>
+    <td>{{ results.deadline_weekday }}</td>
+  </tr>
+  {% if results.next_workday %}
     <tr>
-        <td>Deadline</td>
-        <td {% if not results.next_workday %} class="strong" {% endif %}> {{ results.deadline|date:"Y-m-d" }}</td>
+      <td>Next Business Day</td>
+      <td class="strong">{{ results.next_workday|date:"Y-m-d" }}</td>
     </tr>
-    <tr>
-        <td>Weekday</td>
-        <td>{{ results.deadline_weekday }}</td>
-    </tr>
-    {% if results.next_workday %}
-        <tr>
-            <td>Next Business Day</td>
-            <td class="strong">{{ results.next_workday|date:"Y-m-d" }}</td>
-        </tr>
-    {% endif %}
+  {% endif %}
 </table>

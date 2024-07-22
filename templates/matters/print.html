@@ -1,352 +1,170 @@
 {% extends "print.html" %}
-
 {% load phone_numbers %}
 {% load humanize %}
-
 {% block content %}
-
-    <div class="page-title">
-        {{ matter.name }} - Case Detail Sheet
-    </div>
-
-    <div class="section details">
-
-        <div class="matter-data">
-
-            <div class="description">
-
-                {{ matter.description }}
-
-            </div>
-
-            <div class="matter-data-tables">
-
-                <table>
-
-                    <tr>
-                        <td class="strong">Matter No.</td>
-                        <td>{{ matter.id }}</td>
-                    </tr>
-
-                    <tr>
-                        <td class="strong">File No.</td>
-                        <td>{{ matter.firm_file_no|slice:'0:5'|default:'' }}</td>
-                    </tr>
-
-                    <tr>
-                        <td class="strong">Ref No.</td>
-                        <td>{{ matter.ref_no|default:'' }}</td>
-                    </tr>
-
-                </table>
-
-                <table>
-
-                    <tr>
-                        <td class="strong">Open Date</td>
-                        <td>{{ matter.date_start|date:'Y-m-d' }}</td>
-                    </tr>
-
-                    <tr>
-                        <td class="strong">Practice Area</td>
-                        <td>{{ matter.practice_area }}</td>
-                    </tr>
-
-                </table>
-
-                {% if proceeding %}
-
-                    <table>
-
-                        <tr>
-                            <td class="strong">Forum</td>
-                            <td>{{ proceeding.forum }}</td>
-                        </tr>
-
-                        <tr>
-                            <td class="strong">Case No.</td>
-                            <td><strong>{{ proceeding.case_number }}</strong></td>
-                        </tr>
-
-                        <tr>
-                            <td class="strong">Filed</td>
-                            <td>{{ proceeding.date_filed|date:'Y-m-d' }}</td>
-                        </tr>
-
-                    </table>
-
-                {% endif %}
-
-            </div> <!-- tables -->
-
-        </div>
-
-    </div>
-
-    <div class="section contacts">
-
-        <div class="section-title contacts">
-            Contacts
-        </div>
-
-        {% if relationship_groups %}
-
-            {% for group, relationships in relationship_groups.items %}
-
-                {% if relationships %}
-
-                    <div class="contact-group-heading">
-                        <strong>{{ group }}</strong>
-                    </div>
-
-                    <table class="table contact-list">
-
-                        {% for relationship in relationships %}
-
-                            <tr>
-
-                                <td class="relationship">
-                                    {{ relationship.role.name }}
-                                </td>
-
-                                <td class="name">
-                                    {{ relationship.contact.name }}
-                                </td>
-
-                                <td class="phone1">
-                                    {{ relationship.contact.phone1|phone_number|default:'' }}
-                                </td>
-
-                                <td class="email">
-                                    {{ relationship.contact.email|default:'na' }}
-                                </td>
-                            </tr>
-
-                        {% endfor %}
-
-                    </table>
-
-                {% endif %}
-            {% endfor %}
-
+  <div class="page-title">{{ matter.name }} - Case Detail Sheet</div>
+  <div class="section details">
+    <div class="matter-data">
+      <div class="description">{{ matter.description }}</div>
+      <div class="matter-data-tables">
+        <table>
+          <tr>
+            <td class="strong">Matter No.</td>
+            <td>{{ matter.id }}</td>
+          </tr>
+          <tr>
+            <td class="strong">File No.</td>
+            <td>{{ matter.firm_file_no|slice:'0:5'|default:'' }}</td>
+          </tr>
+          <tr>
+            <td class="strong">Ref No.</td>
+            <td>{{ matter.ref_no|default:'' }}</td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td class="strong">Open Date</td>
+            <td>{{ matter.date_start|date:'Y-m-d' }}</td>
+          </tr>
+          <tr>
+            <td class="strong">Practice Area</td>
+            <td>{{ matter.practice_area }}</td>
+          </tr>
+        </table>
+        {% if proceeding %}
+          <table>
+            <tr>
+              <td class="strong">Forum</td>
+              <td>{{ proceeding.forum }}</td>
+            </tr>
+            <tr>
+              <td class="strong">Case No.</td>
+              <td>
+                <strong>{{ proceeding.case_number }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="strong">Filed</td>
+              <td>{{ proceeding.date_filed|date:'Y-m-d' }}</td>
+            </tr>
+          </table>
         {% endif %}
-
+      </div>
+      <!-- tables -->
     </div>
-
-    <div class="section">
-
-        <div class="section-title">
-            Events
-        </div>
-
-        <table id="events" class="table">
-            <tr>
-                <th>Date</th>
-                <th>Party</th>
-                <th>Description</th>
-                <th>Status</th>
-            </tr>
-            {% if events %}
-                {% for event in events %}
-
-                    <tr>
-
-                        <td class="date">
-                            {{ event.date|date:"Y-m-d" }}
-                        </td>
-
-                        <td class="party">
-                            {{ event.party }}
-                        </td>
-
-                        <td class="description">
-                            {{ event.description }}
-                        </td>
-
-                        <td class="status">
-                            {{ event.status }}
-                        </td>
-                    </tr>
-
-                {% endfor %}
-            {% endif %}
-
-        </table>
-
-    </div>
-
-    <div class="section">
-
-        <div class="section-title">
-            Proceedings
-        </div>
-
-        <table id="proceedings" class="table">
-
-            <tr>
-
-                <th>
-                    Date Filed
-                </th>
-
-                <th>
-                    Case No
-                </th>
-
-                <th>
-                    Forum and Description
-                </th>
-
-                <th>
-                    Status
-                </th>
-            </tr>
-
-            {% if proceedings %}
-                {% for proceeding in proceedings %}
-
-                    <tr>
-
-                        <td class="date-filed">
-                            {{ proceeding.date_filed|date:'Y-m-d' }}
-                        </td>
-
-                        <td class="case-no">
-                            {{ proceeding.case_number }}
-                        </td>
-
-                        <td class="forum">
-                            {{ proceeding.forum }}
-                        </td>
-
-                        <td class="status">
-                            {{ proceeding.status }}
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-            {% endif %}
-
-        </table>
-
-    </div>
-
-    <div class="section">
-
-        <div class="section-title">
-            Timeline
-        </div>
-
-        <table id="facts" class="table facts">
-
-            <tr>
-
-                <th>
-                    Date
-                </th>
-
-                <th>
-                    Description
-                </th>
-
-                <th>
-                    Citation
-                </th>
-            </tr>
-
-            {% if facts %}
-                {% for fact in facts %}
-
-                    <tr>
-
-                        <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-                            {{ fact.date|date:'Y-m-d' }}
-                        </td>
-
-                        <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-                            {{ fact.description }}
-                        </td>
-
-                        <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-                            {{ fact.citation|slice:":25"|default_if_none:'' }}
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-            {% endif %}
-
-        </table>
-
-    </div>
-
-    <div class="section">
-
-        <div class="section-title">
-            Settlement Discussion
-        </div>
-
-        <table id="settlement" class="table settlement">
-
-            <tr>
-
-                <th>
-                    Date
-                </th>
-
-                <th>
-                    Medium
-                </th>
-
-                <th>
-                    Type
-                </th>
-
-                <th>
-                    Notes
-                </th>
-
-                <th class="amount">
-                    Amount
-                </th>
-
-            </tr>
-
-            {% if entries %}
-                {% for entry in entries %}
-
-                    <tr>
-
-                        <td class="date {% if entry.type == 'Authorization' %}strong{% endif %}">
-                            {{ entry.date|date:'Y-m-d' }}
-                        </td>
-
-                        <td class="medium {% if entry.type == 'Authorization' %}strong{% endif %}">
-                            {{ entry.medium }}
-                        </td>
-
-                        <td class="type {% if entry.type == 'Authorization' %}strong{% endif %}">
-                            {{ entry.type }}
-                        </td>
-
-                        <td class="notes {% if entry.type == 'Authorization' %}strong{% endif %}">
-                            {{ entry.notes }}
-                        </td>
-
-                        <td class="amount {% if entry.type == 'Authorization' %}strong{% endif %}">
-                            {% if entry.amount|floatformat:2|intcomma %}
-                                ${{ entry.amount|floatformat:2|intcomma }}
-                            {% else %}
-                                NA
-                            {% endif %}
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-            {% endif %}
-        </table>
-    </div>
-
+  </div>
+  <div class="section contacts">
+    <div class="section-title contacts">Contacts</div>
+    {% if relationship_groups %}
+      {% for group, relationships in relationship_groups.items %}
+        {% if relationships %}
+          <div class="contact-group-heading">
+            <strong>{{ group }}</strong>
+          </div>
+          <table class="table contact-list">
+            {% for relationship in relationships %}
+              <tr>
+                <td class="relationship">{{ relationship.role.name }}</td>
+                <td class="name">{{ relationship.contact.name }}</td>
+                <td class="phone1">{{ relationship.contact.phone1|phone_number|default:'' }}</td>
+                <td class="email">{{ relationship.contact.email|default:'na' }}</td>
+              </tr>
+            {% endfor %}
+          </table>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  </div>
+  <div class="section">
+    <div class="section-title">Events</div>
+    <table id="events" class="table">
+      <tr>
+        <th>Date</th>
+        <th>Party</th>
+        <th>Description</th>
+        <th>Status</th>
+      </tr>
+      {% if events %}
+        {% for event in events %}
+          <tr>
+            <td class="date">{{ event.date|date:"Y-m-d" }}</td>
+            <td class="party">{{ event.party }}</td>
+            <td class="description">{{ event.description }}</td>
+            <td class="status">{{ event.status }}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>
+  <div class="section">
+    <div class="section-title">Proceedings</div>
+    <table id="proceedings" class="table">
+      <tr>
+        <th>Date Filed</th>
+        <th>Case No</th>
+        <th>Forum and Description</th>
+        <th>Status</th>
+      </tr>
+      {% if proceedings %}
+        {% for proceeding in proceedings %}
+          <tr>
+            <td class="date-filed">{{ proceeding.date_filed|date:'Y-m-d' }}</td>
+            <td class="case-no">{{ proceeding.case_number }}</td>
+            <td class="forum">{{ proceeding.forum }}</td>
+            <td class="status">{{ proceeding.status }}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>
+  <div class="section">
+    <div class="section-title">Timeline</div>
+    <table id="facts" class="table facts">
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Citation</th>
+      </tr>
+      {% if facts %}
+        {% for fact in facts %}
+          <tr>
+            <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">{{ fact.date|date:'Y-m-d' }}</td>
+            <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">{{ fact.description }}</td>
+            <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+              {{ fact.citation|slice:":25"|default_if_none:'' }}
+            </td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>
+  <div class="section">
+    <div class="section-title">Settlement Discussion</div>
+    <table id="settlement" class="table settlement">
+      <tr>
+        <th>Date</th>
+        <th>Medium</th>
+        <th>Type</th>
+        <th>Notes</th>
+        <th class="amount">Amount</th>
+      </tr>
+      {% if entries %}
+        {% for entry in entries %}
+          <tr>
+            <td class="date {% if entry.type == 'Authorization' %}strong{% endif %}">{{ entry.date|date:'Y-m-d' }}</td>
+            <td class="medium {% if entry.type == 'Authorization' %}strong{% endif %}">{{ entry.medium }}</td>
+            <td class="type {% if entry.type == 'Authorization' %}strong{% endif %}">{{ entry.type }}</td>
+            <td class="notes {% if entry.type == 'Authorization' %}strong{% endif %}">{{ entry.notes }}</td>
+            <td class="amount {% if entry.type == 'Authorization' %}strong{% endif %}">
+              {% if entry.amount|floatformat:2|intcomma %}
+                ${{ entry.amount|floatformat:2|intcomma }}
+              {% else %}
+                NA
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>
 {% endblock content %}

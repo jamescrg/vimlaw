@@ -1,38 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="description" content="Lab"/>
-    <meta name="keywords" content="Lab, HTMX"/>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Lab" />
+    <meta name="keywords" content="Lab, HTMX" />
     <title>Lab</title>
-</head>
-<body
-        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
->
-
-<p>
-    This is the lab.
-</p>
-
-<p>
-    {{ text }}
-</p>
-
-<button hx-post="/lab/results" hx-target="#test-div">
-    Click Me
-</button>
-
-<form hx-post="/lab/results" hx-target="#test-div">
-    <label>
-        <input type="text" name="weather"/>
-    </label>
-    <button type="submit">Submit</button>
-</form>
-
-<div id="test-div">
-    Some prelim text
-</div>
-
-<script src="https://unpkg.com/htmx.org@1.7.0"></script>
-</body>
+  </head>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <p>This is the lab.</p>
+    <p>{{ text }}</p>
+    <button hx-post="/lab/results" hx-target="#test-div">Click Me</button>
+    <form hx-post="/lab/results" hx-target="#test-div">
+      <label>
+        <input type="text" name="weather" />
+      </label>
+      <button type="submit">Submit</button>
+    </form>
+    <div id="test-div">Some prelim text</div>
+    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+  </body>
 </html>
