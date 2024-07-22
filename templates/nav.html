@@ -31,9 +31,11 @@
         <li class="nav-item {% if page == 'activity' %}nav-active{% endif %}">
           <a id="nav-activity" class="nav-link" href={% url 'activity:list' %}>Activity</a>
         </li>
-        <!-- <li class="nav-item {% if page == 'invoicing' %}nav-active{% endif %}"> -->
-        <!--   <a id="nav-invoicing" class="nav-link" href="/invoicing">Invoicing</a> -->
-        <!-- </li> -->
+        <li class="nav-item {% if page == 'invoicing' %}nav-active{% endif %}">
+          <a id="nav-invoicing"
+             class="nav-link"
+             href="{% url 'invoicing:invoicing' %}">Invoicing</a>
+        </li>
         <li class="nav-item {% if page == 'trust' %}nav-active{% endif %}">
           <a id="nav-trust" class="nav-link" href={% url 'trust:trust' %}>Trust</a>
         </li>

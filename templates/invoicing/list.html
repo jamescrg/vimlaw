@@ -1,37 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="section-title">
-    <div class="section-title-left">
-      <h1>Invoices</h1>
-      <div class="section-title-left-right">
-        <button type="button"
-                class="btn-icon"
-                hx-get="/invoicing/add"
-                hx-target="#htmx-modal-container"
-                hx-trigger="click"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
-          <i class="bi bi-plus-lg"></i>
-        </button>
+  <div class="section">
+    <div class="section-title">
+      <div class="section-title-left">
+        <h1>Invoices</h1>
+        <div class="section-title-left-right">
+          <button type="button"
+                  class="btn-icon"
+                  hx-get="/invoicing/add"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="table-container">
-    <table class="table events">
-      <tr>
-        <th class="date">Date Issued</th>
-        <th class="matter">Matter</th>
-        <th class="party">Amount</th>
-      </tr>
-      {% for invoice in invoices %}
+    <div class="table-container">
+      <table class="table events">
         <tr>
-          <td class="date">{{ invoice.date|date:"Y-m-d" }}</td>
-          <td class="matter">
-            <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name }}</a>
-          </td>
-          <td class="amount"></td>
+          <th class="date">Date Issued</th>
+          <th class="matter">Matter</th>
+          <th class="party">Amount</th>
         </tr>
-      {% endfor %}
-    </table>
+        {% for invoice in invoices %}
+          <tr>
+            <td class="date">{{ invoice.date|date:"Y-m-d" }}</td>
+            <td class="matter">
+              <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name }}</a>
+            </td>
+            <td class="amount"></td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
   </div>
 {% endblock content %}
