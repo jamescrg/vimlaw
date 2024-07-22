@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.invoicing.views import index
+from apps.invoicing.views.invoice import index
 
 app_name = "invoicing"
 
