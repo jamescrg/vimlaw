@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Filter Time Entries</h1>
+      <h1 class="modal-title">Filter Activity</h1>
       <div>
         <a href="#" data-bs-dismiss="modal">
           <i class="bi bi-x-lg"></i>
@@ -13,6 +13,20 @@
             class="form-responsive"
             action="{% url 'activity:filter-update' %}">
         {% csrf_token %}
+        <label>Show Time Entries:</label>
+        <label for="show_time">
+          <select id="show_time" name="show_time">
+            <option value="1" {% if filter.show_time == True %}selected{% endif %}>Yes</option>
+            <option value="0" {% if filter.show_time == False %}selected{% endif %}>No</option>
+          </select>
+        </label>
+        <label>Show Expenses:</label>
+        <label for="show_expenses">
+          <select id="show_expenses" name="show_expenses">
+            <option value="1" {% if filter.show_expenses == True %}selected{% endif %}>Yes</option>
+            <option value="0" {% if filter.show_expenses == False %}selected{% endif %}>No</option>
+          </select>
+        </label>
         <label>From:</label>
         <label>
           <input type="date"
