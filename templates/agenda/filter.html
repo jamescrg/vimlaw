@@ -50,7 +50,9 @@
             <option value="">All</option>
             {% for user in users %}
               <option value="{{ user.id }}"
-                      {% if user.id == filter.user %}selected{% endif %}>{{ user.username }}</option>
+                      {% if user.id|stringformat:"d" == filter.user|stringformat:"d" %}selected{% endif %}>
+                {{ user.username }}
+              </option>
             {% endfor %}
           </select>
         </label>

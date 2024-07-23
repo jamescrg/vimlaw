@@ -6,6 +6,8 @@ logger = logging.getLogger(__name__)
 
 class Filter:
     values = {
+        "show_time": True,
+        "show_expenses": True,
         "date_from": None,
         "date_to": None,
         "firm": "Campbell & Brannon",
@@ -14,7 +16,6 @@ class Filter:
         "keyword": "",
         "comp": None,
         "entered": None,
-        "view_rate": "Firm",
         "order": "date, descending",
     }
 
@@ -59,8 +60,17 @@ class Filter:
             request.session["activity_filter"] = {}
 
     def update(self, request):
+
+        # make the user submitted post data mutable
+        filter_values = request.POST.copy()
+
+        # cast the show_x values to integers that will evaluate to True/False
+        filter_values["show_time"] = int(filter_values["show_time"])
+        filter_values["show_expenses"] = int(filter_values["show_expenses"])
+
+        # save in session
         for key in self.values.keys():
-            request.session["activity_filter"][key] = request.POST[key]
+            request.session["activity_filter"][key] = filter_values[key]
         request.session.modified = True
 
     def set_quick_filter(self, request, quick_filter):
@@ -81,4 +91,16 @@ class Filter:
         }
         for key, val in new_values.items():
             request.session["activity_filter"][key] = val
+        request.session.modified = True
+
+    def toggle_entries(self, request, entry_type):
+        if entry_type == "time":
+            val = "show_time"
+        else:
+            val = "show_expenses"
+        if self.values[val]:
+            self.values[val] = False
+        else:
+            self.values[val] = True
+        request.session["activity_filter"][val] = self.values[val]
         request.session.modified = True
