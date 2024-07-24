@@ -29,6 +29,7 @@ class Invoice(models.Model):
     approved_at = models.DateTimeField(null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    pdf_file = models.FileField(upload_to="invoices/", null=True, blank=True)
 
     def __str__(self):
         return f"Invoice #{self.id}"
@@ -42,11 +43,15 @@ class Invoice(models.Model):
         invoice = super().save(*args, **kwargs)
 
         TimeEntry.objects.filter(
-            matter=self.matter, date__range=[self.date_from, self.date_to]
+            matter=self.matter,
+            date__range=[self.date_from, self.date_to],
+            invoice__isnull=True,
         ).update(invoice_id=self.id)
 
         ExpenseEntry.objects.filter(
-            matter=self.matter, date__range=[self.date_from, self.date_to]
+            matter=self.matter,
+            date__range=[self.date_from, self.date_to],
+            invoice__isnull=True,
         ).update(invoice_id=self.id)
 
         return invoice
@@ -72,4 +77,4 @@ class Invoice(models.Model):
             or 0
         )
 
-        return time_entry_amount + expense_amount
+        return (time_entry_amount + expense_amount) * (1 - self.discount / 100)

@@ -26,6 +26,7 @@
           <th>Comment</th>
           <th>Created at</th>
           <th>Amount</th>
+          <th>PDF</th>
         </tr>
         {% for invoice in invoices %}
           <tr>
@@ -36,6 +37,11 @@
             <td class="amount">{{ invoice.comment }}</td>
             <td class="invoice-date">{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
             <td class="numeric total">${{ invoice.amount|floatformat:2|intcomma }}</td>
+            <td class="actions">
+              <a href="{{ invoice.pdf_file.url }}" target="_blank">
+                <i class="bi bi-download"></i>
+              </a>
+            </td>
           </tr>
         {% endfor %}
       </table>

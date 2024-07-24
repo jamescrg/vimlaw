@@ -12,3 +12,5 @@ google-auth-oauthlib==0.4.6
 black==24.4.2
 pytest-django==4.8.0
 pre-commit==3.7.1
+weasyprint==62.3
+django-cleanup==8.1.0

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django import forms
 
@@ -30,4 +30,15 @@ class InvoiceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["issue_date"].initial = datetime.now()
+        today = datetime.now().date()
+
+        first_day_of_current_month = today.replace(day=1)
+
+        last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
+        first_day_of_previous_month = last_day_of_previous_month.replace(day=1)
+
+        self.fields["issue_date"].initial = today
+        self.fields["show_comp"].initial = True
+
+        self.fields["date_from"].initial = first_day_of_previous_month
+        self.fields["date_to"].initial = last_day_of_previous_month
