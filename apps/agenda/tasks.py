@@ -34,7 +34,8 @@ def get_table_data(request):
 
     if filter["user"]:
         user = get_object_or_404(CustomUser, pk=filter["user"])
-        tasks = tasks.filter(user=user)
+        if user:
+            tasks = tasks.filter(user=user)
 
     order = filter["order_field"]
     if order == "matter":

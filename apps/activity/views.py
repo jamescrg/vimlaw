@@ -517,3 +517,10 @@ def export(request):
         )
 
     return response
+
+
+@login_required
+def toggle_entries(request, entry_type):
+    filter = Filter(request)
+    filter.toggle_entries(request, entry_type)
+    return redirect("/activity")

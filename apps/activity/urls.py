@@ -15,6 +15,7 @@ from apps.activity.views import (
     index,
     toggle_entered,
     toggle_entered_expense,
+    toggle_entries,
 )
 
 app_name = "activity"
@@ -64,4 +65,9 @@ urlpatterns = [
         name="filter-matter",
     ),
     path("activity/export", export, name="export"),
+    path(
+        "activity/toggle-entries/<str:entry_type>",
+        toggle_entries,
+        name="toggle-entries",
+    ),
 ]

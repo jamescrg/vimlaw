@@ -10,15 +10,6 @@ class Filter:
     }
 
     quick_filters = {
-        "current_user": {
-            "date_from": None,
-            "date_to": None,
-            "matter": None,
-            "user": None,
-            "status": "Pending",
-            "order_field": "matter",
-            "order_direction": "ascending",
-        },
         "all": {
             "date_from": None,
             "date_to": None,
@@ -28,11 +19,20 @@ class Filter:
             "order_field": "matter",
             "order_direction": "ascending",
         },
-        "paralegal": {
+        "james": {
             "date_from": None,
             "date_to": None,
             "matter": None,
-            "user": 4,
+            "user": 3,
+            "status": "Pending",
+            "order_field": "matter",
+            "order_direction": "ascending",
+        },
+        "lexi": {
+            "date_from": None,
+            "date_to": None,
+            "matter": None,
+            "user": 9,
             "status": "Pending",
             "order_field": "matter",
             "order_direction": "ascending",
@@ -47,7 +47,7 @@ class Filter:
         # ).strftime("%Y-%m-%d")
 
         # set the current user for the "mine" quickfilter
-        self.quick_filters["current_user"]["user"] = request.user.id
+        # self.quick_filters["current_user"]["user"] = request.user.id
 
         # load save session data
         agenda_filter = request.session.get("agenda_filter")
