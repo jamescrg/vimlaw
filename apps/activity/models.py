@@ -1,6 +1,7 @@
 from django.db import models
 
 from apps.accounts.models import CustomUser
+from apps.invoicing.models import Invoice
 from apps.matters.models import Matter
 
 
@@ -14,7 +15,9 @@ class TimeEntry(models.Model):
     firm_rate = models.IntegerField(null=True)
     comp = models.IntegerField(blank=True, null=True)
     entered = models.IntegerField(blank=True, null=True)
-    invoice = models.IntegerField(null=True)
+    invoice = models.ForeignKey(
+        Invoice, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def __str__(self):
         return f"{self.actions}"
@@ -36,7 +39,9 @@ class ExpenseEntry(models.Model):
     comp = models.IntegerField(blank=True, null=True)
     category = models.CharField(max_length=100, blank=True, null=True)
     entered = models.IntegerField(blank=True, null=True)
-    invoice = models.IntegerField(null=True)
+    invoice = models.ForeignKey(
+        Invoice, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def __str__(self):
         return f"{self.description}"

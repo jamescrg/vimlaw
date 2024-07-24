@@ -1,37 +1,50 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block content %}
-  <div class="section-title">
-    <div class="section-title-left">
-      <h1>Invoices</h1>
-      <div class="section-title-left-right">
-        <button type="button"
-                class="btn-icon"
-                hx-get="/invoicing/add"
-                hx-target="#htmx-modal-container"
-                hx-trigger="click"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
-          <i class="bi bi-plus-lg"></i>
-        </button>
+  <div class="section">
+    <div class="section-title">
+      <div class="section-title-left">
+        <h1>Invoices</h1>
+        <div class="section-title-left-right">
+          <button type="button"
+                  class="btn-icon"
+                  hx-get="{% url 'invoicing:new-invoice' %}"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="table-container">
-    <table class="table events">
-      <tr>
-        <th class="date">Date Issued</th>
-        <th class="matter">Matter</th>
-        <th class="party">Amount</th>
-      </tr>
-      {% for invoice in invoices %}
+    <div class="table-container">
+      <table class="table events">
         <tr>
-          <td class="date">{{ invoice.date|date:"Y-m-d" }}</td>
-          <td class="matter">
-            <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name }}</a>
-          </td>
-          <td class="amount"></td>
+          <th class="date">Invoice no.</th>
+          <th class="matter">Matter</th>
+          <th>Comment</th>
+          <th>Created at</th>
+          <th>Amount</th>
+          <th>PDF</th>
         </tr>
-      {% endfor %}
-    </table>
+        {% for invoice in invoices %}
+          <tr>
+            <td>#{{ invoice.id }}</td>
+            <td class="matter">
+              <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name }}</a>
+            </td>
+            <td class="amount">{{ invoice.comment }}</td>
+            <td class="invoice-date">{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
+            <td class="numeric total">${{ invoice.amount|floatformat:2|intcomma }}</td>
+            <td class="actions">
+              <a href="{{ invoice.pdf_file.url }}" target="_blank">
+                <i class="bi bi-download"></i>
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
   </div>
 {% endblock content %}

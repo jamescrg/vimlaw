@@ -82,6 +82,8 @@ def test_filter_update(client):
         "view_rate": "Firm",
         "order": "date, descending",
         "user": "All",
+        "show_time": 1,
+        "show_expenses": 1,
     }
     response = client.post("/activity/filter/update", data)
     assert response.status_code == 302
