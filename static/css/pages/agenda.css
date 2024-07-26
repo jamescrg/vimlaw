@@ -139,6 +139,9 @@ Tasks Table Inputs
 Task Add Form Quick
 ------------------------------------------------*/
 
+.task-form-add {
+}
+
 .task-form-add input,
 .task-form-add select {
     border: 1px solid var(--warm-gray-200);
@@ -160,15 +163,6 @@ Task Add Form Quick
 .task-input-description-label {
   width: 80%;
 }
-
-.change-user {
-  background: var(--warm-gray-100);
-  border: none;
-  border-radius: 4px;
-  color: var(--warm-gray-600);
-  padding-top: 0;
-}
-
 
 /*------------------------------------------------
 Task Edit Form
