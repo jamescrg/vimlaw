@@ -36,6 +36,15 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
+      <th class="date">
+        Date
+        <button class="btn-task-sort"
+                hx-target="#tasks-table"
+                hx-swap="outerHTML"
+                hx-post="/agenda/filter/sort/date_due">
+          <i class="bi bi-chevron-expand"></i>
+        </button>
+      </th>
     </tr>
     {% for task in tasks %}
       <tr>
@@ -57,7 +66,8 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
-        <td id="task-user" class="user">{% include "agenda/change-user.html" %}</td>
+        <td id="task-user" class="user">{{ task.user }}</td>
+        <td id="task-date" class="date">{{ task.date_due|date:'Y-m-d' }}</td>
       </tr>
     {% endfor %}
   </table>

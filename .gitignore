@@ -13,4 +13,3 @@ venv/
 .venv/
 google/*
 !google/.gitkeep
-media/invoices/*
