@@ -69,7 +69,7 @@
         <td id="task-user" class="user">
           <select name="user"
                   class="edit-user"
-                  hx-post="/agenda/{{ task.id }}/change-user"
+                  hx-post="/agenda/{{ task.id }}/edit-user"
                   hx-target="this"
                   hx-swap="outerHTML"
                   hx-trigger="change">
