@@ -6,7 +6,7 @@
     <meta charset="UTF-8" content="" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
-    <title>{{ invoice.matter.name }} - {{ invoice.issue_date }}</title>
+    <title>{{ invoice.matter.name }} - {{ invoice.date_issued }}</title>
     <link rel="shortcut icon" href={% static 'images/briefcase-fill.svg' %} />
     <link rel="stylesheet" href={% static 'css/invoice_template.css' %} />
   </head>
@@ -28,7 +28,7 @@
         <div>
           <h2 class="header-right-title text-right">INVOICE</h2>
           <p class="normal-height text-right">Invoice #{{ invoice.id }}</p>
-          <p class="normal-height text-right">Date: {{ invoice.issue_date|date:"Y-m-d" }}</p>
+          <p class="normal-height text-right">Date: {{ invoice.date_issued|date:"Y-m-d" }}</p>
           <p class="normal-height text-right">Due Upon Receipt</p>
         </div>
       </div>
@@ -95,7 +95,7 @@
           </tr>
           <tr>
             <td>Discount</td>
-            <td>{{ invoice.discount|floatformat:2|intcomma }}%</td>
+            <td>${{ invoice.discount|floatformat:2|intcomma }}</td>
           </tr>
           <tr>
             <td>Total</td>

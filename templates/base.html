@@ -32,6 +32,8 @@
     <link rel="stylesheet" href="{% static 'css/pages/matters/timeline.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/matters/rates.css' %}" />
   {% endif %}
+  {% block head %}
+  {% endblock head %}
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% include "modals.html" %}

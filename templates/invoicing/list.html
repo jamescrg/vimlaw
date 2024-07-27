@@ -21,10 +21,10 @@
     <div class="table-container">
       <table class="table events">
         <tr>
-          <th class="date">Invoice no.</th>
+          <th>Invoice no.</th>
+          <th>Issue date</th>
           <th class="matter">Matter</th>
-          <th>Comment</th>
-          <th>Created at</th>
+          <th>Status</th>
           <th>Amount</th>
           <th>Actions</th>
         </tr>
@@ -33,11 +33,11 @@
             <td>
               <a href={% url 'invoicing:invoice-detail' invoice.id %}>#{{ invoice.id }}</a>
             </td>
+            <td>{{ invoice.date_issued|date:"Y-m-d" }}</td>
             <td class="matter">
               <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name }}</a>
             </td>
-            <td class="amount">{{ invoice.comment }}</td>
-            <td class="invoice-date">{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ invoice.status_display }}</td>
             <td class="numeric total">${{ invoice.amount|floatformat:2|intcomma }}</td>
             <td class="actions">
               <i class="dot-icon bi bi-three-dots-vertical pointer"
@@ -46,9 +46,9 @@
               </i>
               <ul class="dropdown-menu" aria-labelledby="invoiceDropdown">
                 <li>
-                  <a class="dropdown-item" target="_blank" href={{ invoice.pdf_file.url }}>
-                    Download PDF
-                  </a>
+                  <a class="dropdown-item"
+                     target="_blank"
+                     href="{% url 'invoicing:invoice-pdf' invoice.id %}">Download PDF</a>
                 </li>
                 <li>
                   <hr class="dropdown-divider" />

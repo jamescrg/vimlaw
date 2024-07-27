@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 {% load humanize %}
+{% block head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/pages/activity.css' %}" />
+{% endblock head %}
 {% block content %}
   <div class="section">
     <div class="section-title">
@@ -30,7 +35,7 @@
       <table class="detail-table">
         <tr>
           <th>Issue date</th>
-          <td>{{ invoice.issue_date|date:"Y-m-d" }}</td>
+          <td>{{ invoice.date_issued|date:"Y-m-d" }}</td>
         </tr>
         <tr>
           <th>Total amount</th>
@@ -38,7 +43,7 @@
         </tr>
         <tr>
           <th>Discount</th>
-          <td>{{ invoice.discount|floatformat:2|intcomma }}%</td>
+          <td>${{ invoice.discount|floatformat:2|intcomma }}</td>
         </tr>
         <tr>
           <th>Status</th>
@@ -50,12 +55,6 @@
   <ul class="sub-modules">
     <li {% if request.path|slice:"28:" == '/preview/' %}class="active"{% endif %}>
       <a href={% url 'invoicing:invoice-detail' pk=invoice.id %}>Preview PDF</a>
-    </li>
-    <li {% if request.path|slice:"28:" == '/entries/' %}class="active"{% endif %}>
-      <a href={% url 'invoicing:invoice-activity' pk=invoice.id %}>Activity entries</a>
-    </li>
-    <li {% if request.path|slice:"28:" == '/expenses/' %}class="active"{% endif %}>
-      <a href={% url 'invoicing:invoice-expenses' pk=invoice.id %}>Expense entries</a>
     </li>
   </ul>
   <div class="section">
