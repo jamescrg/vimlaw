@@ -17,14 +17,10 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
     """
     if invoice.show_comp:
         entries = TimeEntry.objects.filter(
-            matter=invoice.matter,
-            date__range=[invoice.date_from, invoice.date_to],
             invoice=invoice,
         ).order_by("date")
     else:
         entries = TimeEntry.objects.filter(
-            matter=invoice.matter,
-            date__range=[invoice.date_from, invoice.date_to],
             invoice=invoice,
             comp=invoice.show_comp,
         ).order_by("date")
@@ -39,14 +35,10 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
 
     if invoice.show_comp:
         expenses = ExpenseEntry.objects.filter(
-            matter=invoice.matter,
-            date__range=[invoice.date_from, invoice.date_to],
             invoice=invoice,
         ).order_by("date")
     else:
         expenses = ExpenseEntry.objects.filter(
-            matter=invoice.matter,
-            date__range=[invoice.date_from, invoice.date_to],
             invoice=invoice,
             comp=invoice.show_comp,
         ).order_by("date")

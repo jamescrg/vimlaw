@@ -110,7 +110,6 @@ class InvoicePDFView(LoginRequiredMixin, DetailView):
         return response
 
 
-# Make a view that edits the 'status' field of an invoice
 class StatusUpdateView(LoginRequiredMixin, View):
     model = Invoice
 
@@ -129,5 +128,9 @@ class StatusUpdateView(LoginRequiredMixin, View):
             invoice.date_canceled = datetime.now()
 
         invoice.save()
+
+        if invoice_status == "CANCELED":
+            TimeEntry.objects.filter(invoice=invoice).update(invoice=None)
+            ExpenseEntry.objects.filter(invoice=invoice).update(invoice=None)
 
         return render(request, "invoicing/invoice-row.html", {"invoice": invoice})
