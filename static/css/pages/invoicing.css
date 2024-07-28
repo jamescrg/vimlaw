@@ -4,26 +4,29 @@
 List View
 ========================================================================== */
 
+.invoices {
+  table-layout: fixed;
+}
 .invoices .number {
-  width: 150px;
 }
 
 .invoices .date {
-  width: 250px;
 }
 
 .invoices .amount {
   text-align: right;
-  width: 160px;
 }
 
 .invoices .status {
-  text-align: right;
-  width: 160px;
 }
 
+.invoices .pdf {
+  text-align: right;
+}
+
+
 .invoices .actions {
-  width: 20px;
+  border-left: none;
 }
 
 .pointer {

@@ -9,23 +9,19 @@
   <div class="section">
     <div class="section-title">
       <div class="section-title-left">
-        <h1>Invoice no. {{ invoice.id }} - {{ invoice.matter.name }}</h1>
+        <h1>Invoice {{ invoice.id }} - {{ invoice.matter.name }}</h1>
       </div>
     </div>
     <p>{{ invoice.comment }}</p>
     <div class="invoice-table-container">
       <table class="detail-table">
         <tr>
-          <th>Date from</th>
-          <td>{{ invoice.date_from|date:"Y-m-d" }}</td>
-        </tr>
-        <tr>
-          <th>Date to</th>
-          <td>{{ invoice.date_to|date:"Y-m-d" }}</td>
+          <th>Date Limit</th>
+          <td>{{ invoice.date_limit|date:"Y-m-d" }}</td>
         </tr>
         <tr>
           <th>Created by</th>
-          <td>{{ invoice.created_by.username }}</td>
+          <td>{{ invoice.created_by.username|title }}</td>
         </tr>
         <tr>
           <th>Created at</th>
@@ -42,28 +38,18 @@
           <td>${{ invoice.amount|floatformat:2|intcomma }}</td>
         </tr>
         <tr>
-          <th>Discount</th>
-          <td>${{ invoice.discount|floatformat:2|intcomma }}</td>
-        </tr>
-        <tr>
           <th>Status</th>
           <td>{{ invoice.status_display }}</td>
         </tr>
       </table>
-      <table class="detail-table">
-        <tr>
-          <th>Approved at</th>
-          <td>{{ invoice.date_approved|date:"Y-m-d H:i" }}</td>
-        </tr>
-        <tr>
-          <th>Sent at</th>
-          <td>{{ invoice.date_sent|date:"Y-m-d H:i" }}</td>
-        </tr>
-        <tr>
-          <th>Canceled at</th>
-          <td>{{ invoice.date_canceled|date:"Y-m-d H:i" }}</td>
-        </tr>
-      </table>
+      {% if invoice.discount %}
+        <table class="detail-table">
+          <tr>
+            <th>Discount</th>
+            <td>${{ invoice.discount|floatformat:2|intcomma }}</td>
+          </tr>
+        </table>
+      {% endif %}
     </div>
   </div>
   <ul class="sub-modules">

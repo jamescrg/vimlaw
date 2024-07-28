@@ -10,7 +10,7 @@ class InvoiceForm(forms.ModelForm):
         model = Invoice
         fields = [
             "matter",
-            "date_to",
+            "date_limit",
             "date_issued",
             "message",
             "comment",
@@ -20,7 +20,7 @@ class InvoiceForm(forms.ModelForm):
         widgets = {
             "matter": forms.Select(attrs={"required": True}),
             "date_issued": forms.DateInput(attrs={"type": "date"}),
-            "date_to": forms.DateInput(attrs={"type": "date"}),
+            "date_limit": forms.DateInput(attrs={"type": "date"}),
             "message": forms.Textarea(attrs={"rows": 3}),
             "comment": forms.Textarea(attrs={"rows": 3}),
             "discount": forms.TextInput(attrs={"class": "discount"}),
@@ -39,5 +39,5 @@ class InvoiceForm(forms.ModelForm):
         self.fields["date_issued"].label = "Issue Date"
         self.fields["show_comp"].initial = True
 
-        self.fields["date_to"].initial = last_day_of_previous_month
-        self.fields["date_to"].label = "Limit Date "
+        self.fields["date_limit"].initial = last_day_of_previous_month
+        self.fields["date_limit"].label = "Limit Date "

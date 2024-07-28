@@ -67,9 +67,6 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
         or 0
     )
     expenses_net_total = expenses_gross_total - expenses_comp_total
-    print("gross", expenses_gross_total)
-    print("comp", expenses_comp_total)
-    print("net", expenses_net_total)
 
     pre_discount_total = entries_net_total + expenses_net_total
     invoice_total = pre_discount_total - invoice.discount

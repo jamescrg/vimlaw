@@ -6,9 +6,9 @@ from apps.matters.models import Matter
 
 INVOICE_STATUS = (
     ("DRAFT", "Draft"),
+    ("APPROVED", "Approved"),
     ("SENT", "Sent"),
     ("CANCELED", "Canceled"),
-    ("APPROVED", "Approved"),
 )
 
 
@@ -18,16 +18,13 @@ class Invoice(models.Model):
         CustomUser, on_delete=models.SET_NULL, null=True, blank=True
     )
     matter = models.ForeignKey(Matter, on_delete=models.SET_NULL, null=True, blank=True)
-    date_to = models.DateField()
+    date_limit = models.DateField()
     date_issued = models.DateField()
     message = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     show_comp = models.BooleanField(default=False)
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=INVOICE_STATUS, default="DRAFT")
-    date_approved = models.DateTimeField(null=True, blank=True)
-    date_sent = models.DateTimeField(null=True, blank=True)
-    date_canceled = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Invoice #{self.id}"
@@ -43,13 +40,13 @@ class Invoice(models.Model):
         # TODO: clean mark all old time entries prior to 2024 as "entered"
         TimeEntry.objects.filter(
             matter=self.matter,
-            date__lte=self.date_to,
+            date__lte=self.date_limit,
             invoice__isnull=True,
         ).update(invoice_id=self.id)
 
         ExpenseEntry.objects.filter(
             matter=self.matter,
-            date__lte=self.date_to,
+            date__lte=self.date_limit,
             invoice__isnull=True,
         ).update(invoice_id=self.id)
 

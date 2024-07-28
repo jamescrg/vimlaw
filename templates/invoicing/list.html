@@ -22,10 +22,10 @@
         <tr>
           <th class="number">Number</th>
           <th class="date">Issue Date</th>
+          <th class="status">Status</th>
           <th>Matter</th>
           <th class="amount">Amount</th>
-          <th class="status">Status</th>
-          <th class="actions"></th>
+          <th class="pdf">Download</th>
         </tr>
         {% for invoice in invoices %}
           {% include "invoicing/invoice-row.html" %}

@@ -105,7 +105,9 @@ class InvoicePDFView(LoginRequiredMixin, DetailView):
 
         with open(file.name, "rb") as pdf:
             response = HttpResponse(pdf.read(), content_type="application/pdf")
-            response["Content-Disposition"] = f'filename="{invoice}.pdf"'
+            response["Content-Disposition"] = (
+                f'filename="Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
+            )
 
         os.unlink(file.name)
 
