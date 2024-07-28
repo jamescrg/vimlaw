@@ -15,6 +15,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
     """
     Generate a PDF invoice for the given invoice instance
     """
+
     if invoice.show_comp:
         entries = TimeEntry.objects.filter(
             invoice=invoice,
@@ -25,7 +26,8 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
             comp=invoice.show_comp,
         ).order_by("date")
 
-    entries_total = (
+    # total fees prior to any comp hours
+    entries_gross_total = (
         entries.annotate(
             fee=ExpressionWrapper(
                 F("hours") * F("firm_rate"), output_field=DecimalField()
@@ -33,6 +35,20 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
         ).aggregate(total_fee=Sum("fee"))["total_fee"]
     ) or 0
 
+    # total fees for comp hours
+    entries_comp_total = (
+        entries.filter(comp=1)
+        .annotate(
+            fee=ExpressionWrapper(
+                F("hours") * F("firm_rate"), output_field=DecimalField()
+            )
+        )
+        .aggregate(total_fee=Sum("fee"))["total_fee"]
+    ) or 0
+
+    # net fees after comp hours
+    entries_net_total = entries_gross_total - entries_comp_total
+
     if invoice.show_comp:
         expenses = ExpenseEntry.objects.filter(
             invoice=invoice,
@@ -42,17 +58,32 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
             invoice=invoice,
             comp=invoice.show_comp,
         ).order_by("date")
-    expenses_total = expenses.aggregate(total_amount=Sum("amount"))["total_amount"] or 0
 
-    pre_discount_total = entries_total + expenses_total
+    expenses_gross_total = (
+        expenses.aggregate(total_amount=Sum("amount"))["total_amount"] or 0
+    )
+    expenses_comp_total = (
+        expenses.filter(comp=1).aggregate(total_amount=Sum("amount"))["total_amount"]
+        or 0
+    )
+    expenses_net_total = expenses_gross_total - expenses_comp_total
+    print("gross", expenses_gross_total)
+    print("comp", expenses_comp_total)
+    print("net", expenses_net_total)
+
+    pre_discount_total = entries_net_total + expenses_net_total
     invoice_total = pre_discount_total - invoice.discount
 
     context = {
         "invoice": invoice,
         "entries": entries,
         "expenses": expenses,
-        "entries_total": entries_total,
-        "expenses_total": expenses_total,
+        "entries_gross_total": entries_gross_total,
+        "entries_comp_total": entries_comp_total,
+        "entries_net_total": entries_net_total,
+        "expenses_gross_total": expenses_gross_total,
+        "expenses_comp_total": expenses_comp_total,
+        "expenses_net_total": expenses_net_total,
         "invoice_total": invoice_total,
     }
 

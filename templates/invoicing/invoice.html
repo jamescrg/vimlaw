@@ -55,9 +55,19 @@
               <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
             </tr>
           {% endfor %}
+          {% if invoice.show_comp %}
+            <tr>
+              <td colspan="3">Hourly Fees</td>
+              <td class="money">${{ entries_gross_total|floatformat:2|intcomma }}</td>
+            </tr>
+            <tr>
+              <td colspan="3">Less Comp Fees</td>
+              <td class="money">- ${{ entries_comp_total|floatformat:2|intcomma }}</td>
+            </tr>
+          {% endif %}
           <tr>
             <td class="total" colspan="3">Total Hourly Fees (see below for invoice total)</td>
-            <td class="money total">${{ entries_total|floatformat:2|intcomma }}</td>
+            <td class="money total">${{ entries_net_total|floatformat:2|intcomma }}</td>
           </tr>
         </table>
       </div>
@@ -72,14 +82,24 @@
             </tr>
             {% for expense in expenses %}
               <tr>
-                <td class="date">{{ expense.date|date:"Y-m-d" }}</td>
-                <td>{{ expense.description }}</td>
-                <td class="money">${{ expense.amount|floatformat:2|intcomma }}</td>
+                <td class="date{% if expense.comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
+                <td class="{% if expense.comp %} comp{% endif %}">{{ expense.description }}</td>
+                <td class="money{% if expense.comp %} comp{% endif %}">${{ expense.amount|floatformat:2|intcomma }}</td>
               </tr>
             {% endfor %}
+            {% if invoice.show_comp %}
+              <tr>
+                <td colspan="2">Expenses</td>
+                <td class="money">${{ expenses_gross_total|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td colspan="2">Less Comp Expenses</td>
+                <td class="money">- ${{ expenses_comp_total|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endif %}
             <tr>
               <td class="total" colspan="2">Total Expenses (see below for invoice total)</td>
-              <td class="money total">${{ expenses_total|floatformat:2|intcomma }}</td>
+              <td class="money total">${{ expenses_net_total|floatformat:2|intcomma }}</td>
             </tr>
           </table>
         </div>
@@ -89,11 +109,11 @@
         <table class="table">
           <tr>
             <td>Hourly Fees</td>
-            <td class="money">${{ entries_total|floatformat:2|intcomma }}</td>
+            <td class="money">${{ entries_net_total|floatformat:2|intcomma }}</td>
           </tr>
           <tr>
             <td>Expenses</td>
-            <td class="money">${{ expenses_total|floatformat:2|intcomma }}</td>
+            <td class="money">${{ expenses_net_total|floatformat:2|intcomma }}</td>
           </tr>
           {% if invoice.discount %}
             <tr>
