@@ -5,29 +5,29 @@ List View
 ========================================================================== */
 
 .invoices {
-  table-layout: fixed;
-}
-.invoices .number {
 }
 
+.invoices .number,
+.invoices .matter,
 .invoices .date {
+  width: 19%;
 }
+
 
 .invoices .amount {
   text-align: right;
+  width: 19%;
 }
 
 .invoices .status {
+  width: 19%;
 }
 
 .invoices .pdf {
-  text-align: right;
+  text-align: center;
+  width: 5%;
 }
 
-
-.invoices .actions {
-  border-left: none;
-}
 
 .pointer {
   cursor: pointer;

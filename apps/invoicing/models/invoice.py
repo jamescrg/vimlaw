@@ -37,7 +37,6 @@ class Invoice(models.Model):
 
         invoice = super().save(*args, **kwargs)
 
-        # TODO: clean mark all old time entries prior to 2024 as "entered"
         TimeEntry.objects.filter(
             matter=self.matter,
             date__lte=self.date_limit,

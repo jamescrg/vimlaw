@@ -11,8 +11,6 @@ class TimeEntry(models.Model):
     date = models.DateField(null=True)
     actions = models.TextField(null=True)
     hours = models.DecimalField(max_digits=3, decimal_places=1, default=0)
-    # TODO: scrub old firm records, then remove contractor rate
-    # and rename firm_rate, simply "rate"
     contractor_rate = models.IntegerField(blank=True, null=True)
     firm_rate = models.IntegerField(null=True)
     comp = models.IntegerField(blank=True, null=True)
