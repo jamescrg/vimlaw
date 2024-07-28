@@ -1,14 +1,14 @@
 {% load humanize %}
 <tr id="invoice-{{ invoice.id }}">
-  <td>
-    <a href={% url 'invoicing:invoice-detail' invoice.id %}>#{{ invoice.id }}</a>
+  <td class="number">
+    <a href={% url 'invoicing:invoice-detail' invoice.id %}>{{ invoice.id }}</a>
   </td>
-  <td>{{ invoice.date_issued|date:"Y-m-d" }}</td>
-  <td class="matter">
+  <td class="date">{{ invoice.date_issued|date:"Y-m-d" }}</td>
+  <td>
     <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name }}</a>
   </td>
-  <td>{{ invoice.status_display }}</td>
-  <td class="numeric total">${{ invoice.amount|floatformat:2|intcomma }}</td>
+  <td class="amount">${{ invoice.amount|floatformat:2|intcomma }}</td>
+  <td class="status">{{ invoice.status_display }}</td>
   <td class="actions">
     <i class="dot-icon bi bi-three-dots-vertical pointer"
        data-bs-toggle="dropdown"
@@ -18,10 +18,7 @@
       <li>
         <a class="dropdown-item"
            target="_blank"
-           href="{% url 'invoicing:invoice-pdf' invoice.id %}">Download PDF</a>
-      </li>
-      <li>
-        <hr class="dropdown-divider" />
+           href="{% url 'invoicing:invoice-pdf' invoice.id %}">Download</a>
       </li>
       <li>
         <form hx-post="{% url 'invoicing:status-update' invoice.id %}"
@@ -30,42 +27,29 @@
           <input type="hidden" name="status" value="SENT">
           <button type="submit"
                   class="dropdown-item {% if invoice.status == 'CANCELED' or invoice.status == 'SENT' %}disabled{% endif %}">
-            Send invoice
-          </button>
-        </form>
-      </li>
-      <li>
-        <form hx-post="{% url 'invoicing:status-update' invoice.id %}"
-              hx-target="#invoice-{{ invoice.id }}"
-              hx-swap="outerHTML">
-          <input type="hidden" name="status" value="APPROVED">
-          <button type="submit"
-                  class="dropdown-item {% if invoice.status != 'DRAFT' %}disabled{% endif %}">Approve invoice</button>
-        </form>
-      </li>
-      <li>
-        <form hx-post="{% url 'invoicing:status-update' invoice.id %}"
-              hx-target="#invoice-{{ invoice.id }}"
-              hx-swap="outerHTML">
-          <input type="hidden" name="status" value="CANCELED">
-          <button type="submit"
-                  class="dropdown-item invoice-delete {% if invoice.status == 'CANCELED' %}disabled{% endif %}">
-            Cancel invoice
+            Send
           </button>
         </form>
       </li>
       <li>
         <hr class="dropdown-divider" />
       </li>
-      <li>
-        <a class="dropdown-item"
-           href="{% url 'invoicing:invoice-detail' invoice.id %}">Open details</a>
-      </li>
-      <li>
-        <a onclick="return confirm('Are you sure you want to delete this invoice?')"
-           class="dropdown-item invoice-delete"
-           href="{% url 'invoicing:delete-invoice' invoice.id %}">Delete invoice</a>
-      </li>
+      {% if invoice.status == 'SENT' %}
+        <li>
+          <form hx-post="{% url 'invoicing:status-update' invoice.id %}"
+                hx-target="#invoice-{{ invoice.id }}"
+                hx-swap="outerHTML">
+            <input type="hidden" name="status" value="CANCELED">
+            <button type="submit" class="dropdown-item invoice-delete">Cancel</button>
+          </form>
+        </li>
+      {% else %}
+        <li>
+          <a onclick="return confirm('Are you sure you want to delete this invoice?')"
+             class="dropdown-item invoice-delete"
+             href="{% url 'invoicing:delete-invoice' invoice.id %}">Delete</a>
+        </li>
+      {% endif %}
     </ul>
   </td>
 </tr>

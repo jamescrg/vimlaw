@@ -1,10 +1,29 @@
-.invoice-date {
-    min-width: 160px;
+
+
+/* ==========================================================================
+List View
+========================================================================== */
+
+.invoices .number {
+  width: 150px;
 }
 
-.actions {
-    text-align: center;
-    width: 50px;
+.invoices .date {
+  width: 250px;
+}
+
+.invoices .amount {
+  text-align: right;
+  width: 160px;
+}
+
+.invoices .status {
+  text-align: right;
+  width: 160px;
+}
+
+.invoices .actions {
+  width: 20px;
 }
 
 .pointer {
@@ -12,12 +31,18 @@
 }
 
 .invoice-delete {
-    color: var(--red-600)
+    color: var(--orange-800)
 }
 
 .invoice-delete:hover {
-    color: var(--red-700)
+    color: var(--orange-800)
 }
+
+
+
+/* ==========================================================================
+Detail View
+========================================================================== */
 
 .detail-table {
     width: 25%;
