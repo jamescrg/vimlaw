@@ -58,8 +58,8 @@ class AddInvoiceView(LoginRequiredMixin, FormView):
 
         form = self.form_class()
 
-        # TODO: remove all old firm data from database;
-        # remote the date__gte limiter from this query
+        # TODO: after removing old firm data from database;
+        # remove the date__gte limiter from this query
         entries = TimeEntry.objects.filter(
             invoice__isnull=True, entered=0, date__gte="2024-01-01"
         ).values_list("matter", flat=True)
