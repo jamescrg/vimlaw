@@ -45,7 +45,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
     expenses_total = expenses.aggregate(total_amount=Sum("amount"))["total_amount"] or 0
 
     pre_discount_total = entries_total + expenses_total
-    combined_total = pre_discount_total - invoice.discount
+    invoice_total = pre_discount_total - invoice.discount
 
     context = {
         "invoice": invoice,
@@ -53,8 +53,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
         "expenses": expenses,
         "entries_total": entries_total,
         "expenses_total": expenses_total,
-        "combined_total": combined_total,
-        "pre_discount_total": pre_discount_total,
+        "invoice_total": invoice_total,
     }
 
     html_string = render_to_string("invoicing/invoice.html", context)

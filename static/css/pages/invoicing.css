@@ -27,15 +27,15 @@ List View
 }
 
 .pointer {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .invoice-delete {
-    color: var(--orange-800)
+  color: var(--orange-800)
 }
 
 .invoice-delete:hover {
-    color: var(--orange-800)
+  color: var(--orange-800)
 }
 
 
@@ -45,34 +45,34 @@ Detail View
 ========================================================================== */
 
 .detail-table {
-    width: 25%;
-    height: fit-content;
+  width: 25%;
+  height: fit-content;
 }
 
 @media (max-width: 768px) {
-    .detail-table {
-        width: 100%;
-    }
+  .detail-table {
+   width: 100%;
+  }
 }
 
 .invoice-table-container {
-    display: flex;
-    gap: 2rem;
+  display: flex;
+  gap: 2rem;
 }
 
 @media (max-width: 768px) {
-    .invoice-table-container {
-        flex-direction: column;
-    }
+  .invoice-table-container {
+   flex-direction: column;
+  }
 }
 
 .sub-modules {
-    display: flex;
-    gap: 2rem;
-    background: var(--warm-gray-200);
-    border-radius: 3px 3px 0 0;
-    margin-bottom: 0;
-    padding: 7px 20px;
+  display: flex;
+  gap: 2rem;
+  background: var(--warm-gray-200);
+  border-radius: 3px 3px 0 0;
+  margin-bottom: 0;
+  padding: 7px 20px;
 }
 
 .sub-modules .active {
@@ -80,17 +80,14 @@ Detail View
 }
 
 .activites-title {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 /* ==========================================================================
 Invoice Form
 ========================================================================== */
 
-.add-invoice {
-
-  .discount {
-    max-width: 2rem;
-  }
-
+.add-invoice .discount {
+  text-align: right;
+  width: 6rem;
 }

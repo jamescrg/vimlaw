@@ -1,127 +1,122 @@
+
+/* ==========================================================================
+Page Setup
+========================================================================== */
+
 @page {
-    size: A4;
-    margin: 4rem;
+  size: Letter;
+  margin: 0.75in;
+}
+
+@font-face {
+  font-family: 'NotoSerif';
+  src: url('/static/fonts/noto-serif/NotoSerif-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'NotoSerif-SemiBold';
+  src: url('/static/fonts/noto-serif/NotoSerif-SemiBold.ttf');
 }
 
 .invoice-template {
-    width: 100%;
-    font-size: 0.9rem;
-    background-color: #fff;
+  width: 100%;
+  font-size: 11pt;
+  font-family: 'NotoSerif', serif;
+  background-color: #fff;
 }
 
+/* ==========================================================================
+Header
+========================================================================== */
+
 .cb-logo {
-    width: 280px;
-    height: auto;
-    margin-top: 1rem;
+  width: 100px;
+  height: auto;
+}
+
+.llc {
+  font-size: 9pt;
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
 }
 
-.header-right-title {
-    margin-bottom: 2rem;
+.header-right {
+  margin-top: 24pt;
 }
 
-.normal-height {
-    line-height: 0.5;
+p {
+  line-height: 1;
+  margin: 6pt 0;
+  padding: 0;
 }
 
-.text-right {
-    text-align: right;
+/* ==========================================================================
+Content
+========================================================================== */
+
+.section {
+  margin-top: 24pt;
 }
 
-.text-left {
-    text-align: left;
-}
-
-.bold {
-    font-weight: bold;
-}
-
-.matter-name {
-    margin-top: 4rem;
-}
-
-.table-title {
-    margin-top: 4rem;
+h3 {
+  margin-bottom: 6pt;
+  margin-top: 11pt;
+  font-family: 'NotoSerif-SemiBold';
+  font-size: 12pt;
 }
 
 .table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  font-family: 'NotoSerif-SemiBold';
 }
 
 .table th, .table td {
-    padding: 8px 16px;
-    border-bottom: 1px solid #ddd;
-}
-
-.table-header {
-    background-color: #ececec;
-    height: 2rem;
-}
-
-.table-row {
-    height: auto;
-}
-
-.table-row:nth-child(odd) {
-    background-color: #f4f4f4;
-}
-
-.table-row:nth-child(even) {
-    background-color: #ffffff;
+  border: solid 1px lightgray;
+  font-size: 10pt;
+  padding: 6pt;
+  vertical-align: top;
 }
 
 .table td {
-    word-wrap: break-word;
-    white-space: normal;
+  word-wrap: break-word;
+  white-space: normal;
 }
 
-.table-date {
-    min-width: 5rem;
+.comp {
+  text-decoration: line-through;
+  color: gray;
 }
 
-.total {
-    display: flex;
-    justify-content: flex-end;
-    margin-right: 1rem;
-    font-weight: bold;
-    font-size: 0.8rem;
-    align-items: baseline;
+.table .date {
+  width: 0.8in;
 }
 
-.total-name {
-    margin-right: 2rem;
+.table .money {
+  text-align: right;
+  width: 0.8in;
 }
 
-.expense {
-    margin-top: 4rem;
-    page-break-before: always;
+.table .total {
+  font-family: 'NotoSerif-SemiBold';
 }
 
-.small-line {
-    line-height: 0;
+
+/* ==========================================================================
+Utility Classes
+========================================================================== */
+
+.text-right {
+  text-align: right;
 }
 
-.note {
-    margin-top: 3rem;
-}
-
-.price-container {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 1rem;
-    text-align: right;
-    margin-left: 73%;
-}
-
-.price td {
-    padding: 4px 16px;
-    font-weight: bold;
-    text-align: right;
+.text-left {
+  text-align: left;
 }

@@ -13,96 +13,106 @@
   <body>
     <div class="invoice-template">
       <div class="header">
-        <div>
-          <img width="280"
+        <div class="header-left">
+          <img width="100"
                height="auto"
                class="cb-logo"
                alt="cb_logo"
                src="{% static 'images/cb_logo.png' %}" />
-          <p class="normal-height bold">CB Legal, LLC</p>
-          <p class="normal-height">5565 Glenridge Connector, Suite 350</p>
-          <p class="normal-height">Atlana, GA 30342</p>
-          <p class="normal-height">Phone: (770) 426 - 7740</p>
-          <p class="normal-height">Email: jcraig@cblegal.law</p>
+          <p>
+            CB Legal, <span class="llc">LLC</span>
+          </p>
+          <p>5565 Glenridge Connector</p>
+          <p>Suite 350</p>
+          <p>Atlana, GA 30342</p>
+          <p>(770) 426 - 7740</p>
+          <p>jcraig@cblegal.law</p>
         </div>
-        <div>
-          <h2 class="header-right-title text-right">INVOICE</h2>
-          <p class="normal-height text-right">Invoice #{{ invoice.id }}</p>
-          <p class="normal-height text-right">Date: {{ invoice.date_issued|date:"Y-m-d" }}</p>
-          <p class="normal-height text-right">Due Upon Receipt</p>
+        <div class="header-right">
+          <p class="text-right">Invoice {{ invoice.id }}</p>
+          <p class="text-right">{{ invoice.date_issued|date:"Y-m-d" }}</p>
+          <br />
+          <p class="text-right">Matter {{ invoice.matter.id }}</p>
+          <p class="text-right">"{{ invoice.matter.name }}"</p>
         </div>
       </div>
-      <p class="note">
-        Please make all amounts payable to CB Legal, LLC. Payment is due upon receipt. If paying by check, please
-        address
-        the envelope to: <strong>ATTN Litigation</strong>
-      </p>
-      <p class="note">{{ invoice.message }}</p>
-      <h2 class="matter-name">{{ invoice.matter.name }}</h2>
-      <h3 class="table-title">Services</h3>
-      <table class="table">
-        <tr class="table-header">
-          <th class="text-left">Date</th>
-          <th class="text-left">Attorney</th>
-          <th class="text-left">Notes</th>
-          <th class="text-right">Quantity</th>
-          <th class="text-right">Rate</th>
-          <th class="text-right">Total</th>
-        </tr>
-        {% for entry in entries %}
-          <tr class="table-row">
-            <td class="table-date">{{ entry.date|date:"Y-m-d" }}</td>
-            <td>JC</td>
-            <td>{{ entry.actions }}</td>
-            <td class="text-right">{{ entry.hours }}</td>
-            <td class="text-right">${{ entry.firm_rate|floatformat:2|intcomma }}</td>
-            <td class="text-right">${{ entry.fee|floatformat:2|intcomma }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-      <div class="total">
-        <p class="total-name">Services Subtotal</p>
-        <p>${{ entries_total|floatformat:2|intcomma }}</p>
-      </div>
-      <h3 class="table-title expense">Expenses</h3>
-      <table class="table">
-        <tr class="table-header">
-          <th class="text-left">Date</th>
-          <th class="text-left">Notes</th>
-          <th class="text-right">Quantity</th>
-          <th class="text-right">Rate</th>
-          <th class="text-right">Total</th>
-        </tr>
-        {% for expense in expenses %}
-          <tr class="table-row">
-            <td class="table-date">{{ expense.date|date:"Y-m-d" }}</td>
-            <td>{{ expense.description }}</td>
-            <td class="text-right">1.00</td>
-            <td class="text-right">${{ expense.amount|floatformat:2|intcomma }}</td>
-            <td class="text-right">${{ expense.amount|floatformat:2|intcomma }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-      <div class="total">
-        <p class="total-name">Expenses Subtotal</p>
-        <p>${{ expenses_total|floatformat:2|intcomma }}</p>
-      </div>
-      <div class="price-container">
-        <table class="price">
+      <div class="section">
+        <h3>Hourly Fees</h3>
+        <table class="table">
           <tr>
-            <td>Subtotal</td>
-            <td>${{ pre_discount_total|floatformat:2|intcomma }}</td>
+            <th class="text-left">Date</th>
+            <th class="text-left">Description</th>
+            <th class="text-right">Qty</th>
+            <th class="money">Total</th>
           </tr>
+          {% for entry in entries %}
+            <tr>
+              <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+              <td class="{% if entry.comp %} comp{% endif %}">
+                {{ entry.actions }} {{ entry.user.symbol }}, ${{ entry.firm_rate|floatformat:0|intcomma }}
+              </td>
+              <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
+              <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
+            </tr>
+          {% endfor %}
           <tr>
-            <td>Discount</td>
-            <td>${{ invoice.discount|floatformat:2|intcomma }}</td>
-          </tr>
-          <tr>
-            <td>Total</td>
-            <td>${{ combined_total|floatformat:2|intcomma }}</td>
+            <td class="total" colspan="3">Total Hourly Fees (see below for invoice total)</td>
+            <td class="money total">${{ entries_total|floatformat:2|intcomma }}</td>
           </tr>
         </table>
       </div>
+      {% if expenses %}
+        <div class="section">
+          <h3>Expenses</h3>
+          <table class="table">
+            <tr>
+              <th class="date">Date</th>
+              <th>Description</th>
+              <th class="money">Amount</th>
+            </tr>
+            {% for expense in expenses %}
+              <tr>
+                <td class="date">{{ expense.date|date:"Y-m-d" }}</td>
+                <td>{{ expense.description }}</td>
+                <td class="money">${{ expense.amount|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endfor %}
+            <tr>
+              <td class="total" colspan="2">Total Expenses (see below for invoice total)</td>
+              <td class="money total">${{ expenses_total|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+      <div class="section">
+        <h3>Invoice Total</h3>
+        <table class="table">
+          <tr>
+            <td>Hourly Fees</td>
+            <td class="money">${{ entries_total|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td>Expenses</td>
+            <td class="money">${{ expenses_total|floatformat:2|intcomma }}</td>
+          </tr>
+          {% if invoice.discount %}
+            <tr>
+              <td>Less Discount</td>
+              <td class="money">- ${{ invoice.discount|floatformat:2|intcomma }}</td>
+            </tr>
+          {% endif %}
+          <tr>
+            <td class="total">Total Due (please pay this amount)</td>
+            <td class="money total">${{ invoice_total|floatformat:2|intcomma }}</td>
+          </tr>
+        </table>
+      </div>
+      {% if invoice.message %}
+        <div class="section">
+          <h3>Client Message</h3>
+          <p class="note">{{ invoice.message }}</p>
+        </div>
+      {% endif %}
     </div>
   </body>
 </html>
