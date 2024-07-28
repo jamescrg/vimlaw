@@ -258,6 +258,10 @@ li {
     font-weight: 600;
 }
 
+.dot-icon {
+  color: var(--warm-gray-350);
+}
+
 .btn-icon {
     background: none;
     border: none;
