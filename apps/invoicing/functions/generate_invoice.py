@@ -29,9 +29,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
     # total fees prior to any comp hours
     entries_gross_total = (
         entries.annotate(
-            fee=ExpressionWrapper(
-                F("hours") * F("firm_rate"), output_field=DecimalField()
-            )
+            fee=ExpressionWrapper(F("hours") * F("rate"), output_field=DecimalField())
         ).aggregate(total_fee=Sum("fee"))["total_fee"]
     ) or 0
 
@@ -39,9 +37,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
     entries_comp_total = (
         entries.filter(comp=1)
         .annotate(
-            fee=ExpressionWrapper(
-                F("hours") * F("firm_rate"), output_field=DecimalField()
-            )
+            fee=ExpressionWrapper(F("hours") * F("rate"), output_field=DecimalField())
         )
         .aggregate(total_fee=Sum("fee"))["total_fee"]
     ) or 0

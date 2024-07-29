@@ -7,11 +7,11 @@ def calculate_summary(entries, expense_entries):
 
     for entry in entries:
         total_hours += entry.hours
-        total_fees += entry.hours * entry.firm_rate
+        total_fees += entry.hours * entry.rate
 
         if entry.comp == 1:
             comp_hours += entry.hours
-            comp_fees += comp_fees + (entry.hours * entry.firm_rate)
+            comp_fees += comp_fees + (entry.hours * entry.rate)
 
     for entry in expense_entries:
         total_expenses += entry.amount

@@ -63,7 +63,7 @@ class Invoice(models.Model):
             TimeEntry.objects.filter(invoice=self.id)
             .annotate(
                 fee=ExpressionWrapper(
-                    F("hours") * F("firm_rate"), output_field=DecimalField()
+                    F("hours") * F("rate"), output_field=DecimalField()
                 )
             )
             .aggregate(total_fee=Sum("fee"))["total_fee"]

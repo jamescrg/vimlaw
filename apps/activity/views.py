@@ -478,7 +478,7 @@ def export(request):
                 entry.date.strftime("%m/%d/%Y"),
                 "",
                 entry.actions,
-                entry.firm_rate,
+                entry.rate,
                 entry.hours,
                 "TimeEntry",
                 clio_user,

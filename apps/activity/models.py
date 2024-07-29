@@ -11,7 +11,7 @@ class TimeEntry(models.Model):
     date = models.DateField(null=True)
     actions = models.TextField(null=True)
     hours = models.DecimalField(max_digits=3, decimal_places=1, default=0)
-    firm_rate = models.IntegerField(null=True)
+    rate = models.IntegerField(null=True)
     comp = models.IntegerField(blank=True, null=True)
     entered = models.IntegerField(blank=True, null=True)
     invoice = models.ForeignKey(
@@ -26,7 +26,7 @@ class TimeEntry(models.Model):
 
     @property
     def fee(self):
-        return self.hours * self.firm_rate
+        return self.hours * self.rate
 
 
 class ExpenseEntry(models.Model):
