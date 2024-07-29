@@ -10,7 +10,7 @@ class TimeEntryForm(forms.ModelForm):
         fields = (
             "date",
             "matter",
-            "firm_rate",
+            "rate",
             "actions",
             "hours",
             "comp",
@@ -35,7 +35,7 @@ class TimeEntryForm(forms.ModelForm):
             "entered": forms.Select(choices=ENTERED_CHOICES),
         }
 
-        labels = {"firm_rate": "Rate"}
+        labels = {"rate": "Rate"}
 
 
 class ExpenseEntryForm(forms.ModelForm):

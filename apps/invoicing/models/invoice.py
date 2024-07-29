@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 
 from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
@@ -25,6 +24,7 @@ class Invoice(models.Model):
     show_comp = models.BooleanField(default=False)
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=INVOICE_STATUS, default="DRAFT")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return f"Invoice #{self.id}"
@@ -54,26 +54,3 @@ class Invoice(models.Model):
     @property
     def status_display(self):
         return dict(INVOICE_STATUS).get(self.status)
-
-    @property
-    def amount(self):
-        from apps.activity.models import ExpenseEntry, TimeEntry
-
-        time_entry_amount = (
-            TimeEntry.objects.filter(invoice=self.id)
-            .annotate(
-                fee=ExpressionWrapper(
-                    F("hours") * F("firm_rate"), output_field=DecimalField()
-                )
-            )
-            .aggregate(total_fee=Sum("fee"))["total_fee"]
-        ) or 0
-
-        expense_amount = (
-            ExpenseEntry.objects.filter(invoice=self.id).aggregate(
-                total_amount=Sum("amount")
-            )["total_amount"]
-            or 0
-        )
-
-        return (time_entry_amount + expense_amount) - self.discount

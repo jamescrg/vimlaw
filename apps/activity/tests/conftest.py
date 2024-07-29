@@ -45,8 +45,7 @@ def entry(user, matter):
         date="2020-01-07",
         actions="Call with client",
         hours=0.2,
-        contractor_rate=0,
-        firm_rate=300,
+        rate=300,
         comp=0,
         entered=0,
     )

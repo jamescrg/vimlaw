@@ -4,7 +4,7 @@ from .models import ExpenseEntry, TimeEntry
 
 
 class TimeEntryAdmin(admin.ModelAdmin):
-    list_display = ("id", "date", "user", "matter", "actions", "firm_rate", "fee")
+    list_display = ("id", "date", "user", "matter", "actions", "rate", "fee")
 
 
 class ExpenseAdmin(admin.ModelAdmin):

@@ -47,7 +47,7 @@ def test_edit_post(client, matter, entry):
         "matter": matter.id,
         "actions": "new actions",
         "hours": 2.5,
-        "firm_rate": 300,
+        "rate": 300,
     }
     response = client.post(f"/activity/{entry.id}/edit", data)
     assert response.status_code == 302

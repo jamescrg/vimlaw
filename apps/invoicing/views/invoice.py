@@ -4,6 +4,7 @@ from itertools import chain
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
@@ -58,8 +59,6 @@ class AddInvoiceView(LoginRequiredMixin, FormView):
 
         form = self.form_class()
 
-        # TODO: after removing old firm data from database;
-        # remove the date__gte limiter from this query
         entries = TimeEntry.objects.filter(
             invoice__isnull=True, entered=0, date__gte="2024-01-01"
         ).values_list("matter", flat=True)
@@ -82,6 +81,26 @@ class AddInvoiceView(LoginRequiredMixin, FormView):
         invoice = form.save(commit=False)
         invoice.created_by = self.request.user
 
+        invoice.save()
+
+        time_entry_amount = (
+            TimeEntry.objects.filter(invoice=invoice)
+            .annotate(
+                fee=ExpressionWrapper(
+                    F("hours") * F("rate"), output_field=DecimalField()
+                )
+            )
+            .aggregate(total_fee=Sum("fee"))["total_fee"]
+        ) or 0
+
+        expense_amount = (
+            ExpenseEntry.objects.filter(invoice=invoice).aggregate(
+                total_amount=Sum("amount")
+            )["total_amount"]
+            or 0
+        )
+
+        invoice.amount = (time_entry_amount + expense_amount) - invoice.discount
         invoice.save()
 
         return super().form_valid(form)
