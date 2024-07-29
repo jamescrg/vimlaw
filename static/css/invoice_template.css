@@ -1,28 +1,17 @@
-
 /* ==========================================================================
 Page Setup
 ========================================================================== */
 
 @page {
-  size: Letter;
-  margin: 0.75in;
-}
-
-@font-face {
-  font-family: 'NotoSerif';
-  src: url('/static/fonts/noto-serif/NotoSerif-Regular.ttf');
-}
-
-@font-face {
-  font-family: 'NotoSerif-SemiBold';
-  src: url('/static/fonts/noto-serif/NotoSerif-SemiBold.ttf');
+    size: Letter;
+    margin: 0.75in;
 }
 
 .invoice-template {
-  width: 100%;
-  font-size: 11pt;
-  font-family: 'NotoSerif', serif;
-  background-color: #fff;
+    width: 100%;
+    font-size: 11pt;
+    font-family: "Times New Roman", serif;
+    background-color: #fff;
 }
 
 /* ==========================================================================
@@ -30,28 +19,28 @@ Header
 ========================================================================== */
 
 .cb-logo {
-  width: 100px;
-  height: auto;
+    width: 100px;
+    height: auto;
 }
 
 .llc {
-  font-size: 9pt;
+    font-size: 9pt;
 }
 
 .header {
-  align-items: flex-start;
-  display: flex;
-  justify-content: space-between;
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
 }
 
 .header-right {
-  margin-top: 24pt;
+    margin-top: 24pt;
 }
 
 p {
-  line-height: 1;
-  margin: 6pt 0;
-  padding: 0;
+    line-height: 1;
+    margin: 6pt 0;
+    padding: 0;
 }
 
 /* ==========================================================================
@@ -59,53 +48,53 @@ Content
 ========================================================================== */
 
 .section {
-  margin-top: 24pt;
+    margin-top: 24pt;
 }
 
 h3 {
-  margin-bottom: 6pt;
-  margin-top: 11pt;
-  font-family: 'NotoSerif-SemiBold';
-  font-size: 12pt;
+    margin-bottom: 6pt;
+    margin-top: 11pt;
+    font-family: "Times New Roman", serif;
+    font-size: 12pt;
 }
 
 .table {
-  width: 100%;
-  border-collapse: collapse;
+    width: 100%;
+    border-collapse: collapse;
 }
 
 .table th {
-  font-family: 'NotoSerif-SemiBold';
+    font-family: "Times New Roman", serif;
 }
 
 .table th, .table td {
-  border: solid 1px lightgray;
-  font-size: 10pt;
-  padding: 6pt;
-  vertical-align: top;
+    border: solid 1px lightgray;
+    font-size: 10pt;
+    padding: 6pt;
+    vertical-align: top;
 }
 
 .table td {
-  word-wrap: break-word;
-  white-space: normal;
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 .comp {
-  text-decoration: line-through;
-  color: gray;
+    text-decoration: line-through;
+    color: gray;
 }
 
 .table .date {
-  width: 0.8in;
+    width: 0.8in;
 }
 
 .table .money {
-  text-align: right;
-  width: 0.8in;
+    text-align: right;
+    width: 0.8in;
 }
 
 .table .total {
-  font-family: 'NotoSerif-SemiBold';
+    font-family: "Times New Roman", serif;
 }
 
 
@@ -114,9 +103,9 @@ Utility Classes
 ========================================================================== */
 
 .text-right {
-  text-align: right;
+    text-align: right;
 }
 
 .text-left {
-  text-align: left;
+    text-align: left;
 }

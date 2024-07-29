@@ -39,7 +39,7 @@ def insert(request, page):
 
 @login_required
 def update(request, id, page):
-    folder = Folder.objects.filter(user_id=request.user.id, pk=id).get()
+    folder = Folder.objects.get(user_id=request.user.id, pk=id).get()
     folder.name = request.POST["name"]
     folder.save()
     return redirect(f"/{page}")
