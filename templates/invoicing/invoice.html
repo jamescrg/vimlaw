@@ -18,19 +18,23 @@
     <div class="invoice-template">
       <div class="header">
         <div class="header-left">
-          <img width="100"
-               height="auto"
-               class="cb-logo"
-               alt="cb_logo"
-               src="{% static 'images/cb_logo.png' %}" />
-          <p>
-            CB Legal, <span class="llc">LLC</span>
-          </p>
-          <p>5565 Glenridge Connector</p>
-          <p>Suite 350</p>
-          <p>Atlana, GA 30342</p>
-          <p>(770) 426 - 7740</p>
-          <p>jcraig@cblegal.law</p>
+          <div class="header-left-left">
+            <img width="100"
+                 height="auto"
+                 class="cb-logo"
+                 alt="cb_logo"
+                 src="{% static 'images/cb_logo.png' %}" />
+          </div>
+          <div class="header-left-right">
+            <p>
+              CB Legal, <span class="llc">LLC</span>
+            </p>
+            <p>5565 Glenridge Connector</p>
+            <p>Suite 350</p>
+            <p>Atlana, GA 30342</p>
+            <p>(770) 426 - 7740</p>
+            <p>jcraig@cblegal.law</p>
+          </div>
         </div>
         <div class="header-right">
           <p class="text-right">Invoice {{ invoice.id }}</p>
