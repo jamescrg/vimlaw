@@ -363,6 +363,10 @@ li {
     padding: 4px 7px 5px 7px;
 }
 
+.filter-bar:first-child {
+  padding-left: 0;
+}
+
 .filter-bar-left {
     display: flex;
     flex-direction: row;
