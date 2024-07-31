@@ -443,7 +443,7 @@ def export(request):
 
     entries = TimeEntry.objects.all()
     entries = entries.filter(matter__firm="Campbell & Brannon")
-    entries = entries.exclude(matter__firm_file_no__isnull=True)
+    entries = entries.exclude(matter__clio_matter_id__isnull=True)
     entries = entries.filter(entered=0)
     entries = entries.order_by("-date", "-id")
 
