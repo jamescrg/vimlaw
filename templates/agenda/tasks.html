@@ -6,18 +6,20 @@
       <div class="section-title-left-right"
            hx-target="#tasks-table"
            hx-swap="#outerHTML">
-        <button hx-get="/agenda/filter"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
-          <i class="bi bi-funnel"></i>
-        </button>
         <button hx-get="filter/all">All</button>
         <button hx-get="filter/james">James</button>
         <button hx-get="filter/lexi">Lexi</button>
       </div>
     </div>
-    <div class="section-title-right">
+    <div class="section-title-right"
+         hx-target="#tasks-table"
+         hx-swap="#outerHTML">
+      <button hx-get="/agenda/filter"
+              hx-target="#htmx-modal-container"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="bi bi-funnel"></i>
+      </button>
       {% if not show_events %}
         <a href={% url 'agenda:toggle-events' %}>
           <i class="bi bi-calendar2"></i>

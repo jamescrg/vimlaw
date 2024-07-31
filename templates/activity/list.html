@@ -2,21 +2,22 @@
 {% block content %}
   {% load humanize %}
   <div class="filter-bar">
-    <div class="section-title-left-right">
+    <div class="section-title-left">
       <a {% if filter.show_time %}class="strong"{% endif %}
          href="{% url 'activity:toggle-entries' entry_type='time' %}">Time</a>
       <a {% if filter.show_expenses %}class="strong"{% endif %}
          href="{% url 'activity:toggle-entries' entry_type='expense' %}">Expenses</a>
+      <span class="filter-bar-divider">|</span>
+      <a href={% url 'activity:filter-quick' quick_filter='unentered' %}>Unentered</a>
+      <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
+    </div>
+    <div class="section-title-right">
       <button hx-get="{% url 'activity:filter' %}"
               hx-target="#htmx-modal-container"
               data-bs-toggle="modal"
               data-bs-target="#htmx-modal-container">
         <i class="bi bi-funnel"></i>
       </button>
-      <a href={% url 'activity:filter-quick' quick_filter='unentered' %}>Unentered</a>
-      <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
-    </div>
-    <div class="section-title-right">
       <a href={% url 'activity:export' %}>
         <i class="bi bi-cloud-download"></i>
       </a>
@@ -27,14 +28,14 @@
       <div class="section-title">
         <div class="section-title-left">
           <h1>Time</h1>
-          <div class="section-title-left-right">
-            <button hx-get="/activity/add"
-                    hx-target="#htmx-modal-container"
-                    data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
+        </div>
+        <div class="section-title-right">
+          <button hx-get="/activity/add"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
         </div>
       </div>
       <div class="table-container">
@@ -108,14 +109,14 @@
       <div class="section-title">
         <div class="section-title-left">
           <h1>Expenses</h1>
-          <div class="section-title-left-right">
-            <button data-bs-toggle="modal"
-                    hx-target="#htmx-modal-container"
-                    data-bs-target="#htmx-modal-container"
-                    hx-get="{% url 'activity:add-expense' %}">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
+        </div>
+        <div class="section-title-right">
+          <button data-bs-toggle="modal"
+                  hx-target="#htmx-modal-container"
+                  data-bs-target="#htmx-modal-container"
+                  hx-get="{% url 'activity:add-expense' %}">
+            <i class="bi bi-plus-lg"></i>
+          </button>
         </div>
       </div>
       <div class="table-container">

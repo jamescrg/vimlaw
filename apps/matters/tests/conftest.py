@@ -77,7 +77,7 @@ def matter(user, contact):
         date_start="2020-08-07",
         date_end="2022-08-07",
         firm="Test Firm",
-        firm_file_no="123",
+        clio_matter_no="123",
         ref_no="125",
         practice_area="General",
         client=contact,

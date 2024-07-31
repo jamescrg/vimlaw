@@ -12,7 +12,7 @@ class Matter(models.Model):
     date_start = models.DateField(null=True)
     date_end = models.DateField(blank=True, null=True)
     firm = models.CharField(max_length=50, null=True)
-    firm_file_no = models.CharField(max_length=500, null=True, blank=True)
+    clio_matter_no = models.CharField(max_length=500, null=True, blank=True)
     ref_no = models.CharField(max_length=50, blank=True, null=True)
     practice_area = models.CharField(max_length=50, null=True)
     contacts = models.ManyToManyField(Contact, through="Relationship")

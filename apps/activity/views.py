@@ -474,7 +474,7 @@ def export(request):
 
         writer.writerow(
             [
-                entry.matter.firm_file_no,
+                entry.matter.clio_matter_no,
                 entry.date.strftime("%m/%d/%Y"),
                 "",
                 entry.actions,
@@ -488,7 +488,7 @@ def export(request):
 
     entries = ExpenseEntry.objects.all()
     entries = entries.filter(matter__firm="Campbell & Brannon")
-    entries = entries.exclude(matter__firm_file_no="")
+    entries = entries.exclude(matter__clio_matter_no="")
     entries = entries.filter(entered=0)
     entries = entries.order_by("-date", "-id")
 
@@ -504,7 +504,7 @@ def export(request):
 
         writer.writerow(
             [
-                entry.matter.firm_file_no,
+                entry.matter.clio_matter_no,
                 entry.date.strftime("%m/%d/%Y"),
                 "",
                 entry.description,
