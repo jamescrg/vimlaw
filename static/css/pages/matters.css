@@ -20,12 +20,12 @@ Matter Form
   width: 250px;
 }
 
-#id_clio_file_no {
-  width: 250px;
+#id_clio_matter_id {
+  width: 400px;
 }
 
 #id_client_reference_id {
-  width: 250px;
+  width: 400px;
 }
 
 #id_firm_rate {

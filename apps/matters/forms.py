@@ -24,12 +24,7 @@ class MatterForm(forms.ModelForm):
             ("Closed", "Closed"),
         )
 
-        FIRMS = (
-            ("Campbell & Brannon", "Campbell & Brannon"),
-            ("Craig Law", "Craig Law"),
-            ("Mitchell Law", "Mitchell Law"),
-            ("Mays & Kerr", "Mays & Kerr"),
-        )
+        FIRMS = (("Campbell & Brannon", "Campbell & Brannon"),)
 
         PRACTICE_AREAS = (
             ("CB", "CB"),
@@ -47,7 +42,7 @@ class MatterForm(forms.ModelForm):
 
         labels = {
             "date_start": "Open Date",
-            "clio_matter_id": "File Number",
+            "clio_matter_id": "Clio Matter",
             "client_reference_id": "Client Reference",
             "practice_area": "Practice Area",
         }
