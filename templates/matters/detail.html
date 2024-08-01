@@ -25,31 +25,6 @@
     </div>
     <div class="flex-start-space">
       <div class="matter-data">
-        <div class="description">
-          <!-- -------------------------------------------------------- -->
-          <!-- normal display, show matter link -->
-          <!-- -------------------------------------------------------- -->
-          <button class="button-link show-status-form-button"
-                  onclick="showStatusForm()">{{ matter.description }}</button>
-          <!-- -------------------------------------------------------- -->
-          <!-- edit status form -->
-          <!-- -------------------------------------------------------- -->
-          <form class="edit-status"
-                method="post"
-                action="{% url 'matters:edit-description' id=matter.id %}">
-            {% csrf_token %}
-            <label>
-              <input type="text"
-                     class="edit-status-input"
-                     name="description"
-                     onchange="submit()"
-                     onblur="hideStatusForm()"
-                     value="{{ matter.description }}"
-                     required />
-            </label>
-            <input type="hidden" name="return" value="detail" />
-          </form>
-        </div>
         <div class="tables">
           <table>
             <tr>
@@ -57,12 +32,8 @@
               <td>{{ matter.id }}</td>
             </tr>
             <tr>
-              <td class="strong">File No.</td>
+              <td class="strong">Clio No.</td>
               <td>{{ matter.clio_matter_id|slice:'0:5'|default:'' }}</td>
-            </tr>
-            <tr>
-              <td class="strong">Ref No.</td>
-              <td>{{ matter.client_reference_id|default:'' }}</td>
             </tr>
           </table>
           <table>
@@ -85,15 +56,15 @@
                 <td class="strong">Case No.</td>
                 <td>{{ proceeding.case_number }}</td>
               </tr>
-              <tr>
-                <td class="strong">Filed</td>
-                <td>{{ proceeding.date_filed|date:'Y-m-d' }}</td>
-              </tr>
-              <tr>
-                <td class="strong">Status</td>
-                <td>{{ proceeding.status }}</td>
-              </tr>
             </table>
+            {% if matter.client_reference_id %}
+              <table>
+                <tr>
+                  <td class="strong">Client Reference Id.</td>
+                  <td>{{ matter.client_reference_id|default:'' }}</td>
+                </tr>
+              </table>
+            {% endif %}
           {% endif %}
         </div>
       </div>
