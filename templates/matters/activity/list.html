@@ -5,7 +5,7 @@
       <h2>Last 30 Days</h2>
     </div>
     <div class="section-title-right">
-      <a href={% url 'activity:filter-matter' id=matter.id %}>Jump to Activity: All</a>
+      <a href={% url 'activity:filter-matter' id=matter.id %}>View All Activity</a>
     </div>
   </div>
   <div class="matter-section-data">
@@ -15,9 +15,7 @@
           {% for entry in entries %}
             <tr>
               <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
-              <td>
-                <a href={% url 'activity:edit' id=entry.id %}>{{ entry.actions }}</a>
-              </td>
+              <td>{{ entry.actions }}</td>
               <td class="hours">{{ entry.hours }}</td>
             </tr>
           {% endfor %}
