@@ -7,12 +7,25 @@ Page Setup
     margin: 0.75in;
 }
 
-
 .invoice-template {
     width: 100%;
     font-size: 11pt;
     font-family: "Times New Roman", serif;
-    background-color: #fff;
+    position: relative;
+}
+
+.invoice-body-draft {
+    background-image: url("/static/images/draft.png");
+    background-repeat: repeat-y;
+    background-position: center;
+    background-size: cover;
+}
+
+.invoice-body-canceled {
+    background-image: url("/static/images/canceled.png");
+    background-repeat: repeat-y;
+    background-position: center;
+    background-size: cover;
 }
 
 /* ==========================================================================
@@ -35,24 +48,24 @@ Header
 }
 
 .header-left {
-  align-items: flex-start;
-  display: flex;
-  flex-direction: row;
-  justify-content: left;
-  width: 70%;
+    align-items: flex-start;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    width: 70%;
 }
 
 .header-left-left {
-  margin-top: 3pt;
+    margin-top: 3pt;
 }
 
 .header-left-right {
-  font-size: 11pt;
-  margin-left: 0.25in;
+    font-size: 11pt;
+    margin-left: 0.25in;
 }
 
 .header-right {
-  margin-top: 6pt;
+    margin-top: 6pt;
 }
 
 p {
