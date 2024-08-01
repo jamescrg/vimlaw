@@ -197,16 +197,16 @@ def add(request, id=None):
 
             try:
                 rate = Rate.objects.filter(matter=matter, user=request.user).get()
-                firm_rate = rate.matter_rate
+                rate = rate.matter_rate
             except ObjectDoesNotExist:
-                firm_rate = request.user.user_rate
+                rate = request.user.user_rate
 
             form = TimeEntryForm(
                 initial={
                     "date": today,
                     "hours": 0.2,
                     "matter": matter,
-                    "firm_rate": firm_rate,
+                    "rate": rate,
                 }
             )
         else:

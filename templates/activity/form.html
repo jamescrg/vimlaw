@@ -3,8 +3,7 @@
 <!-- -------------------------------------------------------- -->
 <script type="text/javascript">
 
-    const contract_rates = [];
-    const firm_rates = [];
+    const rates = [];
 
     // pulls a specific matter, if user has selected one
     // otherwise, pulls a list of all open matters
@@ -12,7 +11,7 @@
     // for each matter, creates javascript array value
     // key  = matterId, value = hourlyRate
     {% for matter, rate in matter_rates.items %}
-        firm_rates[{{ matter }}] = {{ rate }}
+        rates[{{ matter }}] = {{ rate }}
     {% endfor %}
 
 </script>
