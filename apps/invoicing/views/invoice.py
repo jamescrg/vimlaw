@@ -6,9 +6,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView, DetailView, FormView, View
+from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
 
 from apps.activity.models import ExpenseEntry, TimeEntry
 from apps.invoicing.forms import InvoiceForm
@@ -114,6 +114,19 @@ class DeleteInvoiceView(LoginRequiredMixin, DeleteView):
         return self.delete(request, *args, **kwargs)
 
 
+class CancelInvoiceView(LoginRequiredMixin, TemplateView):
+    template_name = "invoicing/confirm-cancel.html"
+    success_url = reverse_lazy("invoicing:invoicing")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        invoice = Invoice.objects.get(pk=self.kwargs["pk"])
+        context["invoice"] = invoice
+
+        return context
+
+
 class InvoicePDFView(LoginRequiredMixin, DetailView):
     model = Invoice
 
@@ -155,5 +168,7 @@ class StatusUpdateView(LoginRequiredMixin, View):
         if invoice_status == "CANCELED":
             TimeEntry.objects.filter(invoice=invoice).update(invoice=None)
             ExpenseEntry.objects.filter(invoice=invoice).update(invoice=None)
+
+            return redirect("invoicing:invoicing")
 
         return render(request, "invoicing/invoice-row.html", {"invoice": invoice})

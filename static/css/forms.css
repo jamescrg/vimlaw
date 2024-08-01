@@ -46,6 +46,12 @@ textarea {
     padding: 4px 10px;
 }
 
+.disabled-btn {
+    background: var(--warm-gray-300);
+    border: solid 1px var(--warm-gray-300);
+    color: var(--warm-gray-400);
+}
+
 .add-event {
   margin-top: 1rem;
   border-top: solid 1px var(--warm-gray-200);

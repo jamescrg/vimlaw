@@ -1,0 +1,26 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Are you sure you want to cancel this invoice?</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form class="cancel-form"
+            method="post"
+            action="{% url 'invoicing:status-update' invoice.id %}">
+        <input type="hidden" name="status" value="CANCELED">
+        {% csrf_token %}
+        <label for="userInput">Type 'CANCEL' to confirm:</label>
+        <input type="text" id="userInput" oninput="updateText()">
+        <br />
+        <div class="flex-center-space">
+          <button type="submit" class="submit disabled-btn" disabled>Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

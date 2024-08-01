@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.invoicing.views.invoice import (
     AddInvoiceView,
+    CancelInvoiceView,
     DeleteInvoiceView,
     InvoiceDetailView,
     InvoicePDFView,
@@ -31,5 +32,10 @@ urlpatterns = [
         "invoicing/status-update/<int:pk>/",
         StatusUpdateView.as_view(),
         name="status-update",
+    ),
+    path(
+        "invoicing/cancel-invoice/<int:pk>/",
+        CancelInvoiceView.as_view(),
+        name="cancel-invoice",
     ),
 ]

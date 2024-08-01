@@ -31,14 +31,12 @@
         </li>
       {% endif %}
       {% if invoice.status == 'SENT' %}
-        <li>
-          <form hx-post="{% url 'invoicing:status-update' invoice.id %}"
-                hx-target="#invoice-{{ invoice.id }}"
-                hx-swap="outerHTML">
-            <input type="hidden" name="status" value="CANCELED">
-            <button type="submit" class="dropdown-item invoice-delete">Cancel</button>
-          </form>
-        </li>
+        <li class="dropdown-item invoice-delete pointer"
+            hx-get="{% url 'invoicing:cancel-invoice' invoice.id %}"
+            hx-target="#htmx-modal-container"
+            hx-trigger="click"
+            data-bs-toggle="modal"
+            data-bs-target="#htmx-modal-container">Cancel</li>
       {% endif %}
       {% if invoice.status == 'CANCELED' %}
         <li>
