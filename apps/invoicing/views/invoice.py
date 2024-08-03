@@ -111,7 +111,19 @@ class AddInvoiceView(LoginRequiredMixin, FormView):
 class EditInvoiceView(LoginRequiredMixin, FormView):
     template_name = "invoicing/edit-invoice.html"
     form_class = EditInvoiceForm
-    success_url = reverse_lazy("invoicing:invoicing")
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "invoicing:invoice-detail", kwargs={"pk": self.kwargs["pk"]}
+        )
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        invoice = Invoice.objects.get(pk=self.kwargs["pk"])
+        kwargs["instance"] = invoice
+
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -119,10 +131,45 @@ class EditInvoiceView(LoginRequiredMixin, FormView):
         invoice = Invoice.objects.get(pk=self.kwargs["pk"])
         context["invoice"] = invoice
 
-        form = self.form_class(instance=invoice)
-        context["form"] = form
-
         return context
+
+    def form_valid(self, form):
+        form.save()
+
+        invoice = Invoice.objects.get(pk=self.kwargs["pk"])
+
+        date_limit = form.cleaned_data["date_limit"]
+
+        # Remove entries that are not within the new date limit
+        TimeEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
+            invoice=None
+        )
+
+        ExpenseEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
+            invoice=None
+        )
+
+        time_entry_amount = (
+            TimeEntry.objects.filter(invoice=invoice)
+            .annotate(
+                fee=ExpressionWrapper(
+                    F("hours") * F("rate"), output_field=DecimalField()
+                )
+            )
+            .aggregate(total_fee=Sum("fee"))["total_fee"]
+        ) or 0
+
+        expense_amount = (
+            ExpenseEntry.objects.filter(invoice=invoice).aggregate(
+                total_amount=Sum("amount")
+            )["total_amount"]
+            or 0
+        )
+
+        invoice.amount = (time_entry_amount + expense_amount) - invoice.discount
+        invoice.save()
+
+        return super().form_valid(form)
 
 
 class DeleteInvoiceView(LoginRequiredMixin, DeleteView):
