@@ -59,12 +59,12 @@
           {% for entry in entries %}
             <tr>
               <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
-              <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} {{ entry.user.symbol }}</td>
+              <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} {{ entry.user.symbol }} {{ entry.rate }}</td>
               <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
               <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
             </tr>
           {% endfor %}
-          {% if invoice.show_comp %}
+          {% if invoice.show_comp and entries_comp_total %}
             <tr>
               <td colspan="3">Hourly Fees</td>
               <td class="money">${{ entries_gross_total|floatformat:2|intcomma }}</td>
@@ -96,7 +96,7 @@
                 <td class="money{% if expense.comp %} comp{% endif %}">${{ expense.amount|floatformat:2|intcomma }}</td>
               </tr>
             {% endfor %}
-            {% if invoice.show_comp %}
+            {% if invoice.show_comp and expenses_comp_total %}
               <tr>
                 <td colspan="2">Expenses</td>
                 <td class="money">${{ expenses_gross_total|floatformat:2|intcomma }}</td>
@@ -115,7 +115,7 @@
       {% endif %}
       <div class="section">
         <h3>Invoice Total</h3>
-        <table class="table">
+        <table class="table invoice-totals">
           <tr>
             <td>Hourly Fees</td>
             <td class="money">${{ entries_net_total|floatformat:2|intcomma }}</td>
