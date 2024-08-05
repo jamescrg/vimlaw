@@ -16,6 +16,7 @@ class Filter:
         "keyword": "",
         "comp": None,
         "entered": None,
+        "invoiced": None,
         "order": "date, descending",
     }
 
@@ -29,8 +30,9 @@ class Filter:
             "keyword": "",
             "comp": None,
             "entered": None,
+            "invoiced": None,
         },
-        "unentered": {
+        "unbilled": {
             "date_from": None,
             "date_to": None,
             "firm": "Campbell & Brannon",
@@ -39,6 +41,7 @@ class Filter:
             "keyword": "",
             "comp": None,
             "entered": "No",
+            "invoiced": "No",
         },
     }
 
@@ -86,6 +89,7 @@ class Filter:
             "keyword": "",
             "comp": None,
             "entered": None,
+            "invoiced": None,
             "order": "date, descending",
         }
         for key, val in new_values.items():

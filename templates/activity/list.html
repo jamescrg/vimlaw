@@ -8,7 +8,7 @@
       <a {% if filter.show_expenses %}class="strong"{% endif %}
          href="{% url 'activity:toggle-entries' entry_type='expense' %}">Expenses</a>
       <span class="filter-bar-divider">|</span>
-      <a href={% url 'activity:filter-quick' quick_filter='unentered' %}>Unentered</a>
+      <a href={% url 'activity:filter-quick' quick_filter='unbilled' %}>Unentered</a>
       <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
     </div>
     <div class="section-title-right">
