@@ -92,7 +92,10 @@
             {% for expense in expenses %}
               <tr>
                 <td class="date{% if expense.comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
-                <td class="{% if expense.comp %} comp{% endif %}">{{ expense.category }} - {{ expense.description }}</td>
+                <td class="{% if expense.comp %} comp{% endif %}">
+                  {% if expense.category %}{{ expense.category }} -{% endif %}
+                  {{ expense.description }}
+                </td>
                 <td class="money{% if expense.comp %} comp{% endif %}">${{ expense.amount|floatformat:2|intcomma }}</td>
               </tr>
             {% endfor %}
