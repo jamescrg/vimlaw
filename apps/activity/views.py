@@ -78,6 +78,14 @@ def index(request):
             entries = entries.filter(entered=0)
             expense_entries = expense_entries.filter(entered=0)
 
+    if filter["invoiced"]:
+        if filter["invoiced"] == "Yes":
+            entries = entries.filter(invoice__isnull=False)
+            expense_entries = expense_entries.filter(invoice__isnull=False)
+        if filter["invoiced"] == "No":
+            entries = entries.filter(invoice__isnull=True)
+            expense_entries = expense_entries.filter(invoice__isnull=True)
+
     if filter["order"]:
         if filter["order"] == "date, ascending":
             entries = entries.order_by("date", "id")
@@ -469,8 +477,8 @@ def export(request):
         if entry.user.symbol == "JC":
             clio_user = "James Craig"
 
-        if entry.user.symbol == "PL":
-            clio_user = "Julia Taylor"
+        if entry.user.symbol == "LK":
+            clio_user = "Lexi Krier"
 
         writer.writerow(
             [
@@ -499,8 +507,8 @@ def export(request):
         if entry.user.symbol == "JC":
             clio_user = "James Craig"
 
-        if entry.user.symbol == "PL":
-            clio_user = "Julia Taylor"
+        if entry.user.symbol == "LK":
+            clio_user = "Lexi Krier"
 
         writer.writerow(
             [

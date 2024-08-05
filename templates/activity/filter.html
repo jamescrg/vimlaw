@@ -91,6 +91,14 @@
             <option value="Yes" {% if filter.entered == 'Yes' %}selected{% endif %}>Only Entered</option>
           </select>
         </label>
+        <label>Invoice Status:</label>
+        <label for="invoiced">
+          <select id="invoiced" name="invoiced">
+            <option value="">All</option>
+            <option value="No" {% if filter.invoiced == 'No' %}selected{% endif %}>Only Non Invoiced</option>
+            <option value="Yes" {% if filter.invoiced == 'Yes' %}selected{% endif %}>Only Invoiced</option>
+          </select>
+        </label>
         <label>Sort By:</label>
         <label for="order">
           <select name="order" id="order">
