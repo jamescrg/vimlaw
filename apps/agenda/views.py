@@ -76,6 +76,10 @@ def add(request):
     task = Task()
 
     task.user_id = request.user.id
+    filter = Filter(request).values
+
+    if filter["user"]:
+        task.user_id = int(filter["user"])
 
     matter = get_object_or_404(Matter, pk=request.POST.get("matter"))
     task.matter = matter
