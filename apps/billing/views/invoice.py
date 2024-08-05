@@ -12,10 +12,10 @@ from django.urls import reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
 
 from apps.activity.models import ExpenseEntry, TimeEntry
-from apps.invoicing.forms import InvoiceForm
-from apps.invoicing.forms.invoice import EditInvoiceForm
-from apps.invoicing.functions import generate_invoice
-from apps.invoicing.models import Invoice
+from apps.billing.forms import InvoiceForm
+from apps.billing.forms.invoice import EditInvoiceForm
+from apps.billing.functions import generate_invoice
+from apps.billing.models import Invoice
 from apps.matters.models import Matter
 
 
@@ -28,33 +28,33 @@ def index(request):
     )
 
     context = {
-        "page": "invoicing",
+        "page": "billing",
         "invoices": invoices,
     }
 
-    return render(request, "invoicing/list.html", context)
+    return render(request, "billing/list.html", context)
 
 
 class InvoiceDetailView(LoginRequiredMixin, DetailView):
     model = Invoice
-    template_name = "invoicing/preview/preview.html"
+    template_name = "billing/preview/preview.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["page"] = "invoicing"
+        context["page"] = "billing"
 
         context["file_url"] = reverse_lazy(
-            "invoicing:invoice-pdf", kwargs={"pk": self.object.pk}
+            "billing:invoice-pdf", kwargs={"pk": self.object.pk}
         )
 
         return context
 
 
 class AddInvoiceView(LoginRequiredMixin, FormView):
-    template_name = "invoicing/form-invoice.html"
+    template_name = "billing/form-invoice.html"
     form_class = InvoiceForm
-    success_url = reverse_lazy("invoicing:invoicing")
+    success_url = reverse_lazy("billing:billing")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -109,13 +109,11 @@ class AddInvoiceView(LoginRequiredMixin, FormView):
 
 
 class EditInvoiceView(LoginRequiredMixin, FormView):
-    template_name = "invoicing/edit-invoice.html"
+    template_name = "billing/edit-invoice.html"
     form_class = EditInvoiceForm
 
     def get_success_url(self):
-        return reverse_lazy(
-            "invoicing:invoice-detail", kwargs={"pk": self.kwargs["pk"]}
-        )
+        return reverse_lazy("billing:invoice-detail", kwargs={"pk": self.kwargs["pk"]})
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -174,15 +172,15 @@ class EditInvoiceView(LoginRequiredMixin, FormView):
 
 class DeleteInvoiceView(LoginRequiredMixin, DeleteView):
     model = Invoice
-    success_url = reverse_lazy("invoicing:invoicing")
+    success_url = reverse_lazy("billing:billing")
 
     def get(self, request, *args, **kwargs):
         return self.delete(request, *args, **kwargs)
 
 
 class CancelInvoiceView(LoginRequiredMixin, TemplateView):
-    template_name = "invoicing/confirm-cancel.html"
-    success_url = reverse_lazy("invoicing:invoicing")
+    template_name = "billing/confirm-cancel.html"
+    success_url = reverse_lazy("billing:billing")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -252,6 +250,6 @@ class StatusUpdateView(LoginRequiredMixin, View):
             TimeEntry.objects.filter(invoice=invoice).update(invoice=None)
             ExpenseEntry.objects.filter(invoice=invoice).update(invoice=None)
 
-            return redirect("invoicing:invoicing")
+            return redirect("billing:billing")
 
-        return render(request, "invoicing/invoice-row.html", {"invoice": invoice})
+        return render(request, "billing/invoice-row.html", {"invoice": invoice})

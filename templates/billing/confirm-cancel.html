@@ -11,7 +11,7 @@
     <div class="modal-body">
       <form class="cancel-form"
             method="post"
-            action="{% url 'invoicing:status-update' invoice.id %}">
+            action="{% url 'billing:status-update' invoice.id %}">
         <input type="hidden" name="status" value="CANCELED">
         {% csrf_token %}
         <label for="userInput">Type 'CANCEL' to confirm:</label>

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.invoicing.views.invoice import (
+from apps.billing.views.invoice import (
     AddInvoiceView,
     CancelInvoiceView,
     DeleteInvoiceView,
@@ -11,36 +11,34 @@ from apps.invoicing.views.invoice import (
     index,
 )
 
-app_name = "invoicing"
+app_name = "billing"
 
 urlpatterns = [
-    path("invoicing/", index, name="invoicing"),
+    path("billing/", index, name="billing"),
     path(
-        "invoicing/invoice-detail/<int:pk>/preview/",
+        "billing/invoice-detail/<int:pk>/preview/",
         InvoiceDetailView.as_view(),
         name="invoice-detail",
     ),
-    path("invoicing/add-invoice/", AddInvoiceView.as_view(), name="add-invoice"),
+    path("billing/add-invoice/", AddInvoiceView.as_view(), name="add-invoice"),
     path(
-        "invoicing/edit-invoice/<int:pk>/",
+        "billing/edit-invoice/<int:pk>/",
         EditInvoiceView.as_view(),
         name="edit-invoice",
     ),
     path(
-        "invoicing/delete-invoice/<int:pk>/",
+        "billing/delete-invoice/<int:pk>/",
         DeleteInvoiceView.as_view(),
         name="delete-invoice",
     ),
+    path("billing/invoice-pdf/<int:pk>/", InvoicePDFView.as_view(), name="invoice-pdf"),
     path(
-        "invoicing/invoice-pdf/<int:pk>/", InvoicePDFView.as_view(), name="invoice-pdf"
-    ),
-    path(
-        "invoicing/status-update/<int:pk>/",
+        "billing/status-update/<int:pk>/",
         StatusUpdateView.as_view(),
         name="status-update",
     ),
     path(
-        "invoicing/cancel-invoice/<int:pk>/",
+        "billing/cancel-invoice/<int:pk>/",
         CancelInvoiceView.as_view(),
         name="cancel-invoice",
     ),

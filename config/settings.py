@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     "apps.search",
     "apps.settings",
     "apps.trust",
-    "apps.invoicing",
+    "apps.billing",
     "apps.management",
     "django_cleanup.apps.CleanupConfig",
 ]

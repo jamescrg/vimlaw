@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 
 from apps.activity.models import ExpenseEntry, TimeEntry
-from apps.invoicing.models import Invoice
+from apps.billing.models import Invoice
 from config.settings import BASE_DIR
 
 
@@ -80,7 +80,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
         "invoice_total": invoice_total,
     }
 
-    html_string = render_to_string("invoicing/invoice.html", context)
+    html_string = render_to_string("billing/invoice.html", context)
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
 
     with NamedTemporaryFile(suffix=".pdf", delete=False) as pdf_file:

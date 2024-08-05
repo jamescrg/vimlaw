@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("invoicing", "0005_alter_invoice_status"),
+        ("billing", "0005_alter_invoice_status"),
     ]
 
     operations = [

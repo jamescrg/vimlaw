@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from apps.invoicing.models import Invoice
+from apps.billing.models import Invoice
 
 
 class InvoiceAdmin(admin.ModelAdmin):

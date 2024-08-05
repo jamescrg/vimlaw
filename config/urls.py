@@ -33,8 +33,8 @@ urlpatterns = [
     path("", include("apps.search.urls")),
     # Settings App
     path("", include("apps.settings.urls")),
-    # Invoicing App
-    path("", include("apps.invoicing.urls")),
+    # Billing App
+    path("", include("apps.billing.urls")),
     # Lab App
     path("", include("apps.lab.urls")),
 ]

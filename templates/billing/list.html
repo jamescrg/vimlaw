@@ -8,7 +8,7 @@
       <div class="section-title-right">
         <button type="button"
                 class="btn-icon"
-                hx-get="{% url 'invoicing:add-invoice' %}"
+                hx-get="{% url 'billing:add-invoice' %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 data-bs-toggle="modal"
@@ -28,7 +28,7 @@
           <th class="pdf">PDF</th>
         </tr>
         {% for invoice in invoices %}
-          {% include "invoicing/invoice-row.html" %}
+          {% include "billing/invoice-row.html" %}
         {% endfor %}
       </table>
     </div>

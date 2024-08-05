@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("invoicing", "0007_rename_date_to_invoice_date_limit_and_more"),
+        ("billing", "0007_rename_date_to_invoice_date_limit_and_more"),
     ]
 
     operations = [

@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-lg">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Add Invoice</h1>
+      <h1 class="modal-title">Edit Invoice</h1>
       <div>
         <a href="#" data-bs-dismiss="modal">
           <i class="bi bi-x-lg"></i>
@@ -11,7 +11,7 @@
     <div class="modal-body">
       <form class="form-responsive add-invoice"
             method="post"
-            action="{% url 'invoicing:add-invoice' %}">
+            action="{% url 'billing:edit-invoice' invoice.id %}">
         {% csrf_token %}
         {{ form }}
         <br />

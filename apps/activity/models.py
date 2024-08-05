@@ -1,7 +1,7 @@
 from django.db import models
 
 from apps.accounts.models import CustomUser
-from apps.invoicing.models import Invoice
+from apps.billing.models import Invoice
 from apps.matters.models import Matter
 
 
