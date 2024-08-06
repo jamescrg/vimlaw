@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 class Filter:
     values = {
-        "tab": "time",
         "date_from": None,
         "date_to": None,
         "firm": "Campbell & Brannon",
@@ -81,7 +80,6 @@ class Filter:
 
     def matter(self, request, id):
         new_values = {
-            "tab": "time",
             "date_from": None,
             "date_to": None,
             "firm": None,
@@ -94,8 +92,4 @@ class Filter:
         }
         for key, val in new_values.items():
             request.session["activity_filter"][key] = val
-        request.session.modified = True
-
-    def set_tab(self, request, tab):
-        request.session["activity_filter"]["tab"] = tab
         request.session.modified = True
