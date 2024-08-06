@@ -79,16 +79,6 @@ a:hover {
     margin-right: 0.3rem;
 }
 
-
-.section-title-right {
-}
-
-.section-title-right .bi {
-}
-
-.section-title-right .bi-plus-lg {
-}
-
 .section-text {
     padding: 0 1rem;
     margin-bottom: 1rem;
@@ -96,6 +86,10 @@ a:hover {
 
 .section > .list-group {
     border: none;
+}
+
+.sub-section {
+  border-radius: 0 0 3px 3px;
 }
 
 /* ==========================================================================
@@ -389,7 +383,7 @@ Sub nav
   background: var(--warm-gray-200);
   border-radius: 3px 3px 0 0;
   margin-bottom: 0;
-  padding: 0.5rem 0;
+  padding: 10px 0;
 }
 
 .sub-nav ul {

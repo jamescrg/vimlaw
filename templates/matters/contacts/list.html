@@ -6,31 +6,29 @@
     </div>
     <a href={% url 'matters:contacts-assign' id=matter.id %}>Assign</a>
   </div>
-  <div class="matter-section-data">
-    {% if relationship_groups %}
-      {% for group, relationships in relationship_groups.items %}
-        {% if relationships %}
-          <div class="contact-group-heading">
-            <strong>{{ group }}</strong>
-          </div>
-          <div class="table-container">
-            <table class="table contacts">
-              {% for relationship in relationships %}
-                <tr>
-                  <td class="relationship">
-                    <a href={% url 'matters:contacts-assign-edit' id=relationship.id %}>{{ relationship.role.name }}</a>
-                  </td>
-                  <td class="name">
-                    <a href={% url 'contacts:select' id=relationship.contact.id %}>{{ relationship.contact.name }}</a>
-                  </td>
-                  <td class="phone1">{{ relationship.contact.phone1|default:'' }}</td>
-                  <td class="email">{{ relationship.contact.email|default:'' }}</td>
-                </tr>
-              {% endfor %}
-            </table>
-          </div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  </div>
+  {% if relationship_groups %}
+    {% for group, relationships in relationship_groups.items %}
+      {% if relationships %}
+        <div class="contact-group-heading">
+          <strong>{{ group }}</strong>
+        </div>
+        <div class="table-container">
+          <table class="table contacts">
+            {% for relationship in relationships %}
+              <tr>
+                <td class="relationship">
+                  <a href={% url 'matters:contacts-assign-edit' id=relationship.id %}>{{ relationship.role.name }}</a>
+                </td>
+                <td class="name">
+                  <a href={% url 'contacts:select' id=relationship.contact.id %}>{{ relationship.contact.name }}</a>
+                </td>
+                <td class="phone1">{{ relationship.contact.phone1|default:'' }}</td>
+                <td class="email">{{ relationship.contact.email|default:'' }}</td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 {% endblock subcontent %}

@@ -13,35 +13,33 @@
       </button>
     </div>
   </div>
-  <div class="matter-section-data">
-    <div class="table-container">
-      <table id="proceedings" class="table">
-        {% if proceedings %}
+  <div class="table-container">
+    <table id="proceedings" class="table">
+      {% if proceedings %}
+        <tr>
+          <th>Date Filed</th>
+          <th>Case No</th>
+          <th>Forum and Description</th>
+          <th>Status</th>
+        </tr>
+        {% for proceeding in proceedings %}
           <tr>
-            <th>Date Filed</th>
-            <th>Case No</th>
-            <th>Forum and Description</th>
-            <th>Status</th>
+            <td class="date-filed">{{ proceeding.date_filed|date:'Y-m-d' }}</td>
+            <td class="case-no">{{ proceeding.case_number }}</td>
+            <td class="forum">
+              <a href="#"
+                 type="button"
+                 class="btn-icon"
+                 hx-get="/matters/{{ matter.id }}/proceedings/{{ proceeding.id }}/edit"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click"
+                 data-bs-toggle="modal"
+                 data-bs-target="#htmx-modal-container">{{ proceeding.forum }}</a>
+            </td>
+            <td class="status">{{ proceeding.status }}</td>
           </tr>
-          {% for proceeding in proceedings %}
-            <tr>
-              <td class="date-filed">{{ proceeding.date_filed|date:'Y-m-d' }}</td>
-              <td class="case-no">{{ proceeding.case_number }}</td>
-              <td class="forum">
-                <a href="#"
-                   type="button"
-                   class="btn-icon"
-                   hx-get="/matters/{{ matter.id }}/proceedings/{{ proceeding.id }}/edit"
-                   hx-target="#htmx-modal-container"
-                   hx-trigger="click"
-                   data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container">{{ proceeding.forum }}</a>
-              </td>
-              <td class="status">{{ proceeding.status }}</td>
-            </tr>
-          {% endfor %}
-        {% endif %}
-      </table>
-    </div>
+        {% endfor %}
+      {% endif %}
+    </table>
   </div>
 {% endblock subcontent %}

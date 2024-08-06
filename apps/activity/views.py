@@ -528,7 +528,7 @@ def export(request):
 
 
 @login_required
-def toggle_entries(request, entry_type):
+def set_tab(request, tab):
     filter = Filter(request)
-    filter.toggle_entries(request, entry_type)
+    filter.set_tab(request, tab)
     return redirect("/activity")

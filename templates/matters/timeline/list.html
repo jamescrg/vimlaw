@@ -13,35 +13,33 @@
       </button>
     </div>
   </div>
-  <div class="matter-section-data">
-    <div class="table-container">
-      <table id="facts" class="table">
-        {% if facts %}
+  <div class="table-container">
+    <table id="facts" class="table">
+      {% if facts %}
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Citation</th>
+        </tr>
+        {% for fact in facts %}
           <tr>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Citation</th>
+            <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">{{ fact.date|date:'Y-m-d' }}</td>
+            <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+              <a href="#"
+                 type="button"
+                 class="btn-icon"
+                 hx-get="/matters/{{ matter.id }}/timeline/{{ fact.id }}/edit"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click"
+                 data-bs-toggle="modal"
+                 data-bs-target="#htmx-modal-container">{{ fact.description }}</a>
+            </td>
+            <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+              {{ fact.citation|slice:":25"|default_if_none:'' }}
+            </td>
           </tr>
-          {% for fact in facts %}
-            <tr>
-              <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">{{ fact.date|date:'Y-m-d' }}</td>
-              <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-                <a href="#"
-                   type="button"
-                   class="btn-icon"
-                   hx-get="/matters/{{ matter.id }}/timeline/{{ fact.id }}/edit"
-                   hx-target="#htmx-modal-container"
-                   hx-trigger="click"
-                   data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container">{{ fact.description }}</a>
-              </td>
-              <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
-                {{ fact.citation|slice:":25"|default_if_none:'' }}
-              </td>
-            </tr>
-          {% endfor %}
-        {% endif %}
-      </table>
-    </div>
+        {% endfor %}
+      {% endif %}
+    </table>
   </div>
 {% endblock subcontent %}

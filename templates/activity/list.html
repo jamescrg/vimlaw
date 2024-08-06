@@ -1,35 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
   {% load humanize %}
-  <div class="filter-bar">
-    <div class="section-title-left">
-      <a {% if filter.show_time %}class="strong"{% endif %}
-         href="{% url 'activity:toggle-entries' entry_type='time' %}">Time</a>
-      <a {% if filter.show_expenses %}class="strong"{% endif %}
-         href="{% url 'activity:toggle-entries' entry_type='expense' %}">Expenses</a>
-      <span class="filter-bar-divider">|</span>
-      <a href={% url 'activity:filter-quick' quick_filter='unbilled' %}>Unbilled</a>
-      <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
-    </div>
-    <div class="section-title-right">
-      <button hx-get="{% url 'activity:filter' %}"
-              hx-target="#htmx-modal-container"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
-        <i class="bi bi-funnel"></i>
-      </button>
-      <a href={% url 'activity:export' %}>
-        <i class="bi bi-cloud-download"></i>
-      </a>
-    </div>
+  <div class="sub-nav">
+    <ul>
+      <li {% if filter.tab == "time" %}class="active"{% endif %}>
+        <a href="{% url 'activity:set-tab' tab='time' %}">Time</a>
+      </li>
+      <li {% if filter.tab == "expenses" %}class="active"{% endif %}>
+        <a href="{% url 'activity:set-tab' tab='expenses' %}">Expenses</a>
+      </li>
+    </ul>
   </div>
-  {% if filter.show_time %}
-    <div class="section">
+  {% if filter.tab == "time" %}
+    <div class="section sub-section">
       <div class="section-title">
         <div class="section-title-left">
           <h1>Time</h1>
+          <div class="section-title-left-right">
+            <a href={% url 'activity:filter-quick' quick_filter='unbilled' %}>Unbilled</a>
+            <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
+          </div>
         </div>
         <div class="section-title-right">
+          <a href={% url 'activity:export' %}>
+            <i class="bi bi-cloud-download"></i>
+          </a>
+          <button hx-get="{% url 'activity:filter' %}"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-funnel"></i>
+          </button>
           <button hx-get="/activity/add"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
@@ -104,13 +105,23 @@
       </div>
     </div>
   {% endif %}
-  {% if filter.show_expenses %}
-    <div class="section">
+  {% if filter.tab == "expenses" %}
+    <div class="section sub-section">
       <div class="section-title">
         <div class="section-title-left">
           <h1>Expenses</h1>
+          <div class="section-title-left-right">
+            <a href={% url 'activity:filter-quick' quick_filter='unbilled' %}>Unbilled</a>
+            <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
+          </div>
         </div>
         <div class="section-title-right">
+          <button hx-get="{% url 'activity:filter' %}"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-funnel"></i>
+          </button>
           <button data-bs-toggle="modal"
                   hx-target="#htmx-modal-container"
                   data-bs-target="#htmx-modal-container"
