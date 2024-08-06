@@ -6,8 +6,7 @@ logger = logging.getLogger(__name__)
 
 class Filter:
     values = {
-        "show_time": True,
-        "show_expenses": True,
+        "tab": "time",
         "date_from": None,
         "date_to": None,
         "firm": "Campbell & Brannon",
@@ -82,6 +81,7 @@ class Filter:
 
     def matter(self, request, id):
         new_values = {
+            "tab": "time",
             "date_from": None,
             "date_to": None,
             "firm": None,
@@ -96,14 +96,6 @@ class Filter:
             request.session["activity_filter"][key] = val
         request.session.modified = True
 
-    def toggle_entries(self, request, entry_type):
-        if entry_type == "time":
-            val = "show_time"
-        else:
-            val = "show_expenses"
-        if self.values[val]:
-            self.values[val] = False
-        else:
-            self.values[val] = True
-        request.session["activity_filter"][val] = self.values[val]
+    def set_tab(self, request, tab):
+        request.session["activity_filter"]["tab"] = tab
         request.session.modified = True

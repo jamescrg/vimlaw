@@ -90,17 +90,6 @@ Matter List
 Matter Details
 ========================================================================== */
 
-.matter-section {
-  background: var(--warm-gray-100);
-  border-radius: 0 0 3px 3px;
-  margin-bottom: 1rem;
-  padding: 1rem;
-}
-
-.matter-section-data {
-  margin-left: 1rem;
-}
-
 .matter-data {
   display: flex;
   align-items: flex-start;

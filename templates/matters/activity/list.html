@@ -8,19 +8,17 @@
       <a href={% url 'activity:filter-matter' id=matter.id %}>View All Activity</a>
     </div>
   </div>
-  <div class="matter-section-data">
-    <div class="table-container">
-      <table id="activity" class="table">
-        {% if entries %}
-          {% for entry in entries %}
-            <tr>
-              <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
-              <td>{{ entry.actions }}</td>
-              <td class="hours">{{ entry.hours }}</td>
-            </tr>
-          {% endfor %}
-        {% endif %}
-      </table>
-    </div>
+  <div class="table-container">
+    <table id="activity" class="table">
+      {% if entries %}
+        {% for entry in entries %}
+          <tr>
+            <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
+            <td>{{ entry.actions }}</td>
+            <td class="hours">{{ entry.hours }}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
   </div>
 {% endblock subcontent %}

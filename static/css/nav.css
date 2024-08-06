@@ -1,9 +1,4 @@
 
-
-.nav-container {
-  /* align-items: end; */
-}
-
 .navbar {
 	background: var(--warm-gray-350);
   padding-bottom: 0;
@@ -25,9 +20,6 @@
 .nav-active {
   background: var(--warm-gray-300);
   border-radius: 5px 5px 0 0;
-}
-
-.nav-active a {
 }
 
 .navbar-toggler-icon {

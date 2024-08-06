@@ -13,34 +13,32 @@
       </button>
     </div>
   </div>
-  <div class="matter-section-data">
-    <div class="table-container">
-      <table id="events" class="table">
-        <tr>
-          <th>Date</th>
-          <th>Party</th>
-          <th>Description</th>
-          <th>Status</th>
-        </tr>
-        {% if pending_events %}
-          {% for event in pending_events %}
-            <tr>
-              <td class="date">{{ event.date|date:"Y-m-d" }}</td>
-              <td class="party">{{ event.party }}</td>
-              <td class="description {% if event.date < third_day and event.status == 'Pending' %}soon{% endif %}">
-                <a href="#"
-                   hx-get="/events/{{ event.id }}/edit/matters"
-                   hx-target="#htmx-modal-container"
-                   hx-trigger="click"
-                   data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container">{{ event.description }}</a>
-              </td>
-              <td class="status">{{ event.status }}</td>
-            </tr>
-          {% endfor %}
-        {% endif %}
-      </table>
-    </div>
+  <div class="table-container">
+    <table id="events" class="table">
+      <tr>
+        <th>Date</th>
+        <th>Party</th>
+        <th>Description</th>
+        <th>Status</th>
+      </tr>
+      {% if pending_events %}
+        {% for event in pending_events %}
+          <tr>
+            <td class="date">{{ event.date|date:"Y-m-d" }}</td>
+            <td class="party">{{ event.party }}</td>
+            <td class="description {% if event.date < third_day and event.status == 'Pending' %}soon{% endif %}">
+              <a href="#"
+                 hx-get="/events/{{ event.id }}/edit/matters"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click"
+                 data-bs-toggle="modal"
+                 data-bs-target="#htmx-modal-container">{{ event.description }}</a>
+            </td>
+            <td class="status">{{ event.status }}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
   </div>
   {% if past_events %}
     <br />
@@ -49,32 +47,30 @@
         <h2>Past Events</h2>
       </div>
     </div>
-    <div class="matter-section-data">
-      <div class="table-container">
-        <table id="events" class="table">
+    <div class="table-container">
+      <table id="events" class="table">
+        <tr>
+          <th>Date</th>
+          <th>Party</th>
+          <th>Description</th>
+          <th>Status</th>
+        </tr>
+        {% for event in past_events %}
           <tr>
-            <th>Date</th>
-            <th>Party</th>
-            <th>Description</th>
-            <th>Status</th>
+            <td class="date">{{ event.date|date:"Y-m-d" }}</td>
+            <td class="party">{{ event.party }}</td>
+            <td class="description {% if event.date < third_day and event.status == 'Pending' %}soon{% endif %}">
+              <a href="#"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click"
+                 data-bs-toggle="modal"
+                 data-bs-target="#htmx-modal-container"
+                 hx-get="{% url 'events:edit-origin' id=event.id origin='matters' %}">{{ event.description }}</a>
+            </td>
+            <td class="status">{{ event.status }}</td>
           </tr>
-          {% for event in past_events %}
-            <tr>
-              <td class="date">{{ event.date|date:"Y-m-d" }}</td>
-              <td class="party">{{ event.party }}</td>
-              <td class="description {% if event.date < third_day and event.status == 'Pending' %}soon{% endif %}">
-                <a href="#"
-                   hx-target="#htmx-modal-container"
-                   hx-trigger="click"
-                   data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container"
-                   hx-get="{% url 'events:edit-origin' id=event.id origin='matters' %}">{{ event.description }}</a>
-              </td>
-              <td class="status">{{ event.status }}</td>
-            </tr>
-          {% endfor %}
-        {% endif %}
-      </table>
-    </div>
+        {% endfor %}
+      {% endif %}
+    </table>
   </div>
 {% endblock subcontent %}

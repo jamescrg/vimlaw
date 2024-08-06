@@ -101,6 +101,10 @@ def index(request):
 
     summary = calculate_summary(entries, expense_entries)
 
+    tab = "time"
+    if request.session.get("activity-tab"):
+        tab = request.session["activity-tab"]
+
     context = {
         "page": "activity",
         "edit": False,
@@ -109,6 +113,7 @@ def index(request):
         "expense_entries": expense_entries,
         "number_entries": number_entries,
         "summary": summary,
+        "tab": tab,
     }
 
     return render(request, "activity/list.html", context)
@@ -528,7 +533,7 @@ def export(request):
 
 
 @login_required
-def toggle_entries(request, entry_type):
-    filter = Filter(request)
-    filter.toggle_entries(request, entry_type)
+def set_tab(request, tab):
+    request.session["activity-tab"] = tab
+    request.session.modified = True
     return redirect("/activity")
