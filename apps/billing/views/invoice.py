@@ -15,6 +15,7 @@ from apps.activity.models import ExpenseEntry, TimeEntry
 from apps.billing.forms import InvoiceForm
 from apps.billing.forms.invoice import EditInvoiceForm
 from apps.billing.functions import generate_invoice
+from apps.billing.functions.calculate_inv_amount import calculate_inv_amount
 from apps.billing.models import Invoice
 from apps.matters.models import Matter
 
@@ -85,24 +86,9 @@ class AddInvoiceView(LoginRequiredMixin, FormView):
 
         invoice.save()
 
-        time_entry_amount = (
-            TimeEntry.objects.filter(invoice=invoice)
-            .annotate(
-                fee=ExpressionWrapper(
-                    F("hours") * F("rate"), output_field=DecimalField()
-                )
-            )
-            .aggregate(total_fee=Sum("fee"))["total_fee"]
-        ) or 0
+        calc = calculate_inv_amount(invoice)
+        invoice.amount = calc["invoice_total"]
 
-        expense_amount = (
-            ExpenseEntry.objects.filter(invoice=invoice).aggregate(
-                total_amount=Sum("amount")
-            )["total_amount"]
-            or 0
-        )
-
-        invoice.amount = (time_entry_amount + expense_amount) - invoice.discount
         invoice.save()
 
         return super().form_valid(form)
