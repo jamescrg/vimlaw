@@ -31,6 +31,14 @@
         </li>
       {% endif %}
       {% if invoice.status == 'SENT' %}
+        <li>
+          <form hx-post="{% url 'billing:status-update' invoice.id %}"
+                hx-target="#invoice-{{ invoice.id }}"
+                hx-swap="outerHTML">
+            <input type="hidden" name="status" value="PAID">
+            <button type="submit" class="dropdown-item">Mark as Paid</button>
+          </form>
+        </li>
         <li class="dropdown-item invoice-delete pointer"
             hx-get="{% url 'billing:cancel-invoice' invoice.id %}"
             hx-target="#htmx-modal-container"
