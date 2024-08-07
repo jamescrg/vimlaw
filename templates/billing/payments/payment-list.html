@@ -2,7 +2,7 @@
   <div class="section">
     <div class="section-title">
       <div class="section-title-left">
-        <h1>Invoices</h1>
+        <h1>Payments</h1>
       </div>
       <div class="section-title-right">
         <button type="button"
@@ -17,17 +17,17 @@
       </div>
     </div>
     <div class="table-container">
-      <table class="table invoices">
+      <table class="table">
         <tr>
           <th class="number">Number</th>
-          <th class="date">Issue Date</th>
-          <th class="status">Status</th>
           <th>Matter</th>
+          <th class="date">Date</th>
+          <th>Payment method</th>
+          <th>Payment detail</th>
           <th class="amount">Amount</th>
-          <th class="pdf">PDF</th>
         </tr>
-        {% for invoice in invoices %}
-          {% include "billing/invoice-row.html" %}
+        {% for payment in payments %}
+          {% include "billing/payments/payment-row.html" %}
         {% endfor %}
       </table>
     </div>

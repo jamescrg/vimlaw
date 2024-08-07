@@ -2,19 +2,21 @@ from django.urls import path
 
 from apps.billing.views.invoice import (
     AddInvoiceView,
+    BillingIndex,
     CancelInvoiceView,
     DeleteInvoiceView,
     EditInvoiceView,
     InvoiceDetailView,
     InvoicePDFView,
     StatusUpdateView,
-    index,
+    set_tab,
 )
 
 app_name = "billing"
 
 urlpatterns = [
-    path("billing/", index, name="billing"),
+    path("billing/", BillingIndex.as_view(), name="billing"),
+    path("billing/set-tab/<str:tab>/", set_tab, name="set-tab"),
     path(
         "billing/invoice-detail/<int:pk>/preview/",
         InvoiceDetailView.as_view(),

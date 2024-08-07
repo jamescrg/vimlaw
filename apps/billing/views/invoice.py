@@ -17,23 +17,42 @@ from apps.billing.forms.invoice import EditInvoiceForm
 from apps.billing.functions import generate_invoice
 from apps.billing.functions.calculate_inv_amount import calculate_inv_amount
 from apps.billing.models import Invoice
+from apps.billing.models.payment import Payment
 from apps.matters.models import Matter
 
 
+class BillingIndex(LoginRequiredMixin, TemplateView):
+    template_name = "billing/billing-main.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["page"] = "billing"
+
+        tab = self.request.session.get("billing_tab", "invoices")
+        context["tab"] = tab
+
+        if tab == "invoices":
+            invoices = (
+                Invoice.objects.all()
+                .select_related("matter", "created_by")
+                .order_by("-created_at")
+            )
+            context["invoices"] = invoices
+
+        elif tab == "payments":
+            payments = Payment.objects.all().select_related("matter")
+            context["payments"] = payments
+
+        return context
+
+
 @login_required
-def index(request):
-    invoices = (
-        Invoice.objects.all()
-        .select_related("matter", "created_by")
-        .order_by("-created_at")
-    )
+def set_tab(request, tab):
+    request.session["billing_tab"] = tab
+    request.session.modified = True
 
-    context = {
-        "page": "billing",
-        "invoices": invoices,
-    }
-
-    return render(request, "billing/list.html", context)
+    return redirect("/billing")
 
 
 class InvoiceDetailView(LoginRequiredMixin, DetailView):

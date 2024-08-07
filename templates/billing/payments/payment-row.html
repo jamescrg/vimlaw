@@ -1,0 +1,11 @@
+{% load humanize %}
+<tr id="payment-{{ payment.id }}">
+  <td class="number">{{ payment.id }}</td>
+  <td>
+    <a href={% url 'matters:detail' id=payment.matter.id %}>{{ payment.matter.name|slice:":20" }}</a>
+  </td>
+  <td class="date">{{ payment.date|date:"Y-m-d" }}</td>
+  <td>{{ payment.method_display }}</td>
+  <td>{{ payment.detail|default:"" }}</td>
+  <td class="amount">${{ payment.amount|floatformat:2|intcomma }}</td>
+</tr>
