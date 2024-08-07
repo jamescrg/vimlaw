@@ -87,3 +87,7 @@ Cancel Form
     margin-top: 0.5rem;
     width: 100%;
 }
+
+.dropdown-item:active {
+    background-color: var(--warm-gray-350);
+}
