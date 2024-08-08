@@ -1,6 +1,13 @@
 {% load humanize %}
 <tr id="payment-{{ payment.id }}">
-  <td class="number">{{ payment.id }}</td>
+  <td class="number">
+    <a class="pointer"
+       hx-get="{% url 'billing:edit-payment' payment.id %}"
+       hx-target="#htmx-modal-container"
+       hx-trigger="click"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">{{ payment.id }}</a>
+  </td>
   <td>
     <a href={% url 'matters:detail' id=payment.matter.id %}>{{ payment.matter.name|slice:":20" }}</a>
   </td>
@@ -8,4 +15,21 @@
   <td>{{ payment.method_display }}</td>
   <td>{{ payment.detail|default:"" }}</td>
   <td class="amount">${{ payment.amount|floatformat:2|intcomma }}</td>
+  <td class="actions">
+    <a href="#"
+       class="pointer"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+      <i class="bi bi-three-dots-vertical"></i>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
+      <li>
+        <form hx-delete="{% url 'billing:delete-payment' payment.id %}"
+              hx-target="#payment-list"
+              hx-swap="outerHTML">
+          <button type="submit" class="dropdown-item invoice-delete">Delete</button>
+        </form>
+      </li>
+    </ul>
+  </td>
 </tr>
