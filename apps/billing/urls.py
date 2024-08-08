@@ -11,6 +11,7 @@ from apps.billing.views.invoice import (
     StatusUpdateView,
     set_tab,
 )
+from apps.billing.views.payment import AddPaymentView
 
 app_name = "billing"
 
@@ -44,4 +45,5 @@ urlpatterns = [
         CancelInvoiceView.as_view(),
         name="cancel-invoice",
     ),
+    path("billing/add-payment/", AddPaymentView.as_view(), name="add-payment"),
 ]
