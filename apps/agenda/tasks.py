@@ -11,7 +11,7 @@ def get_table_data(request):
 
     table_data = {}
 
-    tasks = Task.objects.all().order_by("-tatus", "description")
+    tasks = Task.objects.all().order_by("-status", "description")
 
     filter = Filter(request).values
 
