@@ -83,6 +83,8 @@ def test_filter_update(client):
         "user": "All",
         "show_time": 1,
         "show_expenses": 1,
+        "tab": "time",
+        "invoiced": "Yes",
     }
     response = client.post("/activity/filter/update", data)
     assert response.status_code == 302

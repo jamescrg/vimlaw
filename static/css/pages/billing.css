@@ -2,8 +2,6 @@
 List View
 ========================================================================== */
 
-.invoices {
-}
 
 .invoices .number,
 .invoices .matter,
@@ -86,4 +84,17 @@ Cancel Form
 .cancel-form input {
     margin-top: 0.5rem;
     width: 100%;
+}
+
+.dropdown-item:active {
+    background-color: var(--warm-gray-350);
+}
+
+/* ==========================================================================
+Payments
+========================================================================== */
+
+.actions {
+    width: 5%;
+    text-align: center;
 }
