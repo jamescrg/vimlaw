@@ -11,7 +11,12 @@ from apps.billing.views.invoice import (
     StatusUpdateView,
     set_tab,
 )
-from apps.billing.views.payment import AddPaymentView, EditPaymentView, delete_payment
+from apps.billing.views.payment import (
+    AddPaymentView,
+    EditPaymentView,
+    PaymentFilterView,
+    delete_payment,
+)
 
 app_name = "billing"
 
@@ -55,5 +60,10 @@ urlpatterns = [
         "billing/edit-payment/<int:pk>/",
         EditPaymentView.as_view(),
         name="edit-payment",
+    ),
+    path(
+        "billing/payment-filter/",
+        PaymentFilterView.as_view(),
+        name="filter-payments",
     ),
 ]

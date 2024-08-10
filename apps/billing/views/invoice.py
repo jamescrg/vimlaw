@@ -12,6 +12,7 @@ from django.urls import reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
 
 from apps.activity.models import ExpenseEntry, TimeEntry
+from apps.billing.filters.payment import PaymentFilter
 from apps.billing.forms import InvoiceForm
 from apps.billing.forms.invoice import EditInvoiceForm
 from apps.billing.functions import generate_invoice
@@ -41,7 +42,14 @@ class BillingIndex(LoginRequiredMixin, TemplateView):
             context["invoices"] = invoices
 
         elif tab == "payments":
-            payments = Payment.objects.all().select_related("matter")
+            filter_data = self.request.session.get("payment_filter", None)
+
+            if filter_data:
+                filter = PaymentFilter(filter_data)
+                payments = filter.qs
+            else:
+                payments = Payment.objects.all().select_related("matter")
+
             context["payments"] = payments
 
         return context

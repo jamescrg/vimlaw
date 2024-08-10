@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView, TemplateView, View
 
+from apps.billing.filters.payment import PaymentFilter
 from apps.billing.forms.payment import PaymentForm
 from apps.billing.models.invoice import Invoice
 from apps.billing.models.payment import Payment
@@ -87,7 +88,11 @@ class EditPaymentView(LoginRequiredMixin, FormView):
         )
 
         payment = Payment.objects.get(pk=self.kwargs["pk"])
-        matters = Matter.objects.filter(id__in=matter_ids)
+
+        # Make sure the pre-edit matter is included, even if it doesn't have an invoice
+        matters = Matter.objects.filter(id__in=matter_ids) | Matter.objects.filter(
+            id=payment.matter.id
+        )
 
         form.fields["matter"].queryset = matters
 
@@ -106,3 +111,24 @@ class EditPaymentView(LoginRequiredMixin, FormView):
         form.save()
 
         return super().form_valid(form)
+
+
+class PaymentFilterView(LoginRequiredMixin, View):
+    template_name = "billing/payments/payment-filter.html"
+
+    def get_filter(self, request):
+        filter_data = request.session.get("payment_filter", request.POST)
+
+        return PaymentFilter(
+            filter_data, queryset=Payment.objects.all().select_related("matter")
+        )
+
+    def get(self, request):
+        filter = self.get_filter(request)
+
+        return render(request, self.template_name, {"filter": filter})
+
+    def post(self, request):
+        request.session["payment_filter"] = request.POST
+
+        return redirect("billing:billing")
