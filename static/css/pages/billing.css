@@ -98,3 +98,7 @@ Payments
     width: 5%;
     text-align: center;
 }
+
+.payment-filter select {
+    min-width: 95%;
+}
