@@ -12,6 +12,7 @@ from django.urls import reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
 
 from apps.activity.models import ExpenseEntry, TimeEntry
+from apps.billing.filters.invoice import InvoiceFilter
 from apps.billing.filters.payment import PaymentFilter
 from apps.billing.forms import InvoiceForm
 from apps.billing.forms.invoice import EditInvoiceForm
@@ -34,11 +35,18 @@ class BillingIndex(LoginRequiredMixin, TemplateView):
         context["tab"] = tab
 
         if tab == "invoices":
-            invoices = (
-                Invoice.objects.all()
-                .select_related("matter", "created_by")
-                .order_by("-created_at")
-            )
+            filter_data = self.request.session.get("invoice_filter", None)
+
+            if filter_data:
+                filter = InvoiceFilter(filter_data)
+                invoices = filter.qs
+            else:
+                invoices = (
+                    Invoice.objects.all()
+                    .select_related("matter", "created_by")
+                    .order_by("-created_at")
+                )
+
             context["invoices"] = invoices
 
         elif tab == "payments":
@@ -266,3 +274,27 @@ class StatusUpdateView(LoginRequiredMixin, View):
             return redirect("billing:billing")
 
         return render(request, "billing/invoice-row.html", {"invoice": invoice})
+
+
+class InvoiceFilterView(LoginRequiredMixin, View):
+    template_name = "billing/invoice-filter.html"
+
+    def get_filter(self, request):
+        filter_data = request.session.get("invoice_filter", request.POST)
+
+        return InvoiceFilter(
+            filter_data,
+            queryset=Invoice.objects.all()
+            .select_related("matter", "created_by")
+            .order_by("-created_at"),
+        )
+
+    def get(self, request):
+        filter = self.get_filter(request)
+
+        return render(request, self.template_name, {"filter": filter})
+
+    def post(self, request):
+        request.session["invoice_filter"] = request.POST
+
+        return redirect("billing:billing")

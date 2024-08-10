@@ -7,6 +7,15 @@
       <div class="section-title-right">
         <button type="button"
                 class="btn-icon"
+                hx-get="{% url 'billing:filter-invoices' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-funnel"></i>
+        </button>
+        <button type="button"
+                class="btn-icon"
                 hx-get="{% url 'billing:add-invoice' %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"

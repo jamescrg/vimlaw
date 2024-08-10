@@ -7,6 +7,7 @@ from apps.billing.views.invoice import (
     DeleteInvoiceView,
     EditInvoiceView,
     InvoiceDetailView,
+    InvoiceFilterView,
     InvoicePDFView,
     StatusUpdateView,
     set_tab,
@@ -65,5 +66,10 @@ urlpatterns = [
         "billing/payment-filter/",
         PaymentFilterView.as_view(),
         name="filter-payments",
+    ),
+    path(
+        "billing/invoice-filter/",
+        InvoiceFilterView.as_view(),
+        name="filter-invoices",
     ),
 ]
