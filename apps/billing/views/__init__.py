@@ -5,11 +5,12 @@ from .invoice import (
     DeleteInvoiceView,
     EditInvoiceView,
     InvoiceDetailView,
+    InvoiceFilterView,
     InvoicePDFView,
     StatusUpdateView,
     set_tab,
 )
-from .payment import AddPaymentView, EditPaymentView, delete_payment
+from .payment import AddPaymentView, EditPaymentView, PaymentFilterView, delete_payment
 
 __all__ = [
     "BillingIndex",
@@ -20,8 +21,10 @@ __all__ = [
     "StatusUpdateView",
     "CancelInvoiceView",
     "EditInvoiceView",
+    "InvoiceFilterView",
     "set_tab",
     "AddPaymentView",
     "delete_payment",
     "EditPaymentView",
+    "PaymentFilterView",
 ]
