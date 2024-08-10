@@ -9,7 +9,7 @@ from .invoice import (
     StatusUpdateView,
     set_tab,
 )
-from .payment import AddPaymentView, EditPaymentView, delete_payment
+from .payment import AddPaymentView, EditPaymentView, PaymentFilterView, delete_payment
 
 __all__ = [
     "BillingIndex",
@@ -24,4 +24,5 @@ __all__ = [
     "AddPaymentView",
     "delete_payment",
     "EditPaymentView",
+    "PaymentFilterView",
 ]
