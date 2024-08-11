@@ -12,11 +12,11 @@
         {{ form.as_p }}
         <div class="flex-container login-bottom">
           <div class="login-bottom-right">
-            <a href={% url 'accounts:password_reset' %}>Forgot Password?</a>
-            {#<a href={% url 'accounts:signup' %}>Don't have an account? Sign up</a>#}
+            <button type="submit">Submit</button>
           </div>
           <div class="login-bottom-left">
-            <button type="submit">Submit</button>
+            <a href={% url 'accounts:password_reset' %}>Forgot Password?</a>
+            {#<a href={% url 'accounts:signup' %}>Don't have an account? Sign up</a>#}
           </div>
         </div>
       </form>

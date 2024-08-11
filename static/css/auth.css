@@ -21,7 +21,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 80%;
     width: 100%;
 }
 
@@ -79,15 +79,15 @@ body {
 
 .account-form ul li {
     color: var(--red-600);
-    margin-top: 5px;
     font-size: 0.8rem;
+    margin-top: 5px;
 }
 
 .account-form button {
-    background: var(--warm-gray-600);
+    background: var(--lime-900);
     border: solid 1px var(--warm-gray-600);
-    color: var(--warm-gray-200);
     border-radius: 5px;
+    color: var(--warm-gray-200);
     font-size: 1em;
     margin-top: 40px;
     padding: 7px 10px;
