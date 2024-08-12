@@ -1,8 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
-from django.views.generic import FormView, TemplateView, View
 
 from apps.billing.filters.payment import PaymentFilter
 from apps.billing.forms.payment import PaymentForm
@@ -11,27 +8,18 @@ from apps.billing.models.payment import Payment
 from apps.matters.models import Matter
 
 
-class PaymentIndex(LoginRequiredMixin, TemplateView):
-    template_name = "billing/payment-list.html"
+@login_required
+def add_payment(request):
+    if request.method == "POST":
+        form = PaymentForm(request.POST)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.save()
 
-        payments = Payment.objects.all().select_related("matter")
-        context["payments"] = payments
-
-        return context
-
-
-class AddPaymentView(LoginRequiredMixin, FormView):
-    template_name = "billing/payments/form-payment.html"
-    form_class = PaymentForm
-    success_url = reverse_lazy("billing:billing")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        form = self.form_class()
+            return redirect("billing:billing")
+    else:
+        form = PaymentForm()
 
         matter_ids = (
             Invoice.objects.filter(status="SENT")
@@ -42,15 +30,7 @@ class AddPaymentView(LoginRequiredMixin, FormView):
         matters = Matter.objects.filter(id__in=matter_ids)
         form.fields["matter"].queryset = matters
 
-        context["form"] = form
-
-        return context
-
-    def form_valid(self, form):
-        payment = form.save(commit=False)
-        payment.save()
-
-        return super().form_valid(form)
+    return render(request, "billing/payments/form-payment.html", {"form": form})
 
 
 @login_required
@@ -63,72 +43,58 @@ def delete_payment(request, pk):
     return render(request, "billing/payments/payment-list.html", {"payments": payments})
 
 
-class EditPaymentView(LoginRequiredMixin, FormView):
-    template_name = "billing/payments/edit-payment.html"
-    form_class = PaymentForm
+@login_required
+def edit_payment(request, pk):
+    payment = Payment.objects.get(pk=pk)
 
-    def get_success_url(self):
-        return reverse_lazy("billing:billing")
+    if request.method == "POST":
+        form = PaymentForm(request.POST, instance=payment)
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
+        if form.is_valid():
+            form.save()
 
-        payment = Payment.objects.get(pk=self.kwargs["pk"])
-        kwargs["instance"] = payment
-
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        form = self.form_class()
+            return redirect("billing:billing")
+    else:
+        form = PaymentForm(instance=payment)
 
         matter_ids = Invoice.objects.filter(status="SENT").values_list(
             "matter", flat=True
         )
 
-        payment = Payment.objects.get(pk=self.kwargs["pk"])
-
-        # Make sure the pre-edit matter is included, even if it doesn't have an invoice
         matters = Matter.objects.filter(id__in=matter_ids) | Matter.objects.filter(
             id=payment.matter.id
         )
 
         form.fields["matter"].queryset = matters
-
         form.fields["matter"].initial = payment.matter
         form.fields["date"].initial = payment.date
         form.fields["amount"].initial = payment.amount
         form.fields["payment_method"].initial = payment.payment_method
         form.fields["detail"].initial = payment.detail
 
-        context["form"] = form
-        context["payment"] = payment
-
-        return context
-
-    def form_valid(self, form):
-        form.save()
-
-        return super().form_valid(form)
+    return render(
+        request,
+        "billing/payments/edit-payment.html",
+        {"form": form, "payment": payment},
+    )
 
 
-class PaymentFilterView(LoginRequiredMixin, View):
-    template_name = "billing/payments/payment-filter.html"
-
-    def get_filter(self, request):
+@login_required
+def payment_filter(request):
+    def get_filter(request):
         filter_data = request.session.get("payment_filter", request.POST)
 
         return PaymentFilter(
             filter_data, queryset=Payment.objects.all().select_related("matter")
         )
 
-    def get(self, request):
-        filter = self.get_filter(request)
-
-        return render(request, self.template_name, {"filter": filter})
-
-    def post(self, request):
+    if request.method == "POST":
         request.session["payment_filter"] = request.POST
 
         return redirect("billing:billing")
+    else:
+        filter = get_filter(request)
+
+        return render(
+            request, "billing/payments/payment-filter.html", {"filter": filter}
+        )

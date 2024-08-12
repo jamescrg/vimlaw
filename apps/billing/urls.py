@@ -1,57 +1,56 @@
 from django.urls import path
 
+from apps.billing.views.billing import billing_index, set_tab
 from apps.billing.views.invoice import (
-    AddInvoiceView,
-    BillingIndex,
-    CancelInvoiceView,
-    DeleteInvoiceView,
-    EditInvoiceView,
-    InvoiceDetailView,
-    InvoiceFilterView,
-    InvoicePDFView,
-    StatusUpdateView,
-    set_tab,
+    add_invoice,
+    cancel_invoice,
+    delete_invoice,
+    edit_invoice,
+    invoice_detail,
+    invoice_filter,
+    invoice_pdf,
+    status_update,
 )
 from apps.billing.views.payment import (
-    AddPaymentView,
-    EditPaymentView,
-    PaymentFilterView,
+    add_payment,
     delete_payment,
+    edit_payment,
+    payment_filter,
 )
 
 app_name = "billing"
 
 urlpatterns = [
-    path("billing/", BillingIndex.as_view(), name="billing"),
+    path("billing/", billing_index, name="billing"),
     path("billing/set-tab/<str:tab>/", set_tab, name="set-tab"),
     path(
         "billing/invoice-detail/<int:pk>/preview/",
-        InvoiceDetailView.as_view(),
+        invoice_detail,
         name="invoice-detail",
     ),
-    path("billing/add-invoice/", AddInvoiceView.as_view(), name="add-invoice"),
+    path("billing/add-invoice/", add_invoice, name="add-invoice"),
     path(
         "billing/edit-invoice/<int:pk>/",
-        EditInvoiceView.as_view(),
+        edit_invoice,
         name="edit-invoice",
     ),
     path(
         "billing/delete-invoice/<int:pk>/",
-        DeleteInvoiceView.as_view(),
+        delete_invoice,
         name="delete-invoice",
     ),
-    path("billing/invoice-pdf/<int:pk>/", InvoicePDFView.as_view(), name="invoice-pdf"),
+    path("billing/invoice-pdf/<int:pk>/", invoice_pdf, name="invoice-pdf"),
     path(
         "billing/status-update/<int:pk>/",
-        StatusUpdateView.as_view(),
+        status_update,
         name="status-update",
     ),
     path(
         "billing/cancel-invoice/<int:pk>/",
-        CancelInvoiceView.as_view(),
+        cancel_invoice,
         name="cancel-invoice",
     ),
-    path("billing/add-payment/", AddPaymentView.as_view(), name="add-payment"),
+    path("billing/add-payment/", add_payment, name="add-payment"),
     path(
         "billing/delete-payment/<int:pk>/",
         delete_payment,
@@ -59,17 +58,17 @@ urlpatterns = [
     ),
     path(
         "billing/edit-payment/<int:pk>/",
-        EditPaymentView.as_view(),
+        edit_payment,
         name="edit-payment",
     ),
     path(
         "billing/payment-filter/",
-        PaymentFilterView.as_view(),
+        payment_filter,
         name="filter-payments",
     ),
     path(
         "billing/invoice-filter/",
-        InvoiceFilterView.as_view(),
+        invoice_filter,
         name="filter-invoices",
     ),
 ]
