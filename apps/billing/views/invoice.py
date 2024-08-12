@@ -3,103 +3,59 @@ from datetime import datetime
 from itertools import chain
 
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.base import ContentFile
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
 
 from apps.activity.models import ExpenseEntry, TimeEntry
 from apps.billing.filters.invoice import InvoiceFilter
-from apps.billing.filters.payment import PaymentFilter
 from apps.billing.forms import InvoiceForm
 from apps.billing.forms.invoice import EditInvoiceForm
 from apps.billing.functions import generate_invoice
 from apps.billing.functions.calculate_inv_amount import calculate_inv_amount
 from apps.billing.models import Invoice
-from apps.billing.models.payment import Payment
 from apps.matters.models import Matter
 
 
-class BillingIndex(LoginRequiredMixin, TemplateView):
-    template_name = "billing/billing-main.html"
+@login_required
+def invoice_detail(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    context = {
+        "page": "billing",
+        "file_url": reverse_lazy("billing:invoice-pdf", kwargs={"pk": invoice.pk}),
+        "invoice": invoice,
+    }
 
-        context["page"] = "billing"
-
-        tab = self.request.session.get("billing_tab", "invoices")
-        context["tab"] = tab
-
-        if tab == "invoices":
-            filter_data = self.request.session.get("invoice_filter", None)
-
-            if filter_data:
-                filter = InvoiceFilter(filter_data)
-                invoices = filter.qs
-            else:
-                invoices = (
-                    Invoice.objects.all()
-                    .select_related("matter", "created_by")
-                    .order_by("-created_at")
-                )
-
-            context["invoices"] = invoices
-
-        elif tab == "payments":
-            filter_data = self.request.session.get("payment_filter", None)
-
-            if filter_data:
-                filter = PaymentFilter(filter_data)
-                payments = filter.qs
-            else:
-                payments = Payment.objects.all().select_related("matter")
-
-            context["payments"] = payments
-
-        return context
+    return render(request, "billing/preview/preview.html", context)
 
 
 @login_required
-def set_tab(request, tab):
-    request.session["billing_tab"] = tab
-    request.session.modified = True
+def add_invoice(request):
+    if request.method == "POST":
+        form = InvoiceForm(request.POST)
 
-    return redirect("/billing")
+        if form.is_valid():
+            invoice = form.save(commit=False)
 
+            invoice.created_by = request.user
+            invoice.save()
 
-class InvoiceDetailView(LoginRequiredMixin, DetailView):
-    model = Invoice
-    template_name = "billing/preview/preview.html"
+            calc = calculate_inv_amount(invoice)
+            invoice.amount = calc["invoice_total"]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+            invoice.save()
 
-        context["page"] = "billing"
-
-        context["file_url"] = reverse_lazy(
-            "billing:invoice-pdf", kwargs={"pk": self.object.pk}
-        )
-
-        return context
-
-
-class AddInvoiceView(LoginRequiredMixin, FormView):
-    template_name = "billing/form-invoice.html"
-    form_class = InvoiceForm
-    success_url = reverse_lazy("billing:billing")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        form = self.form_class()
+            return redirect("billing:billing")
+    else:
+        form = InvoiceForm()
 
         entries = TimeEntry.objects.filter(
             invoice__isnull=True, entered=0, date__gte="2024-01-01"
         ).values_list("matter", flat=True)
+
         expenses = ExpenseEntry.objects.filter(
             invoice__isnull=True, entered=0
         ).values_list("matter", flat=True)
@@ -111,141 +67,103 @@ class AddInvoiceView(LoginRequiredMixin, FormView):
         )
         form.fields["matter"].queryset = matter_list
 
-        context["form"] = form
-
-        return context
-
-    def form_valid(self, form):
-        invoice = form.save(commit=False)
-        invoice.created_by = self.request.user
-
-        invoice.save()
-
-        calc = calculate_inv_amount(invoice)
-        invoice.amount = calc["invoice_total"]
-
-        invoice.save()
-
-        return super().form_valid(form)
+    return render(request, "billing/form-invoice.html", {"form": form})
 
 
-class EditInvoiceView(LoginRequiredMixin, FormView):
-    template_name = "billing/edit-invoice.html"
-    form_class = EditInvoiceForm
+@login_required
+def edit_invoice(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
 
-    def get_success_url(self):
-        return reverse_lazy("billing:invoice-detail", kwargs={"pk": self.kwargs["pk"]})
+    if request.method == "POST":
+        form = EditInvoiceForm(request.POST, instance=invoice)
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
+        if form.is_valid():
+            form.save()
 
-        invoice = Invoice.objects.get(pk=self.kwargs["pk"])
-        kwargs["instance"] = invoice
+            date_limit = form.cleaned_data["date_limit"]
 
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        invoice = Invoice.objects.get(pk=self.kwargs["pk"])
-        context["invoice"] = invoice
-
-        return context
-
-    def form_valid(self, form):
-        form.save()
-
-        invoice = Invoice.objects.get(pk=self.kwargs["pk"])
-
-        date_limit = form.cleaned_data["date_limit"]
-
-        # Remove entries that are not within the new date limit
-        TimeEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
-            invoice=None
-        )
-
-        ExpenseEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
-            invoice=None
-        )
-
-        time_entry_amount = (
-            TimeEntry.objects.filter(invoice=invoice)
-            .annotate(
-                fee=ExpressionWrapper(
-                    F("hours") * F("rate"), output_field=DecimalField()
-                )
+            TimeEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
+                invoice=None
             )
-            .aggregate(total_fee=Sum("fee"))["total_fee"]
-        ) or 0
 
-        expense_amount = (
-            ExpenseEntry.objects.filter(invoice=invoice).aggregate(
-                total_amount=Sum("amount")
-            )["total_amount"]
-            or 0
-        )
+            ExpenseEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
+                invoice=None
+            )
 
-        invoice.amount = (time_entry_amount + expense_amount) - invoice.discount
-        invoice.save()
-
-        return super().form_valid(form)
-
-
-class DeleteInvoiceView(LoginRequiredMixin, DeleteView):
-    model = Invoice
-    success_url = reverse_lazy("billing:billing")
-
-    def get(self, request, *args, **kwargs):
-        return self.delete(request, *args, **kwargs)
-
-
-class CancelInvoiceView(LoginRequiredMixin, TemplateView):
-    template_name = "billing/confirm-cancel.html"
-    success_url = reverse_lazy("billing:billing")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        invoice = Invoice.objects.get(pk=self.kwargs["pk"])
-        context["invoice"] = invoice
-
-        return context
-
-
-class InvoicePDFView(LoginRequiredMixin, DetailView):
-    model = Invoice
-
-    def get(self, request, *args, **kwargs):
-        invoice = self.get_object()
-
-        if invoice.status == "CANCELED":
-            with open(invoice.pdf_file.path, "rb") as pdf:
-                response = HttpResponse(pdf.read(), content_type="application/pdf")
-                response["Content-Disposition"] = (
-                    f'filename="Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
+            time_entry_amount = (
+                TimeEntry.objects.filter(invoice=invoice)
+                .annotate(
+                    fee=ExpressionWrapper(
+                        F("hours") * F("rate"), output_field=DecimalField()
+                    )
                 )
-        else:
-            file = generate_invoice(invoice, request)
+                .aggregate(total_fee=Sum("fee"))["total_fee"]
+            ) or 0
 
-            with open(file.name, "rb") as pdf:
-                response = HttpResponse(pdf.read(), content_type="application/pdf")
-                response["Content-Disposition"] = (
-                    f'filename="Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
-                )
+            expense_amount = (
+                ExpenseEntry.objects.filter(invoice=invoice).aggregate(
+                    total_amount=Sum("amount")
+                )["total_amount"]
+                or 0
+            )
 
-            os.unlink(file.name)
+            invoice.amount = (time_entry_amount + expense_amount) - invoice.discount
+            invoice.save()
 
-        return response
+            return redirect("billing:invoice-detail", pk=pk)
+    else:
+        form = EditInvoiceForm(instance=invoice)
+
+    return render(
+        request, "billing/edit-invoice.html", {"form": form, "invoice": invoice}
+    )
 
 
-class StatusUpdateView(LoginRequiredMixin, View):
-    model = Invoice
+@login_required
+def delete_invoice(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    invoice.delete()
 
-    def post(self, request, *args, **kwargs):
-        invoice = self.model.objects.get(pk=kwargs["pk"])
+    return redirect("billing:billing")
+
+
+@login_required
+def cancel_invoice(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    return render(request, "billing/confirm-cancel.html", {"invoice": invoice})
+
+
+@login_required
+def invoice_pdf(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    if invoice.status == "CANCELED":
+        with open(invoice.pdf_file.path, "rb") as pdf:
+            response = HttpResponse(pdf.read(), content_type="application/pdf")
+            response["Content-Disposition"] = (
+                f'filename="Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
+            )
+    else:
+        file = generate_invoice(invoice, request)
+
+        with open(file.name, "rb") as pdf:
+            response = HttpResponse(pdf.read(), content_type="application/pdf")
+            response["Content-Disposition"] = (
+                f'filename="Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
+            )
+
+        os.unlink(file.name)
+
+    return response
+
+
+@login_required
+def status_update(request, pk):
+    if request.method == "POST":
+        invoice = get_object_or_404(Invoice, pk=pk)
 
         invoice_status = request.POST["status"]
-
         invoice.status = invoice_status
 
         if invoice_status == "APPROVED":
@@ -265,10 +183,10 @@ class StatusUpdateView(LoginRequiredMixin, View):
                     f"Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf",
                     ContentFile(pdf.read()),
                 )
-
             invoice.save()
 
             TimeEntry.objects.filter(invoice=invoice).update(invoice=None)
+
             ExpenseEntry.objects.filter(invoice=invoice).update(invoice=None)
 
             return redirect("billing:billing")
@@ -276,25 +194,20 @@ class StatusUpdateView(LoginRequiredMixin, View):
         return render(request, "billing/invoice-row.html", {"invoice": invoice})
 
 
-class InvoiceFilterView(LoginRequiredMixin, View):
-    template_name = "billing/invoice-filter.html"
+@login_required
+def invoice_filter(request):
+    if request.method == "POST":
+        request.session["invoice_filter"] = request.POST
 
-    def get_filter(self, request):
-        filter_data = request.session.get("invoice_filter", request.POST)
+        return redirect("billing:billing")
+    else:
+        filter_data = request.session.get("invoice_filter", {})
 
-        return InvoiceFilter(
+        filter = InvoiceFilter(
             filter_data,
             queryset=Invoice.objects.all()
             .select_related("matter", "created_by")
             .order_by("-created_at"),
         )
 
-    def get(self, request):
-        filter = self.get_filter(request)
-
-        return render(request, self.template_name, {"filter": filter})
-
-    def post(self, request):
-        request.session["invoice_filter"] = request.POST
-
-        return redirect("billing:billing")
+        return render(request, "billing/invoice-filter.html", {"filter": filter})
