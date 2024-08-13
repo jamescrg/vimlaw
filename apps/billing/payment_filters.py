@@ -1,6 +1,6 @@
 import django_filters
 
-from apps.billing.models.payment import PAYMENT_METHOD_CHOICES, Payment
+from apps.billing.payment_models import PAYMENT_METHOD_CHOICES, Payment
 from apps.matters.models import Matter
 
 

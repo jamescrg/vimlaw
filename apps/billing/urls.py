@@ -1,7 +1,7 @@
 from django.urls import path
 
-from apps.billing.views.billing import billing_index, set_tab
-from apps.billing.views.invoice import (
+from apps.billing.billing_views import billing_index, set_tab
+from apps.billing.invoice_views import (
     add_invoice,
     cancel_invoice,
     delete_invoice,
@@ -11,7 +11,7 @@ from apps.billing.views.invoice import (
     invoice_pdf,
     status_update,
 )
-from apps.billing.views.payment import (
+from apps.billing.payment_views import (
     add_payment,
     delete_payment,
     edit_payment,
