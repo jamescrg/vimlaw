@@ -1,6 +1,6 @@
 import django_filters
 
-from apps.billing.invoice_models import INVOICE_STATUS, Invoice
+from apps.billing.models_invoice import INVOICE_STATUS, Invoice
 from apps.matters.models import Matter
 
 

@@ -1,10 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from apps.billing.invoice_models import Invoice
-from apps.billing.payment_filters import PaymentFilter
-from apps.billing.payment_forms import PaymentForm
-from apps.billing.payment_models import Payment
+from apps.billing.filters_payment import PaymentFilter
+from apps.billing.forms_payment import PaymentForm
+from apps.billing.models_invoice import Invoice
+from apps.billing.models_payment import Payment
 from apps.matters.models import Matter
 
 

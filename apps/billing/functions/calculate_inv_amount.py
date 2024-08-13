@@ -1,7 +1,7 @@
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 
 from apps.activity.models import ExpenseEntry, TimeEntry
-from apps.billing.invoice_models import Invoice
+from apps.billing.models_invoice import Invoice
 
 
 def calculate_inv_amount(invoice: Invoice):

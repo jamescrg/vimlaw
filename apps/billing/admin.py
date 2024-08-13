@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from apps.billing.invoice_models import Invoice
-from apps.billing.payment_models import Payment
+from apps.billing.models_invoice import Invoice
+from apps.billing.models_payment import Payment
 
 
 class InvoiceAdmin(admin.ModelAdmin):
