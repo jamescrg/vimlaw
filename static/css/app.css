@@ -67,6 +67,12 @@ a:hover {
     margin: 3px 0 0 1rem;
 }
 
+.activity-row-filter {
+    display: flex;
+    margin: 3px 0 0 1.5rem;
+    gap: 1.5rem;
+}
+
 .section-title-left-right a,
 .section-title-left-right button {
     margin-left: 1rem;

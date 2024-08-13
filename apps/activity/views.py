@@ -105,6 +105,13 @@ def index(request):
     if request.session.get("activity-tab"):
         tab = request.session["activity-tab"]
 
+    users = CustomUser.objects.all()
+
+    activity_filter = request.session.get("activity_filter", {})
+
+    user_id = activity_filter.get("user")
+    user_id = int(user_id) if user_id not in (None, "All") else None
+
     context = {
         "page": "activity",
         "edit": False,
@@ -114,6 +121,8 @@ def index(request):
         "number_entries": number_entries,
         "summary": summary,
         "tab": tab,
+        "users": users,
+        "user_id": user_id,
     }
 
     return render(request, "activity/list.html", context)

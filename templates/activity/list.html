@@ -16,9 +16,18 @@
       <div class="section-title">
         <div class="section-title-left">
           <h1>Time</h1>
-          <div class="section-title-left-right">
+          <div class="activity-row-filter">
             <a href={% url 'activity:filter-quick' quick_filter='unbilled' %}>Unbilled</a>
             <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
+            <form action="{% url 'activity:filter-update' %}" method="post">
+              {% csrf_token %}
+              <select name="user" onchange="this.form.submit()">
+                <option value="All">All</option>
+                {% for user in users %}
+                  <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
+                {% endfor %}
+              </select>
+            </form>
           </div>
         </div>
         <div class="section-title-right">
@@ -110,9 +119,18 @@
       <div class="section-title">
         <div class="section-title-left">
           <h1>Expenses</h1>
-          <div class="section-title-left-right">
+          <div class="activity-row-filter">
             <a href={% url 'activity:filter-quick' quick_filter='unbilled' %}>Unbilled</a>
             <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
+            <form action="{% url 'activity:filter-update' %}" method="post">
+              {% csrf_token %}
+              <select name="user" onchange="this.form.submit()">
+                <option value="All">All</option>
+                {% for user in users %}
+                  <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
+                {% endfor %}
+              </select>
+            </form>
           </div>
         </div>
         <div class="section-title-right">

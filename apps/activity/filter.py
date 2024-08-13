@@ -66,12 +66,21 @@ class Filter:
         filter_values = request.POST.copy()
 
         # cast the show_x values to integers that will evaluate to True/False
-        filter_values["show_time"] = int(filter_values["show_time"])
-        filter_values["show_expenses"] = int(filter_values["show_expenses"])
+        filter_values["show_time"] = (
+            int(filter_values["show_time"]) if "show_time" in filter_values else 0
+        )
+        filter_values["show_expenses"] = (
+            int(filter_values["show_expenses"])
+            if "show_expenses" in filter_values
+            else 0
+        )
 
         # save in session
         for key in self.values.keys():
-            request.session["activity_filter"][key] = filter_values[key]
+            if key in filter_values:
+                request.session["activity_filter"][key] = filter_values[key]
+            else:
+                request.session["activity_filter"][key] = self.values[key]
         request.session.modified = True
 
     def set_quick_filter(self, request, quick_filter):
@@ -91,5 +100,6 @@ class Filter:
             "order": "date, descending",
         }
         for key, val in new_values.items():
-            request.session["activity_filter"][key] = val
+            if key in self.values:
+                request.session["activity_filter"][key] = val
         request.session.modified = True
