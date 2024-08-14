@@ -19,6 +19,12 @@ Time entry form
 Time entry list table
 ========================================================================== */
 
+.select-user {
+  background-color: var(--warm-gray-150);
+  border: none;
+  padding: 6px;
+}
+
 .activity {
     width: 100%;
 }
