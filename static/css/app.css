@@ -414,3 +414,36 @@ Sub nav
   border-radius: 3px 3px 0 0;
   padding-bottom: 0.
 }
+
+/* ==========================================================================
+Pagination
+========================================================================== */
+
+.pagination-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.pagination-row p {
+    margin: 0;
+}
+
+.pagination-row a {
+    background: var(--warm-gray-150);
+    border: none;
+    border-radius: 4px;
+    color: var(--lime-800);
+    padding: 0.3rem 0.7rem;
+
+    &:hover {
+        background: var(--warm-gray-150);
+        color: var(--lime-800);
+    }
+}
+
+.pagination-disabled {
+    pointer-events: none;
+}

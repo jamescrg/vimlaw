@@ -1,0 +1,15 @@
+{% if pagination.paginator.num_pages > 1 %}
+  <div class="pagination-row">
+    <a href="?page=1"
+       class="btn btn-primary {% if not pagination.has_previous %}pagination-disabled{% endif %}">
+    << </a>
+    <a href="?page={% if pagination.has_previous %}{{ pagination.previous_page_number }}{% else %}1{% endif %}"
+       class="btn btn-primary {% if not pagination.has_previous %}pagination-disabled{% endif %}">
+    < </a>
+    <p>Page {{ pagination.number }} of {{ pagination.paginator.num_pages }}</p>
+    <a href="?page={% if pagination.has_next %}{{ pagination.next_page_number }}{% else %}{{ pagination.paginator.num_pages }}{% endif %}"
+       class="btn btn-primary {% if not pagination.has_next %}pagination-disabled{% endif %}">></a>
+    <a href="?page={{ pagination.paginator.num_pages }}"
+       class="btn btn-primary {% if not pagination.has_next %}pagination-disabled{% endif %}">>></a>
+  </div>
+{% endif %}

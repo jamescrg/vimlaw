@@ -3,6 +3,7 @@ from datetime import date
 from dateutil import parser
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 import config.appdata as appdata
@@ -112,12 +113,18 @@ def index(request):
     user_id = activity_filter.get("user")
     user_id = int(user_id) if user_id not in (None, "All") else None
 
+    page = request.GET.get("page")
+
+    pagination = Paginator(
+        entries if tab == "time" else expense_entries, per_page=10
+    ).get_page(page)
+
     context = {
         "page": "activity",
         "edit": False,
         "filter": filter,
-        "entries": entries,
-        "expense_entries": expense_entries,
+        "objects": pagination.object_list,
+        "pagination": pagination,
         "number_entries": number_entries,
         "summary": summary,
         "tab": tab,
