@@ -21,7 +21,7 @@
             <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
             <form action="{% url 'activity:filter-update' %}" method="post">
               {% csrf_token %}
-              <select name="user" onchange="this.form.submit()">
+              <select class="select-user" name="user" onchange="this.form.submit()">
                 <option value="All">All</option>
                 {% for user in users %}
                   <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
