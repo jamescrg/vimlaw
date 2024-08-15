@@ -6,16 +6,19 @@
       <div class="section-title-left-right"
            hx-target="#tasks-table"
            hx-swap="#outerHTML">
-        <button hx-get="filter/all">All</button>
-        <button hx-get="filter/james">James</button>
-        <button hx-get="filter/lexi">Lexi</button>
+        <a href="{% url 'agenda:filter-user' 'All' %}">All</a>
+        <a href="{% url 'agenda:filter-user' 'james' %}">james</a>
+        <a href="{% url 'agenda:filter-user' 'lexi' %}">lexi</a>
       </div>
     </div>
     <div class="section-title-right"
          hx-target="#tasks-table"
          hx-swap="#outerHTML">
-      <button hx-get="/agenda/filter"
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'agenda:filter-tasks' %}"
               hx-target="#htmx-modal-container"
+              hx-trigger="click"
               data-bs-toggle="modal"
               data-bs-target="#htmx-modal-container">
         <i class="bi bi-funnel"></i>

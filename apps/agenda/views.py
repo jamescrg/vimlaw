@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
 from apps.agenda.filter import Filter
+from apps.agenda.filter_tasks import TasksFilter
 from apps.agenda.forms import TaskForm
 from apps.agenda.models import Task
 from apps.agenda.tasks import get_table_data
@@ -155,42 +156,33 @@ def delete(request, id):
 
 
 @login_required
-def filter(request):
-    filter = Filter(request).values
-    if filter["matter"]:
-        filter["matter"] = int(filter["matter"])
-    matters = Matter.objects.filter(status="Open").order_by("name")
-    users = CustomUser.objects.all().order_by("username")
-    context = {
-        "page": "agenda",
-        "filter": filter,
-        "matters": matters,
-        "users": users,
-    }
-    return render(request, "agenda/filter.html", context)
+def task_filter(request, user=None):
+    if request.method == "POST":
+        request.session["task_filter"] = request.POST
+
+        return redirect("agenda:agenda")
+    else:
+        filter_data = request.session.get("task_filter", {})
+
+        filter = TasksFilter(filter_data, queryset=Task.objects.all())
+
+        return render(request, "agenda/task-filter.html", {"filter": filter})
 
 
 @login_required
-def filter_update(request):
-    filter = Filter(request)
-    filter.update(request)
-    return redirect("/agenda")
+def quick_filter_user(request, user):
+    filter_data = request.session.get("task_filter", {})
 
+    if user == "All":
+        filter_data["user"] = None
+    else:
+        user_id = CustomUser.objects.get(username=user).id
 
-@login_required
-def filter_quick(request, quick_filter):
-    filter = Filter(request)
-    filter.set_quick_filter(request, quick_filter)
-    context = get_table_data(request)
-    return render(request, "agenda/tasks-table.html", context)
+        filter_data["user"] = user_id
 
+    request.session["task_filter"] = filter_data
 
-@login_required
-def filter_sort(request, new_field):
-    filter = Filter(request)
-    filter.sort(request, new_field)
-    context = get_table_data(request)
-    return render(request, "agenda/tasks-table.html", context)
+    return redirect("agenda:agenda")
 
 
 @login_required
