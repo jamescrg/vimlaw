@@ -15,12 +15,11 @@ from apps.matters.views import (
     detail,
     edit,
     edit_description,
-    filter,
-    filter_quick,
-    filter_update,
     index,
-    order,
+    matter_filter,
+    order_by,
     print,
+    quick_filter_status,
 )
 
 app_name = "matters"
@@ -32,14 +31,6 @@ urlpatterns = [
     path("matters/add", add, name="add"),
     path("matters/<int:id>/edit", edit, name="edit"),
     path("matters/<int:id>/delete", delete, name="delete"),
-    path("matters/filter", filter, name="filter"),
-    path("matters/filter/update", filter_update, name="filter-update"),
-    path(
-        "matters/filter/<str:quick_filter>",
-        filter_quick,
-        name="filter-quick",
-    ),
-    path("matters/sort/<str:order>", order, name="sort-by"),
     path(
         "matters/<int:id>/edit-description",
         edit_description,
@@ -167,5 +158,20 @@ urlpatterns = [
         "matters/<int:id>/timeline/print",
         matters_timeline.print,
         name="timeline-print",
+    ),
+    path(
+        "matters/filter-matters",
+        matter_filter,
+        name="filter-matters",
+    ),
+    path(
+        "matters/order-by/<str:order>",
+        order_by,
+        name="order-by",
+    ),
+    path(
+        "matters/filter-status/<str:status>/",
+        quick_filter_status,
+        name="filter-status",
     ),
 ]
