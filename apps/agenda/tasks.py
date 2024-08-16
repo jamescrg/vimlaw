@@ -1,3 +1,5 @@
+from django.core.paginator import Paginator
+
 from apps.accounts.models import CustomUser
 from apps.agenda.filter_tasks import TasksFilter
 from apps.agenda.models import Task
@@ -15,7 +17,12 @@ def get_table_data(request):
     else:
         tasks = Task.objects.all().order_by("-status", "description")
 
-    table_data["tasks"] = tasks
+    page = request.GET.get("page")
+
+    pagination = Paginator(tasks, per_page=10).get_page(page)
+
+    table_data["pagination"] = pagination
+    table_data["tasks"] = pagination.object_list
     table_data["matters"] = Matter.objects.filter(status="Open").order_by("name")
     table_data["users"] = CustomUser.objects.all().order_by("username")
 
