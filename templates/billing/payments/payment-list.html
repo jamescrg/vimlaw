@@ -36,10 +36,11 @@
           <th class="amount">Amount</th>
           <th class="actions">Actions</th>
         </tr>
-        {% for payment in payments %}
+        {% for payment in objects %}
           {% include "billing/payments/payment-row.html" %}
         {% endfor %}
       </table>
+      {% include "pagination.html" %}
     </div>
   </div>
 {% endblock content %}

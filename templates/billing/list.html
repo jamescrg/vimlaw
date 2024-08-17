@@ -35,10 +35,11 @@
           <th class="amount">Amount</th>
           <th class="pdf">PDF</th>
         </tr>
-        {% for invoice in invoices %}
+        {% for invoice in objects %}
           {% include "billing/invoice-row.html" %}
         {% endfor %}
       </table>
+      {% include "pagination.html" %}
     </div>
   </div>
 {% endblock content %}

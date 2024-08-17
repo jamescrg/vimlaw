@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 
 from apps.billing.filters_invoice import InvoiceFilter
@@ -28,8 +29,6 @@ def billing_index(request):
                 .order_by("-created_at")
             )
 
-        context["invoices"] = invoices
-
     elif tab == "payments":
         filter_data = request.session.get("payment_filter", None)
 
@@ -39,7 +38,14 @@ def billing_index(request):
         else:
             payments = Payment.objects.all().select_related("matter")
 
-        context["payments"] = payments
+    page = request.GET.get("page")
+
+    pagination = Paginator(
+        invoices if tab == "invoices" else payments, per_page=10
+    ).get_page(page)
+
+    context["pagination"] = pagination
+    context["objects"] = pagination.object_list
 
     return render(request, "billing/billing-main.html", context)
 
