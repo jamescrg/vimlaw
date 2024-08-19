@@ -95,9 +95,6 @@ def index(request):
             entries = entries.order_by("-date", "-id")
             expense_entries = expense_entries.order_by("-date", "-id")
 
-    entries = entries[:1000]
-    expense_entries = expense_entries[:1000]
-
     number_entries = entries.count()
 
     summary = calculate_summary(entries, expense_entries)
