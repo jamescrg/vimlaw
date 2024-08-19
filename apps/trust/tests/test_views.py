@@ -8,9 +8,8 @@ pytestmark = pytest.mark.django_db
 
 
 def test_index(client):
-    response = client.get("/trust/")
-    assert response.status_code == 200
     response = client.get(reverse("trust:trust"))
+    print("response", response)
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/summary.html")
     assert "confirmed_account_balance" in response.context

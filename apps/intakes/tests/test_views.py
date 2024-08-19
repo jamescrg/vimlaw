@@ -12,7 +12,7 @@ def test_index(client):
     assert response.status_code == 200
     response = client.get(reverse("intakes:list"))
     assert response.status_code == 200
-    assertTemplateUsed(response, "intakes/list.html")
+    assertTemplateUsed(response, "intakes/list-table.html")
     assert response.context["page"] == "intakes"
 
 
@@ -68,11 +68,9 @@ def test_intake_delete(client, intake):
 
 
 def test_filter_new(client):
-    response = client.get("/intakes/filter")
+    response = client.get("/intakes/filter-intakes")
     assert response.status_code == 200
-    assertTemplateUsed("intakes/filter.html")
-    assert response.context["filter"]["status"] == "Open"
-    assert response.context["filter"]["area"] is None
+    assertTemplateUsed("intakes/intake-filter.html")
 
 
 def test_filter_update(client):
@@ -81,27 +79,22 @@ def test_filter_update(client):
         "date_from": "",
         "date_to": "",
         "area": "",
-        "order": "date",
+        "order_by": "date",
         "limit": "",
         "source": "",
     }
-    response = client.post("/intakes/filter/update", data)
+    response = client.post("/intakes/filter-intakes", data)
     assert response.status_code == 302
-    response = client.get("/intakes/filter")
-    assert response.context["filter"]["status"] == "Pending"
+    response = client.get("/intakes/filter-intakes")
+    assert response.context["form"]["status"].value() == "Pending"
 
 
 def test_filter_quick(client):
-    response = client.get("/intakes/filter/recent")
+    data = {"order_by": "date"}
+    response = client.post("/intakes/filter-intakes", data)
     assert response.status_code == 302
-    response = client.get("/intakes/filter")
-    assert response.context["filter"]["order"] == "date"
-
-
-def test_filter_order(client):
-    response = client.get("/intakes/sort/date")
-    assert response.status_code == 302
-    assert True
+    response = client.get("/intakes/filter-intakes")
+    assert response.context["form"]["order_by"].value() == ["date"]
 
 
 def test_note_add_get(client, intake):

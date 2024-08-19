@@ -178,3 +178,7 @@ Task Edit Form
   max-width: 500px;
   width: 100%
 }
+
+.task-filter select {
+    min-width: 95%;
+}

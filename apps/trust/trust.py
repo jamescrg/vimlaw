@@ -108,7 +108,7 @@ def get_clients_asymmetric():
     if current_contacts:
         current_contacts = sorted(current_contacts, key=lambda k: k["name"])
 
-    return current_contacts or False
+    return current_contacts or []
 
 
 def get_pending_account_balance():

@@ -1,13 +1,12 @@
 from datetime import date
 
-from dateutil import parser
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
-import config.appdata as appdata
 from apps.contacts.models import Contact
 from apps.events.models import Event
-from apps.matters.filter import Filter
+from apps.matters.filter_matters import MatterFilter
 from apps.matters.forms import MatterForm
 from apps.matters.load_contacts import load_contacts
 from apps.matters.models import Fact, Matter, Proceeding, SettlementEntry
@@ -17,38 +16,24 @@ from apps.matters.models import Fact, Matter, Proceeding, SettlementEntry
 def index(request):
     request.session["matters-view"] = "list"
 
-    filter = Filter(request).values
+    filter_data = request.session.get("matter_filter", None)
 
-    if filter["date_from"]:
-        filter["date_from"] = parser.parse(filter["date_from"])
-
-    if filter["date_to"]:
-        filter["date_to"] = parser.parse(filter["date_to"])
-
-    matters = Matter.objects.all()
-
-    if filter["status"]:
-        matters = matters.filter(status=filter["status"])
-    if filter["date_from"]:
-        matters = matters.filter(date_start__gt=filter["date_from"])
-    if filter["date_to"]:
-        matters = matters.filter(date_start__lt=filter["date_to"])
-    if filter["firm"]:
-        matters = matters.filter(firm=filter["firm"])
-    if filter["area"]:
-        matters = matters.filter(practice_area=filter["area"])
-    if filter["order"] == "name":
-        matters = matters.order_by("name")
-    if filter["order"] == "description":
-        matters = matters.order_by("description")
+    if filter_data:
+        filter = MatterFilter(filter_data)
+        matters = filter.qs
+    else:
+        matters = Matter.objects.all()
 
     number_matters = matters.count()
 
+    page = request.GET.get("page")
+    pagination = Paginator(matters, per_page=10).get_page(page)
+
     context = {
         "page": "matters",
+        "pagination": pagination,
         "edit": False,
-        "filter": filter,
-        "matters": matters,
+        "matters": pagination.object_list,
         "number_matters": number_matters,
     }
 
@@ -56,38 +41,47 @@ def index(request):
 
 
 @login_required
-def filter(request):
-    filter = Filter(request).values
-    firms = appdata.firms
-    areas = appdata.areas
-    context = {
-        "page": "matters",
-        "filter": filter,
-        "firms": firms,
-        "areas": areas,
-    }
-    return render(request, "matters/filter.html", context)
+def matter_filter(request):
+    def get_filter(request):
+        filter_data = request.session.get("matter_filter", request.POST)
+
+        return MatterFilter(filter_data, queryset=Matter.objects.all())
+
+    if request.method == "POST":
+        request.session["matter_filter"] = request.POST
+
+        return redirect("matters:list")
+    else:
+        filter = get_filter(request)
+
+        return render(request, "matters/matter-filter.html", {"filter": filter})
 
 
 @login_required
-def filter_update(request):
-    filter = Filter(request)
-    filter.update(request)
-    return redirect("/matters")
+def quick_filter_status(request, status):
+    filter_data = request.session.get("matter_filter", {})
+
+    filter_data["status"] = status
+    request.session["matter_filter"] = filter_data
+
+    return redirect("matters:list")
 
 
 @login_required
-def filter_quick(request, quick_filter):
-    filter = Filter(request)
-    filter.set_quick_filter(request, quick_filter)
-    return redirect("/matters")
+def order_by(request, order):
+    filter_data = request.session.get("matter_filter", {})
 
+    current_order = filter_data.get("order_by", "")
 
-@login_required
-def order(request, order):
-    filter = Filter(request)
-    filter.order(request, order)
-    return redirect("/matters")
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session["matter_filter"] = filter_data
+
+    return redirect("matters:list")
 
 
 @login_required

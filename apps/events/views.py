@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from dateutil import parser
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 import apps.events.google as google
@@ -17,9 +18,14 @@ def index(request):
 
     events = Event.objects.filter(status="Pending").order_by("date")
 
+    page = request.GET.get("page")
+
+    pagination = Paginator(events, per_page=10).get_page(page)
+
     context = {
+        "pagination": pagination,
         "page": "events",
-        "events": events,
+        "events": pagination.object_list,
         "third_day": third_day,
     }
 

@@ -12,21 +12,14 @@ urlpatterns = [
     path("agenda/<int:id>/delete", views.delete, name="delete"),
     path("agenda/<int:id>/task-status", views.task_status, name="task-status"),
     path("agenda/<int:task_id>/change-user", views.change_user, name="change-user"),
-    path("agenda/filter", views.filter, name="filter"),
-    path("agenda/filter/update", views.filter_update, name="filter-update"),
     path(
-        "agenda/filter/sort/<str:new_field>",
-        views.filter_sort,
-        name="filter-sort",
+        "agenda/task-filter/",
+        views.task_filter,
+        name="filter-tasks",
     ),
     path(
-        "agenda/filter/<str:quick_filter>",
-        views.filter_quick,
-        name="filter-quick",
+        "agenda/filter-user/<str:user>/",
+        views.quick_filter_user,
+        name="filter-user",
     ),
-    # path(
-    #     "filter/matter/<int:id>",
-    #     views.filter_matter,
-    #     name="filter-matter",
-    # ),
 ]

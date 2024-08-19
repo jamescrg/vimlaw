@@ -1,47 +1,28 @@
-from dateutil import parser
+from django.core.paginator import Paginator
 
-from apps.intakes.filter import Filter
+from apps.intakes.filter_intakes import IntakeFilter
 from apps.intakes.models import Intake
 
 
 def get_table_data(request):
-
     table_data = {}
 
-    intakes = Intake.objects.all()
+    filter_data = request.session.get("intake_filter", None)
 
-    filter = Filter(request).values
-
-    if filter["date_from"]:
-        filter["date_from"] = parser.parse(filter["date_from"])
-
-    if filter["date_to"]:
-        filter["date_to"] = parser.parse(filter["date_to"])
-
-    intakes = Intake.objects.all()
-
-    if filter["status"]:
-        intakes = intakes.filter(status=filter["status"])
-    if filter["date_from"]:
-        intakes = intakes.filter(date__gt=filter["date_from"])
-    if filter["date_to"]:
-        intakes = intakes.filter(date__lt=filter["date_to"])
-    if filter["area"]:
-        intakes = intakes.filter(practice_area=filter["area"])
-    if filter["source"]:
-        intakes = intakes.filter(source=filter["source"])
-    if filter["order"] == "name":
-        intakes = intakes.order_by("name")
+    if filter_data:
+        filter = IntakeFilter(filter_data)
+        intakes = filter.qs
     else:
-        intakes = intakes.order_by("-date", "-id")
-
-    if filter["limit"]:
-        intakes = intakes[: filter["limit"]]
+        intakes = Intake.objects.all()
 
     number_intakes = intakes.count()
 
+    page = request.GET.get("page")
+    pagination = Paginator(intakes, per_page=10).get_page(page)
+
     table_data = {
-        "intakes": intakes,
+        "pagination": pagination,
+        "intakes": pagination.object_list,
         "number_intakes": number_intakes,
     }
 

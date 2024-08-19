@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 import apps.trust.trust as trust
@@ -30,9 +31,13 @@ def index(request):
     pending_account_balance = trust.get_pending_account_balance()
     confirmed_account_balance = trust.get_confirmed_account_balance()
 
+    page = request.GET.get("page")
+    pagination = Paginator(contacts, per_page=10).get_page(page)
+
     context = {
         "page": "trust",
-        "contacts": contacts,
+        "pagination": pagination,
+        "contacts": pagination.object_list,
         "pending_account_balance": pending_account_balance,
         "confirmed_account_balance": confirmed_account_balance,
     }

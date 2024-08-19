@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
-from apps.intakes.filter import Filter
+from apps.intakes.filter_intakes import IntakeFilter
 from apps.intakes.forms import IntakeForm, NoteForm
 from apps.intakes.intakes import get_table_data
 from apps.intakes.models import Intake, Note
@@ -17,60 +17,57 @@ from config.helpers import format_phone
 def index(request):
     request.session["intakes-view"] = "list"
 
-    context = {
-        "page": "intakes",
-    }
-
-    return render(request, "intakes/list.html", context)
-
-
-@login_required
-def list_data(request):
     table_data = get_table_data(request)
+
     context = table_data
+    context["page"] = "intakes"
+
     return render(request, "intakes/list-table.html", context)
 
 
 @login_required
-def filter(request):
-    filter = Filter(request).values
-    areas = [
-        "General",
-        "Boundary Dispute",
-        "Title Dispute",
-        "LLT - LL",
-        "LLT - T",
-        "Quiet Title",
-        "HOA",
-        "Home Defect",
-    ]
-    context = {
-        "page": "intakes",
-        "filter": filter,
-        "areas": areas,
-    }
-    return render(request, "intakes/filter.html", context)
+def intake_filter(request):
+    def get_filter(request):
+        filter_data = request.session.get("intake_filter", request.POST)
+
+        return IntakeFilter(filter_data, queryset=Intake.objects.all())
+
+    if request.method == "POST":
+        request.session["intake_filter"] = request.POST
+
+        return redirect("intakes:list")
+    else:
+        filter = get_filter(request)
+
+        return render(request, "intakes/intake-filter.html", {"filter": filter})
 
 
 @login_required
-def filter_update(request):
-    filter = Filter(request)
-    filter.update(request)
-    return redirect("/intakes")
+def quick_filter_status(request, status):
+    filter_data = request.session.get("intake_filter", {})
+
+    filter_data["status"] = status
+
+    request.session["intake_filter"] = filter_data
+
+    return redirect("intakes:list")
 
 
 @login_required
-def filter_quick(request, quick_filter):
-    filter = Filter(request)
-    filter.set_quick_filter(request, quick_filter)
-    return redirect("/intakes")
+def order_by(request, order):
+    filter_data = request.session.get("intake_filter", {})
 
+    current_order = filter_data.get("order_by", "")
 
-@login_required
-def order(request, order):
-    filter = Filter(request)
-    filter.order(request, order)
-    return redirect("/intakes")
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session["intake_filter"] = filter_data
+
+    return redirect("intakes:list")
 
 
 @login_required

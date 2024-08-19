@@ -90,12 +90,12 @@ a:hover {
     margin-bottom: 1rem;
 }
 
-.section > .list-group {
+.section>.list-group {
     border: none;
 }
 
 .sub-section {
-  border-radius: 0 0 3px 3px;
+    border-radius: 0 0 3px 3px;
 }
 
 /* ==========================================================================
@@ -123,7 +123,7 @@ strong {
 }
 
 .soon a {
-  color: var(--orange-800);
+    color: var(--orange-800);
 }
 
 .warn {
@@ -132,7 +132,7 @@ strong {
 }
 
 .urgent {
-  color: var(--orange-800);
+    color: var(--orange-800);
 }
 
 /* ==========================================================================
@@ -140,7 +140,7 @@ strong {
    ========================================================================== */
 
 .width100 {
-  width: 100%;
+    width: 100%;
 }
 
 .table {
@@ -259,7 +259,7 @@ li {
 }
 
 .dot-icon {
-  color: var(--warm-gray-350);
+    color: var(--warm-gray-350);
 }
 
 .btn-icon {
@@ -315,7 +315,7 @@ li {
 }
 
 .overflow-x {
-  overflow-x: auto;
+    overflow-x: auto;
 }
 
 /* ==========================================================================
@@ -367,11 +367,11 @@ li {
 }
 
 .filter-bar-divider {
-  padding: 0 1rem;
+    padding: 0 1rem;
 }
 
 .filter-bar:first-child {
-  padding-left: 0.5rem;
+    padding-left: 0.5rem;
 }
 
 .filter-bar-left {
@@ -381,38 +381,42 @@ li {
     align-items: center;
 }
 
+.filter select {
+    min-width: 95%;
+}
+
 /* ==========================================================================
 Sub nav
 ========================================================================== */
 
 .sub-nav {
-  background: var(--warm-gray-200);
-  border-radius: 3px 3px 0 0;
-  margin-bottom: 0;
-  padding: 10px 0;
+    background: var(--warm-gray-200);
+    border-radius: 3px 3px 0 0;
+    margin-bottom: 0;
+    padding: 10px 0;
 }
 
 .sub-nav ul {
-  border-radius: 3px 3px 0 0;
-  margin: 5px 0 0 0;
-  padding: 0;
+    border-radius: 3px 3px 0 0;
+    margin: 5px 0 0 0;
+    padding: 0;
 }
 
 .sub-nav li {
-  display: inline;
-  padding: 0.5rem 1rem 0.7rem 1rem;
+    display: inline;
+    padding: 0.5rem 1rem 0.7rem 1rem;
 }
 
 .sub-nav a {
-  color: var(--warm-gray-600);
-  margin: 0;
-  padding-bottom: 0.6rem;
+    color: var(--warm-gray-600);
+    margin: 0;
+    padding-bottom: 0.6rem;
 }
 
 .sub-nav .active {
-  background-color: var(--warm-gray-100);
-  border-radius: 3px 3px 0 0;
-  padding-bottom: 0.
+    background-color: var(--warm-gray-100);
+    border-radius: 3px 3px 0 0;
+    padding-bottom: 0.
 }
 
 /* ==========================================================================
