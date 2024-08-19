@@ -11,18 +11,18 @@
           <a href={% url 'intakes:quick-filter-status' 'Recent' %}>Recent</a>
         </div>
       </div>
-     <div class="section-title-right">
-      <button hx-get="/intakes/filter"
-              hx-target="#htmx-modal-container"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">Filter</button>
-      <button hx-get="/intakes/add"
-              hx-target="#htmx-modal-container"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
-        <i class="bi bi-plus-lg"></i>
-      </button>
-     </div>
+      <div class="section-title-right">
+        <button hx-get="/intakes/filter-intakes"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">Filter</button>
+        <button hx-get="/intakes/add"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </div>
     </div>
     <div class="table-container">
       <table id="intake-list" class="table">
