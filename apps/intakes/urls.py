@@ -24,7 +24,6 @@ urlpatterns = [
     path("intakes/add", add, name="add"),
     path("intakes/<int:id>/edit", edit, name="edit"),
     path("intakes/<int:id>/delete", delete, name="delete"),
-    path("intakes/filter", filter, name="filter"),
     path("intakes/<int:id>/add-note", add_note, name="add_note"),
     path("intakes/<int:id>/edit-note", edit_note, name="edit_note"),
     path("intakes/<int:id>/delete-note", delete_note, name="delete_note"),
