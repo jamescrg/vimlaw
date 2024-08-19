@@ -73,11 +73,9 @@ def test_delete(client, matter):
 
 
 def test_filter_new(client):
-    response = client.get("/matters/filter")
+    response = client.get("/matters/filter-matters")
     assert response.status_code == 200
-    assertTemplateUsed("matters/filter.html")
-    assert response.context["filter"]["status"] == "Open"
-    assert response.context["filter"]["area"] is None
+    assertTemplateUsed("matters/matter-filter.html")
 
 
 def test_filter_update(client):
@@ -87,25 +85,26 @@ def test_filter_update(client):
         "date_to": "",
         "firm": "Campbell & Brannon",
         "order": "name",
-        "area": "CB",
+        "practice_area": "CB",
     }
-    response = client.post("/matters/filter/update", data)
+    response = client.post("/matters/filter-matters", data)
     assert response.status_code == 302
-    response = client.get("/matters/filter")
-    assert response.context["filter"]["area"] == "CB"
+    response = client.get("/matters/filter-matters")
+    print(response.context["form"])
+    assert response.context["form"]["practice_area"].value() == "CB"
 
 
 def test_filter_quick(client):
-    response = client.get("/matters/filter/general")
-    assert response.status_code == 302
-    response = client.get("/matters/filter")
-    assert response.context["filter"]["area"] == "General"
+    response = client.get("/matters/filter-status/Open")
+    assert response.status_code == 301
+    response = client.get("/matters/")
+    assert all([matter.status == "Open" for matter in response.context["matters"]])
 
 
 def test_filter_order(client):
-    response = client.get("/matters/sort/random")
+    response = client.get("/matters/order-by/name")
     assert response.status_code == 302
-    assert client.session["matters_filter"]["order"] == "random"
+    assert client.session["matter_filter"]["order_by"] == "name"
 
 
 def test_edit_description(client, user, matter):
