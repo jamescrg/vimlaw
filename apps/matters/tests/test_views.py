@@ -90,7 +90,6 @@ def test_filter_update(client):
     response = client.post("/matters/filter-matters", data)
     assert response.status_code == 302
     response = client.get("/matters/filter-matters")
-    print(response.context["form"])
     assert response.context["form"]["practice_area"].value() == "CB"
 
 

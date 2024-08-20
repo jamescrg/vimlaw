@@ -53,48 +53,48 @@ textarea {
 }
 
 .add-event {
-  margin-top: 1rem;
-  border-top: solid 1px var(--warm-gray-200);
-  padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: solid 1px var(--warm-gray-200);
+    padding-top: 1rem;
 }
 
 
 .deadline-calculator-form {
-  margin-top: 1rem;
+    margin-top: 1rem;
 }
 
 .deadline-calculator-form label {
-  font-weight: 600;
-  margin-right: 1rem;
+    font-weight: 600;
+    margin-right: 1rem;
 }
 
 .deadline-calculator-results {
-  margin-top: 1rem;
+    margin-top: 1rem;
 }
 
 .days {
-  width: 50px;
+    width: 50px;
 }
 
 
 .numeric {
-  text-align: right;
-  width: 50px;
+    text-align: right;
+    width: 50px;
 }
 
 /* responsive layout */
 
 .form-responsive {
-  display: grid;
-  gap: 0.5rem;
+    display: grid;
+    gap: 0.5rem;
 }
 
-.form-responsive > label {
+.form-responsive>label {
     font-weight: 600;
 }
 
-.form-responsive > div {
-  margin-block-end: 1rem;
+.form-responsive>div {
+    margin-block-end: 1rem;
 }
 
 @media screen and (min-width: 800px) and (max-width: 1199px) {
@@ -132,30 +132,29 @@ Time entry form
 ------------------------------------------------*/
 
 #id_matter {
-  width: auto;
+    width: auto;
 }
 
 #id_actions {
-  height: 100px;
-  max-width: 500px;
-  vertical-align: top;
-  width: 100%;
+    max-width: 500px;
+    vertical-align: top;
+    width: 95%;
 }
 
 #id_hours {
-  max-width: 80px;
+    max-width: 80px;
 }
 
 #id_firm_rate {
-  max-width: 80px;
+    max-width: 80px;
 }
 
-#id_comp  {
-  max-width: 80px;
+#id_comp {
+    max-width: 80px;
 }
 
 #id_entered {
-  max-width: 80px;
+    max-width: 80px;
 }
 
 /*------------------------------------------------
@@ -163,5 +162,5 @@ Expense entry form
 ------------------------------------------------*/
 
 #id_amount {
-  max-width: 120px;
+    max-width: 120px;
 }
