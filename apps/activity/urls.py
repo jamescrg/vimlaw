@@ -9,6 +9,7 @@ from apps.activity.views import (
     edit_expense,
     expenses_filter,
     export,
+    filter_matter,
     index,
     quick_filter_today,
     quick_filter_unbilled,
@@ -74,6 +75,11 @@ urlpatterns = [
         "activity/quick-filter-user/<str:tab>",
         quick_filter_user,
         name="quick-filter-user",
+    ),
+    path(
+        "activity/filter-matter/<int:matter_id>/<str:tab>",
+        filter_matter,
+        name="filter-matter",
     ),
     path(
         "activity/filter-time-entries/", time_entry_filter, name="filter-time-entries"

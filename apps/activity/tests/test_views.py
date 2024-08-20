@@ -63,47 +63,42 @@ def test_delete(client, entry):
 
 
 def test_filter(client):
-    response = client.get("/activity/filter")
-    assert response.status_code == 200
-    assertTemplateUsed("activity/filter.html")
-    assert response.context["filter"]["matter"] is None
-    assert response.context["filter"]["firm"] == "Campbell & Brannon"
+    response = client.post("/activity/filter-time-entries/")
+    assert response.status_code == 302
+    assertTemplateUsed("activity/time-entries-filter.html")
 
 
 def test_filter_update(client):
     data = {
         "date_from": "",
         "date_to": "",
-        "firm": "Campbell & Brannon",
         "matter": "",
         "keyword": "",
         "comp": "",
-        "entered": "No",
-        "order": "date, descending",
-        "user": "All",
-        "show_time": 1,
-        "show_expenses": 1,
+        "entered": "0",
+        "order": "date",
+        "user": "",
         "tab": "time",
-        "invoiced": "Yes",
+        "invoiced": "1",
     }
-    response = client.post("/activity/filter/update", data)
+    response = client.post("/activity/filter-time-entries/", data)
     assert response.status_code == 302
-    response = client.get("/activity/filter")
-    assert response.context["filter"]["entered"] == "No"
+    response = client.get("/activity/filter-time-entries/")
+    assert response.context["form"]["entered"].value() == "0"
 
 
 def test_filter_quick(client):
-    response = client.get("/activity/filter/today")
+    response = client.get("/activity/quick-filter-today/time")
     assert response.status_code == 302
-    response = client.get("/activity/filter")
-    assert response.context["filter"]["date_from"] == date.today().strftime("%Y-%m-%d")
+    response = client.get("/activity/filter-time-entries/")
+    assert client.session["time_filter"]["date_min"] == date.today().isoformat()
 
 
 def test_filter_matter(client, matter):
-    response = client.get(f"/activity/filter/matter/{matter.id}")
+    response = client.get(f"/activity/filter-matter/{matter.id}/time")
     assert response.status_code == 302
-    response = client.get("/activity/filter")
-    assert response.context["filter"]["matter"] == matter.id
+    response = client.get("/activity/filter-time-entries/")
+    assert client.session["time_filter"]["matter"] == matter.id
 
 
 def test_toggle_entered(client, entry):

@@ -121,6 +121,23 @@ def expenses_filter(request):
 
 
 @login_required
+def filter_matter(request, matter_id, tab):
+    if tab == "time":
+        filter_data = request.session.get("time_filter", {})
+    elif tab == "expenses":
+        filter_data = request.session.get("expense_filter", {})
+
+    filter_data["matter"] = matter_id
+
+    if tab == "time":
+        request.session["time_filter"] = filter_data
+    elif tab == "expenses":
+        request.session["expense_filter"] = filter_data
+
+    return redirect("activity:list")
+
+
+@login_required
 def quick_filter_unbilled(request, tab):
     if tab == "time":
         filter_data = request.session.get("time_filter", {})
