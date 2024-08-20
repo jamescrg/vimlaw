@@ -1,11 +1,11 @@
 import django_filters
 
 from apps.accounts.models import CustomUser
-from apps.activity.models import TimeEntry
+from apps.activity.models import ExpenseEntry
 from apps.matters.models import Matter
 
 
-class TimeEntryFilter(django_filters.FilterSet):
+class ExpenseFilter(django_filters.FilterSet):
     date = django_filters.DateFromToRangeFilter(
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"})
     )
@@ -17,7 +17,7 @@ class TimeEntryFilter(django_filters.FilterSet):
         queryset=Matter.objects.filter(status="Open"),
         empty_label="All",
     )
-    actions = django_filters.CharFilter(
+    description = django_filters.CharFilter(
         lookup_expr="icontains",
         label="Keyword",
     )
@@ -49,5 +49,5 @@ class TimeEntryFilter(django_filters.FilterSet):
     )
 
     class Meta:
-        model = TimeEntry
-        fields = ["date", "user", "matter", "actions", "comp", "entered", "invoice"]
+        model = ExpenseEntry
+        fields = ["date", "user", "matter", "description", "comp", "entered", "invoice"]

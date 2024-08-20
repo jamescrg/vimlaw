@@ -17,9 +17,9 @@
         <div class="section-title-left">
           <h1>Time</h1>
           <div class="activity-row-filter">
-            <a href={% url 'activity:quick-filter-unbilled' %}>Unbilled</a>
-            <a href={% url 'activity:quick-filter-today' %}>Today</a>
-            <form action="{% url 'activity:quick-filter-user' %}" method="post">
+            <a href={% url 'activity:quick-filter-unbilled' 'time' %}>Unbilled</a>
+            <a href={% url 'activity:quick-filter-today' 'time' %}>Today</a>
+            <form action="{% url 'activity:quick-filter-user' 'time' %}" method="post">
               {% csrf_token %}
               <select class="select-user" name="user" onchange="this.form.submit()">
                 <option value="">All</option>
@@ -113,12 +113,13 @@
         <div class="section-title-left">
           <h1>Expenses</h1>
           <div class="activity-row-filter">
-            <a href={% url 'activity:filter-quick' quick_filter='unbilled' %}>Unbilled</a>
-            <a href={% url 'activity:filter-quick' quick_filter='today' %}>Today</a>
-            <form action="{% url 'activity:filter-update' %}" method="post">
+            <a href={% url 'activity:quick-filter-unbilled' 'expenses' %}>Unbilled</a>
+            <a href={% url 'activity:quick-filter-today' 'expenses' %}>Today</a>
+            <form action="{% url 'activity:quick-filter-user' 'expenses' %}"
+                  method="post">
               {% csrf_token %}
               <select class="select-user" name="user" onchange="this.form.submit()">
-                <option value="All">All</option>
+                <option value="">All</option>
                 {% for user in users %}
                   <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
                 {% endfor %}
@@ -127,7 +128,7 @@
           </div>
         </div>
         <div class="section-title-right">
-          <button hx-get="{% url 'activity:filter' %}"
+          <button hx-get="{% url 'activity:filter-expenses' %}"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">Filter</button>

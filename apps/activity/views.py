@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
+from apps.activity.filter_expenses import ExpenseFilter
 from apps.activity.filter_time_entries import TimeEntryFilter
 from apps.activity.forms import ExpenseEntryForm, TimeEntryForm
 from apps.activity.models import ExpenseEntry, TimeEntry
@@ -47,6 +48,19 @@ def index(request):
             entries = TimeEntry.objects.all()
             user_id = None
 
+    elif tab == "expenses":
+        filter_data = request.session.get("expense_filter", None)
+
+        if filter_data:
+            filter = ExpenseFilter(filter_data)
+            expense_entries = filter.qs
+
+            user_id = filter_data.get("user")
+            user_id = int(user_id) if user_id not in (None, "") else None
+        else:
+            expense_entries = ExpenseEntry.objects.all()
+            user_id = None
+
     summary = calculate_summary(entries, expense_entries)
 
     users = CustomUser.objects.all()
@@ -86,41 +100,77 @@ def time_entry_filter(request):
     else:
         filter = get_filter(request)
 
-        return render(request, "activity/activity-filter.html", {"filter": filter})
+        return render(request, "activity/time-entries-filter.html", {"filter": filter})
 
 
 @login_required
-def quick_filter_unbilled(request):
-    filter_data = request.session.get("time_filter", {})
+def expenses_filter(request):
+    def get_filter(request):
+        filter_data = request.session.get("expense_filter", request.POST)
+
+        return ExpenseFilter(filter_data, queryset=ExpenseEntry.objects.all())
+
+    if request.method == "POST":
+        request.session["expense_filter"] = request.POST
+
+        return redirect("activity:list")
+    else:
+        filter = get_filter(request)
+
+        return render(request, "activity/expenses-filter.html", {"filter": filter})
+
+
+@login_required
+def quick_filter_unbilled(request, tab):
+    if tab == "time":
+        filter_data = request.session.get("time_filter", {})
+    elif tab == "expenses":
+        filter_data = request.session.get("expense_filter", {})
 
     filter_data["entered"] = 0
     filter_data["date_min"] = ""
     filter_data["date_max"] = ""
 
-    request.session["time_filter"] = filter_data
+    if tab == "time":
+        request.session["time_filter"] = filter_data
+    elif tab == "expenses":
+        request.session["expense_filter"] = filter_data
 
     return redirect("activity:list")
 
 
 @login_required
-def quick_filter_today(request):
-    filter_data = request.session.get("time_filter", {})
+def quick_filter_today(request, tab):
+    if tab == "time":
+        filter_data = request.session.get("time_filter", {})
+    elif tab == "expenses":
+        filter_data = request.session.get("expense_filter", {})
 
     filter_data["date_min"] = date.today().strftime("%Y-%m-%d")
     filter_data["date_max"] = date.today().strftime("%Y-%m-%d")
 
-    request.session["time_filter"] = filter_data
+    if tab == "time":
+        request.session["time_filter"] = filter_data
+    elif tab == "expenses":
+        request.session["expense_filter"] = filter_data
 
     return redirect("activity:list")
 
 
 @login_required
-def quick_filter_user(request):
-    filter_data = request.session.get("time_filter", {})
+def quick_filter_user(request, tab):
+    if tab == "time":
+        filter_data = request.session.get("time_filter", {})
+    elif tab == "expenses":
+        filter_data = request.session.get("expense_filter", {})
+
     user = request.POST.get("user")
     filter_data["user"] = user
 
-    request.session["time_filter"] = filter_data
+    if tab == "time":
+        request.session["time_filter"] = filter_data
+    elif tab == "expenses":
+        request.session["expense_filter"] = filter_data
 
     return redirect("activity:list")
 
