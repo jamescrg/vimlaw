@@ -1,14 +1,12 @@
 from datetime import date
 
-from dateutil import parser
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
-import config.appdata as appdata
 from apps.accounts.models import CustomUser
-from apps.activity.filter import Filter
+from apps.activity.filter_time_entries import TimeEntryFilter
 from apps.activity.forms import ExpenseEntryForm, TimeEntryForm
 from apps.activity.models import ExpenseEntry, TimeEntry
 from apps.activity.summary import calculate_summary
@@ -27,88 +25,31 @@ def index(request):
     hours and fees.
     """
 
-    filter = Filter(request).values
-
     entries = TimeEntry.objects.all()
     expense_entries = ExpenseEntry.objects.all()
 
-    if filter["date_from"]:
-        if isinstance(filter["date_from"], str):
-            filter["date_from"] = parser.parse(filter["date_from"])
-        entries = entries.filter(date__gte=filter["date_from"])
-        expense_entries = expense_entries.filter(date__gte=filter["date_from"])
-
-    if filter["date_to"]:
-        if isinstance(filter["date_to"], str):
-            filter["date_to"] = parser.parse(filter["date_to"])
-        entries = entries.filter(date__lte=filter["date_to"])
-        expense_entries = expense_entries.filter(date__lte=filter["date_to"])
-
-    if filter["firm"]:
-        entries = entries.filter(matter__firm=filter["firm"])
-        expense_entries = expense_entries.filter(matter__firm=filter["firm"])
-
-    if filter["matter"]:
-        matter = get_object_or_404(Matter, pk=filter["matter"])
-        entries = entries.filter(matter=matter)
-        expense_entries = expense_entries.filter(matter=matter)
-
-    if filter["user"] and filter["user"] != "All":
-        user = get_object_or_404(CustomUser, pk=filter["user"])
-        entries = entries.filter(user=user)
-        expense_entries = expense_entries.filter(user=user)
-
-    if filter["keyword"]:
-        expense_entries = expense_entries.filter(
-            description__icontains=filter["keyword"]
-        )
-
-    if filter["comp"]:
-        if filter["comp"] == "Yes":
-            entries = entries.filter(comp=1)
-            expense_entries = expense_entries.filter(comp=1)
-        if filter["comp"] == "No":
-            entries = entries.filter(comp=0)
-            expense_entries = expense_entries.filter(comp=0)
-
-    if filter["entered"]:
-        if filter["entered"] == "Yes":
-            entries = entries.filter(entered=1)
-            expense_entries = expense_entries.filter(entered=1)
-        if filter["entered"] == "No":
-            entries = entries.filter(entered=0)
-            expense_entries = expense_entries.filter(entered=0)
-
-    if filter["invoiced"]:
-        if filter["invoiced"] == "Yes":
-            entries = entries.filter(invoice__isnull=False)
-            expense_entries = expense_entries.filter(invoice__isnull=False)
-        if filter["invoiced"] == "No":
-            entries = entries.filter(invoice__isnull=True)
-            expense_entries = expense_entries.filter(invoice__isnull=True)
-
-    if filter["order"]:
-        if filter["order"] == "date, ascending":
-            entries = entries.order_by("date", "id")
-            expense_entries = expense_entries.order_by("date", "id")
-        else:
-            entries = entries.order_by("-date", "-id")
-            expense_entries = expense_entries.order_by("-date", "-id")
-
     number_entries = entries.count()
-
-    summary = calculate_summary(entries, expense_entries)
 
     tab = "time"
     if request.session.get("activity-tab"):
         tab = request.session["activity-tab"]
 
+    if tab == "time":
+        filter_data = request.session.get("time_filter", None)
+
+        if filter_data:
+            filter = TimeEntryFilter(filter_data)
+            entries = filter.qs
+
+            user_id = filter_data.get("user")
+            user_id = int(user_id) if user_id not in (None, "") else None
+        else:
+            entries = TimeEntry.objects.all()
+            user_id = None
+
+    summary = calculate_summary(entries, expense_entries)
+
     users = CustomUser.objects.all()
-
-    activity_filter = request.session.get("activity_filter", {})
-
-    user_id = activity_filter.get("user")
-    user_id = int(user_id) if user_id not in (None, "All") else None
 
     page = request.GET.get("page")
 
@@ -119,7 +60,6 @@ def index(request):
     context = {
         "page": "activity",
         "edit": False,
-        "filter": filter,
         "objects": pagination.object_list,
         "pagination": pagination,
         "number_entries": number_entries,
@@ -133,44 +73,56 @@ def index(request):
 
 
 @login_required
-def filter(request):
-    filter = Filter(request).values
-    if filter["matter"]:
-        filter["matter"] = int(filter["matter"])
-    if filter["user"] != "All":
-        filter["user"] = int(filter["user"])
-    firms = appdata.firms
-    matters = Matter.objects.filter(status="Open").order_by("name")
-    users = CustomUser.objects.all()
-    context = {
-        "page": "activity",
-        "filter": filter,
-        "firms": firms,
-        "matters": matters,
-        "users": users,
-    }
-    return render(request, "activity/filter.html", context)
+def time_entry_filter(request):
+    def get_filter(request):
+        filter_data = request.session.get("time_filter", request.POST)
+
+        return TimeEntryFilter(filter_data, queryset=TimeEntry.objects.all())
+
+    if request.method == "POST":
+        request.session["time_filter"] = request.POST
+
+        return redirect("activity:list")
+    else:
+        filter = get_filter(request)
+
+        return render(request, "activity/activity-filter.html", {"filter": filter})
 
 
 @login_required
-def filter_update(request):
-    filter = Filter(request)
-    filter.update(request)
-    return redirect("/activity")
+def quick_filter_unbilled(request):
+    filter_data = request.session.get("time_filter", {})
+
+    filter_data["entered"] = 0
+    filter_data["date_min"] = ""
+    filter_data["date_max"] = ""
+
+    request.session["time_filter"] = filter_data
+
+    return redirect("activity:list")
 
 
 @login_required
-def filter_quick(request, quick_filter):
-    filter = Filter(request)
-    filter.set_quick_filter(request, quick_filter)
-    return redirect("/activity")
+def quick_filter_today(request):
+    filter_data = request.session.get("time_filter", {})
+
+    filter_data["date_min"] = date.today().strftime("%Y-%m-%d")
+    filter_data["date_max"] = date.today().strftime("%Y-%m-%d")
+
+    request.session["time_filter"] = filter_data
+
+    return redirect("activity:list")
 
 
 @login_required
-def filter_matter(request, id):
-    filter = Filter(request)
-    filter.matter(request, id)
-    return redirect("/activity")
+def quick_filter_user(request):
+    filter_data = request.session.get("time_filter", {})
+    user = request.POST.get("user")
+    filter_data["user"] = user
+
+    request.session["time_filter"] = filter_data
+
+    return redirect("activity:list")
 
 
 @login_required

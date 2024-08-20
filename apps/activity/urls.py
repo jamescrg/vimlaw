@@ -8,12 +8,12 @@ from apps.activity.views import (
     edit,
     edit_expense,
     export,
-    filter,
-    filter_matter,
-    filter_quick,
-    filter_update,
     index,
+    quick_filter_today,
+    quick_filter_unbilled,
+    quick_filter_user,
     set_tab,
+    time_entry_filter,
     toggle_entered,
     toggle_entered_expense,
 )
@@ -53,21 +53,28 @@ urlpatterns = [
         name="toggle-entered-expense",
     ),
     path("activity/filter", filter, name="filter"),
-    path("activity/filter/update", filter_update, name="filter-update"),
-    path(
-        "activity/filter/<str:quick_filter>",
-        filter_quick,
-        name="filter-quick",
-    ),
-    path(
-        "activity/filter/matter/<int:id>",
-        filter_matter,
-        name="filter-matter",
-    ),
     path("activity/export", export, name="export"),
     path(
         "activity/set-tab/<str:tab>",
         set_tab,
         name="set-tab",
+    ),
+    path(
+        "activity/quick-filter-today",
+        quick_filter_today,
+        name="quick-filter-today",
+    ),
+    path(
+        "activity/quick-filter-unbilled",
+        quick_filter_unbilled,
+        name="quick-filter-unbilled",
+    ),
+    path(
+        "activity/quick-filter-user",
+        quick_filter_user,
+        name="quick-filter-user",
+    ),
+    path(
+        "activity/filter-time-entries/", time_entry_filter, name="filter-time-entries"
     ),
 ]
