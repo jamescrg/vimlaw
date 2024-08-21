@@ -24,7 +24,7 @@ def client(user):
 
 
 @pytest.fixture
-def folders(user):
+def folders():
     folder_names = [
         "Current",
         "Tomorrow",
@@ -35,7 +35,6 @@ def folders(user):
     folders = []
     for name in folder_names:
         folder = Folder.objects.create(
-            user=user,
             page="agenda",
             name=name,
             selected=0,

@@ -46,7 +46,7 @@
                 {% if contact.folder %}
                   <a href={% url 'folders:list' id=contact.folder.id page='contacts' %}>{{ contact.folder.name }}</a>
                 {% else %}
-                  <a href={% url 'folders:list' id=0 page='contacts' %}>Uncategorized</a>
+                  <a href={% url 'folders:list' id=0 page='contacts' %}>Unsorted</a>
                 {% endif %}
               </td>
               <td class="contact-name">

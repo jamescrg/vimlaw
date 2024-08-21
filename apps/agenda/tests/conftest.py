@@ -28,9 +28,8 @@ def client(user):
 
 
 @pytest.fixture
-def folder(user):
+def folder():
     folder = Folder.objects.create(
-        user=user,
         page="agenda",
         name="Current",
     )

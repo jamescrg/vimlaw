@@ -9,9 +9,8 @@ def test_string(folder_data):
     assert str(folder_data) == f"{folder_data.name}"
 
 
-def test_content(user, folder_data):
+def test_content(folder_data):
     expected_values = {
-        "user": user,
         "page": "agenda",
         "name": "Current",
         "selected": 0,
@@ -26,9 +25,8 @@ def test_select(client, folder_data):
     assert response.status_code == 302
 
 
-def test_insert(user, client):
+def test_insert(client):
     data = {
-        "user": user,
         "page": "agenda",
         "name": "More Tasks",
     }

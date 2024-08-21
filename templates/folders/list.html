@@ -17,7 +17,8 @@
       {% if folders %}
         {% for folder in folders %}
           <li class="list-group-item folder-item">
-            <button class="button-icon edit-folder-button" onclick="showEditFolderForm()">
+            <button class="button-icon edit-folder-button"
+                    {% if folder.id != 0 %}onclick="showEditFolderForm()"{% endif %}>
               <i class="bi bi-folder"></i>
             </button>
             <div class="show-folder">
@@ -26,6 +27,7 @@
                 {% if selected_folders and folder in selected_folders %}class="strong"{% endif %}
                 {# contacts #}
                 {% if selected_folder and selected_folder.id == folder.id %}class="strong"{% endif %}
+                {% if selected_folder.id == None and folder.id == 0 %}class="strong"{% endif %}
               >{{ folder.name }}</a>
             </div>
             {% include "folders/edit.html" %}

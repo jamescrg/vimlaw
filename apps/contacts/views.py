@@ -18,6 +18,9 @@ def index(request):
 
     folders = Folder.objects.filter(page=page).order_by("name")
 
+    folders = list(folders)
+    folders.append({"id": 0, "name": "Unsorted"})
+
     if request.session.get("contacts_selected_folder_id"):
         selected_folder_id = request.session["contacts_selected_folder_id"]
         selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
@@ -69,7 +72,11 @@ def index(request):
 def select(request, id):
     contact = get_object_or_404(Contact, pk=id)
 
-    request.session["contacts_selected_folder_id"] = contact.folder.id
+    if not contact.folder:
+        request.session["contacts_selected_folder_id"] = 0
+    else:
+        request.session["contacts_selected_folder_id"] = contact.folder.id
+
     request.session["selected_contact_id"] = id
 
     return redirect("/contacts/")
