@@ -157,15 +157,17 @@
               </td>
               <td class="actions">
                 {% if expense.invoice %}
-                  {{ expense.category }} - {{ expense.description }}
+                  {% if expense.category %}{{ expense.category }} -{% endif %}
+                  {{ expense.description }}
                 {% else %}
                   <a href="#"
                      hx-get="/activity/{{ expense.id }}/edit_expense"
                      hx-target="#htmx-modal-container"
                      hx-trigger="click"
                      data-bs-toggle="modal"
-                     data-bs-target="#htmx-modal-container">{{ expense.category }}
-                  - {{ expense.description }}</a>
+                     data-bs-target="#htmx-modal-container">
+                    {% if expense.category %}{{ expense.category }} -{% endif %}
+                  {{ expense.description }}</a>
                 {% endif %}
               </td>
               <td class="hours {% if not expense.entered and not expense.invoice %}urgent{% endif %}">
@@ -186,7 +188,7 @@
             </tr>
           {% endfor %}
         </table>
-        <div class="activty-under-table">
+        <div class="flex-start-space">
           {% include "pagination.html" %}
           {% include "activity/summary_expenses.html" %}
         </div>
