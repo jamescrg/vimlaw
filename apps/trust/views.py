@@ -54,12 +54,16 @@ def history(request, interval="30days"):
     confirmed_account_balance = trust.get_confirmed_account_balance()
     transactions = trust.get_account_history(interval)
 
+    page = request.GET.get("page")
+    pagination = Paginator(transactions, per_page=10).get_page(page)
+
     context = {
         "page": "trust",
+        "pagination": pagination,
         "interval": interval,
         "pending_account_balance": pending_account_balance,
         "confirmed_account_balance": confirmed_account_balance,
-        "transactions": transactions,
+        "transactions": pagination.object_list,
     }
 
     return render(request, "trust/history.html", context)
