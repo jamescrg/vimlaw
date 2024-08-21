@@ -8,8 +8,8 @@ List View
 }
 
 .intake-details {
-    width: 100%;
     margin-bottom: 2rem;
+    width: 100%;
 }
 
 .intake-details .strong {
@@ -64,8 +64,8 @@ Notes
 }
 
 .note-title {
-  display: flex;
   align-items: center;
+  display: flex;
   justify-content: space-between;
 
 }
@@ -139,12 +139,12 @@ Markdown
 }
 
 .note-details ol {
-    padding: inherit;
+    margin: 1rem 0 0 0;
 }
 
 .note-details ol li {
     list-style-type: decimal;
-    padding-left: 5px;
+    padding: 0.5rem 0 0.3rem 0;
 }
 
 .note-details p {
