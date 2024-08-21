@@ -45,7 +45,7 @@ def index(request):
             user_id = filter_data.get("user")
             user_id = int(user_id) if user_id not in (None, "") else None
         else:
-            entries = TimeEntry.objects.all()
+            entries = TimeEntry.objects.all().order_by("-date", "-id")
             user_id = None
 
     elif tab == "expenses":
@@ -58,7 +58,7 @@ def index(request):
             user_id = filter_data.get("user")
             user_id = int(user_id) if user_id not in (None, "") else None
         else:
-            expense_entries = ExpenseEntry.objects.all()
+            expense_entries = ExpenseEntry.objects.all().order_by("-date", "-id")
             user_id = None
 
     summary = calculate_summary(entries, expense_entries)

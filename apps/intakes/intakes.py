@@ -13,7 +13,7 @@ def get_table_data(request):
         filter = IntakeFilter(filter_data)
         intakes = filter.qs
     else:
-        intakes = Intake.objects.all()
+        intakes = Intake.objects.all().order_by("-date")
 
     number_intakes = intakes.count()
 

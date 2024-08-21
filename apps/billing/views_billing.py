@@ -36,7 +36,7 @@ def billing_index(request):
             filter = PaymentFilter(filter_data)
             payments = filter.qs
         else:
-            payments = Payment.objects.all().select_related("matter")
+            payments = Payment.objects.all().select_related("matter").order_by("-date")
 
     page = request.GET.get("page")
 

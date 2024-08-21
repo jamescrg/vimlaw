@@ -22,7 +22,7 @@ def index(request):
         filter = MatterFilter(filter_data)
         matters = filter.qs
     else:
-        matters = Matter.objects.all()
+        matters = Matter.objects.all().order_by("-date_start")
 
     number_matters = matters.count()
 
