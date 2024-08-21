@@ -3,8 +3,10 @@
   <div class="section-title">
     <div class="section-title-left">
       <h2>Related Contacts</h2>
+      <div class="section-title-left-right">
+        <a href={% url 'matters:contacts-assign' id=matter.id %}>Assign</a>
+      </div>
     </div>
-    <a href={% url 'matters:contacts-assign' id=matter.id %}>Assign</a>
   </div>
   {% if relationship_groups %}
     {% for group, relationships in relationship_groups.items %}

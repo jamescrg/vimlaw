@@ -39,10 +39,10 @@ a:hover {
 }
 
 .section-title {
+    align-items: center;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: center;
     padding: 0 0 1rem 0;
 }
 
@@ -55,12 +55,11 @@ a:hover {
     padding: 4px 7px;
 }
 
-
 .section-title-left {
+    align-items: center;
     display: flex;
     flex-direction: row;
     justify-content: left;
-    align-items: center;
 }
 
 .section-title-left-right {
@@ -69,8 +68,8 @@ a:hover {
 
 .activity-row-filter {
     display: flex;
-    margin: 3px 0 0 1.5rem;
     gap: 1.5rem;
+    margin: 3px 0 0 1.5rem;
 }
 
 .section-title-left-right a,

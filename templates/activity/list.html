@@ -17,6 +17,16 @@
         <div class="section-title-left">
           <h1>Time</h1>
           <div class="activity-row-filter">
+            <button hx-get="/activity/add"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+            <button hx-get="{% url 'activity:filter-time-entries' %}"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">Filter</button>
             <a href={% url 'activity:quick-filter-unbilled' 'time' %}>Unbilled</a>
             <a href={% url 'activity:quick-filter-today' 'time' %}>Today</a>
             <form action="{% url 'activity:quick-filter-user' 'time' %}" method="post">
@@ -34,16 +44,6 @@
           <a href={% url 'activity:export' %}>
             <i class="bi bi-cloud-download"></i>
           </a>
-          <button hx-get="{% url 'activity:filter-time-entries' %}"
-                  hx-target="#htmx-modal-container"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">Filter</button>
-          <button hx-get="/activity/add"
-                  hx-target="#htmx-modal-container"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="bi bi-plus-lg"></i>
-          </button>
         </div>
       </div>
       <div class="table-container">
@@ -113,6 +113,16 @@
         <div class="section-title-left">
           <h1>Expenses</h1>
           <div class="activity-row-filter">
+            <button data-bs-toggle="modal"
+                    hx-target="#htmx-modal-container"
+                    data-bs-target="#htmx-modal-container"
+                    hx-get="{% url 'activity:add-expense' %}">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+            <button hx-get="{% url 'activity:filter-expenses' %}"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">Filter</button>
             <a href={% url 'activity:quick-filter-unbilled' 'expenses' %}>Unbilled</a>
             <a href={% url 'activity:quick-filter-today' 'expenses' %}>Today</a>
             <form action="{% url 'activity:quick-filter-user' 'expenses' %}"
@@ -127,18 +137,7 @@
             </form>
           </div>
         </div>
-        <div class="section-title-right">
-          <button hx-get="{% url 'activity:filter-expenses' %}"
-                  hx-target="#htmx-modal-container"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">Filter</button>
-          <button data-bs-toggle="modal"
-                  hx-target="#htmx-modal-container"
-                  data-bs-target="#htmx-modal-container"
-                  hx-get="{% url 'activity:add-expense' %}">
-            <i class="bi bi-plus-lg"></i>
-          </button>
-        </div>
+        <div class="section-title-right"></div>
       </div>
       <div class="table-container">
         <table class="table activity">

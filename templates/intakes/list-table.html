@@ -6,23 +6,22 @@
       <div class="section-title-left">
         <h1>{{ filter.status }} Intakes ({{ number_intakes }})</h1>
         <div class="section-title-left-right">
+          <button hx-get="/intakes/add"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+          <button hx-get="/intakes/filter-intakes"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">Filter</button>
           <a href={% url 'intakes:quick-filter-status' 'Open' %}>Open</a>
           <a href={% url 'intakes:quick-filter-status' 'Pending' %}>Pending</a>
           <a href={% url 'intakes:quick-filter-status' 'Recent' %}>Recent</a>
         </div>
       </div>
-      <div class="section-title-right">
-        <button hx-get="/intakes/filter-intakes"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">Filter</button>
-        <button hx-get="/intakes/add"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
-          <i class="bi bi-plus-lg"></i>
-        </button>
-      </div>
+      <div class="section-title-right"></div>
     </div>
     <div class="table-container">
       <table id="intake-list" class="table">

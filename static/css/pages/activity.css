@@ -4,7 +4,7 @@ Filter form
 ========================================================================== */
 
 #matter {
-    width: auto
+  width: auto
 }
 
 
@@ -27,43 +27,43 @@ Time and expense entry list table
 }
 
 .activity {
-    width: 100%;
+  width: 100%;
 }
 
 
 .activity .date {
-    width: 120px;
+  width: 120px;
 }
 
 .activity .user {
-    width: 60px;
+  width: 60px;
 }
 
 .activity .matter {
-    width: 240px;
+  width: 240px;
 }
 
 .activity .hours {
-    text-align: right;
-    width: 60px;
+  text-align: right;
+  width: 60px;
 }
 
 .activity .hours a {
-    color: inherit;
+  color: inherit;
 }
 
 .activity .rate {
-    text-align: right;
-    width: 80px;
+  text-align: right;
+  width: 80px;
 }
 
 .activity .fee {
-    text-align: right;
-    width: 120px;
+  text-align: right;
+  width: 120px;
 }
 
 .total {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .activity-summary {

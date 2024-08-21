@@ -5,18 +5,15 @@
       <div class="section-title-left">
         <h1>{{ filter.status }} Matters ({{ number_matters }})</h1>
         <div class="section-title-left-right">
+          <a href={% url 'matters:add' %}><i class="bi bi-plus-lg"></i></a>
+          <button hx-get="/matters/filter-matters"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">Filter</button>
           <a href={% url 'matters:filter-status' 'Open' %}>Open</a>
         </div>
       </div>
-      <div class="section-title-right">
-        <button hx-get="/matters/filter-matters"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">Filter</button>
-        <a href={% url 'matters:add' %}>
-          <i class="bi bi-plus-lg"></i>
-        </a>
-      </div>
+      <div class="section-title-right"></div>
     </div>
     <div class="table-container">
       <table id="matter-list" class="table">

@@ -4,23 +4,22 @@
     <div class="section-title">
       <div class="section-title-left">
         <h1>{{ matter.name }}</h1>
-        <div class="section-title-left-right"></div>
-      </div>
-      <div class="section-title-right">
-        <button hx-get="/activity/add/{{ matter.id }}"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">+ Time</button>
-        <button hx-get="/activity/add_expense/{{ matter.id }}"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">+ Expense</button>
-        <a href={% url 'matters:print' id=matter.id %}>
-          <i class="bi bi-printer"></i>
-        </a>
-        <a href={% url 'matters:edit' id=matter.id %}>
-          <i class="bi bi-pencil"></i>
-        </a>
+        <div class="section-title-left-right">
+          <button hx-get="/activity/add/{{ matter.id }}"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">+ Time</button>
+          <button hx-get="/activity/add_expense/{{ matter.id }}"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">+ Expense</button>
+          <a href={% url 'matters:print' id=matter.id %}>
+            <i class="bi bi-printer"></i>
+          </a>
+          <a href={% url 'matters:edit' id=matter.id %}>
+            <i class="bi bi-pencil"></i>
+          </a>
+        </div>
       </div>
     </div>
     <div class="matter-data">
