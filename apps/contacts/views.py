@@ -105,6 +105,11 @@ def add(request):
             contact.phone2 = format_phone(contact.phone2)
             contact.phone3 = format_phone(contact.phone3)
 
+            intake_id = request.POST.get("intake_id")
+            if intake_id:
+                intake = get_object_or_404(Intake, pk=intake_id)
+                contact.intake = intake
+
             # save contact to database with google id
             contact.save()
 
@@ -278,38 +283,37 @@ def remove_store(request, id):
 
 @login_required
 def add_intake(request, id):
-    # get the intake to add
     intake = get_object_or_404(Intake, pk=id)
 
-    try:
-        contact = Contact.objects.filter(intake=intake).get()
-    except ObjectDoesNotExist:
-        contact = None
+    initial_data = {
+        "name": intake.name,
+        "address": intake.address,
+        "phone1": intake.phone,
+        "phone1_label": "Mobile",
+        "email": intake.email,
+        "client_status": "Current",
+    }
 
-    if not contact:
-        # create a contact and load it with the intake data, then save it
-        contact = Contact()
-        contact.user_id = request.user.id
-        contact.name = intake.name
-        contact.address = intake.address
-        contact.phone1 = intake.phone
-        contact.phone1_label = "Mobile"
-        contact.email = intake.email
-        contact.intake = intake
-        contact.client_status = "Current"
+    form = ContactForm(initial=initial_data)
 
-        # add to google account
-        if google.check_credentials():
-            contact.google_id = google.add_contact(contact)
+    folders = Folder.objects.filter(page="contacts").order_by("name")
+    form.fields["folder"].queryset = folders
 
-        contact.save()
+    google_connected = google.check_credentials()
 
-        # select newest contact for user
-        new = Contact.objects.all().latest("id")
-        request.session["selected_contact_id"] = new.id
+    context = {
+        "page": "contacts",
+        "edit": False,
+        "add": True,
+        "action": "/contacts/add",
+        "folders": folders,
+        "selected_folder": None,
+        "google_connected": google_connected,
+        "form": form,
+        "intake_id": id,
+    }
 
-    # redirect to the edit form
-    return redirect(f"/contacts/{contact.id}/edit")
+    return render(request, "contacts/content.html", context)
 
 
 @login_required

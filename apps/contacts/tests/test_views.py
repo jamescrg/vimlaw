@@ -120,4 +120,4 @@ def test_add_intake(client, intake, contact, folder):
     contact.folder = folder
     contact.save()
     response = client.get(f"/contacts/{intake.id}/add_intake")
-    assert response.status_code == 302
+    assert response.status_code == 200
