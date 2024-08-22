@@ -179,6 +179,7 @@ def quick_filter_user(request, user):
         user_id = CustomUser.objects.get(username=user).id
 
         filter_data["user"] = user_id
+        filter_data["status"] = "Pending"
 
     request.session["task_filter"] = filter_data
 
