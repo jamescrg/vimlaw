@@ -5,11 +5,11 @@
       <div class="section-title-left">
         <h1>{{ matter.name }}</h1>
         <div class="section-title-left-right">
-          <button hx-get="/activity/add/{{ matter.id }}"
+          <button hx-get="/activity/time/add/{{ matter.id }}"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">+ Time</button>
-          <button hx-get="/activity/add_expense/{{ matter.id }}"
+          <button hx-get="/activity/expenses/add/{{ matter.id }}"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">+ Expense</button>

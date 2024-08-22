@@ -14,7 +14,7 @@ from apps.matters.models import Matter, Rate
 
 
 @login_required
-def list_time(request):
+def time_list(request):
     """
     Display a list of activity entries
 
@@ -67,40 +67,40 @@ def list_time(request):
 
 
 @login_required
-def filter_time(request):
+def time_filter(request):
     def get_filter(request):
         filter_data = request.session.get("time_filter", request.POST)
         return TimeEntryFilter(filter_data, queryset=TimeEntry.objects.all())
 
     if request.method == "POST":
         request.session["time_filter"] = request.POST
-        return redirect("activity:list")
+        return redirect("activity:time-list")
 
     else:
         filter = get_filter(request)
-        print("---------------------------------------")
-        print("filter", filter)
-        filter_order = request.session["time_filter"].get("order", "date, ascending")
-        print("---------------------------------------")
-        print("order", filter_order)
+        if request.session.get("time_filter"):
+            filter_order = request.session["time_filter"].get(
+                "order", "date, ascending"
+            )
+        else:
+            filter_order = "date, ascending"
         return render(
             request,
-            "activity/time-entries-filter.html",
+            "activity/time/filter.html",
             {"filter": filter, "filter_order": filter_order},
         )
 
 
 @login_required
-def quick_filter_time_matter(request, matter_id, tab):
-    if tab == "time":
-        filter_data = request.session.get("time_filter", {})
-    elif tab == "expenses":
-        filter_data = request.session.get("expense_filter", {})
+def time_filter_matter(request, matter_id):
+
+    filter_data = request.session.get("time_filter", {})
 
     new_values = {
         "date_min": "",
         "date_max": "",
         "firm": None,
+        "matter": matter_id,
         "keyword": "",
         "comp": None,
         "entered": None,
@@ -110,103 +110,63 @@ def quick_filter_time_matter(request, matter_id, tab):
 
     for key, val in new_values.items():
         filter_data[key] = val
-
     filter_data["matter"] = matter_id
+    request.session["time_filter"] = filter_data
 
-    if tab == "time":
-        request.session["time_filter"] = filter_data
-    elif tab == "expenses":
-        request.session["expense_filter"] = filter_data
-
-    return redirect("activity:list")
+    return redirect("activity:time-list")
 
 
 @login_required
-def quick_filter_time(request, tab):
-    if tab == "time":
-        filter_data = request.session.get("time_filter", {})
-    elif tab == "expenses":
-        filter_data = request.session.get("expense_filter", {})
+def time_filter_quick(request, quick_filter):
 
-    new_values = {
-        "firm": "Campbell & Brannon",
-        "matter": None,
-        "keyword": "",
-        "comp": None,
-        "order": "date, ascending",
+    # TODO: why are these switching the user to all?
+    # that's the desired behavior, but I don't understand it
+    quick_filters = {
+        "unbilled": {
+            "date_min": "",
+            "date_max": "",
+            "firm": "Campbell & Brannon",
+            "matter": None,
+            "keyword": "",
+            "comp": None,
+            "entered": 0,
+            "invoice": 0,
+            "order": "date, ascending",
+        },
+        "today": {
+            "date_min": date.today().strftime("%Y-%m-%d"),
+            "date_max": date.today().strftime("%Y-%m-%d"),
+            "firm": "Campbell & Brannon",
+            "matter": None,
+            "keyword": "",
+            "comp": None,
+            "entered": None,
+            "invoice": None,
+            "order": "date, descending",
+        },
     }
 
-    for key, val in new_values.items():
+    filter_data = {}
+    for key, val in quick_filters[quick_filter].items():
         filter_data[key] = val
 
-    filter_data["entered"] = 0
-    filter_data["invoice"] = 0
-    filter_data["date_min"] = ""
-    filter_data["date_max"] = ""
-
-    if tab == "time":
-        request.session["time_filter"] = filter_data
-    elif tab == "expenses":
-        request.session["expense_filter"] = filter_data
-
+    request.session["time_filter"] = filter_data
     request.session.modified = True
 
-    return redirect("activity:list")
+    return redirect("activity:time-list")
 
 
 @login_required
-def quick_filter_today(request, tab):
-    if tab == "time":
-        filter_data = request.session.get("time_filter", {})
-    elif tab == "expenses":
-        filter_data = request.session.get("expense_filter", {})
-
-    new_values = {
-        "firm": "Campbell & Brannon",
-        "matter": None,
-        "order": "date, descending",
-        "keyword": "",
-        "comp": None,
-        "entered": None,
-        "invoice": None,
-    }
-
-    for key, val in new_values.items():
-        filter_data[key] = val
-
-    filter_data["date_min"] = date.today().strftime("%Y-%m-%d")
-    filter_data["date_max"] = date.today().strftime("%Y-%m-%d")
-
-    if tab == "time":
-        request.session["time_filter"] = filter_data
-    elif tab == "expenses":
-        request.session["expense_filter"] = filter_data
-
-    request.session.modified = True
-
-    return redirect("activity:list")
-
-
-@login_required
-def quick_filter_user(request, tab):
-    if tab == "time":
-        filter_data = request.session.get("time_filter", {})
-    elif tab == "expenses":
-        filter_data = request.session.get("expense_filter", {})
-
+def time_filter_user(request):
+    filter_data = request.session.get("time_filter", {})
     user = request.POST.get("user")
     filter_data["user"] = user
-
-    if tab == "time":
-        request.session["time_filter"] = filter_data
-    elif tab == "expenses":
-        request.session["expense_filter"] = filter_data
-
-    return redirect("activity:list")
+    request.session["time_filter"] = filter_data
+    return redirect("activity:time-list")
 
 
 @login_required
-def add_time(request, id=None):
+def time_add(request, id=None):
     # if applicable, process any post data submitted by user
     if request.method == "POST":
         form = TimeEntryForm(request.POST)
@@ -298,17 +258,17 @@ def add_time(request, id=None):
         "page": "activity",
         "edit": False,
         "add": True,
-        "action": "/activity/add",
+        "action": "/activity/time/add",
         "form": form,
         "matter_list": matter_list,
         "matter_rates": matter_rates,
     }
 
-    return render(request, "activity/form.html", context)
+    return render(request, "activity/time/form.html", context)
 
 
 @login_required
-def edit_time(request, id):
+def time_edit(request, id):
     entry = get_object_or_404(TimeEntry, pk=id)
 
     if request.method == "POST":
@@ -344,25 +304,25 @@ def edit_time(request, id):
         "page": "activity",
         "edit": True,
         "add": False,
-        "action": f"/activity/{id}/edit",
+        "action": f"/activity/time/{id}/edit",
         "entry": entry,
         "form": form,
         "matter_list": matter_list,
         "matter_rates": matter_rates,
     }
 
-    return render(request, "activity/form.html", context)
+    return render(request, "activity/time/form.html", context)
 
 
 @login_required
-def delete_time(request, id):
+def time_delete(request, id):
     entry = get_object_or_404(TimeEntry, pk=id)
     entry.delete()
     return redirect("/activity")
 
 
 @login_required
-def toggle_entered_time(request, id):
+def time_toggle_entered(request, id):
     entry = get_object_or_404(TimeEntry, pk=id)
     if entry.entered == 1:
         entry.entered = 0

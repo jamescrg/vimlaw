@@ -10,7 +10,7 @@ class TimeEntryFilter(django_filters.FilterSet):
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"})
     )
     user = django_filters.ModelChoiceFilter(
-        queryset=CustomUser.objects.all(),
+        queryset=CustomUser.objects.filter(is_active=True),
         empty_label="All",
     )
     matter = django_filters.ModelChoiceFilter(

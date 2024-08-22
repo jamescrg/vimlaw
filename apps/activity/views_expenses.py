@@ -13,7 +13,7 @@ from apps.matters.models import Matter
 
 
 @login_required
-def list_expenses(request):
+def expenses_list(request):
     """
     Display a list of activity expenses
 
@@ -27,7 +27,7 @@ def list_expenses(request):
     expenses = ExpenseEntry.objects.all()
     number_expenses = expenses.count()
 
-    filter_data = request.session.get("expense_filter", None)
+    filter_data = request.session.get("expenses_filter", None)
 
     if filter_data:
         filter = ExpenseFilter(filter_data)
@@ -62,79 +62,75 @@ def list_expenses(request):
         "user_id": user_id,
     }
 
-    return render(request, "activity/list.html", context)
+    return render(request, "activity/expenses/list.html", context)
 
 
 @login_required
-def filter_expenses(request):
+def expenses_filter(request):
     def get_filter(request):
-        filter_data = request.session.get("expense_filter", request.POST)
+        filter_data = request.session.get("expenses_filter", request.POST)
 
         return ExpenseFilter(filter_data, queryset=ExpenseEntry.objects.all())
 
     if request.method == "POST":
-        request.session["expense_filter"] = request.POST
+        request.session["expenses_filter"] = request.POST
 
-        return redirect("activity:list")
+        return redirect("activity:expenses-list")
     else:
         filter = get_filter(request)
 
-        return render(request, "activity/expenses-filter.html", {"filter": filter})
+        return render(request, "activity/expenses/filter.html", {"filter": filter})
 
 
 @login_required
-def quick_filter_expenses(request, tab):
-    if tab == "time":
-        filter_data = request.session.get("time_filter", {})
-    elif tab == "expenses":
-        filter_data = request.session.get("expense_filter", {})
+def expenses_filter_quick(request, quick_filter):
 
-    new_values = {
-        "firm": "Campbell & Brannon",
-        "matter": None,
-        "keyword": "",
-        "comp": None,
-        "order": "date, ascending",
+    quick_filters = {
+        "unbilled": {
+            "date_min": "",
+            "date_max": "",
+            "firm": "Campbell & Brannon",
+            "matter": None,
+            "keyword": "",
+            "comp": None,
+            "entered": 0,
+            "invoice": 0,
+            "order": "date, ascending",
+        },
+        "today": {
+            "date_min": date.today().strftime("%Y-%m-%d"),
+            "date_max": date.today().strftime("%Y-%m-%d"),
+            "firm": "Campbell & Brannon",
+            "matter": None,
+            "keyword": "",
+            "comp": None,
+            "entered": None,
+            "invoice": None,
+            "order": "date, descending",
+        },
     }
 
-    for key, val in new_values.items():
+    filter_data = {}
+    for key, val in quick_filters[quick_filter].items():
         filter_data[key] = val
 
-    filter_data["entered"] = 0
-    filter_data["invoice"] = 0
-    filter_data["date_min"] = ""
-    filter_data["date_max"] = ""
-
-    if tab == "time":
-        request.session["time_filter"] = filter_data
-    elif tab == "expenses":
-        request.session["expense_filter"] = filter_data
-
+    request.session["expenses_filter"] = filter_data
     request.session.modified = True
 
-    return redirect("activity:list")
+    return redirect("activity:expenses-list")
 
 
 @login_required
-def quick_filter_user(request, tab):
-    if tab == "time":
-        filter_data = request.session.get("time_filter", {})
-    elif tab == "expenses":
-        filter_data = request.session.get("expense_filter", {})
-
+def expenses_filter_user(request):
+    filter_data = request.session.get("expenses_filter", {})
     user = request.POST.get("user")
     filter_data["user"] = user
-
-    if tab == "time":
-        request.session["time_filter"] = filter_data
-    elif tab == "expenses":
-        request.session["expense_filter"] = filter_data
-
-    return redirect("activity:list")
+    request.session["expenses_filter"] = filter_data
+    return redirect("activity:expenses-list")
 
 
 @login_required
-def add_expense(request, id=None):
+def expenses_add(request, id=None):
     # if applicable, process any post data submitted by user
     if request.method == "POST":
         form = ExpenseEntryForm(request.POST)
@@ -149,7 +145,7 @@ def add_expense(request, id=None):
             for key, val in codes.items():
                 entry.description = entry.description.replace(key, val)
             entry.save()
-            return redirect("/activity")
+            return redirect("/activity/expenses")
 
     # if no post data has been submitted, show the entry form
     else:
@@ -184,16 +180,16 @@ def add_expense(request, id=None):
         "page": "activity",
         "edit": False,
         "add": True,
-        "action": "/activity/add_expense",
+        "action": "/activity/expenses/add",
         "form": form,
         "matter_list": matter_list,
     }
 
-    return render(request, "activity/form_expense.html", context)
+    return render(request, "activity/expenses/form.html", context)
 
 
 @login_required
-def edit_expense(request, id):
+def expenses_edit(request, id):
     entry = get_object_or_404(ExpenseEntry, pk=id)
 
     if request.method == "POST":
@@ -201,7 +197,7 @@ def edit_expense(request, id):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.save()
-            return redirect("/activity")
+            return redirect("/activity/expenses")
 
     else:
         # get list of matters for activity form
@@ -221,28 +217,28 @@ def edit_expense(request, id):
         "page": "activity",
         "edit": True,
         "add": False,
-        "action": f"/activity/{id}/edit_expense",
+        "action": f"/activity/expenses/{id}/edit",
         "entry": entry,
         "form": form,
         "matter_list": matter_list,
     }
 
-    return render(request, "activity/form_expense.html", context)
+    return render(request, "activity/expenses/form.html", context)
 
 
 @login_required
-def delete_expense(request, id):
+def expenses_delete(request, id):
     entry = get_object_or_404(ExpenseEntry, pk=id)
     entry.delete()
-    return redirect("/activity")
+    return redirect("/activity/expenses")
 
 
 @login_required
-def toggle_entered_expenses(request, id):
+def expenses_toggle_entered(request, id):
     entry = get_object_or_404(ExpenseEntry, pk=id)
     if entry.entered == 1:
         entry.entered = 0
     else:
         entry.entered = 1
     entry.save()
-    return redirect("/activity")
+    return redirect("/activity/expenses")

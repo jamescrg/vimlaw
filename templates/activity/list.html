@@ -3,10 +3,10 @@
   <div class="sub-nav">
     <ul>
       <li {% if subpage == "time" %}class="active"{% endif %}>
-        <a href="{% url 'activity:list-time' %}">Time</a>
+        <a href="{% url 'activity:time-list' %}">Time</a>
       </li>
       <li {% if subpage == "expenses" %}class="active"{% endif %}>
-        <a href="{% url 'activity:list-expenses' %}">Expenses</a>
+        <a href="{% url 'activity:expenses-list' %}">Expenses</a>
       </li>
     </ul>
   </div>

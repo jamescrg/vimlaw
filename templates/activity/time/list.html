@@ -5,19 +5,19 @@
     <div class="section-title-left">
       <h1>Time</h1>
       <div class="activity-row-filter">
-        <button hx-get="/activity/add-time"
+        <button hx-get="{% url 'activity:time-add' %}"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">
           <i class="bi bi-plus-lg"></i>
         </button>
-        <button hx-get="{% url 'activity:filter-time' %}"
+        <button hx-get="{% url 'activity:time-filter' %}"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">Filter</button>
-        <a href={% url 'activity:quick-filter-time' 'unbilled' %}>Unbilled</a>
-        <a href={% url 'activity:quick-filter-time' 'today' %}>Today</a>
-        <form action="{% url 'activity:quick-filter-time' 'user' %}" method="post">
+        <a href={% url 'activity:time-filter-quick' 'unbilled' %}>Unbilled</a>
+        <a href={% url 'activity:time-filter-quick' 'today' %}>Today</a>
+        <form action="{% url 'activity:time-filter-user' %}" method="post">
           {% csrf_token %}
           <select class="select-user" name="user" onchange="this.form.submit()">
             <option value="">All</option>
@@ -57,7 +57,7 @@
               {{ entry.actions }}
             {% else %}
               <a href="#"
-                 hx-get="{% url 'activity:edit-time' id=entry.id %}"
+                 hx-get="{% url 'activity:time-edit' id=entry.id %}"
                  hx-target="#htmx-modal-container"
                  hx-trigger="click"
                  data-bs-toggle="modal"
@@ -68,7 +68,7 @@
             {% if entry.invoice %}
               {{ entry.hours|floatformat:1 }}
             {% else %}
-              <a href={% url 'activity:toggle-entered-time' id=entry.id %}>{{ entry.hours|floatformat:1 }}</a>
+              <a href={% url 'activity:time-toggle-entered' id=entry.id %}>{{ entry.hours|floatformat:1 }}</a>
             {% endif %}
           </td>
           <td class="rate">

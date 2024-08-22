@@ -47,7 +47,7 @@
             {% if edit %}
               <a class="confirm"
                  onclick="return confirm('Are you sure you want to delete this record?')"
-                 href="{% url 'activity:delete' id=entry.id %}">Delete Entry</a>
+                 href="{% url 'activity:time-delete' id=entry.id %}">Delete Entry</a>
             {% endif %}
           </div>
         </div>

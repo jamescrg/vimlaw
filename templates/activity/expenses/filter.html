@@ -11,7 +11,7 @@
     <div class="modal-body">
       <form class="form-responsive filter"
             method="post"
-            action="{% url 'activity:filter-expenses' %}">
+            action="{% url 'activity:expenses-filter' %}">
         {% csrf_token %}
         {{ filter.form }}
         <br />
