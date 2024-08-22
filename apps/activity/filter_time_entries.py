@@ -42,11 +42,11 @@ class TimeEntryFilter(django_filters.FilterSet):
             return queryset.filter(invoice__isnull=True)
         return queryset
 
-    order_by = django_filters.OrderingFilter(
-        fields=(("date", "date")),
-        field_labels={"date": "Date"},
-        empty_label="Default",
-    )
+    # order_by = django_filters.OrderingFilter(
+    #     fields=(("date", "date")),
+    #     field_labels={"date": "Date"},
+    #     empty_label="Default",
+    # )
 
     class Meta:
         model = TimeEntry
