@@ -37,11 +37,12 @@ def index(request):
 
     if tab == "time":
         filter_data = request.session.get("time_filter", None)
-        order = filter_data.get("order", "date, ascending")
 
         if filter_data:
             filter = TimeEntryFilter(filter_data)
             entries = filter.qs
+
+            order = filter_data.get("order", "date, ascending")
             if order == "date, descending":
                 entries = entries.order_by("-date", "-id")
             else:
@@ -60,6 +61,8 @@ def index(request):
         if filter_data:
             filter = ExpenseFilter(filter_data)
             expense_entries = filter.qs
+
+            order = filter_data.get("order", "date, ascending")
             if order == "date, descending":
                 entries.order_by("-date", "-id")
             else:
