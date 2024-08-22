@@ -41,11 +41,15 @@ def index(request):
         if filter_data:
             filter = TimeEntryFilter(filter_data)
             entries = filter.qs
+            if filter_data["order"] == "date, descending":
+                entries = entries.order_by("-date", "-id")
+            else:
+                entries = entries.order_by("date", "id")
 
             user_id = filter_data.get("user")
             user_id = int(user_id) if user_id not in (None, "") else None
         else:
-            entries = TimeEntry.objects.all().order_by("-date", "-id")
+            entries = TimeEntry.objects.all().order_by("date", "id")
             user_id = None
 
     elif tab == "expenses":
@@ -54,11 +58,15 @@ def index(request):
         if filter_data:
             filter = ExpenseFilter(filter_data)
             expense_entries = filter.qs
+            if filter_data["order"] == "date, descending":
+                entries.order_by("-date", "-id")
+            else:
+                entries.order_by("date", "id")
 
             user_id = filter_data.get("user")
             user_id = int(user_id) if user_id not in (None, "") else None
         else:
-            expense_entries = ExpenseEntry.objects.all().order_by("-date", "-id")
+            expense_entries = ExpenseEntry.objects.all().order_by("date", "id")
             user_id = None
 
     summary = calculate_summary(entries, expense_entries)
@@ -127,6 +135,20 @@ def filter_matter(request, matter_id, tab):
     elif tab == "expenses":
         filter_data = request.session.get("expense_filter", {})
 
+    new_values = {
+        "date_min": "",
+        "date_max": "",
+        "firm": None,
+        "keyword": "",
+        "comp": None,
+        "entered": None,
+        "invoice": None,
+        "order": "date, ascending",
+    }
+
+    for key, val in new_values.items():
+        filter_data[key] = val
+
     filter_data["matter"] = matter_id
 
     if tab == "time":
@@ -144,7 +166,19 @@ def quick_filter_unbilled(request, tab):
     elif tab == "expenses":
         filter_data = request.session.get("expense_filter", {})
 
+    new_values = {
+        "firm": "Campbell & Brannon",
+        "matter": None,
+        "keyword": "",
+        "comp": None,
+        "order": "date, ascending",
+    }
+
+    for key, val in new_values.items():
+        filter_data[key] = val
+
     filter_data["entered"] = 0
+    filter_data["invoice"] = 0
     filter_data["date_min"] = ""
     filter_data["date_max"] = ""
 
@@ -152,6 +186,8 @@ def quick_filter_unbilled(request, tab):
         request.session["time_filter"] = filter_data
     elif tab == "expenses":
         request.session["expense_filter"] = filter_data
+
+    request.session.modified = True
 
     return redirect("activity:list")
 
@@ -163,6 +199,19 @@ def quick_filter_today(request, tab):
     elif tab == "expenses":
         filter_data = request.session.get("expense_filter", {})
 
+    new_values = {
+        "firm": "Campbell & Brannon",
+        "matter": None,
+        "order": "date, descending",
+        "keyword": "",
+        "comp": None,
+        "entered": None,
+        "invoice": None,
+    }
+
+    for key, val in new_values.items():
+        filter_data[key] = val
+
     filter_data["date_min"] = date.today().strftime("%Y-%m-%d")
     filter_data["date_max"] = date.today().strftime("%Y-%m-%d")
 
@@ -170,6 +219,8 @@ def quick_filter_today(request, tab):
         request.session["time_filter"] = filter_data
     elif tab == "expenses":
         request.session["expense_filter"] = filter_data
+
+    request.session.modified = True
 
     return redirect("activity:list")
 
