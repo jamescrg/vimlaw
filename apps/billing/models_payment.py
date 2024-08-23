@@ -18,6 +18,7 @@ class Payment(models.Model):
     class Meta:
         indexes = [models.Index(fields=["matter"])]
         ordering = ["-date"]
+        db_table = "app_billing_payment"
 
     @property
     def method_display(self):
