@@ -33,9 +33,11 @@ class Invoice(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["matter"])]
+        db_table = "app_billing_invoice"
 
     def save(self, *args, **kwargs):
-        from apps.activity.models import ExpenseEntry, TimeEntry
+        from apps.activity.expenses.models import ExpenseEntry
+        from apps.activity.time.models import TimeEntry
 
         invoice = super().save(*args, **kwargs)
 
