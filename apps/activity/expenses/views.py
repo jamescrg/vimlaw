@@ -5,11 +5,12 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
-from apps.activity.filter_expenses import ExpenseFilter
-from apps.activity.forms import ExpenseEntryForm
-from apps.activity.models import ExpenseEntry
-from apps.activity.summary import calculate_summary_expenses
 from apps.matters.models import Matter
+
+from .filter import ExpenseFilter
+from .forms import ExpenseEntryForm
+from .models import ExpenseEntry
+from .summary import calculate_summary
 
 
 @login_required
@@ -45,7 +46,7 @@ def expenses_list(request):
         expenses = ExpenseEntry.objects.all().order_by("date", "id")
         user_id = None
 
-    summary = calculate_summary_expenses(expenses)
+    summary = calculate_summary(expenses)
     users = CustomUser.objects.filter(is_active=True)
     page = request.GET.get("page")
     pagination = Paginator(expenses, per_page=10).get_page(page)

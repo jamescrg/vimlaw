@@ -1,4 +1,4 @@
-def calculate_summary_time(entries):
+def calculate_summary(entries):
     total_hours = 0
     total_fees = 0
     comp_hours = 0
@@ -22,28 +22,6 @@ def calculate_summary_time(entries):
         "comp_fees": comp_fees,
         "net_hours": net_hours,
         "net_fees": net_fees,
-    }
-
-    return summary
-
-
-def calculate_summary_expenses(expenses):
-    total_expenses = 0
-    comp_expenses = 0
-    net_expenses = 0
-
-    for entry in expenses:
-        total_expenses += entry.amount
-
-        if entry.comp == 1:
-            comp_expenses += entry.amount
-
-    net_expenses = total_expenses - comp_expenses
-
-    summary = {
-        "total_expenses": total_expenses,
-        "comp_expenses": comp_expenses,
-        "net_expenses": net_expenses,
     }
 
     return summary

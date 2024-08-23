@@ -6,11 +6,13 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
-from apps.activity.filter_time import TimeEntryFilter
-from apps.activity.forms import TimeEntryForm
-from apps.activity.models import ExpenseEntry, TimeEntry
-from apps.activity.summary import calculate_summary_time
+from apps.activity.expenses.models import ExpenseEntry
 from apps.matters.models import Matter, Rate
+
+from .filter import TimeEntryFilter
+from .forms import TimeEntryForm
+from .models import TimeEntry
+from .summary import calculate_summary
 
 
 @login_required
@@ -46,7 +48,7 @@ def time_list(request):
         entries = TimeEntry.objects.all().order_by("date", "id")
         user_id = None
 
-    summary = calculate_summary_time(entries)
+    summary = calculate_summary(entries)
     users = CustomUser.objects.filter(is_active=True)
     page = request.GET.get("page")
     pagination = Paginator(entries, per_page=10).get_page(page)

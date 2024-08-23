@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.activity.views_expenses import (
+from apps.activity.expenses.views import (
     expenses_add,
     expenses_delete,
     expenses_edit,
@@ -10,7 +10,7 @@ from apps.activity.views_expenses import (
     expenses_list,
     expenses_toggle_entered,
 )
-from apps.activity.views_time import (
+from apps.activity.time.views import (
     export,
     time_add,
     time_delete,

@@ -9,7 +9,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 
-from apps.activity.models import ExpenseEntry, TimeEntry
+from apps.activity.expenses.models import ExpenseEntry
+from apps.activity.time.models import TimeEntry
 from apps.billing.filters_invoice import InvoiceFilter
 from apps.billing.forms_invoice import EditInvoiceForm, InvoiceForm
 from apps.billing.functions import generate_invoice

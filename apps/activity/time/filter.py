@@ -1,8 +1,9 @@
 import django_filters
 
 from apps.accounts.models import CustomUser
-from apps.activity.models import TimeEntry
 from apps.matters.models import Matter
+
+from .models import TimeEntry
 
 
 class TimeEntryFilter(django_filters.FilterSet):

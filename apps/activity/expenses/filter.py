@@ -1,8 +1,9 @@
 import django_filters
 
 from apps.accounts.models import CustomUser
-from apps.activity.models import ExpenseEntry
 from apps.matters.models import Matter
+
+from .models import ExpenseEntry
 
 
 class ExpenseFilter(django_filters.FilterSet):
