@@ -17,13 +17,6 @@ PRACTICE_AREA_CHOICES = (
     ("Old Republic", "Old Republic"),
 )
 
-FIRM_CHOICES = (
-    ("Campbell & Brannon", "Campbell & Brannon"),
-    ("Craig Law", "Craig Law"),
-    ("Mitchell Law", "Mitchell Law"),
-    ("Mays & Kerr", "Mays & Kerr"),
-)
-
 
 class MatterFilter(django_filters.FilterSet):
     status = django_filters.ChoiceFilter(
@@ -44,7 +37,6 @@ class MatterFilter(django_filters.FilterSet):
         lookup_expr="lte",
         label="Date end",
     )
-    firm = django_filters.ChoiceFilter(choices=FIRM_CHOICES, empty_label="All")
     order_by = django_filters.OrderingFilter(
         fields=(
             ("name", "name"),
@@ -64,6 +56,5 @@ class MatterFilter(django_filters.FilterSet):
             "practice_area",
             "date_start",
             "date_end",
-            "firm",
             "order_by",
         ]
