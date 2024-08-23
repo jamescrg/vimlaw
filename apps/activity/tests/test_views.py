@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.activity.models import TimeEntry
+from apps.activity.time.models import TimeEntry
 
 pytestmark = pytest.mark.django_db
 
