@@ -3,12 +3,14 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
 from apps.activity.expenses.models import ExpenseEntry
 from apps.matters.models import Matter, Rate
 
+from .export import write_clio_csv, write_standard_csv
 from .filter import TimeEntryFilter
 from .forms import TimeEntryForm
 from .models import TimeEntry
@@ -420,5 +422,32 @@ def export(request):
                 entry.comp,
             ]
         )
+
+    return response
+
+
+@login_required
+def export2(request, format):
+
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="time_entries.csv"'},
+    )
+
+    # get the time entries per the user filter
+    entries = TimeEntry.objects.all()
+    filter_data = request.session.get("time_filter", None)
+    if filter_data:
+        filter = TimeEntryFilter(filter_data)
+        entries = filter.qs
+    else:
+        entries = TimeEntry.objects.all().order_by("date", "id")
+
+    # write the time entries to CSV
+    if format == "clio":
+        write_clio_csv(entries, response)
+    else:
+        write_standard_csv(entries, response)
 
     return response
