@@ -4,7 +4,8 @@ from django.shortcuts import render
 
 from apps.contacts.models import Contact
 from apps.intakes.models import Intake
-from apps.matters.models import Matter, Proceeding
+from apps.matters.models import Matter
+from apps.matters.proceedings.models import Proceeding
 
 
 @login_required

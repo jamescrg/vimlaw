@@ -3,8 +3,10 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.forms import SettlementEntryForm
-from apps.matters.models import Matter, Proceeding, SettlementEntry
+from apps.matters.models import Matter
+from apps.matters.proceedings.models import Proceeding
+from apps.matters.settlement.forms import SettlementEntryForm
+from apps.matters.settlement.models import SettlementEntry
 
 
 @login_required

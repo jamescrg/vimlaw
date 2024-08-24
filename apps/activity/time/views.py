@@ -7,7 +7,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
 from apps.activity.expenses.models import ExpenseEntry
-from apps.matters.models import Matter, Rate
+from apps.matters.models import Matter
+from apps.matters.rates.models import Rate
 
 from .filter import TimeEntryFilter
 from .forms import TimeEntryForm

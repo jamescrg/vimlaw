@@ -2,8 +2,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
-from apps.matters.forms import RateForm
-from apps.matters.models import Matter, Proceeding, Rate
+from apps.matters.models import Matter
+from apps.matters.proceedings.models import Proceeding
+from apps.matters.rates.forms import RateForm
+from apps.matters.rates.models import Rate
 
 
 @login_required

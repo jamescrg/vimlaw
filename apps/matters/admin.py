@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Matter, Rate
+from apps.matters.models import Matter
+from apps.matters.rates.models import Rate
 
 
 class MatterAdmin(admin.ModelAdmin):
