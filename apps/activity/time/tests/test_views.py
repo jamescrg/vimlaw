@@ -109,5 +109,5 @@ def test_toggle_entered(client, entry):
 
 
 def test_export(client):
-    response = client.get("/activity/export")
+    response = client.get("/activity/time/export/clio")
     assert response.status_code == 200

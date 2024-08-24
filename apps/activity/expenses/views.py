@@ -1,12 +1,14 @@
-from datetime import date
+from datetime import date, datetime
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
 
+from .export import write_clio_csv, write_standard_csv
 from .filter import ExpenseFilter
 from .forms import ExpenseEntryForm
 from .models import ExpenseEntry
@@ -243,3 +245,34 @@ def expenses_toggle_entered(request, id):
         entry.entered = 1
     entry.save()
     return redirect("/activity/expenses")
+
+
+@login_required
+def expenses_export_to_csv(request, format):
+
+    # Set the file name
+    current_day_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    filename = f"Expenses - {current_day_and_time} - {format.title()}"
+
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+    # get the time expenses per the user filter
+    expenses = ExpenseEntry.objects.all()
+    filter_data = request.session.get("expenses_filter", None)
+    if filter_data:
+        filter = ExpenseFilter(filter_data)
+        expenses = filter.qs
+    else:
+        expenses = ExpenseEntry.objects.all().order_by("date", "id")
+
+    # write the time expenses to CSV
+    if format == "clio":
+        write_clio_csv(expenses, response)
+    else:
+        write_standard_csv(expenses, response)
+
+    return response

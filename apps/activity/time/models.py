@@ -6,9 +6,9 @@ from apps.matters.models import Matter
 
 
 class TimeEntry(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
     date = models.DateField(null=True)
+    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     actions = models.TextField(null=True)
     hours = models.DecimalField(max_digits=3, decimal_places=1, default=0)
     rate = models.IntegerField(null=True)
@@ -27,3 +27,10 @@ class TimeEntry(models.Model):
     @property
     def fee(self):
         return self.hours * self.rate
+
+    @property
+    def discounted_fee(self):
+        if self.comp:
+            return self.hours * self.rate
+        else:
+            return 0

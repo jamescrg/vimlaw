@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
@@ -10,6 +11,7 @@ from apps.activity.expenses.models import ExpenseEntry
 from apps.matters.models import Matter
 from apps.matters.rates.models import Rate
 
+from .export import write_clio_csv, write_standard_csv
 from .filter import TimeEntryFilter
 from .forms import TimeEntryForm
 from .models import TimeEntry
@@ -336,7 +338,7 @@ def time_toggle_entered(request, id):
 
 
 @login_required
-def export(request):
+def export_old(request):
     import csv
 
     from django.http import HttpResponse
@@ -421,5 +423,36 @@ def export(request):
                 entry.comp,
             ]
         )
+
+    return response
+
+
+@login_required
+def time_export_to_csv(request, format):
+
+    # Set the file name
+    current_day_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    filename = f"Time Entries - {current_day_and_time} - {format.title()}"
+
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+    # get the time entries per the user filter
+    entries = TimeEntry.objects.all()
+    filter_data = request.session.get("time_filter", None)
+    if filter_data:
+        filter = TimeEntryFilter(filter_data)
+        entries = filter.qs
+    else:
+        entries = TimeEntry.objects.all().order_by("date", "id")
+
+    # write the time entries to CSV
+    if format == "clio":
+        write_clio_csv(entries, response)
+    else:
+        write_standard_csv(entries, response)
 
     return response

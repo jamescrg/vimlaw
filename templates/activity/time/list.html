@@ -29,9 +29,24 @@
       </div>
     </div>
     <div class="section-title-right">
-      <a href={% url 'activity:export' %}>
-        <i class="bi bi-cloud-download"></i>
-      </a>
+      <div class="dropdown">
+        <button class="btn-icon"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          <i class="bi bi-cloud-download"></i>
+        </button>
+        <ul class="dropdown-menu">
+          <li>
+            <a href="{% url 'activity:time-export' 'standard' %}"
+               onclick="javascript: return confirm('Are you sure you want to download records?')">Standard</a>
+          </li>
+          <li>
+            <a href="{% url 'activity:time-export' 'clio' %}"
+               onclick="javascript: return confirm('Are you sure you want to download records?')">Clio</a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
   <div class="table-container">

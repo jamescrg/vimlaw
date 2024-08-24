@@ -55,6 +55,15 @@ a:hover {
     padding: 4px 7px;
 }
 
+.section-title .dropdown li {
+  background: none;
+  padding: 7px 0;
+}
+
+.section-title .dropdown li > a {
+  background: none;
+}
+
 .section-title-left {
     align-items: center;
     display: flex;
