@@ -4,12 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.contacts.functions.load_contacts import load_contacts
 from apps.contacts.models import Contact
 from apps.events.models import Event
-from apps.matters.filter_matters import MatterFilter
+from apps.matters.filter import MatterFilter
 from apps.matters.forms import MatterForm
-from apps.matters.load_contacts import load_contacts
-from apps.matters.models import Fact, Matter, Proceeding, SettlementEntry
+from apps.matters.models import Fact, Matter
+from apps.matters.proceedings.models import Proceeding
+from apps.matters.settlement.models import SettlementEntry
 
 
 @login_required

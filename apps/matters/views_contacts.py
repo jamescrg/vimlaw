@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.contacts.functions.load_contacts import load_contacts
 from apps.contacts.models import Contact
-from apps.matters.load_contacts import load_contacts
-from apps.matters.models import Matter, Proceeding, Relationship, Role
+from apps.matters.models import Matter, Relationship, Role
+from apps.matters.proceedings.models import Proceeding
 
 
 @login_required

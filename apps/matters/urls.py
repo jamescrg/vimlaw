@@ -4,9 +4,6 @@ from apps.matters import (
     views_activity as matters_activity,
     views_contacts as matters_contacts,
     views_events as matters_events,
-    views_proceedings as matters_proceedings,
-    views_rates as matters_rates,
-    views_settlement as matters_settlement,
     views_timeline as matters_timeline,
 )
 from apps.matters.views import (
@@ -21,6 +18,10 @@ from apps.matters.views import (
     print,
     quick_filter_status,
 )
+
+from .proceedings import views as matters_proceedings
+from .rates import views as matters_rates
+from .settlement import views as matters_settlement
 
 app_name = "matters"
 

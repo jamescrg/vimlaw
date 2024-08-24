@@ -1,6 +1,5 @@
 from django.db import models
 
-from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
 
 
@@ -52,37 +51,6 @@ class Relationship(models.Model):
         return f"matter: {self.matter.id}, contact: {self.contact.id}, role: {self.role.id}"
 
 
-class Proceeding(models.Model):
-    user_id = models.IntegerField()
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
-    date_filed = models.DateField(null=True)
-    forum = models.CharField(max_length=150, null=True)
-    case_number = models.CharField(max_length=50, null=True)
-    status = models.CharField(max_length=50, null=True)
-
-    def __str__(self):
-        return f"{self.case_number}"
-
-    class Meta:
-        db_table = "app_proceeding"
-
-
-class SettlementEntry(models.Model):
-    user_id = models.IntegerField()
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
-    date = models.DateField(null=True)
-    medium = models.CharField(max_length=50, blank=True, null=True)
-    type = models.CharField(max_length=150, null=True)
-    amount = models.CharField(max_length=50, null=True)
-    notes = models.CharField(max_length=50, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.amount}"
-
-    class Meta:
-        db_table = "app_settlement"
-
-
 class Fact(models.Model):
     user_id = models.IntegerField()
     matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
@@ -96,15 +64,3 @@ class Fact(models.Model):
 
     class Meta:
         db_table = "app_fact"
-
-
-class Rate(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
-    matter_rate = models.IntegerField()
-
-    def __str__(self):
-        return f"{self.matter.name} - {self.user.username} - {self.matter_rate}"
-
-    class Meta:
-        db_table = "app_matter_rate"
