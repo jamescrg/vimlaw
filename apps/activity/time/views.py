@@ -39,12 +39,6 @@ def time_list(request):
         filter = TimeEntryFilter(filter_data)
         entries = filter.qs
 
-        order = filter_data.get("order", "date, ascending")
-        if order == "date, descending":
-            entries = entries.order_by("-date", "-id")
-        else:
-            entries = entries.order_by("date", "id")
-
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
     else:
@@ -53,6 +47,7 @@ def time_list(request):
 
     summary = calculate_summary(entries)
     users = CustomUser.objects.filter(is_active=True)
+
     page = request.GET.get("page")
     pagination = Paginator(entries, per_page=10).get_page(page)
 
@@ -75,30 +70,26 @@ def time_list(request):
 def time_filter(request):
     def get_filter(request):
         filter_data = request.session.get("time_filter", request.POST)
+
         return TimeEntryFilter(filter_data, queryset=TimeEntry.objects.all())
 
     if request.method == "POST":
         request.session["time_filter"] = request.POST
+
         return redirect("activity:time-list")
 
     else:
         filter = get_filter(request)
-        if request.session.get("time_filter"):
-            filter_order = request.session["time_filter"].get(
-                "order", "date, ascending"
-            )
-        else:
-            filter_order = "date, ascending"
+
         return render(
             request,
             "activity/time/filter.html",
-            {"filter": filter, "filter_order": filter_order},
+            {"filter": filter},
         )
 
 
 @login_required
 def time_filter_matter(request, matter_id):
-
     filter_data = request.session.get("time_filter", {})
 
     new_values = {
@@ -110,12 +101,13 @@ def time_filter_matter(request, matter_id):
         "comp": None,
         "entered": None,
         "invoice": None,
-        "order": "date, ascending",
     }
 
     for key, val in new_values.items():
         filter_data[key] = val
+
     filter_data["matter"] = matter_id
+
     request.session["time_filter"] = filter_data
 
     return redirect("activity:time-list")
@@ -123,9 +115,6 @@ def time_filter_matter(request, matter_id):
 
 @login_required
 def time_filter_quick(request, quick_filter):
-
-    # TODO: why are these switching the user to all?
-    # that's the desired behavior, but I don't understand it
     quick_filters = {
         "unbilled": {
             "date_min": "",
@@ -136,7 +125,6 @@ def time_filter_quick(request, quick_filter):
             "comp": None,
             "entered": 0,
             "invoice": 0,
-            "order": "date, ascending",
         },
         "today": {
             "date_min": date.today().strftime("%Y-%m-%d"),
@@ -147,7 +135,6 @@ def time_filter_quick(request, quick_filter):
             "comp": None,
             "entered": None,
             "invoice": None,
-            "order": "date, descending",
         },
     }
 

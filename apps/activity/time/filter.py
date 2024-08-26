@@ -2,6 +2,7 @@ import django_filters
 
 from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
+from config.helpers import MultipleOrderingFilter
 
 from .models import TimeEntry
 
@@ -35,6 +36,11 @@ class TimeEntryFilter(django_filters.FilterSet):
         empty_label="All",
         method="filter_invoice",
     )
+    order_by = MultipleOrderingFilter(
+        fields=[(("date", "id"), "date")],
+        field_labels={"date": "Date meow"},
+        empty_label="Default",
+    )
 
     def filter_invoice(self, queryset, _, value):
         if value == "1":
@@ -42,12 +48,6 @@ class TimeEntryFilter(django_filters.FilterSet):
         elif value == "0":
             return queryset.filter(invoice__isnull=True)
         return queryset
-
-    # order_by = django_filters.OrderingFilter(
-    #     fields=(("date", "date")),
-    #     field_labels={"date": "Date"},
-    #     empty_label="Default",
-    # )
 
     class Meta:
         model = TimeEntry

@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
+import django_filters
 import pytz
 from django.db.models import Model
-from django.db.models.query import QuerySet
+from django.db.models.query import F, QuerySet
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 
@@ -64,3 +65,25 @@ def format_phone(original):
             return f"{new[:3]}.{new[3:6]}.{new[6:]}"
         else:
             return original
+
+
+class MultipleOrderingFilter(django_filters.OrderingFilter):
+    def filter(self, qs, value):
+        if value in (None, ""):
+            return qs
+
+        ordering = []
+
+        for param in value:
+            fields = self.param_map[param.removeprefix("-")]
+
+            if not isinstance(fields, (list, tuple)):
+                fields = [fields]
+
+            for field in fields:
+                if isinstance(field, str):
+                    field = F(field)
+
+                ordering.append(field.desc() if param.startswith("-") else field)
+
+        return qs.order_by(*ordering)
