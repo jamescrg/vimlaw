@@ -1,7 +1,7 @@
 import django_filters
 
 from apps.accounts.models import CustomUser
-from apps.agenda.models import Task
+from apps.agenda.tasks.models import Task
 from apps.matters.models import Matter
 
 STATUS_CHOICES = (

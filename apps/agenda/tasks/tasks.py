@@ -1,8 +1,8 @@
 from django.core.paginator import Paginator
 
 from apps.accounts.models import CustomUser
-from apps.agenda.filter_tasks import TasksFilter
-from apps.agenda.models import Task
+from apps.agenda.tasks.filter import TasksFilter
+from apps.agenda.tasks.models import Task
 from apps.matters.models import Matter
 
 
