@@ -125,6 +125,7 @@ def time_filter_quick(request, quick_filter):
             "comp": None,
             "entered": 0,
             "invoice": 0,
+            "order_by": "date",
         },
         "today": {
             "date_min": date.today().strftime("%Y-%m-%d"),
@@ -135,6 +136,7 @@ def time_filter_quick(request, quick_filter):
             "comp": None,
             "entered": None,
             "invoice": None,
+            "order_by": "-date",
         },
     }
 
