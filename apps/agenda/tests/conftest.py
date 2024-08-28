@@ -2,7 +2,7 @@ import pytest
 from django.test import Client
 
 from apps.accounts.models import CustomUser
-from apps.agenda.models import Task
+from apps.agenda.tasks.models import Task
 from apps.folders.models import Folder
 from apps.matters.models import Matter
 
@@ -28,7 +28,7 @@ def client(user):
 
 
 @pytest.fixture
-def folder():
+def folder(user):
     folder = Folder.objects.create(
         page="agenda",
         name="Current",

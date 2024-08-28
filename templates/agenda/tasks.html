@@ -18,15 +18,6 @@
         <a href="{% url 'agenda:filter-user' 'lexi' %}">Lexi</a>
       </div>
     </div>
-    <div class="section-title-right"
-         hx-target="#tasks-table"
-         hx-swap="#outerHTML">
-      {% if not show_events %}
-        <a href={% url 'agenda:toggle-events' %}>
-          <i class="bi bi-calendar2"></i>
-        </a>
-      {% endif %}
-    </div>
   </div>
   {% include "agenda/task-form-add.html" %}
   {% include "agenda/tasks-table.html" %}

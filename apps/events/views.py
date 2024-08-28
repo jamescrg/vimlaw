@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 import apps.events.google as google
+from apps.events.filter import EventFilter
 from apps.events.forms import EventForm
 from apps.events.models import Event
 from apps.matters.models import Matter
@@ -30,6 +31,36 @@ def index(request):
     }
 
     return render(request, "events/list.html", context)
+
+
+@login_required
+def event_filter(request):
+    if request.method == "POST":
+        request.session["event_filter"] = request.POST
+
+        return redirect("agenda:agenda")
+    else:
+        filter_data = request.session.get("event_filter", {})
+
+        filter = EventFilter(filter_data, queryset=Event.objects.all())
+
+        return render(request, "events/event-filter.html", {"filter": filter})
+
+
+@login_required
+def quick_filter_pending(request):
+    values = {
+        "status": "Pending",
+        "matter": None,
+        "date_min": "",
+        "date_max": "",
+        "party": None,
+    }
+
+    request.session["event_filter"] = values
+    request.session.modified = True
+
+    return redirect("agenda:agenda")
 
 
 @login_required

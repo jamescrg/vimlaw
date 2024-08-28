@@ -1,0 +1,24 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Filter Events</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form class="form-responsive filter"
+            method="post"
+            action="{% url 'events:filter-events' %}">
+        {% csrf_token %}
+        {{ filter.form }}
+        <br />
+        <div class="flex-center-space">
+          <button type="submit" class="submit">Apply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

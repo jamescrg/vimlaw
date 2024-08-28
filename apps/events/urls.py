@@ -1,6 +1,14 @@
 from django.urls import path
 
-from apps.events.views import add, deadline_results, delete, edit, index
+from apps.events.views import (
+    add,
+    deadline_results,
+    delete,
+    edit,
+    event_filter,
+    index,
+    quick_filter_pending,
+)
 
 app_name = "events"
 
@@ -26,5 +34,11 @@ urlpatterns = [
         "events/<int:id>/delete/<str:origin>",
         delete,
         name="delete-origin",
+    ),
+    path("events/filter-events/", event_filter, name="filter-events"),
+    path(
+        "events/quick-filter-pending/",
+        quick_filter_pending,
+        name="quick-filter-pending",
     ),
 ]

@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.agenda.models import Task
+from apps.agenda.tasks.models import Task
 
 pytestmark = pytest.mark.django_db
 
@@ -12,17 +12,9 @@ def test_index(client, folder, task, matter):
     assert response.status_code == 200
     response = client.get(reverse("agenda:agenda"))
     assert response.status_code == 200
-    assertTemplateUsed(response, "agenda/content.html")
+    assertTemplateUsed(response, "agenda/agenda-main.html")
     assert response.context["page"] == "agenda"
     assert response.context["show_events"]
-
-
-def test_toggle_events(client):
-    response = client.get("/agenda/")
-    assert response.context["show_events"]
-    client.get("/agenda/toggle-events")
-    response = client.get("/agenda/")
-    assert not response.context["show_events"]
 
 
 def test_add_post(client, folder, task_data):
