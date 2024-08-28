@@ -2,11 +2,11 @@
 {% block content %}
   <div class="sub-nav">
     <ul>
-      <li {% if tab == "tasks" %}class="active"{% endif %}>
-        <a href="{% url 'agenda:set-tab' tab='tasks' %}">Tasks</a>
-      </li>
       <li {% if tab == "events" %}class="active"{% endif %}>
         <a href="{% url 'agenda:set-tab' tab='events' %}">Events</a>
+      </li>
+      <li {% if tab == "tasks" %}class="active"{% endif %}>
+        <a href="{% url 'agenda:set-tab' tab='tasks' %}">Tasks</a>
       </li>
     </ul>
   </div>
