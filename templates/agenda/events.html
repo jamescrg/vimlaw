@@ -4,18 +4,25 @@
       <div class="section-title">
         <div class="section-title-left">
           <h1>Events</h1>
-          <div class="section-title-left-right"></div>
-        </div>
-        <div class="section-title-right">
-          <button type="button"
-                  class="btn-icon"
-                  hx-get="/events/add/agenda"
-                  hx-target="#htmx-modal-container"
-                  hx-trigger="click"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="bi bi-plus-lg"></i>
-          </button>
+          <div class="section-title-left-right">
+            <button type="button"
+                    class="btn-icon"
+                    hx-get="/events/add/agenda"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+            <button type="button"
+                    class="btn-icon"
+                    hx-get="{% url 'events:filter-events' %}"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">Filter</button>
+            <a href={% url 'events:quick-filter-pending' %}>Pending</a>
+          </div>
         </div>
       </div>
       <div class="table-container">
@@ -26,7 +33,7 @@
             <th class="party">Party</th>
             <th class="description">Description</th>
           </tr>
-          {% for event in events %}
+          {% for event in objects %}
             <tr>
               <td class="date">{{ event.date|date:"Y-m-d" }}</td>
               <td class="matter">
@@ -46,6 +53,7 @@
             </tr>
           {% endfor %}
         </table>
+        {% include "pagination.html" %}
       </div>
     </div>
   </div>

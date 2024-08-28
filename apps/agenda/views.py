@@ -1,10 +1,9 @@
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 from apps.agenda.tasks.tasks import get_table_data
-from apps.events.models import Event
 
 
 @login_required
@@ -25,18 +24,6 @@ def index(request):
             show_events = True
             request.session["show_events"] = True
 
-    # if events are shown, load them
-    if show_events:
-        today = date.today()
-        three_weeks_out = today + timedelta(days=21)
-        three_days_out = today + timedelta(days=3)
-        events = Event.objects.filter(
-            status="Pending", date__lt=three_weeks_out
-        ).order_by("date")
-    else:
-        events = None
-        three_days_out = None
-
     table_data = get_table_data(request)
 
     # save the currently selected matter in the add task form
@@ -47,8 +34,6 @@ def index(request):
         "tab": tab,
         "page": page,
         "show_events": show_events,
-        "events": events,
-        "three_days_out": three_days_out,
         "agenda_matter": agenda_matter,
     }
 
