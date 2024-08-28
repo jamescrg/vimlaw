@@ -13,10 +13,9 @@ from apps.matters.models import Matter
 
 
 @login_required
-def index(request):
-    page = "agenda"
+def tasks_list(request):
+    page = "tasks"
 
-    tab = request.session.get("agenda_tab", "tasks")
     # check whether events have been hidden
     show_events = request.session.get("show_events", True)
 
@@ -34,21 +33,20 @@ def index(request):
 
     # save the currently selected matter in the add task form
     # so multiple tasks can quickly be added to a matter
-    agenda_matter = request.session.get("agenda_matter")
+    tasks_matter = request.session.get("tasks_matter")
 
     context = {
-        "tab": tab,
         "page": page,
         "show_events": show_events,
-        "agenda_matter": agenda_matter,
+        "tasks_matter": tasks_matter,
     }
 
     context = context | table_data
-    return render(request, "agenda/agenda-main.html", context)
+    return render(request, "tasks/list.html", context)
 
 
 @login_required
-def add(request):
+def tasks_add(request):
     task = Task()
 
     task.user_id = request.user.id
@@ -75,7 +73,7 @@ def add(request):
 
 
 @login_required
-def edit(request, id):
+def tasks_edit(request, id):
     if request.method == "POST":
         try:
             task = Task.objects.filter(pk=id).get()
@@ -119,14 +117,14 @@ def edit(request, id):
 
 
 @login_required
-def delete(request, id):
+def tasks_delete(request, id):
     entry = get_object_or_404(Task, pk=id)
     entry.delete()
     return redirect("/agenda")
 
 
 @login_required
-def task_filter(request, user=None):
+def tasks_filter(request, user=None):
     if request.method == "POST":
         request.session["task_filter"] = request.POST
 
@@ -140,7 +138,7 @@ def task_filter(request, user=None):
 
 
 @login_required
-def quick_filter_user(request, user):
+def tasks_filter_quick(request, user):
     filter_data = request.session.get("task_filter", {})
 
     if user == "All":
@@ -157,7 +155,7 @@ def quick_filter_user(request, user):
 
 
 @login_required
-def task_status(request, id):
+def tasks_status(request, id):
     task = get_object_or_404(Task, pk=id)
     if task.status == "Complete":
         task.status = "Pending"
@@ -171,7 +169,7 @@ def task_status(request, id):
 
 
 @login_required
-def change_user(request, task_id):
+def tasks_filter_user(request, task_id):
     task = get_object_or_404(Task, pk=task_id)
     user = get_object_or_404(CustomUser, pk=request.POST["user"])
     users = CustomUser.objects.all()
@@ -185,3 +183,8 @@ def change_user(request, task_id):
         "users": users,
     }
     return render(request, "agenda/change-user.html", context)
+
+
+@login_required
+def tasks_change_user():
+    pass

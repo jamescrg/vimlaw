@@ -13,7 +13,7 @@ from apps.matters.models import Matter
 
 
 @login_required
-def index(request):
+def events_list(request):
     today = date.today()
     third_day = today + timedelta(days=3)
 
@@ -34,7 +34,7 @@ def index(request):
 
 
 @login_required
-def event_filter(request):
+def events_filter(request):
     if request.method == "POST":
         request.session["event_filter"] = request.POST
 
@@ -48,7 +48,7 @@ def event_filter(request):
 
 
 @login_required
-def quick_filter_pending(request):
+def events_filter_quick(request):
     values = {
         "status": "Pending",
         "matter": None,
@@ -64,7 +64,7 @@ def quick_filter_pending(request):
 
 
 @login_required
-def add(request, matter_id=None, origin="events"):
+def events_add(request, matter_id=None, origin="events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":
         request.session["origin"] = origin
@@ -133,7 +133,7 @@ def add(request, matter_id=None, origin="events"):
 
 
 @login_required
-def edit(request, id, origin="events"):
+def events_edit(request, id, origin="events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":
         request.session["origin"] = origin
@@ -205,7 +205,7 @@ def edit(request, id, origin="events"):
 
 
 @login_required
-def delete(request, id, origin="events:events"):
+def events_delete(request, id, origin="events:events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":
         request.session["origin"] = origin
@@ -225,7 +225,7 @@ def delete(request, id, origin="events:events"):
 
 
 @login_required
-def google_sync(request, id):
+def events_google_sync(request, id):
     event = get_object_or_404(Event, pk=id)
     event.google_id = google.add_event(event)
     event.save()
@@ -233,7 +233,7 @@ def google_sync(request, id):
 
 
 @login_required
-def deadline_results(request, matter_id=None):
+def events_deadline_results(request, matter_id=None):
 
     # get the submitted initial date and days
     initial_date = request.POST["initial_date"]
