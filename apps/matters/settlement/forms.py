@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.matters.settlement.models import SettlementEntry
+from .models import SettlementEntry
 
 
 class SettlementEntryForm(forms.ModelForm):

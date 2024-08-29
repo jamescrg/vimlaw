@@ -3,9 +3,10 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.matters.forms import FactForm
-from apps.matters.models import Fact, Matter
+from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
+from apps.matters.timeline.forms import FactForm
+from apps.matters.timeline.models import Fact
 
 
 @login_required

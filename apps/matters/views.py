@@ -9,9 +9,10 @@ from apps.contacts.models import Contact
 from apps.events.models import Event
 from apps.matters.filter import MatterFilter
 from apps.matters.forms import MatterForm
-from apps.matters.models import Fact, Matter
+from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
+from apps.matters.timeline.models import Fact
 
 
 @login_required
