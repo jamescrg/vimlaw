@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="sub-nav">
+  <div class="subnav">
     <ul>
       <li {% if subpage == "time" %}class="active"{% endif %}>
         <a href="{% url 'activity:time-list' %}">Time</a>
@@ -10,8 +10,8 @@
       </li>
     </ul>
   </div>
-  <div class="section sub-section">
-    {% block sub-content %}
-    {% endblock sub-content %}
+  <div class="section subsection">
+    {% block subcontent %}
+    {% endblock subcontent %}
   </div>
 {% endblock content %}

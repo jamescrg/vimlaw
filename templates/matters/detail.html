@@ -65,7 +65,7 @@
       {% endif %}
     </div>
   </div>
-  <div class="sub-nav">
+  <div class="subnav">
     <ul>
       <li {% if submodule == 'rates' %}class="active"{% endif %}>
         <a href={% url 'matters:rates' id=matter.id %}>Rates</a>
@@ -90,7 +90,7 @@
       </li>
     </ul>
   </div>
-  <div class="section sub-section">
+  <div class="section subsection">
     {% block subcontent %}
     {% endblock subcontent %}
   </div>

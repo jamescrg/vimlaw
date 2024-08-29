@@ -1,74 +1,83 @@
 from django.urls import path
 
-from apps.billing.invoice.views import (
-    add_invoice,
-    cancel_invoice,
-    delete_invoice,
-    edit_invoice,
-    invoice_detail,
-    invoice_filter,
-    invoice_pdf,
-    status_update,
+from apps.billing.invoices.views import (
+    invoices_add,
+    invoices_cancel,
+    invoices_delete,
+    invoices_detail,
+    invoices_edit,
+    invoices_filter,
+    invoices_list,
+    invoices_pdf,
+    invoices_status_update,
 )
-from apps.billing.payment.views import (
-    add_payment,
-    delete_payment,
-    edit_payment,
-    payment_filter,
+from apps.billing.payments.views import (
+    payments_add,
+    payments_delete,
+    payments_edit,
+    payments_filter,
+    payments_list,
 )
-from apps.billing.views import billing_index, set_tab
 
 app_name = "billing"
 
 urlpatterns = [
-    path("billing/", billing_index, name="billing"),
-    path("billing/set-tab/<str:tab>/", set_tab, name="set-tab"),
     path(
-        "billing/invoice-detail/<int:pk>/preview/",
-        invoice_detail,
-        name="invoice-detail",
-    ),
-    path("billing/add-invoice/", add_invoice, name="add-invoice"),
-    path(
-        "billing/edit-invoice/<int:pk>/",
-        edit_invoice,
-        name="edit-invoice",
+        "billing/",
+        invoices_list,
+        name="invoices-list",
     ),
     path(
-        "billing/delete-invoice/<int:pk>/",
-        delete_invoice,
-        name="delete-invoice",
+        "billing/invoicess-detail/<int:pk>/preview/",
+        invoices_detail,
+        name="invoices-detail",
     ),
-    path("billing/invoice-pdf/<int:pk>/", invoice_pdf, name="invoice-pdf"),
+    path("billing/invoices-add/", invoices_add, name="invoices-add"),
     path(
-        "billing/status-update/<int:pk>/",
-        status_update,
-        name="status-update",
+        "billing/invoices-edit/<int:pk>/",
+        invoices_edit,
+        name="invoices-edit",
     ),
     path(
-        "billing/cancel-invoice/<int:pk>/",
-        cancel_invoice,
-        name="cancel-invoice",
+        "billing/invoices-delete/<int:pk>/",
+        invoices_delete,
+        name="invoices-delete",
     ),
-    path("billing/add-payment/", add_payment, name="add-payment"),
+    path("billing/invoices-pdf/<int:pk>/", invoices_pdf, name="invoices-pdf"),
     path(
-        "billing/delete-payment/<int:pk>/",
-        delete_payment,
+        "billing/invoices-status-update/<int:pk>/",
+        invoices_status_update,
+        name="invoices-status-update",
+    ),
+    path(
+        "billing/invoices-cancel/<int:pk>/",
+        invoices_cancel,
+        name="invoices-cancel",
+    ),
+    path(
+        "billing/payments/",
+        payments_list,
+        name="payments-list",
+    ),
+    path("billing/payments-add/", payments_add, name="payments-add"),
+    path(
+        "billing/payments-delete/<int:pk>/",
+        payments_delete,
         name="delete-payment",
     ),
     path(
-        "billing/edit-payment/<int:pk>/",
-        edit_payment,
-        name="edit-payment",
+        "billing/payments-edit/<int:pk>/",
+        payments_edit,
+        name="payments-edit",
     ),
     path(
-        "billing/payment-filter/",
-        payment_filter,
-        name="filter-payments",
+        "billing/payments-filter/",
+        payments_filter,
+        name="payments-filter",
     ),
     path(
-        "billing/invoice-filter/",
-        invoice_filter,
-        name="filter-invoices",
+        "billing/invoices-filter/",
+        invoices_filter,
+        name="invoices-filter",
     ),
 ]

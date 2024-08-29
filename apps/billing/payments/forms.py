@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django import forms
 
-from apps.billing.payment.models import Payment
+from apps.billing.payments.models import Payment
 
 
 class PaymentForm(forms.ModelForm):

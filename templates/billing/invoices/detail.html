@@ -15,7 +15,7 @@
         <div class="section-title-right">
           <button type="button"
                   class="btn-icon"
-                  hx-get="{% url 'billing:edit-invoice' invoice.id %}"
+                  hx-get="{% url 'billing:invoices-edit' invoice.id %}"
                   hx-target="#htmx-modal-container"
                   hx-trigger="click"
                   data-bs-toggle="modal"
@@ -65,9 +65,9 @@
       {% endif %}
     </div>
   </div>
-  <ul class="sub-nav">
+  <ul class="subnav">
     <li {% if request.path|slice:"28:" == '/preview/' %}class="active"{% endif %}>
-      <a href={% url 'billing:invoice-detail' pk=invoice.id %}>Preview PDF</a>
+      <a href={% url 'billing:invoices-detail' pk=invoice.id %}>Preview PDF</a>
     </li>
   </ul>
   <div class="section">

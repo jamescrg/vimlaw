@@ -2,7 +2,7 @@
 <tr id="payment-{{ payment.id }}">
   <td class="number">
     <a class="pointer"
-       hx-get="{% url 'billing:edit-payment' payment.id %}"
+       hx-get="{% url 'billing:payments-edit' payment.id %}"
        hx-target="#htmx-modal-container"
        hx-trigger="click"
        data-bs-toggle="modal"
@@ -24,7 +24,7 @@
     </a>
     <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
       <li>
-        <form hx-delete="{% url 'billing:delete-payment' payment.id %}"
+        <form hx-delete="{% url 'billing:payments-delete' payment.id %}"
               hx-target="#payment-list"
               hx-swap="outerHTML">
           <button type="submit" class="dropdown-item invoice-delete">Delete</button>

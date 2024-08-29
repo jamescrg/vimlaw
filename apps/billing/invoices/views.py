@@ -4,6 +4,7 @@ from itertools import chain
 
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
+from django.core.paginator import Paginator
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -11,16 +12,45 @@ from django.urls import reverse_lazy
 
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
-from apps.billing.functions import generate_invoice
-from apps.billing.functions.calculate_inv_amount import calculate_inv_amount
-from apps.billing.invoice.filters import InvoiceFilter
-from apps.billing.invoice.forms import EditInvoiceForm, InvoiceForm
-from apps.billing.invoice.models import Invoice
 from apps.matters.models import Matter
+
+from .filters import InvoiceFilter
+from .forms import EditInvoiceForm, InvoiceForm
+from .functions import generate_invoice
+from .functions.calculate_inv_amount import calculate_inv_amount
+from .models import Invoice
 
 
 @login_required
-def invoice_detail(request, pk):
+def invoices_list(request):
+
+    filter_data = request.session.get("invoices_filter", None)
+
+    if filter_data:
+        filter = InvoiceFilter(filter_data)
+        invoices = filter.qs
+    else:
+        invoices = (
+            Invoice.objects.all()
+            .select_related("matter", "created_by")
+            .order_by("-created_at")
+        )
+
+    page = request.GET.get("page")
+    pagination = Paginator(invoices, per_page=10).get_page(page)
+
+    context = {
+        "page": "billing",
+        "subpage": "invoices",
+        "pagination": pagination,
+        "objects": pagination.object_list,
+    }
+
+    return render(request, "billing/invoices/list.html", context)
+
+
+@login_required
+def invoices_detail(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
     context = {
@@ -29,11 +59,11 @@ def invoice_detail(request, pk):
         "invoice": invoice,
     }
 
-    return render(request, "billing/preview/preview.html", context)
+    return render(request, "billing/invoices/preview/preview.html", context)
 
 
 @login_required
-def add_invoice(request):
+def invoices_add(request):
     if request.method == "POST":
         form = InvoiceForm(request.POST)
 
@@ -48,7 +78,7 @@ def add_invoice(request):
 
             invoice.save()
 
-            return redirect("billing:billing")
+            return redirect("billing:invoices-list")
     else:
         form = InvoiceForm()
 
@@ -67,11 +97,11 @@ def add_invoice(request):
         )
         form.fields["matter"].queryset = matter_list
 
-    return render(request, "billing/form-invoice.html", {"form": form})
+    return render(request, "billing/invoices/form.html", {"form": form})
 
 
 @login_required
-def edit_invoice(request, pk):
+def invoices_edit(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
     if request.method == "POST":
@@ -110,32 +140,32 @@ def edit_invoice(request, pk):
             invoice.amount = (time_entry_amount + expense_amount) - invoice.discount
             invoice.save()
 
-            return redirect("billing:invoice-detail", pk=pk)
+            return redirect("billing:invoices-detail", pk=pk)
     else:
         form = EditInvoiceForm(instance=invoice)
 
     return render(
-        request, "billing/edit-invoice.html", {"form": form, "invoice": invoice}
+        request, "billing/invoices/edit.html", {"form": form, "invoice": invoice}
     )
 
 
 @login_required
-def delete_invoice(request, pk):
+def invoices_delete(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
     invoice.delete()
 
-    return redirect("billing:billing")
+    return redirect("billing:invoices-list")
 
 
 @login_required
-def cancel_invoice(request, pk):
+def invoices_cancel(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
-    return render(request, "billing/confirm-cancel.html", {"invoice": invoice})
+    return render(request, "billing/invoices/confirm-cancel.html", {"invoice": invoice})
 
 
 @login_required
-def invoice_pdf(request, pk):
+def invoices_pdf(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
     if invoice.status == "CANCELED":
@@ -159,7 +189,7 @@ def invoice_pdf(request, pk):
 
 
 @login_required
-def status_update(request, pk):
+def invoices_status_update(request, pk):
     if request.method == "POST":
         invoice = get_object_or_404(Invoice, pk=pk)
 
@@ -189,19 +219,19 @@ def status_update(request, pk):
 
             ExpenseEntry.objects.filter(invoice=invoice).update(invoice=None)
 
-            return redirect("billing:billing")
+            return redirect("billing:invoices-list")
 
-        return render(request, "billing/invoice-row.html", {"invoice": invoice})
+        return render(request, "billing/invoices/row.html", {"invoice": invoice})
 
 
 @login_required
-def invoice_filter(request):
+def invoices_filter(request):
     if request.method == "POST":
-        request.session["invoice_filter"] = request.POST
+        request.session["invoices_filter"] = request.POST
 
-        return redirect("billing:billing")
+        return redirect("billing:invoices-list")
     else:
-        filter_data = request.session.get("invoice_filter", {})
+        filter_data = request.session.get("invoices_filter", {})
 
         filter = InvoiceFilter(
             filter_data,
@@ -210,4 +240,4 @@ def invoice_filter(request):
             .order_by("-created_at"),
         )
 
-        return render(request, "billing/invoice-filter.html", {"filter": filter})
+        return render(request, "billing/invoices/filter.html", {"filter": filter})

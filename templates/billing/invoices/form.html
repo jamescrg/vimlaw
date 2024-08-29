@@ -1,7 +1,7 @@
-<div class="modal-dialog modal-md">
+<div class="modal-dialog modal-lg">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Filter Invoices</h1>
+      <h1 class="modal-title">Add Invoice</h1>
       <div>
         <a href="#" data-bs-dismiss="modal">
           <i class="bi bi-x-lg"></i>
@@ -9,14 +9,14 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive filter"
+      <form class="form-responsive add-invoice"
             method="post"
-            action="{% url 'billing:filter-invoices' %}">
+            action="{% url 'billing:invoices-add' %}">
         {% csrf_token %}
-        {{ filter.form }}
+        {{ form }}
         <br />
         <div class="flex-center-space">
-          <button type="submit" class="submit">Apply</button>
+          <button type="submit" class="submit">Submit</button>
         </div>
       </form>
     </div>

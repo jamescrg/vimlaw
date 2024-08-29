@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from django import forms
 
-from apps.billing.invoice.models import Invoice
+from apps.billing.invoices.models import Invoice
 
 
 class InvoiceForm(forms.ModelForm):

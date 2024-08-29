@@ -1,0 +1,42 @@
+{% extends "billing/list.html" %}
+{% block subcontent %}
+  <div class="section-title">
+    <div class="section-title-left">
+      <h1>Invoices</h1>
+      <div class="section-title-left-right">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'billing:invoices-add' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'billing:invoices-filter' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">Filter</button>
+      </div>
+    </div>
+  </div>
+  <div class="table-container">
+    <table class="table invoices">
+      <tr>
+        <th class="number">Number</th>
+        <th class="date">Issue Date</th>
+        <th class="status">Status</th>
+        <th>Matter</th>
+        <th class="amount">Amount</th>
+        <th class="pdf">PDF</th>
+      </tr>
+      {% for invoice in objects %}
+        {% include "billing/invoices/row.html" %}
+      {% endfor %}
+    </table>
+    {% include "pagination.html" %}
+  </div>
+{% endblock subcontent %}

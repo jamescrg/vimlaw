@@ -1,15 +1,45 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 
-from apps.billing.invoice.models import Invoice
-from apps.billing.payment.filters import PaymentFilter
-from apps.billing.payment.forms import PaymentForm
-from apps.billing.payment.models import Payment
+from apps.billing.invoices.models import Invoice
 from apps.matters.models import Matter
+
+from .filters import PaymentFilter
+from .forms import PaymentForm
+from .models import Payment
 
 
 @login_required
-def add_payment(request):
+def payments_list(request):
+
+    filter_data = request.session.get("payments_filter", None)
+
+    if filter_data:
+        filter = PaymentFilter(filter_data)
+        payments = filter.qs
+    else:
+        payments = (
+            Payment.objects.all()
+            .select_related("matter", "created_by")
+            .order_by("-created_at")
+        )
+
+    page = request.GET.get("page")
+    pagination = Paginator(payments, per_page=10).get_page(page)
+
+    context = {
+        "page": "billing",
+        "subpage": "payments",
+        "pagination": pagination,
+        "objects": pagination.object_list,
+    }
+
+    return render(request, "payments/list.html", context)
+
+
+@login_required
+def payments_add(request):
     if request.method == "POST":
         form = PaymentForm(request.POST)
 
@@ -32,21 +62,21 @@ def add_payment(request):
         matters = Matter.objects.filter(id__in=matter_ids)
         form.fields["matter"].queryset = matters
 
-    return render(request, "billing/payments/form-payment.html", {"form": form})
+    return render(request, "billing/payments/form.html", {"form": form})
 
 
 @login_required
-def delete_payment(request, pk):
+def payments_delete(request, pk):
     payment = Payment.objects.get(pk=pk)
     payment.delete()
 
     payments = Payment.objects.all().select_related("matter")
 
-    return render(request, "billing/payments/payment-list.html", {"payments": payments})
+    return render(request, "billing/payments/list.html", {"payments": payments})
 
 
 @login_required
-def edit_payment(request, pk):
+def payments_edit(request, pk):
     payment = Payment.objects.get(pk=pk)
 
     if request.method == "POST":
@@ -76,27 +106,25 @@ def edit_payment(request, pk):
 
     return render(
         request,
-        "billing/payments/edit-payment.html",
+        "billing/payments/edit.html",
         {"form": form, "payment": payment},
     )
 
 
 @login_required
-def payment_filter(request):
+def payments_filter(request):
     def get_filter(request):
-        filter_data = request.session.get("payment_filter", request.POST)
+        filter_data = request.session.get("payments_filter", request.POST)
 
         return PaymentFilter(
             filter_data, queryset=Payment.objects.all().select_related("matter")
         )
 
     if request.method == "POST":
-        request.session["payment_filter"] = request.POST
+        request.session["payments_filter"] = request.POST
 
         return redirect("billing:billing")
     else:
         filter = get_filter(request)
 
-        return render(
-            request, "billing/payments/payment-filter.html", {"filter": filter}
-        )
+        return render(request, "billing/payments/filter.html", {"filter": filter})

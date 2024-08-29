@@ -5,9 +5,10 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.template.loader import render_to_string
 from weasyprint import HTML
 
-from apps.billing.functions.calculate_inv_amount import calculate_inv_amount
-from apps.billing.invoice.models import Invoice
+from apps.billing.invoices.models import Invoice
 from config.settings import BASE_DIR
+
+from .calculate_inv_amount import calculate_inv_amount
 
 
 def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFile:
