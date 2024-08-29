@@ -3,6 +3,7 @@ from django.db import models
 from apps.accounts.models import CustomUser
 from apps.folders.models import Folder
 from apps.intakes.models import Intake
+from apps.matters.models import Matter
 
 
 class Contact(models.Model):
@@ -31,3 +32,28 @@ class Contact(models.Model):
 
     class Meta:
         db_table = "app_contact"
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        db_table = "app_matter_role"
+
+
+class Relationship(models.Model):
+    matter = models.ForeignKey(
+        Matter,
+        on_delete=models.CASCADE,
+    )
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "app_matter_relationship"
+
+    def __str__(self):
+        return f"matter: {self.matter.id}, contact: {self.contact.id}, role: {self.role.id}"
