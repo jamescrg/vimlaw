@@ -11,7 +11,7 @@
     <div class="modal-body">
       <form class="form-responsive task-filter"
             method="post"
-            action="{% url 'agenda:filter-tasks' %}">
+            action="{% url 'agenda:tasks-filter' %}">
         {% csrf_token %}
         {{ filter.form }}
         <br />

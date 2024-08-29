@@ -1,4 +1,6 @@
-<form class="task-form-add" method="post" action={% url 'agenda:add' %}>
+<form class="task-form-add"
+      method="post"
+      action="{% url 'agenda:tasks-add' %}">
   {% csrf_token %}
   <label>
     <select name="matter" tabindex="1">

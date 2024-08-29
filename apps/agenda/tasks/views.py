@@ -14,20 +14,22 @@ from apps.matters.models import Matter
 
 @login_required
 def tasks_list(request):
-    page = "tasks"
 
     # check whether events have been hidden
     show_events = request.session.get("show_events", True)
+    if show_events:
+        return redirect("/events")
 
     # if events are hidden, check the date they were hidden
     # if that date is less than today, show them
-    if not show_events:
+    else:
         today = date.today()
         timestamp = int(request.session.get("hide_expire"))
         old_date = date.fromtimestamp(timestamp)
         if today > old_date:
             show_events = True
             request.session["show_events"] = True
+            return redirect("/events")
 
     table_data = get_table_data(request)
 
@@ -36,13 +38,21 @@ def tasks_list(request):
     tasks_matter = request.session.get("tasks_matter")
 
     context = {
-        "page": page,
+        "page": "agenda",
+        "subpage": "tasks",
         "show_events": show_events,
         "tasks_matter": tasks_matter,
     }
 
     context = context | table_data
-    return render(request, "tasks/list.html", context)
+    return render(request, "agenda/tasks/list.html", context)
+
+
+@login_required
+def tasks_select(request):
+    request.session["show_events"] = False
+    request.session["hide_expire"] = date.today().strftime("%s")
+    return redirect("/agenda")
 
 
 @login_required
@@ -109,11 +119,11 @@ def tasks_edit(request, id):
             "page": "agenda",
             "edit": True,
             "task": task,
-            "action": f"/agenda/{id}/edit",
+            "action": f"/agenda/tasks/{id}/edit",
             "form": form,
         }
 
-        return render(request, "agenda/task-form-edit.html", context)
+        return render(request, "agenda/tasks/form-edit.html", context)
 
 
 @login_required
@@ -126,20 +136,18 @@ def tasks_delete(request, id):
 @login_required
 def tasks_filter(request, user=None):
     if request.method == "POST":
-        request.session["task_filter"] = request.POST
+        request.session["tasks_filter"] = request.POST
+        return redirect("/agenda")
 
-        return redirect("agenda:agenda")
     else:
-        filter_data = request.session.get("task_filter", {})
-
+        filter_data = request.session.get("tasks_filter", {})
         filter = TasksFilter(filter_data, queryset=Task.objects.all())
-
-        return render(request, "agenda/task-filter.html", {"filter": filter})
+        return render(request, "agenda/tasks/filter.html", {"filter": filter})
 
 
 @login_required
-def tasks_filter_quick(request, user):
-    filter_data = request.session.get("task_filter", {})
+def tasks_filter_user(request, user):
+    filter_data = request.session.get("tasks_filter", {})
 
     if user == "All":
         filter_data["user"] = None
@@ -149,9 +157,9 @@ def tasks_filter_quick(request, user):
         filter_data["user"] = user_id
         filter_data["status"] = "Pending"
 
-    request.session["task_filter"] = filter_data
+    request.session["tasks_filter"] = filter_data
 
-    return redirect("agenda:agenda")
+    return redirect("agenda:tasks-list")
 
 
 @login_required
@@ -165,11 +173,11 @@ def tasks_status(request, id):
     context = {
         "task": task,
     }
-    return render(request, "agenda/task-status.html", context)
+    return render(request, "agenda/tasks/status.html", context)
 
 
 @login_required
-def tasks_filter_user(request, task_id):
+def tasks_change_user(request, task_id):
     task = get_object_or_404(Task, pk=task_id)
     user = get_object_or_404(CustomUser, pk=request.POST["user"])
     users = CustomUser.objects.all()
@@ -182,9 +190,4 @@ def tasks_filter_user(request, task_id):
         "user": user,
         "users": users,
     }
-    return render(request, "agenda/change-user.html", context)
-
-
-@login_required
-def tasks_change_user():
-    pass
+    return render(request, "agenda/tasks/change-user.html", context)

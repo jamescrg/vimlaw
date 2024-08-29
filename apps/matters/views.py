@@ -43,7 +43,7 @@ def index(request):
 
 
 @login_required
-def matter_filter(request):
+def filter(request):
     def get_filter(request):
         filter_data = request.session.get("matter_filter", request.POST)
 
@@ -60,11 +60,23 @@ def matter_filter(request):
 
 
 @login_required
-def quick_filter_status(request, status):
-    filter_data = request.session.get("matter_filter", {})
+def filter_quick(request, quick_filter):
+    quick_filters = {
+        "open": {
+            "status": "Open",
+            "practice_area": "",
+            "date_start": "",
+            "date_end": "",
+            "order_by": "name",
+        },
+    }
 
-    filter_data["status"] = status
+    filter_data = {}
+    for key, val in quick_filters[quick_filter].items():
+        filter_data[key] = val
+
     request.session["matter_filter"] = filter_data
+    request.session.modified = True
 
     return redirect("matters:list")
 

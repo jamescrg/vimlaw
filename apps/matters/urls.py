@@ -12,11 +12,11 @@ from apps.matters.views import (
     detail,
     edit,
     edit_description,
+    filter,
+    filter_quick,
     index,
-    matter_filter,
     order_by,
     print,
-    quick_filter_status,
 )
 
 from .proceedings import views as matters_proceedings
@@ -162,7 +162,7 @@ urlpatterns = [
     ),
     path(
         "matters/filter-matters",
-        matter_filter,
+        filter,
         name="filter-matters",
     ),
     path(
@@ -171,8 +171,8 @@ urlpatterns = [
         name="order-by",
     ),
     path(
-        "matters/filter-status/<str:status>/",
-        quick_filter_status,
-        name="filter-status",
+        "matters/filter-quick/<str:quick_filter>/",
+        filter_quick,
+        name="filter-quick",
     ),
 ]

@@ -3,10 +3,10 @@
   <div class="sub-nav">
     <ul>
       <li {% if subpage == "events" %}class="active"{% endif %}>
-        <a href="{% url 'agenda:set-tab' tab='events' %}">Events</a>
+        <a href="{% url 'events:events-list' %}">Events</a>
       </li>
       <li {% if subpage == "tasks" %}class="active"{% endif %}>
-        <a href="{% url 'agenda:set-tab' tab='tasks' %}">Tasks</a>
+        <a href="{% url 'agenda:tasks-select' %}">Tasks</a>
       </li>
     </ul>
   </div>
