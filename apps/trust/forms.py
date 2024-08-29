@@ -12,7 +12,6 @@ class TransactionForm(forms.ModelForm):
             "type",
             "description",
             "amount",
-            "entered",
             "confirmed",
         )
 
@@ -35,6 +34,5 @@ class TransactionForm(forms.ModelForm):
             "date": forms.DateInput(attrs={"type": "date"}),
             "type": forms.Select(choices=TYPE_CHOICES),
             "description": forms.TextInput(attrs={"autofocus": "autofocus"}),
-            "entered": forms.Select(choices=ENTERED_CHOICES),
             "confirmed": forms.Select(choices=CONFIRMED_CHOICES),
         }
