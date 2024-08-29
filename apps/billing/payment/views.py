@@ -17,8 +17,6 @@ def add_payment(request):
             payment = form.save(commit=False)
             payment.save()
 
-            print("Saved payment", payment)
-
             return redirect("billing:billing")
     else:
         form = PaymentForm()

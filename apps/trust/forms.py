@@ -8,6 +8,7 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
 
         fields = (
+            "contact",
             "date",
             "type",
             "description",
@@ -31,8 +32,14 @@ class TransactionForm(forms.ModelForm):
         )
 
         widgets = {
+            "contact": forms.Select(attrs={"required": True}),
             "date": forms.DateInput(attrs={"type": "date"}),
             "type": forms.Select(choices=TYPE_CHOICES),
             "description": forms.TextInput(attrs={"autofocus": "autofocus"}),
             "confirmed": forms.Select(choices=CONFIRMED_CHOICES),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["contact"].label = "Client"

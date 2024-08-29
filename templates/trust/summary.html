@@ -5,6 +5,17 @@
     <div class="section-title">
       <div class="section-title-left">
         <h1>Account Summary</h1>
+        <div class="section-title-left-right">
+          <button type="button"
+                  class="btn-icon"
+                  hx-get="{% url 'trust:add' %}"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
       </div>
       <div class="section-title-right">
         <a href={% url 'trust:history' %}>History</a>
