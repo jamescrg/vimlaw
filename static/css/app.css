@@ -56,12 +56,12 @@ a:hover {
 }
 
 .section-title .dropdown li {
-  background: none;
-  padding: 7px 0;
+    background: none;
+    padding: 7px 0;
 }
 
-.section-title .dropdown li > a {
-  background: none;
+.section-title .dropdown li>a {
+    background: none;
 }
 
 .section-title-left {
@@ -392,6 +392,12 @@ li {
 .filter select {
     min-width: 95%;
 }
+
+.filter input[type="date"] {
+    width: 137px;
+    margin-left: 0.2rem;
+}
+
 
 /* ==========================================================================
 Sub nav
