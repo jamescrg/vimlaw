@@ -65,7 +65,7 @@
                  hx-trigger="click"
                  data-bs-toggle="modal"
                  data-bs-target="#htmx-modal-container"
-                 hx-get="{% url 'events:edit-origin' id=event.id origin='matters' %}">{{ event.description }}</a>
+                 hx-get="{% url 'events:events-edit-origin' id=event.id origin='matters' %}">{{ event.description }}</a>
             </td>
             <td class="status">{{ event.status }}</td>
           </tr>

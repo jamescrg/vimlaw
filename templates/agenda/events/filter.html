@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Filter Tasks</h1>
+      <h1 class="modal-title">Filter Events</h1>
       <div>
         <a href="#" data-bs-dismiss="modal">
           <i class="bi bi-x-lg"></i>
@@ -9,9 +9,9 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive task-filter"
+      <form class="form-responsive filter"
             method="post"
-            action="{% url 'agenda:filter-tasks' %}">
+            action="{% url 'events:events-filter' %}">
         {% csrf_token %}
         {{ filter.form }}
         <br />

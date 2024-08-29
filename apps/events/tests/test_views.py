@@ -10,16 +10,16 @@ pytestmark = pytest.mark.django_db
 def test_index(client):
     response = client.get("/events/")
     assert response.status_code == 200
-    response = client.get(reverse("events:events"))
+    response = client.get(reverse("events:events-list"))
     assert response.status_code == 200
-    assert response.context["page"] == "events"
+    assert response.context["page"] == "agenda"
 
 
 def test_add_get(client):
     # test without a selected folder
     response = client.get("/events/add")
     assert response.status_code == 200
-    assertTemplateUsed(response, "events/form.html")
+    assertTemplateUsed(response, "agenda/events/form.html")
 
 
 def test_add_post(client, matter, event_data):
@@ -32,7 +32,7 @@ def test_add_post(client, matter, event_data):
 def test_edit_get(client, event):
     response = client.get(f"/events/{event.id}/edit/test")
     assert response.status_code == 200
-    assertTemplateUsed(response, "events/form.html")
+    assertTemplateUsed(response, "agenda/events/form.html")
 
 
 def test_edit_post(client, user, matter, event):

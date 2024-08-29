@@ -2,7 +2,6 @@ from datetime import date, timedelta
 
 from dateutil import parser
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 import apps.events.google as google
@@ -11,63 +10,65 @@ from apps.events.forms import EventForm
 from apps.events.models import Event
 from apps.matters.models import Matter
 
+from .events import get_table_data
+
 
 @login_required
-def index(request):
+def events_list(request):
     today = date.today()
     third_day = today + timedelta(days=3)
 
-    events = Event.objects.filter(status="Pending").order_by("date")
-
-    page = request.GET.get("page")
-
-    pagination = Paginator(events, per_page=10).get_page(page)
-
     context = {
-        "pagination": pagination,
-        "page": "events",
-        "events": pagination.object_list,
+        "page": "agenda",
+        "subpage": "events",
         "third_day": third_day,
     }
 
-    return render(request, "events/list.html", context)
+    context = context | get_table_data(request)
+
+    return render(request, "agenda/events/list.html", context)
 
 
 @login_required
-def event_filter(request):
+def events_filter(request):
     if request.method == "POST":
-        request.session["event_filter"] = request.POST
+        request.session["events_filter"] = request.POST
+        return redirect("/events")
 
-        return redirect("agenda:agenda")
     else:
-        filter_data = request.session.get("event_filter", {})
-
+        filter_data = request.session.get("events_filter", {})
         filter = EventFilter(filter_data, queryset=Event.objects.all())
-
-        return render(request, "events/event-filter.html", {"filter": filter})
+        return render(request, "agenda/events/filter.html", {"filter": filter})
 
 
 @login_required
-def quick_filter_pending(request):
-    values = {
-        "status": "Pending",
-        "matter": None,
-        "date_min": "",
-        "date_max": "",
-        "party": None,
+def events_filter_quick(request, quick_filter):
+    quick_filters = {
+        "pending": {
+            "status": "Pending",
+            "matter": None,
+            "date_min": "",
+            "date_max": "",
+            "party": None,
+        },
     }
 
-    request.session["event_filter"] = values
+    filter_data = {}
+    for key, val in quick_filters[quick_filter].items():
+        filter_data[key] = val
+
+    request.session["events_filter"] = filter_data
     request.session.modified = True
 
-    return redirect("agenda:agenda")
+    return redirect("/events")
 
 
 @login_required
-def add(request, matter_id=None, origin="events"):
+def events_add(request, matter_id=None, origin="events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":
         request.session["origin"] = origin
+        request.session.modified = True
 
     # set the origin of the request, defaulting to "events"
     origin = request.session.get("origin", "events")
@@ -119,7 +120,8 @@ def add(request, matter_id=None, origin="events"):
     today = date.today().strftime("%Y-%m-%d")
 
     context = {
-        "page": "events",
+        "page": "agenda",
+        "subpage": "events",
         "today": today,
         "edit": False,
         "add": True,
@@ -129,11 +131,11 @@ def add(request, matter_id=None, origin="events"):
         "form": form,
     }
 
-    return render(request, "events/form.html", context)
+    return render(request, "agenda/events/form.html", context)
 
 
 @login_required
-def edit(request, id, origin="events"):
+def events_edit(request, id, origin="events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":
         request.session["origin"] = origin
@@ -201,11 +203,11 @@ def edit(request, id, origin="events"):
         "origin": origin,
     }
 
-    return render(request, "events/form.html", context)
+    return render(request, "agenda/events/form.html", context)
 
 
 @login_required
-def delete(request, id, origin="events:events"):
+def events_delete(request, id, origin="events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":
         request.session["origin"] = origin
@@ -221,11 +223,11 @@ def delete(request, id, origin="events:events"):
     if origin == "matters":
         return redirect(f"/matters/{event.matter_id}/events")
     else:
-        return redirect(origin)
+        return redirect(f"/{origin}")
 
 
 @login_required
-def google_sync(request, id):
+def events_google_sync(request, id):
     event = get_object_or_404(Event, pk=id)
     event.google_id = google.add_event(event)
     event.save()
@@ -233,7 +235,7 @@ def google_sync(request, id):
 
 
 @login_required
-def deadline_results(request, matter_id=None):
+def events_deadline_results(request, matter_id=None):
 
     # get the submitted initial date and days
     initial_date = request.POST["initial_date"]
@@ -266,4 +268,4 @@ def deadline_results(request, matter_id=None):
         "results": results,
     }
 
-    return render(request, "events/deadline-calculator-results.html", context)
+    return render(request, "agenda/events/deadline-calculator-results.html", context)

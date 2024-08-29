@@ -1,5 +1,6 @@
-{% load humanize %}
-<div class="section">
+{% extends "agenda/list.html" %}
+{% block sub-content %}
+  {% load humanize %}
   <div class="section-title">
     <div class="section-title-left">
       <h1>Tasks</h1>
@@ -8,17 +9,17 @@
            hx-swap="#outerHTML">
         <button type="button"
                 class="btn-icon"
-                hx-get="{% url 'agenda:filter-tasks' %}"
+                hx-get="{% url 'agenda:tasks-filter' %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">Filter</button>
-        <a href="{% url 'agenda:filter-user' 'All' %}">All</a>
-        <a href="{% url 'agenda:filter-user' 'james' %}">James</a>
-        <a href="{% url 'agenda:filter-user' 'lexi' %}">Lexi</a>
+        <a href="{% url 'agenda:tasks-filter-user' 'All' %}">All</a>
+        <a href="{% url 'agenda:tasks-filter-user' 'james' %}">James</a>
+        <a href="{% url 'agenda:tasks-filter-user' 'lexi' %}">Lexi</a>
       </div>
     </div>
   </div>
-  {% include "agenda/task-form-add.html" %}
-  {% include "agenda/tasks-table.html" %}
-</div>
+  {% include "agenda/tasks/form-add.html" %}
+  {% include "agenda/tasks/table.html" %}
+{% endblock sub-content %}

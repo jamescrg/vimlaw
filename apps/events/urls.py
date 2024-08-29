@@ -1,44 +1,44 @@
 from django.urls import path
 
 from apps.events.views import (
-    add,
-    deadline_results,
-    delete,
-    edit,
-    event_filter,
-    index,
-    quick_filter_pending,
+    events_add,
+    events_deadline_results,
+    events_delete,
+    events_edit,
+    events_filter,
+    events_filter_quick,
+    events_list,
 )
 
 app_name = "events"
 
 urlpatterns = [
-    path("events/", index, name="events"),
-    path("events/add", add, name="add"),
-    path("events/add/<str:origin>", add, name="add-origin"),
+    path("events/", events_list, name="events-list"),
+    path("events/add", events_add, name="events-add"),
+    path("events/add/<str:origin>", events_add, name="events-add-origin"),
     path(
         "events/deadline-results",
-        deadline_results,
-        name="deadline-results",
+        events_deadline_results,
+        name="events-deadline-results",
     ),
-    path("events/add/<int:matter_id>", add, name="add-matter"),
+    path("events/add/<int:matter_id>", events_add, name="events-add-matter"),
     path(
         "events/add/<int:matter_id>/<str:origin>",
-        add,
-        name="add-matter-origin",
+        events_add,
+        name="events-add-matter-origin",
     ),
-    path("events/<int:id>/edit", edit, name="edit"),
-    path("events/<int:id>/edit/<str:origin>", edit, name="edit-origin"),
-    path("events/<int:id>/delete", delete, name="delete"),
+    path("events/<int:id>/edit", events_edit, name="events-edit"),
+    path("events/<int:id>/edit/<str:origin>", events_edit, name="events-edit-origin"),
+    path("events/<int:id>/delete", events_delete, name="events-delete"),
     path(
         "events/<int:id>/delete/<str:origin>",
-        delete,
-        name="delete-origin",
+        events_delete,
+        name="events-delete-origin",
     ),
-    path("events/filter-events/", event_filter, name="filter-events"),
+    path("events/filter/", events_filter, name="events-filter"),
     path(
-        "events/quick-filter-pending/",
-        quick_filter_pending,
-        name="quick-filter-pending",
+        "events/filter/quick/<str:quick_filter>",
+        events_filter_quick,
+        name="events-filter-quick",
     ),
 ]

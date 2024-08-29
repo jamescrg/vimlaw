@@ -23,7 +23,7 @@
           <div>
             {% if edit %}
               <a onclick="return confirm('Are you sure you want to delete this record?')"
-                 href="{% url 'agenda:delete' id=task.id %}">Delete Task</a>
+                 href="{% url 'agenda:tasks-delete' id=task.id %}">Delete Task</a>
             {% endif %}
           </div>
         </div>

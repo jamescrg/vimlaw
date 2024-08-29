@@ -1,5 +1,5 @@
 <a href="#"
-   hx-get="/agenda/{{ task.id }}/task-status"
+   hx-get="/agenda/tasks/{{ task.id }}/task-status"
    hx-target="closest #task-status"
    hx-swap="innerHTML">
   {% if task.status == "Complete" %}

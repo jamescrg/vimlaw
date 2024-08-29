@@ -94,8 +94,8 @@ a:hover {
 }
 
 .section-text {
-    padding: 0 1rem;
     margin-bottom: 1rem;
+    padding: 0 1rem;
 }
 
 .section>.list-group {
@@ -111,14 +111,14 @@ a:hover {
    ========================================================================== */
 
 h1 {
-    font-weight: normal;
     font-size: 1.3rem;
+    font-weight: normal;
     margin-bottom: 0;
 }
 
 h2 {
-    font-weight: normal;
     font-size: 1.2rem;
+    font-weight: normal;
     margin-bottom: 0;
 }
 
@@ -432,9 +432,9 @@ Pagination
 ========================================================================== */
 
 .pagination-row {
+    align-items: center;
     display: flex;
     flex-direction: row;
-    align-items: center;
     gap: 1rem;
     margin-top: 1rem;
 }
