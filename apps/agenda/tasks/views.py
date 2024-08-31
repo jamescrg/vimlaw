@@ -55,31 +55,54 @@ def tasks_select(request):
     return redirect("/agenda")
 
 
+# @login_required
+# def tasks_add(request):
+#    task = Task()
+#
+#    task.user_id = request.user.id
+#
+#    matter = get_object_or_404(Matter, pk=request.POST.get("matter"))
+#    task.matter = matter
+#
+#    task.status = "Pending"
+#
+#    task.description = request.POST.get("description")
+#    if task.description[:2] == "! ":
+#        task.description = task.description[2:]
+#        task.priority = 1
+#    elif task.description[:1] == "!":
+#        task.description = task.description[1:]
+#        task.priority = 1
+#
+#    task.date_due = date.today()
+#    task.save()
+#
+#    request.session["agenda_matter"] = matter.id
+#
+#    return redirect("/agenda")
+
+
 @login_required
 def tasks_add(request):
-    task = Task()
+    if request.method == "POST":
+        form = TaskForm(request.POST)
 
-    task.user_id = request.user.id
+        if form.is_valid():
+            task = form.save(commit=False)
 
-    matter = get_object_or_404(Matter, pk=request.POST.get("matter"))
-    task.matter = matter
+            task.user = request.user
+            task.status = "Pending"
 
-    task.status = "Pending"
+            task.save()
 
-    task.description = request.POST.get("description")
-    if task.description[:2] == "! ":
-        task.description = task.description[2:]
-        task.priority = 1
-    elif task.description[:1] == "!":
-        task.description = task.description[1:]
-        task.priority = 1
+            return redirect("agenda:tasks-list")
+    else:
+        form = TaskForm()
 
-    task.date_due = date.today()
-    task.save()
+        matters = Matter.objects.filter(status="Open").order_by("name")
+        form.fields["matter"].queryset = matters
 
-    request.session["agenda_matter"] = matter.id
-
-    return redirect("/agenda")
+    return render(request, "agenda/tasks/form-add.html", {"form": form})
 
 
 @login_required
@@ -102,7 +125,6 @@ def tasks_edit(request, id):
 
         # pull the list of matters
         matter_list = Matter.objects.filter(status="Open").order_by("name")
-        user_list = CustomUser.objects.all().order_by("username")
 
         # make sure the matter associated with the event is in the list
         # if not, add it
@@ -113,7 +135,6 @@ def tasks_edit(request, id):
 
         form = TaskForm(instance=task)
         form.fields["matter"].queryset = matter_list
-        form.fields["user"].queryset = user_list
 
         context = {
             "page": "agenda",

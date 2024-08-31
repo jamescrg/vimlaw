@@ -1,22 +1,25 @@
-<form class="task-form-add"
-      method="post"
-      action="{% url 'agenda:tasks-add' %}">
-  {% csrf_token %}
-  <label>
-    <select name="matter" tabindex="1">
-      {% for matter in matters %}
-        <option value="{{ matter.id }}"
-                {% if agenda_matter == matter.id %}selected{% endif %}>{{ matter.name }}</option>
-      {% endfor %}
-    </select>
-  </label>
-  <label class="task-input-description-label">
-    <input type="text"
-           class="tasks-input-description"
-           name="description"
-           tabindex="2"
-           required
-           autofocus
-           onchange="submit()" />
-  </label>
-</form>
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Add Task</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form class="form-responsive"
+            method="post"
+            action="{% url 'agenda:tasks-add' %}">
+        {% csrf_token %}
+        {{ form }}
+        <br />
+        <div class="flex-center-space">
+          <button type="submit" class="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
