@@ -55,33 +55,6 @@ def tasks_select(request):
     return redirect("/agenda")
 
 
-# @login_required
-# def tasks_add(request):
-#    task = Task()
-#
-#    task.user_id = request.user.id
-#
-#    matter = get_object_or_404(Matter, pk=request.POST.get("matter"))
-#    task.matter = matter
-#
-#    task.status = "Pending"
-#
-#    task.description = request.POST.get("description")
-#    if task.description[:2] == "! ":
-#        task.description = task.description[2:]
-#        task.priority = 1
-#    elif task.description[:1] == "!":
-#        task.description = task.description[1:]
-#        task.priority = 1
-#
-#    task.date_due = date.today()
-#    task.save()
-#
-#    request.session["agenda_matter"] = matter.id
-#
-#    return redirect("/agenda")
-
-
 @login_required
 def tasks_add(request):
     if request.method == "POST":
