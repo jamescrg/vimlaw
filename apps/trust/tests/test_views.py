@@ -14,7 +14,7 @@ def test_index(client):
     assert "confirmed_account_balance" in response.context
 
 
-def test_history(client):
+def test_history(client, transaction):
     response = client.get("/trust/history/")
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/history.html")
@@ -22,7 +22,7 @@ def test_history(client):
     assert response.context["pending_account_balance"] == 2000
 
 
-def test_client(client, contact):
+def test_client(client, contact, transaction):
     response = client.get(f"/trust/client/{contact.id}")
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/client.html")
