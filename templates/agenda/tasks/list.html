@@ -7,15 +7,15 @@
       <div class="section-title-left-right"
            hx-target="#tasks-table"
            hx-swap="#outerHTML">
-          <button type="button"
-                  class="btn-icon"
-                  hx-get="{% url 'agenda:tasks-add' %}"
-                  hx-target="#htmx-modal-container"
-                  hx-trigger="click"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="bi bi-plus-lg"></i>
-          </button>
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'agenda:tasks-add' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-plus-lg"></i>
+        </button>
         <button type="button"
                 class="btn-icon"
                 hx-get="{% url 'agenda:tasks-filter' %}"
