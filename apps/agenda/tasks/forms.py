@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django import forms
 
 from apps.agenda.tasks.models import Task
@@ -9,10 +7,10 @@ class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = (
-            "matter",
             "description",
-            "status",
+            "matter",
             "date_due",
+            "status",
             "priority",
         )
         STATUSES = (
@@ -23,7 +21,10 @@ class TaskForm(forms.ModelForm):
             "description": "Task",
         }
         widgets = {
-            "description": forms.TextInput(attrs={"autofocus": "autofocus"}),
+            "description": forms.TextInput(
+                attrs={"autofocus": "autofocus", "required": "required"}
+            ),
+            "matter": forms.Select(attrs={"required": "required"}),
             "status": forms.Select(choices=STATUSES),
             "date_due": forms.DateInput(attrs={"type": "date"}),
         }
@@ -31,5 +32,4 @@ class TaskForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        current_date = datetime.now().date()
-        self.fields["date_due"].initial = current_date
+        self.fields["date_due"].initial = None

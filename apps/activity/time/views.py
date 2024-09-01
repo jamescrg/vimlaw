@@ -38,9 +38,9 @@ def time_list(request):
     if filter_data:
         filter = TimeEntryFilter(filter_data)
         entries = filter.qs
-
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
+
     else:
         entries = TimeEntry.objects.all().order_by("date", "id")
         user_id = None
