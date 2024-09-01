@@ -54,7 +54,7 @@ def payments_add(request):
             .values_list("matter", flat=True)
         )
 
-        matters = Matter.objects.filter(id__in=matter_ids)
+        matters = Matter.objects.filter(id__in=matter_ids).order_by("name")
         form.fields["matter"].queryset = matters
 
     return render(request, "billing/payments/form.html", {"form": form})

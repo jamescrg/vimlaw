@@ -26,7 +26,6 @@ from apps.activity.time.views import (
 
 app_name = "activity"
 
-# fmt: off
 urlpatterns = [
     path("activity/", time_list, name="time-list"),
     path("activity/time/add", time_add, name="time-add"),
@@ -34,20 +33,47 @@ urlpatterns = [
     path("activity/time/<int:id>/edit", time_edit, name="time-edit"),
     path("activity/time/export/<str:format>", time_export_to_csv, name="time-export"),
     path("activity/time/<int:id>/delete", time_delete, name="time-delete"),
-    path("activity/time/<int:id>/toggle-entered", time_toggle_entered, name="time-toggle-entered"),
+    path(
+        "activity/time/<int:id>/toggle-entered",
+        time_toggle_entered,
+        name="time-toggle-entered",
+    ),
     path("activity/time/filter", time_filter, name="time-filter"),
-    path("activity/time/filter/quick/<str:quick_filter>", time_filter_quick, name="time-filter-quick"),
-    path("activity/time/filter/matter/<int:matter_id>", time_filter_matter, name="time-filter-matter"),
+    path(
+        "activity/time/filter/quick/<str:quick_filter>",
+        time_filter_quick,
+        name="time-filter-quick",
+    ),
+    path(
+        "activity/time/filter/matter/<int:matter_id>",
+        time_filter_matter,
+        name="time-filter-matter",
+    ),
     path("activity/time/filter/user/", time_filter_user, name="time-filter-user"),
     path("activity/expenses", expenses_list, name="expenses-list"),
     path("activity/expenses/add", expenses_add, name="expenses-add"),
     path("activity/expenses/add/<int:id>", expenses_add, name="expenses-add"),
     path("activity/expenses/<int:id>/edit", expenses_edit, name="expenses-edit"),
-    path("activity/expenses/export/<str:format>", expenses_export_to_csv, name="expenses-export"),
+    path(
+        "activity/expenses/export/<str:format>",
+        expenses_export_to_csv,
+        name="expenses-export",
+    ),
     path("activity/expenses/<int:id>/delete", expenses_delete, name="expenses-delete"),
-    path("activity/expenses/<int:id>/toggle-entered", expenses_toggle_entered, name="expenses-toggle-entered"),
+    path(
+        "activity/expenses/<int:id>/toggle-entered",
+        expenses_toggle_entered,
+        name="expenses-toggle-entered",
+    ),
     path("activity/expenses/filter/", expenses_filter, name="expenses-filter"),
-    path("activity/expenses/filter/quick/<str:quick_filter>", expenses_filter_quick, name="expenses-filter-quick"),
-    path("activity/expenses/filter/user/", expenses_filter_user, name="expenses-filter-user")
+    path(
+        "activity/expenses/filter/quick/<str:quick_filter>",
+        expenses_filter_quick,
+        name="expenses-filter-quick",
+    ),
+    path(
+        "activity/expenses/filter/user/",
+        expenses_filter_user,
+        name="expenses-filter-user",
+    ),
 ]
-# fmt: on

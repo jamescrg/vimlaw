@@ -13,7 +13,6 @@ from apps.trust.views import (
 
 app_name = "trust"
 
-# fmt: off
 urlpatterns = [
     path("trust/", index, name="trust"),
     path("trust/history/", history, name="history"),
@@ -26,4 +25,3 @@ urlpatterns = [
     path("trust/<int:id>/entered", toggle_entered, name="entered"),
     path("trust/<int:id>/confirmed", toggle_confirmed, name="confirmed"),
 ]
-# fmt: on

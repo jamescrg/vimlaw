@@ -17,7 +17,6 @@ from apps.contacts.views import (
 
 app_name = "contacts"
 
-# fmt: off
 urlpatterns = [
     path("contacts/", index, name="contacts"),
     path("contacts/<int:id>", select, name="select"),
@@ -29,7 +28,10 @@ urlpatterns = [
     path("contacts/<int:id>/remove", remove, name="remove"),
     path("contacts/<int:id>/remove/store", remove_store, name="remove-store"),
     path("contacts/<int:id>/add_intake", add_intake, name="add-intake"),
-    path("contacts/<int:id>/toggle_google_sync", toggle_google_sync, name="toggle-google-sync"),
+    path(
+        "contacts/<int:id>/toggle_google_sync",
+        toggle_google_sync,
+        name="toggle-google-sync",
+    ),
     path("contacts/google_list", google_list, name="google"),
 ]
-# fmt: on
