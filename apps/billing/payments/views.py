@@ -12,14 +12,15 @@ from .models import Payment
 
 @login_required
 def payments_list(request):
-
     filter_data = request.session.get("payments_filter", None)
 
     if filter_data:
         filter = PaymentFilter(filter_data)
         payments = filter.qs
     else:
-        payments = Payment.objects.all().select_related("matter").order_by("-date")
+        payments = (
+            Payment.objects.all().select_related("matter").order_by("-date", "-id")
+        )
 
     page = request.GET.get("page")
     pagination = Paginator(payments, per_page=10).get_page(page)
@@ -43,8 +44,6 @@ def payments_add(request):
             payment = form.save(commit=False)
             payment.save()
 
-            print("Saved payment", payment)
-
             return redirect("billing:payments-list")
     else:
         form = PaymentForm()
@@ -55,7 +54,7 @@ def payments_add(request):
             .values_list("matter", flat=True)
         )
 
-        matters = Matter.objects.filter(id__in=matter_ids)
+        matters = Matter.objects.filter(id__in=matter_ids).order_by("name")
         form.fields["matter"].queryset = matters
 
     return render(request, "billing/payments/form.html", {"form": form})

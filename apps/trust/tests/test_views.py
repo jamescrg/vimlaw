@@ -9,7 +9,6 @@ pytestmark = pytest.mark.django_db
 
 def test_index(client):
     response = client.get(reverse("trust:trust"))
-    print("response", response)
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/summary.html")
     assert "confirmed_account_balance" in response.context
@@ -32,14 +31,14 @@ def test_client(client, contact, transaction):
     assert response.context["confirmed_client_balance"] == 0
 
 
-def test_add_get(client, contact):
-    response = client.get(f"/trust/{contact.id}/add")
+def test_add_get(client):
+    response = client.get("/trust/add")
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/form.html")
 
 
-def test_add_post(client, contact, transaction_data):
-    response = client.post(f"/trust/{contact.id}/add", transaction_data)
+def test_add_post(client, transaction_data):
+    response = client.post("/trust/add", transaction_data)
     assert response.status_code == 302
     found = Transaction.objects.filter(
         description=transaction_data["description"]

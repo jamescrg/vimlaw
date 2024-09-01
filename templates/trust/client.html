@@ -14,7 +14,7 @@
       <div class="trust-contact-links">
         <a href={% url 'contacts:select' id=client.id %}>View Contact</a>
         <a href="#"
-           hx-get="/trust/{{ client.id }}/add"
+           hx-get="{% url 'trust:add-with-client' client.id %}"
            hx-target="#htmx-modal-container"
            data-bs-toggle="modal"
            data-bs-target="#htmx-modal-container">Add Transaction</a>
@@ -41,7 +41,6 @@
               <th>Description</th>
               <th class="amount">Withdrawal</th>
               <th class="amount">Deposit</th>
-              <th class="check">E</th>
               <th class="check">C</th>
             </tr>
             {% for transaction in transactions %}
@@ -65,15 +64,6 @@
                     $
                     {{ transaction.amount|intcomma }}
                   {% endif %}
-                </td>
-                <td class="check">
-                  <a href={% url 'trust:entered' id=transaction.id %}>
-                    {% if transaction.entered %}
-                      <i class="bi bi-check-square"></i>
-                    {% else %}
-                      <i class="bi bi-square"></i>
-                    {% endif %}
-                  </a>
                 </td>
                 <td class="check">
                   <a href={% url 'trust:confirmed' id=transaction.id %}>

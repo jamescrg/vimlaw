@@ -14,7 +14,6 @@ def test_content(transaction, contact):
         "type": "Deposit",
         "description": "Retainer",
         "amount": 2000.00,
-        "entered": 0,
         "confirmed": 0,
     }
     for key, val in expected_values.items():

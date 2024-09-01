@@ -19,13 +19,6 @@ Time entry form
 Time and expense entry list table
 ========================================================================== */
 
-.select-user {
-  background-color: var(--warm-gray-150);
-  border: none;
-  color: var(--warm-gray-700);
-  padding: 6px;
-}
-
 .activity {
   width: 100%;
 }

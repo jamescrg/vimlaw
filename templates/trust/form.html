@@ -16,7 +16,7 @@
     </div>
     <div class="modal-body">
       <form id="transaction"
-            action="{{ action }}"
+            action="{% if edit %}{% url 'trust:edit' id=transaction.id %}{% else %}{% url 'trust:add' %}{% endif %}"
             class="form-responsive"
             method="post">
         {% csrf_token %}

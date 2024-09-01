@@ -40,7 +40,7 @@
               <a href={% url 'matters:detail' id=event.matter.id %}>{{ event.matter.name }}</a>
             </td>
             <td class="party">{{ event.party }}</td>
-            <td class="description {% if event.date < third_day %}soon{% endif %}">
+            <td class="description {% if event.date < third_day and event.status == "Pending" %}soon{% endif %}">
               <a href="#"
                  type="button"
                  class="btn-icon"

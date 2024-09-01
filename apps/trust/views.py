@@ -90,31 +90,32 @@ def client(request, id):
 
 
 @login_required
-def add(request, contact_id):
-    # if applicable, process any post data submitted by user
+def add(request, client_id=None):
     if request.method == "POST":
         form = TransactionForm(request.POST)
-        if form.is_valid():
-            # initialize transaction data
-            transaction = form.save(commit=False)
-            contact = get_object_or_404(Contact, pk=contact_id)
-            transaction.contact = contact
 
-            # save transaction to database with google id
+        if form.is_valid():
+            transaction = form.save(commit=False)
             transaction.save()
 
-            return redirect(f"/trust/client/{contact_id}")
+            return redirect("trust:trust")
 
-    # if no post data has been submitted, show the contact form
     else:
         today = date.today().strftime("%Y-%m-%d")
-        form = TransactionForm(initial={"date": today})
+
+        if client_id:
+            client = Contact.objects.get(pk=client_id)
+            form = TransactionForm(initial={"date": today, "contact": client})
+        else:
+            clients = Contact.objects.filter(client_status="Current").order_by("name")
+
+            form = TransactionForm(initial={"date": today})
+            form.fields["contact"].queryset = clients
 
     context = {
         "page": "trust",
         "edit": False,
         "add": True,
-        "action": f"/trust/{contact_id}/add",
         "form": form,
     }
 
@@ -141,7 +142,6 @@ def edit(request, id):
         "page": "trust",
         "edit": True,
         "add": False,
-        "action": f"/trust/{id}/edit",
         "transaction": transaction,
         "form": form,
     }

@@ -33,9 +33,5 @@ urlpatterns = [
         quick_filter_status,
         name="quick-filter-status",
     ),
-    path(
-        "intakes/order-by/<str:order>",
-        order_by,
-        name="order-by",
-    ),
+    path("intakes/order-by/<str:order>", order_by, name="order-by"),
 ]
