@@ -21,63 +21,21 @@ from apps.billing.payments.views import (
 
 app_name = "billing"
 
+# fmt: off
 urlpatterns = [
-    path(
-        "billing/",
-        invoices_list,
-        name="invoices-list",
-    ),
-    path(
-        "billing/invoices-detail/<int:pk>/preview/",
-        invoices_detail,
-        name="invoices-detail",
-    ),
+    path("billing/", invoices_list, name="invoices-list"),
+    path("billing/invoices-detail/<int:pk>/preview/", invoices_detail, name="invoices-detail"),
     path("billing/invoices-add/", invoices_add, name="invoices-add"),
-    path(
-        "billing/invoices-edit/<int:pk>/",
-        invoices_edit,
-        name="invoices-edit",
-    ),
-    path(
-        "billing/invoices-filter/",
-        invoices_filter,
-        name="invoices-filter",
-    ),
-    path(
-        "billing/invoices-delete/<int:pk>/",
-        invoices_delete,
-        name="invoices-delete",
-    ),
+    path("billing/invoices-edit/<int:pk>/", invoices_edit, name="invoices-edit"),
+    path("billing/invoices-filter/", invoices_filter, name="invoices-filter"),
+    path("billing/invoices-delete/<int:pk>/", invoices_delete, name="invoices-delete"),
     path("billing/invoices-pdf/<int:pk>/", invoices_pdf, name="invoices-pdf"),
-    path(
-        "billing/invoices-status-update/<int:pk>/",
-        invoices_status_update,
-        name="invoices-status-update",
-    ),
-    path(
-        "billing/invoices-cancel/<int:pk>/",
-        invoices_cancel,
-        name="invoices-cancel",
-    ),
-    path(
-        "billing/payments/",
-        payments_list,
-        name="payments-list",
-    ),
+    path("billing/invoices-status-update/<int:pk>/", invoices_status_update, name="invoices-status-update"),
+    path("billing/invoices-cancel/<int:pk>/", invoices_cancel, name="invoices-cancel"),
+    path("billing/payments/", payments_list, name="payments-list"),
     path("billing/payments-add/", payments_add, name="payments-add"),
-    path(
-        "billing/payments-delete/<int:pk>/",
-        payments_delete,
-        name="payments-delete",
-    ),
-    path(
-        "billing/payments-edit/<int:pk>/",
-        payments_edit,
-        name="payments-edit",
-    ),
-    path(
-        "billing/payments-filter/",
-        payments_filter,
-        name="payments-filter",
-    ),
+    path("billing/payments-delete/<int:pk>/", payments_delete, name="payments-delete"),
+    path("billing/payments-edit/<int:pk>/", payments_edit, name="payments-edit"),
+    path("billing/payments-filter/", payments_filter, name="payments-filter"),
 ]
+# fmt: on

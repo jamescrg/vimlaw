@@ -17,6 +17,7 @@ from apps.intakes.views import (
 
 app_name = "intakes"
 
+# fmt: off
 urlpatterns = [
     path("intakes/", index, name="list"),
     path("intakes/<int:id>", detail, name="detail"),
@@ -28,14 +29,7 @@ urlpatterns = [
     path("intakes/<int:id>/edit-note", edit_note, name="edit_note"),
     path("intakes/<int:id>/delete-note", delete_note, name="delete_note"),
     path("intakes/filter-intakes", intake_filter, name="filter-intakes"),
-    path(
-        "intakes/quick-filter-status/<str:status>",
-        quick_filter_status,
-        name="quick-filter-status",
-    ),
-    path(
-        "intakes/order-by/<str:order>",
-        order_by,
-        name="order-by",
-    ),
+    path("intakes/quick-filter-status/<str:status>", quick_filter_status, name="quick-filter-status"),
+    path("intakes/order-by/<str:order>", order_by, name="order-by"),
 ]
+# fmt: on
