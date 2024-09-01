@@ -23,25 +23,19 @@ from .views import (
 app_name = "matters"
 
 urlpatterns = [
-    # Generic
+    # Matters, general
     path("matters/", index, name="list"),
     path("matters/<int:id>", detail, name="detail"),
     path("matters/add", add, name="add"),
     path("matters/<int:id>/edit", edit, name="edit"),
     path("matters/<int:id>/delete", delete, name="delete"),
     path(
-        "matters/<int:id>/edit-description",
-        edit_description,
-        name="edit-description",
+        "matters/<int:id>/edit-description", edit_description, name="edit-description"
     ),
     path("matters/<int:id>/print", print, name="print"),
     # Contacts
     path("matters/<int:id>/contacts", contacts.index, name="contacts"),
-    path(
-        "matters/<int:id>/contacts/assign",
-        contacts.assign,
-        name="contacts-assign",
-    ),
+    path("matters/<int:id>/contacts/assign", contacts.assign, name="contacts-assign"),
     path(
         "matters/<int:id>/contacts/assign/results",
         contacts.assign_results,
@@ -52,16 +46,8 @@ urlpatterns = [
         contacts.assign_role,
         name="contacts-assign-role",
     ),
-    path(
-        "matters/assign/store",
-        contacts.assign_store,
-        name="contacts-assign-store",
-    ),
-    path(
-        "matters/assign/<id>/edit",
-        contacts.assign_edit,
-        name="contacts-assign-edit",
-    ),
+    path("matters/assign/store", contacts.assign_store, name="contacts-assign-store"),
+    path("matters/assign/<id>/edit", contacts.assign_edit, name="contacts-assign-edit"),
     path(
         "matters/assign/<id>/update",
         contacts.assign_update,
@@ -74,11 +60,7 @@ urlpatterns = [
     ),
     # Rates
     path("matters/<int:id>/rates", matters_rates.index, name="rates"),
-    path(
-        "matters/<int:id>/rates/add",
-        matters_rates.add,
-        name="rates-add",
-    ),
+    path("matters/<int:id>/rates/add", matters_rates.add, name="rates-add"),
     path(
         "matters/<int:id>/rates/<int:rate_id>/edit",
         matters_rates.edit,
@@ -94,16 +76,8 @@ urlpatterns = [
     # events
     path("matters/<int:id>/events", events.index, name="events"),
     # proceedings
-    path(
-        "matters/<int:id>/proceedings",
-        proceedings.index,
-        name="proceedings",
-    ),
-    path(
-        "matters/<int:id>/proceedings/add",
-        proceedings.add,
-        name="proceedings-add",
-    ),
+    path("matters/<int:id>/proceedings", proceedings.index, name="proceedings"),
+    path("matters/<int:id>/proceedings/add", proceedings.add, name="proceedings-add"),
     path(
         "matters/<int:id>/proceedings/<int:proceeding_id>/edit",
         proceedings.edit,
@@ -115,16 +89,8 @@ urlpatterns = [
         name="proceedings-delete",
     ),
     # Settlement
-    path(
-        "matters/<int:id>/settlement",
-        settlement.index,
-        name="settlement",
-    ),
-    path(
-        "matters/<int:id>/settlement/add",
-        settlement.add,
-        name="settlement-add",
-    ),
+    path("matters/<int:id>/settlement", settlement.index, name="settlement"),
+    path("matters/<int:id>/settlement/add", settlement.add, name="settlement-add"),
     path(
         "matters/<int:id>/settlement/<int:entry_id>/edit",
         settlement.edit,
@@ -137,11 +103,7 @@ urlpatterns = [
     ),
     # Timeline
     path("matters/<int:id>/timeline", timeline.index, name="timeline"),
-    path(
-        "matters/<int:id>/timeline/add",
-        timeline.add,
-        name="timeline-add",
-    ),
+    path("matters/<int:id>/timeline/add", timeline.add, name="timeline-add"),
     path(
         "matters/<int:id>/timeline/<int:fact_id>/edit",
         timeline.edit,
@@ -152,24 +114,8 @@ urlpatterns = [
         timeline.delete,
         name="timeline-delete",
     ),
-    path(
-        "matters/<int:id>/timeline/print",
-        timeline.print,
-        name="timeline-print",
-    ),
-    path(
-        "matters/filter",
-        filter,
-        name="filter",
-    ),
-    path(
-        "matters/order-by/<str:order>",
-        order_by,
-        name="order-by",
-    ),
-    path(
-        "matters/filter-quick/<str:quick_filter>/",
-        filter_quick,
-        name="filter-quick",
-    ),
+    path("matters/<int:id>/timeline/print", timeline.print, name="timeline-print"),
+    path("matters/filter", filter, name="filter"),
+    path("matters/order-by/<str:order>", order_by, name="order-by"),
+    path("matters/filter-quick/<str:quick_filter>/", filter_quick, name="filter-quick"),
 ]

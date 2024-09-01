@@ -24,17 +24,9 @@ urlpatterns = [
     path("contacts/<int:id>/edit", edit, name="edit"),
     path("contacts/<int:id>/delete", delete, name="delete"),
     path("contacts/<int:id>/assign", assign, name="assign"),
-    path(
-        "contacts/<int:id>/assign/store",
-        assign_store,
-        name="assign-store",
-    ),
+    path("contacts/<int:id>/assign/store", assign_store, name="assign-store"),
     path("contacts/<int:id>/remove", remove, name="remove"),
-    path(
-        "contacts/<int:id>/remove/store",
-        remove_store,
-        name="remove-store",
-    ),
+    path("contacts/<int:id>/remove/store", remove_store, name="remove-store"),
     path("contacts/<int:id>/add_intake", add_intake, name="add-intake"),
     path(
         "contacts/<int:id>/toggle_google_sync",

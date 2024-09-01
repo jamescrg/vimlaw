@@ -4,9 +4,16 @@
   <div class="section-title">
     <div class="section-title-left">
       <h1>Tasks</h1>
-      <div class="section-title-left-right"
-           hx-target="#tasks-table"
-           hx-swap="#outerHTML">
+      <div class="table-filter" hx-target="#tasks-table" hx-swap="#outerHTML">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'agenda:tasks-add' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-plus-lg"></i>
+        </button>
         <button type="button"
                 class="btn-icon"
                 hx-get="{% url 'agenda:tasks-filter' %}"
@@ -14,12 +21,18 @@
                 hx-trigger="click"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">Filter</button>
-        <a href="{% url 'agenda:tasks-filter-user' 'All' %}">All</a>
-        <a href="{% url 'agenda:tasks-filter-user' 'james' %}">James</a>
-        <a href="{% url 'agenda:tasks-filter-user' 'lexi' %}">Lexi</a>
+        <a href="{% url 'agenda:tasks-filter-quick' 'pending' %}">Pending</a>
+        <form action="{% url 'agenda:tasks-filter-user' %}" method="post">
+          {% csrf_token %}
+          <select class="select-user" name="user" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for user in users %}
+              <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
+            {% endfor %}
+          </select>
+        </form>
       </div>
     </div>
   </div>
-  {% include "agenda/tasks/form-add.html" %}
   {% include "agenda/tasks/table.html" %}
 {% endblock subcontent %}

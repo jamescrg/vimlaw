@@ -74,7 +74,6 @@ def transaction(contact):
         type="Deposit",
         description="Retainer",
         amount=2000.00,
-        entered=0,
         confirmed=0,
     )
     transaction.save()
@@ -84,7 +83,13 @@ def transaction(contact):
 @pytest.fixture
 def transaction_data(transaction):
     transaction_data = transaction.__dict__
+
     keys = "_state id".split()
+
     for key in keys:
         del transaction_data[key]
+
+    transaction_data["contact"] = transaction_data["contact_id"]
+    del transaction_data["entered"]
+
     return transaction_data

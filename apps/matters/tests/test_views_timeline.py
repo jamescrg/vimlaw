@@ -1,7 +1,7 @@
 import pytest
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.matters.models import Fact
+from apps.matters.timeline.models import Fact
 
 pytestmark = pytest.mark.django_db
 

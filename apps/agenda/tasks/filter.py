@@ -22,6 +22,16 @@ class TasksFilter(django_filters.FilterSet):
         queryset=CustomUser.objects.all(), empty_label="All"
     )
 
+    order_by = django_filters.OrderingFilter(
+        fields=(
+            ("status", "status"),
+            ("matter", "matter"),
+            ("description", "description"),
+            ("user", "user"),
+            ("date_due", "date_due"),
+        )
+    )
+
     class Meta:
         model = Task
         fields = ["status", "date_due", "matter", "user"]

@@ -49,43 +49,23 @@ urlpatterns = [
         time_filter_matter,
         name="time-filter-matter",
     ),
-    path(
-        "activity/time/filter/user/",
-        time_filter_user,
-        name="time-filter-user",
-    ),
+    path("activity/time/filter/user/", time_filter_user, name="time-filter-user"),
     path("activity/expenses", expenses_list, name="expenses-list"),
     path("activity/expenses/add", expenses_add, name="expenses-add"),
-    path(
-        "activity/expenses/add/<int:id>",
-        expenses_add,
-        name="expenses-add",
-    ),
-    path(
-        "activity/expenses/<int:id>/edit",
-        expenses_edit,
-        name="expenses-edit",
-    ),
+    path("activity/expenses/add/<int:id>", expenses_add, name="expenses-add"),
+    path("activity/expenses/<int:id>/edit", expenses_edit, name="expenses-edit"),
     path(
         "activity/expenses/export/<str:format>",
         expenses_export_to_csv,
         name="expenses-export",
     ),
-    path(
-        "activity/expenses/<int:id>/delete",
-        expenses_delete,
-        name="expenses-delete",
-    ),
+    path("activity/expenses/<int:id>/delete", expenses_delete, name="expenses-delete"),
     path(
         "activity/expenses/<int:id>/toggle-entered",
         expenses_toggle_entered,
         name="expenses-toggle-entered",
     ),
-    path(
-        "activity/expenses/filter/",
-        expenses_filter,
-        name="expenses-filter",
-    ),
+    path("activity/expenses/filter/", expenses_filter, name="expenses-filter"),
     path(
         "activity/expenses/filter/quick/<str:quick_filter>",
         expenses_filter_quick,

@@ -36,19 +36,6 @@
           {% endif %}
         </div>
       </div>
-      {% if edit %}
-        <br />
-        <div class="flex-center-space">
-          <br />
-          <div>
-            <a href="#"
-               hx-get="/trust/{{ contact.id }}/add"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container">Add Trust Deposit</a>
-          </div>
-        </div>
-      {% endif %}
     </form>
   </div>
 </div>

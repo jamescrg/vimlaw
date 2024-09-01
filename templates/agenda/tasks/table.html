@@ -5,7 +5,7 @@
         <button class="btn-task-sort btn-task-status"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/status">
+                hx-post="/agenda/tasks/filter/sort/status/">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
@@ -14,7 +14,7 @@
         <button class="btn-task-sort"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/matter">
+                hx-post="/agenda/tasks/filter/sort/matter/">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
@@ -23,7 +23,7 @@
         <button class="btn-task-sort"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/description">
+                hx-post="/agenda/tasks/filter/sort/description/">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
@@ -32,18 +32,28 @@
         <button class="btn-task-sort"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/user">
+                hx-post="/agenda/tasks/filter/sort/user/">
+          <i class="bi bi-chevron-expand"></i>
+        </button>
+      </th>
+      <th>
+        Date Due
+        <button class="btn-task-sort"
+                hx-target="#tasks-table"
+                hx-swap="outerHTML"
+                hx-post="/agenda/tasks/filter/sort/date_due/">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
     </tr>
     {% for task in objects %}
       <tr>
-        <td id="task-status" class="status">{% include "agenda/tasks/status.html" %}</td>
-        <td id="task-matter" class="matter">
+        <td class="status">{% include "agenda/tasks/status.html" %}</td>
+        <td class="matter">
           <a href={% url 'matters:detail' id=task.matter.id %}>{{ task.matter.name }}</a>
         </td>
-        <td id="task-description" class="description">
+        <td id="task-description"
+            class="description {% if task.date_due <= today %}soon{% endif %}">
           {% if task.priority %}
             <span class="priority">
               <i class="bi bi-exclamation-lg"></i>
@@ -57,7 +67,8 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
-        <td id="task-user" class="user">{% include "agenda/tasks/change-user.html" %}</td>
+        <td class="user">{% include "agenda/tasks/change-user.html" %}</td>
+        <td class="date">{{ task.date_due|date:"Y-m-d" }}</td>
       </tr>
     {% endfor %}
   </table>

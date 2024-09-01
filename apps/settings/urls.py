@@ -6,15 +6,7 @@ app_name = "settings"
 
 urlpatterns = [
     path("settings/", index, name="settings"),
-    path(
-        "settings/google/login/<str:app>",
-        google_login,
-        name="google-login",
-    ),
+    path("settings/google/login/<str:app>", google_login, name="google-login"),
     path("settings/google/store", google_store, name="google-store"),
-    path(
-        "settings/google/logout/<str:app>",
-        google_logout,
-        name="google-logout",
-    ),
+    path("settings/google/logout/<str:app>", google_logout, name="google-logout"),
 ]

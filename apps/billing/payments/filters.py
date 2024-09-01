@@ -2,6 +2,7 @@ import django_filters
 
 from apps.billing.payments.models import PAYMENT_METHOD_CHOICES, Payment
 from apps.matters.models import Matter
+from config.helpers import MultipleOrderingFilter
 
 
 class PaymentFilter(django_filters.FilterSet):
@@ -14,6 +15,9 @@ class PaymentFilter(django_filters.FilterSet):
     )
     date = django_filters.DateFromToRangeFilter(
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"})
+    )
+    order_by = MultipleOrderingFilter(
+        fields=[(("date", "id"), "date")], empty_label="Default"
     )
 
     class Meta:
