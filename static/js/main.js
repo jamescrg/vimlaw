@@ -43,6 +43,15 @@ htmx.on("htmx:beforeSwap", (e) => {
     }
 })
 
+// Auto focus on the first element that has the autofocus attribute inside a modal
+htmx.on("shown.bs.modal", () => {
+    const autofocusElement = document.querySelector("#htmx-modal-container [autofocus]")
+
+    if (autofocusElement) {
+        autofocusElement.focus()
+    }
+})
+
 htmx.on("hidden.bs.modal", () => {
     document.getElementById("htmx-modal-container").innerHTML = ""
 })
