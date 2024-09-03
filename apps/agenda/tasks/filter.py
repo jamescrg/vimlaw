@@ -16,7 +16,8 @@ class TasksFilter(django_filters.FilterSet):
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"})
     )
     matter = django_filters.ModelChoiceFilter(
-        queryset=Matter.objects.filter(status="Open"), empty_label="All"
+        queryset=Matter.objects.filter(status="Open").order_by("name"),
+        empty_label="All",
     )
     user = django_filters.ModelChoiceFilter(
         queryset=CustomUser.objects.all(), empty_label="All"

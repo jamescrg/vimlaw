@@ -6,7 +6,9 @@ from apps.matters.models import Matter
 
 class InvoiceFilter(django_filters.FilterSet):
     matter = django_filters.ModelChoiceFilter(
-        queryset=Matter.objects.filter(invoice__isnull=False).distinct(),
+        queryset=Matter.objects.filter(invoice__isnull=False)
+        .distinct()
+        .order_by("name"),
         empty_label="All",
     )
     status = django_filters.ChoiceFilter(choices=INVOICE_STATUS, empty_label="All")
