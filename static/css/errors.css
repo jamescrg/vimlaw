@@ -1,38 +1,38 @@
 
 .vertical-center {
-    align-items: center;
-    display: flex;
-    min-height: 80%;
+  align-items: center;
+  display: flex;
+  min-height: 80%;
 }
 
 @supports (height: 80vh) {
-    .vertical-center {
-        min-height: 80vh; /* Override with 80vh if supported */
-    }
+  .vertical-center {
+  min-height: 80vh; /* Override with 80vh if supported */
+  }
 }
 
 .error-card {
-    background: #f4f4f4;
-    border-radius: 3px;
-    font-size: 1.2em;
-    margin: 0 auto 20px;
-    padding: 20px;
-    width: 700px;
+  background: #f4f4f4;
+  border-radius: 3px;
+  font-size: 1.2em;
+  margin: 0 auto 20px;
+  padding: 20px;
+  width: 700px;
 }
 
 .error-title {
-    font-size: 1.4em;
-    margin-bottom: 20px;
-    text-align: center;
+  font-size: 1.4em;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .error-message {
-    font-size: 1.3em;
-    margin-bottom: 15px;
-    text-align: center;
+  font-size: 1.3em;
+  margin-bottom: 15px;
+  text-align: center;
 }
 
 .contact-message {
-    margin-bottom: 15px;
-    text-align: center;
+  margin-bottom: 15px;
+  text-align: center;
 }

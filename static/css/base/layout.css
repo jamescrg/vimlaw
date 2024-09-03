@@ -1,42 +1,42 @@
 
 html {
-    height: 100%;
+  height: 100%;
 }
 
 body {
-    background: var(--warm-gray-300);
-    color: var(--warm-gray-600);
-    font-family: 'Open Sans', sans-serif;
-    font-size: 1em;
-    min-height: 100%;
+  background: var(--warm-gray-300);
+  color: var(--warm-gray-600);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 1em;
+  min-height: 100%;
 }
 
 a,
 a:hover {
-    color: var(--lime-800);
-    outline: none;
-    text-decoration: none;
+  color: var(--lime-800);
+  outline: none;
+  text-decoration: none;
 }
 
 .content {
-    padding-bottom: 3rem;
-    padding-top: 1.5rem;
+  padding-bottom: 3rem;
+  padding-top: 1.5rem;
 }
 
 .flex-start-space {
-    align-items: start;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+  align-items: start;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .flex-center-space {
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .overflow-x {
-    overflow-x: auto;
+  overflow-x: auto;
 }

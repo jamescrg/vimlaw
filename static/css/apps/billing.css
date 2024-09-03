@@ -6,35 +6,35 @@ List View
 .invoices .number,
 .invoices .matter,
 .invoices .date {
-    width: 19%;
+  width: 19%;
 }
 
 
 .invoices .amount {
-    text-align: right;
-    width: 19%;
+  text-align: right;
+  width: 19%;
 }
 
 .invoices .status {
-    width: 19%;
+  width: 19%;
 }
 
 .invoices .pdf {
-    text-align: center;
-    width: 5%;
+  text-align: center;
+  width: 5%;
 }
 
 
 .pointer {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .invoice-delete {
-    color: var(--orange-800)
+  color: var(--orange-800)
 }
 
 .invoice-delete:hover {
-    color: var(--orange-800)
+  color: var(--orange-800)
 }
 
 
@@ -43,29 +43,29 @@ Detail View
 ========================================================================== */
 
 .detail-table {
-    width: 25%;
-    height: fit-content;
+  height: fit-content;
+  width: 25%;
 }
 
 @media (max-width: 768px) {
-    .detail-table {
-        width: 100%;
-    }
+  .detail-table {
+  width: 100%;
+  }
 }
 
 .invoice-table-container {
-    display: flex;
-    gap: 2rem;
+  display: flex;
+  gap: 2rem;
 }
 
 @media (max-width: 768px) {
-    .invoice-table-container {
-        flex-direction: column;
-    }
+  .invoice-table-container {
+  flex-direction: column;
+  }
 }
 
 .activites-title {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 /* ==========================================================================
@@ -73,8 +73,8 @@ Invoice Form
 ========================================================================== */
 
 .add-invoice .discount {
-    text-align: right;
-    width: 6rem;
+  text-align: right;
+  width: 6rem;
 }
 
 /* ==========================================================================
@@ -82,12 +82,12 @@ Cancel Form
 ========================================================================== */
 
 .cancel-form input {
-    margin-top: 0.5rem;
-    width: 100%;
+  margin-top: 0.5rem;
+  width: 100%;
 }
 
 .dropdown-item:active {
-    background-color: var(--warm-gray-350);
+  background-color: var(--warm-gray-350);
 }
 
 /* ==========================================================================
@@ -95,6 +95,6 @@ Payments
 ========================================================================== */
 
 .actions {
-    width: 5%;
-    text-align: center;
+  text-align: center;
+  width: 5%;
 }

@@ -1,38 +1,38 @@
 
 .width100 {
-    width: 100%;
+  width: 100%;
 }
 
 .table {
-    color: inherit;
-    margin-bottom: 0;
+  color: inherit;
+  margin-bottom: 0;
 }
 
 table {
-    border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 th {
-    border: solid 1px var(--warm-gray-200);
-    font-weight: 600;
-    padding: 8px 15px !important;
-    vertical-align: top;
+  border: solid 1px var(--warm-gray-200);
+  font-weight: 600;
+  padding: 8px 15px !important;
+  vertical-align: top;
 }
 
 td {
-    border: solid 1px var(--warm-gray-200);
-    padding: 8px 15px !important;
-    vertical-align: top;
+  border: solid 1px var(--warm-gray-200);
+  padding: 8px 15px !important;
+  vertical-align: top;
 }
 
 .numeric {
-    text-align: right;
+  text-align: right;
 }
 
 .total {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 th {
-    font-weight: 500;
+  font-weight: 500;
 }

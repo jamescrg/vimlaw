@@ -3,21 +3,21 @@ Summary View
 ------------------------------------------------*/
 
 #summary {
-    clear: both;
-    width: 100%;
+  clear: both;
+  width: 100%;
 }
 
 #summary td {
-    border: solid 1px var(--warm-gray-200);
-    vertical-align: top;
+  border: solid 1px var(--warm-gray-200);
+  vertical-align: top;
 }
 
 .numeric {
-    width: 210px;
+  width: 210px;
 }
 
 table .material-icons {
-    margin: 0;
+  margin: 0;
 }
 
 /*------------------------------------------------
@@ -25,24 +25,24 @@ Summary and History Views
 ------------------------------------------------*/
 
 .contact-section {
-    background: var(--warm-gray-100);
-    margin-bottom: 20px;
-    padding: 20px 15px;
+  background: var(--warm-gray-100);
+  margin-bottom: 20px;
+  padding: 20px 15px;
 }
 
 .contact-section-heading {
-    margin: 0;
+  margin: 0;
 }
 
 .contact-section-data {
-    margin: 20px 0 0 0;
+  margin: 20px 0 0 0;
 }
 
 .contact-edit {
-    float: right;
-    font-size: 0.9em;
-    margin: 4px 10px 0 0;
-    text-align: right;
+  float: right;
+  font-size: 0.9em;
+  margin: 4px 10px 0 0;
+  text-align: right;
 }
 
 .transaction-filter,
@@ -56,37 +56,37 @@ Summary and History Views
 }
 
 #transactions {
-    border-collapse: collapse;
-    margin: 10px 0 5px 0;
-    width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0 5px 0;
+  width: 100%;
 }
 
 #transactions td {
-    border: solid 1px var(--warm-gray-200);
-    padding: 6px;
-    vertical-align: top;
+  border: solid 1px var(--warm-gray-200);
+  padding: 6px;
+  vertical-align: top;
 }
 
 #transactions .date {
-    width: 120px;
+  width: 120px;
 }
 
 #transactions .client {
-    width: 200px;
+  width: 200px;
 }
 
 #transactions .description {
-    border: solid 1px var(--warm-gray-200);
+  border: solid 1px var(--warm-gray-200);
 }
 
 #transactions .amount {
-    text-align: right;
-    width: 120px;
+  text-align: right;
+  width: 120px;
 }
 
 #transactions .check {
-    text-align: right;
-    width: 45px;
+  text-align: right;
+  width: 45px;
 }
 
 
@@ -95,25 +95,25 @@ Transaction Form
 ------------------------------------------------*/
 
 #id_type {
-    width: 140px;
+  width: 140px;
 }
 
 #id_description {
-    width: 550px;
+  width: 550px;
 }
 
 #id_amount {
-    width: 140px;
+  width: 140px;
 }
 
 #id_entered {
-    width: 70px;
+  width: 70px;
 }
 
 #id_confirmed {
-    width: 70px;
+  width: 70px;
 }
 
 .intake-contact-item {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }

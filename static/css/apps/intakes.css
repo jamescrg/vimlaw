@@ -3,51 +3,51 @@ List View
 ========================================================================== */
 
 .add-to-contacts {
-    float: right;
-    margin: 15px 5px 0 0;
+  float: right;
+  margin: 15px 5px 0 0;
 }
 
 .intake-details {
-    margin-bottom: 2rem;
-    width: 100%;
+  margin-bottom: 2rem;
+  width: 100%;
 }
 
 .intake-details .strong {
-    width: 170px;
+  width: 170px;
 }
 
 .intake-date {
-    width: 120px
+  width: 120px
 }
 
 .intake-name {
-    width: 300px;
+  width: 300px;
 }
 
 .intake-phone {
-    width: 180px
+  width: 180px
 }
 
 .intake-email {
-    width: 180px
+  width: 180px
 }
 
 .intake-status {
-    width: 120px
+  width: 120px
 }
 
 .intake-source {
-    width: 120px
+  width: 120px
 }
 
 #intake-list th a {
-    color: inherit;
+  color: inherit;
 }
 
 #id_details {
-    min-height: 300px;
-    resize: both;
-    width: 600px;
+  min-height: 300px;
+  resize: both;
+  width: 600px;
 }
 
 /* ==========================================================================
@@ -71,11 +71,11 @@ Notes
 }
 
 .note-title button {
-    background: var(--warm-gray-150);
-    border: none;
-    border-radius: 4px;
-    color: var(--lime-800);
-    padding: 4px 6px;
+  background: var(--warm-gray-150);
+  border: none;
+  border-radius: 4px;
+  color: var(--lime-800);
+  padding: 4px 6px;
 }
 
 .note-title-right {
@@ -95,15 +95,15 @@ Notes
 }
 
 .note-date {
-    width: 120px;
+  width: 120px;
 }
 
 .note-username {
-    width: 120px;
+  width: 120px;
 }
 
 .note-type {
-    width: 120px;
+  width: 120px;
 }
 
 /* ==========================================================================
@@ -111,22 +111,22 @@ Markdown
 ========================================================================== */
 
 .note-details h1 {
-    font-size: 1.5em;
-    font-weight: 600;
+  font-size: 1.5em;
+  font-weight: 600;
 }
 
 .note-details h2 {
-    font-size: 1.1em;
-    font-weight: 600;
+  font-size: 1.1em;
+  font-weight: 600;
 }
 
 .note-details h3 {
-    font-size: 1.0em;
-    font-weight: 600;
+  font-size: 1.0em;
+  font-weight: 600;
 }
 
 .note-details strong {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .note-details ul {
@@ -134,35 +134,35 @@ Markdown
 }
 
 .note-details ul li {
-    list-style-type: disc;
-    padding-left: 0.5rem;
+  list-style-type: disc;
+  padding-left: 0.5rem;
 }
 
 .note-details ol {
-    margin: 1rem 0 0 0;
+  margin: 1rem 0 0 0;
 }
 
 .note-details ol li {
-    list-style-type: decimal;
-    padding: 0.5rem 0 0.3rem 0;
+  list-style-type: decimal;
+  padding: 0.5rem 0 0.3rem 0;
 }
 
 .note-details p {
-    margin: 1rem 0 0 0.5rem;
+  margin: 1rem 0 0 0.5rem;
 }
 
 .note-details a {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 code {
-    background: inherit;
-    color: inherit;
-    display: block;
-    font-family: 'Courier Prime', monospace;
-    font-size: 1.03em;
-    margin-left: 20px;
-    white-space: pre-wrap;
+  background: inherit;
+  color: inherit;
+  display: block;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.03em;
+  margin-left: 20px;
+  white-space: pre-wrap;
 }
 
 /* ==========================================================================
@@ -170,25 +170,25 @@ Form
 ========================================================================== */
 
 #id_name {
-    max-width: 400px;
-    width: 100%;
+  max-width: 400px;
+  width: 100%;
 }
 
 #id_address {
-    max-width: 400px;
-    width: 100%;
+  max-width: 400px;
+  width: 100%;
 }
 
 #id_phone {
-    max-width: 400px;
-    width: 100%;
+  max-width: 400px;
+  width: 100%;
 }
 
 #id_email {
-    max-width: 400px;
-    width: 100%;
+  max-width: 400px;
+  width: 100%;
 }
 
 .intake-contact {
-    float: right;
+  float: right;
 }

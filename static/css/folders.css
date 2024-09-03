@@ -1,48 +1,48 @@
 
 #folders {
-    margin-bottom: 20px;
-    padding-left: 10px;
-    padding-right: 10px;
+  margin-bottom: 20px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .folder-item {
-    display: flex;
+  display: flex;
 }
 
 .folder-item .bi-folder {
-    color: var(--warm-gray-400);
+  color: var(--warm-gray-400);
 }
 
 #add-folder-item {
-    border-bottom: none;
-    display: none;
-    background: var(--warm-gray-100);
+  background: var(--warm-gray-100);
+  border-bottom: none;
+  display: none;
 }
 
 .edit-folder {
-    display: none;
-    justify-content: space-between;
-    margin-right: 10px;
-    width: 100%;
+  display: none;
+  justify-content: space-between;
+  margin-right: 10px;
+  width: 100%;
 }
 
 .folder-form {
-    padding: 0;
-    margin: 0;
-    text-align: left;
-    width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
 }
 
 .folder-form input {
-    background: inherit;
-    border: none;
-    display: inline;
-    margin: 0;
-    padding: 0;
-    width: 100%;
+  background: inherit;
+  border: none;
+  display: inline;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .delete-folder {
-    color: var(--red-600);
-    margin: 0;
+  color: var(--red-600);
+  margin: 0;
 }

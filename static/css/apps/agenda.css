@@ -5,61 +5,59 @@ Events
 ------------------------------------------------*/
 
 .toggle-events {
-    font-weight: 600;
-    margin-right: 10px;
-    text-align: right;
+  font-weight: 600;
+  margin-right: 10px;
+  text-align: right;
 }
 
 .events {
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .events-table {
-    width: 100%;
+  width: 100%;
 }
 
 .date {
-    width: 120px;
+  width: 120px;
 }
 
 .party {
-    width: 120px;
+  width: 120px;
 }
 
 .matter {
-    width: 250px;
+  width: 250px;
 }
 
-.add-event {
 
-    #id_matter {
-        width: auto;
-    }
-
-    #id_party {
-        width: 140px;
-    }
-
-    #id_description {
-        max-width: 500px;
-        width: 100%
-    }
-
-    #id_status {
-        width: 140px;
-    }
-
+.add_event #id_matter {
+  width: auto;
 }
+
+.add_event #id_party {
+  width: 140px;
+}
+
+.add_event #id_description {
+  max-width: 500px;
+  width: 100%
+}
+
+.add_event #id_status {
+  width: 140px;
+}
+
 
 /*------------------------------------------------
 Tasks
 ------------------------------------------------*/
 
 .btn-task-sort {
-    border: none;
-    background: none;
-    color: inherit;
-    font-weight: 600;
+  background: none;
+  border: none;
+  color: inherit;
+  font-weight: 600;
 }
 
 .priority {
@@ -67,34 +65,34 @@ Tasks
 }
 
 .btn-task-status {
-    color: var(--warm-gray-400);
+  color: var(--warm-gray-400);
 }
 
 .tasks-table .status {
-    text-align: center;
-    width: 20px;
+  text-align: center;
+  width: 20px;
 }
 
 .status .bi-chevron-expand {
-    margin: 0;
+  margin: 0;
 }
 
 .tasks-table .matter {
-    width: 250px;
+  width: 250px;
 }
 
 .tasks-table .user {
-    width: 110px;
+  width: 110px;
 }
 
 .tasks-table .date {
-    width: 155px;
+  width: 155px;
 }
 
 .tasks-table .menu {
-  width: 10px;
   margin: 0;
   padding: 0;
+  width: 10px;
 }
 
 /*------------------------------------------------
@@ -117,17 +115,17 @@ Tasks Table Inputs
 
 .tasks-table input[type="text"],
 .tasks-table input[type="date"] {
-    background: var(--warm-gray-50);
-    border: solid 1px var(--warm-gray-200);
-    border-radius: 4px;
-    color: inherit;
-    font-size: inherit;
-    margin: 0;
-    padding: 4px;
+  background: var(--warm-gray-50);
+  border: solid 1px var(--warm-gray-200);
+  border-radius: 4px;
+  color: inherit;
+  font-size: inherit;
+  margin: 0;
+  padding: 4px;
 }
 
 .user select {
-    max-width: 100px;
+  max-width: 100px;
 }
 
 /*------------------------------------------------
@@ -136,20 +134,20 @@ Task Add Form Quick
 
 .task-form-add input,
 .task-form-add select {
-    border: 1px solid var(--warm-gray-200);
-    border-radius: 3px;
-    line-height: 1;
-    margin: 0;
-    padding: 7px;
+  border: 1px solid var(--warm-gray-200);
+  border-radius: 3px;
+  line-height: 1;
+  margin: 0;
+  padding: 7px;
 }
 
 .task-form-add input {
-    max-width: 795px;
-    width: 100%;
+  max-width: 795px;
+  width: 100%;
 }
 
 .task-form-add select {
-    margin-right: 0.5rem;
+  margin-right: 0.5rem;
 }
 
 .task-input-description-label {
@@ -175,5 +173,5 @@ Task Edit Form
 }
 
 .task-filter select {
-    min-width: 95%;
+  min-width: 95%;
 }

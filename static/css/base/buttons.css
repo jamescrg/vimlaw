@@ -1,42 +1,42 @@
 
 .btn {
-    font-size: 1em;
+  font-size: 1em;
 }
 
 .btn-primary,
 .btn-primary:hover,
 .btn-primary:focus {
-    background: var(--lime-900);
-    border: none;
-    box-shadow: none;
-    color: var(--warm-gray-300);
+  background: var(--lime-900);
+  border: none;
+  box-shadow: none;
+  color: var(--warm-gray-300);
 }
 
 .btn-icon {
-    border: none;
-    padding: 0;
+  border: none;
+  padding: 0;
 }
 
 .btn-slim {
-    font-size: 0.97rem;
-    padding: 0.1rem 0.4rem;
+  font-size: 0.97rem;
+  padding: 0.1rem 0.4rem;
 }
 
 .button-icon {
-    background: none;
-    border: none;
-    margin: 0;
-    padding: 0;
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 .button-link {
-    background: none;
-    border: none;
-    color: var(--lime-800);
-    margin: 0;
-    padding: 0;
+  background: none;
+  border: none;
+  color: var(--lime-800);
+  margin: 0;
+  padding: 0;
 }
 
 .button-link:hover {
-    color: var(--lime-800);
+  color: var(--lime-800);
 }
