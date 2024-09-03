@@ -8,23 +8,23 @@ Page Setup
 }
 
 .invoice-template {
-  width: 100%;
-  font-size: 11pt;
   font-family: "Times New Roman", serif;
+  font-size: 11pt;
   position: relative;
+  width: 100%;
 }
 
 .invoice-body-draft {
   background-image: url("/static/images/draft.png");
-  background-repeat: repeat-y;
   background-position: center;
+  background-repeat: repeat-y;
   background-size: cover;
 }
 
 .invoice-body-canceled {
   background-image: url("/static/images/canceled.png");
-  background-repeat: repeat-y;
   background-position: center;
+  background-repeat: repeat-y;
   background-size: cover;
 }
 
@@ -33,8 +33,8 @@ Header
 ========================================================================== */
 
 .cb-logo {
-  width: 100px;
   height: auto;
+  width: 100px;
 }
 
 .llc {
@@ -83,10 +83,10 @@ Content
 }
 
 h3 {
-  margin-bottom: 12pt;
-  margin-top: 11pt;
   font-family: "Times New Roman", serif;
   font-size: 11pt;
+  margin-bottom: 12pt;
+  margin-top: 11pt;
 }
 
 .table {
@@ -107,13 +107,13 @@ h3 {
 }
 
 .table td {
-  word-wrap: break-word;
   white-space: normal;
+  word-wrap: break-word;
 }
 
 .table .comp {
-  text-decoration: line-through;
   color: gray;
+  text-decoration: line-through;
 }
 
 .table .date {

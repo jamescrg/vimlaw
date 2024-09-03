@@ -43,8 +43,8 @@ Detail View
 ========================================================================== */
 
 .detail-table {
-  width: 25%;
   height: fit-content;
+  width: 25%;
 }
 
 @media (max-width: 768px) {

@@ -17,10 +17,10 @@ body {
 }
 
 .auth-container {
-  display: flex;
-  justify-content: center;
   align-items: center;
+  display: flex;
   height: 80%;
+  justify-content: center;
   width: 100%;
 }
 
@@ -110,8 +110,8 @@ input:focus {
 .login-bottom-right {
   display: flex;
   flex-direction: column;
-  margin-bottom: 2px;
   font-size: 0.95rem;
+  margin-bottom: 2px;
 }
 
 .reset-confirm {
@@ -128,9 +128,9 @@ input:focus {
 }
 
 .auth-buttons {
+  align-items: baseline;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
-  align-items: baseline;
   gap: 1rem;
+  justify-content: flex-end;
 }

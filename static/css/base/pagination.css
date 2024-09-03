@@ -18,10 +18,11 @@
   color: var(--lime-800);
   padding: 0.05rem 0.5rem;
 
-  &:hover {
+}
+
+pagination a:hover {
   background: var(--warm-gray-150);
   color: var(--lime-800);
-  }
 }
 
 .pagination-disabled {

@@ -14,9 +14,9 @@
 }
 
 #add-folder-item {
+  background: var(--warm-gray-100);
   border-bottom: none;
   display: none;
-  background: var(--warm-gray-100);
 }
 
 .edit-folder {
@@ -27,8 +27,8 @@
 }
 
 .folder-form {
-  padding: 0;
   margin: 0;
+  padding: 0;
   text-align: left;
   width: 100%;
 }

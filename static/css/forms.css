@@ -14,8 +14,8 @@ select,
 textarea {
   border: solid 1px var(--warm-gray-300);
   border-radius: 3px;
-  padding: 0.25rem;
   outline: none;
+  padding: 0.25rem;
 }
 
 select {
@@ -62,8 +62,8 @@ textarea {
 }
 
 .add-event {
-  margin-top: 1rem;
   border-top: solid 1px var(--warm-gray-200);
+  margin-top: 1rem;
   padding-top: 1rem;
 }
 
