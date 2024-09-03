@@ -37,7 +37,7 @@ class TimeEntryFilter(django_filters.FilterSet):
         method="filter_invoice",
     )
     order_by = MultipleOrderingFilter(
-        fields=[(("date", "id"), "date")],
+        fields=[(("date", "id"), "date"), ("action", "action")],
         empty_label="Default",
     )
 
