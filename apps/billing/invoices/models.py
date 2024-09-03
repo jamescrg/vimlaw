@@ -9,6 +9,7 @@ INVOICE_STATUS = (
     ("SENT", "Sent"),
     ("CANCELED", "Canceled"),
     ("PAID", "Paid"),
+    ("WAIVED", "Waived"),
 )
 
 
