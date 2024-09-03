@@ -109,7 +109,10 @@ def payments_filter(request):
         filter_data = request.session.get("payments_filter", request.POST)
 
         return PaymentFilter(
-            filter_data, queryset=Payment.objects.all().select_related("matter")
+            filter_data,
+            queryset=Payment.objects.all()
+            .select_related("matter")
+            .order_by("-date", "-id"),
         )
 
     if request.method == "POST":
