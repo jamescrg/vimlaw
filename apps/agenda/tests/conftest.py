@@ -30,7 +30,7 @@ def client(user):
 @pytest.fixture
 def folder(user):
     folder = Folder.objects.create(
-        page="agenda",
+        app="agenda",
         name="Current",
     )
     folder.save()

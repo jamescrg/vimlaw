@@ -26,8 +26,8 @@ def payments_list(request):
     pagination = Paginator(payments, per_page=10).get_page(page)
 
     context = {
-        "page": "billing",
-        "subpage": "payments",
+        "app": "billing",
+        "subapp": "payments",
         "pagination": pagination,
         "objects": pagination.object_list,
     }

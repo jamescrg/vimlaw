@@ -52,8 +52,8 @@ def time_list(request):
     pagination = Paginator(entries, per_page=10).get_page(page)
 
     context = {
-        "page": "activity",
-        "subpage": "time",
+        "app": "activity",
+        "subapp": "time",
         "edit": False,
         "objects": pagination.object_list,
         "pagination": pagination,
@@ -249,7 +249,7 @@ def time_add(request, id=None):
     form.fields["matter"].queryset = matter_list
 
     context = {
-        "page": "activity",
+        "app": "activity",
         "edit": False,
         "add": True,
         "action": "/activity/time/add",
@@ -295,7 +295,7 @@ def time_edit(request, id):
                 matter_rates.update({matter.id: request.user.user_rate})
 
     context = {
-        "page": "activity",
+        "app": "activity",
         "edit": True,
         "add": False,
         "action": f"/activity/time/{id}/edit",

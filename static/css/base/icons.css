@@ -1,0 +1,45 @@
+
+.icon,
+.icon:hover {
+    color: var(--warm-gray-500);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.dot-icon {
+    color: var(--warm-gray-350);
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.bi-plus-lg {
+    color: var(--lime-800);
+}
+
+.bi-x-lg {
+    color: var(--lime-800);
+    font-size: 0.9rem;
+}
+
+.bi-folder {
+    color: var(--warm-gray-400);
+    margin-right: 10px;
+}
+
+.bi-trash {
+    color: var(--red-800);
+}
+
+.bi-chevron-expand {
+    color: var(--warm-gray-400);
+    margin-left: 5px;
+}
+
+.bi-square,
+.bi-check-square {
+    color: var(--warm-gray-400);
+}

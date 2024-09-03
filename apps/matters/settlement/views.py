@@ -16,7 +16,7 @@ def index(request, id):
     entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "settlement",
         "matter": matter,
         "proceeding": proceeding,
@@ -47,7 +47,7 @@ def add(request, id):
         form = SettlementEntryForm(initial={"date": today})
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "settlement",
         "matter": matter,
         "proceeding": proceeding,
@@ -81,7 +81,7 @@ def edit(request, id, entry_id):
         form = SettlementEntryForm(instance=entry)
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "settlement",
         "matter": matter,
         "proceeding": proceeding,

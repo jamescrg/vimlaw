@@ -11,7 +11,7 @@ from apps.matters.proceedings.models import Proceeding
 @login_required
 def index(request):
     context = {
-        "page": "search",
+        "app": "search",
         "action": "/search/results",
         "results": False,
     }
@@ -57,7 +57,7 @@ def results(request):
         intakes = None
 
     context = {
-        "page": "search",
+        "app": "search",
         "action": "/search/results",
         "results": True,
         "matters": matters,

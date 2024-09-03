@@ -15,7 +15,7 @@ def index(request, id):
     relationship_groups = load_contacts(matter)
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "contacts",
         "matter": matter,
         "proceeding": proceeding,
@@ -31,7 +31,7 @@ def assign(request, id):
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "contacts",
         "matter": matter,
         "proceeding": proceeding,
@@ -66,7 +66,7 @@ def assign_role(request, matter_id, contact_id):
     roles = Role.objects.all().order_by("name")
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "contacts",
         "matter": matter,
         "proceeding": proceeding,
@@ -103,7 +103,7 @@ def assign_edit(request, id):
     roles = Role.objects.all().order_by("name")
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "contacts",
         "matter": matter,
         "proceeding": proceeding,

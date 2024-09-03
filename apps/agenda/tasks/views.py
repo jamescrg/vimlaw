@@ -38,8 +38,8 @@ def tasks_list(request):
     tasks_matter = request.session.get("tasks_matter")
 
     context = {
-        "page": "agenda",
-        "subpage": "tasks",
+        "app": "agenda",
+        "subapp": "tasks",
         "show_events": show_events,
         "tasks_matter": tasks_matter,
         "today": today,
@@ -115,7 +115,7 @@ def tasks_edit(request, id):
         form.fields["matter"].queryset = matter_list
 
         context = {
-            "page": "agenda",
+            "app": "agenda",
             "edit": True,
             "task": task,
             "action": f"/agenda/tasks/{id}/edit",

@@ -33,7 +33,7 @@ def index(request):
     pagination = Paginator(matters, per_page=20).get_page(page)
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "pagination": pagination,
         "edit": False,
         "matters": pagination.object_list,
@@ -124,7 +124,7 @@ def add(request):
         form.fields["client"].queryset = client_list
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "edit": False,
         "add": True,
         "action": "/matters/add",
@@ -160,7 +160,7 @@ def edit(request, id):
         form.fields["client"].queryset = client_list
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "edit": True,
         "add": False,
         "action": f"/matters/{id}/edit",

@@ -49,8 +49,8 @@ def expenses_list(request):
     pagination = Paginator(expenses, per_page=10).get_page(page)
 
     context = {
-        "page": "activity",
-        "subpage": "expenses",
+        "app": "activity",
+        "subapp": "expenses",
         "edit": False,
         "objects": pagination.object_list,
         "pagination": pagination,
@@ -174,7 +174,7 @@ def expenses_add(request, id=None):
     form.fields["matter"].queryset = matter_list
 
     context = {
-        "page": "activity",
+        "app": "activity",
         "edit": False,
         "add": True,
         "action": "/activity/expenses/add",
@@ -211,7 +211,7 @@ def expenses_edit(request, id):
         form.fields["matter"].queryset = matter_list
 
     context = {
-        "page": "activity",
+        "app": "activity",
         "edit": True,
         "add": False,
         "action": f"/activity/expenses/{id}/edit",

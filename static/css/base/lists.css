@@ -1,0 +1,18 @@
+
+li {
+    list-style-type: none;
+}
+
+.list-group {
+    background: var(--warm-gray-100);
+    border: none;
+    border-radius: 0;
+}
+
+.list-group-item {
+    background: none;
+    border-left: none;
+    border-right: none;
+    color: inherit;
+    padding: 0.5rem 0 0.5rem 0.5rem;
+}

@@ -1,0 +1,33 @@
+
+h1 {
+    font-size: 1.3rem;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+h2 {
+    font-size: 1.2rem;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+strong {
+    font-weight: 600;
+}
+
+.strong {
+    font-weight: 600;
+}
+
+.soon a {
+    color: var(--orange-800);
+}
+
+.warn {
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.urgent {
+    color: var(--orange-800);
+}

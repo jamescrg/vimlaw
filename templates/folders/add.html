@@ -2,7 +2,7 @@
   <i class="bi bi-folder"></i>
   <div class="edit-folder">
     <form class="folder-form"
-          action="{% url 'folders:insert' page %}"
+          action="{% url 'folders:insert' app %}"
           method="post">
       {% csrf_token %}
       <label for="add-folder-input"></label>

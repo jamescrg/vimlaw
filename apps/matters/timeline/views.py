@@ -16,7 +16,7 @@ def index(request, id):
     facts = Fact.objects.filter(matter=matter.id).order_by("date")
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "timeline",
         "matter": matter,
         "proceeding": proceeding,
@@ -47,7 +47,7 @@ def add(request, id):
         form = FactForm(initial={"date_filed": today})
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "timeline",
         "matter": matter,
         "proceeding": proceeding,
@@ -81,7 +81,7 @@ def edit(request, id, fact_id):
         form = FactForm(instance=fact)
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "timeline",
         "matter": matter,
         "proceeding": proceeding,

@@ -12,7 +12,7 @@ def test_index(client):
     assert response.status_code == 200
     response = client.get(reverse("events:events-list"))
     assert response.status_code == 200
-    assert response.context["page"] == "agenda"
+    assert response.context["app"] == "agenda"
 
 
 def test_add_get(client):

@@ -40,8 +40,8 @@ def invoices_list(request):
     pagination = Paginator(invoices, per_page=10).get_page(page)
 
     context = {
-        "page": "billing",
-        "subpage": "invoices",
+        "app": "billing",
+        "subapp": "invoices",
         "pagination": pagination,
         "objects": pagination.object_list,
     }
@@ -54,7 +54,7 @@ def invoices_detail(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
     context = {
-        "page": "billing",
+        "app": "billing",
         "file_url": reverse_lazy("billing:invoices-pdf", kwargs={"pk": invoice.pk}),
         "invoice": invoice,
     }

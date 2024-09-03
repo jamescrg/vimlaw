@@ -5,13 +5,13 @@ from apps.folders.models import Folder
 
 
 @login_required
-def select(request, id, page):
-    if page == "contacts":
+def select(request, id, app):
+    if app == "contacts":
         request.session["contacts_selected_folder_id"] = id
         if "selected_contact_id" in request.session:
             del request.session["selected_contact_id"]
 
-    if page == "agenda":
+    if app == "agenda":
         folder = get_object_or_404(Folder, pk=id)
 
         if folder.active == 1:
@@ -24,34 +24,34 @@ def select(request, id, page):
 
         folder.save()
 
-    return redirect(f"/{page}")
+    return redirect(f"/{app}")
 
 
 @login_required
-def insert(request, page):
+def insert(request, app):
     folder = Folder()
     folder.user_id = request.user.id
-    folder.page = page
+    folder.app = app
     folder.name = request.POST["name"]
     folder.save()
-    return redirect(f"/{page}")
+    return redirect(f"/{app}")
 
 
 @login_required
-def update(request, id, page):
+def update(request, id, app):
     folder = get_object_or_404(Folder, pk=id)
     folder.name = request.POST["name"]
     folder.save()
 
-    return redirect(f"/{page}")
+    return redirect(f"/{app}")
 
 
 @login_required
-def delete(request, id, page):
+def delete(request, id, app):
     folder = get_object_or_404(Folder, pk=id)
     folder.delete()
 
     # if deleting the selected folder, clear that from the session
     if request.session.get("contacts_selected_folder_id") == id:
         del request.session["contacts_selected_folder_id"]
-    return redirect(f"/{page}")
+    return redirect(f"/{app}")

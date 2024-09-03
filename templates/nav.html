@@ -16,39 +16,39 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="nav navbar-nav">
-        <li class="nav-item {% if page == 'agenda' %}nav-active{% endif %}">
+        <li class="nav-item {% if app == 'agenda' %}nav-active{% endif %}">
           <a id="nav-agenda" class="nav-link" href={% url 'agenda:tasks-list' %}>Agenda</a>
         </li>
-        <li class="nav-item {% if page == 'matters' %}nav-active{% endif %}">
+        <li class="nav-item {% if app == 'matters' %}nav-active{% endif %}">
           <a id="nav-matters" class="nav-link" href={% url 'matters:list' %}>Matters</a>
         </li>
-        <li class="nav-item {% if page == 'contacts' %}nav-active{% endif %}">
+        <li class="nav-item {% if app == 'contacts' %}nav-active{% endif %}">
           <a id="nav-contacts" class="nav-link" href={% url 'contacts:contacts' %}>Contacts</a>
         </li>
-        <li class="nav-item {% if page == 'activity' %}nav-active{% endif %}">
+        <li class="nav-item {% if app == 'activity' %}nav-active{% endif %}">
           <a id="nav-activity"
              class="nav-link"
              href="{% url 'activity:time-list' %}">Activity</a>
         </li>
-        <li class="nav-item {% if page == 'billing' %}nav-active{% endif %}">
+        <li class="nav-item {% if app == 'billing' %}nav-active{% endif %}">
           <a id="nav-invoicing"
              class="nav-link"
              href="{% url 'billing:invoices-list' %}">Billing</a>
         </li>
-        <li class="nav-item {% if page == 'trust' %}nav-active{% endif %}">
+        <li class="nav-item {% if app == 'trust' %}nav-active{% endif %}">
           <a id="nav-trust" class="nav-link" href={% url 'trust:trust' %}>Trust</a>
         </li>
-        <li class="nav-item {% if page == 'intakes' %}nav-active{% endif %}">
+        <li class="nav-item {% if app == 'intakes' %}nav-active{% endif %}">
           <a id="nav-intakes" class="nav-link" href={% url 'intakes:list' %}>Intakes</a>
         </li>
       </ul>
       <ul class="navbar-nav ms-auto">
-        <li {% if page == 'search' %}class="nav-active"{% endif %}>
+        <li {% if app == 'search' %}class="nav-active"{% endif %}>
           <a class="nav-link" href={% url 'search:search' %}>
             <i class="bi bi-search"></i>
           </a>
         </li>
-        <li {% if page == 'settings' %}class="nav-active"{% endif %}>
+        <li {% if app == 'settings' %}class="nav-active"{% endif %}>
           <a class="nav-link settings-link" href={% url 'settings:settings' %}>
             <i class="bi bi-person-circle"></i>
           </a>

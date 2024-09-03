@@ -1,0 +1,82 @@
+
+.section {
+    background: var(--warm-gray-100);
+    border-radius: 3px;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1rem 1.5rem;
+}
+
+.section-title {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 0 1rem 0;
+}
+
+.section-title a,
+.section-title button {
+    background: var(--warm-gray-150);
+    border: none;
+    border-radius: 4px;
+    color: var(--lime-800);
+    padding: 4px 7px;
+}
+
+.section-title .dropdown li {
+    background: none;
+    padding: 7px 0;
+}
+
+.section-title .dropdown li>a {
+    background: none;
+}
+
+.section-title-left {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+}
+
+.section-title-left-right {
+    margin: 3px 0 0 1rem;
+}
+
+.table-filter {
+    display: flex;
+    gap: 1.5rem;
+    margin: 3px 0 0 1.30rem;
+}
+
+.select-user {
+  background-color: var(--warm-gray-150);
+  border: none;
+  color: var(--warm-gray-700);
+  padding: 6px;
+}
+
+.section-title-left-right a,
+.section-title-left-right button {
+    margin-left: 1rem;
+    margin-right: 0.3rem;
+}
+
+.section-title-right a,
+.section-title-right button {
+    margin-left: 1rem;
+    margin-right: 0.3rem;
+}
+
+.section-text {
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+}
+
+.section>.list-group {
+    border: none;
+}
+
+.subsection {
+    border-radius: 0 0 3px 3px;
+}

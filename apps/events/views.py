@@ -19,8 +19,8 @@ def events_list(request):
     third_day = today + timedelta(days=3)
 
     context = {
-        "page": "agenda",
-        "subpage": "events",
+        "app": "agenda",
+        "subapp": "events",
         "third_day": third_day,
     }
 
@@ -120,8 +120,8 @@ def events_add(request, matter_id=None, origin="events"):
     today = date.today().strftime("%Y-%m-%d")
 
     context = {
-        "page": "agenda",
-        "subpage": "events",
+        "app": "agenda",
+        "subapp": "events",
         "today": today,
         "edit": False,
         "add": True,
@@ -192,7 +192,7 @@ def events_edit(request, id, origin="events"):
     google_connected = google.check_credentials()
 
     context = {
-        "page": "events",
+        "app": "events",
         "edit": True,
         "add": False,
         "results": None,

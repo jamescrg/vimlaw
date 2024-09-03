@@ -35,7 +35,7 @@ def folders():
     folders = []
     for name in folder_names:
         folder = Folder.objects.create(
-            page="agenda",
+            app="agenda",
             name=name,
             selected=0,
             active=0,

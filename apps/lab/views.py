@@ -12,7 +12,7 @@ def index(request):
 def results(request):
     weather = request.POST.get("weather")
     # context = {
-    #     'page': 'lab',
+    #     'app': 'lab',
     # }
 
     response = HttpResponse(f"Content is {weather}")
@@ -36,7 +36,7 @@ def email_test(request):
     )
 
     context = {
-        "page": "lab",
+        "app": "lab",
         "text": "This is some text.",
     }
     return render(request, "lab/content.html", context)

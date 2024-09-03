@@ -1,1 +1,1 @@
---ignore = ids,box-model,known-properties
+--ignore = ids,box-model,known-properties,import,outline-none

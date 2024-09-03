@@ -2,10 +2,10 @@
 {% block content %}
   <div class="subnav">
     <ul>
-      <li {% if subpage == "invoices" %}class="active"{% endif %}>
+      <li {% if subapp == "invoices" %}class="active"{% endif %}>
         <a href="{% url 'billing:invoices-list' %}">Invoices</a>
       </li>
-      <li {% if subpage == "payments" %}class="active"{% endif %}>
+      <li {% if subapp == "payments" %}class="active"{% endif %}>
         <a href="{% url 'billing:payments-list' %}">Payments</a>
       </li>
     </ul>

@@ -16,21 +16,21 @@
         rel="stylesheet" />
   <!-- app stylesheets -->
   <link rel="stylesheet" href="{% static 'css/colors.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/app.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
   <link rel="stylesheet" href="{% static 'css/nav.css' %}" />
   <link rel="stylesheet" href="{% static 'css/forms.css' %}" />
   <link rel="stylesheet" href="{% static 'css/folders.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/pages/' %}{{ page }}.css" />
-  {% if page == 'matters' %}
-    <link rel="stylesheet" href="{% static 'css/pages/matters/activity.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/matters/contacts.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/matters/events.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/apps/' %}{{ app }}.css" />
+  {% if app == 'matters' %}
+    <link rel="stylesheet" href="{% static 'css/apps/matters/activity.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/apps/matters/contacts.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/apps/matters/events.css' %}" />
     <link rel="stylesheet"
-          href="{% static 'css/pages/matters/proceedings.css' %}" />
+          href="{% static 'css/apps/matters/proceedings.css' %}" />
     <link rel="stylesheet"
-          href="{% static 'css/pages/matters/settlement.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/matters/timeline.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/matters/rates.css' %}" />
+          href="{% static 'css/apps/matters/settlement.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/apps/matters/timeline.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/apps/matters/rates.css' %}" />
   {% endif %}
   {% block head %}
   {% endblock head %}
@@ -47,15 +47,15 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/htmx.org@1.7.0"></script>
   <script src="/static/js/main.js"></script>
-  {% if page == 'agenda' or 'contacts' %}<script src="/static/js/folders.js"></script>{% endif %}
+  {% if app == 'agenda' or 'contacts' %}<script src="/static/js/folders.js"></script>{% endif %}
   <script src="/static/js/events.js" defer></script>
-  {% if page == 'matters' %}
+  {% if app == 'matters' %}
     <script src="/static/js/matters.js" defer></script>
     <script src="/static/js/activity.js" defer></script>
-  {% elif page == 'events' %}
-  {% elif page == 'activity' %}
+  {% elif app == 'events' %}
+  {% elif app == 'activity' %}
     <script src="/static/js/activity.js" defer></script>
-  {% elif page == 'billing' %}
+  {% elif app == 'billing' %}
     <script src="/static/js/billing.js" defer></script>
   {% endif %}
   <script>

@@ -3,7 +3,7 @@ from django.db import models
 
 class Folder(models.Model):
     id = models.BigAutoField(primary_key=True)
-    page = models.CharField(max_length=50, null=True)
+    app = models.CharField(max_length=50, null=True)
     name = models.CharField(max_length=50, null=True)
     selected = models.IntegerField(blank=True, null=True)
     active = models.IntegerField(blank=True, null=True)

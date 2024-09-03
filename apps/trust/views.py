@@ -35,7 +35,7 @@ def index(request):
     pagination = Paginator(contacts, per_page=10).get_page(page)
 
     context = {
-        "page": "trust",
+        "app": "trust",
         "pagination": pagination,
         "contacts": pagination.object_list,
         "pending_account_balance": pending_account_balance,
@@ -58,7 +58,7 @@ def history(request, interval="30days"):
     pagination = Paginator(transactions, per_page=10).get_page(page)
 
     context = {
-        "page": "trust",
+        "app": "trust",
         "pagination": pagination,
         "interval": interval,
         "pending_account_balance": pending_account_balance,
@@ -79,7 +79,7 @@ def client(request, id):
     transactions = trust.get_client_history(id)
 
     context = {
-        "page": "trust",
+        "app": "trust",
         "client": client,
         "pending_client_balance": pending_client_balance,
         "confirmed_client_balance": confirmed_client_balance,
@@ -113,7 +113,7 @@ def add(request, client_id=None):
             form.fields["contact"].queryset = clients
 
     context = {
-        "page": "trust",
+        "app": "trust",
         "edit": False,
         "add": True,
         "form": form,
@@ -139,7 +139,7 @@ def edit(request, id):
         form = TransactionForm(instance=transaction)
 
     context = {
-        "page": "trust",
+        "app": "trust",
         "edit": True,
         "add": False,
         "transaction": transaction,

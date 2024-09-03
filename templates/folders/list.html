@@ -22,7 +22,7 @@
               <i class="bi bi-folder"></i>
             </button>
             <div class="show-folder">
-              <a href="{% url 'folders:list' id=folder.id page=page %}"
+              <a href="{% url 'folders:list' id=folder.id app=app %}"
                 {# agenda #}
                 {% if selected_folders and folder in selected_folders %}class="strong"{% endif %}
                 {# contacts #}

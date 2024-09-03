@@ -54,7 +54,7 @@ def index(request):
     calendar_token = _token_exists(CALENDAR_TOKEN_PATH)
 
     context = {
-        "page": "settings",
+        "app": "settings",
         "contacts_token": contacts_token,
         "calendar_token": calendar_token,
     }

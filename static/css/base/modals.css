@@ -1,0 +1,12 @@
+
+.modal-content {
+    background: var(--warm-gray-100);
+}
+
+.modal-header {
+    padding: 0.5rem 1rem;
+}
+
+.hide {
+    display: none;
+}

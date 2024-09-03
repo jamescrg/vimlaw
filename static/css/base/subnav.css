@@ -1,0 +1,30 @@
+
+.subnav {
+    background: var(--warm-gray-200);
+    border-radius: 3px 3px 0 0;
+    margin-bottom: 0;
+    padding: 10px 0;
+}
+
+.subnav ul {
+    border-radius: 3px 3px 0 0;
+    margin: 5px 0 0 0;
+    padding: 0;
+}
+
+.subnav li {
+    display: inline;
+    padding: 0.5rem 1rem 0.7rem 1rem;
+}
+
+.subnav a {
+    color: var(--warm-gray-600);
+    margin: 0;
+    padding-bottom: 0.6rem;
+}
+
+.subnav .active {
+    background-color: var(--warm-gray-100);
+    border-radius: 3px 3px 0 0;
+    padding-bottom: 0.
+}

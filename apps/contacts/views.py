@@ -14,9 +14,9 @@ from config.helpers import format_phone
 
 @login_required
 def index(request):
-    page = "contacts"
+    app = "contacts"
 
-    folders = Folder.objects.filter(page=page).order_by("name")
+    folders = Folder.objects.filter(app=app).order_by("name")
 
     folders = list(folders)
     folders.append({"id": 0, "name": "Unsorted"})
@@ -55,7 +55,7 @@ def index(request):
         google_logged_in = False
 
     context = {
-        "page": "contacts",
+        "app": "contacts",
         "edit": False,
         "folders": folders,
         "selected_folder": selected_folder,
@@ -86,7 +86,7 @@ def select(request, id):
 def add(request):
     # load initial page values (user, folders, selected folder)
 
-    folders = Folder.objects.filter(page="contacts").order_by("name")
+    folders = Folder.objects.filter(app="contacts").order_by("name")
 
     if request.session.get("contacts_selected_folder_id"):
         selected_folder_id = request.session["contacts_selected_folder_id"]
@@ -126,14 +126,14 @@ def add(request):
         else:
             form = ContactForm()
 
-    form.fields["folder"].queryset = Folder.objects.filter(page="contacts").order_by(
+    form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
         "name"
     )
 
     google_connected = google.check_credentials()
 
     context = {
-        "page": "contacts",
+        "app": "contacts",
         "edit": False,
         "add": True,
         "action": "/contacts/add",
@@ -148,7 +148,7 @@ def add(request):
 
 @login_required
 def edit(request, id):
-    folders = Folder.objects.filter(page="contacts").order_by("name")
+    folders = Folder.objects.filter(app="contacts").order_by("name")
 
     if request.session.get("contacts_selected_folder_id"):
         selected_folder_id = request.session["contacts_selected_folder_id"]
@@ -160,9 +160,9 @@ def edit(request, id):
 
     if request.method == "POST":
         form = ContactForm(request.POST, instance=contact)
-        form.fields["folder"].queryset = Folder.objects.filter(
-            page="contacts"
-        ).order_by("name")
+        form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
+            "name"
+        )
 
         if form.is_valid():
             contact = form.save(commit=False)
@@ -186,14 +186,14 @@ def edit(request, id):
         else:
             form = ContactForm(instance=contact)
 
-    form.fields["folder"].queryset = Folder.objects.filter(page="contacts").order_by(
+    form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
         "name"
     )
 
     google_connected = google.check_credentials()
 
     context = {
-        "page": "contacts",
+        "app": "contacts",
         "edit": True,
         "add": False,
         "action": f"/contacts/{id}/edit",
@@ -236,7 +236,7 @@ def assign(request, id):
     )
     roles = Role.objects.all().order_by("name")
     context = {
-        "page": "contacts",
+        "app": "contacts",
         "action": f"/contacts/{id}/assign/store",
         "matters": matters,
         "roles": roles,
@@ -266,7 +266,7 @@ def remove(request, id):
     )
 
     context = {
-        "page": "contacts",
+        "app": "contacts",
         "action": f"/contacts/{id}/remove/store",
         "relationships": relationships,
     }
@@ -296,13 +296,13 @@ def add_intake(request, id):
 
     form = ContactForm(initial=initial_data)
 
-    folders = Folder.objects.filter(page="contacts").order_by("name")
+    folders = Folder.objects.filter(app="contacts").order_by("name")
     form.fields["folder"].queryset = folders
 
     google_connected = google.check_credentials()
 
     context = {
-        "page": "contacts",
+        "app": "contacts",
         "edit": False,
         "add": True,
         "action": "/contacts/add",
@@ -337,7 +337,7 @@ def google_list(request):
     #     contact.save()
 
     context = {
-        "page": "contacts",
+        "app": "contacts",
         "contacts": contacts,
     }
 

@@ -19,7 +19,7 @@ def index(request, id):
     entries = TimeEntry.objects.filter(matter=id, date__gt=thirty_days).order_by("-id")
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "activity",
         "matter": matter,
         "proceeding": proceeding,

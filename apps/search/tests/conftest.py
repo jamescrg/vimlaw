@@ -29,7 +29,7 @@ def client(user):
 @pytest.fixture
 def folder():
     folder = Folder.objects.create(
-        page="contacts",
+        app="contacts",
         name="Mahatmas",
     )
     folder.save()

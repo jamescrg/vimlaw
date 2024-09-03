@@ -13,7 +13,7 @@ def test_index(client):
     response = client.get(reverse("intakes:list"))
     assert response.status_code == 200
     assertTemplateUsed(response, "intakes/list-table.html")
-    assert response.context["page"] == "intakes"
+    assert response.context["app"] == "intakes"
 
 
 def test_detail(client, intake):

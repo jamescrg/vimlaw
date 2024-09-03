@@ -16,7 +16,7 @@ def index(request, id):
     rates = Rate.objects.filter(matter=matter)
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "rates",
         "matter": matter,
         "proceeding": proceeding,
@@ -56,7 +56,7 @@ def add(request, id):
         form.fields["user"].queryset = user_list
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "rates",
         "matter": matter,
         "proceeding": proceeding,
@@ -88,7 +88,7 @@ def edit(request, id, rate_id):
         form = RateForm(instance=rate)
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "rates",
         "matter": matter,
         "rate": rate,

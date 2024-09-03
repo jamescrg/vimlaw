@@ -11,7 +11,7 @@ def test_string(folder_data):
 
 def test_content(folder_data):
     expected_values = {
-        "page": "agenda",
+        "app": "agenda",
         "name": "Current",
         "selected": 0,
         "active": 0,
@@ -27,7 +27,7 @@ def test_select(client, folder_data):
 
 def test_insert(client):
     data = {
-        "page": "agenda",
+        "app": "agenda",
         "name": "More Tasks",
     }
     response = client.post("/folders/insert/notes", data)

@@ -15,7 +15,7 @@ def index(request, id):
     proceedings = Proceeding.objects.filter(matter=matter.id).order_by("-id")
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "proceedings",
         "matter": matter,
         "proceeding": proceeding,
@@ -46,7 +46,7 @@ def add(request, id):
         form = ProceedingForm(initial={"date_filed": today})
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "proceedings",
         "matter": matter,
         "proceeding": proceeding,
@@ -81,7 +81,7 @@ def edit(request, id, proceeding_id):
         form = ProceedingForm(instance=proceeding_for_edits)
 
     context = {
-        "page": "matters",
+        "app": "matters",
         "submodule": "proceedings",
         "matter": matter,
         "proceeding": proceeding,

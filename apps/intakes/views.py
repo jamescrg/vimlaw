@@ -20,7 +20,7 @@ def index(request):
     table_data = get_table_data(request)
 
     context = table_data
-    context["page"] = "intakes"
+    context["app"] = "intakes"
 
     return render(request, "intakes/list-table.html", context)
 
@@ -86,7 +86,7 @@ def detail(request, id):
         contact = None
 
     context = {
-        "page": "intakes",
+        "app": "intakes",
         "intake": intake,
         "notes": notes,
         "contact": contact,
@@ -134,7 +134,7 @@ def add(request):
         form = IntakeForm(initial={"date": today})
 
     context = {
-        "page": "intakes",
+        "app": "intakes",
         "edit": False,
         "add": True,
         "action": "/intakes/add",
@@ -160,7 +160,7 @@ def edit(request, id):
         form = IntakeForm(instance=intake)
 
     context = {
-        "page": "intakes",
+        "app": "intakes",
         "edit": True,
         "add": False,
         "action": f"/intakes/{id}/edit",
@@ -199,7 +199,7 @@ def add_note(request, id):
         form = NoteForm(initial={"date": today, "time": now})
 
     context = {
-        "page": "intakes",
+        "app": "intakes",
         "edit": False,
         "add": True,
         "action": f"/intakes/{intake.id}/add-note",
@@ -226,7 +226,7 @@ def edit_note(request, id):
         form = NoteForm(instance=note)
 
     context = {
-        "page": "intakes",
+        "app": "intakes",
         "edit": True,
         "add": False,
         "action": f"/intakes/{id}/edit-note",

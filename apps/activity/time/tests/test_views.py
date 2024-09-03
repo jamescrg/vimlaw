@@ -17,7 +17,7 @@ def test_index(client):
     assert response.status_code == 200
 
     assertTemplateUsed(response, "activity/list.html")
-    assert response.context["page"] == "activity"
+    assert response.context["app"] == "activity"
     assert "summary" in response.context
 
 

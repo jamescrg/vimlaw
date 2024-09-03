@@ -1,7 +1,7 @@
 <div class="edit-folder">
   <form class="folder-form"
         method="post"
-        action="{% url 'folders:update' id=folder.id page=page %}">
+        action="{% url 'folders:update' id=folder.id app=app %}">
     {% csrf_token %}
     <label>
       <input class="form-horizontal edit-folder-input"
@@ -13,7 +13,7 @@
     </label>
   </form>
   <a onclick="return confirm('Are you sure you want to delete this record?')"
-     href="{% url 'folders:delete' id=folder.id page=page %}">
+     href="{% url 'folders:delete' id=folder.id app=app %}">
     <i class="bi bi-trash"></i>
   </a>
 </div>

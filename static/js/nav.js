@@ -1,16 +1,16 @@
-function getPage() {
+function getApp() {
 
     const path = window.location.pathname;
 
     const pathArray = path.split('/');
 
-    let page = pathArray[1];
+    let app = pathArray[1];
 
-    if (page === '') {
-        page = 'agenda';
+    if (app === '') {
+        app = 'agenda';
     }
 
-    return page;
+    return app;
 }
 
 
@@ -22,7 +22,7 @@ function highlightNavLink() {
     let link;
     for (link of navLinks) {
 
-        if (link.id === 'nav-' + getPage()) {
+        if (link.id === 'nav-' + getApp()) {
 
             link.classList.add('active');
 

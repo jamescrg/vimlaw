@@ -2,10 +2,10 @@
 {% block content %}
   <div class="subnav">
     <ul>
-      <li {% if subpage == "time" %}class="active"{% endif %}>
+      <li {% if subapp == "time" %}class="active"{% endif %}>
         <a href="{% url 'activity:time-list' %}">Time</a>
       </li>
-      <li {% if subpage == "expenses" %}class="active"{% endif %}>
+      <li {% if subapp == "expenses" %}class="active"{% endif %}>
         <a href="{% url 'activity:expenses-list' %}">Expenses</a>
       </li>
     </ul>
