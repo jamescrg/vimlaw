@@ -15,7 +15,9 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{{ action }}" method="post" class="form-responsive">
+      <form action="{{ action }}"
+            method="post"
+            class="form-responsive timeline-form">
         {% csrf_token %}
         {{ form }}
         <br />

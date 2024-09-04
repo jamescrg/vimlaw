@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="cancel-form"
+      <form class="invoices-cancel-form"
             method="post"
             action="{% url 'billing:invoices-status-update' invoice.id %}">
         <input type="hidden" name="status" value="CANCELED">

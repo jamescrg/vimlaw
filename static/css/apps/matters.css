@@ -1,41 +1,55 @@
 
+
+/* ==========================================================================
+Subapp stylesj
+========================================================================== */
+
+@import url("apps/matters/activity.css");
+@import url("apps/matters/contacts.css");
+@import url("apps/matters/events.css");
+@import url("apps/matters/proceedings.css");
+@import url("apps/matters/rates.css");
+@import url("apps/matters/settlment.css");
+@import url("apps/matters/timeline.css");
+
+
 /* ==========================================================================
 Matter Form
 ========================================================================== */
 
-#id_name {
+.matter-form #id_name {
   width: 400px;
 }
 
-#id_description {
+.matter-form #id_description {
   width: 400px;
 }
 
-#id_practice_area {
+.matter-form #id_practice_area {
   width: 250px;
 }
 
-#id_firm {
+.matter-form #id_firm {
   width: 250px;
 }
 
-#id_clio_matter_id {
+.matter-form #id_clio_matter_id {
   width: 400px;
 }
 
-#id_client_reference_id {
+.matter-form #id_client_reference_id {
   width: 400px;
 }
 
-#id_rate {
+.matter-form #id_rate {
   width: 80px;
 }
 
-.delete {
+.matter-form .delete {
   float: right;
 }
 
-.delete li {
+.matter-form .delete li {
   margin-bottom: 15px;
 }
 
@@ -43,16 +57,7 @@ Matter Form
 Matter List
 ========================================================================== */
 
-#matter-list {
-  clear: both;
-  width: 100%;
-}
-
-#matter-list th a {
-  color: inherit;
-}
-
-#matter-list td {
+.matter-list td {
   vertical-align: top;
 }
 
@@ -86,6 +91,7 @@ Matter List
   width: 100%!important;
 }
 
+
 /* ==========================================================================
 Matter Details
 ========================================================================== */
@@ -97,19 +103,4 @@ Matter Details
 
 .matter-data table {
   margin-right: 20px;
-}
-
-
-/*------------------------------------------------
-Submodules
-------------------------------------------------*/
-
-.subsection-heading {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 0 5px 5px;
-}
-
-.subsection-title {
-  font-size: 1.2em;
 }

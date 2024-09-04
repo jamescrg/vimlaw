@@ -3,19 +3,19 @@
 display
 ------------------------------------------------*/
 
-#events {
+.events-list {
   margin: 10px 0 5px 0;
   width: 100%;
 }
 
-#events .date {
+.events-list .date {
   width: 140px;
 }
 
-#events .party	{
+.events-list .party	{
   width: 120px;
 }
 
-#events .status {
+.events-list .status {
   width: 140px;
 }

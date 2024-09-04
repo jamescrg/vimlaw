@@ -1,22 +1,46 @@
 
 /* ==========================================================================
-Filter form
+Time entry form
 ========================================================================== */
 
-#matter {
-  width: auto
+.time-form #id_matter {
+  width: auto;
+}
+
+.time-form #id_actions {
+  max-width: 500px;
+  vertical-align: top;
+  width: 95%;
+}
+
+.time-form #id_hours {
+  max-width: 80px;
+}
+
+.time-form #id_firm_rate {
+  max-width: 80px;
+}
+
+.time-form #id_comp {
+  max-width: 80px;
+}
+
+.time-form #id_entered {
+  max-width: 80px;
 }
 
 
 /* ==========================================================================
-Time entry form
+Expenses form
 ========================================================================== */
 
-/* see forms.css (also shows on matters app) */
+.expenses-form #id_amount {
+  max-width: 120px;
+}
 
 
 /* ==========================================================================
-Time and expense entry list table
+Activity list table
 ========================================================================== */
 
 .activity {
@@ -55,9 +79,10 @@ Time and expense entry list table
   width: 120px;
 }
 
-.total {
-  font-weight: 600;
-}
+
+/* ==========================================================================
+Activity summary table
+========================================================================== */
 
 .activity-summary {
   align-items: start;

@@ -14,7 +14,7 @@
     </div>
   </div>
   <div class="table-container">
-    <table id="events" class="table">
+    <table class="table events-list">
       <tr>
         <th>Date</th>
         <th>Party</th>
@@ -26,7 +26,7 @@
           <tr>
             <td class="date">{{ event.date|date:"Y-m-d" }}</td>
             <td class="party">{{ event.party }}</td>
-            <td class="description {% if event.date < third_day and event.status == 'Pending' %}soon{% endif %}">
+            <td class="description {% if event.date < third_day and event.status == 'Pending' %}urgent{% endif %}">
               <a href="#"
                  hx-get="/events/{{ event.id }}/edit/matters"
                  hx-target="#htmx-modal-container"
@@ -48,7 +48,7 @@
       </div>
     </div>
     <div class="table-container">
-      <table id="events" class="table">
+      <table class="table events-list">
         <tr>
           <th>Date</th>
           <th>Party</th>
@@ -59,7 +59,7 @@
           <tr>
             <td class="date">{{ event.date|date:"Y-m-d" }}</td>
             <td class="party">{{ event.party }}</td>
-            <td class="description {% if event.date < third_day and event.status == 'Pending' %}soon{% endif %}">
+            <td class="description {% if event.date < third_day and event.status == 'Pending' %}urgent{% endif %}">
               <a href="#"
                  hx-target="#htmx-modal-container"
                  hx-trigger="click"

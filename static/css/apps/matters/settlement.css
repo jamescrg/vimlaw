@@ -4,18 +4,18 @@
 Display
 ------------------------------------------------*/
 
-#settlement {
+.settlement-list {
   margin: 10px 0 5px 0;
   width: 100%;
 }
 
-#settlement .date,
-#settlement .type,
-#settlement .medium {
+.settlement-list .date,
+.settlement-list .type,
+.settlement-list .medium {
   width: 120px;
 }
 
-#settlement .amount {
+.settlement-list .amount {
   text-align: right;
   width: 120px;
 }
@@ -25,16 +25,12 @@ Display
 Form
 ------------------------------------------------*/
 
-#id_medium,
-#id_type,
-#id_amount {
+.settlement-form #id_medium,
+.settlement-form #id_type,
+.settlement-form #id_amount {
   width: 140px;
 }
 
-#id_notes {
+.settlement-form #id_notes {
   width: 400px;
-}
-
-.table-container {
-  overflow-x: auto;
 }

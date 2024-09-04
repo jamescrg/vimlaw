@@ -2,11 +2,6 @@
 List View
 ========================================================================== */
 
-.add-to-contacts {
-  float: right;
-  margin: 15px 5px 0 0;
-}
-
 .intake-details {
   margin-bottom: 2rem;
   width: 100%;
@@ -40,133 +35,12 @@ List View
   width: 120px
 }
 
-#intake-list th a {
+.intake-list th a {
   color: inherit;
 }
 
-#id_details {
-  min-height: 300px;
-  resize: both;
-  width: 600px;
-}
-
 /* ==========================================================================
-Notes
-========================================================================== */
-
-.notes .section-title {
-  border-bottom: solid 1px var(--warm-gray-200);
-}
-
-.note {
-  border-bottom: solid 1px var(--warm-gray-200);
-  padding: 1rem 0 1rem 0.5rem;
-}
-
-.note-title {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-
-}
-
-.note-title button {
-  background: var(--warm-gray-150);
-  border: none;
-  border-radius: 4px;
-  color: var(--lime-800);
-  padding: 4px 6px;
-}
-
-.note-title-right {
-  margin-right: 0.5rem;
-}
-
-.note-date-time {
-  margin-right: 1rem;
-}
-
-.note-username {
-  margin-right: 1rem;
-}
-
-.note-type {
-  margin-right: 1rem;
-}
-
-.note-date {
-  width: 120px;
-}
-
-.note-username {
-  width: 120px;
-}
-
-.note-type {
-  width: 120px;
-}
-
-/* ==========================================================================
-Markdown
-========================================================================== */
-
-.note-details h1 {
-  font-size: 1.5em;
-  font-weight: 600;
-}
-
-.note-details h2 {
-  font-size: 1.1em;
-  font-weight: 600;
-}
-
-.note-details h3 {
-  font-size: 1.0em;
-  font-weight: 600;
-}
-
-.note-details strong {
-  font-weight: 600;
-}
-
-.note-details ul {
-  margin: 1rem 0 0 0;
-}
-
-.note-details ul li {
-  list-style-type: disc;
-  padding-left: 0.5rem;
-}
-
-.note-details ol {
-  margin: 1rem 0 0 0;
-}
-
-.note-details ol li {
-  list-style-type: decimal;
-  padding: 0.5rem 0 0.3rem 0;
-}
-
-.note-details p {
-  margin: 1rem 0 0 0.5rem;
-}
-
-.note-details a {
-  text-decoration: underline;
-}
-
-code {
-  background: inherit;
-  color: inherit;
-  display: block;
-  font-family: 'Courier Prime', monospace;
-  font-size: 1.03em;
-  margin-left: 20px;
-  white-space: pre-wrap;
-}
-
-/* ==========================================================================
-Form
+Intakes form
 ========================================================================== */
 
 #id_name {
@@ -191,4 +65,120 @@ Form
 
 .intake-contact {
   float: right;
+}
+
+/* ==========================================================================
+ Notes
+========================================================================== */
+
+.intake-notes .section-title {
+  border-bottom: solid 1px var(--warm-gray-200);
+}
+
+.intake-note {
+  border-bottom: solid 1px var(--warm-gray-200);
+  padding: 1rem 0 1rem 0.5rem;
+}
+
+.intake-note-title {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+
+}
+
+.intake-note-title button {
+  background: var(--warm-gray-150);
+  border: none;
+  border-radius: 4px;
+  color: var(--lime-800);
+  padding: 4px 6px;
+}
+
+.intake-note-title-right {
+  margin-right: 0.5rem;
+}
+
+.intake-note-date-time {
+  margin-right: 1rem;
+}
+
+.intake-note-username {
+  margin-right: 1rem;
+}
+
+.intake-note-type {
+  margin-right: 1rem;
+}
+
+.intake-note-date {
+  width: 120px;
+}
+
+.intake-note-username {
+  width: 120px;
+}
+
+.intake-note-type {
+  width: 120px;
+}
+
+/* ==========================================================================
+Notes Form
+========================================================================== */
+
+.intake-note-form #id_details {
+  min-height: 300px;
+  resize: both;
+  width: 600px;
+}
+
+
+/* ==========================================================================
+Markdown
+========================================================================== */
+
+.intake-note-details h1 {
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+.intake-note-details h2 {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.intake-note-details h3 {
+  font-size: 1.0em;
+  font-weight: 600;
+}
+
+.intake-note-details strong {
+  font-weight: 600;
+}
+
+.intake-note-details ul {
+  margin: 1rem 0 0 0;
+}
+
+.intake-note-details ul li {
+  list-style-type: disc;
+  padding-left: 0.5rem;
+}
+
+.intake-note-details ol {
+  margin: 1rem 0 0 0;
+}
+
+.intake-note-details ol li {
+  list-style-type: decimal;
+  padding: 0.5rem 0 0.3rem 0;
+}
+
+.intake-note-details p {
+  margin: 1rem 0 0 0.5rem;
+}
+
+.intake-note-details a {
+  text-decoration: underline;
 }

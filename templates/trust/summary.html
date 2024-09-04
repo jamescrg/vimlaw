@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   {% load humanize %}
-  <div class="section">
+  <div class="section trust">
     <div class="section-title">
       <div class="section-title-left">
         <h1>Account Summary</h1>
@@ -21,7 +21,7 @@
         <a href={% url 'trust:history' %}>History</a>
       </div>
     </div>
-    <table id="summary">
+    <table class="trust-summary">
       <tr>
         <th>Client</th>
         <th class="numeric">Pending Balance</th>
@@ -33,7 +33,7 @@
             <td class="name">
               <a href={% url 'trust:client' id=contact.id %}>{{ contact.name }}</a>
             </td>
-            <td class="numeric {% if contact.pending_client_balance != contact.confirmed_client_balance %}green{% endif %}">
+            <td class="numeric {% if contact.pending_client_balance != contact.confirmed_client_balance %}urgent{% endif %}">
               ${{ contact.pending_client_balance|intcomma }}
             </td>
             <td class="numeric">${{ contact.confirmed_client_balance|intcomma }}</td>

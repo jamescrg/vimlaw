@@ -26,8 +26,8 @@
       {% endif %}
     </div>
     <p>{{ invoice.comment }}</p>
-    <div class="invoice-table-container">
-      <table class="detail-table">
+    <div class="invoices-table-container">
+      <table class="invoices-detail-table">
         <tr>
           <th>Date Limit</th>
           <td>{{ invoice.date_limit|date:"Y-m-d" }}</td>
@@ -41,7 +41,7 @@
           <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
         </tr>
       </table>
-      <table class="detail-table">
+      <table class="invoices-detail-table">
         <tr>
           <th>Issue date</th>
           <td>{{ invoice.date_issued|date:"Y-m-d" }}</td>
@@ -56,7 +56,7 @@
         </tr>
       </table>
       {% if invoice.discount %}
-        <table class="detail-table">
+        <table class="invoices-detail-table">
           <tr>
             <th>Discount</th>
             <td>${{ invoice.discount|floatformat:2|intcomma }}</td>

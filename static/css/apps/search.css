@@ -10,20 +10,20 @@
 }
 
 .search-text {
-  border: 1px solid var(--warm-gray-350);
   background: var(--warm-gray-50);
+  border: 1px solid var(--warm-gray-350);
   margin: 0;
   padding: 0.5rem;
   width: 80%;
 }
 
-.input-group {
+.search .input-group {
   margin: 0 auto;
   max-width: 800px;
 	width: 100%;
 }
 
-.input-group-text {
+.search .input-group-text {
   background: var(--warm-gray-200);
   border: 1px solid var(--warm-gray-350);
 }
@@ -32,7 +32,7 @@
   margin: -3px 10px 0 10px;
 }
 
-.input-group-text {
+.search .input-group-text {
   background: var(--warm-gray-200);
   border: 1px solid var(--warm-gray-350);
 }
@@ -54,26 +54,26 @@
 }
 
 
-.matter-name {
+.search .matter-name {
   width: 250px;
 }
 
-.matter-status {
+.search .matter-status {
   width: 150px;
 }
 
-.contact-folder {
+.search .contact-folder {
 	width: 150px;
 }
 
-.contact-name {
+.search .contact-name {
 	width: 250px;
 }
 
-.contact-phone1 {
+.search .contact-phone1 {
 	width: 150px;
 }
 
-.contact-email {
+.search .contact-email {
 	text-align: right;
 }

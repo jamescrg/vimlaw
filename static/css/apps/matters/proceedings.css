@@ -4,20 +4,20 @@
 Display
 ------------------------------------------------*/
 
-#proceedings {
+.proceedings-list {
   margin: 10px 0 5px 0;
   width: 100%;
 }
 
-#proceedings .date-filed {
+.proceedings-list .date-filed {
   width: 120px;
 }
 
-#proceedings .case-no	{
+.proceedings-list .case-no	{
   width: 200px;
 }
 
-#proceedings .status {
+.proceedings-list .status {
   width: 120px;
 }
 
@@ -26,10 +26,10 @@ Display
 Form
 ------------------------------------------------*/
 
-#id_case_number {
+.proceedings-form #id_case_number {
   width: 250px;
 }
 
-#id_status {
+.proceedings-form #id_status {
   width: 140px;
 }

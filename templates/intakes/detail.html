@@ -36,7 +36,7 @@
       </div>
     </div>
     <div class="col-md-8">
-      <div class="section notes">
+      <div class="section intake-notes">
         <div class="section-title">
           <div class="section-title-left">
             <h1>Notes</h1>
@@ -57,9 +57,9 @@
         </div>
         {% if notes %}
           {% for note in notes %}
-            <div class="note">
-              <div class="note-title">
-                <div class="note-title-left">
+            <div class="intake-note">
+              <div class="intake-note-title">
+                <div class="intake-note-title-left">
                   <a href="#"
                      type="button"
                      class="btn-icon"
@@ -68,14 +68,14 @@
                      hx-trigger="click"
                      data-bs-toggle="modal"
                      data-bs-target="#htmx-modal-container">
-                    <span class="note-date-time">{{ note.date|date:'Y-m-d' }} {{ note.time|time:'g:i A' }}</span>
+                    <span class="intake-note-date-time">{{ note.date|date:'Y-m-d' }} {{ note.time|time:'g:i A' }}</span>
                   </a>
-                  <span class="note-username">{{ note.user.username|title }}</span>
-                  <span class="note-type">{{ note.type }}</span>
+                  <span class="intake-note-username">{{ note.user.username|title }}</span>
+                  <span class="intake-note-type">{{ note.type }}</span>
                 </div>
-                <div class="note-title-right"></div>
+                <div class="intake-note-title-right"></div>
               </div>
-              <div class="note-details">{{ note.details|safe }}</div>
+              <div class="intake-note-details">{{ note.details|safe }}</div>
             </div>
           {% endfor %}
         {% endif %}

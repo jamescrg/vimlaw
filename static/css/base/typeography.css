@@ -11,15 +11,20 @@ h2 {
   margin-bottom: 0;
 }
 
-strong {
-  font-weight: 600;
+a,
+a:hover {
+  color: var(--lime-800);
+  outline: none;
+  text-decoration: none;
 }
 
+strong,
 .strong {
   font-weight: 600;
 }
 
-.soon a {
+.urgent,
+.urgent a {
   color: var(--orange-800);
 }
 
@@ -28,6 +33,12 @@ strong {
   padding: 10px;
 }
 
-.urgent {
-  color: var(--orange-800);
+code {
+  background: inherit;
+  color: inherit;
+  display: block;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.03em;
+  margin-left: 20px;
+  white-space: pre-wrap;
 }

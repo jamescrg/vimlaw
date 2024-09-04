@@ -10,7 +10,9 @@
     </h1>
   </div>
   <div class="section">
-    <form action="{{ action }}" method="post" class="form-responsive">
+    <form action="{{ action }}"
+          method="post"
+          class="form-responsive matter-form">
       {% csrf_token %}
       {{ form }}
       <br />

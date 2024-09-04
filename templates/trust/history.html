@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   {% load humanize %}
-  <div class="section">
+  <div class="section trust">
     <div class="section-title">
       <div class="section-title-left">
         <h1>Account History</h1>
@@ -10,7 +10,7 @@
         <a href={% url 'trust:trust' %}>Return to Summary</a>
       </div>
     </div>
-    <div class="transaction-filter">
+    <div class="trust-intervals">
       <a {% if interval == '30days' %}class="strong"{% endif %}
          href="{% url 'trust:history-interval' interval='30days' %}">30 days</a>
       &nbsp;|&nbsp;
@@ -32,9 +32,9 @@
         </td>
       </tr>
     </table>
-    <div class="contact-section-data">
+    <div class="trust-contact-data">
       <div class="table-container">
-        <table id="transactions" class="table">
+        <table class="trust-transactions">
           {% if transactions %}
             <tr>
               <th>Date</th>
