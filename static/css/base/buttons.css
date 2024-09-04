@@ -29,6 +29,11 @@
   padding: 0;
 }
 
+.menu-icon {
+  color: var(--warm-gray-500);
+  padding: 0;
+}
+
 .button-link {
   background: none;
   border: none;
@@ -46,4 +51,8 @@
   border: none;
   color: inherit;
   font-weight: 600;
+}
+
+.dropdown-item:active {
+  background-color: var(--warm-gray-350);
 }

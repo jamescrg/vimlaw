@@ -32,3 +32,13 @@ strong,
   margin-bottom: 20px;
   padding: 10px;
 }
+
+code {
+  background: inherit;
+  color: inherit;
+  display: block;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.03em;
+  margin-left: 20px;
+  white-space: pre-wrap;
+}

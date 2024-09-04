@@ -43,7 +43,7 @@
   {% if selected_contact.notes %}<div class="contact-item">{{ selected_contact.notes|linebreaks }}</div>{% endif %}
   {% if relationships %}
     <div id="contact-matters">
-      <div class="related">Related Matters</div>
+      <div class="contacts-related">Related Matters</div>
       <ul>
         {% for relationship in relationships %}
           <li>
@@ -60,7 +60,7 @@
       <a href={% url 'intakes:detail' id=selected_contact.intake.id %}>View Intake</a>
     </div>
   {% endif %}
-  <div class="assign-remove">
+  <div class="contacts-assignment">
     <a href="#"
        hx-get="/contacts/{{ selected_contact.id }}/assign"
        hx-target="#htmx-modal-container"

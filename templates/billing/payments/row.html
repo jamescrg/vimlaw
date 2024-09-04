@@ -15,13 +15,13 @@
   <td>{{ payment.method_display }}</td>
   <td>{{ payment.detail|default:"" }}</td>
   <td class="amount">${{ payment.amount|floatformat:2|intcomma }}</td>
-  <td class="actions">
-    <a href="#"
-       class="pointer"
-       data-bs-toggle="dropdown"
-       aria-expanded="false">
+  <td class="payments-actions">
+    <button class="btn-icon menu-icon"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
       <i class="bi bi-three-dots-vertical"></i>
-    </a>
+    </button>
     <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
       <li>
         <a onclick="return confirm('Are you sure you want to delete this payment?')"

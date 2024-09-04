@@ -55,7 +55,7 @@
             <button type="submit" class="dropdown-item">Waived</button>
           </form>
         </li>
-        <li class="dropdown-item invoice-delete pointer"
+        <li class="dropdown-item invoices-delete pointer"
             hx-get="{% url 'billing:invoices-cancel' invoice.id %}"
             hx-target="#htmx-modal-container"
             hx-trigger="click"
@@ -75,7 +75,7 @@
       {% if invoice.status != 'SENT' and invoice.status != 'WAIVED' and invoice.status != 'PAID' %}
         <li>
           <a onclick="return confirm('Are you sure you want to delete this invoice?')"
-             class="dropdown-item invoice-delete"
+             class="dropdown-item invoices-delete"
              href="{% url 'billing:invoices-delete' invoice.id %}">Delete</a>
         </li>
       {% endif %}

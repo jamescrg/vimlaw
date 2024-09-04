@@ -1,14 +1,14 @@
 
-#activity {
+.matter-activity {
 margin: 10px 0 5px 0;
 width: 100%;
 }
 
-#activity .date {
+.matter-activity .date {
   padding-right: 20px;
   width: 100px;
 }
 
-#activity .hours {
+.matter-activity .hours {
   text-align: right;
 }

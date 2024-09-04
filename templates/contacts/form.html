@@ -20,7 +20,7 @@
     <form action="{{ action }}"
           method="post"
           role="form"
-          class="form-responsive">
+          class="form-responsive contacts-form">
       {% csrf_token %}
       {% if intake_id %}<input type="hidden" name="intake_id" value="{{ intake_id }}" />{% endif %}
       {{ form }}

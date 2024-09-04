@@ -1,21 +1,13 @@
 
-#contacts {
+.contacts {
   padding-bottom: 20px;
   padding-left: 10px;
   padding-right: 10px;
 }
 
-#contact {
+.contact {
   padding-left: 10px;
   padding-right: 10px;
-}
-
-
-.contact {
-  background: #f4f4f4;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  padding: 10px 15px;
 }
 
 .contact-top-right a {
@@ -30,7 +22,7 @@
   margin-bottom: 10px;
 }
 
-.related {
+.contacts-related {
   font-weight: 600;
 }
 
@@ -46,40 +38,39 @@
   padding: 2px 0;
 }
 
-.assign-remove {
+.contacts-assignment {
   margin-top: 15px;
 }
 
+/* ==========================================================================
+ Contacts form
+========================================================================== */
 
-/* ------------------------------------------------------------------------- */
-/* contacts form */
-/* ------------------------------------------------------------------------- */
-
-#id_name,
-#id_email,
-#id_company,
-#id_notes {
+.contacts-form #id_name,
+.contacts-form #id_email,
+.contacts-form #id_company,
+.contacts-form #id_notes {
   max-width: 400px;
   width: 100%
 }
 
-#id_address {
+.contacts-form #id_address {
   height: 100px;
   max-width: 400px;
   width: 100%
 }
 
-#id_folder_id,
-#id_phone1,
-#id_phone2,
-#id_phone3,
-#id_phone1_label,
-#id_phone2_label,
-#id_phone3_label {
+.contacts-form #id_folder_id,
+.contacts-form #id_phone1,
+.contacts-form #id_phone2,
+.contacts-form #id_phone3,
+.contacts-form #id_phone1_label,
+.contacts-form #id_phone2_label,
+.contacts-form #id_phone3_label {
   max-width: 250px;
   width: 100%
 }
 
-.select-field {
+.contacts-assignment-select {
   width: 350px;
 }

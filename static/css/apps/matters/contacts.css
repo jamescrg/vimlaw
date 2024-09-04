@@ -3,24 +3,24 @@
   margin: 15px 0 0 5px;
 }
 
-.contacts	{
+.matter-contacts	{
   margin: 10px 0 10px 0;
   width: 100%;
 }
 
-#contacts .name {
+.matter-contacts .name {
   width: 250px;
 }
 
-.contacts .phone1 {
+.matter-contacts .phone1 {
   width: 150px;
 }
 
-.contacts .relationship	{
+.matter-contacts .relationship	{
   width: 200px;
 }
 
-.contacts .email	{
+.matter-contacts .email	{
   width: 400px;
 }
 

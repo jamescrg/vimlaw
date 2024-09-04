@@ -8,16 +8,16 @@
   padding-bottom: 1rem;
 }
 
-.options,
-.options td {
+.settings .options,
+.settings .options td {
   border: none;
 }
 
-.options {
+.settings .options {
   margin-left: 1rem;
 }
 
-.username {
-  margin-left: 1rem;
+.settings .username {
   font-weight: 600;
+  margin-left: 1rem;
 }

@@ -16,7 +16,7 @@
         {% csrf_token %}
         <label>Matter:</label>
         <label>
-          <select class="select-field" name="relationship_id">
+          <select class="contacts-assignment-select" name="relationship_id">
             {% for relationship in relationships %}
               <option value="{{ relationship.id }}">{{ relationship.matter.name }}</option>
             {% endfor %}

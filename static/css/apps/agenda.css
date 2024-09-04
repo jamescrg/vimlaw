@@ -28,6 +28,24 @@
   width: 100%
 }
 
+.deadline-calculator-form {
+  margin-top: 1rem;
+}
+
+.deadline-calculator-form label {
+  font-weight: 600;
+  margin-right: 1rem;
+}
+
+.deadline-calculator-form .days {
+  width: 50px;
+}
+
+.deadline-calculator-results {
+  margin-top: 1rem;
+}
+
+
 /* ==========================================================================
  Tasks
 ========================================================================== */

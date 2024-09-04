@@ -24,16 +24,8 @@ List View
   width: 5%;
 }
 
-
-.pointer {
-  cursor: pointer;
-}
-
-.invoice-delete {
-  color: var(--orange-800)
-}
-
-.invoice-delete:hover {
+.invoices-delete,
+.invoices-delete:hover {
   color: var(--orange-800)
 }
 
@@ -42,37 +34,33 @@ List View
 Detail View
 ========================================================================== */
 
-.detail-table {
+.invoices-detail-table {
   height: fit-content;
   width: 25%;
 }
 
 @media (max-width: 768px) {
-  .detail-table {
-  width: 100%;
+  .invoices-detail-table {
+    width: 100%;
   }
 }
 
-.invoice-table-container {
+.invoices-table-container {
   display: flex;
   gap: 2rem;
 }
 
 @media (max-width: 768px) {
-  .invoice-table-container {
-  flex-direction: column;
+  .invoices-table-container {
+    flex-direction: column;
   }
-}
-
-.activites-title {
-  margin-bottom: 1rem;
 }
 
 /* ==========================================================================
 Invoice Form
 ========================================================================== */
 
-.add-invoice .discount {
+.invoices-add .discount {
   text-align: right;
   width: 6rem;
 }
@@ -81,20 +69,16 @@ Invoice Form
 Cancel Form
 ========================================================================== */
 
-.cancel-form input {
+.invoices-cancel-form input {
   margin-top: 0.5rem;
   width: 100%;
-}
-
-.dropdown-item:active {
-  background-color: var(--warm-gray-350);
 }
 
 /* ==========================================================================
 Payments
 ========================================================================== */
 
-.actions {
+.payments-actions {
   text-align: center;
   width: 5%;
 }

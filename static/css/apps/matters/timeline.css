@@ -4,16 +4,16 @@
 Display
 ------------------------------------------------*/
 
-#facts {
+.timeline-list {
   margin: 10px 0 5px 0;
   width: 100%;
 }
 
-#facts .time {
+.timeline-list .time {
   width: 120px;
 }
 
-#facts .citation {
+.timeline-list .citation {
   width: 250px;
 }
 
@@ -22,25 +22,25 @@ Display
 Form
 ------------------------------------------------*/
 
-#id_fact {
+.timeline-form #id_fact {
   border: none;
   width: 700px;
 }
 
-#id_description {
+.timeline-form #id_description {
   width: 600px;
 }
 
 
-#id_citation {
+.timeline-form #id_citation {
   width: 240px;
 }
 
-#id_emphasis {
+.timeline-form #id_emphasis {
   width: 120px;
 }
 
-.print-link {
+.timeline-form .print-link {
   margin-top: 15px;
   text-align: right;
 }
