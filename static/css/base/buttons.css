@@ -40,3 +40,10 @@
 .button-link:hover {
   color: var(--lime-800);
 }
+
+.btn-sort {
+  background: none;
+  border: none;
+  color: inherit;
+  font-weight: 600;
+}
