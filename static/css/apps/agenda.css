@@ -1,14 +1,7 @@
 
-
-/*------------------------------------------------
-Events
-------------------------------------------------*/
-
-.toggle-events {
-  font-weight: 600;
-  margin-right: 10px;
-  text-align: right;
-}
+/* ==========================================================================
+ Events
+========================================================================== */
 
 .events {
   margin-bottom: 1.5rem;
@@ -18,53 +11,28 @@ Events
   width: 100%;
 }
 
-.date {
+.events-table .date {
   width: 120px;
 }
 
-.party {
+.events-table .party {
   width: 120px;
 }
 
-.matter {
+.events-table .matter {
   width: 250px;
 }
 
-
-.add_event #id_matter {
-  width: auto;
-}
-
-.add_event #id_party {
-  width: 140px;
-}
-
-.add_event #id_description {
+.events-form #id_description {
   max-width: 500px;
   width: 100%
 }
 
-.add_event #id_status {
-  width: 140px;
-}
+/* ==========================================================================
+ Tasks
+========================================================================== */
 
-
-/*------------------------------------------------
-Tasks
-------------------------------------------------*/
-
-.btn-task-sort {
-  background: none;
-  border: none;
-  color: inherit;
-  font-weight: 600;
-}
-
-.priority {
-  color: var(--orange-800);
-}
-
-.btn-task-status {
+.tasks-btn-status {
   color: var(--warm-gray-400);
 }
 
@@ -95,83 +63,7 @@ Tasks
   width: 10px;
 }
 
-/*------------------------------------------------
-Tasks Table Inputs
-------------------------------------------------*/
-
-.input-padding {
-  padding: 5px;
-}
-
-.task-select,
-.task-select:hover {
-  background: var(--warm-gray-50);
-  border: solid 1px var(--warm-gray-200);
-  border-radius: 4px;
-  color: inherit;
-  font-size: inherit;
-  margin: 0;
-}
-
-.tasks-table input[type="text"],
-.tasks-table input[type="date"] {
-  background: var(--warm-gray-50);
-  border: solid 1px var(--warm-gray-200);
-  border-radius: 4px;
-  color: inherit;
-  font-size: inherit;
-  margin: 0;
-  padding: 4px;
-}
-
-.user select {
-  max-width: 100px;
-}
-
-/*------------------------------------------------
-Task Add Form Quick
-------------------------------------------------*/
-
-.task-form-add input,
-.task-form-add select {
-  border: 1px solid var(--warm-gray-200);
-  border-radius: 3px;
-  line-height: 1;
-  margin: 0;
-  padding: 7px;
-}
-
-.task-form-add input {
-  max-width: 795px;
-  width: 100%;
-}
-
-.task-form-add select {
-  margin-right: 0.5rem;
-}
-
-.task-input-description-label {
-  width: 80%;
-}
-
-.change-user {
-  background: var(--warm-gray-100);
-  border: none;
-  border-radius: 4px;
-  color: var(--warm-gray-600);
-  padding-top: 0;
-}
-
-
-/*------------------------------------------------
-Task Edit Form
-------------------------------------------------*/
-
-#id_description {
+.tasks-form #id_description {
   max-width: 500px;
   width: 100%
-}
-
-.task-filter select {
-  min-width: 95%;
 }

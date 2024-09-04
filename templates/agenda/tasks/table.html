@@ -2,7 +2,7 @@
   <table class="table tasks-table">
     <tr>
       <th class="status">
-        <button class="btn-task-sort btn-task-status"
+        <button class="btn-sort btn-task-status"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
                 hx-post="/agenda/tasks/filter/sort/status/">
@@ -11,7 +11,7 @@
       </th>
       <th class="matter">
         Matter
-        <button class="btn-task-sort"
+        <button class="btn-sort"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
                 hx-post="/agenda/tasks/filter/sort/matter/">
@@ -20,7 +20,7 @@
       </th>
       <th class="description">
         Description
-        <button class="btn-task-sort"
+        <button class="btn-sort"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
                 hx-post="/agenda/tasks/filter/sort/description/">
@@ -29,7 +29,7 @@
       </th>
       <th>
         User
-        <button class="btn-task-sort"
+        <button class="btn-sort"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
                 hx-post="/agenda/tasks/filter/sort/user/">
@@ -38,7 +38,7 @@
       </th>
       <th>
         Date Due
-        <button class="btn-task-sort"
+        <button class="btn-sort"
                 hx-target="#tasks-table"
                 hx-swap="outerHTML"
                 hx-post="/agenda/tasks/filter/sort/date_due/">
@@ -55,7 +55,7 @@
         <td id="task-description"
             class="description {% if task.date_due <= today %}urgent{% endif %}">
           {% if task.priority %}
-            <span class="priority">
+            <span class="urgent">
               <i class="bi bi-exclamation-lg"></i>
             </span>
           {% endif %}
@@ -67,7 +67,7 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
-        <td class="user">{% include "agenda/tasks/change-user.html" %}</td>
+        <td class="user">{{ user.username|title }}</td>
         <td class="date">{{ task.date_due|date:"Y-m-d" }}</td>
       </tr>
     {% endfor %}
