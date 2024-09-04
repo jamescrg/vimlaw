@@ -5,7 +5,7 @@
           action="{% url 'folders:insert' app %}"
           method="post">
       {% csrf_token %}
-      <label for="add-folder-input"></label>
+      <label class="hidden" for="add-folder-input"></label>
       <input id="add-folder-input"
              class="form-horizontal"
              type="text"
