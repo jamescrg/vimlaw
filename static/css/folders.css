@@ -46,3 +46,9 @@
   color: var(--red-600);
   margin: 0;
 }
+
+.folder-item-container {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: space-between;
+}
