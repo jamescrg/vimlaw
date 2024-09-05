@@ -61,3 +61,33 @@ class Invoice(models.Model):
     @property
     def status_display(self):
         return dict(INVOICE_STATUS).get(self.status)
+
+    @property
+    def value(self):
+        from apps.activity.time.models import TimeEntry
+
+        time_entries = TimeEntry.objects.filter(invoice=self.id)
+        gross_fees = sum(entry.fee for entry in time_entries)
+        comp_fees = sum(entry.fee for entry in time_entries.filter(comp=1))
+        net_fees = gross_fees - comp_fees
+
+        from apps.activity.expenses.models import ExpenseEntry
+
+        expense_entries = ExpenseEntry.objects.filter(invoice=self.id)
+        gross_expenses = sum(entry.amount for entry in expense_entries)
+        comp_expenses = sum(entry.amount for entry in expense_entries.filter(comp=1))
+        net_expenses = gross_expenses - comp_expenses
+
+        pre_discount_total = net_fees + net_expenses
+        final_total = pre_discount_total - self.discount
+
+        return {
+            "gross_fees": gross_fees,
+            "comp_fees": comp_fees,
+            "net_fees": net_fees,
+            "gross_expenses": gross_expenses,
+            "comp_expenses": comp_expenses,
+            "net_expenses": net_expenses,
+            "pre_discount_total": pre_discount_total,
+            "final_total": final_total,
+        }

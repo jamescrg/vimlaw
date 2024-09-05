@@ -22,6 +22,8 @@ def payments_list(request):
             Payment.objects.all().select_related("matter").order_by("-date", "-id")
         )
 
+    payments_total = sum(payment.amount for payment in payments)
+
     page = request.GET.get("page")
     pagination = Paginator(payments, per_page=10).get_page(page)
 
@@ -30,6 +32,7 @@ def payments_list(request):
         "subapp": "payments",
         "pagination": pagination,
         "objects": pagination.object_list,
+        "payments_total": payments_total,
     }
 
     return render(request, "billing/payments/list.html", context)

@@ -28,5 +28,5 @@
   <td class="date">{{ payment.date|date:"Y-m-d" }}</td>
   <td>{{ payment.method_display }}</td>
   <td>{{ payment.detail|default:"" }}</td>
-  <td class="amount">${{ payment.amount|floatformat:2|intcomma }}</td>
+  <td class="payments-amount">${{ payment.amount|floatformat:2|intcomma }}</td>
 </tr>

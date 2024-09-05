@@ -84,7 +84,9 @@
   <td>
     <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name|slice:":20" }}</a>
   </td>
-  <td class="amount">${{ invoice.amount|floatformat:2|intcomma }}</td>
+  <td class="amount">${{ invoice.value.net_fees|floatformat:2|intcomma }}</td>
+  <td class="amount">${{ invoice.value.net_expenses|floatformat:2|intcomma }}</td>
+  <td class="amount">${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
   <td class="pdf">
     <a target="_blank" href="{% url 'billing:invoices-pdf' invoice.id %}">
       <i class="bi bi-download"></i>

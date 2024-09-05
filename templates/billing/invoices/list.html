@@ -26,17 +26,22 @@
   <div class="table-container">
     <table class="table invoices">
       <tr>
-        <th class="number">Number</th>
+        <th class="invoice-id">ID</th>
         <th class="date">Issue Date</th>
         <th class="status">Status</th>
         <th>Matter</th>
-        <th class="amount">Amount</th>
+        <th class="amount">Fees</th>
+        <th class="amount">Expenses</th>
+        <th class="amount">Total</th>
         <th class="pdf">PDF</th>
       </tr>
       {% for invoice in objects %}
         {% include "billing/invoices/row.html" %}
       {% endfor %}
     </table>
-    {% include "pagination.html" %}
+    <div class="flex-start-space">
+      <div>{% include "pagination.html" %}</div>
+      {% include "billing/invoices/summary.html" %}
+    </div>
   </div>
 {% endblock subcontent %}

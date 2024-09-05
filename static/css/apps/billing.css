@@ -3,25 +3,26 @@ List View
 ========================================================================== */
 
 
-.invoices .number,
-.invoices .matter,
+.invoices .invoice-id {
+  width: 80px;
+}
 .invoices .date {
-  width: 19%;
+  width: 120px;
 }
 
 
 .invoices .amount {
   text-align: right;
-  width: 19%;
+  width: 150px;
 }
 
 .invoices .status {
-  width: 19%;
+  width: 150px;
 }
 
 .invoices .pdf {
   text-align: center;
-  width: 5%;
+  width: 100px;
 }
 
 .invoices-delete,
@@ -74,6 +75,28 @@ Cancel Form
   width: 100%;
 }
 
+
+/* ==========================================================================
+Invoices summary table
+========================================================================== */
+
+.invoices-summary {
+  align-items: start;
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+
+}
+
+.invoices-summary table {
+  margin: 1.5rem 0 0 1.5rem;
+  min-width: 300px;
+}
+
+.invoices-summary table td {
+  width: 50%;
+}
+
 /* ==========================================================================
 Payments
 ========================================================================== */
@@ -81,4 +104,9 @@ Payments
 .payments-actions {
   text-align: center;
   width: 3%;
+}
+
+.payments-amount {
+  text-align: right;
+  width: 150px;
 }
