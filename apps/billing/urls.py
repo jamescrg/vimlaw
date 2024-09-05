@@ -7,6 +7,7 @@ from apps.billing.invoices.views import (
     invoices_edit,
     invoices_edit_status,
     invoices_filter,
+    invoices_filter_status,
     invoices_list,
     invoices_pdf,
 )
@@ -30,6 +31,11 @@ urlpatterns = [
     path("billing/invoices-add/", invoices_add, name="invoices-add"),
     path("billing/invoices-edit/<int:pk>/", invoices_edit, name="invoices-edit"),
     path("billing/invoices-filter/", invoices_filter, name="invoices-filter"),
+    path(
+        "billing/invoices-filter-status/",
+        invoices_filter_status,
+        name="invoices-filter-status",
+    ),
     path("billing/invoices-delete/<int:pk>/", invoices_delete, name="invoices-delete"),
     path("billing/invoices-pdf/<int:pk>/", invoices_pdf, name="invoices-pdf"),
     path(

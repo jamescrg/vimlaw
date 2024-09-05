@@ -2,7 +2,6 @@ from django.urls import path
 
 from apps.agenda.tasks.views import (
     tasks_add,
-    tasks_change_user,
     tasks_delete,
     tasks_edit,
     tasks_filter,
@@ -23,11 +22,6 @@ urlpatterns = [
     path("agenda/tasks/<int:id>/edit", tasks_edit, name="tasks-edit"),
     path("agenda/tasks/<int:id>/delete", tasks_delete, name="tasks-delete"),
     path("agenda/tasks/<int:id>/task-status", tasks_status, name="tasks-task-status"),
-    path(
-        "agenda/tasks/<int:task_id>/change-user",
-        tasks_change_user,
-        name="tasks-change-user",
-    ),
     path("agenda/tasks/filter/", tasks_filter, name="tasks-filter"),
     path(
         "activity/tasks/filter/quick/<str:quick_filter>",

@@ -3,7 +3,7 @@
   <div class="section-title">
     <div class="section-title-left">
       <h1>Invoices</h1>
-      <div class="section-title-left-right">
+      <div class="table-filter">
         <button type="button"
                 class="btn-icon"
                 hx-get="{% url 'billing:invoices-add' %}"
@@ -20,6 +20,16 @@
                 hx-trigger="click"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">Filter</button>
+        <form action="{% url 'billing:invoices-filter-status' %}" method="post">
+          {% csrf_token %}
+          <select class="select-user" name="status" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for option in status_options %}
+              <option value="{{ option.0 }}"
+                      {% if option.0 == selected_status %}selected{% endif %}>{{ option.1 }}</option>
+            {% endfor %}
+          </select>
+        </form>
       </div>
     </div>
   </div>
