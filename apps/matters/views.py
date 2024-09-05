@@ -19,13 +19,25 @@ from apps.matters.timeline.models import Fact
 def index(request):
     request.session["matters-view"] = "list"
 
+    default_filter = {
+        "status": "Open",
+        "practice_area": "",
+        "date_start": "",
+        "date_end": "",
+        "order_by": "name",
+    }
+
     filter_data = request.session.get("matter_filter", None)
 
     if filter_data:
         filter = MatterFilter(filter_data)
         matters = filter.qs
     else:
-        matters = Matter.objects.all().order_by("-date_start")
+        filter = MatterFilter(default_filter)
+        matters = filter.qs
+
+    request.session["matter_filter"] = filter.data
+    request.session.modified = True
 
     number_matters = matters.count()
 

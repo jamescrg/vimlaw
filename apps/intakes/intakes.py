@@ -1,11 +1,12 @@
 from django.core.paginator import Paginator
 
 from apps.intakes.filter_intakes import IntakeFilter
-from apps.intakes.models import Intake
 
 
 def get_table_data(request):
     table_data = {}
+
+    default_filter = {"status": "Open"}
 
     filter_data = request.session.get("intake_filter", None)
 
@@ -13,7 +14,11 @@ def get_table_data(request):
         filter = IntakeFilter(filter_data)
         intakes = filter.qs
     else:
-        intakes = Intake.objects.all().order_by("-date")
+        filter = IntakeFilter(default_filter)
+        intakes = filter.qs
+
+    request.session["intake_filter"] = filter.data
+    request.session.modified = True
 
     number_intakes = intakes.count()
 

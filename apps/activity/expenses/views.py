@@ -30,6 +30,17 @@ def expenses_list(request):
     expenses = ExpenseEntry.objects.all()
     number_expenses = expenses.count()
 
+    default_filter = {
+        "date_min": "",
+        "date_max": "",
+        "firm": "Campbell & Brannon",
+        "matter": None,
+        "keyword": "",
+        "comp": None,
+        "entered": 0,
+        "invoice": 0,
+    }
+
     filter_data = request.session.get("expenses_filter", None)
 
     if filter_data:
@@ -39,8 +50,12 @@ def expenses_list(request):
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
     else:
-        expenses = ExpenseEntry.objects.all().order_by("date", "id")
+        filter = ExpenseFilter(default_filter)
+        expenses = filter.qs
         user_id = None
+
+    request.session["expenses_filter"] = filter.data
+    request.session.modified = True
 
     summary = calculate_summary(expenses)
     users = CustomUser.objects.filter(is_active=True)

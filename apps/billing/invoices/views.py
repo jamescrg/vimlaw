@@ -19,7 +19,6 @@ from .models import INVOICE_STATUS, Invoice
 
 @login_required
 def invoices_list(request):
-
     filter_data = request.session.get("invoices_filter", None)
 
     if filter_data:
@@ -39,7 +38,7 @@ def invoices_list(request):
     page = request.GET.get("page")
     pagination = Paginator(invoices, per_page=10).get_page(page)
 
-    selected_status = filter_data.get("status", "")
+    selected_status = filter_data.get("status", "") if filter_data else ""
 
     context = {
         "app": "billing",

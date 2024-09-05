@@ -33,6 +33,18 @@ def time_list(request):
     entries = TimeEntry.objects.all()
     number_entries = entries.count()
 
+    default_filter = {
+        "date_min": "",
+        "date_max": "",
+        "firm": "Campbell & Brannon",
+        "matter": None,
+        "keyword": "",
+        "comp": None,
+        "entered": 0,
+        "invoice": 0,
+        "order_by": "date",
+    }
+
     filter_data = request.session.get("time_filter", None)
 
     if filter_data:
@@ -40,10 +52,13 @@ def time_list(request):
         entries = filter.qs
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
-
     else:
-        entries = TimeEntry.objects.all().order_by("date", "id")
+        filter = TimeEntryFilter(default_filter)
+        entries = filter.qs
         user_id = None
+
+    request.session["time_filter"] = filter.data
+    request.session.modified = True
 
     summary = calculate_summary(entries)
     users = CustomUser.objects.filter(is_active=True)

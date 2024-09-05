@@ -2,7 +2,6 @@ from django.core.paginator import Paginator
 
 from apps.accounts.models import CustomUser
 from apps.events.filter import EventFilter
-from apps.events.models import Event
 from apps.matters.models import Matter
 
 
@@ -10,14 +9,25 @@ def get_table_data(request):
 
     table_data = {}
 
+    default_filter = {
+        "status": "Pending",
+        "matter": None,
+        "date_min": "",
+        "date_max": "",
+        "party": None,
+    }
+
     events_filter = request.session.get("events_filter", None)
 
     if events_filter:
         filter = EventFilter(events_filter)
         events = filter.qs
-        events = events.order_by("date")
     else:
-        events = Event.objects.all().order_by("date")
+        filter = EventFilter(default_filter)
+        events = filter.qs
+
+    request.session["events_filter"] = filter.data
+    request.session.modified = True
 
     page = request.GET.get("page")
     pagination = Paginator(events, 10).get_page(page)
