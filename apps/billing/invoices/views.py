@@ -36,6 +36,10 @@ def invoices_list(request):
             .order_by("-created_at")
         )
 
+    total_fees = sum(invoice.value["net_fees"] for invoice in invoices)
+    total_expenses = sum(invoice.value["net_expenses"] for invoice in invoices)
+    total = total_fees + total_expenses
+
     page = request.GET.get("page")
     pagination = Paginator(invoices, per_page=15).get_page(page)
 
@@ -44,6 +48,9 @@ def invoices_list(request):
         "subapp": "invoices",
         "pagination": pagination,
         "objects": pagination.object_list,
+        "total_fees": total_fees,
+        "total_expenses": total_expenses,
+        "total": total,
     }
 
     return render(request, "billing/invoices/list.html", context)
