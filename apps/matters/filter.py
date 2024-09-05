@@ -46,7 +46,7 @@ class MatterFilter(django_filters.FilterSet):
             "name": "Name",
             "description": "Description",
         },
-        empty_label="Default",
+        empty_label=None,
     )
 
     class Meta:

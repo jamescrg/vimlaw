@@ -30,7 +30,8 @@ class TasksFilter(django_filters.FilterSet):
             ("description", "description"),
             ("user", "user"),
             ("date_due", "date_due"),
-        )
+        ),
+        empty_label=None,
     )
 
     class Meta:
