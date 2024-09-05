@@ -1,0 +1,11 @@
+<select name="status"
+        class="table-select"
+        hx-post="invoices-edit-status/{{ invoice.id }}/"
+        hx-target="this"
+        hx-swap="outerHTML"
+        hx-trigger="change">
+  {% for option in status_options %}
+    <option value="{{ option.0 }}"
+            {% if option.0 == invoice.status %}selected{% endif %}>{{ option.1 }}</option>
+  {% endfor %}
+</select>

@@ -1,0 +1,21 @@
+.hidden {
+  display: none;
+}
+
+.dropdown-menu {
+  padding: none;
+}
+
+.dropdown-menu li {
+  background: none;
+  border-top: solid 1px var(--warm-gray-200);
+  padding: 0.5rem;
+}
+
+.dropdown-menu li:first-child {
+  border: none;
+}
+
+.dropdown-menu li>a {
+  background: none;
+}

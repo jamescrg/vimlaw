@@ -26,7 +26,8 @@ forms are not included here, to prevent collision with the auth page
 @import url("base/pagination.css");
 @import url("base/buttons.css");
 @import url("base/icons.css");
-@import url("misc.css");
+@import url("base/interface.css");
+
 
 /* ==========================================================================
 App specific styles

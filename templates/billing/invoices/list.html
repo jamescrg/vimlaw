@@ -28,12 +28,11 @@
       <tr>
         <th class="invoice-id">ID</th>
         <th class="date">Issue Date</th>
-        <th class="status">Status</th>
         <th>Matter</th>
+        <th class="status">Status</th>
         <th class="amount">Fees</th>
         <th class="amount">Expenses</th>
         <th class="amount">Total</th>
-        <th class="pdf">PDF</th>
       </tr>
       {% for invoice in objects %}
         {% include "billing/invoices/row.html" %}

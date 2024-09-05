@@ -23,15 +23,6 @@
   padding: 4px 7px;
 }
 
-.section-title .dropdown li {
-  background: none;
-  padding: 7px 0;
-}
-
-.section-title .dropdown li>a {
-  background: none;
-}
-
 .section-title-left {
   align-items: center;
   display: flex;
@@ -62,7 +53,7 @@
   margin-right: 0.3rem;
 }
 
-.section-title-right a,
+.section-title-right > a,
 .section-title-right button {
   margin-left: 1rem;
   margin-right: 0.3rem;

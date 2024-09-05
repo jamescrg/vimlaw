@@ -1,11 +1,8 @@
 import os
-from datetime import datetime
 from itertools import chain
 
 from django.contrib.auth.decorators import login_required
-from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
-from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -17,8 +14,7 @@ from apps.matters.models import Matter
 from .filters import InvoiceFilter
 from .forms import EditInvoiceForm, InvoiceForm
 from .functions import generate_invoice
-from .functions.calculate_inv_amount import calculate_inv_amount
-from .models import Invoice
+from .models import INVOICE_STATUS, Invoice
 
 
 @login_required
@@ -41,7 +37,7 @@ def invoices_list(request):
     total = total_fees + total_expenses
 
     page = request.GET.get("page")
-    pagination = Paginator(invoices, per_page=15).get_page(page)
+    pagination = Paginator(invoices, per_page=10).get_page(page)
 
     context = {
         "app": "billing",
@@ -51,6 +47,7 @@ def invoices_list(request):
         "total_fees": total_fees,
         "total_expenses": total_expenses,
         "total": total,
+        "status_options": INVOICE_STATUS,
     }
 
     return render(request, "billing/invoices/list.html", context)
@@ -59,13 +56,11 @@ def invoices_list(request):
 @login_required
 def invoices_detail(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
-
     context = {
         "app": "billing",
         "file_url": reverse_lazy("billing:invoices-pdf", kwargs={"pk": invoice.pk}),
         "invoice": invoice,
     }
-
     return render(request, "billing/invoices/preview/preview.html", context)
 
 
@@ -73,19 +68,12 @@ def invoices_detail(request, pk):
 def invoices_add(request):
     if request.method == "POST":
         form = InvoiceForm(request.POST)
-
         if form.is_valid():
             invoice = form.save(commit=False)
-
             invoice.created_by = request.user
             invoice.save()
-
-            calc = calculate_inv_amount(invoice)
-            invoice.amount = calc["invoice_total"]
-
-            invoice.save()
-
             return redirect("billing:invoices-list")
+
     else:
         form = InvoiceForm()
 
@@ -110,50 +98,15 @@ def invoices_add(request):
 @login_required
 def invoices_edit(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
-
     if request.method == "POST":
         form = EditInvoiceForm(request.POST, instance=invoice)
-
         if form.is_valid():
-            form.save()
-
-            date_limit = form.cleaned_data["date_limit"]
-
-            TimeEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
-                invoice=None
-            )
-
-            ExpenseEntry.objects.filter(invoice=invoice, date__gt=date_limit).update(
-                invoice=None
-            )
-
-            time_entry_amount = (
-                TimeEntry.objects.filter(invoice=invoice)
-                .annotate(
-                    fee=ExpressionWrapper(
-                        F("hours") * F("rate"), output_field=DecimalField()
-                    )
-                )
-                .aggregate(total_fee=Sum("fee"))["total_fee"]
-            ) or 0
-
-            expense_amount = (
-                ExpenseEntry.objects.filter(invoice=invoice).aggregate(
-                    total_amount=Sum("amount")
-                )["total_amount"]
-                or 0
-            )
-
-            invoice.amount = (time_entry_amount + expense_amount) - invoice.discount
             invoice.save()
-
             return redirect("billing:invoices-detail", pk=pk)
     else:
         form = EditInvoiceForm(instance=invoice)
-
-    return render(
-        request, "billing/invoices/edit.html", {"form": form, "invoice": invoice}
-    )
+    context = {"form": form, "invoice": invoice}
+    return render(request, "billing/invoices/edit.html", context)
 
 
 @login_required
@@ -164,70 +117,18 @@ def invoices_delete(request, pk):
 
 
 @login_required
-def invoices_cancel(request, pk):
-    invoice = get_object_or_404(Invoice, pk=pk)
-
-    return render(request, "billing/invoices/confirm-cancel.html", {"invoice": invoice})
-
-
-@login_required
 def invoices_pdf(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
+    file = generate_invoice(invoice, request)
+    notation = "DRAFT - " if invoice.status == "DRAFT" else ""
 
-    if invoice.status == "CANCELED":
-        with open(invoice.pdf_file.path, "rb") as pdf:
-            response = HttpResponse(pdf.read(), content_type="application/pdf")
-            response["Content-Disposition"] = (
-                f'filename="Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
-            )
-    else:
-        file = generate_invoice(invoice, request)
-
-        with open(file.name, "rb") as pdf:
-            response = HttpResponse(pdf.read(), content_type="application/pdf")
-            response["Content-Disposition"] = (
-                f'filename="Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
-            )
-
-        os.unlink(file.name)
+    with open(file.name, "rb") as pdf:
+        response = HttpResponse(pdf.read(), content_type="application/pdf")
+        filename = f'filename="{notation}Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf"'
+        response["Content-Disposition"] = filename
+    os.unlink(file.name)
 
     return response
-
-
-@login_required
-def invoices_status_update(request, pk):
-    if request.method == "POST":
-        invoice = get_object_or_404(Invoice, pk=pk)
-
-        invoice_status = request.POST["status"]
-        invoice.status = invoice_status
-
-        if invoice_status == "APPROVED":
-            invoice.date_approved = datetime.now()
-        elif invoice_status == "SENT":
-            invoice.date_sent = datetime.now()
-        elif invoice_status == "CANCELED":
-            invoice.date_canceled = datetime.now()
-
-        invoice.save()
-
-        if invoice_status == "CANCELED":
-            pdf_file = generate_invoice(invoice, request)
-
-            with open(pdf_file.name, "rb") as pdf:
-                invoice.pdf_file.save(
-                    f"Invoice {invoice.id} - {invoice.matter} - {invoice.date_issued}.pdf",
-                    ContentFile(pdf.read()),
-                )
-            invoice.save()
-
-            TimeEntry.objects.filter(invoice=invoice).update(invoice=None)
-
-            ExpenseEntry.objects.filter(invoice=invoice).update(invoice=None)
-
-            return redirect("billing:invoices-list")
-
-        return render(request, "billing/invoices/row.html", {"invoice": invoice})
 
 
 @login_required
@@ -247,3 +148,15 @@ def invoices_filter(request):
         )
 
         return render(request, "billing/invoices/filter.html", {"filter": filter})
+
+
+@login_required
+def invoices_edit_status(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    invoice.status = request.POST["status"]
+    invoice.save()
+    context = {
+        "status_options": INVOICE_STATUS,
+        "invoice": invoice,
+    }
+    return render(request, "billing/invoices/status.html", context)
