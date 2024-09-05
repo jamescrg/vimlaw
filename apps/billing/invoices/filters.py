@@ -18,7 +18,7 @@ class InvoiceFilter(django_filters.FilterSet):
     )
     order_by = MultipleOrderingFilter(
         fields=[(("date_issued", "id"), "date issued")],
-        empty_label="Default",
+        empty_label=None,
     )
 
     class Meta:

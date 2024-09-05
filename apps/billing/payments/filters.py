@@ -17,7 +17,7 @@ class PaymentFilter(django_filters.FilterSet):
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"})
     )
     order_by = MultipleOrderingFilter(
-        fields=[(("date", "id"), "date")], empty_label="Default"
+        fields=[(("date", "id"), "date")], empty_label=None
     )
 
     class Meta:
