@@ -51,7 +51,7 @@ class IntakeFilter(django_filters.FilterSet):
             "date": "Date",
             "name": "Name",
         },
-        empty_label="Default",
+        empty_label=None,
     )
 
     class Meta:

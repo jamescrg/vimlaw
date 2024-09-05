@@ -38,7 +38,7 @@ class ExpenseFilter(django_filters.FilterSet):
     )
     order_by = MultipleOrderingFilter(
         fields=[(("date", "id"), "date")],
-        empty_label="Default",
+        empty_label=None,
     )
 
     def filter_invoice(self, queryset, _, value):
