@@ -1,4 +1,4 @@
-<div id="tasks-table" class="table-container">
+<div class="table-container">
   <table class="table tasks-table">
     <tr>
       <th class="status">
@@ -67,7 +67,7 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
-        <td class="user">{{ user.username|title }}</td>
+        <td class="user">{{ task.user.username|title }}</td>
         <td class="date">{{ task.date_due|date:"Y-m-d" }}</td>
       </tr>
     {% endfor %}

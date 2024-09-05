@@ -39,6 +39,8 @@ def invoices_list(request):
     page = request.GET.get("page")
     pagination = Paginator(invoices, per_page=10).get_page(page)
 
+    selected_status = filter_data.get("status", "")
+
     context = {
         "app": "billing",
         "subapp": "invoices",
@@ -48,6 +50,7 @@ def invoices_list(request):
         "total_expenses": total_expenses,
         "total": total,
         "status_options": INVOICE_STATUS,
+        "selected_status": selected_status,
     }
 
     return render(request, "billing/invoices/list.html", context)
@@ -148,6 +151,15 @@ def invoices_filter(request):
         )
 
         return render(request, "billing/invoices/filter.html", {"filter": filter})
+
+
+@login_required
+def invoices_filter_status(request):
+    filter_data = request.session.get("invoices_filter", {})
+    status = request.POST.get("status")
+    filter_data["status"] = status
+    request.session["invoices_filter"] = filter_data
+    return redirect("billing:invoices-list")
 
 
 @login_required

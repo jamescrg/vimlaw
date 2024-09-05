@@ -8,10 +8,10 @@
               aria-expanded="false">{{ invoice.id }}</button>
       <ul class="dropdown-menu">
         <li>
-          <a href={% url 'billing:invoices-detail' invoice.id %}>Detail</a>
+          <a target="_blank" href="{% url 'billing:invoices-pdf' invoice.id %}">Download PDF</a>
         </li>
         <li>
-          <a target="_blank" href="{% url 'billing:invoices-pdf' invoice.id %}">Download PDF</a>
+          <a href={% url 'billing:invoices-detail' invoice.id %}>Detail</a>
         </li>
         <li>
           <a href="#"

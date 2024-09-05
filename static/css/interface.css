@@ -1,0 +1,35 @@
+.hidden {
+  display: none;
+}
+
+.dropdown-menu {
+  padding: 0 !important;
+}
+
+.dropdown-menu li {
+  background: var(--warm-gray-50);
+  border-radius: 3px;
+  border-top: solid 1px var(--warm-gray-200);
+  padding: 0.5rem;
+}
+
+.dropdown-menu li:hover {
+  background: var(--warm-gray-100);
+  color: var(--lime-800);
+}
+
+.dropdown-menu li:first-child {
+  border: none;
+}
+
+.dropdown-menu li>a {
+  background: none;
+  color: inherit;
+  padding: 0.5rem;
+}
+
+.table-select {
+  background: inherit;
+  border: solid 1px var(--warm-gray-200);
+  color: inherit;
+}

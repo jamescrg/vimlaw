@@ -20,11 +20,12 @@
 
 }
 
-pagination a:hover {
+.pagination a:hover {
   background: var(--warm-gray-150);
   color: var(--lime-800);
 }
 
 .pagination-disabled {
+  color: var(--warm-gray-400) !important;
   pointer-events: none;
 }
