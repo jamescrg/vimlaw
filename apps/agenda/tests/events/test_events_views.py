@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.events.models import Event
+from apps.agenda.events.models import Event
 
 pytestmark = pytest.mark.django_db
 
@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 def test_index(client):
     response = client.get("/events/")
     assert response.status_code == 200
-    response = client.get(reverse("events:events-list"))
+    response = client.get(reverse("agenda:events-list"))
     assert response.status_code == 200
     assert response.context["app"] == "agenda"
 

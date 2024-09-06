@@ -4,10 +4,10 @@ from dateutil import parser
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-import apps.events.google as google
-from apps.events.filter import EventFilter
-from apps.events.forms import EventForm
-from apps.events.models import Event
+import apps.agenda.events.google as google
+from apps.agenda.events.filter import EventFilter
+from apps.agenda.events.forms import EventForm
+from apps.agenda.events.models import Event
 from apps.matters.models import Matter
 
 from .events import get_table_data
