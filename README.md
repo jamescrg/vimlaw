@@ -7,25 +7,25 @@ execution of core functionality.
 ## Table of Contents
 
 - [Getting Started](#getting-started)
-    - [Setting up PostgreSQL](#setting-up-postgresql)
-    - [Virtual Environment](#virtual-environment)
-    - [Installing Dependencies](#installing-dependencies)
-    - [Environment Variables](#environment-variables)
-    - [Running Migrations](#running-migrations)
-    - [Running the Application](#running-the-application)
-    - [Creating the first Superuser](#creating-the-first-superuser)
+  - [Setting up PostgreSQL](#setting-up-postgresql)
+  - [Virtual Environment](#virtual-environment)
+  - [Installing Dependencies](#installing-dependencies)
+  - [Environment Variables](#environment-variables)
+  - [Running Migrations](#running-migrations)
+  - [Running the Application](#running-the-application)
+  - [Creating the first Superuser](#creating-the-first-superuser)
 - [Troubleshooting](#troubleshooting)
-    - [Troubleshoot Dependency Installation](#troubleshoot-dependency-installation)
-    - [Troubleshoot Running Migrations](#troubleshoot-running-migrations)
+  - [Troubleshoot Dependency Installation](#troubleshoot-dependency-installation)
+  - [Troubleshoot Running Migrations](#troubleshoot-running-migrations)
 - [Steps After Squashing Migrations](#steps-after-squashing-migrations)
-    - [Step 1: Ensure squashing was done correctly](#step-1-ensure-squashing-was-done-correctly)
-    - [Step 2: Removing the old migration history](#step-2-removing-the-old-migration-history)
-    - [Step 3: Faking Django content type migrations](#step-3-faking-django-content-type-migrations)
-    - [Step 4: Faking the squashed migrations](#step-4-faking-the-squashed-migrations)
+  - [Step 1: Ensure squashing was done correctly](#step-1-ensure-squashing-was-done-correctly)
+  - [Step 2: Removing the old migration history](#step-2-removing-the-old-migration-history)
+  - [Step 3: Faking Django content type migrations](#step-3-faking-django-content-type-migrations)
+  - [Step 4: Faking the squashed migrations](#step-4-faking-the-squashed-migrations)
 - [Google Calendar/Contact Integration](#google-calendarcontact-integration)
-    - [Step 1: Create a Google Cloud Project](#step-1-create-a-google-cloud-project)
-    - [Step 2: Add the credentials file to the project](#step-2-add-the-credentials-file-to-the-project)
-    - [Step 3: Set up the environment variables](#step-3-set-up-the-environment-variables)
+  - [Step 1: Create a Google Cloud Project](#step-1-create-a-google-cloud-project)
+  - [Step 2: Add the credentials file to the project](#step-2-add-the-credentials-file-to-the-project)
+  - [Step 3: Set up the environment variables](#step-3-set-up-the-environment-variables)
 
 ## Getting Started
 
@@ -40,7 +40,7 @@ The application needs additional software to be installed on the machine
 where the application will be running. The additional software is:
 
 - Pango
-    - Install: `sudo apt-get install -y libpangocairo-1.0-0`
+  - Install: `sudo apt-get install -y libpangocairo-1.0-0`
 
 ### Setting up PostgreSQL
 
@@ -49,7 +49,7 @@ and set up privileges and permissions for the user.
 
 **NOTE:** Replace all instances inside `< >` with your own values.
 
-``` postgresql
+```postgresql
 CREATE DATABASE <database_name>;
 CREATE USER <database_user> WITH ENCRYPTED PASSWORD '<user_password>';
 GRANT ALL PRIVILEGES ON DATABASE <database_name> TO <database_user>;
@@ -70,23 +70,23 @@ a virtual environment to manage all project dependencies.
 To create a virtual environment, navigate to the project root directory
 and run the following command:
 
-``` bash
+```bash
 python -m venv venv
 ```
 
----
+______________________________________________________________________
 
 After creating the virtual environment, activate it by running:
 
 **Windows:**
 
-``` bash
+```bash
 .\venv\Scripts\activate
 ```
 
 **Linux/MacOS:**
 
-``` bash
+```bash
 source venv/bin/activate
 ```
 
@@ -102,7 +102,7 @@ located in the project root directory.
 
 To install all dependencies, run the following command:
 
-``` bash
+```bash
 pip install -r requirements.txt
 ```
 
@@ -132,7 +132,7 @@ necessary database schema, run the following command:
 
 **NOTE:** Make sure the virtual environment is activated.
 
-``` bash
+```bash
 python manage.py migrate
 ```
 
@@ -145,7 +145,7 @@ To run the application locally, run the following command:
 
 **NOTE:** Make sure the virtual environment is activated.
 
-``` bash
+```bash
 python manage.py runserver
 ```
 
@@ -162,7 +162,7 @@ To create the first superuser, run the following command:
 
 **NOTE:** Make sure the virtual environment is activated.
 
-``` bash
+```bash
 python manage.py createsuperuser
 ```
 
@@ -216,7 +216,7 @@ have dependencies on other migration files).
 **WARNING:** Do not proceed with the following steps without
 backing up the database and the migration files.
 
----
+______________________________________________________________________
 
 #### Step 1: Ensure squashing was done correctly
 
@@ -256,14 +256,14 @@ to be faked before faking any other migrations.
 
 To fake the content type migrations, run the following command:
 
-``` bash
+```bash
 python manage.py migrate --fake contenttypes
 ```
 
 You can check if the content type migrations were faked correctly
 by running the following command:
 
-``` bash
+```bash
 python manage.py showmigrations
 ```
 
@@ -275,18 +275,18 @@ the migration files have a proper sequence and are squashed.
 
 To fake all the squashed migrations, run the following command:
 
-``` bash
+```bash
 python manage.py migrate --fake
 ```
 
 After running the command, check if all the migrations were
 faked correctly by running the following command:
 
-``` bash
+```bash
 python manage.py showmigrations
 ```
 
----
+______________________________________________________________________
 
 If all the migrations are marked as applied, the process
 was successful and the database is in a consistent state.
@@ -324,7 +324,7 @@ The variable is `CALENDAR_ID` and it should be set to the
 string value of the Google Calendar ID found in the Calendar
 settings.
 
----
+______________________________________________________________________
 
 After finishing these steps, the Google Calendar and Contacts
 integration should be set up and working correctly.
