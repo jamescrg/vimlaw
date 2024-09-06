@@ -1,19 +1,6 @@
 
 
 /* ==========================================================================
-Subapp stylesj
-========================================================================== */
-
-@import url("matters/activity.css");
-@import url("matters/contacts.css");
-@import url("matters/events.css");
-@import url("matters/proceedings.css");
-@import url("matters/rates.css");
-@import url("matters/settlement.css");
-@import url("matters/timeline.css");
-
-
-/* ==========================================================================
 Matter Form
 ========================================================================== */
 
@@ -61,8 +48,16 @@ Matter List
   vertical-align: top;
 }
 
-.matter-name {
+.matter-list .id {
+  width: 80px;
+}
+
+.matter-list .name {
   width: 300px;
+}
+
+.matter-list .unbilled {
+  width: 120px;
 }
 
 .ref-no {

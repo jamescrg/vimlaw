@@ -25,6 +25,25 @@ class Matter(models.Model):
     class Meta:
         db_table = "app_matter"
 
+    @property
+    def unbilled(self):
+        from apps.activity.expenses.models import ExpenseEntry
+        from apps.activity.time.models import TimeEntry
+
+        time_entries = TimeEntry.objects.filter(
+            matter=self, entered=0, comp=0, invoice__isnull=True
+        )
+
+        expenses = ExpenseEntry.objects.filter(
+            matter=self, entered=0, comp=0, invoice__isnull=True
+        )
+
+        net_fees = sum(entry.fee for entry in time_entries)
+        net_expenses = sum(entry.amount for entry in expenses)
+        unbilled = net_fees + net_expenses
+
+        return unbilled
+
 
 class Role(models.Model):
     name = models.CharField(max_length=50)
