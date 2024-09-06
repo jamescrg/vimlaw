@@ -5,84 +5,84 @@
     <div class="section-title">
       <div class="section-title-left">
         <h1>Account History</h1>
+        <div class="table-filter">
+          <a {% if interval == '30days' %}class="strong"{% endif %}
+             href="{% url 'trust:history-interval' interval='30days' %}">30 days</a>
+          <a {% if interval == '60days' %}class="strong"{% endif %}
+             href="{% url 'trust:history-interval' interval='60days' %}">60 days</a>
+          <a {% if interval == 'all' %}class="strong"{% endif %}
+             href="{% url 'trust:history-interval' interval='all' %}">All</a>
+        </div>
       </div>
       <div class="section-title-right">
-        <a href={% url 'trust:trust' %}>Return to Summary</a>
+        <a href={% url 'trust:trust' %}>Summary</a>
       </div>
     </div>
-    <div class="trust-intervals">
-      <a {% if interval == '30days' %}class="strong"{% endif %}
-         href="{% url 'trust:history-interval' interval='30days' %}">30 days</a>
-      &nbsp;|&nbsp;
-      <a {% if interval == '60days' %}class="strong"{% endif %}
-         href="{% url 'trust:history-interval' interval='60days' %}">60 days</a>
-      &nbsp;|&nbsp;
-      <a {% if interval == 'all' %}class="strong"{% endif %}
-         href="{% url 'trust:history-interval' interval='all' %}">All</a>
-    </div>
-    <table id="balances">
-      <tr>
-        <td>Pending Balance</td>
-        <td>${{ pending_account_balance|intcomma }}</td>
-      </tr>
-      <tr>
-        <td>Confirmed Balance</td>
-        <td>
-          <strong>${{ confirmed_account_balance|intcomma }}</strong>
-        </td>
-      </tr>
-    </table>
-    <div class="trust-contact-data">
-      <div class="table-container">
-        <table class="trust-transactions">
-          {% if transactions %}
+    <div class="table-container">
+      <table class="trust-transactions">
+        {% if transactions %}
+          <tr>
+            <th>Date</th>
+            <th>Client</th>
+            <th>Description</th>
+            <th class="amount">Withdrawal</th>
+            <th class="amount">Deposit</th>
+            <th class="check">C</th>
+          </tr>
+          {% for transaction in transactions %}
             <tr>
-              <th>Date</th>
-              <th>Client</th>
-              <th>Description</th>
-              <th class="amount">Withdrawal</th>
-              <th class="amount">Deposit</th>
-              <th class="check">C</th>
+              <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
+              <td class="client">
+                <a href={% url 'trust:client' id=transaction.contact_id %}>{{ transaction.contact.name }}</a>
+              </td>
+              <td class="note">
+                <a href="#"
+                   hx-get="/trust/{{ transaction.id }}/edit"
+                   hx-target="#htmx-modal-container"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container">{{ transaction.description }}</a>
+              </td>
+              <td class="amount urgent">
+                {% if transaction.type == 'Withdrawal' %}
+                  $
+                  {{ transaction.amount|intcomma }}
+                {% endif %}
+              </td>
+              <td class="amount">
+                {% if transaction.type == 'Deposit' %}
+                  $
+                  {{ transaction.amount|intcomma }}
+                {% endif %}
+              </td>
+              <td class="check">
+                <a href={% url 'trust:confirmed' id=transaction.id %}>
+                  {% if transaction.confirmed %}
+                    <i class="bi bi-check-square"></i>
+                  {% else %}
+                    <i class="bi bi-square"></i>
+                  {% endif %}
+                </a>
+              </td>
             </tr>
-            {% for transaction in transactions %}
-              <tr>
-                <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
-                <td class="client">
-                  <a href={% url 'trust:client' id=transaction.contact_id %}>{{ transaction.contact.name }}</a>
-                </td>
-                <td class="note">
-                  <a href="#"
-                     hx-get="/trust/{{ transaction.id }}/edit"
-                     hx-target="#htmx-modal-container"
-                     data-bs-toggle="modal"
-                     data-bs-target="#htmx-modal-container">{{ transaction.description }}</a>
-                </td>
-                <td class="amount urgent">
-                  {% if transaction.type == 'Withdrawal' %}
-                    $
-                    {{ transaction.amount|intcomma }}
-                  {% endif %}
-                </td>
-                <td class="amount">
-                  {% if transaction.type == 'Deposit' %}
-                    $
-                    {{ transaction.amount|intcomma }}
-                  {% endif %}
-                </td>
-                <td class="check">
-                  <a href={% url 'trust:confirmed' id=transaction.id %}>
-                    {% if transaction.confirmed %}
-                      <i class="bi bi-check-square"></i>
-                    {% else %}
-                      <i class="bi bi-square"></i>
-                    {% endif %}
-                  </a>
-                </td>
-              </tr>
-            {% endfor %}
-          {% endif %}
-        </table>
-        {% include "pagination.html" %}
+          {% endfor %}
+        {% endif %}
+      </table>
+      <div class="flex-start-space">
+        <div>{% include "pagination.html" %}</div>
+        <div class="totals-table">
+          <table id="balances">
+            <tr>
+              <td>Pending Balance</td>
+              <td class="numeric">${{ pending_account_balance|intcomma }}</td>
+            </tr>
+            <tr>
+              <td>Confirmed Balance</td>
+              <td class="numeric">
+                <strong>${{ confirmed_account_balance|intcomma }}</strong>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
   </div>

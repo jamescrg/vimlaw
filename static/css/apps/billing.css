@@ -75,27 +75,6 @@ Cancel Form
 
 
 /* ==========================================================================
-Invoices summary table
-========================================================================== */
-
-.invoices-summary {
-  align-items: start;
-  display: flex;
-  flex-direction: row;
-  justify-content: right;
-
-}
-
-.invoices-summary table {
-  margin: 1.5rem 0 0 1.5rem;
-  min-width: 300px;
-}
-
-.invoices-summary table td {
-  width: 50%;
-}
-
-/* ==========================================================================
 Payments
 ========================================================================== */
 

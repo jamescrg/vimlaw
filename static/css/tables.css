@@ -36,3 +36,15 @@ td {
 th {
   font-weight: 500;
 }
+
+.totals-table {
+  align-items: start;
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+}
+
+.totals-table table {
+  margin: 1.5rem 0 0 1.5rem;
+  min-width: 350px;
+}

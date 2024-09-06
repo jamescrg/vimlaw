@@ -41,11 +41,11 @@
       </table>
       <div class="flex-start-space">
         <div>{% include "pagination.html" %}</div>
-        <div class="invoices-summary">
+        <div class="summary">
           <table>
             <tr>
               <th>Total Payments</th>
-              <td class="payments-amount strong">${{ payments_total|floatformat:2|intcomma }}</td>
+              <td class="numeric strong">${{ payments_total|floatformat:2|intcomma }}</td>
             </tr>
           </table>
         </div>

@@ -5,7 +5,7 @@
     <div class="section-title">
       <div class="section-title-left">
         <h1>Account Summary</h1>
-        <div class="section-title-left-right">
+        <div class="table-filter">
           <button type="button"
                   class="btn-icon"
                   hx-get="{% url 'trust:add' %}"
@@ -15,11 +15,10 @@
                   data-bs-target="#htmx-modal-container">
             <i class="bi bi-plus-lg"></i>
           </button>
+          <a href={% url 'trust:history' %}>History</a>
         </div>
       </div>
-      <div class="section-title-right">
-        <a href={% url 'trust:history' %}>History</a>
-      </div>
+      <div class="section-title-right"></div>
     </div>
     <table class="trust-summary">
       <tr>
