@@ -46,5 +46,9 @@ th {
 
 .totals-table table {
   margin: 1.5rem 0 0 1.5rem;
-  min-width: 350px;
+  min-width: 400px;
+}
+
+.totals-table .numeric {
+  width: 150px;
 }
