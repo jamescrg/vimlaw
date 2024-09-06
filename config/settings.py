@@ -106,6 +106,7 @@ TEMPLATES = [
             "loaders": default_loaders if DEBUG else cached_loaders,
             "libraries": {
                 "phone_number": "apps.management.templatetags.phone_numbers",
+                "cache_buster": "apps.management.templatetags.cache_buster",
             },
         },
     },
