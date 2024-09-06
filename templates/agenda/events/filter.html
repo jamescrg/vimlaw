@@ -11,7 +11,7 @@
     <div class="modal-body">
       <form class="form-responsive filter"
             method="post"
-            action="{% url 'events:events-filter' %}">
+            action="{% url 'agenda:events-filter' %}">
         {% csrf_token %}
         {{ filter.form }}
         <br />

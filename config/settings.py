@@ -56,7 +56,6 @@ INSTALLED_APPS = [
     "apps.activity",
     "apps.agenda",
     "apps.contacts",
-    "apps.events",
     "apps.folders",
     "apps.intakes",
     "apps.lab",

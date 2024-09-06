@@ -37,7 +37,7 @@
           <div>
             {% if edit %}
               <a onclick="return confirm('Are you sure you want to delete this record?')"
-                 href="{% url 'events:events-delete-origin' id=event.id origin='events' %}">Delete Event</a>
+                 href="{% url 'agenda:events-delete-origin' id=event.id origin='events' %}">Delete Event</a>
             {% endif %}
           </div>
         </div>

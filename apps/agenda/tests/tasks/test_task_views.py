@@ -30,7 +30,7 @@ def test_add_post(client, folder, task_data):
 def test_edit_get(client, task):
     response = client.get(f"/agenda/tasks/{task.id}/edit")
     assert response.status_code == 200
-    assertTemplateUsed(response, "agenda/tasks/form-edit.html")
+    assertTemplateUsed(response, "agenda/tasks/form.html")
 
 
 def test_edit_post(client, folder, task, user):
