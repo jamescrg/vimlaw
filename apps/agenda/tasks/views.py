@@ -77,10 +77,13 @@ def tasks_add(request):
         matters = Matter.objects.filter(status="Open").order_by("name")
         form.fields["matter"].queryset = matters
         context = {
+            "app": "agenda",
+            "edit": False,
+            "action": "/agenda/tasks/add",
             "form": form,
         }
 
-    return render(request, "agenda/tasks/form-add.html", context)
+    return render(request, "agenda/tasks/form.html", context)
 
 
 @login_required
@@ -122,7 +125,7 @@ def tasks_edit(request, id):
             "form": form,
         }
 
-        return render(request, "agenda/tasks/form-edit.html", context)
+        return render(request, "agenda/tasks/form.html", context)
 
 
 @login_required
