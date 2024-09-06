@@ -1,12 +1,11 @@
 from django.core.paginator import Paginator
 
 from apps.accounts.models import CustomUser
-from apps.events.filter import EventFilter
+from apps.agenda.events.filter import EventFilter
 from apps.matters.models import Matter
 
 
 def get_table_data(request):
-
     table_data = {}
 
     default_filter = {

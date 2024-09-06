@@ -1,6 +1,6 @@
 import django_filters
 
-from apps.events.models import Event
+from apps.agenda.events.models import Event
 from apps.matters.models import Matter
 
 PARTY_CHOICES = (
