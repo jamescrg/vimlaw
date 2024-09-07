@@ -88,6 +88,9 @@
       <li {% if submodule == 'timeline' %}class="active"{% endif %}>
         <a href={% url 'matters:timeline' id=matter.id %}>Timeline</a>
       </li>
+      <li {% if submodule == 'ledger' %}class="active"{% endif %}>
+        <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>
+      </li>
     </ul>
   </div>
   <div class="section subsection">

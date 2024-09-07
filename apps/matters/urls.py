@@ -3,6 +3,7 @@ from django.urls import path
 from .activity import views as activity
 from .contacts import views as contacts
 from .events import views as events
+from .ledger import views as ledger
 from .proceedings import views as proceedings
 from .rates import views as matters_rates
 from .settlement import views as settlement
@@ -118,4 +119,6 @@ urlpatterns = [
     path("matters/filter", filter, name="filter"),
     path("matters/order-by/<str:order>", order_by, name="order-by"),
     path("matters/filter-quick/<str:quick_filter>/", filter_quick, name="filter-quick"),
+    # Ledger
+    path("matters/<int:id>/ledger", ledger.index, name="ledger"),
 ]
