@@ -26,23 +26,67 @@ class Matter(models.Model):
         db_table = "app_matter"
 
     @property
-    def unbilled(self):
+    def value(self):
         from apps.activity.expenses.models import ExpenseEntry
         from apps.activity.time.models import TimeEntry
 
-        time_entries = TimeEntry.objects.filter(
-            matter=self, entered=0, comp=0, invoice__isnull=True
-        )
+        # total fees
+        time_entries = TimeEntry.objects.filter(matter=self)
+        gross_fees = sum(entry.fee for entry in time_entries)
+        comp_fees = sum(entry.fee for entry in time_entries.filter(comp=1))
+        net_fees = gross_fees - comp_fees
 
-        expenses = ExpenseEntry.objects.filter(
-            matter=self, entered=0, comp=0, invoice__isnull=True
-        )
+        # total expenses
+        expenses = ExpenseEntry.objects.filter(matter=self)
+        gross_expenses = sum(expense.amount for expense in expenses)
+        comp_expenses = sum(expense.amount for expense in expenses.filter(comp=1))
+        net_expenses = gross_expenses - comp_expenses
+        net_fees_and_expenses = net_fees + net_expenses
 
-        net_fees = sum(entry.fee for entry in time_entries)
-        net_expenses = sum(entry.amount for entry in expenses)
-        unbilled = net_fees + net_expenses
+        total = {
+            "gross_fees": gross_fees,
+            "comp_fees": comp_fees,
+            "net_fees": net_fees,
+            "gross_expenses": gross_expenses,
+            "comp_expenses": comp_expenses,
+            "net_expenses": net_expenses,
+            "net_fees_and_expenses": net_fees_and_expenses,
+        }
 
-        return unbilled
+        # unbilled fees
+        time_entries = time_entries.filter(matter=self, entered=0, invoice__isnull=True)
+        gross_fees = sum(entry.fee for entry in time_entries)
+        comp_fees = sum(entry.fee for entry in time_entries.filter(comp=1))
+        net_fees = gross_fees - comp_fees
+
+        # unbilled expenses
+        expenses = expenses.filter(matter=self, entered=0, invoice__isnull=True)
+        gross_expenses = sum(expense.amount for expense in expenses)
+        comp_expenses = sum(expense.amount for expense in expenses.filter(comp=1))
+        net_expenses = gross_expenses - comp_expenses
+        net_fees_and_expenses = net_fees + net_expenses
+
+        unbilled = {
+            "gross_fees": gross_fees,
+            "comp_fees": comp_fees,
+            "net_fees": net_fees,
+            "gross_expenses": gross_expenses,
+            "comp_expenses": comp_expenses,
+            "net_expenses": net_expenses,
+            "net_fees_and_expenses": net_fees_and_expenses,
+        }
+
+        billed = {}
+        for key in total.keys():
+            billed[key] = total[key] - unbilled[key]
+
+        value = {
+            "total": total,
+            "unbilled": unbilled,
+            "billed": billed,
+        }
+
+        return value
 
 
 class Role(models.Model):

@@ -11,6 +11,11 @@ h2 {
   margin-bottom: 0;
 }
 
+h3 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
 a,
 a:hover {
   color: var(--lime-800);
@@ -20,7 +25,7 @@ a:hover {
 
 strong,
 .strong {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .urgent,

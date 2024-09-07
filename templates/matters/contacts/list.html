@@ -3,7 +3,7 @@
   <div class="section-title">
     <div class="section-title-left">
       <h2>Related Contacts</h2>
-      <div class="section-title-left-right">
+      <div class="table-filter">
         <a href={% url 'matters:contacts-assign' id=matter.id %}>Assign</a>
       </div>
     </div>
@@ -12,7 +12,7 @@
     {% for group, relationships in relationship_groups.items %}
       {% if relationships %}
         <div class="contact-group-heading">
-          <strong>{{ group }}</strong>
+          <h3>{{ group }}</h3>
         </div>
         <div class="table-container">
           <table class="table matter-contacts">

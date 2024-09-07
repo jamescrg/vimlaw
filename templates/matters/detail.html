@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+  {% load humanize %}
   <div class="section">
     <div class="section-title">
       <div class="section-title-left">
         <h1>{{ matter.name }}</h1>
-        <div class="section-title-left-right">
+        <div class="table-filter">
           <button hx-get="/activity/time/add/{{ matter.id }}"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
@@ -25,44 +26,46 @@
     <div class="matter-data">
       <table>
         <tr>
-          <td class="strong">Matter No.</td>
+          <th>Matter No.</th>
           <td>{{ matter.id }}</td>
         </tr>
         <tr>
-          <td class="strong">Clio No.</td>
+          <th>Clio No.</th>
           <td>{{ matter.clio_matter_id|slice:'0:5'|default:'' }}</td>
         </tr>
       </table>
       <table>
         <tr>
-          <td class="strong">Open Date</td>
+          <th>Open Date</th>
           <td>{{ matter.date_start|date:'Y-m-d' }}</td>
         </tr>
         <tr>
-          <td class="strong">Practice Area</td>
+          <th>Practice Area</th>
           <td>{{ matter.practice_area }}</td>
         </tr>
       </table>
       {% if proceeding %}
         <table>
           <tr>
-            <td class="strong">Forum</td>
+            <th>Forum</th>
             <td>{{ proceeding.forum }}</td>
           </tr>
           <tr>
-            <td class="strong">Case No.</td>
+            <th>Case No.</th>
             <td>{{ proceeding.case_number }}</td>
           </tr>
         </table>
-        {% if matter.client_reference_id %}
-          <table>
-            <tr>
-              <td class="strong">Client Reference Id.</td>
-              <td>{{ matter.client_reference_id|default:'' }}</td>
-            </tr>
-          </table>
-        {% endif %}
       {% endif %}
+      <table>
+        <tr>
+          <th>Total Cost</th>
+          <td class="numeric">${{ matter.value.total.net_fees_and_expenses|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+          <th>Unbilled</th>
+          <td class="numeric">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
+        </tr>
+      </table>
     </div>
   </div>
   <div class="subnav">

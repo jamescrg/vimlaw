@@ -15,7 +15,7 @@ def index(request, id):
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     transactions = []
-    total = 0
+    balance_due = 0
 
     invoices = Invoice.objects.filter(matter=matter).order_by("date_issued") or None
     payments = Payment.objects.filter(matter=matter).order_by("date") or None
@@ -30,7 +30,7 @@ def index(request, id):
                 "amount": invoice.value["final_total"],
             }
             transactions.append(invoice_dict)
-            total -= invoice.amount
+            balance_due -= invoice.amount
 
     if payments:
         for payment in payments:
@@ -42,7 +42,7 @@ def index(request, id):
                 "amount": payment.amount,
             }
             transactions.append(payment_dict)
-            total += payment.amount
+            balance_due += payment.amount
 
     if transactions:
         transactions = sorted(transactions, key=itemgetter("transaction_type"))
@@ -54,7 +54,7 @@ def index(request, id):
         "matter": matter,
         "proceeding": proceeding,
         "transactions": transactions,
-        "total": float(total),
+        "balance_due": -1 * float(balance_due),
     }
 
     return render(request, "matters/ledger/list.html", context)

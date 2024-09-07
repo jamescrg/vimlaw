@@ -4,7 +4,6 @@
   <div class="section-title">
     <div class="section-title-left">
       <h2>Ledger</h2>
-      <div class="section-title-left-right"></div>
     </div>
   </div>
   {% if transactions %}
@@ -41,8 +40,8 @@
         <div class="totals-table">
           <table>
             <tr>
-              <td class="total">Balance</td>
-              <td class="numeric total">${{ total|floatformat:2|intcomma }}</td>
+              <td class="total">Balance Due</td>
+              <td class="numeric total">${{ balance_due|floatformat:2|intcomma }}</td>
             </tr>
           </table>
         </div>

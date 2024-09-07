@@ -5,7 +5,7 @@
     <div class="section-title">
       <div class="section-title-left">
         <h1>{{ filter.status }} Matters ({{ number_matters }})</h1>
-        <div class="section-title-left-right">
+        <div class="table-filter">
           <a href={% url 'matters:add' %}><i class="bi bi-plus-lg"></i></a>
           <button hx-get="/matters/filter"
                   hx-target="#htmx-modal-container"
@@ -14,11 +14,11 @@
           <a href={% url 'matters:filter-quick' 'open' %}>Open</a>
         </div>
       </div>
-      <div class="section-title-right"></div>
     </div>
     <div class="table-container">
       <table id="matter-list" class="table matter-list">
         <tr>
+          <th class="id">ID</th>
           <th class="matter-name">
             Matter
             <a href={% url 'matters:order-by' 'name' %}>
@@ -32,11 +32,11 @@
             </a>
           </th>
           <th class="numeric unbilled">Unbilled</th>
-          <th class="id numeric">ID</th>
         </tr>
         {% if matters %}
           {% for matter in matters %}
             <tr>
+              <td class="id">{{ matter.id }}</td>
               <td class="name">
                 <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name }}</a>
               </td>
@@ -64,13 +64,24 @@
                   </label>
                 </form>
               </td>
-              <td class="numeric unbilled">${{ matter.unbilled|floatformat:2|intcomma }}</td>
-              <td class="id numeric">{{ matter.id }}</td>
+              <td class="numeric unbilled">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
             </tr>
           {% endfor %}
         {% endif %}
       </table>
-      {% include "pagination.html" %}
+    </div>
+    <div class="flex-start-space">
+      <div>{% include "pagination.html" %}</div>
+      <div>
+        <div class="totals-table">
+          <table>
+            <tr>
+              <th>Total Unbilled</th>
+              <td class="numeric strong">${{ total_unbilled|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 {% endblock content %}

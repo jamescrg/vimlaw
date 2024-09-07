@@ -44,12 +44,17 @@ def index(request):
     page = request.GET.get("page")
     pagination = Paginator(matters, per_page=20).get_page(page)
 
+    total_unbilled = 0
+    for matter in matters:
+        total_unbilled += matter.value["unbilled"]["net_fees_and_expenses"]
+
     context = {
         "app": "matters",
         "pagination": pagination,
         "edit": False,
         "matters": pagination.object_list,
         "number_matters": number_matters,
+        "total_unbilled": total_unbilled,
     }
 
     return render(request, "matters/list.html", context)
