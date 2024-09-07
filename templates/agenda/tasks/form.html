@@ -15,12 +15,24 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{{ action }}"
-            class="form-responsive tasks-form"
+      <form id="task-form"
+            hx-post="{{ action }}"
+            hx-trigger="submit"
+            hx-target="#task-form"
+            hx-swap="none"
+            class="new-form-responsive tasks-form"
             method="post"
+            novalidate
             role="form">
         {% csrf_token %}
-        {{ form }}
+        {% for field in form %}
+          <div class="form-group">
+            {{ field.label_tag }} {{ field }}
+            <div></div>
+            <!-- noqa -->
+            <div id="{{ field.id_for_label }}-error" class="form-error-message"></div>
+          </div>
+        {% endfor %}
         <br />
         <div class="flex-center-space">
           <div>

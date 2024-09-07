@@ -82,6 +82,16 @@
   width: 10px;
 }
 
+.tasks-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.tasks-form .form-group {
+  display: grid;
+  grid-template-columns: 1fr 4fr;
+}
+
 .tasks-form #id_description {
   max-width: 500px;
   width: 100%

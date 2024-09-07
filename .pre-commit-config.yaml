@@ -32,8 +32,8 @@ repos:
     hooks:
       - id: djlint-django
         language_version: python3.12
-        args: [ --profile, django ]
+        args: [ --profile, django, --ignore, "H020" ]
       - id: djlint-reformat-django
         files: "\\.html"
         language_version: python3.12
-        args: [ --profile, django ]
+        args: [ --profile, django, --ignore, "H020" ]

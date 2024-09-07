@@ -1,8 +1,9 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
@@ -70,18 +71,27 @@ def tasks_add(request):
             task.user = CustomUser.objects.filter(pk=int(user_id)).get()
             task.status = "Pending"
             task.save()
-            return redirect("agenda:tasks-list")
 
-    else:
-        form = TaskForm()
-        matters = Matter.objects.filter(status="Open").order_by("name")
-        form.fields["matter"].queryset = matters
-        context = {
-            "app": "agenda",
-            "edit": False,
-            "action": "/agenda/tasks/add",
-            "form": form,
-        }
+            return HttpResponse(
+                status=204,
+                headers={
+                    "HX-Redirect": reverse("agenda:tasks-list"),
+                },
+            )
+        else:
+            return JsonResponse({"errors": form.errors}, status=400)
+
+    form = TaskForm()
+
+    matters = Matter.objects.filter(status="Open").order_by("name")
+    form.fields["matter"].queryset = matters
+
+    context = {
+        "app": "agenda",
+        "edit": False,
+        "action": "/agenda/tasks/add",
+        "form": form,
+    }
 
     return render(request, "agenda/tasks/form.html", context)
 

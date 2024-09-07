@@ -1,4 +1,3 @@
-
 .vertical-center {
   align-items: center;
   display: flex;
@@ -7,7 +6,7 @@
 
 @supports (height: 80vh) {
   .vertical-center {
-  min-height: 80vh; /* Override with 80vh if supported */
+    min-height: 80vh; /* Override with 80vh if supported */
   }
 }
 
@@ -35,4 +34,9 @@
 .contact-message {
   margin-bottom: 15px;
   text-align: center;
+}
+
+.form-error-message {
+  color: var(--red-800);
+  width: 100%;
 }

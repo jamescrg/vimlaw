@@ -33,3 +33,9 @@ class TaskForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         self.fields["date_due"].initial = None
+
+    def clean_matter(self):
+        matter = self.cleaned_data.get("matter")
+        if not matter:
+            raise forms.ValidationError("This field is required")
+        return matter

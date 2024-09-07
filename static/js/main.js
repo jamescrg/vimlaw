@@ -3,55 +3,79 @@
 //
 
 function show(elementId) {
-    const item = document.getElementById(elementId);
-    item.style.display = 'block';
+  const item = document.getElementById(elementId);
+  item.style.display = "block";
 }
 
 function hide(elementId) {
-    const item = document.getElementById(elementId);
-    item.style.display = 'none';
+  const item = document.getElementById(elementId);
+  item.style.display = "none";
 }
-
 
 function confirmProceed() {
-    const check = confirm('Are you sure you want to delete this record?');
-    if (check) {
-        return
-    } else {
-        event.stopPropagation();
-        event.preventDefault();
-    }
+  const check = confirm("Are you sure you want to delete this record?");
+  if (check) {
+    return;
+  } else {
+    event.stopPropagation();
+    event.preventDefault();
+  }
 }
 
-const confirmLinks = document.querySelectorAll('.confirm');
+const confirmLinks = document.querySelectorAll(".confirm");
 if (confirmLinks) {
-    for (const link of confirmLinks) {
-        link.addEventListener('click', confirmProceed);
-    }
+  for (const link of confirmLinks) {
+    link.addEventListener("click", confirmProceed);
+  }
 }
-
 
 // clear htmx-modal-container after use
 // this prevents it from showing up for an instant on subsequent requests
-const modal = new bootstrap.Modal(document.getElementById("htmx-modal-container"))
+const modal = new bootstrap.Modal(
+  document.getElementById("htmx-modal-container"),
+);
 
 htmx.on("htmx:beforeSwap", (e) => {
-    // Empty response targeting #dialog => hide the modal
-    if (e.detail.target.id === "htmx-modal-container" && !e.detail.xhr.response) {
-        modal.hide()
-        e.detail.shouldSwap = false
+  // Empty response targeting #dialog => hide the modal
+  if (e.detail.target.id === "htmx-modal-container" && !e.detail.xhr.response) {
+    modal.hide();
+    e.detail.shouldSwap = false;
+  }
+});
+
+htmx.on("htmx:afterRequest", function (event) {
+  if (event.detail.failed) {
+    const errors = JSON.parse(event.detail.xhr.response).errors;
+
+    document
+      .querySelectorAll(".form-error-message")
+      .forEach((el) => (el.textContent = ""));
+
+    for (const [field, message] of Object.entries(errors)) {
+      const errorElement = document.getElementById(`id_${field}-error`);
+
+      if (errorElement) {
+        errorElement.textContent = message;
+
+        setTimeout(() => {
+          errorElement.textContent = "";
+        }, 3000);
+      }
     }
-})
+  }
+});
 
 // Auto focus on the first element that has the autofocus attribute inside a modal
 htmx.on("shown.bs.modal", () => {
-    const autofocusElement = document.querySelector("#htmx-modal-container [autofocus]")
+  const autofocusElement = document.querySelector(
+    "#htmx-modal-container [autofocus]",
+  );
 
-    if (autofocusElement) {
-        autofocusElement.focus()
-    }
-})
+  if (autofocusElement) {
+    autofocusElement.focus();
+  }
+});
 
 htmx.on("hidden.bs.modal", () => {
-    document.getElementById("htmx-modal-container").innerHTML = ""
-})
+  document.getElementById("htmx-modal-container").innerHTML = "";
+});
