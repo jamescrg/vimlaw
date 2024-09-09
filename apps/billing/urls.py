@@ -39,7 +39,7 @@ urlpatterns = [
     path("billing/invoices-delete/<int:pk>/", invoices_delete, name="invoices-delete"),
     path("billing/invoices-pdf/<int:pk>/", invoices_pdf, name="invoices-pdf"),
     path(
-        "billing/invoices-edit-status/<int:pk>/",
+        "billing/invoices-edit-status/<int:pk>/<str:status>/",
         invoices_edit_status,
         name="invoices-edit-status",
     ),

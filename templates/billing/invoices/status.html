@@ -1,12 +1,23 @@
-<select name="status"
-        class="table-select"
-        hx-post="invoices-edit-status/{{ invoice.id }}/"
-        hx-target="this"
-        hx-swap="outerHTML"
-        hx-trigger="change">
-  {% for option in status_options %}
-    <option value="{{ option.0 }}"
-            class="table-option"
-            {% if option.0 == invoice.status %}selected{% endif %}>{{ option.1 }}</option>
-  {% endfor %}
-</select>
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ invoice.status_display }}</button>
+  <ul class="dropdown-menu">
+    <li>
+      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='DRAFT' %}">Draft</a>
+    </li>
+    <li>
+      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='APPROVED' %}">Approved</a>
+    </li>
+    <li>
+      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='SENT' %}">Sent</a>
+    </li>
+    <li>
+      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='PAID' %}">Paid</a>
+    </li>
+    <li>
+      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='WAIVED' %}">Waived</a>
+    </li>
+  </ul>
+</div>
