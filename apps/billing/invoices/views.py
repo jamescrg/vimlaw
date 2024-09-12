@@ -162,12 +162,10 @@ def invoices_filter_status(request):
 
 
 @login_required
-def invoices_edit_status(request, pk):
+def invoices_edit_status(_, pk, status):
     invoice = get_object_or_404(Invoice, pk=pk)
-    invoice.status = request.POST["status"]
+
+    invoice.status = status
     invoice.save()
-    context = {
-        "status_options": INVOICE_STATUS,
-        "invoice": invoice,
-    }
-    return render(request, "billing/invoices/status.html", context)
+
+    return redirect("billing:invoices-list")
