@@ -126,3 +126,20 @@ def payments_filter(request):
         filter = get_filter(request)
 
         return render(request, "billing/payments/filter.html", {"filter": filter})
+
+
+@login_required
+def order_by_payments(request, order):
+    filter_data = request.session.get("payments_filter", {})
+
+    current_order = filter_data.get("order_by", "")
+
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session["payments_filter"] = filter_data
+
+    return redirect("billing:payments-list")

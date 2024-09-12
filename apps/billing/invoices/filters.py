@@ -17,7 +17,11 @@ class InvoiceFilter(django_filters.FilterSet):
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"})
     )
     order_by = MultipleOrderingFilter(
-        fields=[(("date_issued", "id"), "date issued")],
+        fields=[
+            (("date_issued", "id"), "date_issued"),
+            ("matter__name", "matter"),
+            ("status", "status"),
+        ],
         empty_label=None,
     )
 
