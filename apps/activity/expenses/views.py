@@ -142,6 +142,23 @@ def expenses_filter_user(request):
 
 
 @login_required
+def order_by_expenses(request, order):
+    filter_data = request.session.get("expenses_filter", {})
+
+    current_order = filter_data.get("order_by", "")
+
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session["expenses_filter"] = filter_data
+
+    return redirect("activity:expenses-list")
+
+
+@login_required
 def expenses_add(request, id=None):
     # if applicable, process any post data submitted by user
     if request.method == "POST":

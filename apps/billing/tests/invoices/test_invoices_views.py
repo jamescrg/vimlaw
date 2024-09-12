@@ -56,14 +56,11 @@ def test_invoices_edit_get(client, invoice):
 
 def test_invoices_edit_status(client, invoice):
     response = client.post(
-        reverse("billing:invoices-edit-status", kwargs={"pk": invoice.pk}),
-        {"status": "PAID"},
+        reverse(
+            "billing:invoices-edit-status", kwargs={"pk": invoice.pk, "status": "PAID"}
+        )
     )
-    assert response.status_code == 200
-    assertTemplateUsed(response, "billing/invoices/status.html")
-
-    assert "status_options" in response.context
-    assert "invoice" in response.context
+    assert response.status_code == 302
 
     invoice.refresh_from_db()
     assert invoice.status == "PAID"

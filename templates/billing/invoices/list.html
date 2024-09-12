@@ -37,9 +37,24 @@
     <table class="table invoices">
       <tr>
         <th class="invoice-id">ID</th>
-        <th class="date">Issue Date</th>
-        <th>Matter</th>
-        <th class="status">Status</th>
+        <th class="date">
+          Issue Date
+          <a href="{% url 'billing:invoices-order-by' 'date_issued' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+        </th>
+        <th>
+          Matter
+          <a href="{% url 'billing:invoices-order-by' 'matter' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+        </th>
+        <th class="status">
+          Status
+          <a href="{% url 'billing:invoices-order-by' 'status' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+        </th>
         <th class="amount">Fees</th>
         <th class="amount">Expenses</th>
         <th class="amount">Total</th>

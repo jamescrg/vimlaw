@@ -10,8 +10,10 @@ from apps.billing.invoices.views import (
     invoices_filter_status,
     invoices_list,
     invoices_pdf,
+    order_by_invoices,
 )
 from apps.billing.payments.views import (
+    order_by_payments,
     payments_add,
     payments_delete,
     payments_edit,
@@ -36,6 +38,11 @@ urlpatterns = [
         invoices_filter_status,
         name="invoices-filter-status",
     ),
+    path(
+        "billing/invoices-filter/order-by/<str:order>",
+        order_by_invoices,
+        name="invoices-order-by",
+    ),
     path("billing/invoices-delete/<int:pk>/", invoices_delete, name="invoices-delete"),
     path("billing/invoices-pdf/<int:pk>/", invoices_pdf, name="invoices-pdf"),
     path(
@@ -48,4 +55,9 @@ urlpatterns = [
     path("billing/payments-delete/<int:pk>/", payments_delete, name="payments-delete"),
     path("billing/payments-edit/<int:pk>/", payments_edit, name="payments-edit"),
     path("billing/payments-filter/", payments_filter, name="payments-filter"),
+    path(
+        "billing/payments-filter/order-by/<str:order>",
+        order_by_payments,
+        name="payments-order-by",
+    ),
 ]

@@ -10,8 +10,10 @@ from apps.activity.expenses.views import (
     expenses_filter_user,
     expenses_list,
     expenses_toggle_entered,
+    order_by_expenses,
 )
 from apps.activity.time.views import (
+    order_by_time,
     time_add,
     time_delete,
     time_edit,
@@ -50,6 +52,9 @@ urlpatterns = [
         name="time-filter-matter",
     ),
     path("activity/time/filter/user/", time_filter_user, name="time-filter-user"),
+    path(
+        "activity/time/filter/order_by/<str:order>", order_by_time, name="time-order-by"
+    ),
     path("activity/expenses", expenses_list, name="expenses-list"),
     path("activity/expenses/add", expenses_add, name="expenses-add"),
     path("activity/expenses/add/<int:id>", expenses_add, name="expenses-add"),
@@ -75,5 +80,10 @@ urlpatterns = [
         "activity/expenses/filter/user/",
         expenses_filter_user,
         name="expenses-filter-user",
+    ),
+    path(
+        "activity/expenses/filter/order_by/<str:order>",
+        order_by_expenses,
+        name="expenses-order-by",
     ),
 ]

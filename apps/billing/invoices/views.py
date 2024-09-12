@@ -162,6 +162,23 @@ def invoices_filter_status(request):
 
 
 @login_required
+def order_by_invoices(request, order):
+    filter_data = request.session.get("invoices_filter", {})
+
+    current_order = filter_data.get("order_by", "")
+
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session["invoices_filter"] = filter_data
+
+    return redirect("billing:invoices-list")
+
+
+@login_required
 def invoices_edit_status(_, pk, status):
     invoice = get_object_or_404(Invoice, pk=pk)
 
