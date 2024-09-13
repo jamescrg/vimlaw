@@ -203,13 +203,17 @@ def tasks_change_user(request, task_id):
 @login_required
 def tasks_filter_sort(request, order):
     filter_data = request.session.get("tasks_filter", {})
+
     current_order = filter_data.get("order_by", "")
+
     if current_order == order:
         new_order = f"-{order}" if not current_order.startswith("-") else order
     else:
         new_order = order
+
     filter_data["order_by"] = new_order
     request.session["tasks_filter"] = filter_data
+
     context = get_table_data(request)
     return render(request, "agenda/tasks/table.html", context)
 

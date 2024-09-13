@@ -3,45 +3,45 @@
     <tr>
       <th class="status">
         <button class="btn-sort btn-task-status"
-                hx-target="#tasks-table"
-                hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/status/">
+                hx-target="#task-table"
+                hx-swap="innerHTML"
+                hx-post="{% url 'agenda:tasks-filter-sort' 'status' %}">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
       <th class="matter">
         Matter
         <button class="btn-sort"
-                hx-target="#tasks-table"
-                hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/matter/">
+                hx-target="#task-table"
+                hx-swap="innerHTML"
+                hx-post="{% url 'agenda:tasks-filter-sort' 'matter' %}">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
       <th class="description">
         Description
         <button class="btn-sort"
-                hx-target="#tasks-table"
-                hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/description/">
+                hx-target="#task-table"
+                hx-swap="innerHTML"
+                hx-post="{% url 'agenda:tasks-filter-sort' 'description' %}">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
       <th>
         User
         <button class="btn-sort"
-                hx-target="#tasks-table"
-                hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/user/">
+                hx-target="#task-table"
+                hx-swap="innerHTML"
+                hx-post="{% url 'agenda:tasks-filter-sort' 'user' %}">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
       <th>
         Date Due
         <button class="btn-sort"
-                hx-target="#tasks-table"
-                hx-swap="outerHTML"
-                hx-post="/agenda/tasks/filter/sort/date_due/">
+                hx-target="#task-table"
+                hx-swap="innerHTML"
+                hx-post="{% url 'agenda:tasks-filter-sort' 'date_due' %}">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
