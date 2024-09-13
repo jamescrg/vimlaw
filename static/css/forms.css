@@ -1,4 +1,3 @@
-
 .filter select {
   min-width: 95%;
 }
@@ -6,6 +5,12 @@
 .filter input[type="date"] {
   margin-left: 0.2rem;
   width: 137px;
+}
+
+form .errorlist {
+  padding: 0;
+  margin: 0;
+  color: var(--red-700);
 }
 
 input,
@@ -22,15 +27,15 @@ select {
   max-width: 200px;
 }
 
-input[type=date] {
+input[type="date"] {
   max-width: 140px;
 }
 
-input[type=time] {
+input[type="time"] {
   max-width: 140px;
 }
 
-input[type=password] {
+input[type="password"] {
   max-width: 200px;
 }
 
@@ -66,7 +71,6 @@ textarea {
   padding-top: 1rem;
 }
 
-
 /* responsive layout */
 
 .form-responsive {
@@ -74,43 +78,41 @@ textarea {
   gap: 0.5rem;
 }
 
-.form-responsive>label {
+.form-responsive > label {
   font-weight: 600;
 }
 
-.form-responsive>div {
+.form-responsive > div {
   margin-block-end: 1rem;
 }
 
 @media screen and (min-width: 800px) and (max-width: 1199px) {
   .form-responsive {
-  grid-template-columns: 1fr 3fr;
+    grid-template-columns: 1fr 3fr;
   }
 
   .modal-md .form-responsive {
-  grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 2fr;
   }
 
   .modal-lg .form-responsive {
-  grid-template-columns: 1fr 4fr;
+    grid-template-columns: 1fr 4fr;
   }
 }
 
 @media screen and (min-width: 1200px) {
-
   .form-responsive {
-  grid-template-columns: 1fr 4fr;
+    grid-template-columns: 1fr 4fr;
   }
 
   .modal-md .form-responsive {
-  grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 2fr;
   }
 
   .modal-lg .form-responsive {
-  grid-template-columns: 1fr 4fr;
+    grid-template-columns: 1fr 4fr;
   }
 }
-
 
 /*------------------------------------------------
 Time entry form
