@@ -1,7 +1,7 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
@@ -31,8 +31,6 @@ def tasks_list(request):
             request.session["show_events"] = True
             return redirect("/events")
 
-    table_data = get_table_data(request)
-
     # save the currently selected matter in the add task form
     # so multiple tasks can quickly be added to a matter
     tasks_matter = request.session.get("tasks_matter")
@@ -45,7 +43,6 @@ def tasks_list(request):
         "today": today,
     }
 
-    context = context | table_data
     return render(request, "agenda/tasks/list.html", context)
 
 
@@ -58,10 +55,11 @@ def tasks_select(request):
 
 @login_required
 def tasks_add(request):
+
     if request.method == "POST":
         form = TaskForm(request.POST)
-
         if form.is_valid():
+
             task = form.save(commit=False)
             filter_data = request.session.get("tasks_filter", {})
             user_id = filter_data.get("user", None)
@@ -70,62 +68,58 @@ def tasks_add(request):
             task.user = CustomUser.objects.filter(pk=int(user_id)).get()
             task.status = "Pending"
             task.save()
-            return redirect("agenda:tasks-list")
-
+            return HttpResponse(status=204, headers={"HX-Trigger": "taskTableChanged"})
     else:
         form = TaskForm()
-        matters = Matter.objects.filter(status="Open").order_by("name")
-        form.fields["matter"].queryset = matters
-        context = {
-            "app": "agenda",
-            "edit": False,
-            "action": "/agenda/tasks/add",
-            "form": form,
-        }
+
+    matters = Matter.objects.filter(status="Open").order_by("name")
+    form.fields["matter"].queryset = matters
+
+    context = {
+        "app": "agenda",
+        "edit": False,
+        "add": True,
+        "form": form,
+    }
 
     return render(request, "agenda/tasks/form.html", context)
 
 
 @login_required
 def tasks_edit(request, id):
+
+    task = get_object_or_404(Task, pk=id)
+
     if request.method == "POST":
-        try:
-            task = Task.objects.filter(pk=id).get()
-        except (Task.DoesNotExist, ValueError):
-            raise Http404("Record not found.")
 
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             task = form.save(commit=False)
             task.save()
-
-        return redirect("/agenda")
+            return HttpResponse(status=204, headers={"HX-Trigger": "taskTableChanged"})
 
     else:
-        task = get_object_or_404(Task, pk=id)
-
-        # pull the list of matters
-        matter_list = Matter.objects.filter(status="Open").order_by("name")
-
-        # make sure the matter associated with the event is in the list
-        # if not, add it
-        # this ensures the matter is available in the form select element
-        # even when the matter is closed
-        if task.matter and task.matter not in matter_list:
-            matter_list |= Matter.objects.filter(pk=task.matter.id)
-
         form = TaskForm(instance=task)
-        form.fields["matter"].queryset = matter_list
 
-        context = {
-            "app": "agenda",
-            "edit": True,
-            "task": task,
-            "action": f"/agenda/tasks/{id}/edit",
-            "form": form,
-        }
+    # pull the list of matters
+    matter_list = Matter.objects.filter(status="Open").order_by("name")
 
-        return render(request, "agenda/tasks/form.html", context)
+    # make sure the matter associated with the event is in the list
+    # if not, add it
+    # this ensures the matter is available in the form select element
+    # even when the matter is closed
+    if task.matter and task.matter not in matter_list:
+        matter_list |= Matter.objects.filter(pk=task.matter.id)
+    form.fields["matter"].queryset = matter_list
+
+    context = {
+        "app": "agenda",
+        "edit": True,
+        "task": task,
+        "form": form,
+    }
+
+    return render(request, "agenda/tasks/form.html", context)
 
 
 @login_required
@@ -231,4 +225,11 @@ def clear_tasks(request):
 
     context = get_table_data(request)
 
+    return render(request, "agenda/tasks/table.html", context)
+
+
+@login_required
+def tasks_table(request):
+    table_data = get_table_data(request)
+    context = table_data
     return render(request, "agenda/tasks/table.html", context)

@@ -15,10 +15,10 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{{ action }}"
-            class="form-responsive tasks-form"
-            method="post"
-            role="form">
+      <form hx-post="{{ request.path }}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-responsive tasks-form">
         {% csrf_token %}
         {{ form }}
         <br />

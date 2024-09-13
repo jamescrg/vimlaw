@@ -38,8 +38,11 @@
               class="btn-icon"
               hx-post="{% url 'agenda:tasks-clear' %}"
               hx-target="#task-table"
-              hx-swap="innerHTML">Clear tasks</button>
+              hx-swap="innerHTML">Clear Complete</button>
     </div>
   </div>
-  <div id="task-table">{% include "agenda/tasks/table.html" %}</div>
+  <div id="task-table"
+       hx-trigger="load, taskTableChanged from:body"
+       hx-get="{% url 'agenda:tasks-table' %}"
+       hx-target="this">{% include "agenda/tasks/table.html" %}</div>
 {% endblock subcontent %}
