@@ -22,7 +22,7 @@ def test_add_post(client, folder, task_data):
     task_data["matter_id"] = ""
     task_data["priority"] = ""
     response = client.post("/agenda/tasks/add", task_data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Task.objects.filter(description=task_data["description"]).first()
     assert found
 
@@ -41,7 +41,7 @@ def test_edit_post(client, folder, task, user):
         "user": user.id,
     }
     response = client.post(reverse("agenda:tasks-edit", args=[task.id]), data)
-    assert response.status_code == 302
+    assert response.status_code == 204
 
     task_exists = Task.objects.filter(description="Finish unit testing").exists()
     assert task_exists
