@@ -10,7 +10,6 @@ class TaskAdmin(admin.ModelAdmin):
         "user",
         "description",
         "status",
-        "priority",
         "matter",
     )
 

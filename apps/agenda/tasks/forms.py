@@ -10,11 +10,11 @@ class TaskForm(forms.ModelForm):
         model = Task
 
         fields = (
-            "description",
             "matter",
-            "date_due",
-            "status",
+            "description",
             "priority",
+            "user",
+            "date_due",
         )
 
         STATUSES = (
@@ -26,6 +26,11 @@ class TaskForm(forms.ModelForm):
             "description": "Task",
         }
 
+        priorities = []
+        for i in range(1, 10):
+            priorities.append((i, i))
+        PRIORITIES = tuple(priorities)
+
         widgets = {
             "description": forms.TextInput(
                 attrs={"autofocus": "autofocus", "required": "required"}
@@ -33,6 +38,7 @@ class TaskForm(forms.ModelForm):
             "matter": forms.Select(attrs={"required": "required"}),
             "status": forms.Select(choices=STATUSES),
             "date_due": forms.DateInput(attrs={"type": "date"}),
+            "priority": forms.Select(choices=PRIORITIES),
         }
 
     def __init__(self, *args, **kwargs):
