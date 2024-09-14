@@ -10,11 +10,11 @@ class TaskForm(forms.ModelForm):
         model = Task
 
         fields = (
-            "description",
             "matter",
+            "description",
             "date_due",
+            "user",
             "status",
-            "priority",
         )
 
         STATUSES = (
