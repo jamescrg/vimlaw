@@ -31,15 +31,10 @@ def tasks_list(request):
             request.session["show_events"] = True
             return redirect("/events")
 
-    # save the currently selected matter in the add task form
-    # so multiple tasks can quickly be added to a matter
-    tasks_matter = request.session.get("tasks_matter")
-
     context = {
         "app": "agenda",
         "subapp": "tasks",
         "show_events": show_events,
-        "tasks_matter": tasks_matter,
         "today": today,
     }
 
@@ -59,7 +54,6 @@ def tasks_add(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
-
             task = form.save(commit=False)
             filter_data = request.session.get("tasks_filter", {})
             user_id = filter_data.get("user", None)
@@ -68,12 +62,20 @@ def tasks_add(request):
             task.user = CustomUser.objects.filter(pk=int(user_id)).get()
             task.status = "Pending"
             task.save()
+            request.session["tasks_matter"] = task.matter.id
             return HttpResponse(status=204, headers={"HX-Trigger": "taskTableChanged"})
+
     else:
-        form = TaskForm()
+
+        # save the currently selected matter in the add task form
+        # so multiple tasks can quickly be added to a matter
+        tasks_matter = request.session.get("tasks_matter")
+        form = TaskForm(initial={"user": request.user, "matter": tasks_matter})
 
     matters = Matter.objects.filter(status="Open").order_by("name")
     form.fields["matter"].queryset = matters
+    users = CustomUser.objects.filter(is_active=True).order_by("username")
+    form.fields["user"].queryset = users
 
     context = {
         "app": "agenda",
@@ -149,7 +151,7 @@ def tasks_filter_quick(request, quick_filter):
             "date_due": "",
             "matter": None,
             "user": None,
-            "order_by": "date",
+            "order_by": "date_due",
         },
     }
     filter_data = {}
@@ -166,7 +168,9 @@ def tasks_filter_user(request):
     user = request.POST.get("user")
     filter_data["user"] = user
     request.session["tasks_filter"] = filter_data
-    return redirect("agenda:tasks-list")
+    table_data = get_table_data(request)
+    context = table_data
+    return render(request, "agenda/tasks/table.html", context)
 
 
 @login_required
@@ -201,9 +205,20 @@ def tasks_change_user(request, task_id):
 
 
 @login_required
-def tasks_filter_sort(request, order):
-    filter_data = request.session.get("tasks_filter", {})
+def tasks_priority(request, task_id, priority):
+    task = get_object_or_404(Task, pk=task_id)
+    task.priority = priority
+    task.save()
+    context = {
+        "task": task,
+    }
+    return render(request, "agenda/tasks/priority.html", context)
 
+
+@login_required
+def tasks_filter_sort(request, order):
+
+    filter_data = request.session.get("tasks_filter", {})
     current_order = filter_data.get("order_by", "")
 
     if current_order == order:

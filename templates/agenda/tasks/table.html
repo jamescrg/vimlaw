@@ -1,3 +1,42 @@
+<div class="section-title">
+  <div class="section-title-left">
+    <h1>Tasks</h1>
+    <div class="table-filter" hx-target="#tasks-table" hx-swap="#outerHTML">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'agenda:tasks-add' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'agenda:tasks-filter' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">Filter</button>
+      <select hx-post="{% url 'agenda:tasks-filter-user' %}"
+              hx-target="#task-table"
+              class="select-user"
+              name="user">
+        <option value="">All</option>
+        {% for user in users %}
+          <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="section-title-right">
+    <button type="button"
+            class="btn-icon"
+            hx-post="{% url 'agenda:tasks-clear' %}"
+            hx-target="#task-table"
+            hx-swap="innerHTML">Clear Complete</button>
+  </div>
+</div>
 <div class="table-container">
   <table class="table tasks-table">
     <tr>
@@ -6,6 +45,14 @@
                 hx-target="#task-table"
                 hx-swap="innerHTML"
                 hx-post="{% url 'agenda:tasks-filter-sort' 'status' %}">
+          <i class="bi bi-check-square"></i>
+        </button>
+      </th>
+      <th class="priority">
+        <button class="btn-sort btn-task-status"
+                hx-target="#task-table"
+                hx-swap="innerHTML"
+                hx-post="{% url 'agenda:tasks-filter-sort' 'priority' %}">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
@@ -49,16 +96,12 @@
     {% for task in objects %}
       <tr>
         <td class="status">{% include "agenda/tasks/status.html" %}</td>
+        <td class="priority">{% include "agenda/tasks/priority.html" %}</td>
         <td class="matter">
           <a href={% url 'matters:detail' id=task.matter.id %}>{{ task.matter.name }}</a>
         </td>
         <td id="task-description"
             class="description {% if task.date_due <= today %}urgent{% endif %}">
-          {% if task.priority %}
-            <span class="urgent">
-              <i class="bi bi-exclamation-lg"></i>
-            </span>
-          {% endif %}
           <a href="#"
              hx-get="/agenda/tasks/{{ task.id }}/edit"
              hx-target="#htmx-modal-container"

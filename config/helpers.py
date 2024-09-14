@@ -68,8 +68,10 @@ def format_phone(original):
 
 
 class MultipleOrderingFilter(django_filters.OrderingFilter):
+
     # Override the default filter method to handle multiple fields
     def filter(self, qs, value):
+
         # If no ordering is provided, return the original queryset
         if value in (None, ""):
             return qs
@@ -78,6 +80,7 @@ class MultipleOrderingFilter(django_filters.OrderingFilter):
 
         # Iterate over the ordering parameteres
         for param in value:
+
             # Fetch the field from the mapping, and reverse the order if necessary
             fields = self.param_map[param.removeprefix("-")]
 
@@ -87,6 +90,7 @@ class MultipleOrderingFilter(django_filters.OrderingFilter):
 
             # Add the fields to the ordering list
             for field in fields:
+
                 # If the field is a string, convert it to an F object so we can use the desc() method on it
                 if isinstance(field, str):
                     field = F(field)

@@ -42,8 +42,8 @@
 }
 
 .deadline-calculator-results {
-  margin-top: 1rem;
   margin-bottom: 2rem;
+  margin-top: 1rem;
 }
 
 
@@ -56,12 +56,25 @@
 }
 
 .tasks-table .status {
+  padding-left: 7px !important;
+  padding-right: 7px !important;
+  text-align: center;
+  width: 20px;
+}
+
+.tasks-table .priority {
+  padding-left: 7px !important;
+  padding-right: 7px !important;
   text-align: center;
   width: 20px;
 }
 
 .status .bi-chevron-expand {
   margin: 0;
+}
+
+.tasks-table .dropdown-menu {
+  min-width: 0;
 }
 
 .tasks-table .matter {
@@ -74,6 +87,10 @@
 
 .tasks-table .date {
   width: 155px;
+}
+
+.tasks-table .priority i {
+  margin: 0;
 }
 
 .tasks-table .menu {

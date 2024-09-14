@@ -3,6 +3,7 @@ import django_filters
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.models import Task
 from apps.matters.models import Matter
+from config.helpers import MultipleOrderingFilter
 
 STATUS_CHOICES = (
     ("Pending", "Pending"),
@@ -23,15 +24,15 @@ class TasksFilter(django_filters.FilterSet):
         queryset=CustomUser.objects.all(), empty_label="All"
     )
 
-    order_by = django_filters.OrderingFilter(
+    order_by = MultipleOrderingFilter(
         fields=(
             ("status", "status"),
             ("matter", "matter"),
             ("description", "description"),
             ("user", "user"),
             ("date_due", "date_due"),
+            ("priority", "priority"),
         ),
-        empty_label=None,
     )
 
     class Meta:

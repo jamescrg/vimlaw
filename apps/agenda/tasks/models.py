@@ -13,6 +13,7 @@ class Task(models.Model):
     matter = models.ForeignKey(Matter, on_delete=models.CASCADE, blank=True, null=True)
     status = models.CharField(max_length=50, null=True)
     urgent = models.BooleanField(default=False)
+    priority = models.IntegerField(default=5)
 
     def __str__(self):
         return f"{self.description} : {self.id}"
