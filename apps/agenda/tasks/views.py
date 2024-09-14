@@ -113,6 +113,8 @@ def tasks_edit(request, id):
     if task.matter and task.matter not in matter_list:
         matter_list |= Matter.objects.filter(pk=task.matter.id)
     form.fields["matter"].queryset = matter_list
+    users = CustomUser.objects.filter(is_active=True).order_by("username")
+    form.fields["user"].queryset = users
 
     context = {
         "app": "agenda",
