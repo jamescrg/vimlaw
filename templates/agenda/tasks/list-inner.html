@@ -45,7 +45,7 @@
                 hx-target="#tasks-list"
                 hx-swap="innerHTML"
                 hx-post="{% url 'agenda:tasks-filter-sort' 'status' %}">
-          <i class="bi bi-chevron-expand"></i>
+          <i class="bi bi-check-square"></i>
         </button>
       </th>
       <th class="priority">
@@ -53,7 +53,7 @@
                 hx-target="#tasks-list"
                 hx-swap="innerHTML"
                 hx-post="{% url 'agenda:tasks-filter-sort' 'priority' %}">
-          <i class="bi bi-chevron-expand"></i>
+          <i class="bi bi-exclamation-lg"></i>
         </button>
       </th>
       <th class="matter">
@@ -96,12 +96,14 @@
     {% for task in objects %}
       <tr>
         <td class="status">{% include "agenda/tasks/status.html" %}</td>
-        <td class="priority">{% include "agenda/tasks/priority.html" %}</td>
-        <td class="matter">
+        <td class="priority {% if task.status == 'Complete' %}complete{% endif %}">
+          {% include "agenda/tasks/priority.html" %}
+        </td>
+        <td class="matter {% if task.status == 'Complete' %}complete{% endif %}">
           <a href={% url 'matters:detail' id=task.matter.id %}>{{ task.matter.name }}</a>
         </td>
         <td id="task-description"
-            class="description {% if task.date_due <= today %}urgent{% endif %}">
+            class="description {% if task.date_due <= today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
           <a href="#"
              hx-get="/agenda/tasks/{{ task.id }}/edit"
              hx-target="#htmx-modal-container"
@@ -110,8 +112,8 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
-        <td class="user">{{ task.user.username|title }}</td>
-        <td class="date">{{ task.date_due|date:"Y-m-d" }}</td>
+        <td class="user {% if task.status == 'Complete' %}complete{% endif %}">{{ task.user.username|title }}</td>
+        <td class="date {% if task.status == 'Complete' %}complete{% endif %}">{{ task.date_due|date:"Y-m-d" }}</td>
       </tr>
     {% endfor %}
   </table>

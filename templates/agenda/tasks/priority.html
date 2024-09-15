@@ -7,9 +7,8 @@
     {% for i in '123456789'|make_list %}
       <li>
         <a href="#"
-           hx-get="/agenda/tasks/{{ task.id }}/task-priority/{{ forloop.counter }}"
-           hx-target="closest .dropdown"
-           hx-swap="outerHTML">{{ forloop.counter }}</a>
+           hx-get="{% url 'agenda:tasks-task-priority' task_id=task.id priority=forloop.counter %}"
+           hx-target="#tasks-list">{{ forloop.counter }}</a>
       </li>
     {% endfor %}
   </ul>
