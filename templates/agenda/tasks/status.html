@@ -1,9 +1,8 @@
 <a href="#"
    class="task-status-link"
    id="task-{{ task.id }}"
-   hx-get="/agenda/tasks/{{ task.id }}/task-status"
-   hx-target="closest .task-status-link"
-   hx-swap="outerHTML">
+   hx-get="{% url 'agenda:tasks-task-status' task.id %}"
+   hx-target="#tasks-list">
   {% if task.status == "Complete" %}
     <i class="bi bi-check-square"></i>
   {% else %}

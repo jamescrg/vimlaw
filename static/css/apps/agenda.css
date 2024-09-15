@@ -73,8 +73,8 @@
   margin: 0;
 }
 
-.tasks-table .dropdown-menu {
-  min-width: 0;
+.tasks-table .priority .dropdown-menu {
+  min-width: 44px;
 }
 
 .tasks-table .matter {
@@ -97,6 +97,13 @@
   margin: 0;
   padding: 0;
   width: 10px;
+}
+
+.tasks-table .complete,
+.tasks-table .complete a,
+.tasks-table .complete .button-link {
+  color: var(--warm-gray-400);
+  text-decoration: line-through;
 }
 
 .tasks-form #id_description {

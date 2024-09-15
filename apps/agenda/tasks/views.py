@@ -183,10 +183,9 @@ def tasks_status(request, id):
     else:
         task.status = "Complete"
     task.save()
-    context = {
-        "task": task,
-    }
-    return render(request, "agenda/tasks/status.html", context)
+    table_data = get_table_data(request)
+    context = table_data
+    return render(request, "agenda/tasks/list-inner.html", context)
 
 
 @login_required
@@ -211,10 +210,9 @@ def tasks_priority(request, task_id, priority):
     task = get_object_or_404(Task, pk=task_id)
     task.priority = priority
     task.save()
-    context = {
-        "task": task,
-    }
-    return render(request, "agenda/tasks/priority.html", context)
+    table_data = get_table_data(request)
+    context = table_data
+    return render(request, "agenda/tasks/list-inner.html", context)
 
 
 @login_required
