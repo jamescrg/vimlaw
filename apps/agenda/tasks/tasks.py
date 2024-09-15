@@ -4,12 +4,17 @@ from django.core.paginator import Paginator
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
-from apps.agenda.tasks.models import Task
 from apps.matters.models import Matter
 
 
 def get_table_data(request):
     table_data = {}
+
+    default_filter = {
+        "status": None,
+        "matter": None,
+        "order_by": "priority",
+    }
 
     today = date.today()
 
@@ -22,7 +27,8 @@ def get_table_data(request):
         user_id = int(user_id) if user_id not in (None, "") else None
 
     else:
-        tasks = Task.objects.all().order_by("-status", "priority")
+        filter = TasksFilter(default_filter)
+        tasks = filter.qs
         user_id = None
 
     page = request.GET.get("page")
