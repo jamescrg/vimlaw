@@ -15,8 +15,10 @@
         {% csrf_token %}
         {{ filter.form }}
         <br />
-        <div class="flex-center-space">
+        <div class="flex-center-space limited-width">
           <button type="submit" class="submit">Apply</button>
+          <a class="btn-icon"
+             href="{% url 'management:clear-filters' 'expenses_filter' %}">Clear Filters</a>
         </div>
       </form>
     </div>

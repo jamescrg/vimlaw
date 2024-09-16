@@ -35,6 +35,8 @@ urlpatterns = [
     path("", include("apps.billing.urls")),
     # Lab App
     path("", include("apps.lab.urls")),
+    # Management App
+    path("", include("apps.management.urls")),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

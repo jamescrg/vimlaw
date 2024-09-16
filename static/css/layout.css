@@ -30,6 +30,10 @@ body {
   justify-content: space-between;
 }
 
+.limited-width {
+  width: 95%;
+}
+
 .overflow-x {
   overflow-x: auto;
 }
