@@ -18,17 +18,17 @@ from apps.agenda.tasks.views import (
     tasks_filter_quick,
     tasks_filter_sort,
     tasks_filter_user,
+    tasks_index,
     tasks_list,
     tasks_priority,
     tasks_select,
     tasks_status,
-    tasks_table,
 )
 
 app_name = "agenda"
 
 urlpatterns = [
-    path("agenda/", tasks_list, name="tasks-list"),
+    path("agenda/", tasks_index, name="tasks-index"),
     path("agenda/tasks", tasks_select, name="tasks-select"),
     path("agenda/tasks/add", tasks_add, name="tasks-add"),
     path("agenda/tasks/<int:id>/edit", tasks_edit, name="tasks-edit"),
@@ -41,7 +41,7 @@ urlpatterns = [
     ),
     path("agenda/tasks/filter/", tasks_filter, name="tasks-filter"),
     path("agenda/tasks/clear/", clear_tasks, name="tasks-clear"),
-    path("agenda/tasks/table/", tasks_table, name="tasks-table"),
+    path("agenda/tasks/list/", tasks_list, name="tasks-list"),
     path(
         "activity/tasks/filter/quick/<str:quick_filter>",
         tasks_filter_quick,

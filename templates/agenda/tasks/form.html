@@ -29,7 +29,8 @@
           <div>
             {% if edit %}
               <a onclick="return confirm('Are you sure you want to delete this record?')"
-                 href="{% url 'agenda:tasks-delete' id=task.id %}">Delete Task</a>
+                 hx-get="{% url 'agenda:tasks-delete' id=task.id %}"
+                 hx-target="#htmx-modal-container">Delete Task</a>
             {% endif %}
           </div>
         </div>

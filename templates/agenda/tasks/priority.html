@@ -8,7 +8,7 @@
       <li>
         <a href="#"
            hx-get="{% url 'agenda:tasks-task-priority' task_id=task.id priority=forloop.counter %}"
-           hx-target="#tasks-list">{{ forloop.counter }}</a>
+           hx-target="#tasks">{{ forloop.counter }}</a>
       </li>
     {% endfor %}
   </ul>

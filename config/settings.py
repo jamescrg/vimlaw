@@ -171,8 +171,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
-LOGIN_REDIRECT_URL = "agenda:tasks-list"
-LOGOUT_REDIRECT_URL = "agenda:tasks-list"
+LOGIN_REDIRECT_URL = "agenda:tasks-index"
+LOGOUT_REDIRECT_URL = "agenda:tasks-index"
 
 INTERNAL_IPS = [
     "127.0.0.1",

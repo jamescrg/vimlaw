@@ -7,8 +7,8 @@ from apps.agenda.tasks.filter import TasksFilter
 from apps.matters.models import Matter
 
 
-def get_table_data(request):
-    table_data = {}
+def get_list_data(request):
+    list_data = {}
 
     default_filter = {
         "status": None,
@@ -34,7 +34,7 @@ def get_table_data(request):
     page = request.GET.get("page")
     pagination = Paginator(tasks, 50).get_page(page)
 
-    table_data = {
+    list_data = {
         "pagination": pagination,
         "objects": pagination.object_list,
         "matters": Matter.objects.filter(status="Open").order_by("name"),
@@ -43,4 +43,4 @@ def get_table_data(request):
         "user_id": user_id,
     }
 
-    return table_data
+    return list_data

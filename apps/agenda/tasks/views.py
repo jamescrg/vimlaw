@@ -8,12 +8,12 @@ from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
 from apps.agenda.tasks.forms import TaskForm
 from apps.agenda.tasks.models import Task
-from apps.agenda.tasks.tasks import get_table_data
+from apps.agenda.tasks.tasks import get_list_data
 from apps.matters.models import Matter
 
 
 @login_required
-def tasks_list(request):
+def tasks_index(request):
 
     # check whether events have been hidden
     show_events = request.session.get("show_events", True)
@@ -38,6 +38,12 @@ def tasks_list(request):
         "today": today,
     }
 
+    return render(request, "agenda/tasks/tasks.html", context)
+
+
+@login_required
+def tasks_list(request):
+    context = get_list_data(request)
     return render(request, "agenda/tasks/list.html", context)
 
 
@@ -45,7 +51,7 @@ def tasks_list(request):
 def tasks_select(request):
     request.session["show_events"] = False
     request.session["hide_expire"] = date.today().strftime("%s")
-    return redirect("/agenda")
+    return redirect("agenda:tasks-index")
 
 
 @login_required
@@ -130,14 +136,14 @@ def tasks_edit(request, id):
 def tasks_delete(request, id):
     entry = get_object_or_404(Task, pk=id)
     entry.delete()
-    return redirect("/agenda")
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
 def tasks_filter(request, user=None):
     if request.method == "POST":
         request.session["tasks_filter"] = request.POST
-        return redirect("/agenda")
+        return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
     else:
         filter_data = request.session.get("tasks_filter", {})
@@ -170,9 +176,7 @@ def tasks_filter_user(request):
     user = request.POST.get("user")
     filter_data["user"] = user
     request.session["tasks_filter"] = filter_data
-    table_data = get_table_data(request)
-    context = table_data
-    return render(request, "agenda/tasks/list-inner.html", context)
+    return redirect("agenda:tasks-list")
 
 
 @login_required
@@ -183,9 +187,7 @@ def tasks_status(request, id):
     else:
         task.status = "Complete"
     task.save()
-    table_data = get_table_data(request)
-    context = table_data
-    return render(request, "agenda/tasks/list-inner.html", context)
+    return redirect("agenda:tasks-list")
 
 
 @login_required
@@ -193,10 +195,8 @@ def tasks_change_user(request, task_id):
     task = get_object_or_404(Task, pk=task_id)
     user = get_object_or_404(CustomUser, pk=request.POST["user"])
     users = CustomUser.objects.filter(is_active=True)
-
     task.user = user
     task.save()
-
     context = {
         "task": task,
         "user": user,
@@ -210,45 +210,26 @@ def tasks_priority(request, task_id, priority):
     task = get_object_or_404(Task, pk=task_id)
     task.priority = priority
     task.save()
-    table_data = get_table_data(request)
-    context = table_data
-    return render(request, "agenda/tasks/list-inner.html", context)
+    return redirect("agenda:tasks-list")
 
 
 @login_required
 def tasks_filter_sort(request, order):
-
     filter_data = request.session.get("tasks_filter", {})
     current_order = filter_data.get("order_by", "")
-
     if current_order == order:
         new_order = f"-{order}" if not current_order.startswith("-") else order
     else:
         new_order = order
-
     filter_data["order_by"] = new_order
     request.session["tasks_filter"] = filter_data
-
-    context = get_table_data(request)
-    return render(request, "agenda/tasks/list-inner.html", context)
+    return redirect("agenda:tasks-list")
 
 
 @login_required
 def clear_tasks(request):
-    filter_data = request.session.get("tasks_filter", {})
-
-    filter = TasksFilter(filter_data)
-
     # Delete all the tasks from the filter that are marked as complete
+    filter_data = request.session.get("tasks_filter", {})
+    filter = TasksFilter(filter_data)
     filter.qs.filter(status="Complete").delete()
-
-    context = get_table_data(request)
-
-    return render(request, "agenda/tasks/list-inner.html", context)
-
-
-@login_required
-def tasks_table(request):
-    table_data = get_table_data(request)
-    context = table_data
-    return render(request, "agenda/tasks/list-inner.html", context)
+    return redirect("agenda:tasks-list")

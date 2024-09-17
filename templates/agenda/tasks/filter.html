@@ -10,8 +10,8 @@
     </div>
     <div class="modal-body">
       <form class="form-responsive filter"
-            method="post"
-            action="{% url 'agenda:tasks-filter' %}">
+            hx-target="#htmx-modal-container"
+            hx-post="{{ request.path }}">
         {% csrf_token %}
         {{ filter.form }}
         <br />

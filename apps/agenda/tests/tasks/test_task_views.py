@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 def test_index(client, folder, task, matter):
     response = client.get("/agenda/tasks")
     assert response.status_code == 302
-    response = client.get(reverse("agenda:tasks-list"))
+    response = client.get(reverse("agenda:tasks-index"))
     assert response.status_code == 200
     assertTemplateUsed(response, "agenda/tasks/list.html")
     assert response.context["app"] == "agenda"
