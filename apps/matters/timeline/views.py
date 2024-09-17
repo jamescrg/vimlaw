@@ -1,11 +1,14 @@
-from datetime import date
+import os
+from datetime import date, datetime
 
 from django.contrib.auth.decorators import login_required
+from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.timeline.forms import FactForm
+from apps.matters.timeline.generate_timeline import generate_timeline
 from apps.matters.timeline.models import Fact
 
 
@@ -112,3 +115,20 @@ def print(request, id):
         "facts": facts,
     }
     return render(request, "matters/timeline/print.html", context)
+
+
+@login_required
+def timeline_pdf(request, pk):
+    matter = get_object_or_404(Matter, pk=pk)
+    file = generate_timeline(matter.id, request)
+
+    current_date = datetime.now().strftime("%Y-%m-%d")
+
+    with open(file.name, "rb") as pdf:
+        response = HttpResponse(pdf.read(), content_type="application/pdf")
+        filename = f'filename="Timeline - {matter.name} - {current_date}.pdf"'
+        response["Content-Disposition"] = filename
+
+    os.unlink(file.name)
+
+    return response

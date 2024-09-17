@@ -116,6 +116,7 @@ urlpatterns = [
         name="timeline-delete",
     ),
     path("matters/<int:id>/timeline/print", timeline.print, name="timeline-print"),
+    path("matters/<int:pk>/timeline/pdf/", timeline.timeline_pdf, name="timeline-pdf"),
     path("matters/filter", filter, name="filter"),
     path("matters/order-by/<str:order>", order_by, name="order-by"),
     path("matters/filter-quick/<str:quick_filter>/", filter_quick, name="filter-quick"),

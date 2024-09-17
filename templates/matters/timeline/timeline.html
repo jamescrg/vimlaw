@@ -7,7 +7,7 @@
     <meta charset="UTF-8" content="" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
-    <title>{{ matter.name }} - Ledger</title>
+    <title>{{ matter.name }} - Timeline</title>
     <link rel="shortcut icon" href={% static 'images/briefcase-fill.svg' %} />
     <link rel="stylesheet" href={% static_v 'css/pdf.css' %} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -39,44 +39,27 @@
         </div>
       </div>
       <div class="section">
-        <h3>{{ matter.name }} - Ledger</h3>
-        {% if transactions %}
-          <div class="table-container">
-            <table class="table ledger">
+        <h3>{{ matter.name }} - Timeline</h3>
+        <div class="table-container">
+          <table class="table timeline-list">
+            {% if facts %}
               <tr>
-                <th class="date">Date</th>
-                <th class="type">Type</th>
+                <th>Date</th>
                 <th>Description</th>
-                <th class="numeric">Amount</th>
+                <th>Citation</th>
               </tr>
-              {% for transaction in transactions %}
+              {% for fact in facts %}
                 <tr>
-                  <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
-                  <td class="type">{{ transaction.transaction_type }}</td>
-                  <td>{{ transaction.description }}</td>
-                  {% if transaction.transaction_type == 'Charge' %}
-                    <td class="numeric urgent">-${{ transaction.amount|floatformat:2|intcomma }}</td>
-                  {% else %}
-                    <td class="numeric">${{ transaction.amount|floatformat:2|intcomma }}</td>
-                  {% endif %}
+                  <td class="date {% if fact.emphasis == 'Yes' %}strong{% endif %}">{{ fact.date|date:'Y-m-d' }}</td>
+                  <td class="description {% if fact.emphasis == 'Yes' %}strong{% endif %}">{{ fact.description }}</td>
+                  <td class="citation {% if fact.emphasis == 'Yes' %}strong{% endif %}">
+                    {{ fact.citation|slice:":25"|default_if_none:'' }}
+                  </td>
                 </tr>
               {% endfor %}
-            </table>
-            <div class="flex-start-space">
-              <br />
-              <div class="totals-table">
-                <table class="table">
-                  <tr>
-                    <td class="total">Balance Due</td>
-                    <td class="numeric balance-due">${{ balance_due|floatformat:2|intcomma }}</td>
-                  </tr>
-                </table>
-              </div>
-            </div>
-          </div>
-        {% else %}
-          No transactions found.
-        {% endif %}
+            {% endif %}
+          </table>
+        </div>
       </div>
     </div>
   </body>
