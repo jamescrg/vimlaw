@@ -12,13 +12,15 @@
       <form class="form-responsive filter"
             hx-target="#htmx-modal-container"
             hx-post="{{ request.path }}">
-        {% csrf_token %}
-        {{ filter.form }}
+        {% csrf_token %} {{ filter.form }}
         <br />
         <div class="flex-center-space limited-width">
           <button type="submit" class="submit">Apply</button>
-          <a class="btn-icon"
-             href="{% url 'management:clear-filters' 'tasks_filter' %}">Clear Filters</a>
+          <button class="btn-icon button-link"
+                  hx-target="#htmx-modal-container"
+                  hx-get="{% url 'management:clear-filters' session_key='tasks_filter' trigger='tasksListChanged' %}">
+            Clear Filters
+          </button>
         </div>
       </form>
     </div>
