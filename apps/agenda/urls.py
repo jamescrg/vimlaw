@@ -28,6 +28,7 @@ from apps.agenda.tasks.views import (
 app_name = "agenda"
 
 urlpatterns = [
+    path("/", tasks_index, name="tasks-index"),
     path("agenda/", tasks_index, name="tasks-index"),
     path("agenda/tasks", tasks_select, name="tasks-select"),
     path("agenda/tasks/add", tasks_add, name="tasks-add"),
