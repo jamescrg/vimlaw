@@ -8,6 +8,7 @@ import apps.agenda.events.google as google
 from apps.agenda.events.filter import EventFilter
 from apps.agenda.events.forms import EventForm
 from apps.agenda.events.models import Event
+from apps.management.filter_manager import FilterManager
 from apps.matters.models import Matter
 
 from .events import get_table_data
@@ -31,35 +32,22 @@ def events_list(request):
 
 @login_required
 def events_filter(request):
-    if request.method == "POST":
-        request.session["events_filter"] = request.POST
+    filter_manager = FilterManager(request, EventFilter, "events_filter")
+
+    if filter_manager.process_filter():
         return redirect("/events")
 
-    else:
-        filter_data = request.session.get("events_filter", {})
-        filter = EventFilter(filter_data, queryset=Event.objects.all())
-        return render(request, "agenda/events/filter.html", {"filter": filter})
+    return render(
+        request,
+        "agenda/events/filter.html",
+        {"filter": filter_manager.get_filter(Event.objects.all())},
+    )
 
 
 @login_required
 def events_filter_quick(request, quick_filter):
-    quick_filters = {
-        "pending": {
-            "status": "Pending",
-            "matter": None,
-            "date_min": "",
-            "date_max": "",
-            "party": None,
-            "order_by": "date",
-        },
-    }
-
-    filter_data = {}
-    for key, val in quick_filters[quick_filter].items():
-        filter_data[key] = val
-
-    request.session["events_filter"] = filter_data
-    request.session.modified = True
+    filter_manager = FilterManager(request, EventFilter, "events_filter")
+    filter_manager.apply_quick_filter(quick_filter)
 
     return redirect("/events")
 
