@@ -395,10 +395,10 @@ def export_old(request):
 
         clio_user = ""
 
-        if entry.user.symbol == "JC":
+        if entry.user.initials == "JC":
             clio_user = "James Craig"
 
-        if entry.user.symbol == "LK":
+        if entry.user.initials == "LK":
             clio_user = "Lexi Krier"
 
         writer.writerow(
@@ -425,10 +425,10 @@ def export_old(request):
 
         clio_user = ""
 
-        if entry.user.symbol == "JC":
+        if entry.user.initials == "JC":
             clio_user = "James Craig"
 
-        if entry.user.symbol == "LK":
+        if entry.user.initials == "LK":
             clio_user = "Lexi Krier"
 
         writer.writerow(

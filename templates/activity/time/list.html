@@ -78,7 +78,7 @@
       {% for entry in objects %}
         <tr>
           <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
-          <td class="user">{{ entry.user.symbol }}</td>
+          <td class="user">{{ entry.user.initials }}</td>
           <td class="matter">
             <a href={% url 'matters:detail' id=entry.matter.id %}>{{ entry.matter.name }}</a>
           </td>

@@ -57,7 +57,7 @@ def write_standard_csv(entries, response):
             [
                 entry.date.strftime("%m/%d/%Y"),
                 entry.matter.name,
-                entry.user.symbol,
+                entry.user.initials,
                 entry.actions,
                 entry.hours,
                 entry.rate,

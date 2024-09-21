@@ -60,7 +60,7 @@
           {% for entry in time_entries %}
             <tr>
               <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
-              <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} {{ entry.user.symbol }} {{ entry.rate }}</td>
+              <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} {{ entry.user.initials }} {{ entry.rate }}</td>
               <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
               <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
             </tr>
