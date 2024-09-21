@@ -55,6 +55,14 @@
   color: var(--warm-gray-400);
 }
 
+th.status .bi-check-square {
+  font-size: 0.9rem;
+}
+
+th.priority .bi-caret-up {
+  font-size: 1.1rem;
+}
+
 .tasks-table .status {
   padding-left: 7px !important;
   padding-right: 7px !important;
