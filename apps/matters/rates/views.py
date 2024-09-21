@@ -17,7 +17,7 @@ def index(request, id):
 
     context = {
         "app": "matters",
-        "submodule": "rates",
+        "subapp": "rates",
         "matter": matter,
         "proceeding": proceeding,
         "rates": rates,
@@ -57,7 +57,7 @@ def add(request, id):
 
     context = {
         "app": "matters",
-        "submodule": "rates",
+        "subapp": "rates",
         "matter": matter,
         "proceeding": proceeding,
         "edit": False,
@@ -89,7 +89,7 @@ def edit(request, id, rate_id):
 
     context = {
         "app": "matters",
-        "submodule": "rates",
+        "subapp": "rates",
         "matter": matter,
         "rate": rate,
         "edit": True,

@@ -54,7 +54,7 @@ def index(request, id):
 
     context = {
         "app": "matters",
-        "submodule": "ledger",
+        "subapp": "ledger",
         "matter": matter,
         "proceeding": proceeding,
         "transactions": transactions,

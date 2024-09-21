@@ -16,7 +16,7 @@ def index(request, id):
 
     context = {
         "app": "matters",
-        "submodule": "contacts",
+        "subapp": "contacts",
         "matter": matter,
         "proceeding": proceeding,
         "relationship_groups": relationship_groups,
@@ -32,7 +32,7 @@ def assign(request, id):
 
     context = {
         "app": "matters",
-        "submodule": "contacts",
+        "subapp": "contacts",
         "matter": matter,
         "proceeding": proceeding,
     }
@@ -67,7 +67,7 @@ def assign_role(request, matter_id, contact_id):
 
     context = {
         "app": "matters",
-        "submodule": "contacts",
+        "subapp": "contacts",
         "matter": matter,
         "proceeding": proceeding,
         "contact": contact,
@@ -104,7 +104,7 @@ def assign_edit(request, id):
 
     context = {
         "app": "matters",
-        "submodule": "contacts",
+        "subapp": "contacts",
         "matter": matter,
         "proceeding": proceeding,
         "contact": contact,
