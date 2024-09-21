@@ -13,7 +13,7 @@ def index(request, id):
     matter = get_object_or_404(Matter, pk=id)
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
-    rates = Rate.objects.filter(matter=matter)
+    rates = Rate.objects.filter(matter=matter).order_by("user__username")
 
     context = {
         "app": "matters",
@@ -53,7 +53,8 @@ def add(request, id):
         form = RateForm(initial={"user": request.user})
 
         # set the list of potential users
-        form.fields["user"].queryset = user_list
+        for user in user_list:
+            user.username = user.username.title()
 
     context = {
         "app": "matters",

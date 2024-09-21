@@ -17,7 +17,7 @@
     <table id="rates" class="table rates-table">
       {% for rate in rates %}
         <tr>
-          <td class="rates-user">{{ rate.user }}</td>
+          <td class="rates-user">{{ rate.user|title }}</td>
           <td class="rates-rate">
             <a href="#"
                hx-get="/matters/{{ matter.id }}/rates/{{ rate.id }}/edit"
