@@ -37,7 +37,10 @@ def generate_ledes_98b(invoice: Invoice) -> NamedTemporaryFile:
             timekeeper_name = f"{entry.user.last_name}, {entry.user.first_name}"
 
             ledes_file.write(
-                f"{created_at_date}|{invoice.id}|{client_reference_id}|{invoice.matter.name} - {invoice.matter.id}|{invoice_total}|{billing_start_date}|{billing_end_date}|{invoice.comment}|{index}|F|{entry.hours}|0|{entry.fee}|{item_date}|{entry_code}||{entry_activity_code}|JC|{entry.actions}|{law_firm_id}|{entry.rate}|{timekeeper_name}|PT|[]\n".encode()
+                f"{created_at_date}|{invoice.id}|{client_reference_id}|{invoice.matter.name} - {invoice.matter.id}|"
+                f"{invoice_total}|{billing_start_date}|{billing_end_date}|{invoice.comment}|{index}|F|{entry.hours}|"
+                f"0|{entry.fee}|{item_date}|{entry_code}||{entry_activity_code}|JC|{entry.actions}|{law_firm_id}|"
+                f"{entry.rate}|{timekeeper_name}|PT|[]\n".encode()
             )
 
         # TODO: Enumerate through all expenses
