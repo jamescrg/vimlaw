@@ -84,7 +84,6 @@ class Invoice(models.Model):
             "gross_fees": gross_fees,
             "comp_fees": comp_fees,
             "net_fees": net_fees,
-
             "gross_expenses": gross_expenses,
             "comp_expenses": comp_expenses,
             "net_expenses": net_expenses,
