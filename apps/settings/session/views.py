@@ -55,11 +55,12 @@ def index(request):
 
     context = {
         "app": "settings",
+        "subapp": "session",
         "contacts_token": contacts_token,
         "calendar_token": calendar_token,
     }
 
-    return render(request, "settings/content.html", context)
+    return render(request, "settings/session/index.html", context)
 
 
 @login_required
