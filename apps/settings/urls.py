@@ -4,6 +4,7 @@ from django.urls import path
 import apps.settings.company.views as company_urls
 import apps.settings.profile.views as profile_urls
 import apps.settings.session.views as session_urls
+import apps.settings.users.views as user_urls
 
 app_name = "settings"
 
@@ -22,6 +23,8 @@ urlpatterns = [
     ),
     # Company
     path("settings/company/", company_urls.company_index, name="company-index"),
+    # Users
+    path("settings/users/", user_urls.users_index, name="users-index"),
     # Profile
     path("settings/profile/", profile_urls.profile_index, name="profile-index"),
 ]
