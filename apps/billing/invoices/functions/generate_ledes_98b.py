@@ -34,7 +34,7 @@ HEADER_FIELDS = [
     "CLIENT_MATTER_ID",
 ]
 
-HEADER = f"LEDES1998B[]\n{'|'.join(HEADER_FIELDS)}\n"
+HEADER = f"LEDES1998B[]\n{'|'.join(HEADER_FIELDS)}[]\n"
 
 
 def _get_combined_entries(invoice: Invoice) -> list:
@@ -131,7 +131,7 @@ def _format_line(
         "LAW_FIRM_ID": os.getenv("LAW_FIRM_ID"),
         "TIMEKEEPER_NAME": timekeeper_name,
         "TIMEKEEPER_CLASSIFICATION": "PT",
-        "CLIENT_MATTER_ID": "[]",
+        "CLIENT_MATTER_ID": entry.matter.client_reference_id,
     }
 
     all_fields: Dict[str, str] = {
@@ -140,7 +140,7 @@ def _format_line(
         **common_end_fields,
     }
 
-    return "|".join(all_fields[field] for field in HEADER_FIELDS)
+    return "|".join(all_fields[field] for field in HEADER_FIELDS) + "[]"
 
 
 def generate_ledes_98b(invoice: Invoice) -> NamedTemporaryFile:
