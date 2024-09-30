@@ -33,6 +33,11 @@ urlpatterns = [
         user_urls.change_role,
         name="change-role",
     ),
+    path(
+        "settings/users/switch-status/<int:user_id>/",
+        user_urls.switch_status,
+        name="switch-status",
+    ),
     # Profile
     path("settings/profile/", profile_urls.profile_index, name="profile-index"),
 ]

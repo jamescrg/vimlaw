@@ -60,3 +60,13 @@ def change_role(request, user_id, role):
     CustomUser.objects.filter(id=user_id).update(role=role)
 
     return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})
+
+
+@login_required
+def switch_status(request, user_id):
+    user = CustomUser.objects.get(id=user_id)
+
+    user.is_active = not user.is_active
+    user.save()
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})

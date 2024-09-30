@@ -55,7 +55,22 @@
     </tr>
     {% for user in users %}
       <tr>
-        <td>{{ user.username }}</td>
+        <td>
+          <div class="dropdown">
+            <button class="button-link"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">{{ user.username }}</button>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="#">Edit</a>
+              </li>
+              <li>
+                <a hx-post="{% url 'settings:switch-status' user.id %}">Switch to {{ user.is_active|yesno:"Inactive,Active" }}</a>
+              </li>
+            </ul>
+          </div>
+        </td>
         <td>{{ user.full_name }}</td>
         <td>{{ user.email }}</td>
         <td>
