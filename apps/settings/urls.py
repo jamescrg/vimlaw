@@ -28,6 +28,11 @@ urlpatterns = [
     path("settings/users/list/", user_urls.user_list, name="user-list"),
     path("settings/users/filter/", user_urls.user_filter, name="user-filter"),
     path("settings/users/sort/<str:order>/", user_urls.user_sort, name="user-sort"),
+    path(
+        "settings/users/change-role/<int:user_id>/<str:role>/",
+        user_urls.change_role,
+        name="change-role",
+    ),
     # Profile
     path("settings/profile/", profile_urls.profile_index, name="profile-index"),
 ]

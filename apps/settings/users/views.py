@@ -53,3 +53,10 @@ def user_sort(request, order):
     request.session["user_filter"] = filter_data
 
     return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})
+
+
+@login_required
+def change_role(request, user_id, role):
+    CustomUser.objects.filter(id=user_id).update(role=role)
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})

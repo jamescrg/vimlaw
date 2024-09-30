@@ -58,7 +58,22 @@
         <td>{{ user.username }}</td>
         <td>{{ user.full_name }}</td>
         <td>{{ user.email }}</td>
-        <td>{{ user.role_display }}</td>
+        <td>
+          <div class="dropdown">
+            <button class="button-link"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">{{ user.role_display }}</button>
+            <ul class="dropdown-menu">
+              <li>
+                <a hx-post="{% url 'settings:change-role' user_id=user.id role='USER' %}">User</a>
+              </li>
+              <li>
+                <a hx-post="{% url 'settings:change-role' user_id=user.id role='ADMIN' %}">Admin</a>
+              </li>
+            </ul>
+          </div>
+        </td>
         <td class="center-data">
           {% if user.is_active %}
             <i class="bi bi-check-circle-fill true-bool"></i>
