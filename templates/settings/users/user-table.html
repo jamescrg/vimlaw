@@ -63,7 +63,11 @@
                     aria-expanded="false">{{ user.username }}</button>
             <ul class="dropdown-menu">
               <li>
-                <a href="#">Edit</a>
+                <a hx-get="{% url 'settings:edit-user' user.id %}"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container">Edit</a>
               </li>
               <li>
                 <a hx-post="{% url 'settings:switch-status' user.id %}">Switch to {{ user.is_active|yesno:"Inactive,Active" }}</a>

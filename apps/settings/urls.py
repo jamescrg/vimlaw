@@ -38,6 +38,11 @@ urlpatterns = [
         user_urls.switch_status,
         name="switch-status",
     ),
+    path(
+        "settings/users/edit/<int:user_id>/",
+        user_urls.edit_user,
+        name="edit-user",
+    ),
     # Profile
     path("settings/profile/", profile_urls.profile_index, name="profile-index"),
 ]
