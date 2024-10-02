@@ -2,6 +2,10 @@
   min-width: 95%;
 }
 
+.filter input[type="text"] {
+  min-width: 95%;
+}
+
 .filter input[type="date"] {
   margin-left: 0.2rem;
   width: 137px;

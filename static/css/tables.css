@@ -25,6 +25,10 @@ td {
   vertical-align: top;
 }
 
+.center-data {
+  text-align: center;
+}
+
 .numeric {
   text-align: right;
 }
