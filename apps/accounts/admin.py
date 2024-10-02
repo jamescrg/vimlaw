@@ -15,9 +15,12 @@ class CustomUserAdmin(UserAdmin):
         "is_staff",
         "user_rate",
         "initials",
+        "role",
     ]
 
-    fieldsets = UserAdmin.fieldsets + ((None, {"fields": ("user_rate", "initials")}),)
+    fieldsets = UserAdmin.fieldsets + (
+        (None, {"fields": ("user_rate", "initials", "role")}),
+    )
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

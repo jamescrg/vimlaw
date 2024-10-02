@@ -1,0 +1,107 @@
+<div class="section-title">
+  <div class="section-title-left">
+    <h1>User Management</h1>
+    <div class="table-filter" hx-target="#users-table" hx-swap="#outerHTML">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'settings:user-filter' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">Filter</button>
+    </div>
+  </div>
+</div>
+<div class="table-container">
+  <table class="table">
+    <tr>
+      <th>
+        Username
+        <button class="btn-sort btn-task-status"
+                hx-target="#users"
+                hx-swap="innerHTML"
+                hx-post="{% url 'settings:user-sort' 'username' %}">
+          <i class="bi bi-chevron-expand"></i>
+        </button>
+      </th>
+      <th>Name</th>
+      <th>
+        E-Mail
+        <button class="btn-sort btn-task-status"
+                hx-target="#users"
+                hx-swap="innerHTML"
+                hx-post="{% url 'settings:user-sort' 'email' %}">
+          <i class="bi bi-chevron-expand"></i>
+        </button>
+      </th>
+      <th>
+        Role
+        <button class="btn-sort btn-task-status"
+                hx-target="#users"
+                hx-swap="innerHTML"
+                hx-post="{% url 'settings:user-sort' 'role' %}">
+          <i class="bi bi-chevron-expand"></i>
+        </button>
+      </th>
+      <th class="center-data">
+        Active
+        <button class="btn-sort btn-task-status"
+                hx-target="#users"
+                hx-swap="innerHTML"
+                hx-post="{% url 'settings:user-sort' 'is_active' %}">
+          <i class="bi bi-chevron-expand"></i>
+        </button>
+      </th>
+    </tr>
+    {% for user in users %}
+      <tr>
+        <td>
+          <div class="dropdown">
+            <button class="button-link"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">{{ user.username }}</button>
+            <ul class="dropdown-menu">
+              <li>
+                <a hx-get="{% url 'settings:edit-user' user.id %}"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container">Edit</a>
+              </li>
+              <li>
+                <a hx-post="{% url 'settings:switch-status' user.id %}">Switch to {{ user.is_active|yesno:"Inactive,Active" }}</a>
+              </li>
+            </ul>
+          </div>
+        </td>
+        <td>{{ user.full_name }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <div class="dropdown">
+            <button class="button-link"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">{{ user.role_display }}</button>
+            <ul class="dropdown-menu">
+              <li>
+                <a hx-post="{% url 'settings:change-role' user_id=user.id role='USER' %}">User</a>
+              </li>
+              <li>
+                <a hx-post="{% url 'settings:change-role' user_id=user.id role='ADMIN' %}">Admin</a>
+              </li>
+            </ul>
+          </div>
+        </td>
+        <td class="center-data">
+          {% if user.is_active %}
+            <i class="bi bi-check-circle-fill true-bool"></i>
+          {% else %}
+            <i class="bi bi-x-circle-fill error false-bool"></i>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+  {% include "pagination.html" %}
+</div>
