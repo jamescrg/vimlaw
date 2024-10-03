@@ -1,0 +1,18 @@
+<div class="modal-body">
+  <h2>General Info</h2>
+  <hr />
+  <form hx-post="{{ request.path }}"
+        hx-target="#success-msg"
+        role="form"
+        class="form-responsive profile-form">
+    {% csrf_token %}
+    {{ form }}
+    <br />
+    <div class="flex-center-space">
+      <div>
+        <button type="submit" class="submit">Submit</button>
+        <div class="success-msg" id="success-msg"></div>
+      </div>
+    </div>
+  </form>
+</div>

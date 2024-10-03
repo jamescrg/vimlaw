@@ -81,8 +81,8 @@ def edit_user(request, user_id):
         form = UserForm(request.POST, instance=user)
 
         if form.is_valid():
-            task = form.save(commit=False)
-            task.save()
+            user = form.save(commit=False)
+            user.save()
 
             return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})
     else:

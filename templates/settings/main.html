@@ -2,9 +2,9 @@
 {% block content %}
   <div class="subnav">
     <ul>
-      <!--<li {% if subapp == "profile" %}class="active"{% endif %}>-->
-      <!--  <a href="{% url 'settings:profile-index' %}">Profile</a>-->
-      <!--</li>-->
+      <li {% if subapp == "profile" %}class="active"{% endif %}>
+        <a href="{% url 'settings:profile-index' %}">Profile</a>
+      </li>
       {% if user.role == 'ADMIN' %}
         <!--<li {% if subapp == "company" %}class="active"{% endif %}>-->
         <!--  <a href="{% url 'settings:company-index' %}">Company</a>-->

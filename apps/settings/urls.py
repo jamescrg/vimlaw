@@ -45,4 +45,9 @@ urlpatterns = [
     ),
     # Profile
     path("settings/profile/", profile_urls.profile_index, name="profile-index"),
+    path(
+        "settings/profile/personal/",
+        profile_urls.personal_profile,
+        name="personal-profile",
+    ),
 ]
