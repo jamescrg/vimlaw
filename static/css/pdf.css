@@ -6,10 +6,15 @@ Page Setup
 @page {
   margin: 0.75in;
   size: Letter;
+  @bottom-center {
+      content: counter(page);
+      font-size: 11pt;
+      color: gray;
+  }
 }
 
 .invoice-template {
-  font-family: "Times New Roman", serif;
+  font-family: "Noto Serif", serif;
   font-size: 11pt;
   position: relative;
   width: 100%;
