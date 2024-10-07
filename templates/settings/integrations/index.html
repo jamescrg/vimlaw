@@ -1,0 +1,40 @@
+{% extends "settings/main.html" %}
+{% block subcontent %}
+  <div class="section settings">
+    {% if user.role == 'ADMIN' %}
+      <div class="section-title">
+        <h1>Google Account</h1>
+      </div>
+      <p class="section-text">
+        Connect a Google account to syncronize contacts and/or view calendar events on your
+        home page.
+      </p>
+      <table class="options">
+        <tr>
+          <td class="setting-label">Google Contacts</td>
+          <td class="setting-control">
+            {% if contacts_token %}
+              <a class="btn btn-primary btn-slim"
+                 href="{% url 'settings:google-logout' 'contacts' %}">Disconnect</a>
+            {% else %}
+              <a class="btn btn-primary btn-slim"
+                 href="{% url 'settings:google-login' 'contacts' %}">Connect</a>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td class="setting-label">Google Calendar</td>
+          <td class="setting-control">
+            {% if calendar_token %}
+              <a class="btn btn-primary btn-slim"
+                 href="{% url 'settings:google-logout' 'calendar' %}">Disconnect</a>
+            {% else %}
+              <a class="btn btn-primary btn-slim"
+                 href="{% url 'settings:google-login' 'calendar' %}">Connect</a>
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
+  {% endif %}
+{% endblock subcontent %}
