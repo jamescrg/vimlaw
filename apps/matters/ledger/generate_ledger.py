@@ -1,4 +1,3 @@
-import os
 from operator import itemgetter
 from tempfile import NamedTemporaryFile
 
@@ -10,7 +9,6 @@ from apps.billing.invoices.models import Invoice
 from apps.billing.payments.models import Payment
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
-from config.settings import BASE_DIR
 
 
 def generate_ledger(matter_id, request):
@@ -69,10 +67,7 @@ def generate_ledger(matter_id, request):
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
 
     with NamedTemporaryFile(suffix=".pdf", delete=False) as pdf_file:
-        html.write_pdf(
-            target=pdf_file.name,
-            stylesheets=[BASE_DIR.joinpath(os.path.join("static", "css", "pdf.css"))],
-        )
+        html.write_pdf(target=pdf_file.name)
         pdf_file.seek(0)
 
     return pdf_file

@@ -1,0 +1,20 @@
+/* ==========================================================================
+Content
+========================================================================== */
+
+.transaction-type {
+  width: 0.75in;
+}
+
+.current-balance {
+  padding-right: 2rem;
+}
+
+.totals-table {
+  float: right;
+  width: fit-content;
+}
+
+.balance-due {
+  font-weight: bold;
+}

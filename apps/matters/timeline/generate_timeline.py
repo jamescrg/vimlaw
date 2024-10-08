@@ -7,7 +7,6 @@ from weasyprint import HTML
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.timeline.models import Fact
-from config.settings import BASE_DIR
 
 
 def generate_timeline(matter_id, request):
@@ -32,10 +31,7 @@ def generate_timeline(matter_id, request):
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
 
     with NamedTemporaryFile(suffix=".pdf", delete=False) as pdf_file:
-        html.write_pdf(
-            target=pdf_file.name,
-            stylesheets=[BASE_DIR.joinpath("static", "css", "pdf.css")],
-        )
+        html.write_pdf(target=pdf_file.name)
         pdf_file.seek(0)
 
     return pdf_file
