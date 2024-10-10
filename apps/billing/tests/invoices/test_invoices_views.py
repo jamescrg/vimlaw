@@ -97,7 +97,7 @@ def test_invoices_filter_post(client):
 
 def test_invoices_filter_status(client):
     response = client.post(
-        reverse("billing:invoices-filter-status"), {"status": "PAID"}
+        reverse("billing:invoices-filter-status", kwargs={"status": "PAID"})
     )
     assert response.status_code == 302
 
