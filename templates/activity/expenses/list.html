@@ -81,7 +81,7 @@
             <a href={% url 'matters:detail' id=expense.matter.id %}>{{ expense.matter.name }}</a>
           </td>
           <td class="actions">
-            {% if expense.invoice %}
+            {% if expense.invoice and expense.invoice.status != 'DRAFT' %}
               {% if expense.category %}{{ expense.category }} -{% endif %}
               {{ expense.description }}
             {% else %}
