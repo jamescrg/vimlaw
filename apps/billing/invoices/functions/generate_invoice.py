@@ -1,4 +1,3 @@
-import os
 from tempfile import NamedTemporaryFile
 
 from django.core.handlers.wsgi import WSGIRequest
@@ -8,7 +7,6 @@ from weasyprint import HTML
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
 from apps.billing.invoices.models import Invoice
-from config.settings import BASE_DIR
 
 
 def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFile:
@@ -43,10 +41,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
 
     with NamedTemporaryFile(suffix=".pdf", delete=False) as pdf_file:
-        html.write_pdf(
-            target=pdf_file.name,
-            stylesheets=[BASE_DIR.joinpath(os.path.join("static", "css", "pdf.css"))],
-        )
+        html.write_pdf(target=pdf_file.name)
         pdf_file.seek(0)
 
     return pdf_file

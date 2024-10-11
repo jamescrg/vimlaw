@@ -2,36 +2,22 @@
 Page Setup
 ========================================================================== */
 
-
 @page {
   margin: 0.75in;
   size: Letter;
+
   @bottom-center {
-      content: counter(page);
-      font-size: 11pt;
-      color: gray;
+    content: counter(page);
+    font-size: 11pt;
+    color: gray;
   }
 }
 
-.invoice-template {
+.template {
   font-family: "Noto Serif", serif;
   font-size: 11pt;
   position: relative;
   width: 100%;
-}
-
-.invoice-body-draft {
-  background-image: url("/static/images/draft.png");
-  background-position: center;
-  background-repeat: repeat-y;
-  background-size: cover;
-}
-
-.invoice-body-canceled {
-  background-image: url("/static/images/canceled.png");
-  background-position: center;
-  background-repeat: repeat-y;
-  background-size: cover;
 }
 
 /* ==========================================================================
@@ -105,7 +91,8 @@ h3 {
   font-family: "Times New Roman", serif;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   border: solid 1px lightgray;
   font-size: 10pt;
   padding: 6pt;
@@ -136,15 +123,6 @@ h3 {
   font-weight: 600;
 }
 
-.invoice-totals {
-  page-break-inside: avoid;
-}
-
-.totals-table {
-  float: right;
-  width: fit-content;
-}
-
 .total {
   width: 100px;
 }
@@ -153,20 +131,8 @@ h3 {
   width: 150px;
 }
 
-.balance-due {
-  font-weight: bold;
-}
-
 .strong {
   font-weight: 600;
-}
-
-.transaction-type {
-  width: 0.75in;
-}
-
-.current-balance {
-  padding-right: 2rem;
 }
 
 /* ==========================================================================
