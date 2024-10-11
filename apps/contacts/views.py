@@ -109,12 +109,12 @@ def add(request):
                 intake = get_object_or_404(Intake, pk=intake_id)
                 contact.intake = intake
 
-            # save contact to database with google id
             contact.save()
 
             # select newest contact for user
             new = Contact.objects.all().latest("id")
             request.session["selected_contact_id"] = new.id
+            request.session["contacts_selected_folder_id"] = new.folder.id
 
             return redirect("/contacts")
 
@@ -129,8 +129,6 @@ def add(request):
         "name"
     )
 
-    google_connected = google.check_credentials()
-
     context = {
         "app": "contacts",
         "edit": False,
@@ -138,7 +136,6 @@ def add(request):
         "action": "/contacts/add",
         "folders": folders,
         "selected_folder": selected_folder,
-        "google_connected": google_connected,
         "form": form,
     }
 
