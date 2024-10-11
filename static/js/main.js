@@ -43,6 +43,12 @@ htmx.on("htmx:beforeSwap", (e) => {
     }
 })
 
+htmx.on("htmx:afterRequest", (e) => {
+    if (e.detail.xhr.status === 200) {
+        modal.hide()
+    }
+})
+
 // Auto focus on the first element that has the autofocus attribute inside a modal
 htmx.on("shown.bs.modal", () => {
     const autofocusElement = document.querySelector("#htmx-modal-container [autofocus]")

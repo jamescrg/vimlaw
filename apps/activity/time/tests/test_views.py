@@ -30,7 +30,7 @@ def test_add_get(client):
 
 def test_add_post(client, entry_data):
     response = client.post(reverse("activity:time-add"), entry_data)
-    assert response.status_code == 302
+    assert response.status_code == 200
     found = TimeEntry.objects.filter(actions=entry_data["actions"]).first()
     assert found
 
@@ -50,14 +50,14 @@ def test_edit_post(client, matter, entry):
         "rate": 300,
     }
     response = client.post(f"/activity/time/{entry.id}/edit", data)
-    assert response.status_code == 302
+    assert response.status_code == 200
     found = TimeEntry.objects.filter(actions="new actions").exists()
     assert found
 
 
 def test_delete(client, entry):
     response = client.get(f"/activity/time/{entry.id}/delete")
-    assert response.status_code == 302
+    assert response.status_code == 200
     found = TimeEntry.objects.filter(pk=entry.id).exists()
     assert not found
 

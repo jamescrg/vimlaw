@@ -1,0 +1,39 @@
+{% load humanize %}
+<td class="date">{{ entry.date|date:'Y-m-d' }}</td>
+<td class="user">{{ entry.user.initials }}</td>
+<td class="matter">
+  <a href={% url 'matters:detail' id=entry.matter.id %}>{{ entry.matter.name }}</a>
+</td>
+<td class="actions">
+  {% if entry.invoice %}
+    {{ entry.actions }}
+  {% else %}
+    <a href="#"
+       hx-get="{% url 'activity:time-edit' id=entry.id %}"
+       hx-target="#htmx-modal-container"
+       hx-trigger="click"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">{{ entry.actions }}</a>
+  {% endif %}
+</td>
+<td class="hours {% if not entry.entered and not entry.invoice %}urgent{% endif %}">
+  {% if entry.invoice %}
+    {{ entry.hours|floatformat:1 }}
+  {% else %}
+    <a href={% url 'activity:time-toggle-entered' id=entry.id %}>{{ entry.hours|floatformat:1 }}</a>
+  {% endif %}
+</td>
+<td class="rate">
+  {% if entry.comp %}
+    comp
+  {% else %}
+    ${{ entry.rate }}
+  {% endif %}
+</td>
+<td class="fee">
+  {% if entry.comp %}
+    comp
+  {% else %}
+    ${{ entry.fee|floatformat:2|intcomma }}
+  {% endif %}
+</td>

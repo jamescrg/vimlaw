@@ -73,44 +73,9 @@
         </th>
         <th class="numeric hours">Amount</th>
       </tr>
+      <tr id="expense-table"></tr>
       {% for expense in objects %}
-        <tr>
-          <td class="date">{{ expense.date|date:'Y-m-d' }}</td>
-          <td class="user">{{ expense.user.initials }}</td>
-          <td class="matter">
-            <a href={% url 'matters:detail' id=expense.matter.id %}>{{ expense.matter.name }}</a>
-          </td>
-          <td class="actions">
-            {% if expense.invoice %}
-              {% if expense.category %}{{ expense.category }} -{% endif %}
-              {{ expense.description }}
-            {% else %}
-              <a href="#"
-                 hx-get="/activity/expenses/{{ expense.id }}/edit"
-                 hx-target="#htmx-modal-container"
-                 hx-trigger="click"
-                 data-bs-toggle="modal"
-                 data-bs-target="#htmx-modal-container">
-                {% if expense.category %}{{ expense.category }} -{% endif %}
-              {{ expense.description }}</a>
-            {% endif %}
-          </td>
-          <td class="hours {% if not expense.entered and not expense.invoice %}urgent{% endif %}">
-            {% if expense.invoice %}
-              {% if expense.comp %}
-                comp
-              {% else %}
-                ${{ expense.amount|floatformat:2|intcomma }}
-              {% endif %}
-            {% else %}
-              {% if expense.comp %}
-                <a href={% url 'activity:expenses-toggle-entered' id=expense.id %}>comp</a>
-              {% else %}
-                <a href={% url 'activity:expenses-toggle-entered' id=expense.id %}>${{ expense.amount|floatformat:2|intcomma }}</a>
-              {% endif %}
-            {% endif %}
-          </td>
-        </tr>
+        <tr id="expense-{{ expense.id }}">{% include "activity/expenses/table-row.html" %}</tr>
       {% endfor %}
     </table>
     <div class="flex-start-space">

@@ -174,7 +174,10 @@ def expenses_add(request, id=None):
             for key, val in codes.items():
                 entry.description = entry.description.replace(key, val)
             entry.save()
-            return redirect("/activity/expenses")
+
+            return render(
+                request, "activity/expenses/table-row.html", {"expense": entry}
+            )
 
     # if no post data has been submitted, show the entry form
     else:
@@ -226,7 +229,10 @@ def expenses_edit(request, id):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.save()
-            return redirect("/activity/expenses")
+
+            return render(
+                request, "activity/expenses/table-row.html", {"expense": entry}
+            )
 
     else:
         # get list of matters for activity form
@@ -259,7 +265,8 @@ def expenses_edit(request, id):
 def expenses_delete(request, id):
     entry = get_object_or_404(ExpenseEntry, pk=id)
     entry.delete()
-    return redirect("/activity/expenses")
+
+    return HttpResponse("", status=200)
 
 
 @login_required
