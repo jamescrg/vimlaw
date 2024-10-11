@@ -36,6 +36,7 @@ List View
 .status-buttons {
   display: flex;
   gap: 0.85rem;
+  margin-left: 1rem;
 }
 
 /* ==========================================================================
