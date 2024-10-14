@@ -1,0 +1,42 @@
+{% extends "billing/invoices/detail.html" %}
+{% block subcontent %}
+  <div class="section-title">
+    <div class="section-title-left">
+      <h1>Expense Entries</h1>
+    </div>
+  </div>
+  <div class="table-container">
+    <table class="table activity">
+      <tr>
+        <th class="date">
+          Date
+          <a href={% url 'activity:expenses-order-by' 'date' %}>
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+        </th>
+        <th class="user">User</th>
+        <th class="matter">
+          Matter
+          <a href={% url 'activity:expenses-order-by' 'matter' %}>
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+        </th>
+        <th class="actions">
+          Description
+          <a href={% url 'activity:expenses-order-by' 'description' %}>
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+        </th>
+        <th class="numeric hours">Amount</th>
+      </tr>
+      <tr id="expense-table"></tr>
+      {% for expense in objects %}
+        <tr id="expense-{{ expense.id }}">{% include "activity/expenses/table-row.html" %}</tr>
+      {% endfor %}
+    </table>
+    <div class="flex-start-space">
+      <div>{% include "pagination.html" %}</div>
+      {% include "activity/expenses/summary.html" %}
+    </div>
+  </div>
+{% endblock subcontent %}

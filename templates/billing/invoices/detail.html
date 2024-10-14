@@ -48,7 +48,7 @@
         </tr>
         <tr>
           <th>Total amount</th>
-          <td>${{ invoice.amount|floatformat:2|intcomma }}</td>
+          <td>${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
         </tr>
         <tr>
           <th>Status</th>
@@ -66,8 +66,14 @@
     </div>
   </div>
   <ul class="subnav">
-    <li {% if request.path|slice:"28:" == '/preview/' %}class="active"{% endif %}>
-      <a href={% url 'billing:invoices-detail' pk=invoice.id %}>Preview PDF</a>
+    <li {% if subapp == "preview" %}class="active"{% endif %}>
+      <a href="{% url 'billing:invoices-detail' invoice.id %}">Preview PDF</a>
+    </li>
+    <li {% if subapp == "time" %}class="active"{% endif %}>
+      <a href="{% url 'billing:invoice-time-entries' invoice.id %}">Time Entries</a>
+    </li>
+    <li {% if subapp == "expenses" %}class="active"{% endif %}>
+      <a href="{% url 'billing:invoice-expense-entries' invoice.id %}">Expense Entries</a>
     </li>
   </ul>
   <div class="section">

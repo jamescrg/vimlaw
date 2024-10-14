@@ -8,7 +8,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 
 from apps.activity.expenses.models import ExpenseEntry
+from apps.activity.expenses.summary import (
+    calculate_summary as calculate_expense_summary,
+)
 from apps.activity.time.models import TimeEntry
+from apps.activity.time.summary import calculate_summary as calculate_time_summary
 from apps.billing.invoices.functions import generate_ledes_98b
 from apps.matters.models import Matter
 
@@ -61,10 +65,55 @@ def invoices_detail(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
     context = {
         "app": "billing",
+        "subapp": "preview",
         "file_url": reverse_lazy("billing:invoices-pdf", kwargs={"pk": invoice.pk}),
         "invoice": invoice,
     }
     return render(request, "billing/invoices/preview/preview.html", context)
+
+
+@login_required
+def invoice_time_entires(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    entries = TimeEntry.objects.filter(invoice=invoice).order_by("date")
+    summary = calculate_time_summary(entries)
+
+    page = request.GET.get("page")
+    pagination = Paginator(entries, per_page=10).get_page(page)
+
+    context = {
+        "app": "billing",
+        "subapp": "time",
+        "objects": pagination.object_list,
+        "pagination": pagination,
+        "invoice": invoice,
+        "summary": summary,
+    }
+
+    return render(request, "billing/invoices/time-entries.html", context)
+
+
+@login_required
+def invoice_expense_entries(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    expenses = ExpenseEntry.objects.filter(invoice=invoice).order_by("date")
+    summary = calculate_expense_summary(expenses)
+
+    page = request.GET.get("page")
+    pagination = Paginator(expenses, per_page=10).get_page(page)
+
+    context = {
+        "app": "billing",
+        "subapp": "expenses",
+        "objects": pagination.object_list,
+        "pagination": pagination,
+        "invoice": invoice,
+        "summary": summary,
+    }
+
+    return render(request, "billing/invoices/expense-entries.html", context)
 
 
 @login_required

@@ -32,7 +32,7 @@ def index(request):
     confirmed_account_balance = trust.get_confirmed_account_balance()
 
     page = request.GET.get("page")
-    pagination = Paginator(contacts, per_page=10).get_page(page)
+    pagination = Paginator(contacts, per_page=50).get_page(page)
 
     context = {
         "app": "trust",
@@ -55,7 +55,7 @@ def history(request, interval="30days"):
     transactions = trust.get_account_history(interval)
 
     page = request.GET.get("page")
-    pagination = Paginator(transactions, per_page=10).get_page(page)
+    pagination = Paginator(transactions, per_page=50).get_page(page)
 
     context = {
         "app": "trust",
