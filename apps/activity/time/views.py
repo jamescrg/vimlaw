@@ -232,7 +232,9 @@ def time_add(request, id=None):
 
             entry.save()
 
-            return render(request, "activity/time/table-row.html", {"entry": entry})
+            return render(
+                request, "activity/time/table-row.html", {"entry": entry}, status=202
+            )
 
     # if no post data has been submitted, show the entry form
     else:
@@ -304,7 +306,9 @@ def time_edit(request, id):
             entry = form.save(commit=False)
             entry.save()
 
-            return render(request, "activity/time/table-row.html", {"entry": entry})
+            return render(
+                request, "activity/time/table-row.html", {"entry": entry}, status=202
+            )
 
     else:
         # get list of matters for activity form

@@ -176,7 +176,10 @@ def expenses_add(request, id=None):
             entry.save()
 
             return render(
-                request, "activity/expenses/table-row.html", {"expense": entry}
+                request,
+                "activity/expenses/table-row.html",
+                {"expense": entry},
+                status=202,
             )
 
     # if no post data has been submitted, show the entry form
@@ -231,7 +234,10 @@ def expenses_edit(request, id):
             entry.save()
 
             return render(
-                request, "activity/expenses/table-row.html", {"expense": entry}
+                request,
+                "activity/expenses/table-row.html",
+                {"expense": entry},
+                status=202,
             )
 
     else:
