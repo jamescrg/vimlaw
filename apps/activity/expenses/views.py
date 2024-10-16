@@ -159,7 +159,7 @@ def order_by_expenses(request, order):
 
 
 @login_required
-def expenses_add(request, id=None, matter_form=None):
+def expenses_add(request, id=None, request_app="activity"):
     # if applicable, process any post data submitted by user
     if request.method == "POST":
         form = ExpenseEntryForm(request.POST)
@@ -175,15 +175,15 @@ def expenses_add(request, id=None, matter_form=None):
                 entry.description = entry.description.replace(key, val)
             entry.save()
 
-            if matter_form:
+            if request_app == "activity":
+                return render(
+                    request,
+                    "activity/expenses/table-row.html",
+                    {"expense": entry},
+                    status=202,
+                )
+            elif request_app == "matters":
                 return redirect("/activity/expenses")
-
-            return render(
-                request,
-                "activity/expenses/table-row.html",
-                {"expense": entry},
-                status=202,
-            )
 
     # if no post data has been submitted, show the entry form
     else:
@@ -224,10 +224,10 @@ def expenses_add(request, id=None, matter_form=None):
         "matter_id": id,
     }
 
-    if matter_form:
+    if request_app == "activity":
+        return render(request, "activity/expenses/form.html", context)
+    elif request_app == "matters":
         return render(request, "matters/activity/expense-form.html", context)
-
-    return render(request, "activity/expenses/form.html", context)
 
 
 @login_required
