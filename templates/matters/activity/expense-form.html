@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{% url 'activity:expenses-add' id=matter_id matter_form=True %}"
+      <form action="{% url 'activity:expenses-add' id=matter_id request_app='matters' %}"
             class="form-responsive expenses-form"
             method="post"
             role="form">

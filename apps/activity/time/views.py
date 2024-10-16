@@ -192,7 +192,7 @@ def order_by_time(request, order):
 
 
 @login_required
-def time_add(request, id=None, matter_form=None):
+def time_add(request, id=None, request_app="activity"):
     # if applicable, process any post data submitted by user
     if request.method == "POST":
         form = TimeEntryForm(request.POST)
@@ -232,13 +232,15 @@ def time_add(request, id=None, matter_form=None):
 
             entry.save()
 
-            if matter_form:
-                print("here 1")
+            if request_app == "activity":
+                return render(
+                    request,
+                    "activity/time/table-row.html",
+                    {"entry": entry},
+                    status=202,
+                )
+            elif request_app == "matters":
                 return redirect("/activity")
-
-            return render(
-                request, "activity/time/table-row.html", {"entry": entry}, status=202
-            )
 
     # if no post data has been submitted, show the entry form
     else:
@@ -298,10 +300,10 @@ def time_add(request, id=None, matter_form=None):
         "matter_id": id,
     }
 
-    if matter_form:
+    if request_app == "activity":
+        return render(request, "activity/time/form.html", context)
+    elif request_app == "matters":
         return render(request, "matters/activity/time-form.html", context)
-
-    return render(request, "activity/time/form.html", context)
 
 
 @login_required
