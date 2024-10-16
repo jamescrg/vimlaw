@@ -23,7 +23,7 @@
 .section-title a,
 .section-title button {
   background: var(--warm-gray-150);
-  border: none;
+  border: solid 1px var(--warm-gray-200);
   border-radius: 4px;
   color: var(--lime-800);
   padding: 4px 7px;
@@ -44,7 +44,7 @@
 
 .select-user {
   background-color: var(--warm-gray-150);
-  border: none;
+  border: solid 1px var(--warm-gray-200);
   color: var(--warm-gray-700);
   padding: 6px;
 }
