@@ -10,10 +10,10 @@
     </div>
     <div class="modal-body">
       <form class="form-responsive invoices-add"
-            method="post"
-            action="{% url 'billing:payments-add' %}">
-        {% csrf_token %}
-        {{ form }}
+            hx-post="{% url 'billing:payments-add' %}"
+            hx-target="#htmx-modal-container"
+            role="form">
+        {% csrf_token %} {{ form }}
         <br />
         <div class="flex-center-space">
           <button type="submit" class="submit">Submit</button>

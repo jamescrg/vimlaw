@@ -1,0 +1,8 @@
+{% extends "billing/list.html" %}
+{% block subcontent %}
+  {% load humanize %}
+  <div id="payments"
+       hx-trigger="load, paymentsChanged from:body"
+       hx-get="{% url 'billing:payments-list' %}"
+       hx-target="this">{% include "billing/payments/list.html" %}</div>
+{% endblock subcontent %}

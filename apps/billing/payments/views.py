@@ -1,13 +1,23 @@
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.shortcuts import redirect, render
+from django.shortcuts import HttpResponse, redirect, render
 
 from apps.billing.invoices.models import Invoice
+from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
 from .filters import PaymentFilter
 from .forms import PaymentForm
 from .models import Payment
+
+
+@login_required
+def payments_index(request):
+    context = {
+        "app": "billing",
+        "subapp": "payments",
+    }
+
+    return render(request, "billing/payments/main.html", context)
 
 
 @login_required
@@ -24,14 +34,13 @@ def payments_list(request):
 
     payments_total = sum(payment.amount for payment in payments)
 
-    page = request.GET.get("page")
-    pagination = Paginator(payments, per_page=10).get_page(page)
+    pagination = CustomPaginator(payments, per_page=10, request=request)
 
     context = {
         "app": "billing",
         "subapp": "payments",
         "pagination": pagination,
-        "objects": pagination.object_list,
+        "objects": pagination.get_object_list(),
         "payments_total": payments_total,
     }
 
@@ -47,7 +56,8 @@ def payments_add(request):
             payment = form.save(commit=False)
             payment.save()
 
-            return redirect("billing:payments-list")
+            return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
+
     else:
         form = PaymentForm()
         matters = Matter.objects.exclude(status="Closed").order_by("name")
@@ -58,9 +68,9 @@ def payments_add(request):
 
 @login_required
 def payments_delete(request, pk):
-    payment = Payment.objects.get(pk=pk)
-    payment.delete()
-    return redirect("billing:payments-list")
+    Payment.objects.get(pk=pk).delete()
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
 
 
 @login_required
@@ -73,7 +83,7 @@ def payments_edit(request, pk):
         if form.is_valid():
             form.save()
 
-            return redirect("billing:payments-list")
+            return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
     else:
         form = PaymentForm(instance=payment)
 
