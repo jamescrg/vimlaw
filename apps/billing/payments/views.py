@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import HttpResponse, redirect, render
+from django.shortcuts import HttpResponse, render
 
 from apps.billing.invoices.models import Invoice
 from apps.management.pagination import CustomPaginator
@@ -124,7 +124,7 @@ def payments_filter(request):
     if request.method == "POST":
         request.session["payments_filter"] = request.POST
 
-        return redirect("billing:payments-list")
+        return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
     else:
         filter = get_filter(request)
 
@@ -145,4 +145,4 @@ def order_by_payments(request, order):
     filter_data["order_by"] = new_order
     request.session["payments_filter"] = filter_data
 
-    return redirect("billing:payments-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
