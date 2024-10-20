@@ -1,23 +1,35 @@
 {% load humanize %}
 <tr id="invoice-{{ invoice.id }}">
-  <td class="number">
+  <td class="number">{{ invoice.id }}</td>
+  <td class="date">{{ invoice.date_issued|date:"Y-m-d" }}</td>
+  <td>
     <div class="dropdown">
       <button class="button-link"
               type="button"
               data-bs-toggle="dropdown"
-              aria-expanded="false">{{ invoice.id }}</button>
+              aria-expanded="false">{{ invoice.matter.name|slice:":20" }}</button>
       <ul class="dropdown-menu">
         <li>
-          <a target="_blank" href="{% url 'billing:invoices-pdf' invoice.id %}">Download PDF</a>
+          <a class="dropdown-item"
+             href="{% url 'billing:invoice-time-entries' invoice.id %}">Detail</a>
         </li>
         <li>
-          <a target="_blank" href="{% url 'billing:invoice-ledes' invoice.id %}">Download Ledes</a>
+          <a class="dropdown-item"
+             target="_blank"
+             href="{% url 'billing:invoices-pdf' invoice.id %}">Download PDF</a>
         </li>
         <li>
-          <a href={% url 'billing:invoice-time-entries' invoice.id %}>Detail</a>
+          <a class="dropdown-item"
+             target="_blank"
+             href="{% url 'billing:invoice-ledes' invoice.id %}">Download Ledes</a>
         </li>
         <li>
-          <a href="#"
+          <a class="dropdown-item"
+             href="{% url 'matters:detail' id=invoice.matter.id %}">View Matter</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
              hx-get="{% url 'billing:invoices-edit' invoice.id %}"
              hx-target="#htmx-modal-container"
              hx-trigger="click"
@@ -27,10 +39,6 @@
         </li>
       </ul>
     </div>
-  </td>
-  <td class="date">{{ invoice.date_issued|date:"Y-m-d" }}</td>
-  <td>
-    <a href={% url 'matters:detail' id=invoice.matter.id %}>{{ invoice.matter.name|slice:":20" }}</a>
   </td>
   <td class="status">{% include "billing/invoices/status.html" %}</td>
   <td class="amount">${{ invoice.value.net_fees|floatformat:2|intcomma }}</td>

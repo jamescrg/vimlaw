@@ -7,7 +7,8 @@
             aria-expanded="false">{{ payment.id }}</button>
     <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
       <li>
-        <a href="#"
+        <a class="dropdown-item"
+           href="#"
            hx-get="{% url 'billing:payments-edit' payment.id %}"
            hx-target="#htmx-modal-container"
            hx-trigger="click"

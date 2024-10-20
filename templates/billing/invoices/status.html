@@ -5,19 +5,24 @@
           aria-expanded="false">{{ invoice.status_display }}</button>
   <ul class="dropdown-menu">
     <li>
-      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='DRAFT' %}">Draft</a>
+      <a class="dropdown-item"
+         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='DRAFT' %}">Draft</a>
     </li>
     <li>
-      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='APPROVED' %}">Approved</a>
+      <a class="dropdown-item"
+         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='APPROVED' %}">Approved</a>
     </li>
     <li>
-      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='SENT' %}">Sent</a>
+      <a class="dropdown-item"
+         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='SENT' %}">Sent</a>
     </li>
     <li>
-      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='PAID' %}">Paid</a>
+      <a class="dropdown-item"
+         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='PAID' %}">Paid</a>
     </li>
     <li>
-      <a href="{% url 'billing:invoices-edit-status' pk=invoice.id status='WAIVED' %}">Waived</a>
+      <a class="dropdown-item"
+         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='WAIVED' %}">Waived</a>
     </li>
   </ul>
 </div>

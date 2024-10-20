@@ -29,8 +29,8 @@ List View
 }
 
 .toggle-active {
-  background: #dfdddc !important;
-  font-weight: 500;
+  background: var(--warm-gray-225) !important;
+  border: solid 1px var(--warm-gray-300) !important;
 }
 
 .status-buttons {

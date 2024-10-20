@@ -10,12 +10,19 @@
   background: var(--warm-gray-50);
   border-radius: 3px;
   border-top: solid 1px var(--warm-gray-200);
-  padding: 0.5rem;
 }
 
 .dropdown-menu li:hover {
   background: var(--warm-gray-100);
   color: var(--lime-800);
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+}
+
+.dropdown-item:hover {
+  background: var(--warm-gray-100);
 }
 
 .dropdown-menu li:first-child {
@@ -25,7 +32,6 @@
 .dropdown-menu li>a {
   background: none;
   color: inherit;
-  padding: 0.5rem;
 }
 
 .table-select {

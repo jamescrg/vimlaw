@@ -38,11 +38,13 @@
         </button>
         <ul class="dropdown-menu">
           <li>
-            <a href="{% url 'activity:time-export' 'standard' %}"
+            <a class="dropdown-item"
+               href="{% url 'activity:time-export' 'standard' %}"
                onclick="javascript: return confirm('Are you sure you want to download records?')">Standard</a>
           </li>
           <li>
-            <a href="{% url 'activity:time-export' 'clio' %}"
+            <a class="dropdown-item"
+               href="{% url 'activity:time-export' 'clio' %}"
                onclick="javascript: return confirm('Are you sure you want to download records?')">Clio</a>
           </li>
         </ul>

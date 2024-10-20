@@ -72,14 +72,16 @@
                     aria-expanded="false">{{ user.username }}</button>
             <ul class="dropdown-menu">
               <li>
-                <a hx-get="{% url 'settings:edit-user' user.id %}"
+                <a class="dropdown-item"
+                   hx-get="{% url 'settings:edit-user' user.id %}"
                    hx-target="#htmx-modal-container"
                    hx-trigger="click"
                    data-bs-toggle="modal"
                    data-bs-target="#htmx-modal-container">Edit</a>
               </li>
               <li>
-                <a hx-post="{% url 'settings:switch-status' user.id %}">Switch to {{ user.is_active|yesno:"Inactive,Active" }}</a>
+                <a class="dropdown-item"
+                   hx-post="{% url 'settings:switch-status' user.id %}">Switch to {{ user.is_active|yesno:"Inactive,Active" }}</a>
               </li>
             </ul>
           </div>
@@ -94,10 +96,12 @@
                     aria-expanded="false">{{ user.role_display }}</button>
             <ul class="dropdown-menu">
               <li>
-                <a hx-post="{% url 'settings:change-role' user_id=user.id role='USER' %}">User</a>
+                <a class="dropdown-item"
+                   hx-post="{% url 'settings:change-role' user_id=user.id role='USER' %}">User</a>
               </li>
               <li>
-                <a hx-post="{% url 'settings:change-role' user_id=user.id role='ADMIN' %}">Admin</a>
+                <a class="dropdown-item"
+                   hx-post="{% url 'settings:change-role' user_id=user.id role='ADMIN' %}">Admin</a>
               </li>
             </ul>
           </div>

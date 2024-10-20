@@ -6,7 +6,8 @@
   <ul class="dropdown-menu">
     {% for i in '123456789'|make_list %}
       <li>
-        <a href="#"
+        <a class="dropdown-item"
+           href="#"
            hx-get="{% url 'agenda:tasks-task-priority' task_id=task.id priority=forloop.counter %}"
            hx-target="#tasks">{{ forloop.counter }}</a>
       </li>
