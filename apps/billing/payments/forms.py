@@ -16,11 +16,8 @@ class PaymentForm(forms.ModelForm):
             "amount",
         ]
         widgets = {
-            "matter": forms.Select(attrs={"required": True}),
             "date": forms.DateInput(attrs={"type": "date"}),
-            "payment_method": forms.Select(attrs={"required": True}),
             "detail": forms.TextInput(attrs={"required": False}),
-            "amount": forms.TextInput(attrs={"required": True}),
         }
 
     def __init__(self, *args, **kwargs):

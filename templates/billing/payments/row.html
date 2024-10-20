@@ -16,8 +16,11 @@
            data-bs-target="#htmx-modal-container">Edit</a>
       </li>
       <li>
-        <a onclick="return confirm('Are you sure you want to delete this payment?')"
-           href="{% url 'billing:payments-delete' payment.id %}">Delete</a>
+        <a hx-confirm="Are you sure you want to delete this payment?"
+           href="#!"
+           hx-delete="{% url 'billing:payments-delete' payment.id %}"
+           hx-swap="outerHTML"
+           hx-target="#payment-{{ payment.id }}">Delete</a>
       </li>
     </ul>
   </td>

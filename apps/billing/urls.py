@@ -23,6 +23,7 @@ from apps.billing.payments.views import (
     payments_delete,
     payments_edit,
     payments_filter,
+    payments_index,
     payments_list,
 )
 
@@ -73,7 +74,8 @@ urlpatterns = [
         name="invoice-parameters",
     ),
     # Payments
-    path("billing/payments/", payments_list, name="payments-list"),
+    path("billing/payments/", payments_index, name="payments-index"),
+    path("billing/payments/list/", payments_list, name="payments-list"),
     path("billing/payments-add/", payments_add, name="payments-add"),
     path("billing/payments-delete/<int:pk>/", payments_delete, name="payments-delete"),
     path("billing/payments-edit/<int:pk>/", payments_edit, name="payments-edit"),

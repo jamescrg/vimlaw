@@ -35,8 +35,7 @@ def test_payments_add_post(client, matter):
     }
     response = client.post(reverse("billing:payments-add"), payment_data)
 
-    assert response.status_code == 302
-    assert response.url == reverse("billing:payments-list")
+    assert response.status_code == 204
 
     assert Payment.objects.filter(matter=matter).exists()
 
@@ -46,8 +45,7 @@ def test_payments_delete(client, payment):
         reverse("billing:payments-delete", kwargs={"pk": payment.pk})
     )
 
-    assert response.status_code == 302
-    assert response.url == reverse("billing:payments-list")
+    assert response.status_code == 204
 
     assert not Payment.objects.filter(pk=payment.pk).exists()
 
@@ -72,8 +70,7 @@ def test_payments_edit_post(client, payment):
     response = client.post(
         reverse("billing:payments-edit", kwargs={"pk": payment.pk}), updated_data
     )
-    assert response.status_code == 302
-    assert response.url == reverse("billing:payments-list")
+    assert response.status_code == 204
 
     payment.refresh_from_db()
     assert payment.amount == 200.00
@@ -91,5 +88,4 @@ def test_payments_filter_post(client):
     filter_data = {"payment_method": "BANK_TRANSFER"}
     response = client.post(reverse("billing:payments-filter"), filter_data)
 
-    assert response.status_code == 302
-    assert response.url == reverse("billing:payments-list")
+    assert response.status_code == 204

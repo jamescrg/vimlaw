@@ -1,13 +1,23 @@
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.shortcuts import redirect, render
+from django.shortcuts import HttpResponse, get_object_or_404, render
 
 from apps.billing.invoices.models import Invoice
+from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
 from .filters import PaymentFilter
 from .forms import PaymentForm
 from .models import Payment
+
+
+@login_required
+def payments_index(request):
+    context = {
+        "app": "billing",
+        "subapp": "payments",
+    }
+
+    return render(request, "billing/payments/main.html", context)
 
 
 @login_required
@@ -24,14 +34,13 @@ def payments_list(request):
 
     payments_total = sum(payment.amount for payment in payments)
 
-    page = request.GET.get("page")
-    pagination = Paginator(payments, per_page=10).get_page(page)
+    pagination = CustomPaginator(payments, per_page=10, request=request)
 
     context = {
         "app": "billing",
         "subapp": "payments",
         "pagination": pagination,
-        "objects": pagination.object_list,
+        "objects": pagination.get_object_list(),
         "payments_total": payments_total,
     }
 
@@ -40,57 +49,46 @@ def payments_list(request):
 
 @login_required
 def payments_add(request):
-    if request.method == "POST":
-        form = PaymentForm(request.POST)
+    matters = Matter.objects.exclude(status="Closed").order_by("name")
 
-        if form.is_valid():
-            payment = form.save(commit=False)
-            payment.save()
+    form = PaymentForm(request.POST or None, use_required_attribute=False)
+    form.fields["matter"].queryset = matters
 
-            return redirect("billing:payments-list")
-    else:
-        form = PaymentForm()
-        matters = Matter.objects.exclude(status="Closed").order_by("name")
-        form.fields["matter"].queryset = matters
+    if request.method == "POST" and form.is_valid():
+        form.save()
+
+        return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
 
     return render(request, "billing/payments/form.html", {"form": form})
 
 
 @login_required
-def payments_delete(request, pk):
-    payment = Payment.objects.get(pk=pk)
-    payment.delete()
-    return redirect("billing:payments-list")
+def payments_delete(_, pk):
+    Payment.objects.get(pk=pk).delete()
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
 
 
 @login_required
 def payments_edit(request, pk):
-    payment = Payment.objects.get(pk=pk)
+    payment = get_object_or_404(Payment, pk=pk)
+
+    matter_ids = Invoice.objects.filter(status="SENT").values_list("matter", flat=True)
+    matters = Matter.objects.filter(id__in=matter_ids) | Matter.objects.filter(
+        id=payment.matter.id
+    )
 
     if request.method == "POST":
-        form = PaymentForm(request.POST, instance=payment)
+        form = PaymentForm(request.POST, instance=payment, use_required_attribute=False)
 
         if form.is_valid():
             form.save()
 
-            return redirect("billing:payments-list")
+            return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
     else:
-        form = PaymentForm(instance=payment)
+        form = PaymentForm(instance=payment, use_required_attribute=False)
 
-        matter_ids = Invoice.objects.filter(status="SENT").values_list(
-            "matter", flat=True
-        )
-
-        matters = Matter.objects.filter(id__in=matter_ids) | Matter.objects.filter(
-            id=payment.matter.id
-        )
-
-        form.fields["matter"].queryset = matters
-        form.fields["matter"].initial = payment.matter
-        form.fields["date"].initial = payment.date
-        form.fields["amount"].initial = payment.amount
-        form.fields["payment_method"].initial = payment.payment_method
-        form.fields["detail"].initial = payment.detail
+    form.fields["matter"].queryset = matters
 
     return render(
         request,
@@ -114,7 +112,7 @@ def payments_filter(request):
     if request.method == "POST":
         request.session["payments_filter"] = request.POST
 
-        return redirect("billing:payments-list")
+        return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
     else:
         filter = get_filter(request)
 
@@ -135,4 +133,4 @@ def order_by_payments(request, order):
     filter_data["order_by"] = new_order
     request.session["payments_filter"] = filter_data
 
-    return redirect("billing:payments-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
