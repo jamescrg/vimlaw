@@ -4,10 +4,11 @@ from apps.intakes.models import Intake
 
 INTAKE_STATUS_CHOICES = (
     ("Open", "Open"),
-    ("Declined", "Declined"),
     ("Accepted", "Accepted"),
     ("Pending", "Pending"),
-    ("Recent", "Recent"),
+    ("Referred Out", "Referred Out"),
+    ("Client Declined", "Client Declined"),
+    ("Unresponsive", "Unresponsive"),
 )
 
 PRACTICE_AREA_CHOICES = (

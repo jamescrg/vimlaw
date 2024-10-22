@@ -54,6 +54,16 @@ def quick_filter_status(request, status):
 
 
 @login_required
+def quick_filter_all(request):
+    filter_data = request.session.get("intake_filter", {})
+
+    filter_data["status"] = None
+    filter_data["order_by"] = "-date"
+
+    return redirect("intakes:list")
+
+
+@login_required
 def order_by(request, order):
     filter_data = request.session.get("intake_filter", {})
 
@@ -244,3 +254,13 @@ def delete_note(request, id):
     intake = get_object_or_404(Intake, pk=note.intake.id)
     note.delete()
     return redirect(f"/intakes/{intake.id}")
+
+
+@login_required
+def intake_edit_status(_, pk, status):
+    intake = get_object_or_404(Intake, pk=pk)
+
+    intake.status = status
+    intake.save()
+
+    return redirect("intakes:list")
