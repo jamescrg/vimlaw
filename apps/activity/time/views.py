@@ -2,12 +2,12 @@ from datetime import date, datetime
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
 from apps.activity.expenses.models import ExpenseEntry
+from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 from apps.matters.rates.models import Rate
 
@@ -16,6 +16,16 @@ from .filter import TimeEntryFilter
 from .forms import TimeEntryForm
 from .models import TimeEntry
 from .summary import calculate_summary
+
+
+@login_required
+def time_index(request):
+    context = {
+        "app": "activity",
+        "subapp": "time",
+    }
+
+    return render(request, "activity/time/main.html", context)
 
 
 @login_required
@@ -63,14 +73,13 @@ def time_list(request):
     summary = calculate_summary(entries)
     users = CustomUser.objects.filter(is_active=True)
 
-    page = request.GET.get("page")
-    pagination = Paginator(entries, per_page=10).get_page(page)
+    pagination = CustomPaginator(entries, per_page=10, request=request)
 
     context = {
         "app": "activity",
         "subapp": "time",
         "edit": False,
-        "objects": pagination.object_list,
+        "objects": pagination.get_object_list(),
         "pagination": pagination,
         "number_entries": number_entries,
         "summary": summary,
@@ -91,7 +100,7 @@ def time_filter(request):
     if request.method == "POST":
         request.session["time_filter"] = request.POST
 
-        return redirect("activity:time-list")
+        return HttpResponse(status=204, headers={"HX-Trigger": "timeChanged"})
 
     else:
         filter = get_filter(request)
@@ -162,16 +171,18 @@ def time_filter_quick(request, quick_filter):
     request.session["time_filter"] = filter_data
     request.session.modified = True
 
-    return redirect("activity:time-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "timeChanged"})
 
 
 @login_required
 def time_filter_user(request):
     filter_data = request.session.get("time_filter", {})
     user = request.POST.get("user")
+
     filter_data["user"] = user
     request.session["time_filter"] = filter_data
-    return redirect("activity:time-list")
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "timeChanged"})
 
 
 @login_required
@@ -188,7 +199,7 @@ def order_by_time(request, order):
     filter_data["order_by"] = new_order
     request.session["time_filter"] = filter_data
 
-    return redirect("activity:time-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "timeChanged"})
 
 
 @login_required

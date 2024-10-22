@@ -22,6 +22,7 @@ from apps.activity.time.views import (
     time_filter_matter,
     time_filter_quick,
     time_filter_user,
+    time_index,
     time_list,
     time_toggle_entered,
 )
@@ -29,7 +30,8 @@ from apps.activity.time.views import (
 app_name = "activity"
 
 urlpatterns = [
-    path("activity/", time_list, name="time-list"),
+    path("activity/", time_index, name="time-index"),
+    path("activity/list/", time_list, name="time-list"),
     path("activity/time/add", time_add, name="time-add"),
     path("activity/time/add/<int:id>/<str:request_app>", time_add, name="time-add"),
     path("activity/time/<int:id>/edit", time_edit, name="time-edit"),
