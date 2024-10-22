@@ -11,7 +11,7 @@ class CustomPaginator(Paginator):
         object_list: List[Any],
         per_page: int,
         request: HttpRequest,
-        orphans: int = 0,
+        orphans: int = 1,
         allow_empty_first_page: bool = True,
     ) -> None:
         super().__init__(object_list, per_page, orphans, allow_empty_first_page)
