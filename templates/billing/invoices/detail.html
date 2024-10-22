@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="{% static 'css/apps/activity.css' %}" />
 {% endblock head %}
 {% block content %}
-  <div class="subnav-section">
+  <div class="section">
     <div class="section-title">
       <div class="section-title-left">
         <h1>Invoice {{ invoice.id }} - {{ invoice.matter.name }}</h1>
@@ -22,10 +22,54 @@
                   data-bs-target="#htmx-modal-container">
             <i class="bi bi-pencil"></i>
           </button>
+          <a type="button"
+             class="btn-icon"
+             target="_blank"
+             href="{% url 'billing:invoices-pdf' invoice.id %}">
+            <i class="bi bi-download"></i>
+          </a>
         </div>
       {% endif %}
     </div>
     <p>{{ invoice.comment }}</p>
+    <div class="invoices-table-container">
+      <table class="invoices-detail-table">
+        <tr>
+          <th>Date Limit</th>
+          <td>{{ invoice.date_limit|date:"Y-m-d" }}</td>
+        </tr>
+        <tr>
+          <th>Created by</th>
+          <td>{{ invoice.created_by.username|title }}</td>
+        </tr>
+        <tr>
+          <th>Created at</th>
+          <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+      </table>
+      <table class="invoices-detail-table">
+        <tr>
+          <th>Issue date</th>
+          <td>{{ invoice.date_issued|date:"Y-m-d" }}</td>
+        </tr>
+        <tr>
+          <th>Total amount</th>
+          <td>${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+          <th>Status</th>
+          <td>{{ invoice.status_display }}</td>
+        </tr>
+      </table>
+      {% if invoice.discount %}
+        <table class="invoices-detail-table">
+          <tr>
+            <th>Discount</th>
+            <td>${{ invoice.discount|floatformat:2|intcomma }}</td>
+          </tr>
+        </table>
+      {% endif %}
+    </div>
   </div>
   <ul class="subnav">
     <li {% if subapp == "time" %}class="active"{% endif %}>
@@ -33,12 +77,6 @@
     </li>
     <li {% if subapp == "expenses" %}class="active"{% endif %}>
       <a href="{% url 'billing:invoice-expense-entries' invoice.id %}">Expenses</a>
-    </li>
-    <li {% if subapp == "parameters" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoice-parameters' invoice.id %}">Parameters</a>
-    </li>
-    <li {% if subapp == "preview" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoices-detail' invoice.id %}">Preview PDF</a>
     </li>
   </ul>
   <div class="section">

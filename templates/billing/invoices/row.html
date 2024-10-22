@@ -27,16 +27,6 @@
           <a class="dropdown-item"
              href="{% url 'matters:detail' id=invoice.matter.id %}">View Matter</a>
         </li>
-        <li>
-          <a class="dropdown-item"
-             href="#"
-             hx-get="{% url 'billing:invoices-edit' invoice.id %}"
-             hx-target="#htmx-modal-container"
-             hx-trigger="click"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"
-             hx-swap="innerHTML">Edit</a>
-        </li>
       </ul>
     </div>
   </td>

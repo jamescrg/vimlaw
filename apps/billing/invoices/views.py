@@ -74,19 +74,6 @@ def invoices_detail(request, pk):
 
 
 @login_required
-def invoice_parameters(request, pk):
-    invoice = get_object_or_404(Invoice, pk=pk)
-
-    context = {
-        "app": "billing",
-        "subapp": "parameters",
-        "invoice": invoice,
-    }
-
-    return render(request, "billing/invoices/parameters.html", context)
-
-
-@login_required
 def invoice_time_entires(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
