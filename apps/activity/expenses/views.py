@@ -1,11 +1,11 @@
 from datetime import date, datetime
 
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
+from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
 from .export import write_clio_csv, write_standard_csv
@@ -13,6 +13,16 @@ from .filter import ExpenseFilter
 from .forms import ExpenseEntryForm
 from .models import ExpenseEntry
 from .summary import calculate_summary
+
+
+@login_required
+def expenses_index(request):
+    context = {
+        "app": "activity",
+        "subapp": "expenses",
+    }
+
+    return render(request, "activity/expenses/main.html", context)
 
 
 @login_required
@@ -60,14 +70,13 @@ def expenses_list(request):
     summary = calculate_summary(expenses)
     users = CustomUser.objects.filter(is_active=True)
 
-    page = request.GET.get("page")
-    pagination = Paginator(expenses, per_page=10).get_page(page)
+    pagination = CustomPaginator(expenses, per_page=10, request=request)
 
     context = {
         "app": "activity",
         "subapp": "expenses",
         "edit": False,
-        "objects": pagination.object_list,
+        "objects": pagination.get_object_list(),
         "pagination": pagination,
         "number_expenses": number_expenses,
         "summary": summary,
@@ -88,7 +97,7 @@ def expenses_filter(request):
     if request.method == "POST":
         request.session["expenses_filter"] = request.POST
 
-        return redirect("activity:expenses-list")
+        return HttpResponse(status=204, headers={"HX-Trigger": "expensesChanged"})
     else:
         filter = get_filter(request)
 
@@ -127,7 +136,7 @@ def expenses_filter_quick(request, quick_filter):
     request.session["expenses_filter"] = filter_data
     request.session.modified = True
 
-    return redirect("activity:expenses-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "expensesChanged"})
 
 
 @login_required
@@ -138,7 +147,7 @@ def expenses_filter_user(request):
     filter_data["user"] = user
 
     request.session["expenses_filter"] = filter_data
-    return redirect("activity:expenses-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "expensesChanged"})
 
 
 @login_required
@@ -155,7 +164,7 @@ def order_by_expenses(request, order):
     filter_data["order_by"] = new_order
     request.session["expenses_filter"] = filter_data
 
-    return redirect("activity:expenses-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "expensesChanged"})
 
 
 @login_required
@@ -295,7 +304,6 @@ def expenses_toggle_entered(request, id):
 
 @login_required
 def expenses_export_to_csv(request, format):
-
     # Set the file name
     current_day_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     filename = f"Expenses - {current_day_and_time} - {format.title()}"

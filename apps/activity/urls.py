@@ -8,6 +8,7 @@ from apps.activity.expenses.views import (
     expenses_filter,
     expenses_filter_quick,
     expenses_filter_user,
+    expenses_index,
     expenses_list,
     expenses_toggle_entered,
     order_by_expenses,
@@ -55,7 +56,8 @@ urlpatterns = [
     path(
         "activity/time/filter/order_by/<str:order>", order_by_time, name="time-order-by"
     ),
-    path("activity/expenses", expenses_list, name="expenses-list"),
+    path("activity/expenses/", expenses_index, name="expenses-index"),
+    path("activity/expenses/list/", expenses_list, name="expenses-list"),
     path("activity/expenses/add", expenses_add, name="expenses-add"),
     path(
         "activity/expenses/add/<int:id>/<str:request_app>",
