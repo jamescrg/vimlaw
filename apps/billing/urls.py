@@ -4,7 +4,6 @@ from apps.billing.collection.views import collection_list
 from apps.billing.invoices.views import (
     invoice_expense_entries,
     invoice_ledes_98b,
-    invoice_parameters,
     invoice_time_entires,
     invoices_add,
     invoices_delete,
@@ -67,11 +66,6 @@ urlpatterns = [
         "billing/invoices-detail/<int:pk>/expense-entries/",
         invoice_expense_entries,
         name="invoice-expense-entries",
-    ),
-    path(
-        "billing/invoices-detail/<int:pk>/parameters/",
-        invoice_parameters,
-        name="invoice-parameters",
     ),
     # Payments
     path("billing/payments/", payments_index, name="payments-index"),
