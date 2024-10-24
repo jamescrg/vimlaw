@@ -13,14 +13,14 @@ table {
 }
 
 th {
-  border: solid 1px var(--warm-gray-200);
+  border: solid 1px var(--stone-200);
   font-weight: 600;
   padding: 8px 15px !important;
   vertical-align: top;
 }
 
 td {
-  border: solid 1px var(--warm-gray-200);
+  border: solid 1px var(--stone-200);
   padding: 8px 15px !important;
   vertical-align: top;
 }

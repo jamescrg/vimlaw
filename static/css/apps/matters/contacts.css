@@ -44,15 +44,15 @@
 }
 
 .assign-results li {
-  background: var(--warm-gray-50);
-  border: solid 1px var(--warm-gray-300);
+  background: var(--stone-50);
+  border: solid 1px var(--stone-300);
   border-top: none;
   max-width: 400px;
   width: 100%;
 }
 
 .assign-results li:hover {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
 }
 
 .assign-results li > a {

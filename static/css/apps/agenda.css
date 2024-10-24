@@ -52,7 +52,7 @@
 ========================================================================== */
 
 .tasks-btn-status {
-  color: var(--warm-gray-400);
+  color: var(--stone-400);
 }
 
 th.status .bi-check-square {
@@ -110,7 +110,7 @@ th.priority .bi-caret-up {
 .tasks-table .complete,
 .tasks-table .complete a,
 .tasks-table .complete .button-link {
-  color: var(--warm-gray-400);
+  color: var(--stone-400);
   text-decoration: line-through;
 }
 

@@ -20,7 +20,7 @@ form .errorlist {
 input,
 select,
 textarea {
-  border: solid 1px var(--warm-gray-300);
+  border: solid 1px var(--stone-300);
   border-radius: 3px;
   outline: none;
   padding: 0.25rem;
@@ -49,28 +49,28 @@ textarea {
 }
 
 .form-control:focus {
-  border: solid 1px var(--warm-gray-300);
+  border: solid 1px var(--stone-300);
   box-shadow: none;
   outline: none;
 }
 
 .submit {
   background: var(--button-form);
-  border: solid 1px var(--warm-gray-600);
+  border: solid 1px var(--stone-600);
   border-radius: 5px;
-  color: var(--warm-gray-200);
+  color: var(--stone-200);
   padding: 4px 10px;
 }
 
 .disabled-btn {
-  background: var(--warm-gray-300);
-  border: solid 1px var(--warm-gray-300);
-  color: var(--warm-gray-400);
+  background: var(--stone-300);
+  border: solid 1px var(--stone-300);
+  color: var(--stone-400);
 }
 
 .add-event {
   margin-top: 1rem;
-  border-top: solid 1px var(--warm-gray-200);
+  border-top: solid 1px var(--stone-200);
   padding-top: 1rem;
 }
 

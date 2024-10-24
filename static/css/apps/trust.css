@@ -9,7 +9,7 @@ Summary
 }
 
 .trust-summary td {
-  border: solid 1px var(--warm-gray-200);
+  border: solid 1px var(--stone-200);
   vertical-align: top;
 }
 
@@ -22,7 +22,7 @@ Summary and History
 ========================================================================== */
 
 .trust-contact {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
   margin-bottom: 20px;
   padding: 20px 15px;
 }
@@ -50,7 +50,7 @@ Summary and History
 }
 
 .trust-transactions td {
-  border: solid 1px var(--warm-gray-200);
+  border: solid 1px var(--stone-200);
   padding: 6px;
   vertical-align: top;
 }
@@ -64,7 +64,7 @@ Summary and History
 }
 
 .trust-transactions .description {
-  border: solid 1px var(--warm-gray-200);
+  border: solid 1px var(--stone-200);
 }
 
 .trust-transactions .amount {

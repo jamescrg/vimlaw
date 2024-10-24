@@ -1,13 +1,13 @@
 
 .section {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
   border-radius: 3px;
   margin-bottom: 1.5rem;
   padding: 1rem 1rem 1.5rem;
 }
 
 .subnav-section {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
   border-radius: 3px 3px 0 0;
   padding: 1rem 1rem 1.5rem;
 }
@@ -22,13 +22,21 @@
 
 .section-title a,
 .section-title button {
-  background: var(--warm-gray-150);
-  border: solid 1px var(--warm-gray-200);
+  background: var(--stone-150);
+  border: solid 1px var(--stone-200);
   border-radius: 4px;
   color: var(--button-section-title);
   outline: none;
   padding: 3px 7px;
 }
+
+/* .section-title .btn-green { */
+/*   color: var(--lime-800); */
+/* } */
+
+/* .section-title .btn-yellow { */
+/*   color: var(--yellow-600); */
+/* } */
 
 .section-title-left {
   align-items: center;
@@ -44,9 +52,9 @@
 }
 
 .select-user {
-  background-color: var(--warm-gray-150);
-  border: solid 1px var(--warm-gray-200);
-  color: var(--warm-gray-700);
+  background-color: var(--stone-150);
+  border: solid 1px var(--stone-200);
+  color: var(--stone-700);
   padding: 5px;
 }
 

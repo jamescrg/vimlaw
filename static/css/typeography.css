@@ -23,6 +23,10 @@ a:hover {
   text-decoration: none;
 }
 
+a:hover {
+  color: var(--link-hover);
+}
+
 strong,
 .strong {
   font-weight: 500;

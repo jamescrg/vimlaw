@@ -1,6 +1,6 @@
 
 body {
-  color: var(--warm-gray-700);
+  color: var(--stone-700);
   font-family: 'Open Sans', sans-serif;
 }
 
@@ -25,7 +25,7 @@ body {
 }
 
 .auth-card {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
   border-radius: 3px;
   padding: 20px;
   width: 500px;
@@ -64,7 +64,7 @@ body {
 }
 
 .account-form input {
-  border: solid 1px var(--warm-gray-350);
+  border: solid 1px var(--stone-350);
   border-radius: 5px;
   display: block;
   margin-top: 5px;
@@ -84,9 +84,9 @@ body {
 
 .account-form button {
   background: var(--link);
-  border: solid 1px var(--warm-gray-600);
+  border: solid 1px var(--stone-600);
   border-radius: 5px;
-  color: var(--warm-gray-200);
+  color: var(--stone-200);
   font-size: 1em;
   margin-top: 40px;
   padding: 7px 10px;

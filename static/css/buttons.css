@@ -9,7 +9,23 @@
   background: var(--button-form);
   border: none;
   box-shadow: none;
-  color: var(--warm-gray-300);
+  color: var(--stone-300);
+}
+
+.icon-green {
+  color: var(--icon-green) !important;
+}
+
+.icon-yellow {
+  color: var(--icon-yellow) !important;
+}
+
+.icon-blue {
+  color: var(--icon-blue) !important;
+}
+
+.icon-purple {
+  color: var(--icon-purple) !important;
 }
 
 .btn-icon {
@@ -30,7 +46,7 @@
 }
 
 .menu-icon {
-  color: var(--warm-gray-350);
+  color: var(--stone-350);
   padding: 0;
 }
 
@@ -43,7 +59,7 @@
 }
 
 .button-link:hover {
-  color: var(--link);
+  color: var(--link-hover);
 }
 
 .btn-sort {
@@ -54,5 +70,5 @@
 }
 
 .dropdown-item:active {
-  background-color: var(--warm-gray-350);
+  background-color: var(--stone-350);
 }

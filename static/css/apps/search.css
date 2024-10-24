@@ -10,8 +10,8 @@
 }
 
 .search-text {
-  background: var(--warm-gray-50);
-  border: 1px solid var(--warm-gray-350);
+  background: var(--stone-50);
+  border: 1px solid var(--stone-350);
   margin: 0;
   padding: 0.5rem;
   width: 80%;
@@ -24,8 +24,8 @@
 }
 
 .search .input-group-text {
-  background: var(--warm-gray-200);
-  border: 1px solid var(--warm-gray-350);
+  background: var(--stone-200);
+  border: 1px solid var(--stone-350);
 }
 
 .search-icon {
@@ -33,8 +33,8 @@
 }
 
 .search .input-group-text {
-  background: var(--warm-gray-200);
-  border: 1px solid var(--warm-gray-350);
+  background: var(--stone-200);
+  border: 1px solid var(--stone-350);
 }
 
 /* ------------------------------------------------------------------------- */

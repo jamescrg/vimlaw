@@ -1,6 +1,6 @@
 
 .navbar {
-	background: var(--warm-gray-350);
+	background: var(--stone-350);
   padding-bottom: 0;
   padding-top: 0;
 }
@@ -11,14 +11,14 @@
 
 /* applies to all of the anchor tags in the list items in the nav bar */
 .navbar-expand-lg .navbar-nav .nav-link {
-  color: var(--warm-gray-600);
+  color: var(--stone-600);
   padding: 12px 25px;
 
 }
 
 /* applies to the active page's anchor tag */
 .nav-active {
-  background: var(--warm-gray-300);
+  background: var(--stone-300);
   border-radius: 5px 5px 0 0;
 }
 
