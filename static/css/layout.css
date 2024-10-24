@@ -4,8 +4,8 @@ html {
 }
 
 body {
-  background: var(--warm-gray-300);
-  color: var(--warm-gray-600);
+  background: var(--stone-300);
+  color: var(--stone-600);
   font-family: 'Open Sans', sans-serif;
   font-size: 1em;
   min-height: 100%;

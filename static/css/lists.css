@@ -4,7 +4,7 @@ li {
 }
 
 .list-group {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
   border: none;
   border-radius: 0;
 }

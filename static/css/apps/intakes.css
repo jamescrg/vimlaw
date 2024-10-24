@@ -72,11 +72,11 @@ Intakes form
 ========================================================================== */
 
 .intake-notes .section-title {
-  border-bottom: solid 1px var(--warm-gray-200);
+  border-bottom: solid 1px var(--stone-200);
 }
 
 .intake-note {
-  border-bottom: solid 1px var(--warm-gray-200);
+  border-bottom: solid 1px var(--stone-200);
   padding: 1rem 0 1rem 0.5rem;
 }
 
@@ -88,7 +88,7 @@ Intakes form
 }
 
 .intake-note-title button {
-  background: var(--warm-gray-150);
+  background: var(--stone-150);
   border: none;
   border-radius: 4px;
   color: var(--link);

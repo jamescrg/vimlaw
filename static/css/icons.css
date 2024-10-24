@@ -1,13 +1,13 @@
 
 .icon,
 .icon:hover {
-  color: var(--warm-gray-500);
+  color: var(--stone-500);
   font-size: 1rem;
   font-weight: 600;
 }
 
 .dot-icon {
-  color: var(--warm-gray-350);
+  color: var(--stone-350);
 }
 
 .btn-icon {
@@ -30,7 +30,7 @@
 }
 
 .bi-folder {
-  color: var(--warm-gray-400);
+  color: var(--stone-400);
   margin-right: 10px;
 }
 
@@ -39,12 +39,12 @@
 }
 
 .bi-chevron-expand {
-  color: var(--warm-gray-400);
+  color: var(--stone-400);
   margin-left: 5px;
 }
 
 .bi-square,
 .bi-caret-up,
 .bi-check-square {
-  color: var(--warm-gray-400);
+  color: var(--stone-400);
 }

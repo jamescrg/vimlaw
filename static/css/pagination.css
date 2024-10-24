@@ -12,7 +12,7 @@
 }
 
 .pagination-row a {
-  background: var(--warm-gray-150);
+  background: var(--stone-150);
   border: none;
   border-radius: 4px;
   color: var(--link);
@@ -21,11 +21,11 @@
 }
 
 .pagination a:hover {
-  background: var(--warm-gray-150);
+  background: var(--stone-150);
   color: var(--link);
 }
 
 .pagination-disabled {
-  color: var(--warm-gray-400) !important;
+  color: var(--stone-400) !important;
   pointer-events: none;
 }

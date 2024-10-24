@@ -5,7 +5,8 @@
       <h1>{{ selected_contact.name }}</h1>
     </div>
     <div class="section-title-right">
-      <a href={% url 'contacts:toggle-google-sync' id=selected_contact.id %}>
+      <a class="icon-blue"
+         href="{% url 'contacts:toggle-google-sync' id=selected_contact.id %}">
         {% if selected_contact.google_id %}
           <i class="bi bi-cloud-slash"></i>
         {% else %}

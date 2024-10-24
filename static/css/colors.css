@@ -1,29 +1,31 @@
 :root {
   /* tailwindcolor.com */
 
-  --true-gray-700: #262626;
-  --true-gray-600: #404040;
-  --true-gray-500: #525252;
-  --true-gray-400: #a3a3a3;
-  --true-gray-350: #cbcbcb;
-  --true-gray-300: #d4d4d4;
-  --true-gray-200: #e5e5e5;
-  --true-gray-100: #f5f5f5;
-  --true-gray-50: #fafafa;
+  --neutral-700: #262626;
+  --neutral-600: #404040;
+  --neutral-500: #525252;
+  --neutral-400: #a3a3a3;
+  --neutral-350: #cbcbcb;
+  --neutral-300: #d4d4d4;
+  --neutral-200: #e5e5e5;
+  --neutral-100: #f5f5f5;
+  --neutral-50: #fafafa;
 
-  --warm-gray-700: #44403c;
-  --warm-gray-600: #57534e;
-  --warm-gray-500: #78716c;
-  --warm-gray-400: #a8a29e;
-  --warm-gray-375: #c1bbb6;
-  --warm-gray-350: #cbc8c6;
-  --warm-gray-300: #d6d3d1; /* 83% */
-  --warm-gray-250: #dbd8d6; /* 85% */
-  --warm-gray-225: #e0dddc; /* 87% */
-  --warm-gray-200: #e7e5e4; /* 90% */
-  --warm-gray-150: #eeecec;
-  --warm-gray-100: #f5f5f4;
-  --warm-gray-50: #fafaf9;
+  --stone-900: black;
+  --stone-800: #292524;
+  --stone-700: #44403c;
+  --stone-600: #57534e;
+  --stone-500: #78716c;
+  --stone-400: #a8a29e;
+  --stone-375: #c1bbb6;
+  --stone-350: #cbc8c6;
+  --stone-300: hsl(24, 6%, 83%);
+  --stone-250: hsl(24, 6%, 85%);
+  --stone-215: hsl(24, 6%, 89%);
+  --stone-200: hsl(24, 6%, 90%);
+  --stone-150: #eeecec;
+  --stone-100: #f5f5f4;
+  --stone-50: #fafaf9;
 
   --amber-400: #f59e0b;
   --amber-500: #eab308;
@@ -58,6 +60,7 @@
   --purple-700: #7e22ce;
   --purple-800: #6b21a8;
   --purple-900: #581c87;
+  --purple-950: #2e1065;
 
   --red-900: #7f1d1d;
   --red-800: #991b1b;
@@ -73,6 +76,10 @@
   --sky-800: #075985;
   --sky-900: #0c4a6e;
 
+  --teal-600: #047857;
+  --teal-700: #047857;
+  --teal-800: #115e59;
+
   --yellow-100: #fef9c3;
   --yellow-200: #fef08a;
   --yellow-300: #fde047;
@@ -82,13 +89,17 @@
   --yellow-700: #a16207;
 
   --link: var(--lime-800);
-  --link-hover: var(--lime-600);
-  --button-form: var(--lime-900);
-  --button-section-title: var(--warm-gray-600);
+  --link-hover: var(--lime-800);
+  --button-form: var(--link);
+  --button-section-title: var(--stone-600);
   --urgent: var(--orange-800);
   --true: var(--lime-700);
   --false: var(--urgent);
-  --add: var(--lime-800);
+  --icon-green: var(--lime-800);
+  --icon-purple: var(--purple-950);
+  --icon-yellow: var(--yellow-700);
+  --icon-blue: var(--sky-800);
+  --add: var(--icon-green);
 }
 
 .true-bool {

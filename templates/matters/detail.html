@@ -6,11 +6,13 @@
       <div class="section-title-left">
         <h1>{{ matter.name }}</h1>
         <div class="table-filter">
-          <button hx-get="/activity/time/add/{{ matter.id }}/matters"
+          <button class="icon-green"
+                  hx-get="/activity/time/add/{{ matter.id }}/matters"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">+ Time</button>
-          <button hx-get="/activity/expenses/add/{{ matter.id }}/matters"
+          <button class="icon-green"
+                  hx-get="/activity/expenses/add/{{ matter.id }}/matters"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">+ Expense</button>

@@ -7,13 +7,13 @@
 }
 
 .dropdown-menu li {
-  background: var(--warm-gray-50);
+  background: var(--stone-50);
   border-radius: 3px;
-  border-top: solid 1px var(--warm-gray-200);
+  border-top: solid 1px var(--stone-200);
 }
 
 .dropdown-menu li:hover {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
   color: var(--link-hover);
 }
 
@@ -22,7 +22,7 @@
 }
 
 .dropdown-item:hover {
-  background: var(--warm-gray-100);
+  background: var(--stone-100);
 }
 
 .dropdown-menu li:first-child {
@@ -36,12 +36,12 @@
 
 .table-select {
   background: inherit;
-  border: solid 1px var(--warm-gray-200);
+  border: solid 1px var(--stone-200);
   color: inherit;
   padding: 0 5px;
   width: 100%;
 }
 
 .table-option {
-  background: var(--warm-gray-50);
+  background: var(--stone-50);
 }
