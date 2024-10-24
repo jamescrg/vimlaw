@@ -14,7 +14,7 @@
 
 .dropdown-menu li:hover {
   background: var(--warm-gray-100);
-  color: var(--lime-800);
+  color: var(--link-hover);
 }
 
 .dropdown-item {

@@ -15,14 +15,14 @@
   background: var(--warm-gray-150);
   border: none;
   border-radius: 4px;
-  color: var(--lime-800);
+  color: var(--link);
   padding: 0.05rem 0.5rem;
 
 }
 
 .pagination a:hover {
   background: var(--warm-gray-150);
-  color: var(--lime-800);
+  color: var(--link);
 }
 
 .pagination-disabled {

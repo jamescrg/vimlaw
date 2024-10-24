@@ -6,7 +6,7 @@
 .btn-primary,
 .btn-primary:hover,
 .btn-primary:focus {
-  background: var(--lime-900);
+  background: var(--button-form);
   border: none;
   box-shadow: none;
   color: var(--warm-gray-300);
@@ -37,13 +37,13 @@
 .button-link {
   background: none;
   border: none;
-  color: var(--lime-800);
+  color: var(--link);
   margin: 0;
   padding: 0;
 }
 
 .button-link:hover {
-  color: var(--lime-800);
+  color: var(--link);
 }
 
 .btn-sort {

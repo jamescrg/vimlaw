@@ -23,12 +23,12 @@
 }
 
 .navbar-toggler-icon {
-  color: var(--lime-700);
+  color: var(--link);
   font-size: 1.8rem;
 }
 
 .navbar-toggler-chevron {
-  color: var(--lime-700);
+  color: var(--link);
   font-size: 1rem;
 }
 

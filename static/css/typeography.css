@@ -18,7 +18,7 @@ h3 {
 
 a,
 a:hover {
-  color: var(--lime-800);
+  color: var(--link);
   outline: none;
   text-decoration: none;
 }
@@ -30,7 +30,7 @@ strong,
 
 .urgent,
 .urgent a {
-  color: var(--orange-800);
+  color: var(--urgent);
 }
 
 .warn {

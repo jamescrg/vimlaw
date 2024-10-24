@@ -55,7 +55,7 @@ textarea {
 }
 
 .submit {
-  background: var(--lime-900);
+  background: var(--button-form);
   border: solid 1px var(--warm-gray-600);
   border-radius: 5px;
   color: var(--warm-gray-200);

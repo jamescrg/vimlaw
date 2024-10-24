@@ -32,7 +32,7 @@ body {
 }
 
 .auth-title {
-  color: var(--lime-800);
+  color: var(--link-hover);
   font-size: 1.5em;
   font-weight: 500;
   margin-bottom: 5px;
@@ -83,7 +83,7 @@ body {
 }
 
 .account-form button {
-  background: var(--lime-900);
+  background: var(--link);
   border: solid 1px var(--warm-gray-600);
   border-radius: 5px;
   color: var(--warm-gray-200);

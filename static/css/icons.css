@@ -17,11 +17,15 @@
 }
 
 .bi-plus-lg {
-  color: var(--lime-800);
+  color: var(--add);
+}
+
+.bi-plus-download {
+  color:var(--link);
 }
 
 .bi-x-lg {
-  color: var(--lime-800);
+  color: var(--link);
   font-size: 0.9rem;
 }
 

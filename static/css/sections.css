@@ -25,7 +25,7 @@
   background: var(--warm-gray-150);
   border: solid 1px var(--warm-gray-200);
   border-radius: 4px;
-  color: var(--lime-800);
+  color: var(--button-section-title);
   outline: none;
   padding: 3px 7px;
 }
