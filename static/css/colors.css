@@ -88,7 +88,7 @@
   --urgent: var(--orange-800);
   --true: var(--lime-700);
   --false: var(--urgent);
-  --add: var(--lime-700);
+  --add: var(--lime-800);
 }
 
 .true-bool {
