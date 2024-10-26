@@ -16,8 +16,7 @@
     </div>
     <div class="modal-body">
       <form hx-post="{{ action }}"
-            hx-target="{% if edit %}#expense-{{ entry.id }}{% else %}#expense-table{% endif %}"
-            hx-swap="innerHTML"
+            hx-target="#htmx-modal-container"
             class="form-responsive expenses-form">
         {% csrf_token %}
         {{ form }}

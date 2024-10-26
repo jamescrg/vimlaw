@@ -185,11 +185,8 @@ def expenses_add(request, id=None, request_app="activity"):
             entry.save()
 
             if request_app == "activity":
-                return render(
-                    request,
-                    "activity/expenses/table-row.html",
-                    {"expense": entry},
-                    status=202,
+                return HttpResponse(
+                    status=204, headers={"HX-Trigger": "expensesChanged"}
                 )
             elif request_app == "matters":
                 return redirect("/activity/expenses")
@@ -249,12 +246,7 @@ def expenses_edit(request, id):
             entry = form.save(commit=False)
             entry.save()
 
-            return render(
-                request,
-                "activity/expenses/table-row.html",
-                {"expense": entry},
-                status=202,
-            )
+            return HttpResponse(status=204, headers={"HX-Trigger": "expensesChanged"})
 
     else:
         # get list of matters for activity form
