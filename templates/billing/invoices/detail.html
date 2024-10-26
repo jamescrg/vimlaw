@@ -76,7 +76,7 @@
       <a href="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
     </li>
     <li {% if subapp == "expenses" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoice-expense-entries' invoice.id %}">Expenses</a>
+      <a href="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
     </li>
   </ul>
   <div class="section">
