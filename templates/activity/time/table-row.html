@@ -5,7 +5,7 @@
   <a href={% url 'matters:detail' id=entry.matter.id %}>{{ entry.matter.name }}</a>
 </td>
 <td class="actions">
-  {% if entry.invoice %}
+  {% if entry.invoice and not entry.invoice.status == 'DRAFT' %}
     {{ entry.actions }}
   {% else %}
     <a href="#"

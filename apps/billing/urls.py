@@ -5,6 +5,7 @@ from apps.billing.invoices.views import (
     invoice_expense_entries,
     invoice_ledes_98b,
     invoice_time_entires,
+    invoice_time_entires_index,
     invoices_add,
     invoices_delete,
     invoices_detail,
@@ -56,6 +57,11 @@ urlpatterns = [
         "billing/invoices-edit-status/<int:pk>/<str:status>/",
         invoices_edit_status,
         name="invoices-edit-status",
+    ),
+    path(
+        "billing/invoices-detail/<int:pk>/time-entries-index/",
+        invoice_time_entires_index,
+        name="invoice-time-entries-index",
     ),
     path(
         "billing/invoices-detail/<int:pk>/time-entries/",

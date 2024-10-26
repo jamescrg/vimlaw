@@ -73,7 +73,7 @@
   </div>
   <ul class="subnav">
     <li {% if subapp == "time" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoice-time-entries' invoice.id %}">Time</a>
+      <a href="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
     </li>
     <li {% if subapp == "expenses" %}class="active"{% endif %}>
       <a href="{% url 'billing:invoice-expense-entries' invoice.id %}">Expenses</a>

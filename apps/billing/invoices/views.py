@@ -74,6 +74,19 @@ def invoices_detail(request, pk):
 
 
 @login_required
+def invoice_time_entires_index(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    context = {
+        "app": "billing",
+        "subapp": "time",
+        "invoice": invoice,
+    }
+
+    return render(request, "billing/invoices/time/index.html", context)
+
+
+@login_required
 def invoice_time_entires(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
@@ -92,7 +105,7 @@ def invoice_time_entires(request, pk):
         "summary": summary,
     }
 
-    return render(request, "billing/invoices/time-entries.html", context)
+    return render(request, "billing/invoices/time/list.html", context)
 
 
 @login_required
