@@ -24,7 +24,7 @@ def test_add_get(client):
 
 def test_add_post(client, matter, event_data):
     response = client.post("/events/add", event_data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Event.objects.filter(description=event_data["description"]).first()
     assert found
 
@@ -45,13 +45,13 @@ def test_edit_post(client, user, matter, event):
         "status": "Complete",
     }
     response = client.post(f"/events/{event.id}/edit", data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Event.objects.filter(status="Complete").exists()
     assert found
 
 
 def test_delete(client, event):
     response = client.get(f"/events/{event.id}/delete")
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Event.objects.filter(pk=event.id).exists()
     assert not found

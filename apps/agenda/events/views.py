@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from dateutil import parser
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 import apps.agenda.events.google as google
@@ -12,6 +13,16 @@ from apps.management.filter_manager import FilterManager
 from apps.matters.models import Matter
 
 from .events import get_table_data
+
+
+@login_required
+def events_index(request):
+    context = {
+        "app": "agenda",
+        "subapp": "events",
+    }
+
+    return render(request, "agenda/events/main.html", context)
 
 
 @login_required
@@ -35,7 +46,7 @@ def events_filter(request):
     filter_manager = FilterManager(request, EventFilter, "events_filter")
 
     if filter_manager.process_filter():
-        return redirect("/events")
+        return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 
     return render(
         request,
@@ -49,7 +60,7 @@ def events_filter_quick(request, quick_filter):
     filter_manager = FilterManager(request, EventFilter, "events_filter")
     filter_manager.apply_quick_filter(quick_filter)
 
-    return redirect("/events")
+    return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 
 
 @login_required
@@ -64,7 +75,7 @@ def events_add(request, matter_id=None, origin="events"):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = EventForm(request.POST)
+        form = EventForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             # initialize event data
             event = form.save(commit=False)
@@ -82,7 +93,7 @@ def events_add(request, matter_id=None, origin="events"):
             if origin == "matters":
                 return redirect(f"/matters/{event.matter_id}/events")
             else:
-                return redirect(f"/{origin}")
+                return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 
     # if no post data has been submitted, show the contact form
     else:
@@ -91,13 +102,15 @@ def events_add(request, matter_id=None, origin="events"):
                 initial={
                     "matter": matter_id,
                     "date": date.today(),
-                }
+                },
+                use_required_attribute=False,
             )
         else:
             form = EventForm(
                 initial={
                     "date": date.today(),
-                }
+                },
+                use_required_attribute=False,
             )
 
     form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
@@ -133,7 +146,7 @@ def events_edit(request, id, origin="events"):
     event = get_object_or_404(Event, pk=id)
 
     if request.method == "POST":
-        form = EventForm(request.POST, instance=event)
+        form = EventForm(request.POST, instance=event, use_required_attribute=False)
 
         # get list of open matters
         matter_list = Matter.objects.filter(status="Open").order_by("name")
@@ -160,10 +173,14 @@ def events_edit(request, id, origin="events"):
             if origin == "matters":
                 return redirect(f"/matters/{event.matter_id}/events")
             else:
-                return redirect(f"/{origin}")
+                return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 
     else:
-        form = EventForm(instance=event, initial={"matter": event.matter})
+        form = EventForm(
+            instance=event,
+            initial={"matter": event.matter},
+            use_required_attribute=False,
+        )
 
     # pull the list of matters
     matter_list = Matter.objects.filter(status="Open").order_by("name")
@@ -212,7 +229,7 @@ def events_delete(request, id, origin="events"):
     if origin == "matters":
         return redirect(f"/matters/{event.matter_id}/events")
     else:
-        return redirect(f"/{origin}")
+        return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 
 
 @login_required
@@ -225,7 +242,6 @@ def events_google_sync(request, id):
 
 @login_required
 def events_deadline_results(request, matter_id=None):
-
     # get the submitted initial date and days
     initial_date = request.POST["initial_date"]
     days = int(request.POST["days"])

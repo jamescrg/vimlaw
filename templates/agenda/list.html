@@ -3,7 +3,7 @@
   <div class="subnav">
     <ul>
       <li {% if subapp == "events" %}class="active"{% endif %}>
-        <a href="{% url 'agenda:events-list' %}">Events</a>
+        <a href="{% url 'agenda:events-index' %}">Events</a>
       </li>
       <li {% if subapp == "tasks" %}class="active"{% endif %}>
         <a href="{% url 'agenda:tasks-select' %}">Tasks</a>
