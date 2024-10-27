@@ -7,6 +7,7 @@ from apps.agenda.events.views import (
     events_edit,
     events_filter,
     events_filter_quick,
+    events_index,
     events_list,
 )
 from apps.agenda.tasks.views import (
@@ -53,7 +54,8 @@ urlpatterns = [
         tasks_filter_sort,
         name="tasks-filter-sort",
     ),
-    path("events/", events_list, name="events-list"),
+    path("events/", events_index, name="events-index"),
+    path("events/list/", events_list, name="events-list"),
     path("events/add", events_add, name="events-add"),
     path("events/add/<str:origin>", events_add, name="events-add-origin"),
     path(

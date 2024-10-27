@@ -1,7 +1,6 @@
-from django.core.paginator import Paginator
-
 from apps.accounts.models import CustomUser
 from apps.agenda.events.filter import EventFilter
+from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
 
@@ -29,11 +28,10 @@ def get_table_data(request):
     request.session["events_filter"] = filter.data
     request.session.modified = True
 
-    page = request.GET.get("page")
-    pagination = Paginator(events, 10).get_page(page)
+    pagination = CustomPaginator(events, per_page=10, request=request)
 
     table_data["pagination"] = pagination
-    table_data["objects"] = pagination.object_list
+    table_data["objects"] = pagination.get_object_list()
     table_data["matters"] = Matter.objects.filter(status="Open").order_by("name")
     table_data["users"] = CustomUser.objects.all().order_by("username")
 
