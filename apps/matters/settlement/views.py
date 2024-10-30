@@ -1,7 +1,8 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
 
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
@@ -10,7 +11,20 @@ from apps.matters.settlement.models import SettlementEntry
 
 
 @login_required
-def index(request, id):
+def settlement_index(request, id):
+    matter = get_object_or_404(Matter, pk=id)
+
+    context = {
+        "app": "matters",
+        "subapp": "settlement",
+        "matter": matter,
+    }
+
+    return render(request, "matters/settlement/main.html", context)
+
+
+@login_required
+def settlement_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
@@ -33,18 +47,23 @@ def add(request, id):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = SettlementEntryForm(request.POST)
+        form = SettlementEntryForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             entry = form.save(commit=False)
             entry.user_id = request.user.id
             entry.matter = matter
             entry.save()
-            return redirect(f"/matters/{id}/settlement")
+
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "matterSettlementChanged"}
+            )
 
     # if no post data has been submitted, show the entry form
     else:
         today = date.today().strftime("%Y-%m-%d")
-        form = SettlementEntryForm(initial={"date": today})
+        form = SettlementEntryForm(
+            initial={"date": today}, use_required_attribute=False
+        )
 
     context = {
         "app": "matters",
@@ -68,17 +87,22 @@ def edit(request, id, entry_id):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = SettlementEntryForm(request.POST, instance=entry)
+        form = SettlementEntryForm(
+            request.POST, instance=entry, use_required_attribute=False
+        )
         if form.is_valid():
             entry = form.save(commit=False)
             entry.user_id = request.user.id
             entry.matter = matter
             entry.save()
-            return redirect(f"/matters/{id}/settlement")
+
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "matterSettlementChanged"}
+            )
 
     # if no post data has been submitted, show the entry form
     else:
-        form = SettlementEntryForm(instance=entry)
+        form = SettlementEntryForm(instance=entry, use_required_attribute=False)
 
     context = {
         "app": "matters",
@@ -99,4 +123,5 @@ def edit(request, id, entry_id):
 def delete(request, matter_id, entry_id):
     entry = get_object_or_404(SettlementEntry, pk=entry_id)
     entry.delete()
-    return redirect(f"/matters/{matter_id}/settlement")
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "matterSettlementChanged"})

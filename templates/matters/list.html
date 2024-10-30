@@ -1,4 +1,3 @@
-{% extends "base.html" %}
 {% load humanize %}
 {% block content %}
   <div class="section">
@@ -11,7 +10,7 @@
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">Filter</button>
-          <a href={% url 'matters:filter-quick' 'open' %}>Open</a>
+          <button hx-post={% url 'matters:filter-quick' 'open' %}>Open</button>
         </div>
       </div>
     </div>
@@ -21,13 +20,13 @@
           <th class="id">ID</th>
           <th class="matter-name">
             Matter
-            <a href={% url 'matters:order-by' 'name' %}>
+            <a href="#" hx-post={% url 'matters:order-by' 'name' %}>
               <i class="bi bi-chevron-expand"></i>
             </a>
           </th>
           <th>
             Description / Status
-            <a href={% url 'matters:order-by' 'description' %}>
+            <a href="#" hx-post={% url 'matters:order-by' 'description' %}>
               <i class="bi bi-chevron-expand"></i>
             </a>
           </th>

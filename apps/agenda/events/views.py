@@ -91,7 +91,9 @@ def events_add(request, matter_id=None, origin="events"):
             event.save()
 
             if origin == "matters":
-                return redirect(f"/matters/{event.matter_id}/events")
+                return HttpResponse(
+                    status=204, headers={"HX-Trigger": "matterEventChanged"}
+                )
             else:
                 return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 
@@ -171,7 +173,9 @@ def events_edit(request, id, origin="events"):
             event.save()
 
             if origin == "matters":
-                return redirect(f"/matters/{event.matter_id}/events")
+                return HttpResponse(
+                    status=204, headers={"HX-Trigger": "matterEventChanged"}
+                )
             else:
                 return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 
@@ -227,7 +231,7 @@ def events_delete(request, id, origin="events"):
     event.delete()
 
     if origin == "matters":
-        return redirect(f"/matters/{event.matter_id}/events")
+        return HttpResponse(status=204, headers={"HX-Trigger": "matterEventChanged"})
     else:
         return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
 

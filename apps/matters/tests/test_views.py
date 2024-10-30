@@ -87,7 +87,7 @@ def test_filter_update(client):
         "practice_area": "CB",
     }
     response = client.post("/matters/filter", data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     response = client.get("/matters/filter")
     assert response.context["form"]["practice_area"].value() == "CB"
 
@@ -102,7 +102,7 @@ def test_filter_update(client):
 
 def test_filter_order(client):
     response = client.get("/matters/order-by/name")
-    assert response.status_code == 302
+    assert response.status_code == 204
     assert client.session["matter_filter"]["order_by"] == "name"
 
 

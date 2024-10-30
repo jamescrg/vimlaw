@@ -10,15 +10,16 @@
     </div>
     <div class="modal-body">
       <form class="form-responsive filter"
-            method="post"
-            action="{% url 'matters:filter' %}">
+            hx-target="#htmx-modal-container"
+            hx-post="{% url 'matters:filter' %}">
         {% csrf_token %}
         {{ filter.form }}
         <br />
         <div class="flex-center-space limited-width">
           <button type="submit" class="submit">Apply</button>
           <a class="btn-icon"
-             href="{% url 'management:clear-filters' 'matter_filter' %}">Restore Defaults</a>
+             href="#"
+             hx-post="{% url 'management:clear-filters' session_key='matter_filter' trigger='mattersChanged' %}">Restore Defaults</a>
         </div>
       </form>
     </div>

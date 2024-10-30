@@ -20,7 +20,7 @@
           <a id="nav-agenda" class="nav-link" href={% url 'agenda:tasks-index' %}>Agenda</a>
         </li>
         <li class="nav-item {% if app == 'matters' %}nav-active{% endif %}">
-          <a id="nav-matters" class="nav-link" href={% url 'matters:list' %}>Matters</a>
+          <a id="nav-matters" class="nav-link" href={% url 'matters:index' %}>Matters</a>
         </li>
         <li class="nav-item {% if app == 'contacts' %}nav-active{% endif %}">
           <a id="nav-contacts" class="nav-link" href={% url 'contacts:contacts' %}>Contacts</a>

@@ -9,7 +9,20 @@ from apps.matters.proceedings.models import Proceeding
 
 
 @login_required
-def index(request, id):
+def events_index(request, id):
+    matter = get_object_or_404(Matter, pk=id)
+
+    context = {
+        "app": "matters",
+        "subapp": "events",
+        "matter": matter,
+    }
+
+    return render(request, "matters/events/main.html", context)
+
+
+@login_required
+def events_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     pending_events = Event.objects.filter(matter=id, status="Pending").order_by("date")

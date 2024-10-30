@@ -16,8 +16,8 @@
     </div>
     <div class="modal-body">
       <form id="settlement"
-            action="{{ action }}"
-            method="post"
+            hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
             class="form-responsive settlement-form">
         {% csrf_token %}
         {{ form }}
@@ -28,8 +28,9 @@
           </div>
           <div>
             {% if edit %}
-              <a onclick="return confirm('Are you sure you want to delete this record?')"
-                 href="{% url 'matters:settlement-delete' matter_id=entry.matter.id entry_id=entry.id %}">
+              <a hx-confirm='Are you sure you want to delete this record?'
+                 href="#"
+                 hx-delete="{% url 'matters:settlement-delete' matter_id=entry.matter.id entry_id=entry.id %}">
                 Delete Entry
               </a>
             {% endif %}

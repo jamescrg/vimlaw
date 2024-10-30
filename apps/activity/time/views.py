@@ -134,7 +134,7 @@ def time_filter_matter(request, matter_id):
 
     request.session["time_filter"] = filter_data
 
-    return redirect("activity:time-list")
+    return redirect("activity:time-index")
 
 
 @login_required

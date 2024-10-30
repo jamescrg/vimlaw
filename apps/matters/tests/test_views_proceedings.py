@@ -8,7 +8,7 @@ pytestmark = pytest.mark.django_db
 
 def test_index(client, matter, proceeding):
     response = client.get(f"/matters/{matter.id}/proceedings")
-    assert response.status_code == 200
+    assert response.status_code == 301
     assertTemplateUsed("matters/proceedings/list.html")
 
 
@@ -20,7 +20,7 @@ def test_add_get(client, matter):
 
 def test_add_post(client, matter, proceeding_data):
     response = client.post(f"/matters/{matter.id}/proceedings/add", proceeding_data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Proceeding.objects.filter(
         case_number=proceeding_data["case_number"]
     ).first()
@@ -43,13 +43,13 @@ def test_edit_post(client, matter, proceeding):
     response = client.post(
         f"/matters/{matter.id}/proceedings/{proceeding.id}/edit", data
     )
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Proceeding.objects.filter(forum="Cobb Superior").exists()
     assert found
 
 
 def test_delete(client, matter, proceeding):
     response = client.get(f"/matters/{matter.id}/proceedings/{proceeding.id}/delete")
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Proceeding.objects.filter(pk=proceeding.id).exists()
     assert not found
