@@ -16,7 +16,8 @@ from .views import (
     edit_description,
     filter,
     filter_quick,
-    index,
+    matter_index,
+    matter_list,
     order_by,
     print,
 )
@@ -25,7 +26,8 @@ app_name = "matters"
 
 urlpatterns = [
     # Matters, general
-    path("matters/", index, name="list"),
+    path("matters/", matter_index, name="index"),
+    path("matters/list/", matter_list, name="list"),
     path("matters/<int:id>", detail, name="detail"),
     path("matters/add", add, name="add"),
     path("matters/<int:id>/edit", edit, name="edit"),
@@ -60,7 +62,8 @@ urlpatterns = [
         name="contacts-assign-delete",
     ),
     # Rates
-    path("matters/<int:id>/rates", matters_rates.index, name="rates"),
+    path("matters/<int:id>/rates", matters_rates.rate_index, name="rate-index"),
+    path("matters/<int:id>/rates/list/", matters_rates.rate_list, name="rates"),
     path("matters/<int:id>/rates/add", matters_rates.add, name="rates-add"),
     path(
         "matters/<int:id>/rates/<int:rate_id>/edit",
@@ -75,9 +78,19 @@ urlpatterns = [
     # Activity
     path("matters/<int:id>/activity", activity.index, name="activity"),
     # events
-    path("matters/<int:id>/events", events.index, name="events"),
+    path("matters/<int:id>/events/", events.events_index, name="events-index"),
+    path("matters/<int:id>/events/list/", events.events_list, name="events"),
     # proceedings
-    path("matters/<int:id>/proceedings", proceedings.index, name="proceedings"),
+    path(
+        "matters/<int:id>/proceedings/",
+        proceedings.proceeding_index,
+        name="proceedings-index",
+    ),
+    path(
+        "matters/<int:id>/proceedings/list/",
+        proceedings.proceeding_list,
+        name="proceedings",
+    ),
     path("matters/<int:id>/proceedings/add", proceedings.add, name="proceedings-add"),
     path(
         "matters/<int:id>/proceedings/<int:proceeding_id>/edit",
@@ -90,7 +103,16 @@ urlpatterns = [
         name="proceedings-delete",
     ),
     # Settlement
-    path("matters/<int:id>/settlement", settlement.index, name="settlement"),
+    path(
+        "matters/<int:id>/settlement/",
+        settlement.settlement_index,
+        name="settlement-index",
+    ),
+    path(
+        "matters/<int:id>/settlement/list/",
+        settlement.settlement_list,
+        name="settlement",
+    ),
     path("matters/<int:id>/settlement/add", settlement.add, name="settlement-add"),
     path(
         "matters/<int:id>/settlement/<int:entry_id>/edit",
@@ -103,7 +125,8 @@ urlpatterns = [
         name="settlement-delete",
     ),
     # Timeline
-    path("matters/<int:id>/timeline", timeline.index, name="timeline"),
+    path("matters/<int:id>/timeline/", timeline.timeline_index, name="timeline-index"),
+    path("matters/<int:id>/timeline/list/", timeline.timeline_list, name="timeline"),
     path("matters/<int:id>/timeline/add", timeline.add, name="timeline-add"),
     path(
         "matters/<int:id>/timeline/<int:fact_id>/edit",

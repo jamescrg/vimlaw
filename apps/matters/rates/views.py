@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
 
 from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
@@ -9,7 +10,20 @@ from apps.matters.rates.models import Rate
 
 
 @login_required
-def index(request, id):
+def rate_index(request, id):
+    matter = get_object_or_404(Matter, pk=id)
+
+    context = {
+        "app": "matters",
+        "subapp": "rates",
+        "matter": matter,
+    }
+
+    return render(request, "matters/rates/main.html", context)
+
+
+@login_required
+def rate_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
@@ -33,16 +47,16 @@ def add(request, id):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = RateForm(request.POST)
+        form = RateForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             rate = form.save(commit=False)
             rate.matter = matter
             rate.save()
-            return redirect(f"/matters/{id}/rates")
+
+            return HttpResponse(status=204, headers={"HX-Trigger": "matterRateChanged"})
 
     # if no post data has been submitted, show the proceeding form
     else:
-
         user_list = CustomUser.objects.all().order_by("username")
 
         for user in user_list:
@@ -50,7 +64,7 @@ def add(request, id):
             if matter_rates:
                 user_list = user_list.exclude(pk=user.pk)
 
-        form = RateForm(initial={"user": request.user})
+        form = RateForm(initial={"user": request.user}, use_required_attribute=False)
 
         # set the list of potential users
         for user in user_list:
@@ -78,15 +92,16 @@ def edit(request, id, rate_id):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = RateForm(request.POST, instance=rate)
+        form = RateForm(request.POST, instance=rate, use_required_attribute=False)
         if form.is_valid():
             rate = form.save(commit=False)
             rate.save()
-            return redirect(f"/matters/{id}/rates")
+
+            return HttpResponse(status=204, headers={"HX-Trigger": "matterRateChanged"})
 
     # if no post data has been submitted, show the proceeding form
     else:
-        form = RateForm(instance=rate)
+        form = RateForm(instance=rate, use_required_attribute=False)
 
     context = {
         "app": "matters",
@@ -106,4 +121,5 @@ def edit(request, id, rate_id):
 def delete(request, matter_id, rate_id):
     rate = get_object_or_404(Rate, pk=rate_id)
     rate.delete()
-    return redirect(f"/matters/{matter_id}/rates")
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "matterRateChanged"})

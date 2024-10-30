@@ -3,7 +3,7 @@ from datetime import date, datetime
 
 from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
@@ -13,7 +13,20 @@ from apps.matters.timeline.models import Fact
 
 
 @login_required
-def index(request, id):
+def timeline_index(request, id):
+    matter = get_object_or_404(Matter, pk=id)
+
+    context = {
+        "app": "matters",
+        "subapp": "timeline",
+        "matter": matter,
+    }
+
+    return render(request, "matters/timeline/main.html", context)
+
+
+@login_required
+def timeline_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     facts = Fact.objects.filter(matter=matter.id).order_by("date")
@@ -36,18 +49,21 @@ def add(request, id):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = FactForm(request.POST)
+        form = FactForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             fact = form.save(commit=False)
             fact.user_id = request.user.id
             fact.matter = matter
             fact.save()
-            return redirect(f"/matters/{id}/timeline")
+
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "matterTimelineChanged"}
+            )
 
     # if no post data has been submitted, show the fact form
     else:
         today = date.today().strftime("%Y-%m-%d")
-        form = FactForm(initial={"date_filed": today})
+        form = FactForm(initial={"date_filed": today}, use_required_attribute=False)
 
     context = {
         "app": "matters",
@@ -71,17 +87,20 @@ def edit(request, id, fact_id):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = FactForm(request.POST, instance=fact)
+        form = FactForm(request.POST, instance=fact, use_required_attribute=False)
         if form.is_valid():
             fact = form.save(commit=False)
             fact.user_id = request.user.id
             fact.matter = matter
             fact.save()
-            return redirect(f"/matters/{id}/timeline")
+
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "matterTimelineChanged"}
+            )
 
     # if no post data has been submitted, show the fact form
     else:
-        form = FactForm(instance=fact)
+        form = FactForm(instance=fact, use_required_attribute=False)
 
     context = {
         "app": "matters",
@@ -102,7 +121,8 @@ def edit(request, id, fact_id):
 def delete(request, matter_id, fact_id):
     fact = get_object_or_404(Fact, pk=fact_id)
     fact.delete()
-    return redirect(f"/matters/{matter_id}/timeline")
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "matterTimelineChanged"})
 
 
 @login_required

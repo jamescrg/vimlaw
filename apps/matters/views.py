@@ -1,12 +1,13 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.agenda.events.models import Event
 from apps.contacts.functions.load_contacts import load_contacts
 from apps.contacts.models import Contact
+from apps.management.pagination import CustomPaginator
 from apps.matters.filter import MatterFilter
 from apps.matters.forms import MatterForm
 from apps.matters.models import Matter
@@ -16,7 +17,16 @@ from apps.matters.timeline.models import Fact
 
 
 @login_required
-def index(request):
+def matter_index(request):
+    context = {
+        "app": "matters",
+    }
+
+    return render(request, "matters/main.html", context)
+
+
+@login_required
+def matter_list(request):
     request.session["matters-view"] = "list"
 
     default_filter = {
@@ -39,10 +49,7 @@ def index(request):
     request.session["matter_filter"] = filter.data
     request.session.modified = True
 
-    number_matters = matters.count()
-
-    page = request.GET.get("page")
-    pagination = Paginator(matters, per_page=20).get_page(page)
+    pagination = CustomPaginator(matters, per_page=20, request=request)
 
     total_unbilled = 0
     for matter in matters:
@@ -52,8 +59,8 @@ def index(request):
         "app": "matters",
         "pagination": pagination,
         "edit": False,
-        "matters": pagination.object_list,
-        "number_matters": number_matters,
+        "matters": pagination.get_object_list(),
+        "number_matters": matters.count(),
         "total_unbilled": total_unbilled,
     }
 
@@ -70,7 +77,7 @@ def filter(request):
     if request.method == "POST":
         request.session["matter_filter"] = request.POST
 
-        return redirect("matters:list")
+        return HttpResponse(status=204, headers={"HX-Trigger": "mattersChanged"})
     else:
         filter = get_filter(request)
 
@@ -96,7 +103,7 @@ def filter_quick(request, quick_filter):
     request.session["matter_filter"] = filter_data
     request.session.modified = True
 
-    return redirect("matters:list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "mattersChanged"})
 
 
 @login_required
@@ -113,7 +120,7 @@ def order_by(request, order):
     filter_data["order_by"] = new_order
     request.session["matter_filter"] = filter_data
 
-    return redirect("matters:list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "mattersChanged"})
 
 
 @login_required
@@ -126,17 +133,18 @@ def detail(request, id):
 def add(request):
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = MatterForm(request.POST)
+        form = MatterForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             matter = form.save(commit=False)
             matter.user_id = request.user.id
             matter.save()
+
             return redirect("/matters")
 
     # if no post data has been submitted, show the matter form
     else:
         today = date.today().strftime("%Y-%m-%d")
-        form = MatterForm(initial={"date_start": today})
+        form = MatterForm(initial={"date_start": today}, use_required_attribute=False)
         client_list = Contact.objects.filter(client_status="Current").order_by("name")
         form.fields["client"].queryset = client_list
 

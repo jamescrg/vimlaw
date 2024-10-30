@@ -73,25 +73,25 @@
   <div class="subnav">
     <ul>
       <li {% if subapp == 'rates' %}class="active"{% endif %}>
-        <a href={% url 'matters:rates' id=matter.id %}>Rates</a>
+        <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
       </li>
       <li {% if subapp == 'activity' %}class="active"{% endif %}>
         <a href={% url 'matters:activity' id=matter.id %}>Activity</a>
       </li>
       <li {% if subapp == 'events' %}class="active"{% endif %}>
-        <a href={% url 'matters:events' id=matter.id %}>Events</a>
+        <a href={% url 'matters:events-index' id=matter.id %}>Events</a>
       </li>
       <li {% if subapp == 'contacts' %}class="active"{% endif %}>
         <a href={% url 'matters:contacts' id=matter.id %}>Contacts</a>
       </li>
       <li {% if subapp == 'proceedings' %}class="active"{% endif %}>
-        <a href={% url 'matters:proceedings' id=matter.id %}>Proceedings</a>
+        <a href={% url 'matters:proceedings-index' id=matter.id %}>Proceedings</a>
       </li>
       <li {% if subapp == 'settlement' %}class="active"{% endif %}>
-        <a href={% url 'matters:settlement' id=matter.id %}>Settlement</a>
+        <a href={% url 'matters:settlement-index' id=matter.id %}>Settlement</a>
       </li>
       <li {% if subapp == 'timeline' %}class="active"{% endif %}>
-        <a href={% url 'matters:timeline' id=matter.id %}>Timeline</a>
+        <a href={% url 'matters:timeline-index' id=matter.id %}>Timeline</a>
       </li>
       <li {% if subapp == 'ledger' %}class="active"{% endif %}>
         <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>

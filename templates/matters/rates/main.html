@@ -1,0 +1,8 @@
+{% extends "matters/detail.html" %}
+{% block subcontent %}
+  {% load humanize %}
+  <div id="rates"
+       hx-trigger="load, matterRateChanged from:body"
+       hx-get="{% url 'matters:rates' matter.id %}"
+       hx-target="this">{% include "matters/rates/list.html" %}</div>
+{% endblock subcontent %}

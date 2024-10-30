@@ -8,7 +8,7 @@ pytestmark = pytest.mark.django_db
 
 def test_index(client, matter, fact):
     response = client.get(f"/matters/{matter.id}/timeline")
-    assert response.status_code == 200
+    assert response.status_code == 301
     assertTemplateUsed("matters/timeline/list.html")
 
 
@@ -20,7 +20,7 @@ def test_add_get(client, matter):
 
 def test_add_post(client, matter, fact_data):
     response = client.post(f"/matters/{matter.id}/timeline/add", fact_data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Fact.objects.filter(description=fact_data["description"]).first()
     assert found
 
@@ -39,13 +39,13 @@ def test_edit_post(client, matter, fact):
         "emphasis": "No",
     }
     response = client.post(f"/matters/{matter.id}/timeline/{fact.id}/edit", data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Fact.objects.filter(description="Purchse of property").exists()
     assert found
 
 
 def test_delete(client, matter, fact):
     response = client.get(f"/matters/{matter.id}/timeline/{fact.id}/delete")
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Fact.objects.filter(pk=fact.id).exists()
     assert not found
