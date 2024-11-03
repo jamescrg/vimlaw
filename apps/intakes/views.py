@@ -3,6 +3,7 @@ from datetime import date, datetime
 import markdown
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
@@ -14,7 +15,16 @@ from config.helpers import format_phone
 
 
 @login_required
-def index(request):
+def intakes_index(request):
+    context = {
+        "app": "intakes",
+    }
+
+    return render(request, "intakes/main.html", context)
+
+
+@login_required
+def intakes_list(request):
     request.session["intakes-view"] = "list"
 
     table_data = get_table_data(request)
@@ -35,7 +45,8 @@ def intake_filter(request):
     if request.method == "POST":
         request.session["intake_filter"] = request.POST
 
-        return redirect("intakes:list")
+        return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
+
     else:
         filter = get_filter(request)
 
@@ -50,7 +61,7 @@ def quick_filter_status(request, status):
 
     request.session["intake_filter"] = filter_data
 
-    return redirect("intakes:list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
 
 
 @login_required
@@ -60,7 +71,7 @@ def quick_filter_all(request):
     filter_data["status"] = None
     filter_data["order_by"] = "-date"
 
-    return redirect("intakes:list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
 
 
 @login_required
@@ -77,7 +88,19 @@ def order_by(request, order):
     filter_data["order_by"] = new_order
     request.session["intake_filter"] = filter_data
 
-    return redirect("intakes:list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
+
+
+@login_required
+def detail_index(request, id):
+    intake = get_object_or_404(Intake, pk=id)
+
+    context = {
+        "app": "intakes",
+        "intake": intake,
+    }
+
+    return render(request, "intakes/detail-index.html", context)
 
 
 @login_required
@@ -105,43 +128,21 @@ def detail(request, id):
 
 
 @login_required
-def detail_data(request, id):
-    intake = get_object_or_404(Intake, pk=id)
-    context = {
-        "intake": intake,
-    }
-    return render(request, "intakes/detail-table.html", context)
-
-
-@login_required
 def add(request):
-    # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = IntakeForm(request.POST)
+        form = IntakeForm(request.POST, use_required_attribute=False)
+
         if form.is_valid():
-            # save the intake
             intake = form.save(commit=False)
             intake.user_id = request.user.id
             intake.phone = format_phone(intake.phone)
             intake.save()
 
-            # send alert re intake added
-            # send_mail(
-            #     "New Intake Added",
-            #     f"""New intake added: {intake.name}
-            #     {intake.phone}
-            #     {intake.email}""",
-            #     settings_local.SERVER_EMAIL,
-            #     settings_local.TEST_EMAIL_RECIPIENT,
-            #     fail_silently=False,
-            # )
+            return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
 
-            return redirect("/intakes")
-
-    # if no post data has been submitted, show the intake form
     else:
         today = date.today().strftime("%Y-%m-%d")
-        form = IntakeForm(initial={"date": today})
+        form = IntakeForm(initial={"date": today}, use_required_attribute=False)
 
     context = {
         "app": "intakes",
@@ -159,15 +160,18 @@ def edit(request, id):
     intake = get_object_or_404(Intake, pk=id)
 
     if request.method == "POST":
-        form = IntakeForm(request.POST, instance=intake)
+        form = IntakeForm(request.POST, instance=intake, use_required_attribute=False)
         if form.is_valid():
             intake = form.save(commit=False)
             intake.phone = format_phone(intake.phone)
             intake.save()
-            return redirect("/intakes")
+
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "intakeDetailChanged"}
+            )
 
     else:
-        form = IntakeForm(instance=intake)
+        form = IntakeForm(instance=intake, use_required_attribute=False)
 
     context = {
         "app": "intakes",
@@ -194,19 +198,24 @@ def add_note(request, id):
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = NoteForm(request.POST)
+        form = NoteForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             note = form.save(commit=False)
             note.intake = intake
             note.user = request.user
             note.save()
-            return redirect(f"/intakes/{intake.id}")
+
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "intakeDetailChanged"}
+            )
 
     # if no post data has been submitted, show the intake form
     else:
         today = date.today().strftime("%Y-%m-%d")
         now = datetime.now().time()
-        form = NoteForm(initial={"date": today, "time": now})
+        form = NoteForm(
+            initial={"date": today, "time": now}, use_required_attribute=False
+        )
 
     context = {
         "app": "intakes",
@@ -226,14 +235,17 @@ def edit_note(request, id):
     intake = get_object_or_404(Intake, pk=note.intake.id)
 
     if request.method == "POST":
-        form = NoteForm(request.POST, instance=note)
+        form = NoteForm(request.POST, instance=note, use_required_attribute=False)
         if form.is_valid():
             note = form.save(commit=False)
             note.save()
-        return redirect(f"/intakes/{intake.id}")
+
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "intakeDetailChanged"}
+            )
 
     else:
-        form = NoteForm(instance=note)
+        form = NoteForm(instance=note, use_required_attribute=False)
 
     context = {
         "app": "intakes",
@@ -249,11 +261,10 @@ def edit_note(request, id):
 
 
 @login_required
-def delete_note(request, id):
-    note = get_object_or_404(Note, pk=id)
-    intake = get_object_or_404(Intake, pk=note.intake.id)
-    note.delete()
-    return redirect(f"/intakes/{intake.id}")
+def delete_note(_, id):
+    Note.objects.filter(pk=id).delete()
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "intakeDetailChanged"})
 
 
 @login_required
