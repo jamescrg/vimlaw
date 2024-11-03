@@ -15,8 +15,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{{ action }}"
-            method="post"
+      <form hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
             class="form-responsive intake-note-form">
         {% csrf_token %}
         {{ form }}
@@ -27,8 +27,9 @@
           </div>
           <div>
             {% if edit %}
-              <a onclick="return confirm('Are you sure you want to delete this record?')"
-                 href="{% url 'intakes:delete_note' id=note.id %}">Delete Note</a>
+              <a hx-confirm='Are you sure you want to delete this record?'
+                 href="#"
+                 hx-post="{% url 'intakes:delete_note' id=note.id %}">Delete Note</a>
             {% endif %}
           </div>
         </div>
