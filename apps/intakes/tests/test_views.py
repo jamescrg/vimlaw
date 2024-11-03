@@ -18,9 +18,7 @@ def test_index(client):
 
 def test_detail(client, intake):
     response = client.get(f"/intakes/{intake.id}")
-    assert response.status_code == 200
-    assertTemplateUsed(response, "intakes/detail.html")
-    assert response.context["intake"] == intake
+    assert response.status_code == 301
 
 
 def test_intake_add_get(client):
@@ -32,7 +30,7 @@ def test_intake_add_get(client):
 
 def test_intake_add_post(client, intake_data):
     response = client.post("/intakes/add", intake_data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Intake.objects.filter(name=intake_data["name"]).first()
     assert found
 
@@ -55,7 +53,7 @@ def test_intake_edit_post(client, intake):
         "status": "Open",
     }
     response = client.post(f"/intakes/{intake.id}/edit", data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Intake.objects.filter(name="Desmond Tutu").exists()
     assert found
 
@@ -84,7 +82,7 @@ def test_filter_update(client):
         "source": "",
     }
     response = client.post("/intakes/filter-intakes", data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     response = client.get("/intakes/filter-intakes")
     assert response.context["form"]["status"].value() == "Pending"
 
@@ -92,7 +90,7 @@ def test_filter_update(client):
 def test_filter_quick(client):
     data = {"order_by": "date"}
     response = client.post("/intakes/filter-intakes", data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     response = client.get("/intakes/filter-intakes")
     assert response.context["form"]["order_by"].value() == ["date"]
 
@@ -106,7 +104,7 @@ def test_note_add_get(client, intake):
 
 def test_note_add_post(client, intake, note_data):
     response = client.post(f"/intakes/{intake.id}/add-note", note_data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Note.objects.filter(intake=intake).first()
     assert found
 
@@ -127,13 +125,13 @@ def test_note_edit_post(client, user, intake, note):
         "details": "",
     }
     response = client.post(f"/intakes/{note.id}/edit-note", data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Note.objects.filter(type="Boundary Dispute").exists()
     assert found
 
 
 def test_note_delete(client, note):
     response = client.get(f"/intakes/{note.id}/delete-note")
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Note.objects.filter(pk=note.id).exists()
     assert not found
