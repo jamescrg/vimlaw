@@ -1,6 +1,5 @@
-from django.core.paginator import Paginator
-
 from apps.intakes.filter_intakes import IntakeFilter
+from apps.management.pagination import CustomPaginator
 
 
 def get_table_data(request):
@@ -22,12 +21,11 @@ def get_table_data(request):
 
     number_intakes = intakes.count()
 
-    page = request.GET.get("page")
-    pagination = Paginator(intakes, per_page=10).get_page(page)
+    pagination = CustomPaginator(intakes, per_page=10, request=request)
 
     table_data = {
         "pagination": pagination,
-        "intakes": pagination.object_list,
+        "intakes": pagination.get_object_list(),
         "number_intakes": number_intakes,
     }
 

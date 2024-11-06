@@ -15,7 +15,9 @@
       </div>
     </div>
     <div class="modal-body">
-      <form method="post" action="{{ action }}" class="form-responsive">
+      <form hx-target="#htmx-modal-container"
+            hx-post="{{ action }}"
+            class="form-responsive">
         {% csrf_token %}
         {{ form }}
         <br />
