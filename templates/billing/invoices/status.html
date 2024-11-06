@@ -6,23 +6,28 @@
   <ul class="dropdown-menu">
     <li>
       <a class="dropdown-item"
-         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='DRAFT' %}">Draft</a>
+         href="#"
+         hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='DRAFT' %}">Draft</a>
     </li>
     <li>
       <a class="dropdown-item"
-         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='APPROVED' %}">Approved</a>
+         href="#"
+         hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='APPROVED' %}">Approved</a>
     </li>
     <li>
       <a class="dropdown-item"
-         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='SENT' %}">Sent</a>
+         href="#"
+         hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='SENT' %}">Sent</a>
     </li>
     <li>
       <a class="dropdown-item"
-         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='PAID' %}">Paid</a>
+         href="#"
+         hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='PAID' %}">Paid</a>
     </li>
     <li>
       <a class="dropdown-item"
-         href="{% url 'billing:invoices-edit-status' pk=invoice.id status='WAIVED' %}">Waived</a>
+         href="#"
+         hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='WAIVED' %}">Waived</a>
     </li>
   </ul>
 </div>

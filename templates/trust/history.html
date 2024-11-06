@@ -1,4 +1,3 @@
-{% extends "base.html" %}
 {% block content %}
   {% load humanize %}
   <div class="section trust">
@@ -7,15 +6,15 @@
         <h1>Account History</h1>
         <div class="table-filter">
           <a {% if interval == '30days' %}class="strong"{% endif %}
-             href="{% url 'trust:history-interval' interval='30days' %}">30 days</a>
+             href="{% url 'trust:history-index' interval='30days' %}">30 days</a>
           <a {% if interval == '60days' %}class="strong"{% endif %}
-             href="{% url 'trust:history-interval' interval='60days' %}">60 days</a>
+             href="{% url 'trust:history-index' interval='60days' %}">60 days</a>
           <a {% if interval == 'all' %}class="strong"{% endif %}
-             href="{% url 'trust:history-interval' interval='all' %}">All</a>
+             href="{% url 'trust:history-index' interval='all' %}">All</a>
         </div>
       </div>
       <div class="section-title-right">
-        <a href={% url 'trust:trust' %}>Summary</a>
+        <a href={% url 'trust:index' %}>Summary</a>
       </div>
     </div>
     <div class="table-container">
@@ -33,7 +32,7 @@
             <tr>
               <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
               <td class="client">
-                <a href={% url 'trust:client' id=transaction.contact_id %}>{{ transaction.contact.name }}</a>
+                <a href={% url 'trust:client-index' id=transaction.contact_id %}>{{ transaction.contact.name }}</a>
               </td>
               <td class="note">
                 <a href="#"
@@ -55,7 +54,7 @@
                 {% endif %}
               </td>
               <td class="check">
-                <a href={% url 'trust:confirmed' id=transaction.id %}>
+                <a href="#" hx-post={% url 'trust:confirmed' id=transaction.id %}>
                   {% if transaction.confirmed %}
                     <i class="bi bi-check-square"></i>
                   {% else %}

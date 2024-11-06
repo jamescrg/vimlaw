@@ -71,14 +71,16 @@
       {% endif %}
     </div>
   </div>
-  <ul class="subnav">
-    <li {% if subapp == "time" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
-    </li>
-    <li {% if subapp == "expenses" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
-    </li>
-  </ul>
+  <div class="subnav">
+    <ul>
+      <li {% if subapp == "time" %}class="active"{% endif %}>
+        <a href="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
+      </li>
+      <li {% if subapp == "expenses" %}class="active"{% endif %}>
+        <a href="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
+      </li>
+    </ul>
+  </div>
   <div class="section">
     {% block subcontent %}
     {% endblock subcontent %}

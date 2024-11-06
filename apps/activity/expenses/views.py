@@ -206,7 +206,9 @@ def expenses_add(request, id=None, request_app="activity"):
             form = ExpenseEntryForm(initial={"date": today})
 
     # get list of matters for activity form
-    matter_list = Matter.objects.filter(status="Open").order_by("name")
+    matter_list = Matter.objects.filter(status__in=["Open", "Complete"]).order_by(
+        "name"
+    )
 
     # if a single matter is selected,  pull that matter as a quersyset
     if id:
@@ -243,14 +245,26 @@ def expenses_edit(request, id):
     if request.method == "POST":
         form = ExpenseEntryForm(request.POST, instance=entry)
         if form.is_valid():
+
+            original_entry = get_object_or_404(ExpenseEntry, pk=id)
             entry = form.save(commit=False)
+
+            # if the matter has been changed, be sure to clear the
+            # entry off of any relevant invoice
+            # this will not happen if the invoice has been approved,
+            # because editing will be locked at that point
+            if original_entry.matter != entry.matter:
+                entry.invoice = None
+
             entry.save()
 
             return HttpResponse(status=204, headers={"HX-Trigger": "expensesChanged"})
 
     else:
         # get list of matters for activity form
-        matter_list = Matter.objects.filter(status="Open").order_by("name")
+        matter_list = Matter.objects.filter(status__in=["Open", "Complete"]).order_by(
+            "name"
+        )
 
         selected_matter = Matter.objects.filter(id=entry.matter.id)
         if selected_matter.first().status == "Closed":

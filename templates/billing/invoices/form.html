@@ -10,8 +10,8 @@
     </div>
     <div class="modal-body">
       <form class="form-responsive invoices-add"
-            method="post"
-            action="{% url 'billing:invoices-add' %}">
+            hx-target="#htmx-modal-container"
+            hx-post="{% url 'billing:invoices-add' %}">
         {% csrf_token %}
         {{ form }}
         <br />

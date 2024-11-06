@@ -23,7 +23,7 @@ class Invoice(models.Model):
     message = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     show_comp = models.BooleanField(default=False)
-    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=INVOICE_STATUS, default="DRAFT")
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     pdf_file = models.FileField(upload_to="invoices/", null=True, blank=True)

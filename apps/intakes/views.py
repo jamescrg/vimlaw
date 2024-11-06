@@ -66,11 +66,9 @@ def quick_filter_status(request, status):
 
 @login_required
 def quick_filter_all(request):
-    filter_data = request.session.get("intake_filter", {})
-
-    filter_data["status"] = None
+    filter_data = {}
     filter_data["order_by"] = "-date"
-
+    request.session["intake_filter"] = filter_data
     return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
 
 

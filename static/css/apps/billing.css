@@ -29,9 +29,9 @@ List View
 }
 
 .toggle-active {
-  /* background: var(--stone-215) !important; */
-  border: solid 1px var(--stone-375) !important;
-  color: var(--stone-600) !important;
+  background: var(--selected-background) !important;
+  color: var(--selected-color) !important;
+  border: solid 1px var(--selected-border) !important;
 }
 
 .status-buttons {
