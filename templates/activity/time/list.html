@@ -14,8 +14,10 @@
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">Filter</button>
-        <button hx-post={% url 'activity:time-filter-quick' 'unbilled' %}>Unbilled</button>
-        <button hx-post={% url 'activity:time-filter-quick' 'today' %}>Today</button>
+        <button class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
+                hx-post="{% url 'activity:time-filter-quick' 'unbilled' %}">Unbilled</button>
+        <button class="{% if filter_label == "today" %}toggle-active{% endif %}"
+                hx-post="{% url 'activity:time-filter-quick' 'today' %}">Today</button>
         <select hx-post="{% url 'activity:time-filter-user' %}"
                 class="select-user"
                 name="user">

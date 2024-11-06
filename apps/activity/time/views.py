@@ -56,6 +56,7 @@ def time_list(request):
     }
 
     filter_data = request.session.get("time_filter", None)
+    print(filter_data)
 
     if filter_data:
         filter = TimeEntryFilter(filter_data)
@@ -85,6 +86,7 @@ def time_list(request):
         "summary": summary,
         "users": users,
         "user_id": user_id,
+        "filter_label": filter_data.get("filter_label", None),
     }
 
     return render(request, "activity/time/list.html", context)
@@ -150,6 +152,7 @@ def time_filter_quick(request, quick_filter):
             "entered": 0,
             "invoice": 0,
             "order_by": "date",
+            "filter_label": "unbilled",
         },
         "today": {
             "date_min": date.today().strftime("%Y-%m-%d"),
@@ -161,6 +164,7 @@ def time_filter_quick(request, quick_filter):
             "entered": None,
             "invoice": None,
             "order_by": "-date",
+            "filter_label": "today",
         },
     }
 
