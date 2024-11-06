@@ -14,6 +14,7 @@ from apps.billing.invoices.views import (
     invoices_edit_status,
     invoices_filter,
     invoices_filter_status,
+    invoices_index,
     invoices_list,
     invoices_pdf,
     order_by_invoices,
@@ -32,7 +33,8 @@ app_name = "billing"
 
 urlpatterns = [
     # Invoices
-    path("billing/", invoices_list, name="invoices-list"),
+    path("billing/", invoices_index, name="invoices-index"),
+    path("billing/list/", invoices_list, name="invoices-list"),
     path(
         "billing/invoices-detail/<int:pk>/preview/",
         invoices_detail,

@@ -1,4 +1,3 @@
-{% extends "billing/list.html" %}
 {% block subcontent %}
   <div class="section-title">
     <div class="section-title-left">
@@ -23,16 +22,20 @@
         <div class="status-buttons">
           <a type="button"
              class="btn-icon {% if selected_status == "DRAFT" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "DRAFT" %}">Draft</a>
+             href="#"
+             hx-post="{% url 'billing:invoices-filter-status' "DRAFT" %}">Draft</a>
           <a type="button"
+             href="#"
              class="btn-icon {% if selected_status == "APPROVED" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "APPROVED" %}">Approved</a>
+             hx-post="{% url 'billing:invoices-filter-status' "APPROVED" %}">Approved</a>
           <a type="button"
+             href="#"
              class="btn-icon {% if selected_status == "SENT" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "SENT" %}">Sent</a>
+             hx-post="{% url 'billing:invoices-filter-status' "SENT" %}">Sent</a>
           <a type="button"
+             href="#"
              class="btn-icon {% if selected_status == "PAID" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "PAID" %}">Paid</a>
+             hx-post="{% url 'billing:invoices-filter-status' "PAID" %}">Paid</a>
         </div>
       </div>
     </div>
