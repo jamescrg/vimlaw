@@ -32,7 +32,6 @@ class TransactionForm(forms.ModelForm):
         )
 
         widgets = {
-            "contact": forms.Select(attrs={"required": True}),
             "date": forms.DateInput(attrs={"type": "date"}),
             "type": forms.Select(choices=TYPE_CHOICES),
             "description": forms.TextInput(attrs={"autofocus": "autofocus"}),

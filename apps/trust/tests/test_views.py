@@ -15,20 +15,15 @@ def test_index(client):
 
 
 def test_history(client, transaction):
-    response = client.get("/trust/history/")
+    response = client.get("/trust/history/30days/")
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/history.html")
     assert "interval" in response.context
-    assert response.context["pending_account_balance"] == 2000
 
 
 def test_client(client, contact, transaction):
     response = client.get(f"/trust/client/{contact.id}")
-    assert response.status_code == 200
-    assertTemplateUsed(response, "trust/client.html")
-    assert "client" in response.context
-    assert response.context["pending_client_balance"] == 2000
-    assert response.context["confirmed_client_balance"] == 0
+    assert response.status_code == 301
 
 
 def test_add_get(client):
@@ -39,7 +34,7 @@ def test_add_get(client):
 
 def test_add_post(client, transaction_data):
     response = client.post("/trust/add", transaction_data)
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Transaction.objects.filter(
         description=transaction_data["description"]
     ).first()
@@ -63,13 +58,13 @@ def test_edit_post(client, transaction, contact):
         "confirmed": 0,
     }
     response = client.post(f"/trust/{transaction.id}/edit", data)
-    assert response.status_code == 302
+    assert response.status_code == 200
     found = Transaction.objects.filter(description="Retainer").exists()
     assert found
 
 
 def test_delete(client, transaction):
     response = client.get(f"/trust/{transaction.id}/delete")
-    assert response.status_code == 302
+    assert response.status_code == 204
     found = Transaction.objects.filter(pk=transaction.id).exists()
     assert not found

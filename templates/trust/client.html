@@ -1,4 +1,3 @@
-{% extends "base.html" %}
 {% block content %}
   {% load humanize %}
   <div class="section trust">
@@ -53,7 +52,7 @@
                 {% endif %}
               </td>
               <td class="check">
-                <a href={% url 'trust:confirmed' id=transaction.id %}>
+                <a href="#" hx-post={% url 'trust:confirmed' id=transaction.id %}>
                   {% if transaction.confirmed %}
                     <i class="bi bi-check-square"></i>
                   {% else %}

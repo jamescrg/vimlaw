@@ -1,4 +1,3 @@
-{% extends "base.html" %}
 {% block content %}
   {% load humanize %}
   <div class="section trust">
@@ -15,6 +14,7 @@
                   data-bs-target="#htmx-modal-container">
             <i class="bi bi-plus-lg"></i>
           </button>
+          <a href={% url 'trust:history-index' '30days' %}>History</a>
         </div>
       </div>
       <div class="section-title-right">
@@ -31,7 +31,7 @@
         {% for contact in contacts %}
           <tr>
             <td class="name">
-              <a href={% url 'trust:client' id=contact.id %}>{{ contact.name }}</a>
+              <a href={% url 'trust:client-index' id=contact.id %}>{{ contact.name }}</a>
             </td>
             <td class="numeric {% if contact.pending_client_balance != contact.confirmed_client_balance %}urgent{% endif %}">
               ${{ contact.pending_client_balance|intcomma }}

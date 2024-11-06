@@ -16,9 +16,9 @@
     </div>
     <div class="modal-body">
       <form id="transaction"
-            action="{% if edit %}{% url 'trust:edit' id=transaction.id %}{% else %}{% url 'trust:add' %}{% endif %}"
-            class="form-responsive trust-transaction-form"
-            method="post">
+            hx-target="#htmx-modal-container"
+            hx-post="{% if edit %}{% url 'trust:edit' id=transaction.id %}{% else %}{% url 'trust:add' %}{% endif %}"
+            class="form-responsive trust-transaction-form">
         {% csrf_token %}
         {{ form }}
         <br />
@@ -28,8 +28,9 @@
           </div>
           <div>
             {% if edit %}
-              <a onclick="return confirm('Are you sure you want to delete this record?')"
-                 href="{% url 'trust:delete' id=transaction.id %}">Delete Transaction</a>
+              <a hx-confirm='Are you sure you want to delete this record?'
+                 href="#"
+                 hx-delete="{% url 'trust:delete' id=transaction.id %}">Delete Transaction</a>
             {% endif %}
           </div>
         </div>
