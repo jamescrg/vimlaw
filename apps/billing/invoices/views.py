@@ -175,6 +175,9 @@ def invoices_add(request):
             invoice.created_by = request.user
             invoice.save()
 
+            filter_data = request.session.get("invoices_filter", {})
+            filter_data["status"] = "DRAFT"
+            request.session["invoices_filter"] = filter_data
             return HttpResponse(status=204, headers={"HX-Trigger": "invoicesChanged"})
 
     else:

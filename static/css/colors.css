@@ -101,7 +101,7 @@
   --icon-blue: var(--sky-800);
   --add: var(--icon-green);
 
-  --selected-background: hsl(252, 32%, 90%);
+  --selected-background: hsl(252, 32%, 91%);
   --selected-color: hsl(24, 6%, 35%);
   --selected-border: hsl(252, 22%, 85%);
 }
