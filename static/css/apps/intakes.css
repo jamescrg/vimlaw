@@ -166,6 +166,10 @@ Markdown
   padding-left: 0.5rem;
 }
 
+.intake-note-details li > ul {
+  margin-top: 0;
+}
+
 .intake-note-details ol {
   margin: 1rem 0 0 0;
 }

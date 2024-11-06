@@ -162,7 +162,7 @@ def edit(request, id):
             intake = form.save(commit=False)
             intake.phone = format_phone(intake.phone)
             intake.save()
-            return redirect("/intakes")
+            return redirect(f"/intakes/{intake.id}")
 
     else:
         form = IntakeForm(instance=intake)
