@@ -102,7 +102,7 @@ def add(request):
         selected_folder = None
 
     if request.method == "POST":
-        form = ContactForm(request.POST)
+        form = ContactForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             # initialize contact data
             contact = form.save(commit=False)
@@ -130,9 +130,11 @@ def add(request):
     # if no post data has been submitted, show the contact form
     else:
         if selected_folder:
-            form = ContactForm(initial={"folder": selected_folder.id})
+            form = ContactForm(
+                initial={"folder": selected_folder.id}, use_required_attribute=False
+            )
         else:
-            form = ContactForm()
+            form = ContactForm(use_required_attribute=False)
 
     form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
         "name"
@@ -140,6 +142,7 @@ def add(request):
 
     context = {
         "app": "contacts",
+        "action_type": "db_update",
         "edit": False,
         "add": True,
         "action": "/contacts/add",
@@ -164,7 +167,7 @@ def edit(request, id):
     contact = get_object_or_404(Contact, pk=id)
 
     if request.method == "POST":
-        form = ContactForm(request.POST, instance=contact)
+        form = ContactForm(request.POST, instance=contact, use_required_attribute=False)
         form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
             "name"
         )
@@ -187,9 +190,13 @@ def edit(request, id):
 
     else:
         if selected_folder:
-            form = ContactForm(instance=contact, initial={"folder": selected_folder.id})
+            form = ContactForm(
+                instance=contact,
+                initial={"folder": selected_folder.id},
+                use_required_attribute=False,
+            )
         else:
-            form = ContactForm(instance=contact)
+            form = ContactForm(instance=contact, use_required_attribute=False)
 
     form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
         "name"
@@ -199,6 +206,7 @@ def edit(request, id):
 
     context = {
         "app": "contacts",
+        "action_type": "db_update",
         "edit": True,
         "add": False,
         "action": f"/contacts/{id}/edit",
@@ -209,7 +217,7 @@ def edit(request, id):
         "form": form,
     }
 
-    return render(request, "contacts/content.html", context)
+    return render(request, "contacts/content-form.html", context)
 
 
 @login_required

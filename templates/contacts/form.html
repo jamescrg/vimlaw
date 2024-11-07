@@ -11,7 +11,8 @@
         </h1>
       </div>
     </div>
-    <form hx-post="{{ action }}"
+    <form {% if action_type == 'db_update' %}action="{{ action }}"{% else %}hx-post="{{ action }}"{% endif %}
+          method="post"
           role="form"
           class="form-responsive contacts-form">
       {% csrf_token %}

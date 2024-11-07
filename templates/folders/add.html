@@ -1,7 +1,9 @@
 <li id="add-folder-item" class="list-group-item">
   <i class="bi bi-folder"></i>
   <div class="edit-folder">
-    <form class="folder-form" hx-post="{% url 'folders:insert' app %}">
+    <form class="folder-form"
+          method="post"
+          {% if action_type == 'db_update' %} action="{% url 'folders:insert' app=app action_type=action_type %}" {% else %} hx-post="{% url 'folders:insert' app=app action_type=None %}" {% endif %}>
       {% csrf_token %}
       <label class="hidden" for="add-folder-input"></label>
       <input id="add-folder-input"
