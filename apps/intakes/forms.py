@@ -22,7 +22,6 @@ class IntakeForm(forms.ModelForm):
 
         STATUSES = (
             ("Open", "Open"),
-            ("Pending", "Pending"),
             ("Accepted", "Accepted"),
             ("Referred Out", "Referred Out"),
             ("Client Declined", "Client Declined"),

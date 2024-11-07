@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+  {% load humanize %}
+  <div id="trustClient"
+       hx-trigger="load, trustClientChanged from:body"
+       hx-get="{% url 'trust:client' client.id %}"
+       hx-target="this">{% include "trust/client.html" %}</div>
+{% endblock content %}

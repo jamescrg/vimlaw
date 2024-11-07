@@ -3,13 +3,13 @@
   <div class="subnav">
     <ul>
       <li {% if subapp == "invoices" %}class="active"{% endif %}>
-        <a href="{% url 'billing:invoices-list' %}">Invoices</a>
+        <a href="{% url 'billing:invoices-index' %}">Invoices</a>
       </li>
       <li {% if subapp == "payments" %}class="active"{% endif %}>
         <a href="{% url 'billing:payments-index' %}">Payments</a>
       </li>
       <li {% if subapp == "collection" %}class="active"{% endif %}>
-        <a href="{% url 'billing:collection-list' %}">Collection</a>
+        <a href="{% url 'billing:collection-index' %}">Collection</a>
       </li>
     </ul>
   </div>

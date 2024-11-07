@@ -92,12 +92,12 @@ class Matter(models.Model):
             or 0
         )
 
-        invoice_owed = billed_invoices - payment_sum
+        invoice_due = billed_invoices - payment_sum
 
         invoices = {
             "billed": billed_invoices,
             "payment_sum": payment_sum,
-            "owed": invoice_owed,
+            "due": invoice_due,
         }
 
         value = {

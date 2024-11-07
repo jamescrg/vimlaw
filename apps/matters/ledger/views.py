@@ -34,7 +34,7 @@ def index(request, id):
                 "amount": invoice.value["final_total"],
             }
             transactions.append(invoice_dict)
-            balance_due -= invoice.amount
+            balance_due -= invoice.value["final_total"]
 
     if payments:
         for payment in payments:

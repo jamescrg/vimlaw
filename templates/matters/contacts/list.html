@@ -1,9 +1,9 @@
 {% extends "matters/detail.html" %}
 {% block subcontent %}
-  <div class="section-title">
-    <div class="section-title-left">
+  <div class="toolbar">
+    <div class="toolbar-left">
       <h2>Related Contacts</h2>
-      <div class="table-filter">
+      <div class="filter-tools">
         <a href={% url 'matters:contacts-assign' id=matter.id %}>Assign</a>
       </div>
     </div>

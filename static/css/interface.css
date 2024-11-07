@@ -45,3 +45,9 @@
 .table-option {
   background: var(--stone-50);
 }
+
+.toggle-active {
+  background: var(--selected-background) !important;
+  border: solid 1px var(--selected-border) !important;
+  color: var(--selected-color) !important;
+}

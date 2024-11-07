@@ -16,6 +16,7 @@ from .views import (
     edit_description,
     filter,
     filter_quick,
+    filter_quick_status,
     matter_index,
     matter_list,
     order_by,
@@ -143,6 +144,11 @@ urlpatterns = [
     path("matters/filter", filter, name="filter"),
     path("matters/order-by/<str:order>", order_by, name="order-by"),
     path("matters/filter-quick/<str:quick_filter>/", filter_quick, name="filter-quick"),
+    path(
+        "matters/filter-quick-status/<str:status>",
+        filter_quick_status,
+        name="filter-quick-status",
+    ),
     # Ledger
     path("matters/<int:id>/ledger", ledger.index, name="ledger"),
     path("matters/<int:pk>/ledger/pdf/", ledger.ledger_pdf, name="ledger-pdf"),

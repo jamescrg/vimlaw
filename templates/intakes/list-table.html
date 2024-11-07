@@ -1,11 +1,9 @@
-{% extends "base.html" %}
 {% load phone_numbers %}
 {% block content %}
   <div class="section">
-    <div class="section-title">
-      <div class="section-title-left">
-        <h1>{{ filter.status }} Intakes ({{ number_intakes }})</h1>
-        <div class="table-filter">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
           <button hx-get="/intakes/add"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
@@ -16,24 +14,32 @@
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">Filter</button>
-          <a href={% url 'intakes:quick-filter-all' %}>All</a>
-          <a href={% url 'intakes:quick-filter-status' 'Open' %}>Open</a>
-          <a href={% url 'intakes:quick-filter-status' 'Pending' %}>Pending</a>
+          <button href="#"
+                  class="{% if filter_label == "all" %} toggle-active {% endif %}"
+                  hx-post="{% url 'intakes:quick-filter-all' %}">All</button>
+          <button href="#"
+                  class="{% if filter_label == "Open" %} toggle-active {% endif %}"
+                  hx-post="{% url 'intakes:quick-filter-status' 'Open' %}">Open</button>
+          <button href="#"
+                  class="{% if filter_label == "Accepted" %} toggle-active {% endif %}"
+                  hx-post="{% url 'intakes:quick-filter-status' 'Accepted' %}">Accepted</button>
         </div>
       </div>
-      <div class="section-title-right"></div>
+      <div class="toolbar-right">
+        Count: <strong>{{ number_intakes }}</strong>
+      </div>
     </div>
     <div class="table-container">
       <table class="table intake-list">
         <tr>
           <th class="intake-date">
-            <a href={% url 'intakes:order-by' 'date' %}>
+            <a href="#" hx-post={% url 'intakes:order-by' 'date' %}>
               Date
               <i class="bi bi-chevron-expand"></i>
             </a>
           </th>
           <th class="intake-name">
-            <a href={% url 'intakes:order-by' 'name' %}>
+            <a href="#" hx-post={% url 'intakes:order-by' 'name' %}>
               Name
               <i class="bi bi-chevron-expand"></i>
             </a>
@@ -48,7 +54,7 @@
             <tr>
               <td class="intake-date">{{ intake.date|date:"Y-m-d" }}</td>
               <td class="intake-name">
-                <a href={% url 'intakes:detail' id=intake.id %}>{{ intake.name }}</a>
+                <a href={% url 'intakes:detail-index' id=intake.id %}>{{ intake.name }}</a>
               </td>
               <td class="intake-phone">{{ intake.phone|phone_number|default:'' }}</td>
               <td class="intake-email">{{ intake.email|default:'' }}</td>

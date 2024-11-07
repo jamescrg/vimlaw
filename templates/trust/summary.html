@@ -1,11 +1,9 @@
-{% extends "base.html" %}
 {% block content %}
   {% load humanize %}
   <div class="section trust">
-    <div class="section-title">
-      <div class="section-title-left">
-        <h1>Account Summary</h1>
-        <div class="table-filter">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
           <button type="button"
                   class="btn-icon"
                   hx-get="{% url 'trust:add' %}"
@@ -15,10 +13,13 @@
                   data-bs-target="#htmx-modal-container">
             <i class="bi bi-plus-lg"></i>
           </button>
-          <a href={% url 'trust:history' %}>History</a>
+          <a class="{% if page == "summary" %}toggle-active{% endif %}"
+             href="{% url 'trust:index' %}">Summary</a>
+          <a class="{% if page == "history" %}toggle-active{% endif %}"
+             href="{% url 'trust:history-index' '30days' %}">History</a>
         </div>
       </div>
-      <div class="section-title-right"></div>
+      <div class="toolbar-right"></div>
     </div>
     <table class="trust-summary">
       <tr>
@@ -30,7 +31,7 @@
         {% for contact in contacts %}
           <tr>
             <td class="name">
-              <a href={% url 'trust:client' id=contact.id %}>{{ contact.name }}</a>
+              <a href={% url 'trust:client-index' id=contact.id %}>{{ contact.name }}</a>
             </td>
             <td class="numeric {% if contact.pending_client_balance != contact.confirmed_client_balance %}urgent{% endif %}">
               ${{ contact.pending_client_balance|intcomma }}

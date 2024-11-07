@@ -1,12 +1,11 @@
 {% load phone_numbers %}
 <div class="section">
-  <div class="section-title">
-    <div class="section-title-left">
+  <div class="toolbar">
+    <div class="toolbar-left">
       <h1>{{ selected_contact.name }}</h1>
     </div>
-    <div class="section-title-right">
-      <a class="icon-blue"
-         href="{% url 'contacts:toggle-google-sync' id=selected_contact.id %}">
+    <div class="toolbar-right">
+      <a href="{% url 'contacts:toggle-google-sync' id=selected_contact.id %}">
         {% if selected_contact.google_id %}
           <i class="bi bi-cloud-slash"></i>
         {% else %}

@@ -1,9 +1,8 @@
 {% block subcontent %}
   {% load humanize %}
-  <div class="section-title">
-    <div class="section-title-left">
-      <h2>Demand / Offer History</h2>
-      <div class="table-filter">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
         <button hx-get="/matters/{{ matter.id }}/settlement/add"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"

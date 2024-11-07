@@ -7,12 +7,12 @@
 {% endblock head %}
 {% block content %}
   <div class="section">
-    <div class="section-title">
-      <div class="section-title-left">
+    <div class="toolbar">
+      <div class="toolbar-left">
         <h1>Invoice {{ invoice.id }} - {{ invoice.matter.name }}</h1>
       </div>
       {% if invoice.status == 'DRAFT' or invoice.status == 'APPROVED' %}
-        <div class="section-title-right">
+        <div class="toolbar-right">
           <button type="button"
                   class="btn-icon"
                   hx-get="{% url 'billing:invoices-edit' invoice.id %}"
@@ -71,14 +71,16 @@
       {% endif %}
     </div>
   </div>
-  <ul class="subnav">
-    <li {% if subapp == "time" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
-    </li>
-    <li {% if subapp == "expenses" %}class="active"{% endif %}>
-      <a href="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
-    </li>
-  </ul>
+  <div class="subnav">
+    <ul>
+      <li {% if subapp == "time" %}class="active"{% endif %}>
+        <a href="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
+      </li>
+      <li {% if subapp == "expenses" %}class="active"{% endif %}>
+        <a href="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
+      </li>
+    </ul>
+  </div>
   <div class="section">
     {% block subcontent %}
     {% endblock subcontent %}

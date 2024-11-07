@@ -1,9 +1,8 @@
 {% block subcontent %}
   {% load humanize %}
-  <div class="section-title">
-    <div class="section-title-left">
-      <h1>Time</h1>
-      <div class="table-filter">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
         <button hx-get="{% url 'activity:time-add' %}"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
@@ -12,10 +11,13 @@
         </button>
         <button hx-get="{% url 'activity:time-filter' %}"
                 hx-target="#htmx-modal-container"
+                class="{% if filter_label == "custom" %}toggle-active{% endif %}"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">Filter</button>
-        <button hx-post={% url 'activity:time-filter-quick' 'unbilled' %}>Unbilled</button>
-        <button hx-post={% url 'activity:time-filter-quick' 'today' %}>Today</button>
+        <button class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
+                hx-post="{% url 'activity:time-filter-quick' 'unbilled' %}">Unbilled</button>
+        <button class="{% if filter_label == "today" %}toggle-active{% endif %}"
+                hx-post="{% url 'activity:time-filter-quick' 'today' %}">Today</button>
         <select hx-post="{% url 'activity:time-filter-user' %}"
                 class="select-user"
                 name="user">
@@ -26,9 +28,9 @@
         </select>
       </div>
     </div>
-    <div class="section-title-right">
+    <div class="toolbar-right">
       <div class="dropdown">
-        <button class="btn-icon icon-blue"
+        <button class="btn-icon"
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false">

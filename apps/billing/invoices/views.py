@@ -14,12 +14,23 @@ from apps.activity.expenses.summary import (
 from apps.activity.time.models import TimeEntry
 from apps.activity.time.summary import calculate_summary as calculate_time_summary
 from apps.billing.invoices.functions import generate_ledes_98b
+from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
 from .filters import InvoiceFilter
 from .forms import EditInvoiceForm, InvoiceForm
 from .functions import generate_invoice
 from .models import INVOICE_STATUS, Invoice
+
+
+@login_required
+def invoices_index(request):
+    context = {
+        "app": "billing",
+        "subapp": "invoices",
+    }
+
+    return render(request, "billing/invoices/main.html", context)
 
 
 @login_required
@@ -40,8 +51,7 @@ def invoices_list(request):
     total_expenses = sum(invoice.value["net_expenses"] for invoice in invoices)
     total = total_fees + total_expenses
 
-    page = request.GET.get("page")
-    pagination = Paginator(invoices, per_page=10).get_page(page)
+    pagination = CustomPaginator(invoices, per_page=10, request=request)
 
     selected_status = filter_data.get("status", "") if filter_data else ""
 
@@ -58,6 +68,19 @@ def invoices_list(request):
     }
 
     return render(request, "billing/invoices/list.html", context)
+
+
+@login_required
+def invoices_detail_index(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    context = {
+        "app": "billing",
+        "subapp": "preview",
+        "invoice": invoice,
+    }
+
+    return render(request, "billing/invoices/detail-index.html", context)
 
 
 @login_required
@@ -146,15 +169,19 @@ def invoice_expense_entries(request, pk):
 @login_required
 def invoices_add(request):
     if request.method == "POST":
-        form = InvoiceForm(request.POST)
+        form = InvoiceForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             invoice = form.save(commit=False)
             invoice.created_by = request.user
             invoice.save()
-            return redirect("billing:invoices-list")
+
+            filter_data = request.session.get("invoices_filter", {})
+            filter_data["status"] = "DRAFT"
+            request.session["invoices_filter"] = filter_data
+            return HttpResponse(status=204, headers={"HX-Trigger": "invoicesChanged"})
 
     else:
-        form = InvoiceForm()
+        form = InvoiceForm(use_required_attribute=False)
 
         entries = TimeEntry.objects.filter(
             invoice__isnull=True, entered=0, date__gte="2024-01-01"
@@ -178,13 +205,19 @@ def invoices_add(request):
 def invoices_edit(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
     if request.method == "POST":
-        form = EditInvoiceForm(request.POST, instance=invoice)
+        form = EditInvoiceForm(
+            request.POST, instance=invoice, use_required_attribute=False
+        )
         if form.is_valid():
             invoice.save()
-            return redirect("billing:invoice-time-entries", pk=pk)
+
+            return redirect("billing:invoice-time-entries-index", pk=pk)
+
     else:
-        form = EditInvoiceForm(instance=invoice)
+        form = EditInvoiceForm(instance=invoice, use_required_attribute=False)
+
     context = {"form": form, "invoice": invoice}
+
     return render(request, "billing/invoices/edit.html", context)
 
 
@@ -192,7 +225,8 @@ def invoices_edit(request, pk):
 def invoices_delete(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
     invoice.delete()
-    return redirect("billing:invoices-list")
+
+    return redirect("billing:invoices-index")
 
 
 @login_required
@@ -232,7 +266,7 @@ def invoices_filter(request):
     if request.method == "POST":
         request.session["invoices_filter"] = request.POST
 
-        return redirect("billing:invoices-list")
+        return HttpResponse(status=204, headers={"HX-Trigger": "invoicesChanged"})
     else:
         filter_data = request.session.get("invoices_filter", {})
 
@@ -253,7 +287,7 @@ def invoices_filter_status(request, status):
 
     request.session["invoices_filter"] = filter_data
 
-    return redirect("billing:invoices-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "invoicesChanged"})
 
 
 @login_required
@@ -270,7 +304,7 @@ def order_by_invoices(request, order):
     filter_data["order_by"] = new_order
     request.session["invoices_filter"] = filter_data
 
-    return redirect("billing:invoices-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "invoicesChanged"})
 
 
 @login_required
@@ -280,4 +314,4 @@ def invoices_edit_status(_, pk, status):
     invoice.status = status
     invoice.save()
 
-    return redirect("billing:invoices-list")
+    return HttpResponse(status=204, headers={"HX-Trigger": "invoicesChanged"})

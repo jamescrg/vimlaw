@@ -42,7 +42,7 @@ def test_invoices_add_post(client, matter, user, invoice_data):
 
     response = client.post(reverse("billing:invoices-add"), cleaned_data)
 
-    assert response.status_code == 302
+    assert response.status_code == 204
     assert Invoice.objects.filter(matter=matter).exists()
 
 
@@ -60,7 +60,7 @@ def test_invoices_edit_status(client, invoice):
             "billing:invoices-edit-status", kwargs={"pk": invoice.pk, "status": "PAID"}
         )
     )
-    assert response.status_code == 302
+    assert response.status_code == 204
 
     invoice.refresh_from_db()
     assert invoice.status == "PAID"
@@ -90,15 +90,11 @@ def test_invoices_filter_get(client):
 def test_invoices_filter_post(client):
     filter_data = {"status": "PAID"}
     response = client.post(reverse("billing:invoices-filter"), filter_data)
-    assert response.status_code == 302
-
-    assert response.url == reverse("billing:invoices-list")
+    assert response.status_code == 204
 
 
 def test_invoices_filter_status(client):
     response = client.post(
         reverse("billing:invoices-filter-status", kwargs={"status": "PAID"})
     )
-    assert response.status_code == 302
-
-    assert response.url == reverse("billing:invoices-list")
+    assert response.status_code == 204

@@ -71,7 +71,7 @@ Intakes form
  Notes
 ========================================================================== */
 
-.intake-notes .section-title {
+.intake-notes .toolbar {
   border-bottom: solid 1px var(--stone-200);
 }
 
@@ -164,6 +164,10 @@ Markdown
 .intake-note-details ul li {
   list-style-type: disc;
   padding-left: 0.5rem;
+}
+
+.intake-note-details li > ul {
+  margin-top: 0;
 }
 
 .intake-note-details ol {

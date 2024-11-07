@@ -16,7 +16,9 @@ class TimeEntryFilter(django_filters.FilterSet):
         empty_label="All",
     )
     matter = django_filters.ModelChoiceFilter(
-        queryset=Matter.objects.filter(status="Open").order_by("name"),
+        queryset=Matter.objects.filter(status__in=["Open", "Complete"]).order_by(
+            "name"
+        ),
         empty_label="All",
     )
     actions = django_filters.CharFilter(

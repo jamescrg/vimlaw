@@ -1,32 +1,40 @@
 {% extends "billing/list.html" %}
 {% load humanize %}
 {% block subcontent %}
-  <div class="section-title">
-    <div class="section-title-left">
-      <h1>Collection</h1>
-    </div>
+  <div class="toolbar">
+    <div class="toolbar-left"></div>
   </div>
   <div class="table-container">
-    <table class="table">
+    <table class="table collection">
       <tr>
         <th>Matter</th>
-        <th>Billed</th>
-        <th>Paid</th>
-        <th>Owed</th>
-        <th>Unbilled</th>
+        <th class="numeric">Billed</th>
+        <th class="numeric">Paid</th>
+        <th class="numeric">Due</th>
       </tr>
       {% for matter in matters %}
         <tr>
           <td>
             <a href="{% url 'matters:ledger' matter.id %}">{{ matter.name }}</a>
           </td>
-          <td>${{ matter.value.invoices.billed|floatformat:2|intcomma }}</td>
-          <td>${{ matter.value.invoices.payment_sum|floatformat:2|intcomma }}</td>
-          <td>${{ matter.value.invoices.owed|floatformat:2|intcomma }}</td>
-          <td class="amount">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ matter.value.invoices.billed|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ matter.value.invoices.payment_sum|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ matter.value.invoices.due|floatformat:2|intcomma }}</td>
         </tr>
       {% endfor %}
     </table>
-    {% include "pagination.html" %}
+    <div class="flex-start-space">
+      <div>{% include "pagination.html" %}</div>
+      <div>
+        <div class="totals-table">
+          <table>
+            <tr>
+              <th>Total Due</th>
+              <td class="numeric strong">${{ total_due|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock subcontent %}

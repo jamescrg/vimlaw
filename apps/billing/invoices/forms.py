@@ -18,13 +18,20 @@ class InvoiceForm(forms.ModelForm):
             "discount",
         ]
         widgets = {
-            "matter": forms.Select(attrs={"required": True}),
             "date_issued": forms.DateInput(attrs={"type": "date"}),
             "date_limit": forms.DateInput(attrs={"type": "date"}),
             "message": forms.Textarea(attrs={"rows": 3}),
             "comment": forms.Textarea(attrs={"rows": 3}),
             "discount": forms.TextInput(attrs={"class": "discount"}),
         }
+
+    def clean_matter(self):
+        matter = self.cleaned_data.get("matter")
+
+        if not matter:
+            raise forms.ValidationError("This field is required")
+
+        return matter
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

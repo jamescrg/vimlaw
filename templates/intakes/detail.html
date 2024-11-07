@@ -1,13 +1,12 @@
-{% extends "base.html" %}
 {% block content %}
   <div class="row">
     <div class="col-md-4">
       <div class="section">
-        <div class="section-title">
-          <div class="section-title-left">
+        <div class="toolbar">
+          <div class="toolbar-left">
             <h1>{{ intake.name }}</h1>
           </div>
-          <div class="section-title-right">
+          <div class="toolbar-right">
             {% if contact %}
               <a href={% url 'contacts:select' id=contact.id %}>
                 <i class="bi bi-person-check"></i>
@@ -30,17 +29,50 @@
           </div>
         </div>
         <div class="intake-section details">
-          <div hx-get="/intakes/{{ intake.id }}/data"
-               hx-trigger="load, dbUpdate from:body"></div>
+          {% load phone_numbers %}
+          <table class="intake-details">
+            <tr>
+              <td class="strong">Email</td>
+              <td>{{ intake.email|default:'' }}</td>
+            </tr>
+            <tr>
+              <td class="strong">Phone</td>
+              <td>{{ intake.phone|phone_number|default:'' }}</td>
+            </tr>
+            <tr>
+              <td class="strong">Address</td>
+              <td>
+                {% if intake.address %}{{ intake.address|linebreaks }}{% endif %}
+              </td>
+            </tr>
+          </table>
+          <table class="width100">
+            <tr>
+              <td class="strong">Status</td>
+              <td>{{ intake.status }}</td>
+            </tr>
+            <tr>
+              <td class="strong">Date Opened</td>
+              <td>{{ intake.date|date:'Y-m-d' }}</td>
+            </tr>
+            <tr>
+              <td class="strong">Practice Area</td>
+              <td>{{ intake.practice_area }}</td>
+            </tr>
+            <tr>
+              <td class="strong">Source</td>
+              <td>{{ intake.source|default:'' }}</td>
+            </tr>
+          </table>
         </div>
       </div>
     </div>
     <div class="col-md-8">
       <div class="section intake-notes">
-        <div class="section-title">
-          <div class="section-title-left">
+        <div class="toolbar">
+          <div class="toolbar-left">
             <h1>Notes</h1>
-            <div class="table-filter">
+            <div class="filter-tools">
               <a href="#"
                  type="button"
                  class="btn-icon"
@@ -53,7 +85,7 @@
               </a>
             </div>
           </div>
-          <div class="section-title-right"></div>
+          <div class="toolbar-right"></div>
         </div>
         {% if notes %}
           {% for note in notes %}

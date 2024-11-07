@@ -1,17 +1,25 @@
 {% load humanize %}
 {% block content %}
   <div class="section">
-    <div class="section-title">
-      <div class="section-title-left">
-        <h1>{{ filter.status }} Matters ({{ number_matters }})</h1>
-        <div class="table-filter">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
           <a href={% url 'matters:add' %}><i class="bi bi-plus-lg"></i></a>
           <button hx-get="/matters/filter"
                   hx-target="#htmx-modal-container"
+                  class="{% if filter_label == "custom" %}toggle-active{% endif %}"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">Filter</button>
-          <button hx-post={% url 'matters:filter-quick' 'open' %}>Open</button>
+          <button class="{% if filter_label == "Pending" %}toggle-active{% endif %}"
+                  hx-post="{% url 'matters:filter-quick-status' 'Pending' %}">Pending</button>
+          <button class="{% if filter_label == "Open" %}toggle-active{% endif %}"
+                  hx-post="{% url 'matters:filter-quick-status' 'Open' %}">Open</button>
+          <button class="{% if filter_label == "Complete" %}toggle-active{% endif %}"
+                  hx-post="{% url 'matters:filter-quick-status' 'Complete' %}">Complete</button>
         </div>
+      </div>
+      <div class="toolbar-right">
+        Count: <strong>{{ number_matters }}</strong>
       </div>
     </div>
     <div class="table-container">

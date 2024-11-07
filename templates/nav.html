@@ -35,13 +35,13 @@
         <li class="nav-item {% if app == 'billing' %}nav-active{% endif %}">
           <a id="nav-invoicing"
              class="nav-link"
-             href="{% url 'billing:invoices-list' %}">Billing</a>
+             href="{% url 'billing:invoices-index' %}">Billing</a>
         </li>
         <li class="nav-item {% if app == 'trust' %}nav-active{% endif %}">
-          <a id="nav-trust" class="nav-link" href={% url 'trust:trust' %}>Trust</a>
+          <a id="nav-trust" class="nav-link" href={% url 'trust:index' %}>Trust</a>
         </li>
         <li class="nav-item {% if app == 'intakes' %}nav-active{% endif %}">
-          <a id="nav-intakes" class="nav-link" href={% url 'intakes:list' %}>Intakes</a>
+          <a id="nav-intakes" class="nav-link" href={% url 'intakes:index' %}>Intakes</a>
         </li>
       </ul>
       <ul class="navbar-nav ms-auto">

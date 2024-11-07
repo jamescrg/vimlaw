@@ -1,9 +1,7 @@
-{% extends "billing/list.html" %}
 {% block subcontent %}
-  <div class="section-title">
-    <div class="section-title-left">
-      <h1>Invoices</h1>
-      <div class="table-filter">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
         <button type="button"
                 class="btn-icon"
                 hx-get="{% url 'billing:invoices-add' %}"
@@ -20,20 +18,22 @@
                 hx-trigger="click"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">Filter</button>
-        <div class="status-buttons">
-          <a type="button"
-             class="btn-icon {% if selected_status == "DRAFT" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "DRAFT" %}">Draft</a>
-          <a type="button"
-             class="btn-icon {% if selected_status == "APPROVED" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "APPROVED" %}">Approved</a>
-          <a type="button"
-             class="btn-icon {% if selected_status == "SENT" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "SENT" %}">Sent</a>
-          <a type="button"
-             class="btn-icon {% if selected_status == "PAID" %}toggle-active{% endif %}"
-             href="{% url 'billing:invoices-filter-status' "PAID" %}">Paid</a>
-        </div>
+        <a type="button"
+           class="btn-icon {% if selected_status == "DRAFT" %}toggle-active{% endif %}"
+           href="#"
+           hx-post="{% url 'billing:invoices-filter-status' "DRAFT" %}">Draft</a>
+        <a type="button"
+           href="#"
+           class="btn-icon {% if selected_status == "APPROVED" %}toggle-active{% endif %}"
+           hx-post="{% url 'billing:invoices-filter-status' "APPROVED" %}">Approved</a>
+        <a type="button"
+           href="#"
+           class="btn-icon {% if selected_status == "SENT" %}toggle-active{% endif %}"
+           hx-post="{% url 'billing:invoices-filter-status' "SENT" %}">Sent</a>
+        <a type="button"
+           href="#"
+           class="btn-icon {% if selected_status == "PAID" %}toggle-active{% endif %}"
+           hx-post="{% url 'billing:invoices-filter-status' "PAID" %}">Paid</a>
       </div>
     </div>
   </div>

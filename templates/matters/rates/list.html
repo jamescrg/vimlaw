@@ -1,8 +1,8 @@
 {% block subcontent %}
-  <div class="section-title">
-    <div class="section-title-left">
+  <div class="toolbar">
+    <div class="toolbar-left">
       <h2>Rates</h2>
-      <div class="table-filter">
+      <div class="filter-tools">
         <button hx-get="/matters/{{ matter.id }}/rates/add"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
