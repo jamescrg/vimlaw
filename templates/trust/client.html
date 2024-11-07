@@ -1,22 +1,27 @@
 {% block content %}
   {% load humanize %}
   <div class="section trust">
-    <div class="section-title">
-      <div class="section-title-left">
-        <h1>{{ client.name }}</h1>
-        <div class="table-filter">
-          <a href="#"
-             hx-get="{% url 'trust:add-with-client' client.id %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
+          <button type="button"
+                  class="btn-icon"
+                  hx-get="{% url 'trust:add' %}"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
             <i class="bi bi-plus-lg"></i>
-          </a>
+          </button>
+          <a class="{% if page == "summary" %}toggle-active{% endif %}"
+             href="{% url 'trust:index' %}">Summary</a>
+          <a class="{% if page == "history" %}toggle-active{% endif %}"
+             href="{% url 'trust:history-index' '30days' %}">History</a>
+          <a class="{% if page == "client" %}toggle-active{% endif %}" href="">{{ client.name }}</a>
         </div>
       </div>
-      <div class="section-title-right">
+      <div class="toolbar-right">
         <a href={% url 'contacts:select' id=client.id %}>View Contact</a>
-        <a href={% url 'trust:index' %}>Summary</a>
       </div>
     </div>
     <div class="table-container">

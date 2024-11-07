@@ -1,10 +1,9 @@
 {% block content %}
   {% load humanize %}
   <div class="section trust">
-    <div class="section-title">
-      <div class="section-title-left">
-        <h1>Account Summary</h1>
-        <div class="table-filter">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
           <button type="button"
                   class="btn-icon"
                   hx-get="{% url 'trust:add' %}"
@@ -14,11 +13,13 @@
                   data-bs-target="#htmx-modal-container">
             <i class="bi bi-plus-lg"></i>
           </button>
+          <a class="{% if page == "summary" %}toggle-active{% endif %}"
+             href="{% url 'trust:index' %}">Summary</a>
+          <a class="{% if page == "history" %}toggle-active{% endif %}"
+             href="{% url 'trust:history-index' '30days' %}">History</a>
         </div>
       </div>
-      <div class="section-title-right">
-        <a href={% url 'trust:history-index' '30days' %}>History</a>
-      </div>
+      <div class="toolbar-right"></div>
     </div>
     <table class="trust-summary">
       <tr>

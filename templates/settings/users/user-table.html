@@ -1,7 +1,7 @@
-<div class="section-title">
-  <div class="section-title-left">
+<div class="toolbar">
+  <div class="toolbar-left">
     <h1>User Management</h1>
-    <div class="table-filter" hx-target="#users-table" hx-swap="#outerHTML">
+    <div class="filter-tools" hx-target="#users-table" hx-swap="#outerHTML">
       <button type="button"
               class="btn-icon"
               hx-get="{% url 'settings:add-user' %}"

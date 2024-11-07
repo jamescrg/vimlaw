@@ -1,9 +1,9 @@
 {% load humanize %}
 {% block content %}
   <div class="section">
-    <div class="section-title">
-      <div class="section-title-left">
-        <div class="table-filter">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
           <a href={% url 'matters:add' %}><i class="bi bi-plus-lg"></i></a>
           <button hx-get="/matters/filter"
                   hx-target="#htmx-modal-container"
@@ -18,7 +18,7 @@
                   hx-post="{% url 'matters:filter-quick-status' 'Complete' %}">Complete</button>
         </div>
       </div>
-      <div class="section-title-right">
+      <div class="toolbar-right">
         Count: <strong>{{ number_matters }}</strong>
       </div>
     </div>

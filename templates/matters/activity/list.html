@@ -1,10 +1,10 @@
 {% extends "matters/detail.html" %}
 {% block subcontent %}
-  <div class="section-title">
-    <div class="section-title-left">
+  <div class="toolbar">
+    <div class="toolbar-left">
       <h2>Last 30 Days</h2>
     </div>
-    <div class="section-title-right">
+    <div class="toolbar-right">
       <a href="{% url 'activity:time-filter-matter' matter.id %}">Activity: View All</a>
     </div>
   </div>

@@ -91,7 +91,7 @@
   --link: var(--lime-800);
   --link-hover: var(--lime-800);
   --button-form: var(--link);
-  --button-section-title: var(--stone-600);
+  --button-toolbar: var(--stone-600);
   --urgent: var(--orange-800);
   --true: var(--lime-700);
   --false: var(--urgent);

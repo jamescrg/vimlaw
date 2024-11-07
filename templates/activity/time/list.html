@@ -1,8 +1,8 @@
 {% block subcontent %}
   {% load humanize %}
-  <div class="section-title">
-    <div class="section-title-left">
-      <div class="table-filter">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
         <button hx-get="{% url 'activity:time-add' %}"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
@@ -28,7 +28,7 @@
         </select>
       </div>
     </div>
-    <div class="section-title-right">
+    <div class="toolbar-right">
       <div class="dropdown">
         <button class="btn-icon"
                 type="button"

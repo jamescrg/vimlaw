@@ -1,9 +1,9 @@
 {% block subcontent %}
-  <div class="section-title">
-    <div class="section-title-left">
+  <div class="toolbar">
+    <div class="toolbar-left">
       <h2>Pending Events</h2>
     </div>
-    <div class="section-title-right">
+    <div class="toolbar-right">
       <button hx-get="/events/add/{{ matter.id }}/matters"
               hx-target="#htmx-modal-container"
               data-bs-toggle="modal"
@@ -41,8 +41,8 @@
   </div>
   {% if past_events %}
     <br />
-    <div class="section-title">
-      <div class="section-title-left">
+    <div class="toolbar">
+      <div class="toolbar-left">
         <h2>Past Events</h2>
       </div>
     </div>

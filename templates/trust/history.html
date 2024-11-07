@@ -1,21 +1,31 @@
 {% block content %}
   {% load humanize %}
   <div class="section trust">
-    <div class="section-title">
-      <div class="section-title-left">
-        <h1>Account History</h1>
-        <div class="table-filter">
-          <a {% if interval == '30days' %}class="strong"{% endif %}
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
+          <button type="button"
+                  class="btn-icon"
+                  hx-get="{% url 'trust:add' %}"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+          <a class="{% if page == "summary" %}toggle-active{% endif %}"
+             href="{% url 'trust:index' %}">Summary</a>
+          <a class="{% if page == "history" %}toggle-active{% endif %}"
+             href="{% url 'trust:history-index' '30days' %}">History</a>
+          <a class="{% if interval == "30days" %}toggle-active{% endif %}"
              href="{% url 'trust:history-index' interval='30days' %}">30 days</a>
-          <a {% if interval == '60days' %}class="strong"{% endif %}
+          <a class="{% if interval == "60days" %}toggle-active{% endif %}"
              href="{% url 'trust:history-index' interval='60days' %}">60 days</a>
-          <a {% if interval == 'all' %}class="strong"{% endif %}
+          <a class="{% if interval == "all" %}toggle-active{% endif %}"
              href="{% url 'trust:history-index' interval='all' %}">All</a>
         </div>
       </div>
-      <div class="section-title-right">
-        <a href={% url 'trust:index' %}>Summary</a>
-      </div>
+      <div class="toolbar-right"></div>
     </div>
     <div class="table-container">
       <table class="trust-transactions">

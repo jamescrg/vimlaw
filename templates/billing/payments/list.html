@@ -1,9 +1,9 @@
 {% block subcontent %}
   {% load humanize %}
   <div id="payment-list">
-    <div class="section-title">
-      <div class="section-title-left">
-        <div class="table-filter">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
           <button type="button"
                   class="btn-icon"
                   hx-get="{% url 'billing:payments-add' %}"

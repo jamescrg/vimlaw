@@ -1,11 +1,11 @@
 {% extends "matters/detail.html" %}
 {% block subcontent %}
   {% load humanize %}
-  <div class="section-title">
-    <div class="section-title-left">
+  <div class="toolbar">
+    <div class="toolbar-left">
       <h2>Ledger</h2>
     </div>
-    <div class="section-title-right">
+    <div class="toolbar-right">
       <a href="{% url 'matters:ledger-pdf' matter.id %}"
          target="_blank"
          type="button"

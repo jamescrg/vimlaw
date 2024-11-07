@@ -1,6 +1,6 @@
-<div class="section-title">
-  <div class="section-title-left">
-    <div class="table-filter" hx-target="#tasks-table" hx-swap="#outerHTML">
+<div class="toolbar">
+  <div class="toolbar-left">
+    <div class="filter-tools" hx-target="#tasks-table" hx-swap="#outerHTML">
       <button type="button"
               class="btn-icon"
               hx-get="{% url 'agenda:tasks-add' %}"
@@ -28,7 +28,7 @@
       </select>
     </div>
   </div>
-  <div class="section-title-right">
+  <div class="toolbar-right">
     <button type="button"
             class="btn-icon"
             hx-post="{% url 'agenda:tasks-clear' %}"
