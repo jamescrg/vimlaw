@@ -62,7 +62,7 @@ def matter_list(request):
         "matters": pagination.get_object_list(),
         "number_matters": matters.count(),
         "total_unbilled": total_unbilled,
-        "filter_label": filter_data.get("filter_label", None),
+        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
 
     return render(request, "matters/list.html", context)
