@@ -9,9 +9,9 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{{ action }}"
+      <form hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
             class="form-responsive"
-            method="post"
             role="form">
         {% csrf_token %}
         <label>Matter:</label>

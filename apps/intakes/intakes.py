@@ -27,7 +27,7 @@ def get_table_data(request):
         "pagination": pagination,
         "intakes": pagination.get_object_list(),
         "number_intakes": number_intakes,
-        "filter_label": filter_data.get("filter_label", None),
+        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
 
     return table_data
