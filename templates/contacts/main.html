@@ -1,8 +1,0 @@
-{% extends "base.html" %}
-{% block content %}
-  {% load humanize %}
-  <div id="contacts"
-       hx-trigger="load, contactsChanged from:body"
-       hx-get="{% url 'contacts:contacts' %}"
-       hx-target="this">{% include "contacts/content.html" %}</div>
-{% endblock content %}

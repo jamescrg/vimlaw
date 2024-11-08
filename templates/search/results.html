@@ -44,9 +44,9 @@
             <tr>
               <td class="contact-folder">
                 {% if contact.folder %}
-                  <a href="{% url 'folders:list' id=contact.folder.id app='contacts' action_type=None %}">{{ contact.folder.name }}</a>
+                  <a href={% url 'folders:list' id=contact.folder.id app='contacts' %}>{{ contact.folder.name }}</a>
                 {% else %}
-                  <a href={% url 'folders:list' id=0 app='contacts' action_type=None %}>Unsorted</a>
+                  <a href={% url 'folders:list' id=0 app='contacts' %}>Unsorted</a>
                 {% endif %}
               </td>
               <td class="contact-name">
