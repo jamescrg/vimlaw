@@ -5,11 +5,10 @@ from apps.contacts.views import (
     add_intake,
     assign,
     assign_store,
-    contact_index,
-    contact_list,
     delete,
     edit,
     google_list,
+    index,
     remove,
     remove_store,
     select,
@@ -19,8 +18,7 @@ from apps.contacts.views import (
 app_name = "contacts"
 
 urlpatterns = [
-    path("contacts/", contact_index, name="contact-index"),
-    path("contacts/list/", contact_list, name="contacts"),
+    path("contacts/", index, name="contacts"),
     path("contacts/<int:id>", select, name="select"),
     path("contacts/add", add, name="add"),
     path("contacts/<int:id>/edit", edit, name="edit"),
@@ -28,7 +26,7 @@ urlpatterns = [
     path("contacts/<int:id>/assign", assign, name="assign"),
     path("contacts/<int:id>/assign/store", assign_store, name="assign-store"),
     path("contacts/<int:id>/remove", remove, name="remove"),
-    path("contacts/remove/store", remove_store, name="remove-store"),
+    path("contacts/<int:id>/remove/store", remove_store, name="remove-store"),
     path("contacts/<int:id>/add_intake", add_intake, name="add-intake"),
     path(
         "contacts/<int:id>/toggle_google_sync",
