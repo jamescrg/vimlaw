@@ -89,7 +89,7 @@ def time_list(request):
         "summary": summary,
         "users": users,
         "user_id": user_id,
-        "filter_label": filter_data.get("filter_label", None),
+        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
 
     return render(request, "activity/time/list.html", context)
