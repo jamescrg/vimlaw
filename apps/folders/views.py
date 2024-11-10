@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.folders.models import Folder
 
@@ -61,7 +61,7 @@ def update(request, id, app, action_type=None):
     if action_type == "db_update":
         return redirect("contacts:add")
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "contactsChanged"})
+    return render(request, "folders/single-folder.html", {"folder": folder, "app": app})
 
 
 @login_required

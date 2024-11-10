@@ -1,0 +1,50 @@
+<div class="folder-item-container list-group-item">
+  <li class="folder-item">
+    <i class="bi bi-folder"></i>
+    <div class="show-folder">
+      {% if action_type == 'db_update' %}
+        <a href="{% url 'folders:list' id=folder.id app=app action_type=action_type %}"
+          {# agenda #}
+          {% if selected_folders and folder in selected_folders %}class="strong"{% endif %}
+          {# contacts #}
+          {% if selected_folder and selected_folder.id == folder.id %}class="strong"{% endif %}
+          {% if selected_folder.id == None and folder.id == 0 %}class="strong"{% endif %}
+        >{{ folder.name }}</a>
+      {% else %}
+        <a href="{% url 'folders:list' id=folder.id app=app action_type=None %}"
+          {# agenda #}
+          {% if selected_folders and folder in selected_folders %}class="strong"{% endif %}
+          {# contacts #}
+          {% if selected_folder and selected_folder.id == folder.id %}class="strong"{% endif %}
+          {% if selected_folder.id == None and folder.id == 0 %}class="strong"{% endif %}
+        >{{ folder.name }}</a>
+      {% endif %}
+    </div>
+    {% include "folders/edit.html" %}
+  </li>
+  {% if folder.id %}
+    <button class="btn-icon menu-icon"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+      <i class="bi bi-three-dots-vertical"></i>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="folderDropdown">
+      <li>
+        <button class="dropdown-item" onclick="showEditFolderForm()">Edit</button>
+      </li>
+      <li>
+        {% if action_type == 'db_update' %}
+          <a class="dropdown-item"
+             onclick="return confirm('Are you sure you want to delete this folder?')"
+             href="{% url 'folders:delete' id=folder.id app=app action_type=action_type %}">Delete</a>
+        {% else %}
+          <a class="dropdown-item"
+             href="#"
+             hx-confirm='Are you sure you want to delete this folder?'
+             hx-delete="{% url 'folders:delete' id=folder.id app=app action_type=None %}">Delete</a>
+        {% endif %}
+      </li>
+    </ul>
+  {% endif %}
+</div>
