@@ -22,7 +22,7 @@ def test_index(client, folder, contact):
 
     # folder selected
     response = client.get(reverse("contacts:select", args=[contact.id]))
-    assert response.status_code == 204
+    assert response.status_code == 302
 
     response = client.get(reverse("contacts:contacts"))
     assert response.context["selected_folder"] == folder
@@ -30,7 +30,7 @@ def test_index(client, folder, contact):
 
 def test_select(client, folder, contact):
     response = client.get(f"/contacts/{contact.id}")
-    assert response.status_code == 204
+    assert response.status_code == 302
 
 
 def test_add_get(client, folder, contact):
@@ -40,7 +40,7 @@ def test_add_get(client, folder, contact):
     assertTemplateUsed(response, "contacts/form.html")
 
     response = client.get(reverse("contacts:select", args=[contact.id]))
-    assert response.status_code == 204
+    assert response.status_code == 302
 
     # set a selected folder
     response = client.get("/contacts/add")
