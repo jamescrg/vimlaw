@@ -61,7 +61,7 @@ def update(request, id, app, action_type=None):
     if action_type == "db_update":
         return redirect("contacts:add")
 
-    return render(request, "folders/single-folder.html", {"folder": folder})
+    return render(request, "folders/single-folder.html", {"folder": folder, "app": app})
 
 
 @login_required

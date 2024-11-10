@@ -1,7 +1,7 @@
 <div class="edit-folder">
   <form class="folder-form"
         method="post"
-        {% if action_type == 'db_update' %} action="{% url 'folders:update' id=folder.id app=app action_type=action_type %}" {% else %} hx-post="{% url 'folders:update' id=folder.id app=None action_type=None %}" hx-target="#folder-{{ folder.id }}" hx-swap="outerHTML" {% endif %}>
+        {% if action_type == 'db_update' %} action="{% url 'folders:update' id=folder.id app=app action_type=action_type %}" {% else %} hx-post="{% url 'folders:update' id=folder.id app=app action_type=None %}" hx-target="#folder-{{ folder.id }}" hx-swap="outerHTML" {% endif %}>
     {% csrf_token %}
     <label>
       <input class="form-horizontal edit-folder-input"

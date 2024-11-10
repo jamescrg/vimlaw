@@ -11,7 +11,7 @@
           {% if selected_folder.id == None and folder.id == 0 %}class="strong"{% endif %}
         >{{ folder.name }}</a>
       {% else %}
-        <a href="#" hx-post="{% url 'folders:list' id=folder.id app=None action_type=None %}"
+        <a href="{% url 'folders:list' id=folder.id app=app action_type=None %}"
           {# agenda #}
           {% if selected_folders and folder in selected_folders %}class="strong"{% endif %}
           {# contacts #}
@@ -42,7 +42,7 @@
           <a class="dropdown-item"
              href="#"
              hx-confirm='Are you sure you want to delete this folder?'
-             hx-delete="{% url 'folders:delete' id=folder.id app=None action_type=None %}">Delete</a>
+             hx-delete="{% url 'folders:delete' id=folder.id app=app action_type=None %}">Delete</a>
         {% endif %}
       </li>
     </ul>
