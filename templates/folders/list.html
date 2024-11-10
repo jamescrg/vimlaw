@@ -29,7 +29,7 @@
                     {% if selected_folder.id == None and folder.id == 0 %}class="strong"{% endif %}
                   >{{ folder.name }}</a>
                 {% else %}
-                  <a href="#" hx-post="{% url 'folders:list' id=folder.id app=app action_type=None %}"
+                  <a href="{% url 'folders:list' id=folder.id app=app action_type=None %}"
                     {# agenda #}
                     {% if selected_folders and folder in selected_folders %}class="strong"{% endif %}
                     {# contacts #}

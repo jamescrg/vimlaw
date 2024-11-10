@@ -20,7 +20,7 @@ def select(request, id, app, action_type=None):
         if "selected_contact_id" in request.session:
             del request.session["selected_contact_id"]
 
-        return HttpResponse(status=204, headers={"HX-Trigger": "contactsChanged"})
+        return redirect("contacts:contact-index")
 
     if app == "agenda":
         folder = get_object_or_404(Folder, pk=id)
