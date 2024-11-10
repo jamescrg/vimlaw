@@ -88,7 +88,7 @@ def select(request, id):
 
     request.session["selected_contact_id"] = id
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "contactsChanged"})
+    return redirect("contacts:contact-index")
 
 
 @login_required
