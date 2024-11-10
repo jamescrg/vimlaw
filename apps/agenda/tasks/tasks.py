@@ -1,9 +1,8 @@
 from datetime import date
 
-from django.core.paginator import Paginator
-
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
+from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
 
@@ -31,12 +30,15 @@ def get_list_data(request):
         tasks = filter.qs
         user_id = None
 
-    page = request.GET.get("page")
-    pagination = Paginator(tasks, 50).get_page(page)
+    pagination = CustomPaginator(
+        tasks, per_page=10, request=request, session_key="tasks_pagination"
+    )
 
     list_data = {
         "pagination": pagination,
-        "objects": pagination.object_list,
+        "session_key": "tasks_pagination",
+        "trigger_key": "tasksListChanged",
+        "objects": pagination.get_object_list(),
         "matters": Matter.objects.filter(status="Open").order_by("name"),
         "today": today,
         "users": CustomUser.objects.filter(is_active=True).order_by("username"),

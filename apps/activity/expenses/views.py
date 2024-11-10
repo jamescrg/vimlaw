@@ -69,7 +69,9 @@ def expenses_list(request):
     summary = calculate_summary(expenses)
     users = CustomUser.objects.filter(is_active=True)
 
-    pagination = CustomPaginator(expenses, per_page=10, request=request)
+    pagination = CustomPaginator(
+        expenses, per_page=10, request=request, session_key="expenses_pagination"
+    )
 
     context = {
         "app": "activity",
@@ -77,6 +79,8 @@ def expenses_list(request):
         "edit": False,
         "objects": pagination.get_object_list(),
         "pagination": pagination,
+        "session_key": "expenses_pagination",
+        "trigger_key": "expensesChanged",
         "number_expenses": number_expenses,
         "summary": summary,
         "users": users,
@@ -250,7 +254,6 @@ def expenses_edit(request, id):
     if request.method == "POST":
         form = ExpenseEntryForm(request.POST, instance=entry)
         if form.is_valid():
-
             original_entry = get_object_or_404(ExpenseEntry, pk=id)
             entry = form.save(commit=False)
 

@@ -21,13 +21,17 @@ def get_table_data(request):
 
     number_intakes = intakes.count()
 
-    pagination = CustomPaginator(intakes, per_page=10, request=request)
+    pagination = CustomPaginator(
+        intakes, per_page=10, request=request, session_key="intake_pagination"
+    )
 
     table_data = {
         "pagination": pagination,
         "intakes": pagination.get_object_list(),
+        "session_key": "intake_pagination",
+        "trigger_key": "intakesChanged",
         "number_intakes": number_intakes,
-        "filter_label": filter_data.get("filter_label", None),
+        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
 
     return table_data

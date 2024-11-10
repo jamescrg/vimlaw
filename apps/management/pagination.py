@@ -1,7 +1,8 @@
 from typing import Any, List
 
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.utils.functional import cached_property
 
 
@@ -11,27 +12,39 @@ class CustomPaginator(Paginator):
         object_list: List[Any],
         per_page: int,
         request: HttpRequest,
+        session_key: str,
         orphans: int = 1,
         allow_empty_first_page: bool = True,
     ) -> None:
         super().__init__(object_list, per_page, orphans, allow_empty_first_page)
 
         self.request: HttpRequest = request
+        self.session_key: str = session_key
 
         # General paginator data
         self.paginator: Paginator = self.current_page.paginator
         self.number: int = self.current_page.number
 
-    def _extract_page_from_url(self, url: str) -> int:
+    def _extract_page(self) -> int:
         """
         Helper function to extract the page number from a URL.
         Defaults to page 1 if extraction fails.
         """
-        try:
-            # Extract only the page number from the URL
-            return int(url.split("page=")[-1].split("&")[0])
-        except (ValueError, IndexError, EmptyPage, InvalidPage):
-            return 1
+        # Get the page from the session_key
+        session_state = self.request.session.get(self.session_key, None)
+
+        if session_state:
+            try:
+                page = int(session_state)
+            except (ValueError, EmptyPage, InvalidPage):
+                self.request.session[self.session_key] = 1
+                page = 1
+
+            return page
+
+        self.request.session[self.session_key] = 1
+
+        return 1
 
     @cached_property
     def page_number(self) -> int:
@@ -40,11 +53,13 @@ class CustomPaginator(Paginator):
         If HTMX is enabled, extracts the page from the request headers.
         Defaults to page 1 if not provided or invalid.
         """
-        if self.request.headers.get("HX-Request") == "true":
-            url = self.request.headers.get("HX-Current-URL", "")
-            return self._extract_page_from_url(url)
+        # Get the URL that was requested
+        try:
+            return self._extract_page()
+        except (ValueError, EmptyPage, InvalidPage):
+            self.request.session[self.session_key] = 1
 
-        return int(self.request.GET.get("page", 1))
+            return 1
 
     @cached_property
     def current_page(self) -> Any:
@@ -55,6 +70,8 @@ class CustomPaginator(Paginator):
         try:
             return self.page(self.page_number)
         except (EmptyPage, InvalidPage):
+            self.request.session[self.session_key] = 1
+
             return self.page(1)
 
     @cached_property
@@ -86,4 +103,19 @@ class CustomPaginator(Paginator):
         return self.current_page.next_page_number()
 
     def get_object_list(self) -> List[Any]:
-        return self.page(self.page_number).object_list
+        try:
+            return self.page(self.page_number).object_list
+        except (EmptyPage, InvalidPage):
+            self.request.session[self.session_key] = 1
+            return self.page(1).object_list
+
+
+@login_required
+def change_page(request, session_key: str, trigger_key: str, page: int) -> int:
+    """
+    Changes the current page in the session and triggers an HTMX refresh.
+    """
+
+    request.session[session_key] = page
+
+    return HttpResponse(status=204, headers={"HX-Trigger": trigger_key})

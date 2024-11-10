@@ -2,7 +2,6 @@ import os
 from itertools import chain
 
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -51,7 +50,9 @@ def invoices_list(request):
     total_expenses = sum(invoice.value["net_expenses"] for invoice in invoices)
     total = total_fees + total_expenses
 
-    pagination = CustomPaginator(invoices, per_page=10, request=request)
+    pagination = CustomPaginator(
+        invoices, per_page=10, request=request, session_key="invoices_pagination"
+    )
 
     selected_status = filter_data.get("status", "") if filter_data else ""
 
@@ -59,7 +60,9 @@ def invoices_list(request):
         "app": "billing",
         "subapp": "invoices",
         "pagination": pagination,
-        "objects": pagination.object_list,
+        "session_key": "invoices_pagination",
+        "trigger_key": "invoicesChanged",
+        "objects": pagination.get_object_list(),
         "total_fees": total_fees,
         "total_expenses": total_expenses,
         "total": total,
@@ -116,14 +119,17 @@ def invoice_time_entires(request, pk):
     entries = TimeEntry.objects.filter(invoice=invoice).order_by("date")
     summary = calculate_time_summary(entries)
 
-    page = request.GET.get("page")
-    pagination = Paginator(entries, per_page=10).get_page(page)
+    pagination = CustomPaginator(
+        entries, per_page=10, request=request, session_key="invoice_time_pagination"
+    )
 
     context = {
         "app": "billing",
         "subapp": "time",
-        "objects": pagination.object_list,
+        "objects": pagination.get_object_list(),
         "pagination": pagination,
+        "session_key": "invoice_time_pagination",
+        "trigger_key": "timeChanged",
         "invoice": invoice,
         "summary": summary,
     }
@@ -151,14 +157,20 @@ def invoice_expense_entries(request, pk):
     expenses = ExpenseEntry.objects.filter(invoice=invoice).order_by("date")
     summary = calculate_expense_summary(expenses)
 
-    page = request.GET.get("page")
-    pagination = Paginator(expenses, per_page=10).get_page(page)
+    pagination = CustomPaginator(
+        expenses,
+        per_page=10,
+        request=request,
+        session_key="invoice_expenses_pagination",
+    )
 
     context = {
         "app": "billing",
         "subapp": "expenses",
-        "objects": pagination.object_list,
+        "objects": pagination.get_object_list(),
         "pagination": pagination,
+        "session_key": "invoice_expenses_pagination",
+        "trigger_key": "expensesChanged",
         "invoice": invoice,
         "summary": summary,
     }

@@ -1,13 +1,17 @@
 {% if pagination.paginator.num_pages > 1 %}
   <div class="pagination-row">
-    <a href="?page=1"
+    <a hx-get="{% url 'management:change-page' session_key=session_key trigger_key=trigger_key page=1 %}"
+       href="#"
        class="{% if not pagination.has_previous %}pagination-disabled{% endif %}"><<</a>
-    <a href="?page={% if pagination.has_previous %}{{ pagination.previous_page_number }}{% else %}1{% endif %}"
+    <a {% if pagination.has_previous %} hx-get="{% url 'management:change-page' session_key=session_key trigger_key=trigger_key page=pagination.previous_page_number %}" {% endif %}
+       href="#"
        class="{% if not pagination.has_previous %}pagination-disabled{% endif %}"><</a>
     <p>Page {{ pagination.number }} of {{ pagination.paginator.num_pages }}</p>
-    <a href="?page={% if pagination.has_next %}{{ pagination.next_page_number }}{% else %}{{ pagination.paginator.num_pages }}{% endif %}"
+    <a {% if pagination.has_next %} hx-get="{% url 'management:change-page' session_key=session_key trigger_key=trigger_key page=pagination.next_page_number %}" {% endif %}
+       href="#"
        class="{% if not pagination.has_next %}pagination-disabled{% endif %}">></a>
-    <a href="?page={{ pagination.paginator.num_pages }}"
+    <a {% if pagination.has_next %} hx-get="{% url 'management:change-page' session_key=session_key trigger_key=trigger_key page=pagination.paginator.num_pages %}" {% endif %}
+       href="#"
        class="{% if not pagination.has_next %}pagination-disabled{% endif %}">>></a>
   </div>
 {% endif %}

@@ -73,7 +73,9 @@ def time_list(request):
     summary = calculate_summary(entries)
     users = CustomUser.objects.filter(is_active=True)
 
-    pagination = CustomPaginator(entries, per_page=10, request=request)
+    pagination = CustomPaginator(
+        entries, per_page=10, request=request, session_key="time_pagination"
+    )
 
     context = {
         "app": "activity",
@@ -81,11 +83,13 @@ def time_list(request):
         "edit": False,
         "objects": pagination.get_object_list(),
         "pagination": pagination,
+        "session_key": "time_pagination",
+        "trigger_key": "timeChanged",
         "number_entries": number_entries,
         "summary": summary,
         "users": users,
         "user_id": user_id,
-        "filter_label": filter_data.get("filter_label", None),
+        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
 
     return render(request, "activity/time/list.html", context)
@@ -325,7 +329,6 @@ def time_edit(request, id):
     if request.method == "POST":
         form = TimeEntryForm(request.POST, instance=entry)
         if form.is_valid():
-
             original_entry = get_object_or_404(TimeEntry, pk=id)
             entry = form.save(commit=False)
 

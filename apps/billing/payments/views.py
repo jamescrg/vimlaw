@@ -34,12 +34,16 @@ def payments_list(request):
 
     payments_total = sum(payment.amount for payment in payments)
 
-    pagination = CustomPaginator(payments, per_page=10, request=request)
+    pagination = CustomPaginator(
+        payments, per_page=10, request=request, session_key="payments_pagination"
+    )
 
     context = {
         "app": "billing",
         "subapp": "payments",
         "pagination": pagination,
+        "session_key": "payments_pagination",
+        "trigger_key": "paymentsChanged",
         "objects": pagination.get_object_list(),
         "payments_total": payments_total,
     }

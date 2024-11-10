@@ -32,13 +32,17 @@ def trust_list(request):
     pending_account_balance = trust.get_pending_account_balance()
     confirmed_account_balance = trust.get_confirmed_account_balance()
 
-    pagination = CustomPaginator(contacts, per_page=50, request=request)
+    pagination = CustomPaginator(
+        contacts, per_page=50, request=request, session_key="trust_pagination"
+    )
 
     context = {
         "app": "trust",
         "page": "summary",
         "pagination": pagination,
-        "contacts": pagination.object_list,
+        "contacts": pagination.get_object_list(),
+        "session_key": "trust_pagination",
+        "trigger_key": "trustChanged",
         "pending_account_balance": pending_account_balance,
         "confirmed_account_balance": confirmed_account_balance,
     }

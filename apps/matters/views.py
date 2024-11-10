@@ -49,7 +49,9 @@ def matter_list(request):
     request.session["matter_filter"] = filter.data
     request.session.modified = True
 
-    pagination = CustomPaginator(matters, per_page=20, request=request)
+    pagination = CustomPaginator(
+        matters, per_page=20, request=request, session_key="matter_pagination"
+    )
 
     total_unbilled = 0
     for matter in matters:
@@ -58,11 +60,13 @@ def matter_list(request):
     context = {
         "app": "matters",
         "pagination": pagination,
+        "session_key": "matter_pagination",
+        "trigger_key": "mattersChanged",
         "edit": False,
         "matters": pagination.get_object_list(),
         "number_matters": matters.count(),
         "total_unbilled": total_unbilled,
-        "filter_label": filter_data.get("filter_label", None),
+        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
 
     return render(request, "matters/list.html", context)
