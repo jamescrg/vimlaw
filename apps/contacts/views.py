@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 import apps.contacts.google as google
@@ -12,7 +13,16 @@ from config.helpers import format_phone
 
 
 @login_required
-def index(request):
+def contact_index(request):
+    context = {
+        "app": "contacts",
+    }
+
+    return render(request, "contacts/main.html", context)
+
+
+@login_required
+def contact_list(request):
     app = "contacts"
 
     folders = Folder.objects.filter(app=app).order_by("name")
@@ -78,13 +88,11 @@ def select(request, id):
 
     request.session["selected_contact_id"] = id
 
-    return redirect("/contacts/")
+    return HttpResponse(status=204, headers={"HX-Trigger": "contactsChanged"})
 
 
 @login_required
 def add(request):
-    # load initial page values (user, folders, selected folder)
-
     folders = Folder.objects.filter(app="contacts").order_by("name")
 
     if request.session.get("contacts_selected_folder_id"):
@@ -93,9 +101,8 @@ def add(request):
     else:
         selected_folder = None
 
-    # if applicable, process any post data submitted by user
     if request.method == "POST":
-        form = ContactForm(request.POST)
+        form = ContactForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             # initialize contact data
             contact = form.save(commit=False)
@@ -123,9 +130,11 @@ def add(request):
     # if no post data has been submitted, show the contact form
     else:
         if selected_folder:
-            form = ContactForm(initial={"folder": selected_folder.id})
+            form = ContactForm(
+                initial={"folder": selected_folder.id}, use_required_attribute=False
+            )
         else:
-            form = ContactForm()
+            form = ContactForm(use_required_attribute=False)
 
     form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
         "name"
@@ -133,6 +142,7 @@ def add(request):
 
     context = {
         "app": "contacts",
+        "action_type": "db_update",
         "edit": False,
         "add": True,
         "action": "/contacts/add",
@@ -141,7 +151,7 @@ def add(request):
         "form": form,
     }
 
-    return render(request, "contacts/content.html", context)
+    return render(request, "contacts/content-form.html", context)
 
 
 @login_required
@@ -157,7 +167,7 @@ def edit(request, id):
     contact = get_object_or_404(Contact, pk=id)
 
     if request.method == "POST":
-        form = ContactForm(request.POST, instance=contact)
+        form = ContactForm(request.POST, instance=contact, use_required_attribute=False)
         form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
             "name"
         )
@@ -180,9 +190,13 @@ def edit(request, id):
 
     else:
         if selected_folder:
-            form = ContactForm(instance=contact, initial={"folder": selected_folder.id})
+            form = ContactForm(
+                instance=contact,
+                initial={"folder": selected_folder.id},
+                use_required_attribute=False,
+            )
         else:
-            form = ContactForm(instance=contact)
+            form = ContactForm(instance=contact, use_required_attribute=False)
 
     form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
         "name"
@@ -192,6 +206,7 @@ def edit(request, id):
 
     context = {
         "app": "contacts",
+        "action_type": "db_update",
         "edit": True,
         "add": False,
         "action": f"/contacts/{id}/edit",
@@ -202,7 +217,7 @@ def edit(request, id):
         "form": form,
     }
 
-    return render(request, "contacts/content.html", context)
+    return render(request, "contacts/content-form.html", context)
 
 
 @login_required
@@ -231,12 +246,14 @@ def delete(request, id):
 def assign(request, id):
     matters = Matter.objects.filter(status="Open").order_by("name")
     roles = Role.objects.all().order_by("name")
+
     context = {
         "app": "contacts",
         "action": f"/contacts/{id}/assign/store",
         "matters": matters,
         "roles": roles,
     }
+
     return render(request, "contacts/assign.html", context)
 
 
@@ -251,7 +268,7 @@ def assign_store(request, id):
     )
     relationship.save()
 
-    return redirect("/contacts")
+    return HttpResponse(status=204, headers={"HX-Trigger": "contactsChanged"})
 
 
 @login_required
@@ -263,7 +280,7 @@ def remove(request, id):
 
     context = {
         "app": "contacts",
-        "action": f"/contacts/{id}/remove/store",
+        "action": "/contacts/remove/store",
         "relationships": relationships,
     }
 
@@ -271,10 +288,11 @@ def remove(request, id):
 
 
 @login_required
-def remove_store(request, id):
+def remove_store(request):
     relationship = get_object_or_404(Relationship, pk=request.POST["relationship_id"])
     relationship.delete()
-    return redirect("/contacts")
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "contactsChanged"})
 
 
 @login_required
@@ -326,7 +344,6 @@ def toggle_google_sync(request, id):
 
 @login_required
 def google_list(request):
-
     contacts = Contact.objects.all()
     # for contact in contacts:
     #     contact.google_id = ""
