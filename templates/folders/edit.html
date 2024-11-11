@@ -4,6 +4,7 @@
          class="edit-folder-input"
          type="text"
          name="name"
+         onfocus="moveFocusToEnd(this)"
          hx-post="/folders/update/{{ folder.id }}"
          hx-target="#folder-{{ folder.id }}"
          hx-trigger="change, blur"

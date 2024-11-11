@@ -47,3 +47,8 @@ function hideAddFolderForm() {
     hide(elementId);
   }, 0);
 }
+
+function moveFocusToEnd(input) {
+  const length = input.value.length;
+  input.setSelectionRange(length, length);
+}
