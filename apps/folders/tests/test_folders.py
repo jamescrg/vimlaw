@@ -21,7 +21,7 @@ def test_content(folder_data):
 
 
 def test_select(client, folder_data):
-    response = client.get(f"/folders/{folder_data.id}/agenda/db_update")
+    response = client.get(f"/folders/{folder_data.id}")
     assert response.status_code == 302
 
 
@@ -30,8 +30,8 @@ def test_insert(client):
         "app": "agenda",
         "name": "More Tasks",
     }
-    response = client.post("/folders/insert/notes/db_update", data)
-    assert response.status_code == 302
+    response = client.post("/folders/insert", data)
+    assert response.status_code == 200
     found = Folder.objects.filter(name="More Tasks").exists()
     assert found
 
@@ -40,15 +40,13 @@ def test_update(client, folder_data):
     data = {
         "name": "Better Tasks",
     }
-    response = client.post(
-        f"/folders/update/{folder_data.id}/favorites/db_update", data
-    )
-    assert response.status_code == 302
+    response = client.post(f"/folders/update/{folder_data.id}", data)
+    assert response.status_code == 200
     found = Folder.objects.filter(name="Better Tasks").exists()
     assert found
 
 
 def test_delete(client, folder_data):
-    client.get(f"/folders/delete/{folder_data.id}/notes/db_update")
+    client.get(f"/folders/delete/{folder_data.id}")
     found = Folder.objects.filter(id=folder_data.id).exists()
     assert not found
