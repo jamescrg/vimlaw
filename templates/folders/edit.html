@@ -1,14 +1,13 @@
-<div class="edit-folder">
-  <form class="folder-form"
-        method="post"
-        {% if action_type == 'db_update' %} action="{% url 'folders:update' id=folder.id app=app action_type=action_type %}" {% else %} hx-post="{% url 'folders:update' id=folder.id app=app action_type=None %}" hx-target="#folder-{{ folder.id }}" hx-swap="outerHTML" {% endif %}>
-    {% csrf_token %}
-    <label>
-      <input class="form-horizontal edit-folder-input"
-             type="text"
-             name="name"
-             onblur="hideEditFolderForm()"
-             value="{{ folder.name }}" />
-    </label>
-  </form>
+<div class="add-folder">
+  <i class="bi bi-folder"></i>
+  <input autofocus
+         class="edit-folder-input"
+         type="text"
+         name="name"
+         hx-post="/folders/update/{{ folder.id }}"
+         hx-target="#folder-{{ folder.id }}"
+         hx-trigger="change, blur"
+         hx-trigger="change, blur, keyup[key=='Enter']"
+         hx-swap="outerHTML"
+         value="{{ folder.name }}" />
 </div>

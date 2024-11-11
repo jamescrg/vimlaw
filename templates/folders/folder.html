@@ -1,0 +1,31 @@
+<li id="folder-{{ folder.id }}"
+    class="folder-item-container list-group-item">
+  <div class="show-folder" id="show-folder-{{ folder.id }}">
+    <i class="bi bi-folder"></i>
+    <a href="{% url 'folders:list' folder_id=folder.id %}"
+       {% if selected_folder and selected_folder.id == folder.id %}class="strong"{% endif %}
+       {% if selected_folder.id == None and folder.id == 0 %}class="strong"{% endif %}>{{ folder.name }}</a>
+  </div>
+  <button class="btn-icon menu-icon"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">
+    <i class="bi bi-three-dots-vertical"></i>
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="folderDropdown">
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-target="#show-folder-{{ folder.id }}"
+         hx-swap="innerHTML"
+         hx-get="{% url 'folders:edit' folder_id=folder.id %}">Edit</a>
+    </li>
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-confirm='Are you sure you want to delete this folder?'
+         hx-target="#folders"
+         hx-delete="{% url 'folders:delete' folder_id=folder.id %}">Delete</a>
+    </li>
+  </ul>
+</li>

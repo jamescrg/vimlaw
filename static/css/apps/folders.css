@@ -13,32 +13,13 @@
   color: var(--stone-400);
 }
 
-#add-folder-item {
-  background: var(--stone-100);
+.add-folder {
   border-bottom: none;
-  display: none;
 }
 
 .edit-folder {
-  display: none;
   justify-content: space-between;
   margin-right: 10px;
-  width: 100%;
-}
-
-.folder-form {
-  margin: 0;
-  padding: 0;
-  text-align: left;
-  width: 100%;
-}
-
-.folder-form input {
-  background: inherit;
-  border: none;
-  display: inline;
-  margin: 0;
-  padding: 0;
   width: 100%;
 }
 

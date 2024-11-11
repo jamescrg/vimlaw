@@ -5,18 +5,18 @@
         <h1>Folders</h1>
       </div>
       <div class="toolbar-right">
-        <button id="add-folder-button"
-                class="button-link"
-                onclick="showAddFolderForm()">
+        <button class="button-link"
+                hx-get="{% url 'folders:add' %}"
+                hx-target="#add-folder">
           <i class="bi bi-plus-lg"></i>
         </button>
       </div>
     </div>
-    {% include "folders/add.html" %}
+    <div id="add-folder"></div>
     <ul class="list-group">
       {% if folders %}
         {% for folder in folders %}
-          <div id="folder-{{ folder.id }}">{% include "folders/single-folder.html" %}</div>
+          {% include "folders/folder.html" %}
         {% endfor %}
       {% endif %}
     </ul>
