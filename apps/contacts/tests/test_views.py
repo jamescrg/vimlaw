@@ -92,7 +92,7 @@ def test_assign_get(client, contact):
 def test_assign_post(client, contact, matter, role):
     data = {"matter_id": matter.id, "role_id": role.id}
     response = client.post(f"/contacts/{contact.id}/assign/store", data)
-    assert response.status_code == 204
+    assert response.status_code == 302
 
 
 def test_remove_get(client, contact):
