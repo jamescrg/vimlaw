@@ -68,7 +68,7 @@
           {% for intake in intakes %}
             <tr>
               <td class="intake-name">
-                <a href={% url 'intakes:detail' id=intake.id %}>{{ intake.name }}</a>
+                <a href={% url 'intakes:detail-index' id=intake.id %}>{{ intake.name }}</a>
               </td>
               <td class="intake-phone">{{ intake.phone }}</td>
               <td class="intake-email">{{ intake.email }}</td>
