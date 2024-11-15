@@ -4,12 +4,12 @@
   <td class="name">
     <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name }}</a>
   </td>
-  <td id="show-matter-{{ matter.id }}">
+  <td id="show-matter-description-{{ matter.id }}">
     <a class="button-link show-status-form-button"
        href="#"
-       hx-target="#show-matter-{{ matter.id }}"
+       hx-target="#show-matter-description-{{ matter.id }}"
        hx-swap="innerHTML"
-       hx-get="{% url 'matters:show-description' matter_id=matter.id %}">{{ matter.description }}</a>
+       hx-get="{% url 'matters:edit-description' matter_id=matter.id %}">{{ matter.description }}</a>
   </td>
   <td class="numeric unbilled">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
 </tr>

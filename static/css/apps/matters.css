@@ -40,7 +40,10 @@ Matter Form
   margin-bottom: 15px;
 }
 
-.edit-matter-input {
+.edit-matter-description-input {
+  background: inherit;
+  border: none;
+  padding: 0;
   width: 100%;
 }
 
