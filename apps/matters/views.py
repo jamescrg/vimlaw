@@ -239,7 +239,7 @@ def edit_description(request, id):
         if request.session["matters-view"] == "detail":
             return redirect(f"/matters/{matter.id}")
         if request.session["matters-view"] == "list":
-            return HttpResponse(status=204, headers={"HX-Trigger": "mattersChanged"})
+            return render(request, "matters/row.html", {"matter": matter})
     else:
         return redirect("/matters")
 
