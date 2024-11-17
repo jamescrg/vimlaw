@@ -58,7 +58,7 @@
         </tr>
         <tr>
           <th>Status</th>
-          <td>{{ invoice.status_display }}</td>
+          <td>{% include "billing/invoices/status.html" %}</td>
         </tr>
       </table>
       {% if invoice.discount %}

@@ -348,10 +348,9 @@ def order_by_invoices(request, order):
 
 
 @login_required
-def invoices_edit_status(_, pk, status):
+def invoices_edit_status(request, pk, status):
     invoice = get_object_or_404(Invoice, pk=pk)
-
     invoice.status = status
     invoice.save()
-
-    return HttpResponse(status=204, headers={"HX-Trigger": "invoicesChanged"})
+    context = {"invoice": invoice}
+    return render(request, "billing/invoices/status.html", context)

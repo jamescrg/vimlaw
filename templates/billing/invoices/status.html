@@ -1,9 +1,12 @@
-<div class="dropdown">
-  <button class="button-link"
-          type="button"
+<div id="status-dropdown-{{ invoice.id }}" class="dropdown">
+  <button type="button"
+          id="status-button"
+          class="button-link"
           data-bs-toggle="dropdown"
           aria-expanded="false">{{ invoice.status_display }}</button>
-  <ul class="dropdown-menu">
+  <ul class="dropdown-menu"
+      hx-target="#status-dropdown-{{ invoice.id }}"
+      hx-swap="outerHTML">
     <li>
       <a class="dropdown-item"
          href="#"
@@ -12,21 +15,25 @@
     <li>
       <a class="dropdown-item"
          href="#"
+         hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='APPROVED' %}">Approved</a>
     </li>
     <li>
       <a class="dropdown-item"
          href="#"
+         hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='SENT' %}">Sent</a>
     </li>
     <li>
       <a class="dropdown-item"
          href="#"
+         hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='PAID' %}">Paid</a>
     </li>
     <li>
       <a class="dropdown-item"
          href="#"
+         hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'billing:invoices-edit-status' pk=invoice.id status='WAIVED' %}">Waived</a>
     </li>
   </ul>
