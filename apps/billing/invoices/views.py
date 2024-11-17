@@ -96,6 +96,34 @@ def invoices_detail(request, pk):
         "file_url": reverse_lazy("billing:invoices-pdf", kwargs={"pk": invoice.pk}),
         "invoice": invoice,
     }
+
+    return render(request, "billing/invoices/preview/preview.html", context)
+
+
+@login_required
+def pdf_preview_index(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    context = {
+        "app": "billing",
+        "subapp": "preview",
+        "invoice": invoice,
+    }
+
+    return render(request, "billing/invoices/preview/index.html", context)
+
+
+@login_required
+def pdf_preview(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    context = {
+        "app": "billing",
+        "subapp": "preview",
+        "file_url": reverse_lazy("billing:invoices-pdf", kwargs={"pk": invoice.pk}),
+        "invoice": invoice,
+    }
+
     return render(request, "billing/invoices/preview/preview.html", context)
 
 

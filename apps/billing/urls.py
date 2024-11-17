@@ -18,6 +18,8 @@ from apps.billing.invoices.views import (
     invoices_list,
     invoices_pdf,
     order_by_invoices,
+    pdf_preview,
+    pdf_preview_index,
 )
 from apps.billing.payments.views import (
     order_by_payments,
@@ -63,6 +65,16 @@ urlpatterns = [
         "billing/invoices-edit-status/<int:pk>/<str:status>/",
         invoices_edit_status,
         name="invoices-edit-status",
+    ),
+    path(
+        "billing/invoices-detail/<int:pk>/pdf-preview-index/",
+        pdf_preview_index,
+        name="invoice-pdf-preview-index",
+    ),
+    path(
+        "billing/invoices-detail/<int:pk>/pdf-preview/",
+        pdf_preview,
+        name="invoice-pdf-preview",
     ),
     path(
         "billing/invoices-detail/<int:pk>/time-entries-index/",

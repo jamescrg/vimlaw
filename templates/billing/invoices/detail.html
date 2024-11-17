@@ -79,6 +79,9 @@
       <li {% if subapp == "expenses" %}class="active"{% endif %}>
         <a href="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
       </li>
+      <li {% if subapp == "preview" %}class="active"{% endif %}>
+        <a href="{% url 'billing:invoice-pdf-preview-index' invoice.id %}">PDF Preview</a>
+      </li>
     </ul>
   </div>
   <div class="section">
