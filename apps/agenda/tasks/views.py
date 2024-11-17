@@ -31,7 +31,9 @@ def tasks_index(request):
             request.session["show_events"] = True
             return redirect("/events")
 
-    context = {
+    context = get_list_data(request)
+
+    context = context | {
         "app": "agenda",
         "subapp": "tasks",
         "show_events": show_events,
