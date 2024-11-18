@@ -79,11 +79,11 @@ def invoices_detail_index(request, pk):
 
     context = {
         "app": "billing",
-        "subapp": "preview",
+        "subapp": "time",
         "invoice": invoice,
     }
 
-    return render(request, "billing/invoices/detail-index.html", context)
+    return render(request, "billing/invoices/detail/detail-index.html", context)
 
 
 @login_required
@@ -92,12 +92,11 @@ def invoices_detail(request, pk):
 
     context = {
         "app": "billing",
-        "subapp": "preview",
-        "file_url": reverse_lazy("billing:invoices-pdf", kwargs={"pk": invoice.pk}),
+        "subapp": "time",
         "invoice": invoice,
     }
 
-    return render(request, "billing/invoices/preview/preview.html", context)
+    return render(request, "billing/invoices/time/index.html", context)
 
 
 @login_required
@@ -128,7 +127,7 @@ def pdf_preview(request, pk):
 
 
 @login_required
-def invoice_time_entires_index(request, pk):
+def invoice_time_entries_index(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
     context = {
@@ -141,7 +140,7 @@ def invoice_time_entires_index(request, pk):
 
 
 @login_required
-def invoice_time_entires(request, pk):
+def invoice_time_entries(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 
     entries = TimeEntry.objects.filter(invoice=invoice).order_by("date")

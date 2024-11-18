@@ -1,8 +1,6 @@
-{% extends "base.html" %}
 {% load static %}
 {% load humanize %}
 {% block head %}
-  {{ block.super }}
   <link rel="stylesheet" href="{% static 'css/apps/activity.css' %}" />
 {% endblock head %}
 {% block content %}
@@ -74,13 +72,16 @@
   <div class="subnav">
     <ul>
       <li {% if subapp == "time" %}class="active"{% endif %}>
-        <a href="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
+        <a href="#"
+           hx-get="{% url 'billing:invoice-time-entries-index' invoice.id %}">Time</a>
       </li>
       <li {% if subapp == "expenses" %}class="active"{% endif %}>
-        <a href="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
+        <a href="#"
+           hx-get="{% url 'billing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
       </li>
       <li {% if subapp == "preview" %}class="active"{% endif %}>
-        <a href="{% url 'billing:invoice-pdf-preview-index' invoice.id %}">PDF Preview</a>
+        <a href="#"
+           hx-get="{% url 'billing:invoice-pdf-preview-index' invoice.id %}">PDF Preview</a>
       </li>
     </ul>
   </div>

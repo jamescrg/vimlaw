@@ -1,7 +1,7 @@
-{% extends "billing/invoices/detail.html" %}
+{% extends "billing/invoices/detail/detail.html" %}
 {% block subcontent %}
   {% load humanize %}
-  <div id="time"
+  <div id="preview"
        hx-trigger="load, previewChanged from:body"
        hx-get="{% url 'billing:invoice-pdf-preview' invoice.id %}"
        hx-target="this">{% include "billing/invoices/preview/preview.html" %}</div>
