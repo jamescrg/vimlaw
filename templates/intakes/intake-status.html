@@ -1,40 +1,40 @@
-<td class="intake-status">
-  <div class="dropdown">
-    <button class="button-link"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false">{{ intake.status }}</button>
-    <ul class="dropdown-menu">
-      <li>
-        <a href="#"
-           hx-post="{% url 'intakes:edit-status' pk=intake.id status='Open' %}"
-           class="dropdown-item">Open</a>
-      </li>
-      <li>
-        <a href="#"
-           hx-post="{% url 'intakes:edit-status' pk=intake.id status='Pending' %}"
-           class="dropdown-item">Pending</a>
-      </li>
-      <li>
-        <a href="#"
-           hx-post="{% url 'intakes:edit-status' pk=intake.id status='Accepted' %}"
-           class="dropdown-item">Accepted</a>
-      </li>
-      <li>
-        <a href="#"
-           hx-post="{% url 'intakes:edit-status' pk=intake.id status='Referred Out' %}"
-           class="dropdown-item">Referred Out</a>
-      </li>
-      <li>
-        <a href="#"
-           hx-post="{% url 'intakes:edit-status' pk=intake.id status='Client Declined' %}"
-           class="dropdown-item">Client Declined</a>
-      </li>
-      <li>
-        <a href="#"
-           hx-post="{% url 'intakes:edit-status' pk=intake.id status='Unresponsive' %}"
-           class="dropdown-item">Unresponsive</a>
-      </li>
-    </ul>
-  </div>
-</td>
+<div class="dropdown" id="intake-dropdown-{{ intake.id }}">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ intake.status }}</button>
+  <ul hx-target="#intake-dropdown-{{ intake.id }}"
+      hx-swap="outerHTML"
+      class="dropdown-menu">
+    <li>
+      <a href="#"
+         hx-post="{% url 'intakes:edit-status' pk=intake.id status='Open' %}"
+         class="dropdown-item">Open</a>
+    </li>
+    <li>
+      <a href="#"
+         hx-post="{% url 'intakes:edit-status' pk=intake.id status='Pending' %}"
+         class="dropdown-item">Pending</a>
+    </li>
+    <li>
+      <a href="#"
+         hx-post="{% url 'intakes:edit-status' pk=intake.id status='Accepted' %}"
+         class="dropdown-item">Accepted</a>
+    </li>
+    <li>
+      <a href="#"
+         hx-post="{% url 'intakes:edit-status' pk=intake.id status='Referred Out' %}"
+         class="dropdown-item">Referred Out</a>
+    </li>
+    <li>
+      <a href="#"
+         hx-post="{% url 'intakes:edit-status' pk=intake.id status='Client Declined' %}"
+         class="dropdown-item">Client Declined</a>
+    </li>
+    <li>
+      <a href="#"
+         hx-post="{% url 'intakes:edit-status' pk=intake.id status='Unresponsive' %}"
+         class="dropdown-item">Unresponsive</a>
+    </li>
+  </ul>
+</div>

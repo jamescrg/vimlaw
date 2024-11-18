@@ -267,13 +267,11 @@ def delete_note(_, id):
 
 @login_required
 def intake_edit_status(request, pk, status):
-    view = request.session.get("intakes-view", "list")
     intake = get_object_or_404(Intake, pk=pk)
 
     intake.status = status
     intake.save()
 
-    if view == "detail":
-        return HttpResponse(status=204, headers={"HX-Trigger": "intakeDetailChanged"})
-    else:
-        return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
+    context = {"intake": intake}
+
+    return render(request, "intakes/intake-status.html", context)

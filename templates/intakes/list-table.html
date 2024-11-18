@@ -58,7 +58,7 @@
               </td>
               <td class="intake-phone">{{ intake.phone|phone_number|default:'' }}</td>
               <td class="intake-email">{{ intake.email|default:'' }}</td>
-              {% include "intakes/intake-status.html" %}
+              <td class="intake-status">{% include "intakes/intake-status.html" %}</td>
               <td class="intake-source">
                 {% if intake.source %}{{ intake.source|slice:':14' }}{% endif %}
               </td>
