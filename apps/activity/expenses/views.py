@@ -4,23 +4,23 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.accounts.models import CustomUser
-from apps.management.pagination import CustomPaginator
+from apps.activity.expenses.get_expenses_data import get_expenses_data
 from apps.matters.models import Matter
 
 from .export import write_clio_csv, write_standard_csv
 from .filter import ExpenseFilter
 from .forms import ExpenseEntryForm
 from .models import ExpenseEntry
-from .summary import calculate_summary
 
 
 @login_required
 def expenses_index(request):
+    expenses_data = get_expenses_data(request)
+
     context = {
         "app": "activity",
         "subapp": "expenses",
-    }
+    } | expenses_data
 
     return render(request, "activity/expenses/main.html", context)
 
@@ -36,57 +36,14 @@ def expenses_list(request):
     Calls the "calculate_summary" function to calculate totals of
     hours and fees.
     """
-
-    expenses = ExpenseEntry.objects.all()
-    number_expenses = expenses.count()
-
-    default_filter = {
-        "date_min": "",
-        "date_max": "",
-        "firm": "Campbell & Brannon",
-        "matter": None,
-        "keyword": "",
-        "comp": None,
-        "entered": 0,
-        "invoice": 0,
-    }
-
-    filter_data = request.session.get("expenses_filter", None)
-
-    if filter_data:
-        filter = ExpenseFilter(filter_data)
-        expenses = filter.qs
-        user_id = filter_data.get("user")
-        user_id = int(user_id) if user_id not in (None, "") else None
-    else:
-        filter = ExpenseFilter(default_filter)
-        expenses = filter.qs
-        user_id = None
-
-    request.session["expenses_filter"] = filter.data
-    request.session.modified = True
-
-    summary = calculate_summary(expenses)
-    users = CustomUser.objects.filter(is_active=True)
-
-    pagination = CustomPaginator(
-        expenses, per_page=10, request=request, session_key="expenses_pagination"
-    )
+    expenses_data = get_expenses_data(request)
 
     context = {
         "app": "activity",
         "subapp": "expenses",
-        "edit": False,
-        "objects": pagination.get_object_list(),
-        "pagination": pagination,
-        "session_key": "expenses_pagination",
-        "trigger_key": "expensesChanged",
-        "number_expenses": number_expenses,
-        "summary": summary,
-        "users": users,
-        "user_id": user_id,
-        "filter_label": filter_data.get("filter_label", None),
     }
+
+    context = context | expenses_data
 
     return render(request, "activity/expenses/list.html", context)
 

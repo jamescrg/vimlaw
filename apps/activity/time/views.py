@@ -5,9 +5,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.accounts.models import CustomUser
 from apps.activity.expenses.models import ExpenseEntry
-from apps.management.pagination import CustomPaginator
+from apps.activity.time.get_time_data import get_time_data
 from apps.matters.models import Matter
 from apps.matters.rates.models import Rate
 
@@ -15,15 +14,16 @@ from .export import write_clio_csv, write_standard_csv
 from .filter import TimeEntryFilter
 from .forms import TimeEntryForm
 from .models import TimeEntry
-from .summary import calculate_summary
 
 
 @login_required
 def time_index(request):
+    time_data = get_time_data(request)
+
     context = {
         "app": "activity",
         "subapp": "time",
-    }
+    } | time_data
 
     return render(request, "activity/time/main.html", context)
 
@@ -40,57 +40,14 @@ def time_list(request):
     hours and fees.
     """
 
-    entries = TimeEntry.objects.all()
-    number_entries = entries.count()
-
-    default_filter = {
-        "date_min": "",
-        "date_max": "",
-        "firm": "Campbell & Brannon",
-        "matter": None,
-        "keyword": "",
-        "comp": None,
-        "entered": 0,
-        "invoice": 0,
-        "order_by": "date",
-    }
-
-    filter_data = request.session.get("time_filter", None)
-
-    if filter_data:
-        filter = TimeEntryFilter(filter_data)
-        entries = filter.qs
-        user_id = filter_data.get("user")
-        user_id = int(user_id) if user_id not in (None, "") else None
-    else:
-        filter = TimeEntryFilter(default_filter)
-        entries = filter.qs
-        user_id = None
-
-    request.session["time_filter"] = filter.data
-    request.session.modified = True
-
-    summary = calculate_summary(entries)
-    users = CustomUser.objects.filter(is_active=True)
-
-    pagination = CustomPaginator(
-        entries, per_page=10, request=request, session_key="time_pagination"
-    )
+    time_data = get_time_data(request)
 
     context = {
         "app": "activity",
         "subapp": "time",
-        "edit": False,
-        "objects": pagination.get_object_list(),
-        "pagination": pagination,
-        "session_key": "time_pagination",
-        "trigger_key": "timeChanged",
-        "number_entries": number_entries,
-        "summary": summary,
-        "users": users,
-        "user_id": user_id,
-        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
+
+    context = context | time_data
 
     return render(request, "activity/time/list.html", context)
 
