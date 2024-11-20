@@ -14,6 +14,8 @@ from apps.trust.models import Transaction
 
 @login_required
 def trust_index(request):
+    request.session["trust_view"] = "summary"
+
     trust_data = get_trust_data(request)
 
     context = {
