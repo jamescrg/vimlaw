@@ -1,7 +1,6 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
@@ -9,14 +8,18 @@ import apps.trust.trust as trust
 from apps.contacts.models import Contact
 from apps.management.pagination import CustomPaginator
 from apps.trust.forms import TransactionForm
+from apps.trust.get_trust_data import get_trust_data
 from apps.trust.models import Transaction
 
 
 @login_required
 def trust_index(request):
+    trust_data = get_trust_data(request)
+
     context = {
         "app": "trust",
-    }
+        "page": "summary",
+    } | trust_data
 
     return render(request, "trust/main.html", context)
 
@@ -25,37 +28,43 @@ def trust_index(request):
 def trust_list(request):
     request.session["trust_view"] = "summary"
 
-    contacts = trust.get_clients_asymmetric()
-    contacts = trust.get_pending_client_balances(contacts)
-    contacts = trust.get_confirmed_client_balances(contacts)
-
-    pending_account_balance = trust.get_pending_account_balance()
-    confirmed_account_balance = trust.get_confirmed_account_balance()
-
-    pagination = CustomPaginator(
-        contacts, per_page=50, request=request, session_key="trust_pagination"
-    )
+    trust_data = get_trust_data(request)
 
     context = {
         "app": "trust",
         "page": "summary",
-        "pagination": pagination,
-        "contacts": pagination.get_object_list(),
-        "session_key": "trust_pagination",
-        "trigger_key": "trustChanged",
-        "pending_account_balance": pending_account_balance,
-        "confirmed_account_balance": confirmed_account_balance,
     }
+
+    context = context | trust_data
 
     return render(request, "trust/summary.html", context)
 
 
 @login_required
 def history_index(request, interval="30days"):
+    request.session["trust_view"] = "history"
+    request.session["interval"] = interval
+
+    pending_account_balance = trust.get_pending_account_balance()
+    confirmed_account_balance = trust.get_confirmed_account_balance()
+    transactions = trust.get_account_history(interval)
+
+    pagination = CustomPaginator(
+        transactions,
+        per_page=50,
+        request=request,
+        session_key="trust_history_pagination",
+    )
+
     context = {
         "app": "trust",
         "page": "history",
+        "session_key": "trust_history_pagination",
+        "trigger_key": "trustHistoryChanged",
         "interval": interval,
+        "pending_account_balance": pending_account_balance,
+        "confirmed_account_balance": confirmed_account_balance,
+        "transactions": pagination.get_object_list(),
     }
 
     return render(request, "trust/history-index.html", context)
@@ -70,17 +79,23 @@ def history(request, interval="30days"):
     confirmed_account_balance = trust.get_confirmed_account_balance()
     transactions = trust.get_account_history(interval)
 
-    page = request.GET.get("page")
-    pagination = Paginator(transactions, per_page=50).get_page(page)
+    pagination = CustomPaginator(
+        transactions,
+        per_page=50,
+        request=request,
+        session_key="trust_history_pagination",
+    )
 
     context = {
         "app": "trust",
         "pagination": pagination,
         "page": "history",
         "interval": interval,
+        "session_key": "trust_history_pagination",
+        "trigger_key": "trustHistoryChanged",
         "pending_account_balance": pending_account_balance,
         "confirmed_account_balance": confirmed_account_balance,
-        "transactions": pagination.object_list,
+        "transactions": pagination.get_object_list(),
     }
 
     return render(request, "trust/history.html", context)
@@ -88,12 +103,21 @@ def history(request, interval="30days"):
 
 @login_required
 def client_index(request, id):
+    request.session["trust_view"] = "client"
+
     client = get_object_or_404(Contact, pk=id)
+
+    pending_client_balance = trust.get_pending_client_balance(id)
+    confirmed_client_balance = trust.get_confirmed_client_balance(id)
+    transactions = trust.get_client_history(id)
 
     context = {
         "app": "trust",
         "client": client,
         "page": "client",
+        "pending_client_balance": pending_client_balance,
+        "confirmed_client_balance": confirmed_client_balance,
+        "transactions": transactions,
     }
 
     return render(request, "trust/client-index.html", context)
