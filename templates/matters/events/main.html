@@ -2,7 +2,7 @@
 {% block subcontent %}
   {% load humanize %}
   <div id="matterEvents"
-       hx-trigger="load, matterEventChanged from:body"
+       hx-trigger="matterEventChanged from:body"
        hx-get="{% url 'matters:events' matter.id %}"
        hx-target="this">{% include "matters/events/list.html" %}</div>
 {% endblock subcontent %}

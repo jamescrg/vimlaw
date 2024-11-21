@@ -12,11 +12,16 @@ from apps.matters.rates.models import Rate
 @login_required
 def rate_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
+    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+
+    rates = Rate.objects.filter(matter=matter).order_by("user__username")
 
     context = {
         "app": "matters",
         "subapp": "rates",
         "matter": matter,
+        "proceeding": proceeding,
+        "rates": rates,
     }
 
     return render(request, "matters/rates/main.html", context)

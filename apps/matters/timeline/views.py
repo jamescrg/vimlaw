@@ -16,10 +16,15 @@ from apps.matters.timeline.models import Fact
 def timeline_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
+    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    facts = Fact.objects.filter(matter=matter.id).order_by("date")
+
     context = {
         "app": "matters",
         "subapp": "timeline",
         "matter": matter,
+        "proceeding": proceeding,
+        "facts": facts,
     }
 
     return render(request, "matters/timeline/main.html", context)
@@ -28,6 +33,7 @@ def timeline_index(request, id):
 @login_required
 def timeline_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
+
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     facts = Fact.objects.filter(matter=matter.id).order_by("date")
 

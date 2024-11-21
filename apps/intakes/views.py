@@ -16,9 +16,13 @@ from config.helpers import format_phone
 
 @login_required
 def intakes_index(request):
+    request.session["intakes-view"] = "list"
+
+    table_data = get_table_data(request)
+
     context = {
         "app": "intakes",
-    }
+    } | table_data
 
     return render(request, "intakes/main.html", context)
 
@@ -29,8 +33,9 @@ def intakes_list(request):
 
     table_data = get_table_data(request)
 
-    context = table_data
-    context["app"] = "intakes"
+    context = {
+        "app": "intakes",
+    } | table_data
 
     return render(request, "intakes/list-table.html", context)
 
@@ -92,11 +97,24 @@ def order_by(request, order):
 def detail_index(request, id):
     request.session["intakes-view"] = "detail"
 
+    # get the intake
     intake = get_object_or_404(Intake, pk=id)
+
+    notes = Note.objects.filter(intake=intake).order_by("-date", "-id")
+    for note in notes:
+        note.details = markdown.markdown(note.details)
+
+    # check whether the intake has been added to contacts
+    try:
+        contact = Contact.objects.filter(intake=intake).get()
+    except ObjectDoesNotExist:
+        contact = None
 
     context = {
         "app": "intakes",
         "intake": intake,
+        "notes": notes,
+        "contact": contact,
     }
 
     return render(request, "intakes/detail-index.html", context)
@@ -104,6 +122,8 @@ def detail_index(request, id):
 
 @login_required
 def detail(request, id):
+    request.session["intakes-view"] = "detail"
+
     # get the intake
     intake = get_object_or_404(Intake, pk=id)
 

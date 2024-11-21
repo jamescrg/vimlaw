@@ -1,22 +1,21 @@
-from datetime import date, timedelta
-
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 
-from apps.agenda.events.models import Event
+from apps.matters.events.get_event_data import get_event_data
 from apps.matters.models import Matter
-from apps.matters.proceedings.models import Proceeding
 
 
 @login_required
 def events_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
+    event_data = get_event_data(matter)
+
     context = {
         "app": "matters",
         "subapp": "events",
         "matter": matter,
-    }
+    } | event_data
 
     return render(request, "matters/events/main.html", context)
 
@@ -24,21 +23,15 @@ def events_index(request, id):
 @login_required
 def events_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
-    pending_events = Event.objects.filter(matter=id, status="Pending").order_by("date")
-    third_day = date.today() + timedelta(days=3)
-    past_events = (
-        Event.objects.filter(matter=id).exclude(status="Pending").order_by("-date")
-    )
+
+    event_data = get_event_data(matter)
 
     context = {
         "app": "matters",
         "subapp": "events",
         "matter": matter,
-        "proceeding": proceeding,
-        "pending_events": pending_events,
-        "past_events": past_events,
-        "third_day": third_day,
     }
+
+    context = context | event_data
 
     return render(request, "matters/events/list.html", context)

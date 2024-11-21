@@ -2,7 +2,7 @@
 {% block content %}
   {% load humanize %}
   <div id="intakes"
-       hx-trigger="load, intakesChanged from:body"
+       hx-trigger="intakesChanged from:body"
        hx-get="{% url 'intakes:list' %}"
        hx-target="this">{% include "intakes/list-table.html" %}</div>
 {% endblock content %}

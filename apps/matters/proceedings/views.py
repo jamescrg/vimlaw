@@ -13,10 +13,15 @@ from apps.matters.proceedings.models import Proceeding
 def proceeding_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
+    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    proceedings = Proceeding.objects.filter(matter=matter.id).order_by("-id")
+
     context = {
         "app": "matters",
         "subapp": "proceedings",
         "matter": matter,
+        "proceeding": proceeding,
+        "proceedings": proceedings,
     }
 
     return render(request, "matters/proceedings/main.html", context)
@@ -25,6 +30,7 @@ def proceeding_index(request, id):
 @login_required
 def proceeding_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
+
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     proceedings = Proceeding.objects.filter(matter=matter.id).order_by("-id")
 

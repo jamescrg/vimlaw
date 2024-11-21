@@ -14,10 +14,15 @@ from apps.matters.settlement.models import SettlementEntry
 def settlement_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
+    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
+
     context = {
         "app": "matters",
         "subapp": "settlement",
         "matter": matter,
+        "proceeding": proceeding,
+        "entries": entries,
     }
 
     return render(request, "matters/settlement/main.html", context)
@@ -26,6 +31,7 @@ def settlement_index(request, id):
 @login_required
 def settlement_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
+
     proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
 

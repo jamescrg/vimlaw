@@ -10,9 +10,7 @@ from apps.settings.users.users import get_user_list
 
 @login_required
 def users_index(request):
-    context = {
-        "subapp": "users",
-    }
+    context = get_user_list(request)
 
     return render(request, "settings/users/index.html", context)
 

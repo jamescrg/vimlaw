@@ -17,7 +17,7 @@ def get_list_data(request):
 
     today = date.today()
 
-    filter_data = request.session.get("tasks_filter", None)
+    filter_data = request.session.get("tasks_filter", {})
 
     if filter_data:
         filter = TasksFilter(filter_data)

@@ -2,7 +2,7 @@
 {% block subcontent %}
   {% load humanize %}
   <div id="time"
-       hx-trigger="load, timeChanged from:body"
+       hx-trigger="timeChanged from:body"
        hx-get="{% url 'activity:time-list' %}"
        hx-target="this">{% include "activity/time/list.html" %}</div>
 {% endblock subcontent %}

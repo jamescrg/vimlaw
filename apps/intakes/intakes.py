@@ -7,7 +7,7 @@ def get_table_data(request):
 
     default_filter = {"status": "Open"}
 
-    filter_data = request.session.get("intake_filter", None)
+    filter_data = request.session.get("intake_filter", {})
 
     if filter_data:
         filter = IntakeFilter(filter_data)
