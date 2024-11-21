@@ -16,7 +16,7 @@ def get_table_data(request):
         "order_by": "date",
     }
 
-    events_filter = request.session.get("events_filter", None)
+    events_filter = request.session.get("events_filter", {})
 
     if events_filter:
         filter = EventFilter(events_filter)

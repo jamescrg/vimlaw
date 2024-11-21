@@ -7,9 +7,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from apps.agenda.events.models import Event
 from apps.contacts.functions.load_contacts import load_contacts
 from apps.contacts.models import Contact
-from apps.management.pagination import CustomPaginator
 from apps.matters.filter import MatterFilter
 from apps.matters.forms import MatterForm
+from apps.matters.get_matter_list import get_matter_list
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
@@ -18,9 +18,11 @@ from apps.matters.timeline.models import Fact
 
 @login_required
 def matter_index(request):
+    list_data = get_matter_list(request)
+
     context = {
         "app": "matters",
-    }
+    } | list_data
 
     return render(request, "matters/main.html", context)
 
@@ -29,45 +31,12 @@ def matter_index(request):
 def matter_list(request):
     request.session["matters-view"] = "list"
 
-    default_filter = {
-        "status": "Open",
-        "practice_area": "",
-        "date_start": "",
-        "date_end": "",
-        "order_by": "name",
-    }
-
-    filter_data = request.session.get("matter_filter", None)
-
-    if filter_data:
-        filter = MatterFilter(filter_data)
-        matters = filter.qs
-    else:
-        filter = MatterFilter(default_filter)
-        matters = filter.qs
-
-    request.session["matter_filter"] = filter.data
-    request.session.modified = True
-
-    pagination = CustomPaginator(
-        matters, per_page=20, request=request, session_key="matter_pagination"
-    )
-
-    total_unbilled = 0
-    for matter in matters:
-        total_unbilled += matter.value["unbilled"]["net_fees_and_expenses"]
-
+    list_data = get_matter_list(request)
     context = {
         "app": "matters",
-        "pagination": pagination,
-        "session_key": "matter_pagination",
-        "trigger_key": "mattersChanged",
-        "edit": False,
-        "matters": pagination.get_object_list(),
-        "number_matters": matters.count(),
-        "total_unbilled": total_unbilled,
-        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
+
+    context = context | list_data
 
     return render(request, "matters/list.html", context)
 
@@ -76,7 +45,6 @@ def matter_list(request):
 def filter(request):
     def get_filter(request):
         filter_data = request.session.get("matter_filter", request.POST)
-
         return MatterFilter(filter_data, queryset=Matter.objects.all())
 
     if request.method == "POST":

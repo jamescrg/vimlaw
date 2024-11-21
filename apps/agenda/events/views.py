@@ -17,10 +17,16 @@ from .events import get_table_data
 
 @login_required
 def events_index(request):
+    today = date.today()
+    third_day = today + timedelta(days=3)
+
+    table_data = get_table_data(request)
+
     context = {
         "app": "agenda",
         "subapp": "events",
-    }
+        "third_day": third_day,
+    } | table_data
 
     return render(request, "agenda/events/main.html", context)
 

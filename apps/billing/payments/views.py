@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponse, get_object_or_404, render
 
 from apps.billing.invoices.models import Invoice
-from apps.management.pagination import CustomPaginator
+from apps.billing.payments.get_payment_data import get_payment_data
 from apps.matters.models import Matter
 
 from .filters import PaymentFilter
@@ -12,41 +12,26 @@ from .models import Payment
 
 @login_required
 def payments_index(request):
+    payment_data = get_payment_data(request)
+
     context = {
         "app": "billing",
         "subapp": "payments",
-    }
+    } | payment_data
 
     return render(request, "billing/payments/main.html", context)
 
 
 @login_required
 def payments_list(request):
-    filter_data = request.session.get("payments_filter", None)
-
-    if filter_data:
-        filter = PaymentFilter(filter_data)
-        payments = filter.qs
-    else:
-        payments = (
-            Payment.objects.all().select_related("matter").order_by("-date", "-id")
-        )
-
-    payments_total = sum(payment.amount for payment in payments)
-
-    pagination = CustomPaginator(
-        payments, per_page=10, request=request, session_key="payments_pagination"
-    )
+    payment_data = get_payment_data(request)
 
     context = {
         "app": "billing",
         "subapp": "payments",
-        "pagination": pagination,
-        "session_key": "payments_pagination",
-        "trigger_key": "paymentsChanged",
-        "objects": pagination.get_object_list(),
-        "payments_total": payments_total,
     }
+
+    context = context | payment_data
 
     return render(request, "billing/payments/list.html", context)
 
