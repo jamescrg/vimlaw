@@ -2,7 +2,7 @@
 {% block subcontent %}
   {% load humanize %}
   <div id="time"
-       hx-trigger="load, previewChanged from:body"
+       hx-trigger="previewChanged from:body"
        hx-get="{% url 'billing:invoice-pdf-preview' invoice.id %}"
        hx-target="this">{% include "billing/invoices/preview/preview.html" %}</div>
 {% endblock subcontent %}
