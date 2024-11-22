@@ -34,7 +34,9 @@ class MatterForm(forms.ModelForm):
         )
 
         widgets = {
-            "name": forms.TextInput(attrs={"autofocus": "autofocus"}),
+            "name": forms.TextInput(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
             "status": forms.Select(choices=STATUSES),
             "firm": forms.Select(choices=FIRMS),
             "practice_area": forms.Select(choices=PRACTICE_AREAS),

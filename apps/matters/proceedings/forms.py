@@ -22,7 +22,9 @@ class ProceedingForm(forms.ModelForm):
         )
 
         widgets = {
-            "forum": forms.TextInput(attrs={"autofocus": "autofocus"}),
+            "forum": forms.TextInput(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
             "status": forms.Select(choices=STATUSES),
             "date_filed": forms.DateInput(attrs={"type": "date"}),
         }

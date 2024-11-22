@@ -5,7 +5,6 @@ from apps.agenda.tasks.models import Task
 
 
 class TaskForm(forms.ModelForm):
-
     class Meta:
         model = Task
 
@@ -33,9 +32,11 @@ class TaskForm(forms.ModelForm):
 
         widgets = {
             "description": forms.TextInput(
-                attrs={"autofocus": "autofocus", "required": "required"}
+                attrs={
+                    "autofocus": "autofocus",
+                    "onfocus": "moveFocusToEnd(this)",
+                }
             ),
-            "matter": forms.Select(attrs={"required": "required"}),
             "status": forms.Select(choices=STATUSES),
             "date_due": forms.DateInput(attrs={"type": "date"}),
             "priority": forms.Select(choices=PRIORITIES),
@@ -53,3 +54,10 @@ class TaskForm(forms.ModelForm):
         if len(description) > 150:
             raise ValidationError("Description must be fewer than 50 characters")
         return description
+
+    def clean_matter(self):
+        matter = self.cleaned_data["matter"]
+        if not matter:
+            raise ValidationError("This field is required")
+
+        return matter

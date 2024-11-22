@@ -26,7 +26,9 @@ class EventForm(forms.ModelForm):
         )
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
-            "description": forms.TextInput(attrs={"autofocus": "autofocus"}),
+            "description": forms.TextInput(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
             "party": forms.Select(choices=PARTIES),
             "status": forms.Select(choices=STATUSES),
         }

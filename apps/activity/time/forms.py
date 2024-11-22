@@ -30,7 +30,9 @@ class TimeEntryForm(forms.ModelForm):
         widgets = {
             "matter": forms.Select(attrs={"onchange": "updateRate()"}),
             "date": forms.DateInput(attrs={"type": "date"}),
-            "actions": forms.Textarea(attrs={"autofocus": "autofocus"}),
+            "actions": forms.Textarea(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
             "comp": forms.Select(choices=COMP_CHOICES),
             "entered": forms.Select(choices=ENTERED_CHOICES),
         }

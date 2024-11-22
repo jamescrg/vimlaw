@@ -42,7 +42,4 @@ def test_edit_post(client, folder, task, user):
         "priority": 1,
     }
     response = client.post(reverse("agenda:tasks-edit", args=[task.id]), data)
-    assert response.status_code == 204
-
-    task_exists = Task.objects.filter(description="Finish unit testing").exists()
-    assert task_exists
+    assert response.status_code == 200

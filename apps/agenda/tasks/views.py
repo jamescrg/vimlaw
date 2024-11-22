@@ -14,7 +14,6 @@ from apps.matters.models import Matter
 
 @login_required
 def tasks_index(request):
-
     # check whether events have been hidden
     show_events = request.session.get("show_events", True)
     if show_events:
@@ -58,9 +57,8 @@ def tasks_select(request):
 
 @login_required
 def tasks_add(request):
-
     if request.method == "POST":
-        form = TaskForm(request.POST)
+        form = TaskForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             task = form.save(commit=False)
             filter_data = request.session.get("tasks_filter", {})
@@ -74,11 +72,13 @@ def tasks_add(request):
             return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
     else:
-
         # save the currently selected matter in the add task form
         # so multiple tasks can quickly be added to a matter
         tasks_matter = request.session.get("tasks_matter")
-        form = TaskForm(initial={"user": request.user, "matter": tasks_matter})
+        form = TaskForm(
+            initial={"user": request.user, "matter": tasks_matter},
+            use_required_attribute=False,
+        )
 
     matters = Matter.objects.filter(status="Open").order_by("name")
     form.fields["matter"].queryset = matters
@@ -97,11 +97,9 @@ def tasks_add(request):
 
 @login_required
 def tasks_edit(request, id):
-
     task = get_object_or_404(Task, pk=id)
 
     if request.method == "POST":
-
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             task = form.save(commit=False)

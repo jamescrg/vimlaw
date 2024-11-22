@@ -6,7 +6,6 @@ from .models import Contact
 
 
 class ContactForm(forms.ModelForm):
-
     class Meta:
         model = Contact
 
@@ -41,7 +40,9 @@ class ContactForm(forms.ModelForm):
         )
 
         widgets = {
-            "name": forms.TextInput(attrs={"autofocus": "autofocus"}),
+            "name": forms.TextInput(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
             "address": forms.Textarea(),
             "notes": forms.Textarea(),
             "phone1_label": forms.Select(choices=PHONE_LABELS),

@@ -40,7 +40,9 @@ class ExpenseEntryForm(forms.ModelForm):
         widgets = {
             "matter": forms.Select(attrs={"onchange": "updateRate()"}),
             "date": forms.DateInput(attrs={"type": "date"}),
-            "description": forms.Textarea(attrs={"autofocus": "autofocus"}),
+            "description": forms.Textarea(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
             "comp": forms.Select(choices=COMP_CHOICES),
             "entered": forms.Select(choices=ENTERED_CHOICES),
             "category": forms.Select(choices=CATEGORY_CHOICES),

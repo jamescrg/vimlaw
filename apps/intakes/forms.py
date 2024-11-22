@@ -49,7 +49,9 @@ class IntakeForm(forms.ModelForm):
         )
 
         widgets = {
-            "name": forms.TextInput(attrs={"autofocus": "autofocus"}),
+            "name": forms.TextInput(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
             "address": forms.Textarea(),
             "status": forms.Select(choices=STATUSES),
             "practice_area": forms.Select(choices=PRACTICE_AREAS),
