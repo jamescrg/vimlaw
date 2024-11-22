@@ -18,6 +18,8 @@ from apps.matters.timeline.models import Fact
 
 @login_required
 def matter_index(request):
+    request.session["matters-view"] = "list"
+
     list_data = get_matter_list(request)
 
     context = {
