@@ -17,6 +17,12 @@ from .events import get_table_data
 
 @login_required
 def events_index(request):
+    if google.check_credentials():
+        try:
+            google.remove_deleted_events()
+        except Exception as err:
+            print(f"Error removing: {err}")
+
     today = date.today()
     third_day = today + timedelta(days=3)
 
