@@ -32,6 +32,10 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
+# NOTE: Allows for insecure transport of OAuth tokens when running locally in DEBUG mode
+if DEBUG:
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
 # check dev v. production environment
 ENV = env("ENV")
 
