@@ -99,7 +99,7 @@ def google_store(request):
     with open(path, "w") as file:
         file.write(google_credentials)
 
-    return redirect("/settings")
+    return redirect("/settings/integrations/")
 
 
 @login_required
@@ -110,4 +110,4 @@ def google_logout(request, app):
     with open(path, "w") as file:
         file.write("")
 
-    return redirect("/settings")
+    return redirect("/settings/integrations/")

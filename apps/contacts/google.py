@@ -85,15 +85,20 @@ def add_contact(contact):
 
 
 def delete_contact(contact):
+    result = None
     service = build_service()
 
     if "people/" not in contact.google_id:
         contact.google_id = "people/" + contact.google_id
 
     if service:
-        result = (
-            service.people().deleteContact(resourceName=contact.google_id).execute()
-        )
+        try:
+            result = (
+                service.people().deleteContact(resourceName=contact.google_id).execute()
+            )
+        except Exception as err:
+            print(f"Contact not found in Contacts API: {err}")
+            pass
 
         if result:
             return True
