@@ -14,6 +14,7 @@ from apps.activity.time.models import TimeEntry
 from apps.activity.time.summary import calculate_summary as calculate_time_summary
 from apps.billing.invoices.functions import generate_ledes_98b
 from apps.billing.invoices.get_invoice_data import get_invoice_data
+from apps.billing.payments.forms import PaymentForm
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
@@ -217,6 +218,47 @@ def invoice_expense_entries(request, pk):
     }
 
     return render(request, "billing/invoices/expenses/list.html", context)
+
+
+@login_required
+def quick_invoice_payment(request, pk, payment_type):
+    try:
+        invoice = Invoice.objects.get(pk=pk)
+    except (Invoice.DoesNotExist, Exception):
+        return HttpResponse(status=404)
+
+    invoice_value = invoice.value["final_total"]
+    matter_outstanding = invoice.matter.value["unbilled"].get(
+        "net_fees_and_expenses", 0
+    )
+
+    # Set the invoice as paid if the payment settles the whole outstanding amount
+    set_as_paid = True if matter_outstanding == 0 else False
+
+    form = PaymentForm(
+        request.POST or None,
+        use_required_attribute=False,
+        initial={
+            "amount": invoice_value,
+            "matter": invoice.matter,
+            "detail": f"Invoice {invoice.id}",
+        },
+    )
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+
+        if set_as_paid:
+            invoice.status = "PAID"
+            invoice.save()
+
+        return HttpResponse(status=302, headers={"HX-Redirect": "/billing/payments"})
+
+    return render(
+        request,
+        "billing/invoices/quick-pay-form.html",
+        {"form": form, "invoice": invoice, "payment_type": payment_type},
+    )
 
 
 @login_required

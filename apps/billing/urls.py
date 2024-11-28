@@ -21,6 +21,7 @@ from apps.billing.invoices.views import (
     order_by_invoices,
     pdf_preview,
     pdf_preview_index,
+    quick_invoice_payment,
 )
 from apps.billing.payments.views import (
     order_by_payments,
@@ -101,6 +102,11 @@ urlpatterns = [
         "billing/invoices-detail/<int:pk>/expense-entries/",
         invoice_expense_entries,
         name="invoice-expense-entries",
+    ),
+    path(
+        "billing/invoice/quick-payment/<int:pk>/<str:payment_type>/",
+        quick_invoice_payment,
+        name="quick-invoice-payment",
     ),
     # Payments
     path("billing/payments/", payments_index, name="payments-index"),

@@ -67,6 +67,14 @@
           </tr>
         </table>
       {% endif %}
+      <div class="invoice-quick-payments">
+        <a class="invoice-direct-payment"
+           href="#"
+           hx-get="{% url 'billing:quick-invoice-payment' pk=invoice.id payment_type='direct' %}"
+           hx-target="#htmx-modal-container"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">Quick Invoice Payment (Direct)</a>
+      </div>
     </div>
   </div>
   <div class="subnav">
