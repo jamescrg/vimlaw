@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from itertools import chain
 
 from django.contrib.auth.decorators import login_required
@@ -17,6 +18,7 @@ from apps.billing.invoices.get_invoice_data import get_invoice_data
 from apps.billing.payments.forms import PaymentForm
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
+from apps.trust.models import Transaction
 
 from .filters import InvoiceFilter
 from .forms import EditInvoiceForm, InvoiceForm
@@ -222,6 +224,8 @@ def invoice_expense_entries(request, pk):
 
 @login_required
 def quick_invoice_payment(request, pk, payment_type):
+    current_date = datetime.now().date()
+
     try:
         invoice = Invoice.objects.get(pk=pk)
     except (Invoice.DoesNotExist, Exception):
@@ -251,6 +255,15 @@ def quick_invoice_payment(request, pk, payment_type):
         if set_as_paid:
             invoice.status = "PAID"
             invoice.save()
+
+        if payment_type == "trust":
+            Transaction.objects.create(
+                contact=invoice.matter.client,
+                date=current_date,
+                type="Withdrawal",
+                amount=invoice_value,
+                description=f"Invoice {invoice.id}",
+            )
 
         return HttpResponse(status=302, headers={"HX-Redirect": "/billing/payments"})
 

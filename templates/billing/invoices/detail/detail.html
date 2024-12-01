@@ -74,6 +74,12 @@
            hx-target="#htmx-modal-container"
            data-bs-toggle="modal"
            data-bs-target="#htmx-modal-container">Quick Invoice Payment (Direct)</a>
+        <a class="invoice-direct-payment"
+           href="#"
+           hx-get="{% url 'billing:quick-invoice-payment' pk=invoice.id payment_type='trust' %}"
+           hx-target="#htmx-modal-container"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">Quick Invoice Payment (Trust)</a>
       </div>
     </div>
   </div>

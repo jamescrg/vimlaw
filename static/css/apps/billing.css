@@ -40,7 +40,7 @@ Detail View
 
 .invoices-detail-table {
   height: fit-content;
-  width: 25%;
+  width: 23%;
 }
 
 @media (max-width: 768px) {
@@ -66,10 +66,12 @@ Quick Payments
 
 .invoice-quick-payments {
   flex-grow: 1;
+  gap: 1rem;
 }
 
 .invoice-direct-payment {
   float: right;
+  margin-bottom: 0.5rem;
 }
 
 /* ==========================================================================
