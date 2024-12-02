@@ -62,6 +62,9 @@
         <th class="amount">Fees</th>
         <th class="amount">Expenses</th>
         <th class="amount">Total</th>
+        <th class="download">
+          <i class="bi bi-download"></i>
+        </th>
       </tr>
       {% for invoice in objects %}
         {% include "billing/invoices/row.html" %}

@@ -18,9 +18,9 @@ List View
   width: 150px;
 }
 
-.invoices .pdf {
+.invoices .download {
   text-align: center;
-  width: 100px;
+  width: 50px;
 }
 
 .invoices-delete,

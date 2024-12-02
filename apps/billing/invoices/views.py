@@ -230,14 +230,7 @@ def quick_invoice_payment(request, pk, payment_type):
         invoice = Invoice.objects.get(pk=pk)
     except (Invoice.DoesNotExist, Exception):
         return HttpResponse(status=404)
-
     invoice_value = invoice.value["final_total"]
-    matter_outstanding = invoice.matter.value["unbilled"].get(
-        "net_fees_and_expenses", 0
-    )
-
-    # Set the invoice as paid if the payment settles the whole outstanding amount
-    set_as_paid = True if matter_outstanding == 0 else False
 
     form = PaymentForm(
         request.POST or None,
@@ -250,9 +243,9 @@ def quick_invoice_payment(request, pk, payment_type):
     )
 
     if request.method == "POST" and form.is_valid():
-        form.save()
+        payment = form.save()
 
-        if set_as_paid:
+        if payment.amount == invoice_value:
             invoice.status = "PAID"
             invoice.save()
 

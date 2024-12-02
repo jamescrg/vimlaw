@@ -1,12 +1,10 @@
 {% load humanize %}
 <tr id="payment-{{ payment.id }}">
-  <td class="id">{{ payment.id }}</td>
-  <td class="date">{{ payment.date|date:"Y-m-d" }}</td>
-  <td class="matter">
+  <td class="id">
     <button class="button-link"
             type="button"
             data-bs-toggle="dropdown"
-            aria-expanded="false">{{ payment.matter.name|slice:":20" }}</button>
+            aria-expanded="false">{{ payment.id }}</button>
     <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
       <li>
         <a class="dropdown-item"
@@ -26,6 +24,10 @@
            hx-target="#payment-{{ payment.id }}">Delete</a>
       </li>
     </ul>
+  </td>
+  <td class="date">{{ payment.date|date:"Y-m-d" }}</td>
+  <td class="matter">
+    <a href="{% url 'matters:ledger' id=payment.matter.id %}">{{ payment.matter.name|slice:":35" }}</a>
   </td>
   <td class="method">{{ payment.method_display }}</td>
   <td>{{ payment.detail|default:"" }}</td>

@@ -27,8 +27,7 @@
             <td class="type">{{ transaction.transaction_type }}</td>
             <td>
               {% if 'Invoice' in transaction.description %}
-                <a target="_blank"
-                   href="{% url 'billing:invoices-pdf' transaction.id %}">{{ transaction.description }}</a>
+                <a href="{% url 'billing:invoices-detail-index' transaction.id %}">{{ transaction.description }}</a>
               {% else %}
                 {{ transaction.description }}
               {% endif %}

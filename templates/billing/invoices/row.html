@@ -1,18 +1,25 @@
 {% load humanize %}
 <tr id="invoice-{{ invoice.id }}">
-  <td class="number">{{ invoice.id }}</td>
+  <td class="number">
+    <a href="{% url 'billing:invoices-detail-index' invoice.id %}">{{ invoice.id }}</a>
+  </td>
   <td class="date">{{ invoice.date_issued|date:"Y-m-d" }}</td>
-  <td>
+  <td class="matter">
+    <a href="{% url 'matters:ledger' id=invoice.matter.id %}">{{ invoice.matter.name|slice:":35" }}</a>
+  </td>
+  <td class="status">{% include "billing/invoices/status.html" %}</td>
+  <td class="amount">${{ invoice.value.net_fees|floatformat:2|intcomma }}</td>
+  <td class="amount">${{ invoice.value.net_expenses|floatformat:2|intcomma }}</td>
+  <td class="amount total">${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
+  <td class="download">
     <div class="dropdown">
       <button class="button-link"
               type="button"
               data-bs-toggle="dropdown"
-              aria-expanded="false">{{ invoice.matter.name|slice:":20" }}</button>
+              aria-expanded="false">
+        <i class="bi bi-download"></i>
+      </button>
       <ul class="dropdown-menu">
-        <li>
-          <a class="dropdown-item"
-             href="{% url 'billing:invoices-detail-index' invoice.id %}">Detail</a>
-        </li>
         <li>
           <a class="dropdown-item"
              target="_blank"
@@ -23,15 +30,7 @@
              target="_blank"
              href="{% url 'billing:invoice-ledes' invoice.id %}">Download Ledes</a>
         </li>
-        <li>
-          <a class="dropdown-item"
-             href="{% url 'matters:detail' id=invoice.matter.id %}">View Matter</a>
-        </li>
       </ul>
     </div>
   </td>
-  <td class="status">{% include "billing/invoices/status.html" %}</td>
-  <td class="amount">${{ invoice.value.net_fees|floatformat:2|intcomma }}</td>
-  <td class="amount">${{ invoice.value.net_expenses|floatformat:2|intcomma }}</td>
-  <td class="amount total">${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
 </tr>

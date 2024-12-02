@@ -8,28 +8,56 @@
     <div class="toolbar">
       <div class="toolbar-left">
         <h1>Invoice {{ invoice.id }} - {{ invoice.matter.name }}</h1>
-      </div>
-      {% if invoice.status == 'DRAFT' or invoice.status == 'APPROVED' %}
-        <div class="toolbar-right">
-          <button type="button"
-                  class="btn-icon"
-                  hx-get="{% url 'billing:invoices-edit' invoice.id %}"
-                  hx-target="#htmx-modal-container"
-                  hx-trigger="click"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <a type="button"
-             class="btn-icon"
-             target="_blank"
-             href="{% url 'billing:invoices-pdf' invoice.id %}">
-            <i class="bi bi-download"></i>
-          </a>
+        <div class="filter-tools">
+          {% if invoice.status == 'SENT' %}
+            <button class="icon-green"
+                    hx-get="{% url 'billing:quick-invoice-payment' pk=invoice.id payment_type='direct' %}"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">+ Card</button>
+            <button class="icon-green"
+                    hx-get="{% url 'billing:quick-invoice-payment' pk=invoice.id payment_type='trust' %}"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">+ Trust</button>
+          {% endif %}
+          {% if invoice.status == 'DRAFT' or invoice.status == 'APPROVED' %}
+            <button type="button"
+                    class="btn-icon"
+                    hx-get="{% url 'billing:invoices-edit' invoice.id %}"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">
+              <i class="bi bi-pencil"></i>
+            </button>
+          {% endif %}
         </div>
-      {% endif %}
+      </div>
+      <div class="toolbar-right">
+        <div class="dropdown">
+          <button class="button-link"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+            <i class="bi bi-download"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item"
+                 target="_blank"
+                 href="{% url 'billing:invoices-pdf' invoice.id %}">Download PDF</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 target="_blank"
+                 href="{% url 'billing:invoice-ledes' invoice.id %}">Download Ledes</a>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-    <p>{{ invoice.comment }}</p>
+    {% if invoice.comment %}<p>{{ invoice.comment }}</p>{% endif %}
     <div class="invoices-table-container">
       <table class="invoices-detail-table">
         <tr>
@@ -66,22 +94,6 @@
             <td>${{ invoice.discount|floatformat:2|intcomma }}</td>
           </tr>
         </table>
-      {% endif %}
-      {% if invoice.status != 'PAID' %}
-        <div class="invoice-quick-payments">
-          <a class="invoice-direct-payment"
-             href="#"
-             hx-get="{% url 'billing:quick-invoice-payment' pk=invoice.id payment_type='direct' %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container">Quick Invoice Payment (Direct)</a>
-          <a class="invoice-direct-payment"
-             href="#"
-             hx-get="{% url 'billing:quick-invoice-payment' pk=invoice.id payment_type='trust' %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container">Quick Invoice Payment (Trust)</a>
-        </div>
       {% endif %}
     </div>
   </div>
