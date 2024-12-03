@@ -131,7 +131,7 @@ def _format_line(
         "LAW_FIRM_ID": os.getenv("LAW_FIRM_ID"),
         "TIMEKEEPER_NAME": timekeeper_name,
         "TIMEKEEPER_CLASSIFICATION": "PT",
-        "CLIENT_MATTER_ID": entry.matter.client_reference_id,
+        "CLIENT_MATTER_ID": entry.matter.client_reference_id or "",
     }
 
     all_fields: Dict[str, str] = {
