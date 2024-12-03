@@ -20,8 +20,8 @@
   padding: 0 0 1rem 0;
 }
 
-.toolbar a,
-.toolbar button {
+.toolbar a:not(.dropdown-menu *),
+.toolbar button:not(.dropdown-menu *) {
   background: var(--stone-150);
   border: solid 1px var(--stone-200);
   border-radius: 4px;
