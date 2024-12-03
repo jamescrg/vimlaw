@@ -91,8 +91,18 @@ def payments_filter(request):
     def get_filter(request):
         filter_data = request.session.get("payments_filter", request.POST)
 
+        if filter_data:
+            return PaymentFilter(
+                filter_data,
+                queryset=Payment.objects.all()
+                .select_related("matter")
+                .order_by("-date", "-id"),
+            )
+        else:
+            default_filter = {"order_by": "-date"}
+
         return PaymentFilter(
-            filter_data,
+            default_filter,
             queryset=Payment.objects.all()
             .select_related("matter")
             .order_by("-date", "-id"),

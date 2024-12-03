@@ -373,13 +373,22 @@ def invoices_filter(request):
     else:
         filter_data = request.session.get("invoices_filter", {})
 
-        filter = InvoiceFilter(
-            filter_data,
-            queryset=Invoice.objects.all()
-            .select_related("matter", "created_by")
-            .order_by("-created_at"),
-        )
+        if filter_data:
+            filter = InvoiceFilter(
+                filter_data,
+                queryset=Invoice.objects.all()
+                .select_related("matter", "created_by")
+                .order_by("-created_at"),
+            )
+        else:
+            default_filter = {"order_by": "-date_issued"}
 
+            filter = InvoiceFilter(
+                default_filter,
+                queryset=Invoice.objects.all()
+                .select_related("matter", "created_by")
+                .order_by("-created_at"),
+            )
         return render(request, "billing/invoices/filter.html", {"filter": filter})
 
 
