@@ -17,11 +17,9 @@
              href="{% url 'trust:index' %}">Summary</a>
           <a class="{% if page == "history" %}toggle-active{% endif %}"
              href="{% url 'trust:history-index' '30days' %}">History</a>
-          <a class="{% if page == "client" %}toggle-active{% endif %}" href="">{{ client.name }}</a>
+          <a class="{% if page == "client" %}toggle-active{% endif %}"
+             href="{% url 'contacts:select' id=client.id %}">{{ client.name }}</a>
         </div>
-      </div>
-      <div class="toolbar-right">
-        <a href={% url 'contacts:select' id=client.id %}>View Contact</a>
       </div>
     </div>
     <div class="table-container">
