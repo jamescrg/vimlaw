@@ -6,7 +6,7 @@
         <div class="filter-tools">
           <button type="button"
                   class="btn-icon"
-                  hx-get="{% url 'trust:add' %}"
+                  hx-get="{% url 'trust:add-with-client' client.id %}"
                   hx-target="#htmx-modal-container"
                   hx-trigger="click"
                   data-bs-toggle="modal"
