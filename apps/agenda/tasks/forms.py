@@ -12,8 +12,8 @@ class TaskForm(forms.ModelForm):
             "matter",
             "description",
             "priority",
-            "user",
             "date_due",
+            "user",
         )
 
         STATUSES = (
