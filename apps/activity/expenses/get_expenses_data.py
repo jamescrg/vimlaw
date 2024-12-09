@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from apps.accounts.models import CustomUser
 from apps.activity.expenses.filter import ExpenseFilter
 from apps.activity.expenses.models import ExpenseEntry
@@ -24,6 +26,23 @@ def get_expenses_data(request):
 
     if filter_data:
         filter = ExpenseFilter(filter_data)
+
+        current_date = datetime.now().date()
+        filter_label = filter.data.get("filter_label", None)
+
+        min_date = filter.data.get("date_min", None)
+        max_date = filter.data.get("date_max", None)
+
+        # If the label is 'today' make sure the dates match the current date
+        if min_date and max_date:
+            if (
+                filter_label == "today"
+                and min_date != current_date
+                and max_date != current_date
+            ):
+                filter.data["date_min"] = str(current_date)
+                filter.data["date_max"] = str(current_date)
+
         expenses = filter.qs
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
