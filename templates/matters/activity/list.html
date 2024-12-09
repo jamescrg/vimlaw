@@ -1,11 +1,7 @@
-{% extends "matters/detail.html" %}
 {% block subcontent %}
   <div class="toolbar">
     <div class="toolbar-left">
-      <h2>Last 30 Days</h2>
-    </div>
-    <div class="toolbar-right">
-      <a href="{% url 'activity:time-filter-matter' matter.id %}">Activity: View All</a>
+      <h2>Time Entries</h2>
     </div>
   </div>
   <div class="table-container">
@@ -20,5 +16,6 @@
         {% endfor %}
       {% endif %}
     </table>
+    {% include "pagination.html" %}
   </div>
 {% endblock subcontent %}
