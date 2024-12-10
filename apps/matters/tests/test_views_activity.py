@@ -6,5 +6,5 @@ pytestmark = pytest.mark.django_db
 
 def test_index(client, matter):
     response = client.get(f"/matters/{matter.id}/activity")
-    assert response.status_code == 200
+    assert response.status_code == 301
     assertTemplateUsed("matters/activity/list.html")

@@ -85,7 +85,8 @@ urlpatterns = [
         name="rates-delete",
     ),
     # Activity
-    path("matters/<int:id>/activity", activity.index, name="activity"),
+    path("matters/<int:id>/activity/", activity.activity_index, name="activity-index"),
+    path("matters/<int:id>/activity/list/", activity.activity_list, name="activity"),
     # events
     path("matters/<int:id>/events/", events.events_index, name="events-index"),
     path("matters/<int:id>/events/list/", events.events_list, name="events"),

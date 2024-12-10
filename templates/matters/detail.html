@@ -84,7 +84,7 @@
         <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
       </li>
       <li {% if subapp == 'activity' %}class="active"{% endif %}>
-        <a href={% url 'matters:activity' id=matter.id %}>Activity</a>
+        <a href={% url 'matters:activity-index' id=matter.id %}>Activity</a>
       </li>
       <li {% if subapp == 'events' %}class="active"{% endif %}>
         <a href={% url 'matters:events-index' id=matter.id %}>Events</a>
