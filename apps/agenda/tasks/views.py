@@ -147,7 +147,19 @@ def tasks_filter(request, user=None):
 
     else:
         filter_data = request.session.get("tasks_filter", {})
-        filter = TasksFilter(filter_data, queryset=Task.objects.all())
+
+        if filter_data:
+            filter = TasksFilter(filter_data, queryset=Task.objects.all())
+        else:
+            default_filter = {
+                "status": None,
+                "matter": None,
+                "order_by": "priority",
+                "user": request.user.id,
+            }
+
+            filter = TasksFilter(default_filter, queryset=Task.objects.all())
+
         return render(request, "agenda/tasks/filter.html", {"filter": filter})
 
 

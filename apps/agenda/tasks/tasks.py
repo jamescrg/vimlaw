@@ -9,12 +9,6 @@ from apps.matters.models import Matter
 def get_list_data(request):
     list_data = {}
 
-    default_filter = {
-        "status": None,
-        "matter": None,
-        "order_by": "priority",
-    }
-
     today = date.today()
 
     filter_data = request.session.get("tasks_filter", {})
@@ -24,11 +18,17 @@ def get_list_data(request):
         tasks = filter.qs
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
-
     else:
+        default_filter = {
+            "status": "Pending",
+            "matter": None,
+            "order_by": "status",
+            "user": request.user.id,
+        }
+
         filter = TasksFilter(default_filter)
         tasks = filter.qs
-        user_id = None
+        user_id = request.user.id
 
     pagination = CustomPaginator(
         tasks, per_page=10, request=request, session_key="tasks_pagination"
