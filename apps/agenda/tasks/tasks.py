@@ -18,14 +18,14 @@ def get_list_data(request):
         tasks = filter.qs
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
+
     else:
         default_filter = {
-            "status": "Pending",
+            "status": "All",
             "matter": None,
-            "order_by": "status",
+            "order_by": "priority",
             "user": request.user.id,
         }
-
         filter = TasksFilter(default_filter)
         tasks = filter.qs
         user_id = request.user.id
