@@ -32,8 +32,14 @@
           <td>{{ matter.id }}</td>
         </tr>
         <tr>
-          <th>Clio No.</th>
-          <td>{{ matter.clio_matter_id|slice:'0:5'|default:'' }}</td>
+          <th>Client</th>
+          {% if matter.client %}
+            <td>
+              <a href={% url 'contacts:select' id=matter.client.id %}>{{ matter.client.name }}</a>
+            </td>
+          {% else %}
+            <td>No Client</td>
+          {% endif %}
         </tr>
       </table>
       <table>
@@ -68,14 +74,14 @@
           <td class="numeric">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
         </tr>
       </table>
-      <table>
-        <tr>
-          <th>Client</th>
-          <td>
-            <a href={% url 'contacts:select' id=matter.client.id %}>{{ matter.client.name }}</a>
-          </td>
-        </tr>
-      </table>
+      {% if matter.clio_matter_id %}
+        <table>
+          <tr>
+            <th>Clio No.</th>
+            <td>{{ matter.clio_matter_id|slice:'0:5'|default:'' }}</td>
+          </tr>
+        </table>
+      {% endif %}
     </div>
   </div>
   <div class="subnav">
