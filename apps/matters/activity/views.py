@@ -42,7 +42,7 @@ def activity_list(request, id):
     entries = TimeEntry.objects.filter(matter=id).order_by("-id")
 
     pagination = CustomPaginator(
-        entries, per_page=1, request=request, session_key="activity_pagination"
+        entries, per_page=10, request=request, session_key="activity_pagination"
     )
 
     context = {
