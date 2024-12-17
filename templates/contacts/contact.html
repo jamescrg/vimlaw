@@ -60,6 +60,9 @@
       <a href={% url 'intakes:detail-index' id=selected_contact.intake.id %}>View Intake</a>
     </div>
   {% endif %}
+  {% if selected_contact.client_status == "Current" or selected_contact.client_status == "Former" %}
+    <a href={% url 'trust:client-index' selected_contact.id %}>View Trust</a>
+  {% endif %}
   <div class="contacts-assignment">
     <a href="#"
        hx-get="/contacts/{{ selected_contact.id }}/assign"
