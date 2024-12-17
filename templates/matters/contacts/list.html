@@ -8,31 +8,24 @@
       </div>
     </div>
   </div>
-  {% if matter.client %}
-    <div class="contact-group-heading">
-      <h3>Client</h3>
-    </div>
-    <div class="table-container">
-      <table class="table matter-contacts">
-        <tr>
-          <td class="relationship">Client (Primary)</td>
-          <td class="name">
-            <a href={% url 'contacts:select' id=matter.client.id %}>{{ matter.client.name }}</a>
-          </td>
-          <td class="phone1">{{ matter.client.phone1|default:'' }}</td>
-          <td class="email">{{ matter.client.email|default:'' }}</td>
-        </tr>
-      </table>
-    </div>
-  {% endif %}
   {% if relationship_groups %}
     {% for group, relationships in relationship_groups.items %}
-      {% if relationships %}
+      {% if group == "Client" or relationships %}
         <div class="contact-group-heading">
           <h3>{{ group }}</h3>
         </div>
         <div class="table-container">
           <table class="table matter-contacts">
+            {% if matter.client %}
+              <tr>
+                <td class="relationship">Client</td>
+                <td class="name">
+                  <a href={% url 'contacts:select' id=matter.client.id %}>{{ matter.client.name }}</a>
+                </td>
+                <td class="phone1">{{ matter.client.phone1|default:'' }}</td>
+                <td class="email">{{ matter.client.email|default:'' }}</td>
+              </tr>
+            {% endif %}
             {% for relationship in relationships %}
               <tr>
                 <td class="relationship">
