@@ -1,79 +1,39 @@
 import os
 from datetime import datetime
-from operator import itemgetter
 
 from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from apps.billing.credits.models import Credit
-from apps.billing.invoices.models import Invoice
-from apps.billing.payments.models import Payment
 from apps.matters.ledger.generate_ledger import generate_ledger
+from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
-from apps.matters.proceedings.models import Proceeding
 
 
 @login_required
-def index(request, id):
+def ledger_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
-
-    transactions = []
-    balance_due = 0
-
-    invoices = Invoice.objects.filter(matter=matter).order_by("date_issued") or None
-    payments = Payment.objects.filter(matter=matter).order_by("date") or None
-    credits = Credit.objects.filter(matter=matter).order_by("date") or None
-
-    if invoices:
-        for invoice in invoices:
-            invoice_dict = {
-                "id": invoice.id,
-                "date": invoice.date_issued,
-                "transaction_type": "Charge",
-                "description": f"Invoice {invoice.id}",
-                "amount": invoice.value["final_total"],
-            }
-            transactions.append(invoice_dict)
-            balance_due -= invoice.value["final_total"]
-
-    if payments:
-        for payment in payments:
-            payment_dict = {
-                "id": payment.id,
-                "date": payment.date,
-                "transaction_type": "Credit",
-                "description": f"Payment by {payment.payment_method.lower()}",
-                "amount": payment.amount,
-            }
-            transactions.append(payment_dict)
-            balance_due += payment.amount
-
-    if credits:
-        for credit in credits:
-            credit_dict = {
-                "id": credit.id,
-                "date": credit.date,
-                "transaction_type": "Credit",
-                "description": f"Credit {credit.id}",
-                "amount": credit.amount,
-            }
-            transactions.append(credit_dict)
-            balance_due += credit.amount
-
-    if transactions:
-        transactions = sorted(transactions, key=itemgetter("transaction_type"))
-        transactions = sorted(transactions, key=itemgetter("date"))
+    ledger_data = get_ledger_data(matter)
 
     context = {
         "app": "matters",
         "subapp": "ledger",
         "matter": matter,
-        "proceeding": proceeding,
-        "transactions": transactions,
-        "balance_due": -1 * float(balance_due),
-    }
+    } | ledger_data
+
+    return render(request, "matters/ledger/main.html", context)
+
+
+@login_required
+def ledger_list(request, id):
+    matter = get_object_or_404(Matter, pk=id)
+    ledger_data = get_ledger_data(matter)
+
+    context = {
+        "app": "matters",
+        "subapp": "ledger",
+        "matter": matter,
+    } | ledger_data
 
     return render(request, "matters/ledger/list.html", context)
 

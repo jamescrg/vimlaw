@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -60,7 +62,14 @@ def credits_edit(request, pk):
         if form.is_valid():
             form.save()
 
-            return HttpResponse(status=204, headers={"HX-Trigger": "creditsChanged"})
+            return HttpResponse(
+                status=204,
+                headers={
+                    "HX-Trigger": json.dumps(
+                        {"creditsChanged": "", "matterLedgerChanged": ""}
+                    )
+                },
+            )
     else:
         form = CreditsForm(instance=credit, use_required_attribute=False)
 
@@ -75,7 +84,12 @@ def credits_edit(request, pk):
 def credits_delete(_, pk):
     Credit.objects.get(pk=pk).delete()
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "creditsChanged"})
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps({"creditsChanged": "", "matterLedgerChanged": ""})
+        },
+    )
 
 
 @login_required
