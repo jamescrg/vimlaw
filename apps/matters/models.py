@@ -41,7 +41,7 @@ class Matter(models.Model):
                 Contact.objects.filter(pk=self.client.pk).update(client_status="Former")
         elif self.status == "Open":
             # Mark client as current if the matter was reopened
-            if self.client.client_status == "Former":
+            if self.client and self.client.client_status == "Former":
                 Contact.objects.filter(pk=self.client.pk).update(
                     client_status="Current"
                 )

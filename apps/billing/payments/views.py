@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponse, get_object_or_404, render
 
@@ -55,7 +57,12 @@ def payments_add(request):
 def payments_delete(_, pk):
     Payment.objects.get(pk=pk).delete()
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps({"paymentsChanged": "", "matterLedgerChanged": ""})
+        },
+    )
 
 
 @login_required
@@ -73,7 +80,14 @@ def payments_edit(request, pk):
         if form.is_valid():
             form.save()
 
-            return HttpResponse(status=204, headers={"HX-Trigger": "paymentsChanged"})
+            return HttpResponse(
+                status=204,
+                headers={
+                    "HX-Trigger": json.dumps(
+                        {"paymentsChanged": "", "matterLedgerChanged": ""}
+                    )
+                },
+            )
     else:
         form = PaymentForm(instance=payment, use_required_attribute=False)
 

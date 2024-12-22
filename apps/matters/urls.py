@@ -159,6 +159,7 @@ urlpatterns = [
         name="filter-quick-status",
     ),
     # Ledger
-    path("matters/<int:id>/ledger", ledger.index, name="ledger"),
+    path("matters/<int:id>/ledger/", ledger.ledger_index, name="ledger"),
+    path("matters/<int:id>/ledger/list/", ledger.ledger_list, name="ledger-list"),
     path("matters/<int:pk>/ledger/pdf/", ledger.ledger_pdf, name="ledger-pdf"),
 ]
