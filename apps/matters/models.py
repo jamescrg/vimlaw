@@ -25,6 +25,29 @@ class Matter(models.Model):
     class Meta:
         db_table = "app_matter"
 
+    def save(self, *args, **kwargs):
+        if self.status == "Closed":
+            from apps.matters.proceedings.models import Proceeding
+
+            # Mark all proceedings as concluded when matter is closed
+            Proceeding.objects.filter(matter=self).update(status="Concluded")
+
+            # Mark client as former if client has no open matters
+            if (
+                not Matter.objects.filter(client=self.client, status="Open")
+                .exclude(pk=self.pk)
+                .exists()
+            ):
+                Contact.objects.filter(pk=self.client.pk).update(client_status="Former")
+        elif self.status == "Open":
+            # Mark client as current if the matter was reopened
+            if self.client.client_status == "Former":
+                Contact.objects.filter(pk=self.client.pk).update(
+                    client_status="Current"
+                )
+
+        super().save(*args, **kwargs)
+
     @property
     def value(self):
         from apps.activity.expenses.models import ExpenseEntry

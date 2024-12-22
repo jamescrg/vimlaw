@@ -20,6 +20,7 @@
           <th>Case No</th>
           <th>Forum and Description</th>
           <th>Status</th>
+          <th class="primary">Primary</th>
         </tr>
         {% for proceeding in proceedings %}
           <tr>
@@ -36,6 +37,13 @@
                  data-bs-target="#htmx-modal-container">{{ proceeding.forum }}</a>
             </td>
             <td class="status">{{ proceeding.status }}</td>
+            <td class="center-data">
+              {% if proceeding.primary %}
+                <i class="bi bi-check-circle-fill true-bool"></i>
+              {% else %}
+                <i class="bi bi-x-circle-fill error false-bool"></i>
+              {% endif %}
+            </td>
           </tr>
         {% endfor %}
       {% endif %}

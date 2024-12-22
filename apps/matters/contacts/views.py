@@ -10,7 +10,7 @@ from apps.matters.proceedings.models import Proceeding
 @login_required
 def index(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
 
     relationship_groups = load_contacts(matter)
 

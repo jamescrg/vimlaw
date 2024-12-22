@@ -16,7 +16,7 @@ from apps.matters.timeline.models import Fact
 def timeline_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
     facts = Fact.objects.filter(matter=matter.id).order_by("date")
 
     context = {

@@ -14,7 +14,7 @@ from apps.matters.settlement.models import SettlementEntry
 def settlement_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
     entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
 
     context = {

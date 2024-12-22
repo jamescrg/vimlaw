@@ -170,6 +170,10 @@ def edit(request, id):
     else:
         form = MatterForm(instance=matter)
         client_list = Contact.objects.filter(client_status="Current").order_by("name")
+
+        if matter.client:
+            client_list |= Contact.objects.filter(pk=matter.client.pk)
+
         form.fields["client"].queryset = client_list
 
     context = {

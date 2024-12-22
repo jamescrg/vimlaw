@@ -6,12 +6,12 @@ from apps.matters.proceedings.models import Proceeding
 class ProceedingForm(forms.ModelForm):
     class Meta:
         model = Proceeding
-
         fields = (
             "date_filed",
             "forum",
             "case_number",
             "status",
+            "primary",
         )
 
         STATUSES = (

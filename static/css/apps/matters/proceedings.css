@@ -21,6 +21,10 @@ Display
   width: 120px;
 }
 
+.proceedings-list .primary {
+  width: 100px;
+}
+
 
 /*------------------------------------------------
 Form

@@ -5,7 +5,7 @@ from apps.matters.proceedings.models import Proceeding
 
 
 def get_event_data(matter):
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
     pending_events = Event.objects.filter(matter=matter, status="Pending").order_by(
         "date"
     )

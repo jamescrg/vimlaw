@@ -13,8 +13,8 @@ from apps.matters.proceedings.models import Proceeding
 def proceeding_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     proceedings = Proceeding.objects.filter(matter=matter.id).order_by("-id")
+    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
 
     context = {
         "app": "matters",
