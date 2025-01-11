@@ -1,5 +1,10 @@
 from django.db import models
 
+CLIENT_FOLDERS = [
+    {"id": "current", "name": "Current"},
+    {"id": "former", "name": "Former"},
+]
+
 
 class Folder(models.Model):
     id = models.BigAutoField(primary_key=True)

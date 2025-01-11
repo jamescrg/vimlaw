@@ -2,6 +2,20 @@
   <div class="folders">
     <div class="toolbar">
       <div class="toolbar-left">
+        <h1>Client Status</h1>
+      </div>
+    </div>
+    <ul class="list-group">
+      {% for folder in client_folders %}
+        {% include "folders/folder.html" %}
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<div class="section">
+  <div class="folders">
+    <div class="toolbar">
+      <div class="toolbar-left">
         <h1>Folders</h1>
       </div>
       <div class="toolbar-right">

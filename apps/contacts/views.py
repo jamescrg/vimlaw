@@ -5,7 +5,7 @@ import apps.contacts.google as google
 from apps.contacts.contacts import get_list_data
 from apps.contacts.forms import ContactForm
 from apps.contacts.models import Contact
-from apps.folders.models import Folder
+from apps.folders.models import CLIENT_FOLDERS, Folder
 from apps.intakes.models import Intake
 from apps.matters.models import Matter, Relationship, Role
 from config.helpers import format_phone
@@ -21,8 +21,14 @@ def contact_index(request):
 def select(request, id):
     contact = get_object_or_404(Contact, pk=id)
 
-    if not contact.folder:
-        request.session["contacts_selected_folder_id"] = 0
+    # Real folder from database
+    contact_folder_id = request.session.get("contacts_selected_folder_id", "unsorted")
+
+    # Client Status folders
+    client_folder_id = request.session.get("contacts_selected_client_folder_id")
+
+    if client_folder_id:
+        request.session["contacts_selected_folder_id"] = contact_folder_id
     else:
         request.session["contacts_selected_folder_id"] = contact.folder.id
 
@@ -35,7 +41,13 @@ def select(request, id):
 def add(request):
     folders = Folder.objects.filter(app="contacts").order_by("name")
 
-    if request.session.get("contacts_selected_folder_id"):
+    contact_folder_id = request.session.get("contacts_selected_folder_id")
+
+    client_folder_id = request.session.get("contacts_selected_client_folder_id")
+
+    if client_folder_id:
+        selected_folder = None
+    elif contact_folder_id:
         selected_folder_id = request.session["contacts_selected_folder_id"]
         selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
     else:
@@ -89,6 +101,7 @@ def add(request):
         "folders": folders,
         "selected_folder": selected_folder,
         "form": form,
+        "client_folders": CLIENT_FOLDERS,
     }
 
     return render(request, "contacts/content-form.html", context)
@@ -98,7 +111,13 @@ def add(request):
 def edit(request, id):
     folders = Folder.objects.filter(app="contacts").order_by("name")
 
-    if request.session.get("contacts_selected_folder_id"):
+    contact_folder_id = request.session.get("contacts_selected_folder_id")
+
+    client_folder_id = request.session.get("contacts_selected_client_folder_id")
+
+    if client_folder_id:
+        selected_folder = None
+    elif contact_folder_id:
         selected_folder_id = request.session["contacts_selected_folder_id"]
         selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
     else:
@@ -155,6 +174,7 @@ def edit(request, id):
         "contact": contact,
         "google_connected": google_connected,
         "form": form,
+        "client_folders": CLIENT_FOLDERS,
     }
 
     return render(request, "contacts/content-form.html", context)

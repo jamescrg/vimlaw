@@ -12,8 +12,14 @@ def list(request):
 
 
 @login_required
-def select(request, folder_id):
-    request.session["contacts_selected_folder_id"] = folder_id
+def select(request, folder_id, folder_type):
+    if folder_type == "current" or folder_type == "former":
+        request.session["contacts_selected_client_folder_id"] = folder_id
+        request.session["contacts_selected_folder_id"] = None
+    else:
+        request.session["contacts_selected_folder_id"] = folder_id
+        request.session["contacts_selected_client_folder_id"] = None
+
     return redirect("contacts:contact-index")
 
 
