@@ -257,7 +257,7 @@ def quick_invoice_payment(request, pk, payment_type):
                 contact=invoice.matter.client,
                 date=current_date,
                 type="Withdrawal",
-                amount=invoice_value,
+                amount=payment.amount,
                 description=f"Invoice {invoice.id}",
             )
 
