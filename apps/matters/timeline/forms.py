@@ -9,6 +9,7 @@ class FactForm(forms.ModelForm):
 
         fields = (
             "date",
+            "time",
             "description",
             "citation",
             "emphasis",
@@ -21,5 +22,6 @@ class FactForm(forms.ModelForm):
 
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
+            "time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
             "emphasis": forms.Select(choices=EMPHASIS_OPTIONS),
         }

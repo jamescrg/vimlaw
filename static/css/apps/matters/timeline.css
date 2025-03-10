@@ -9,6 +9,10 @@ Display
   width: 100%;
 }
 
+.timeline-list .date {
+  width: 120px;
+}
+
 .timeline-list .time {
   width: 120px;
 }
