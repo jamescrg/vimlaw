@@ -38,7 +38,7 @@ def get_table_data(request):
     request.session.modified = True
 
     pagination = CustomPaginator(
-        events, per_page=4, request=request, session_key="events_pagination"
+        events, per_page=10, request=request, session_key="events_pagination"
     )
 
     table_data["pagination"] = pagination
