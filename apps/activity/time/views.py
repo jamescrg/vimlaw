@@ -77,7 +77,8 @@ def time_filter(request):
 
 @login_required
 def time_filter_matter(request, matter_id):
-    filter_data = request.session.get("time_filter", {})
+    time_filter_data = request.session.get("time_filter", {})
+    expenses_filter_data = request.session.get("expenses_filter", {})
 
     new_values = {
         "date_min": "",
@@ -88,14 +89,18 @@ def time_filter_matter(request, matter_id):
         "comp": None,
         "entered": None,
         "invoice": None,
+        "order_by": "date",
     }
 
     for key, val in new_values.items():
-        filter_data[key] = val
+        time_filter_data[key] = val
+        expenses_filter_data[key] = val
 
-    filter_data["matter"] = matter_id
+    time_filter_data["matter"] = matter_id
+    expenses_filter_data["matter"] = matter_id
 
-    request.session["time_filter"] = filter_data
+    request.session["time_filter"] = time_filter_data
+    request.session["expenses_filter"] = expenses_filter_data
 
     return redirect("activity:time-index")
 
