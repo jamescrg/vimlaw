@@ -21,7 +21,7 @@ def get_invoice_data(request):
     total = total_fees + total_expenses
 
     pagination = CustomPaginator(
-        invoices, per_page=10, request=request, session_key="invoices_pagination"
+        invoices, per_page=20, request=request, session_key="invoices_pagination"
     )
 
     selected_status = filter_data.get("status", "") if filter_data else ""
