@@ -55,7 +55,7 @@
   background: var(--stone-25);
   color: var(--stone-600);
   padding-left: 10px;
-  width: 400px;
+  width: 550px;
 }
 
 .tasks-add-quick-input::placeholder {
