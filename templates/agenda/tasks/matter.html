@@ -1,0 +1,23 @@
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">
+    {% if task.matter %}
+      {{ task.matter_display_name|default:"Admin" }}
+    {% else %}
+      Admin
+    {% endif %}
+  </button>
+  <ul class="dropdown-menu">
+    {% for matter in matters %}
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-swap="outerHTML"
+           hx-get="{% url 'agenda:tasks-task-matter' task_id=task.id matter_id=matter.id %}"
+           hx-target="closest .dropdown">{{ matter.name }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
