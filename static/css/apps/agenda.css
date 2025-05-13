@@ -54,9 +54,10 @@
 .tasks-add-quick-input {
   background: var(--stone-25);
   color: var(--stone-600);
-  padding-left: 10px;
+  padding: 6px 10px;
   width: 550px;
 }
+
 
 .tasks-add-quick-input::placeholder {
   color: var(--stone-300);
@@ -113,6 +114,13 @@ th.priority .bi-caret-up {
 }
 
 .tasks-table .date {
+  width: 150px;
+}
+
+.task-date {
+  background: none;
+  margin: 0;
+  padding: 0;
   width: 120px;
 }
 

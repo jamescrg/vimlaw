@@ -55,11 +55,7 @@ urlpatterns = [
         tasks_matter,
         name="tasks-task-matter",
     ),
-    path(
-        "agenda/tasks/<int:task_id>/task-date/<int:amount>",
-        tasks_date,
-        name="tasks-task-date",
-    ),
+    path("agenda/tasks/<int:task_id>/task-date", tasks_date, name="tasks-date"),
     path("agenda/tasks/filter/", tasks_filter, name="tasks-filter"),
     path("agenda/tasks/clear/", clear_tasks, name="tasks-clear"),
     path("agenda/tasks/list/", tasks_list, name="tasks-list"),

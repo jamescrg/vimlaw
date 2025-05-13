@@ -134,13 +134,7 @@
         </td>
         <td class="user {% if task.status == 'Complete' %}complete{% endif %}">{% include "agenda/tasks/user.html" %}</td>
         <td class="date {% if task.status == 'Complete' %}complete{% endif %}">
-          <a href="#"
-             hx-get="/agenda/tasks/{{ task.id }}/edit"
-             hx-target="#htmx-modal-container"
-             hx-trigger="click"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"
-             hx-swap="innerHTML">{{ task.date_due|date:'Y-m-d' }}</a>
+          {% include "agenda/tasks/date-display.html" %}
         </td>
         <td class="priority {% if task.status == 'Complete' %}complete{% endif %}">
           {% include "agenda/tasks/priority.html" %}
