@@ -15,7 +15,6 @@ class MatterForm(forms.ModelForm):
             "description",
             "practice_area",
             "firm",
-            "clio_matter_id",
             "client_reference_id",
         )
 
