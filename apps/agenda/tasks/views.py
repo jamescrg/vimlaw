@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -272,11 +272,23 @@ def tasks_priority(request, task_id, priority):
 
 
 @login_required
-def tasks_date(request, task_id, amount):
+def tasks_date(request, task_id):
     task = get_object_or_404(Task, pk=task_id)
-    task.date_due += timedelta(days=amount)
-    task.save()
-    return redirect("agenda:tasks-list")
+
+    if request.method == "POST":
+        date_due = datetime.strptime(request.POST["date_due"], "%Y-%m-%d")
+        task.date_due = date_due
+        task.save()
+        context = {
+            "task": task,
+        }
+        return render(request, "agenda/tasks/date-display.html", context)
+
+    else:
+        context = {
+            "task": task,
+        }
+        return render(request, "agenda/tasks/date-edit.html", context)
 
 
 @login_required
