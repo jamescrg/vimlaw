@@ -4,12 +4,13 @@
           data-bs-toggle="dropdown"
           aria-expanded="false">{{ task.priority }}</button>
   <ul class="dropdown-menu">
-    {% for i in '123456789'|make_list %}
+    {% for i in '12345'|make_list %}
       <li>
         <a class="dropdown-item"
            href="#"
+           hx-swap="outerHTML"
            hx-get="{% url 'agenda:tasks-task-priority' task_id=task.id priority=forloop.counter %}"
-           hx-target="#tasks">{{ forloop.counter }}</a>
+           hx-target="closest .dropdown">{{ forloop.counter }}</a>
       </li>
     {% endfor %}
   </ul>

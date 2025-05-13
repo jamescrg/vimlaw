@@ -265,7 +265,10 @@ def tasks_priority(request, task_id, priority):
     task = get_object_or_404(Task, pk=task_id)
     task.priority = priority
     task.save()
-    return redirect("agenda:tasks-list")
+    context = {
+        "task": task,
+    }
+    return render(request, "agenda/tasks/priority.html", context)
 
 
 @login_required

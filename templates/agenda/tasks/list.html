@@ -91,14 +91,6 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th class="priority">
-        <button class="btn-sort btn-task-status"
-                hx-target="#tasks"
-                hx-swap="innerHTML"
-                hx-post="{% url 'agenda:tasks-filter-sort' 'priority' %}">
-          <i class="bi bi-caret-up"></i>
-        </button>
-      </th>
       <th>
         User
         <button class="btn-sort"
@@ -117,6 +109,14 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
+      <th class="priority">
+        <button class="btn-sort btn-task-status"
+                hx-target="#tasks"
+                hx-swap="innerHTML"
+                hx-post="{% url 'agenda:tasks-filter-sort' 'priority' %}">
+          <i class="bi bi-caret-up"></i>
+        </button>
+      </th>
     </tr>
     {% for task in objects %}
       <tr>
@@ -132,9 +132,6 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
-        <td class="priority {% if task.status == 'Complete' %}complete{% endif %}">
-          {% include "agenda/tasks/priority.html" %}
-        </td>
         <td class="user {% if task.status == 'Complete' %}complete{% endif %}">{% include "agenda/tasks/user.html" %}</td>
         <td class="date {% if task.status == 'Complete' %}complete{% endif %}">
           <a href="#"
@@ -144,6 +141,9 @@
              data-bs-toggle="modal"
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.date_due|date:'Y-m-d' }}</a>
+        </td>
+        <td class="priority {% if task.status == 'Complete' %}complete{% endif %}">
+          {% include "agenda/tasks/priority.html" %}
         </td>
       </tr>
     {% endfor %}
