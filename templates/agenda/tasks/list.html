@@ -1,6 +1,12 @@
 <div class="toolbar">
   <div class="toolbar-left">
     <div class="filter-tools">
+      <button hx-get="{% url 'agenda:tasks-add' %}"
+              hx-target="#htmx-modal-container"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="bi bi-plus-lg"></i>
+      </button>
       <button type="button"
               class="btn-icon"
               hx-get="{% url 'agenda:tasks-filter' %}"
@@ -48,7 +54,7 @@
 <div class="toolbar">
   <input type="text"
          class="tasks-add-quick-input"
-         placeholder=" + Add Task"
+         placeholder=" + Quick Task"
          autofocus
          name="description"
          hx-post="{% url 'agenda:tasks-add-quick' %}"
@@ -115,11 +121,7 @@
     {% for task in objects %}
       <tr>
         <td class="status">{% include "agenda/tasks/status.html" %}</td>
-        <td class="matter {% if task.status == 'Complete' %}complete{% endif %}">
-          {% if task.matter %}
-            <a href={% url 'matters:detail' id=task.matter.id %}>{{ task.matter_first_name|slice:"0:10" }}</a>
-          {% endif %}
-        </td>
+        <td class="matter {% if task.status == 'Complete' %}complete{% endif %}">{% include "agenda/tasks/matter.html" %}</td>
         <td id="task-description"
             class="description {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
           <a href="#"

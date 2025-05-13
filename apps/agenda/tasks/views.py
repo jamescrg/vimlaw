@@ -286,6 +286,21 @@ def tasks_user(request, task_id, user):
 
 
 @login_required
+def tasks_matter(request, task_id, matter_id):
+    task = get_object_or_404(Task, pk=task_id)
+    matter = get_object_or_404(Matter, pk=matter_id)
+    matters = Matter.objects.filter(status="Open").order_by("name")
+    task.matter = matter
+    task.save()
+    context = {
+        "task": task,
+        "matter": matter,
+        "matters": matters,
+    }
+    return render(request, "agenda/tasks/matter.html", context)
+
+
+@login_required
 def tasks_filter_sort(request, order):
     filter_data = request.session.get("tasks_filter", {})
     filter_data["order_by"] = order

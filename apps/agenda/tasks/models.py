@@ -22,5 +22,13 @@ class Task(models.Model):
         db_table = "app_task"
 
     @property
-    def matter_first_name(self):
-        return self.matter.name.split(" ")[0]
+    def matter_display_name(self):
+        if self.matter:
+            full_name = self.matter.name
+            short_name = self.matter.name[0:15]
+            display_name = short_name
+            if len(full_name) > len(short_name):
+                display_name = short_name + " ..."
+            return display_name
+        else:
+            return "Admin"
