@@ -13,7 +13,9 @@
                 hx-get="{% url 'agenda:events-filter' %}"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">Filter</button>
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-filter"></i> &nbsp;Filter
+        </button>
         <a href="#"
            hx-post="{% url 'agenda:events-filter-quick' 'events-pending' %}">Pending</a>
       </div>

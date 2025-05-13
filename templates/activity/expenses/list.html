@@ -13,7 +13,9 @@
                 hx-target="#htmx-modal-container"
                 class="{% if filter_label == "custom" %}toggle-active{% endif %}"
                 data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">Filter</button>
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-filter"></i> &nbsp;Filter
+        </button>
         <a href="#"
            class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
            hx-post="{% url 'activity:expenses-filter-quick' 'unbilled' %}">Unbilled</a>

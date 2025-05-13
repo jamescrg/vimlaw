@@ -45,6 +45,7 @@
 
 .bi-square,
 .bi-caret-up,
-.bi-check-square {
+.bi-check-square,
+.bi-exclamation-square {
   color: var(--stone-400);
 }

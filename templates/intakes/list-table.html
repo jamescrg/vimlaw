@@ -13,7 +13,9 @@
           <button hx-get="/intakes/filter-intakes"
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">Filter</button>
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-filter"></i> &nbsp;Filter
+          </button>
           <button href="#"
                   class="{% if filter_label == "all" %} toggle-active {% endif %}"
                   hx-post="{% url 'intakes:quick-filter-all' %}">All</button>
