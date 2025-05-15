@@ -51,16 +51,6 @@
     </button>
   </div>
 </div>
-<div class="toolbar">
-  <input type="text"
-         class="tasks-add-quick-input"
-         placeholder=" + Quick Task"
-         autofocus
-         name="description"
-         hx-post="{% url 'agenda:tasks-add-quick' %}"
-         hx-trigger="keyup[keyCode==13]">
-</input>
-</div>
 <div class="tasks-add-quick"></div>
 <div class="table-container table-responsive-xl">
   <table class="table tasks-table">
