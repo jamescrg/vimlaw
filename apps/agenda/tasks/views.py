@@ -136,6 +136,7 @@ def tasks_edit(request, id):
     if task.matter and task.matter not in matter_list:
         matter_list |= Matter.objects.filter(pk=task.matter.id)
     form.fields["matter"].queryset = matter_list
+    form.fields["matter"].empty_label = "Admin"
     users = CustomUser.objects.filter(is_active=True).order_by("username")
     form.fields["user"].queryset = users
 
