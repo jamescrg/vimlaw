@@ -15,19 +15,22 @@ class TasksOrderingFilter(django_filters.OrderingFilter):
         if value in (None, ""):
             return qs
         ordering = [self.get_ordering_value(param) for param in value]
-        if ordering[0] == "matter":
-            return qs.order_by(
-                "-status", "matter", "date_due", "priority", "description"
-            )
-        if ordering[0] == "description":
-            return qs.order_by("-status", "description")
-        if ordering[0] == "user":
-            return qs.order_by("-status", "user", "date_due", "priority")
-        if ordering[0] == "date_due":
-            return qs.order_by("-status", "date_due", "priority")
-        if ordering[0] == "priority":
-            return qs.order_by("-status", "priority", "date_due")
-        return qs.order_by("-status", *ordering)
+        try:
+            if ordering[0] == "matter":
+                return qs.order_by(
+                    "-status", "matter", "date_due", "priority", "description"
+                )
+            if ordering[0] == "description":
+                return qs.order_by("-status", "description")
+            if ordering[0] == "user":
+                return qs.order_by("-status", "user", "date_due", "priority")
+            if ordering[0] == "date_due":
+                return qs.order_by("-status", "date_due", "priority")
+            if ordering[0] == "priority":
+                return qs.order_by("-status", "priority", "date_due")
+            return qs.order_by("-status", *ordering)
+        except IndexError:
+            return qs.order_by("-status", *ordering)
 
 
 class TasksFilter(django_filters.FilterSet):
