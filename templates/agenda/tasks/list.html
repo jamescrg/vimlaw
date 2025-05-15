@@ -37,15 +37,6 @@
       </select>
     </div>
   </div>
-  <div class="toolbar-right" hx-target="#tasks-table" hx-swap="#outerHTML">
-    <button type="button"
-            class="btn-icon"
-            hx-post="{% url 'agenda:tasks-clear' %}"
-            hx-target="#tasks"
-            hx-swap="innerHTML">
-      <i class="bi bi-trash3"></i> &nbsp;Clear Complete
-    </button>
-  </div>
 </div>
 <div class="tasks-add-quick"></div>
 <div class="table-container table-responsive-xl">
