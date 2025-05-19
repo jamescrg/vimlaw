@@ -188,7 +188,7 @@ def tasks_filter_quick(request, quick_filter):
     filter_data = request.session.get("tasks_filter", {})
     quick_filters = {
         "today": {
-            "status": None,
+            "status": "Pending",
             "date_due_max": date.today().strftime("%Y-%m-%d"),
             "matter": filter_data.get("matter"),
             "user": filter_data.get("user"),
@@ -196,7 +196,7 @@ def tasks_filter_quick(request, quick_filter):
             "filter_label": "today",
         },
         "week": {
-            "status": None,
+            "status": "Pending",
             "date_due_max": end_of_week,
             "matter": filter_data.get("matter"),
             "user": filter_data.get("user"),
