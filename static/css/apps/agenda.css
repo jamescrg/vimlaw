@@ -110,14 +110,15 @@ th.priority .bi-caret-up {
 }
 
 .tasks-table .date {
-  width: 150px;
+  width: 170px;
 }
 
 .task-date {
   background: none;
+  border: none;
   margin: 0;
   padding: 0;
-  width: 120px;
+  width: 140px;
 }
 
 .tasks-table .priority i {
