@@ -20,7 +20,7 @@ class TasksOrderingFilter(django_filters.OrderingFilter):
             if ordering[0] == "matter":
                 return qs.order_by(
                     "-status",
-                    "matter",
+                    "matter__name",
                     F("date_due").asc(nulls_first=True),
                     "priority",
                     "description",
