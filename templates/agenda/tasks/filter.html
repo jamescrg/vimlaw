@@ -16,11 +16,7 @@
         <br />
         <div class="flex-center-space limited-width">
           <button type="submit" class="submit">Apply</button>
-          <button class="btn-icon button-link"
-                  hx-target="#htmx-modal-container"
-                  hx-get="{% url 'management:clear-filters' session_key='tasks_filter' trigger='tasksListChanged' %}">
-            Restore Defaults
-          </button>
+          <a href="{% url 'agenda:tasks-filter-default' %}">Restore Defaults</a>
         </div>
       </form>
     </div>

@@ -187,15 +187,6 @@ def tasks_filter_quick(request, quick_filter):
     end_of_week = end_of_week.strftime("%Y-%m-%d")
     filter_data = request.session.get("tasks_filter", {})
     quick_filters = {
-        "default": {
-            "filter_label": "default",
-            "status": "Pending",
-            "date_due_max": None,
-            "date_due_min": None,
-            "matter": None,
-            "user": filter_data.get("user"),
-            "order_by": "priority",
-        },
         "today": {
             "filter_label": "today",
             "status": "Pending",
@@ -228,6 +219,22 @@ def tasks_filter_user(request):
     filter_data["user"] = user
     request.session["tasks_filter"] = filter_data
     return redirect("agenda:tasks-list")
+
+
+@login_required
+def tasks_filter_default(request):
+    filter_data = {
+        "filter_label": "default",
+        "status": "Pending",
+        "date_due_max": None,
+        "date_due_min": None,
+        "matter": None,
+        "user": request.user.id,
+        "order_by": "priority",
+    }
+    request.session["tasks_filter"] = filter_data
+    request.session.modified = True
+    return redirect("agenda:tasks-index")
 
 
 @login_required
