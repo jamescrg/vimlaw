@@ -26,7 +26,10 @@ def get_list_data(request):
     elif contact_folder_id:
         # Fetch real folder if real folder is selected
         selected_folder_id = request.session["contacts_selected_folder_id"]
-        selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
+        if selected_folder_id == "unsorted":
+            selected_folder = None
+        else:
+            selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
     else:
         # Case: No folder is selected
         selected_folder = None

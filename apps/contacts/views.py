@@ -19,7 +19,6 @@ def contact_index(request):
 
 @login_required
 def select(request, id):
-    contact = get_object_or_404(Contact, pk=id)
 
     # Real folder from database
     contact_folder_id = request.session.get("contacts_selected_folder_id", "unsorted")
@@ -28,9 +27,9 @@ def select(request, id):
     client_folder_id = request.session.get("contacts_selected_client_folder_id")
 
     if client_folder_id:
-        request.session["contacts_selected_folder_id"] = contact_folder_id
+        request.session["contacts_selected_folder_id"] = client_folder_id
     else:
-        request.session["contacts_selected_folder_id"] = contact.folder.id
+        request.session["contacts_selected_folder_id"] = contact_folder_id
 
     request.session["selected_contact_id"] = id
 
