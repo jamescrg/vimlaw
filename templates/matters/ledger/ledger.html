@@ -55,6 +55,7 @@
                 <th class="transaction-type">Type</th>
                 <th>Description</th>
                 <th class="money">Amount</th>
+                <th class="money">Balance</th>
               </tr>
               {% for transaction in transactions %}
                 <tr>
@@ -66,6 +67,7 @@
                   {% else %}
                     <td class="money">${{ transaction.amount|floatformat:2|intcomma }}</td>
                   {% endif %}
+                  <td class="money">${{ transaction.balance|floatformat:2|intcomma }}</td>
                 </tr>
               {% endfor %}
             </table>

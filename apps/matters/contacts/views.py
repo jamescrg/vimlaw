@@ -3,14 +3,25 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.functions.load_contacts import load_contacts
 from apps.contacts.models import Contact
+from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter, Relationship, Role
 from apps.matters.proceedings.models import Proceeding
+from apps.trust.trust import get_confirmed_client_balance
 
 
 @login_required
 def index(request, id):
     matter = get_object_or_404(Matter, pk=id)
     proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
+
+    # Get client trust balance
+    client_trust_balance = 0
+    if matter.client:
+        client_trust_balance = get_confirmed_client_balance(matter.client.id)
+
+    # Get balance due from ledger
+    ledger_data = get_ledger_data(matter)
+    balance_due = ledger_data.get("balance_due", 0)
 
     relationship_groups = load_contacts(matter)
 
@@ -20,6 +31,8 @@ def index(request, id):
         "matter": matter,
         "proceeding": proceeding,
         "relationship_groups": relationship_groups,
+        "client_trust_balance": client_trust_balance,
+        "balance_due": balance_due,
     }
 
     return render(request, "matters/contacts/list.html", context)

@@ -7,23 +7,31 @@ from apps.invoicing.payments.models import Payment
 
 def get_ledger_data(matter):
     transactions = []
-    balance_due = 0
 
-    invoices = Invoice.objects.filter(matter=matter).order_by("date_issued") or None
+    # Only include invoices that should be displayed in ledger (exclude DRAFT and APPROVED)
+    invoices = (
+        Invoice.objects.filter(matter=matter)
+        .exclude(status__in=["DRAFT", "APPROVED"])
+        .order_by("date_issued")
+        or None
+    )
     payments = Payment.objects.filter(matter=matter).order_by("date") or None
     credits = Credit.objects.filter(matter=matter).order_by("date") or None
 
+    # Add invoices to transactions (only SENT, PAID, WAIVED, etc. - not DRAFT or APPROVED)
     if invoices:
         for invoice in invoices:
+            affects_balance = invoice.status in ["SENT", "PAID"]
             invoice_dict = {
                 "id": invoice.id,
                 "date": invoice.date_issued,
                 "transaction_type": "Charge",
                 "description": f"Invoice {invoice.id}",
                 "amount": invoice.value["final_total"],
+                "invoice_status": invoice.status,
+                "affects_balance": affects_balance,
             }
             transactions.append(invoice_dict)
-            balance_due -= invoice.value["final_total"]
 
     if payments:
         for payment in payments:
@@ -33,9 +41,9 @@ def get_ledger_data(matter):
                 "transaction_type": "Credit",
                 "description": f"Payment by {payment.payment_method.lower()}",
                 "amount": payment.amount,
+                "affects_balance": True,  # Payments always affect balance
             }
             transactions.append(payment_dict)
-            balance_due += payment.amount
 
     if credits:
         for credit in credits:
@@ -45,15 +53,27 @@ def get_ledger_data(matter):
                 "transaction_type": "Credit",
                 "description": f"Credit {credit.id}",
                 "amount": credit.amount,
+                "affects_balance": True,  # Credits always affect balance
             }
             transactions.append(credit_dict)
-            balance_due += credit.amount
 
     if transactions:
         transactions = sorted(transactions, key=itemgetter("transaction_type"))
         transactions = sorted(transactions, key=itemgetter("date"))
 
+        # Calculate balance for each transaction (only counting those that affect balance)
+        balance = 0
+        for transaction in transactions:
+            if transaction.get(
+                "affects_balance", True
+            ):  # Default to True for backwards compatibility
+                if transaction["transaction_type"] == "Charge":
+                    balance += transaction["amount"]
+                else:
+                    balance -= transaction["amount"]
+            transaction["balance"] = balance
+
     return {
         "transactions": transactions,
-        "balance_due": -1 * float(balance_due),
+        "balance_due": balance,
     }

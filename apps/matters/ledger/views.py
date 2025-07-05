@@ -9,6 +9,7 @@ from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
+from apps.trust.trust import get_confirmed_client_balance
 
 
 @login_required
@@ -18,11 +19,17 @@ def ledger_index(request, id):
 
     ledger_data = get_ledger_data(matter)
 
+    # Get client trust balance
+    client_trust_balance = 0
+    if matter.client:
+        client_trust_balance = get_confirmed_client_balance(matter.client.id)
+
     context = {
         "app": "matters",
         "subapp": "ledger",
         "matter": matter,
         "proceeding": proceeding,
+        "client_trust_balance": client_trust_balance,
     } | ledger_data
 
     return render(request, "matters/ledger/main.html", context)
@@ -35,11 +42,17 @@ def ledger_list(request, id):
 
     ledger_data = get_ledger_data(matter)
 
+    # Get client trust balance
+    client_trust_balance = 0
+    if matter.client:
+        client_trust_balance = get_confirmed_client_balance(matter.client.id)
+
     context = {
         "app": "matters",
         "subapp": "ledger",
         "matter": matter,
         "proceeding": proceeding,
+        "client_trust_balance": client_trust_balance,
     } | ledger_data
 
     return render(request, "matters/ledger/list.html", context)

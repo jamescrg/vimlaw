@@ -5,11 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
+from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.timeline.forms import FactForm
 from apps.matters.timeline.generate_timeline import generate_timeline
 from apps.matters.timeline.models import Fact
+from apps.trust.trust import get_confirmed_client_balance
 
 
 @login_required
@@ -19,12 +21,23 @@ def timeline_index(request, id):
     proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
     facts = Fact.objects.filter(matter=matter.id).order_by("date")
 
+    # Get client trust balance
+    client_trust_balance = 0
+    if matter.client:
+        client_trust_balance = get_confirmed_client_balance(matter.client.id)
+
+    # Get balance due from ledger
+    ledger_data = get_ledger_data(matter)
+    balance_due = ledger_data.get("balance_due", 0)
+
     context = {
         "app": "matters",
         "subapp": "timeline",
         "matter": matter,
         "proceeding": proceeding,
         "facts": facts,
+        "client_trust_balance": client_trust_balance,
+        "balance_due": balance_due,
     }
 
     return render(request, "matters/timeline/main.html", context)

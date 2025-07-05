@@ -40,7 +40,18 @@
               <i class="bi bi-chevron-expand"></i>
             </a>
           </th>
-          <th class="numeric unbilled">Unbilled</th>
+          <th class="numeric unbilled">
+            Unbilled
+            <a href="#" hx-post={% url 'matters:order-by' 'unbilled' %}>
+              <i class="bi bi-chevron-expand"></i>
+            </a>
+          </th>
+          <th class="numeric balance-due">
+            Balance Due
+            <a href="#" hx-post={% url 'matters:order-by' 'balance_due' %}>
+              <i class="bi bi-chevron-expand"></i>
+            </a>
+          </th>
         </tr>
         {% if matters %}
           {% for matter in matters %}
@@ -57,6 +68,10 @@
             <tr>
               <th>Total Unbilled</th>
               <td class="numeric strong">${{ total_unbilled|floatformat:2|intcomma }}</td>
+            </tr>
+            <tr>
+              <th>Total Balance Due</th>
+              <td class="numeric strong">${{ total_balance_due|floatformat:2|intcomma }}</td>
             </tr>
           </table>
         </div>
