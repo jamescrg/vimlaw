@@ -12,4 +12,5 @@
        hx-get="{% url 'matters:edit-description' matter_id=matter.id %}">{{ matter.description }}</a>
   </td>
   <td class="numeric unbilled">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
+  <td class="numeric balance-due">${{ matter.balance_due|floatformat:2|intcomma }}</td>
 </tr>

@@ -1,0 +1,182 @@
+{% load humanize %}
+{% load static %}
+{% load cache_buster %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" content="" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>{{ client.name }} - Activity Report</title>
+    <link rel="shortcut icon" href={% static 'images/briefcase-fill.svg' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/general.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/invoice.css' %} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+          rel="stylesheet" />
+  </head>
+  <body>
+    <div class="template">
+      <div class="header">
+        <div class="header-left">
+          <div class="header-left-left">
+            <img width="100"
+                 height="auto"
+                 class="cb-logo"
+                 alt="cb_logo"
+                 src="{% static 'images/cb_logo.png' %}" />
+          </div>
+          <div class="header-left-right">
+            <p>
+              CB Legal, <span class="llc">LLC</span>
+            </p>
+            <p>5565 Glenridge Connector</p>
+            <p>Suite 350</p>
+            <p>Atlana, GA 30342</p>
+            <p>(770) 426 - 7740</p>
+            <p>jcraig@cblegal.law</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <p class="text-right">Activity Report</p>
+          <p class="text-right">{{ current_date|date:"Y-m-d" }}</p>
+          <br />
+          <p class="text-right">{{ client.name }}</p>
+          {% if date_from and date_to %}
+            <p class="text-right">{{ date_from|date:"Y-m-d" }} to {{ date_to|date:"Y-m-d" }}</p>
+          {% elif date_from %}
+            <p class="text-right">From {{ date_from|date:"Y-m-d" }}</p>
+          {% elif date_to %}
+            <p class="text-right">Through {{ date_to|date:"Y-m-d" }}</p>
+          {% else %}
+            <p class="text-right">All Activity</p>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Summary Section -->
+      <div class="section">
+        <h3>Activity Summary</h3>
+        <table class="table invoice-totals">
+          <tr>
+            <td>Time Entries</td>
+            <td class="numeric">{{ time_entries_count }} entries</td>
+            <td class="numeric">{{ total_hours|floatformat:1 }} hours</td>
+            <td class="money">${{ total_fees|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td>Expenses</td>
+            <td class="numeric">{{ expense_entries_count }} entries</td>
+            <td class="numeric">-</td>
+            <td class="money">${{ total_expenses|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td class="total">Total Activity</td>
+            <td class="numeric total">{{ time_entries_count|add:expense_entries_count }} entries</td>
+            <td class="numeric total">{{ total_hours|floatformat:1 }} hours</td>
+            <td class="money total">${{ total_fees|add:total_expenses|floatformat:2|intcomma }}</td>
+          </tr>
+        </table>
+      </div>
+      <!-- Time Entries Section -->
+      {% if time_entries_count > 0 %}
+        <div class="section">
+          <h3>Time Entries</h3>
+          <table class="table">
+            <tr>
+              <th class="text-left">Date</th>
+              <th class="text-left">Matter</th>
+              <th class="text-left">Description</th>
+              <th class="text-left">User</th>
+              <th class="text-right">Hours</th>
+              <th class="text-right">Rate</th>
+              <th class="money">Fee</th>
+            </tr>
+            {% for entry in time_entries %}
+              <tr>
+                <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.matter.name|default:"-" }}</td>
+                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }}</td>
+                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.user.username|default:"-" }}</td>
+                <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours|floatformat:1 }}</td>
+                <td class="text-right {% if entry.comp %}comp{% endif %}">
+                  {% if entry.comp %}
+                    comp
+                  {% else %}
+                    ${{ entry.rate }}
+                  {% endif %}
+                </td>
+                <td class="money {% if entry.comp %}comp{% endif %}">
+                  {% if entry.comp %}
+                    comp
+                  {% else %}
+                    ${{ entry.fee|floatformat:2|intcomma }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            <tr>
+              <td colspan="6">Total Time Entries</td>
+              <td class="money">${{ total_fees|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+      <!-- Expenses Section -->
+      {% if expense_entries_count > 0 %}
+        <div class="section">
+          <h3>Expenses</h3>
+          <table class="table">
+            <tr>
+              <th class="text-left">Date</th>
+              <th class="text-left">Matter</th>
+              <th class="text-left">Description</th>
+              <th class="text-left">User</th>
+              <th class="money">Amount</th>
+            </tr>
+            {% for entry in expense_entries %}
+              <tr>
+                <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.matter.name|default:"-" }}</td>
+                <td class="{% if entry.comp %} comp{% endif %}">
+                  {% if entry.category %}{{ entry.category }} -{% endif %}
+                  {{ entry.description }}
+                </td>
+                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.user.username|default:"-" }}</td>
+                <td class="money{% if entry.comp %} comp{% endif %}">
+                  {% if entry.comp %}
+                    comp
+                  {% else %}
+                    ${{ entry.amount|floatformat:2|intcomma }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            <tr>
+              <td colspan="4">Total Expenses</td>
+              <td class="money">${{ total_expenses|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+      <!-- Final Total Section -->
+      <div class="section">
+        <h3>Report Total</h3>
+        <table class="table invoice-totals">
+          <tr>
+            <td>Time Entries</td>
+            <td class="money">${{ total_fees|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td>Expenses</td>
+            <td class="money">${{ total_expenses|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td class="total">Total Activity</td>
+            <td class="money total">${{ total_fees|add:total_expenses|floatformat:2|intcomma }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

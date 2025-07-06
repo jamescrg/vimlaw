@@ -1,0 +1,40 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Filter Clients</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form class="form-responsive filter"
+            hx-target="#htmx-modal-container"
+            hx-post="{% url 'reports:clients-filter' %}">
+        {% csrf_token %}
+        <label for="date_from">From Date:</label>
+        <div>
+          <input type="date"
+                 id="date_from"
+                 name="date_from"
+                 value="{{ filter_data.date_from }}">
+        </div>
+        <label for="date_to">To Date:</label>
+        <div>
+          <input type="date"
+                 id="date_to"
+                 name="date_to"
+                 value="{{ filter_data.date_to }}">
+        </div>
+        <br />
+        <div class="flex-center-space limited-width">
+          <button type="submit" class="submit">Apply</button>
+          <a class="btn-icon"
+             href="#"
+             hx-post="{% url 'management:clear-filters' session_key='clients_filter' trigger='clientsChanged' %}">Restore Defaults</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

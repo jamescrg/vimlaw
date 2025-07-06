@@ -44,7 +44,7 @@
           </div>
           <div>
             {% if edit %}
-              <a class="confirm"
+              <a class="delete-link"
                  href="#!"
                  hx-confirm="Are you sure  you want to delete this record?"
                  hx-delete="{% url 'activity:time-delete' id=entry.id %}"

@@ -30,7 +30,8 @@
             {% if edit %}
               <a hx-confirm='Are you sure you want to delete this record?'
                  href="#"
-                 hx-delete="{% url 'trust:delete' id=transaction.id %}">Delete Transaction</a>
+                 hx-delete="{% url 'trust:delete' id=transaction.id %}"
+                 class="delete-link">Delete Transaction</a>
             {% endif %}
           </div>
         </div>

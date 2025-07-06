@@ -19,17 +19,27 @@ def contact_index(request):
 
 @login_required
 def select(request, id):
+    # Check if coming from reports
+    from_reports = request.GET.get("from") == "reports"
 
-    # Real folder from database
-    contact_folder_id = request.session.get("contacts_selected_folder_id", "unsorted")
-
-    # Client Status folders
-    client_folder_id = request.session.get("contacts_selected_client_folder_id")
-
-    if client_folder_id:
-        request.session["contacts_selected_folder_id"] = client_folder_id
+    if from_reports:
+        # Set client status filter to "current" when coming from reports
+        request.session["contacts_selected_client_folder_id"] = "current"
+        request.session["contacts_selected_folder_id"] = None
     else:
-        request.session["contacts_selected_folder_id"] = contact_folder_id
+        # Normal behavior
+        # Real folder from database
+        contact_folder_id = request.session.get(
+            "contacts_selected_folder_id", "unsorted"
+        )
+
+        # Client Status folders
+        client_folder_id = request.session.get("contacts_selected_client_folder_id")
+
+        if client_folder_id:
+            request.session["contacts_selected_folder_id"] = client_folder_id
+        else:
+            request.session["contacts_selected_folder_id"] = contact_folder_id
 
     request.session["selected_contact_id"] = id
 

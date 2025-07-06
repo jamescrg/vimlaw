@@ -38,7 +38,8 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
     }
 
     html_string = render_to_string("invoicing/invoices/invoice.html", context)
-    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    base_url = request.build_absolute_uri("/").rstrip("/")
+    html = HTML(string=html_string, base_url=base_url)
 
     with NamedTemporaryFile(suffix=".pdf", delete=False) as pdf_file:
         html.write_pdf(target=pdf_file.name)

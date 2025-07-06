@@ -300,7 +300,17 @@ def invoices_add(request):
             .distinct()
             .order_by("name")
         )
+
+        # Create a list of matters with unbilled time for the dropdown
+        matters_with_unbilled = []
+        for matter in matter_list:
+            unbilled_amount = matter.value["unbilled"]["net_fees_and_expenses"]
+            matters_with_unbilled.append(
+                (matter.id, f"{matter.name}\u00A0\u00A0\u00A0(${unbilled_amount:,.2f})")
+            )
+
         form.fields["matter"].queryset = matter_list
+        form.fields["matter"].widget.choices = matters_with_unbilled
 
     return render(request, "invoicing/invoices/form.html", {"form": form})
 

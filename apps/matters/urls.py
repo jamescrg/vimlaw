@@ -162,4 +162,9 @@ urlpatterns = [
     path("matters/<int:id>/ledger/", ledger.ledger_index, name="ledger"),
     path("matters/<int:id>/ledger/list/", ledger.ledger_list, name="ledger-list"),
     path("matters/<int:pk>/ledger/pdf/", ledger.ledger_pdf, name="ledger-pdf"),
+    path(
+        "matters/<int:id>/activity-report/",
+        activity.activity_report,
+        name="activity-report",
+    ),
 ]

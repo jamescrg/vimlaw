@@ -44,12 +44,28 @@
       </table>
       <table>
         <tr>
-          <th>Open Date</th>
-          <td>{{ matter.date_start|date:'Y-m-d' }}</td>
+          <th>Total Cost</th>
+          <td class="numeric">${{ matter.value.total.net_fees_and_expenses|floatformat:2|intcomma }}</td>
         </tr>
         <tr>
-          <th>Practice Area</th>
-          <td>{{ matter.practice_area }}</td>
+          <th>Unbilled</th>
+          <td class="numeric">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
+        </tr>
+      </table>
+      <table>
+        <tr>
+          <th>Trust</th>
+          <td class="numeric">
+            {% if matter.client %}
+              <a href="{% url 'trust:client-index' id=matter.client.id %}">${{ client_trust_balance|floatformat:2|intcomma }}</a>
+            {% else %}
+              ${{ client_trust_balance|floatformat:2|intcomma }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>Balance Due</th>
+          <td class="numeric">${{ balance_due|floatformat:2|intcomma }}</td>
         </tr>
       </table>
       {% if proceeding %}
@@ -61,24 +77,6 @@
           <tr>
             <th>Case No.</th>
             <td>{{ proceeding.case_number }}</td>
-          </tr>
-        </table>
-      {% endif %}
-      <table>
-        <tr>
-          <th>Total Cost</th>
-          <td class="numeric">${{ matter.value.total.net_fees_and_expenses|floatformat:2|intcomma }}</td>
-        </tr>
-        <tr>
-          <th>Unbilled</th>
-          <td class="numeric">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
-        </tr>
-      </table>
-      {% if matter.clio_matter_id %}
-        <table>
-          <tr>
-            <th>Clio No.</th>
-            <td>{{ matter.clio_matter_id|slice:'0:5'|default:'' }}</td>
           </tr>
         </table>
       {% endif %}

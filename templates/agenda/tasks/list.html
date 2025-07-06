@@ -28,7 +28,7 @@
       <select hx-post="{% url 'agenda:tasks-filter-user' %}"
               hx-target="#tasks"
               hx-swap="#outerHTML"
-              class="select-user"
+              class="select-user {% if user_id %}toggle-active{% endif %}"
               name="user">
         <option value="">All</option>
         {% for user in users %}

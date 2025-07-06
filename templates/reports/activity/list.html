@@ -1,0 +1,40 @@
+{% load humanize %}
+<div class="toolbar">
+  <div class="toolbar-left">
+    <h2>Activity Report - Last 6 Months</h2>
+  </div>
+</div>
+<div class="table-container">
+  <table class="table">
+    <tr>
+      <th>User</th>
+      {% for month in months %}<th class="numeric">{{ month }}</th>{% endfor %}
+      <th class="numeric">Total Hours</th>
+    </tr>
+    {% for user_data in activity_data %}
+      <tr>
+        <td>
+          <strong>{{ user_data.user.first_name }} {{ user_data.user.last_name }}</strong>
+        </td>
+        {% for month in user_data.months %}
+          <td class="numeric">
+            {% if month.hours > 0 %}
+              {{ month.hours|floatformat:1 }}h
+              <br>
+              <small class="text-muted">({{ month.entries_count }} entries)</small>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        {% endfor %}
+        <td class="numeric">
+          <strong>{{ user_data.total_hours|floatformat:1 }}h</strong>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="{{ months|length|add:2 }}">No activity data available for the last 6 months.</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
