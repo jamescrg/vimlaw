@@ -1,0 +1,13 @@
+.table-total {
+  border-top: 2px solid var(--stone-400);
+  font-weight: bold;
+}
+
+.table-total td {
+  padding-top: 1rem;
+}
+
+.text-muted {
+  color: var(--stone-400);
+  font-size: 0.9em;
+}

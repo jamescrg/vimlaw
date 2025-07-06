@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="subnav">
+    <ul>
+      <li {% if subapp == "revenue" %}class="active"{% endif %}>
+        <a href="{% url 'reports:revenue-index' %}">Revenue</a>
+      </li>
+      <li {% if subapp == "activity" %}class="active"{% endif %}>
+        <a href="{% url 'reports:activity-index' %}">Activity</a>
+      </li>
+      <li {% if subapp == "clients" %}class="active"{% endif %}>
+        <a href="{% url 'reports:clients-index' %}">Clients</a>
+      </li>
+    </ul>
+  </div>
+  <div class="section subsection">
+    {% block subcontent %}
+    {% endblock subcontent %}
+  </div>
+{% endblock content %}
