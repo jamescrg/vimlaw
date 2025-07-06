@@ -21,3 +21,23 @@ class ClientReportFilter(django_filters.FilterSet):
     class Meta:
         model = Contact
         fields = ["date_from", "date_to"]
+
+
+class ClientDetailFilter(django_filters.FilterSet):
+    client = django_filters.ModelChoiceFilter(
+        queryset=Contact.objects.filter(client_status="Current").order_by("name"),
+        empty_label="Select Client",
+        label="Client",
+    )
+    date_from = django_filters.DateFilter(
+        widget=forms.DateInput(attrs={"type": "date"}),
+        label="From Date",
+    )
+    date_to = django_filters.DateFilter(
+        widget=forms.DateInput(attrs={"type": "date"}),
+        label="To Date",
+    )
+
+    class Meta:
+        model = Contact
+        fields = ["client", "date_from", "date_to"]

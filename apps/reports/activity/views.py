@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.admin.views.decorators import staff_member_required
@@ -13,6 +13,27 @@ from apps.activity.time.models import TimeEntry
 @login_required
 @staff_member_required
 def activity_index(request):
+    # Get filter data from session
+    filter_data = request.session.get("reports_filter", {})
+
+    # Set date filter objects (None means no date filtering)
+    date_from_obj = None
+    date_to_obj = None
+    date_from = filter_data.get("date_from")
+    date_to = filter_data.get("date_to")
+
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
+        except ValueError:
+            date_from = None
+
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
+        except ValueError:
+            date_to = None
+
     # Calculate the last 6 months (oldest to newest)
     today = date.today()
     months = []
@@ -41,12 +62,18 @@ def activity_index(request):
 
         total_hours = 0
         for month_info in months:
-            # Get time entries for this user and month
+            # Get time entries for this user and month with optional filtering
             entries = TimeEntry.objects.filter(
                 user=user,
                 date__year=month_info["year"],
                 date__month=month_info["month"],
             )
+
+            # Apply additional date filtering if specified
+            if date_from_obj:
+                entries = entries.filter(date__gte=date_from_obj)
+            if date_to_obj:
+                entries = entries.filter(date__lte=date_to_obj)
 
             month_hours = entries.aggregate(Sum("hours"))["hours__sum"] or 0
             total_hours += month_hours
@@ -67,6 +94,8 @@ def activity_index(request):
         "subapp": "activity",
         "activity_data": activity_data,
         "months": [m["name"] for m in months],
+        "date_from": date_from,
+        "date_to": date_to,
     }
 
     return render(request, "reports/activity/main.html", context)
@@ -75,6 +104,27 @@ def activity_index(request):
 @login_required
 @staff_member_required
 def activity_list(request):
+    # Get filter data from session
+    filter_data = request.session.get("reports_filter", {})
+
+    # Set date filter objects (None means no date filtering)
+    date_from_obj = None
+    date_to_obj = None
+    date_from = filter_data.get("date_from")
+    date_to = filter_data.get("date_to")
+
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
+        except ValueError:
+            date_from = None
+
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
+        except ValueError:
+            date_to = None
+
     # Calculate the last 6 months (oldest to newest)
     today = date.today()
     months = []
@@ -103,12 +153,18 @@ def activity_list(request):
 
         total_hours = 0
         for month_info in months:
-            # Get time entries for this user and month
+            # Get time entries for this user and month with optional filtering
             entries = TimeEntry.objects.filter(
                 user=user,
                 date__year=month_info["year"],
                 date__month=month_info["month"],
             )
+
+            # Apply additional date filtering if specified
+            if date_from_obj:
+                entries = entries.filter(date__gte=date_from_obj)
+            if date_to_obj:
+                entries = entries.filter(date__lte=date_to_obj)
 
             month_hours = entries.aggregate(Sum("hours"))["hours__sum"] or 0
             total_hours += month_hours
@@ -129,6 +185,8 @@ def activity_list(request):
         "subapp": "activity",
         "activity_data": activity_data,
         "months": [m["name"] for m in months],
+        "date_from": date_from,
+        "date_to": date_to,
     }
 
     return render(request, "reports/activity/list.html", context)

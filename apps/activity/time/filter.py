@@ -1,6 +1,7 @@
 import django_filters
 
 from apps.accounts.models import CustomUser
+from apps.contacts.models import Contact
 from apps.matters.models import Matter
 from config.helpers import MultipleOrderingFilter
 
@@ -20,6 +21,12 @@ class TimeEntryFilter(django_filters.FilterSet):
             "name"
         ),
         empty_label="All",
+    )
+    client = django_filters.ModelChoiceFilter(
+        field_name="matter__client",
+        queryset=Contact.objects.filter(client_status="Current").order_by("name"),
+        empty_label="All Clients",
+        label="Client",
     )
     actions = django_filters.CharFilter(
         lookup_expr="icontains",
@@ -56,4 +63,13 @@ class TimeEntryFilter(django_filters.FilterSet):
 
     class Meta:
         model = TimeEntry
-        fields = ["date", "user", "matter", "actions", "comp", "entered", "invoice"]
+        fields = [
+            "date",
+            "user",
+            "matter",
+            "client",
+            "actions",
+            "comp",
+            "entered",
+            "invoice",
+        ]

@@ -21,4 +21,10 @@ urlpatterns = [
     path("reports/clients/", clients.clients_index, name="clients-index"),
     path("reports/clients/list/", clients.clients_list, name="clients"),
     path("reports/clients/filter/", clients.clients_filter, name="clients-filter"),
+    path("reports/clients/detail/", clients.client_detail, name="client-detail"),
+    path(
+        "reports/clients/detail/filter/",
+        clients.client_detail_filter,
+        name="client-detail-filter",
+    ),
 ]
