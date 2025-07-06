@@ -7,6 +7,7 @@ from apps.invoicing.payments.models import Payment
 
 def get_ledger_data(matter):
     transactions = []
+    balance = 0  # Initialize balance to prevent UnboundLocalError
 
     # Only include invoices that should be displayed in ledger (exclude DRAFT and APPROVED)
     invoices = (
