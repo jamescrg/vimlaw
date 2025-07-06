@@ -29,7 +29,8 @@
             {% if edit %}
               <a hx-confirm='Are you sure you want to delete this record?'
                  href="#"
-                 hx-delete="{% url 'matters:timeline-delete' matter_id=matter.id fact_id=fact.id %}">Delete Fact</a>
+                 hx-delete="{% url 'matters:timeline-delete' matter_id=matter.id fact_id=fact.id %}"
+                 class="delete-link">Delete Fact</a>
             {% endif %}
           </div>
         </div>

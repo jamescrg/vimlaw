@@ -23,6 +23,7 @@
         <div>
           {% if edit %}
             <a onclick="return confirm('Are you sure you want to delete this record?')"
+               class="delete-link"
                href="{% url 'matters:delete' id=matter.id %}">Delete Matter</a>
           {% endif %}
         </div>

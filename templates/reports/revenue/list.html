@@ -1,0 +1,45 @@
+{% load humanize %}
+<div class="toolbar">
+  <div class="toolbar-left">
+    <h2>Revenue Report - Last 6 Months</h2>
+  </div>
+</div>
+<div class="table-container">
+  <table class="table">
+    <tr>
+      <th>Month</th>
+      <th class="numeric">Payments</th>
+      <th class="numeric">Revenue</th>
+    </tr>
+    {% for month_data in revenue_data %}
+      <tr>
+        <td>
+          <strong>{{ month_data.name }}</strong>
+        </td>
+        <td class="numeric">{{ month_data.payments_count }}</td>
+        <td class="numeric">
+          {% if month_data.revenue > 0 %}
+            ${{ month_data.revenue|floatformat:2|intcomma }}
+          {% else %}
+            $0.00
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="3">No revenue data available for the last 6 months.</td>
+      </tr>
+    {% endfor %}
+    <tr class="table-total">
+      <td>
+        <strong>Total</strong>
+      </td>
+      <td class="numeric">
+        <strong>-</strong>
+      </td>
+      <td class="numeric">
+        <strong>${{ total_revenue|floatformat:2|intcomma }}</strong>
+      </td>
+    </tr>
+  </table>
+</div>

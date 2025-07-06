@@ -1,0 +1,52 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Filter Client Activity</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form class="form-responsive filter"
+            hx-target="#htmx-modal-container"
+            hx-post="{% url 'reports:client-detail-filter' %}">
+        {% csrf_token %}
+        <label for="client">Client:</label>
+        <div>
+          <select id="client" name="client" required>
+            <option value="">Select Client</option>
+            {% for client in clients %}
+              <option value="{{ client.id }}"
+                      {% if filter_data.client == client.id|stringformat:"s" %}selected{% endif %}>
+                {{ client.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <label for="date_from">From Date:</label>
+        <div>
+          <input type="date"
+                 id="date_from"
+                 name="date_from"
+                 value="{{ filter_data.date_from }}">
+        </div>
+        <label for="date_to">To Date:</label>
+        <div>
+          <input type="date"
+                 id="date_to"
+                 name="date_to"
+                 value="{{ filter_data.date_to }}">
+        </div>
+        <br />
+        <div class="flex-center-space limited-width">
+          <button type="submit" class="submit">Apply</button>
+          <a class="btn-icon"
+             href="#"
+             hx-post="{% url 'management:clear-filters' session_key='client_detail_filter' trigger='clientDetailChanged' %}">Restore Defaults</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

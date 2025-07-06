@@ -3,7 +3,10 @@
     <div class="toolbar-left">
       <h2>Time Entries</h2>
     </div>
-    <a href="{% url 'activity:time-filter-matter' matter.id %}">View All Activity</a>
+    <div class="toolbar-right">
+      <a href="{% url 'activity:time-filter-matter' matter.id %}">View All Activity</a>
+      <a href="{% url 'matters:activity-report' matter.id %}">Activity Report</a>
+    </div>
   </div>
   <div class="table-container">
     <table class="table matter-activity">

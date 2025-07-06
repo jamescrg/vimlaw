@@ -1,0 +1,122 @@
+{% load humanize %}
+{% load static %}
+{% load cache_buster %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" content="" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>{{ matter.name }} - Activity Report</title>
+    <link rel="shortcut icon" href={% static 'images/briefcase-fill.svg' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/general.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/invoice.css' %} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+          rel="stylesheet" />
+  </head>
+  <body>
+    <div class="template">
+      <div class="header">
+        <div class="header-left">
+          <div class="header-left-left">
+            <img width="100"
+                 height="auto"
+                 class="cb-logo"
+                 alt="cb_logo"
+                 src="{% static 'images/cb_logo.png' %}" />
+          </div>
+          <div class="header-left-right">
+            <p>
+              CB Legal, <span class="llc">LLC</span>
+            </p>
+            <p>5565 Glenridge Connector</p>
+            <p>Suite 350</p>
+            <p>Atlana, GA 30342</p>
+            <p>(770) 426 - 7740</p>
+            <p>jcraig@cblegal.law</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <p class="text-right">Activity Report</p>
+          <p class="text-right">{{ current_date|date:"Y-m-d" }}</p>
+          <br />
+          <p class="text-right">Matter {{ matter.id }}</p>
+          <p class="text-right">"{{ matter.name }}"</p>
+          {% if matter.client_reference_id %}<p class="text-right">{{ matter.client_reference_id }}</p>{% endif %}
+        </div>
+      </div>
+      {% if time_entries %}
+        <div class="section">
+          <h3>Time Entries</h3>
+          <table class="table">
+            <tr>
+              <th class="text-left">Date</th>
+              <th class="text-left">Description</th>
+              <th class="text-right">Hours</th>
+              <th class="text-right">Rate</th>
+              <th class="money">Total</th>
+            </tr>
+            {% for entry in time_entries %}
+              <tr>
+                <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} ({{ entry.user.initials }})</td>
+                <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
+                <td class="text-right {% if entry.comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
+                <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endfor %}
+            <tr>
+              <td colspan="4">Total Time Charges</td>
+              <td class="money">${{ total_time_fees|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+      {% if expenses %}
+        <div class="section">
+          <h3>Expenses</h3>
+          <table class="table">
+            <tr>
+              <th class="date">Date</th>
+              <th>Description</th>
+              <th class="money">Amount</th>
+            </tr>
+            {% for expense in expenses %}
+              <tr>
+                <td class="date{% if expense.comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
+                <td class="{% if expense.comp %} comp{% endif %}">
+                  {% if expense.category %}{{ expense.category }} -{% endif %}
+                  {{ expense.description }}
+                </td>
+                <td class="money{% if expense.comp %} comp{% endif %}">${{ expense.amount|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endfor %}
+            <tr>
+              <td colspan="2">Total Expenses</td>
+              <td class="money">${{ total_expenses|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+      <div class="section">
+        <h3>Matter Total</h3>
+        <table class="table invoice-totals">
+          <tr>
+            <td>Time Charges</td>
+            <td class="money">${{ total_time_fees|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td>Expenses</td>
+            <td class="money">${{ total_expenses|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td class="total">Matter Total</td>
+            <td class="money total">${{ matter_total|floatformat:2|intcomma }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

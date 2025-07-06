@@ -1,0 +1,98 @@
+{% load humanize %}
+<div class="toolbar">
+  <div class="toolbar-left">
+    <h2>Client Report - Current Clients</h2>
+    <div class="filter-tools">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'reports:clients-filter' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="bi bi-funnel"></i> Filter
+      </button>
+    </div>
+  </div>
+</div>
+<div class="table-container">
+  <table class="table">
+    <tr>
+      <th>
+        Client
+        <a href="?sort=client_name&direction={% if current_sort == 'client_name' and current_direction == 'asc' %}desc{% else %}asc{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+          <i class="bi bi-chevron-expand"></i>
+        </a>
+      </th>
+      <th class="numeric">
+        Hours
+        <a href="?sort=total_hours&direction={% if current_sort == 'total_hours' and current_direction == 'desc' %}asc{% else %}desc{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+          <i class="bi bi-chevron-expand"></i>
+        </a>
+      </th>
+      <th class="numeric">
+        Fees
+        <a href="?sort=total_fees&direction={% if current_sort == 'total_fees' and current_direction == 'desc' %}asc{% else %}desc{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+          <i class="bi bi-chevron-expand"></i>
+        </a>
+      </th>
+      <th class="numeric">
+        Invoices
+        <a href="?sort=total_invoices&direction={% if current_sort == 'total_invoices' and current_direction == 'desc' %}asc{% else %}desc{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+          <i class="bi bi-chevron-expand"></i>
+        </a>
+      </th>
+      <th class="numeric">
+        Payments
+        <a href="?sort=total_payments&direction={% if current_sort == 'total_payments' and current_direction == 'desc' %}asc{% else %}desc{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+          <i class="bi bi-chevron-expand"></i>
+        </a>
+      </th>
+    </tr>
+    {% for client_info in client_data %}
+      <tr>
+        <td>
+          <a href="{% url 'contacts:select' id=client_info.client.id %}?from=reports">{{ client_info.client.name }}</a>
+        </td>
+        <td class="numeric">
+          {% if client_info.total_hours > 0 %}
+            {{ client_info.total_hours|floatformat:1 }}h
+            <br>
+            <small class="text-muted">({{ client_info.time_entries_count }} entries)</small>
+          {% else %}
+            -
+          {% endif %}
+        </td>
+        <td class="numeric">
+          {% if client_info.total_fees > 0 %}
+            ${{ client_info.total_fees|floatformat:2|intcomma }}
+          {% else %}
+            $0.00
+          {% endif %}
+        </td>
+        <td class="numeric">
+          {% if client_info.total_invoices > 0 %}
+            ${{ client_info.total_invoices|floatformat:2|intcomma }}
+            <br>
+            <small class="text-muted">({{ client_info.invoices_count }} invoices)</small>
+          {% else %}
+            $0.00
+          {% endif %}
+        </td>
+        <td class="numeric">
+          {% if client_info.total_payments > 0 %}
+            ${{ client_info.total_payments|floatformat:2|intcomma }}
+            <br>
+            <small class="text-muted">({{ client_info.payments_count }} payments)</small>
+          {% else %}
+            $0.00
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="5">No current clients found.</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>

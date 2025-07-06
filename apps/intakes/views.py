@@ -100,7 +100,7 @@ def detail_index(request, id):
     # get the intake
     intake = get_object_or_404(Intake, pk=id)
 
-    notes = Note.objects.filter(intake=intake).order_by("-date", "-id")
+    notes = Note.objects.filter(intake=intake).order_by("-date", "-time")
     for note in notes:
         note.details = markdown.markdown(note.details)
 
@@ -127,7 +127,7 @@ def detail(request, id):
     # get the intake
     intake = get_object_or_404(Intake, pk=id)
 
-    notes = Note.objects.filter(intake=intake).order_by("-date", "-id")
+    notes = Note.objects.filter(intake=intake).order_by("-date", "-time")
     for note in notes:
         note.details = markdown.markdown(note.details)
 

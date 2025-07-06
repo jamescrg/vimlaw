@@ -1,0 +1,141 @@
+{% load humanize %}
+<div class="toolbar">
+  <div class="toolbar-left">
+    <h2>Client Activity Detail</h2>
+    <div class="filter-tools">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'reports:client-detail-filter' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="bi bi-funnel"></i> Filter
+      </button>
+      {% if client %}
+        <a href="{% url 'reports:client-detail-pdf' %}"
+           class="btn-icon"
+           onclick="javascript: return confirm('Are you sure you want to download the activity report?')">
+          <i class="bi bi-cloud-download"></i> Export PDF
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% if client %}
+  <!-- Summary Section -->
+  <div class="section">
+    <h1>{{ client.name }} - Activity Summary</h1>
+    <div class="table-container">
+      <table class="table invoice-totals">
+        <tr>
+          <td>Time Entries</td>
+          <td class="numeric">{{ time_entries_count }} entries</td>
+          <td class="numeric">{{ total_hours|floatformat:1 }} hours</td>
+          <td class="numeric">${{ total_fees|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>Expenses</td>
+          <td class="numeric">{{ expense_entries_count }} entries</td>
+          <td class="numeric">-</td>
+          <td class="numeric">${{ total_expenses|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr style="border-top: 2px solid var(--stone-300); font-weight: 600;">
+          <td class="total">Total Activity</td>
+          <td class="numeric total">{{ time_entries_count|add:expense_entries_count }} entries</td>
+          <td class="numeric total">{{ total_hours|floatformat:1 }} hours</td>
+          <td class="numeric total">${{ total_fees|add:total_expenses|floatformat:2|intcomma }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <!-- Time Entries Section -->
+  <div class="section">
+    <h1>Time Entries</h1>
+    {% if time_entries_count > 0 %}
+      <div class="table-container">
+        <table class="table activity">
+          <tr>
+            <th class="date">Date</th>
+            <th class="user">User</th>
+            <th class="matter">Matter</th>
+            <th class="actions">Actions</th>
+            <th class="numeric hours">Hours</th>
+            <th class="numeric rate">Rate</th>
+            <th class="numeric fee">Fee</th>
+          </tr>
+          {% for activity in activities %}
+            {% if activity.type == "time" %}
+              <tr>
+                <td class="date">{{ activity.date|date:'Y-m-d' }}</td>
+                <td class="user">{{ activity.user }}</td>
+                <td class="matter">{{ activity.matter }}</td>
+                <td class="actions">{{ activity.description }}</td>
+                <td class="hours">{{ activity.hours|floatformat:1 }}</td>
+                <td class="rate">
+                  {% if activity.comp %}
+                    comp
+                  {% else %}
+                    ${{ activity.rate }}
+                  {% endif %}
+                </td>
+                <td class="fee">
+                  {% if activity.comp %}
+                    comp
+                  {% else %}
+                    ${{ activity.amount|floatformat:2|intcomma }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--stone-500); font-style: italic;">No time entries found for the selected criteria.</p>
+    {% endif %}
+  </div>
+  <!-- Expenses Section -->
+  <div class="section">
+    <h1>Expenses</h1>
+    {% if expense_entries_count > 0 %}
+      <div class="table-container">
+        <table class="table activity">
+          <tr>
+            <th class="date">Date</th>
+            <th class="user">User</th>
+            <th class="matter">Matter</th>
+            <th class="actions">Description</th>
+            <th class="numeric hours">Amount</th>
+          </tr>
+          {% for activity in activities %}
+            {% if activity.type == "expense" %}
+              <tr>
+                <td class="date">{{ activity.date|date:'Y-m-d' }}</td>
+                <td class="user">{{ activity.user }}</td>
+                <td class="matter">{{ activity.matter }}</td>
+                <td class="actions">
+                  {% if activity.category %}{{ activity.category }} -{% endif %}
+                  {{ activity.description }}
+                </td>
+                <td class="hours">
+                  {% if activity.comp %}
+                    comp
+                  {% else %}
+                    ${{ activity.amount|floatformat:2|intcomma }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--stone-500); font-style: italic;">No expenses found for the selected criteria.</p>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="no-data">
+    <p>Please select a client and date range to view activity details.</p>
+  </div>
+{% endif %}

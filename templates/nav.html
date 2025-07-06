@@ -43,6 +43,11 @@
         <li class="nav-item {% if app == 'intakes' %}nav-active{% endif %}">
           <a id="nav-intakes" class="nav-link" href={% url 'intakes:index' %}>Intakes</a>
         </li>
+        {% if user.is_staff %}
+          <li class="nav-item {% if app == 'reports' %}nav-active{% endif %}">
+            <a id="nav-reports" class="nav-link" href={% url 'reports:index' %}>Reports</a>
+          </li>
+        {% endif %}
       </ul>
       <ul class="navbar-nav ms-auto">
         <li {% if app == 'search' %}class="nav-active"{% endif %}>

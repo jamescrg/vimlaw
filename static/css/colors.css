@@ -114,3 +114,11 @@
 .false-bool {
   color: var(--false);
 }
+
+.delete-link {
+  color: var(--orange-700);
+}
+
+.delete-link:hover {
+  color: var(--orange-700);
+}
