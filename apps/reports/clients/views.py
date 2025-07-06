@@ -334,6 +334,10 @@ def client_detail(request):
         "total_expenses": sum(entry.amount for entry in expense_entries),
     }
 
+    # Return partial template for HTMX requests
+    if request.headers.get("HX-Request"):
+        return render(request, "reports/clients/detail_content.html", context)
+
     return render(request, "reports/clients/detail.html", context)
 
 
