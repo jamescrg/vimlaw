@@ -71,8 +71,20 @@ def tasks_add(request):
         # save the currently selected matter in the add task form
         # so multiple tasks can quickly be added to a matter
         tasks_matter = request.session.get("tasks_matter")
+
+        # get the currently filtered user if available
+        filter_data = request.session.get("tasks_filter", {})
+        user_id = filter_data.get("user")
+        if user_id and user_id != "":
+            try:
+                initial_user = CustomUser.objects.get(pk=int(user_id))
+            except (ValueError, CustomUser.DoesNotExist):
+                initial_user = request.user
+        else:
+            initial_user = request.user
+
         form = TaskForm(
-            initial={"user": request.user, "matter": tasks_matter},
+            initial={"user": initial_user, "matter": tasks_matter},
             use_required_attribute=False,
         )
 
