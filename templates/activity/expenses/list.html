@@ -25,7 +25,7 @@
         <form hx-post="{% url 'activity:expenses-filter-user' %}"
               hx-trigger="change from:select">
           {% csrf_token %}
-          <select class="select-user" name="user">
+          <select class="select-property" name="user">
             <option value="">All</option>
             {% for user in users %}
               <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>

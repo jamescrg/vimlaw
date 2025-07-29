@@ -6,6 +6,11 @@ from apps.matters.models import Matter
 
 
 class Task(models.Model):
+    TERM_CHOICES = [
+        ("Current", "Current"),
+        ("Long Term", "Long Term"),
+    ]
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     folder = models.ForeignKey(Folder, on_delete=models.SET_NULL, null=True)
     description = models.CharField(max_length=200, null=True)
@@ -14,6 +19,7 @@ class Task(models.Model):
     status = models.CharField(max_length=50, null=True)
     urgent = models.BooleanField(default=False)
     priority = models.IntegerField(default=5)
+    term = models.CharField(max_length=20, choices=TERM_CHOICES, default="Current")
 
     def __str__(self):
         return f"{self.description} : {self.id}"

@@ -17,20 +17,32 @@
               data-bs-target="#htmx-modal-container">
         <i class="bi bi-filter"></i> &nbsp;Filter
       </button>
-      <button class="{% if filter_label == "today" %}toggle-active{% endif %}"
-              hx-post="{% url 'agenda:tasks-filter-quick' 'today' %}">
-        <i class="bi bi-calendar-event"></i> &nbsp;Today
-      </button>
-      <button class="{% if filter_label == "week" %}toggle-active{% endif %}"
-              hx-post="{% url 'agenda:tasks-filter-quick' 'week' %}">
-        <i class="bi bi-calendar2"></i> &nbsp;This Week
-      </button>
+      <select hx-post="{% url 'agenda:tasks-filter-matter' %}"
+              hx-target="#tasks"
+              hx-swap="#outerHTML"
+              class="select-property {% if matter_id %}toggle-active{% endif %}"
+              name="matter">
+        <option value="">Matters&nbsp;&nbsp;(All)</option>
+        {% for matter in matters %}
+          <option value="{{ matter.id }}"
+                  {% if matter.id == matter_id %}selected{% endif %}>{{ matter.name }}</option>
+        {% endfor %}
+      </select>
+      <select hx-post="{% url 'agenda:tasks-filter-term' %}"
+              hx-target="#tasks"
+              hx-swap="#outerHTML"
+              class="select-property {% if term %}toggle-active{% endif %}"
+              name="term">
+        <option value="" {% if term == "" %}selected{% endif %}>Terms&nbsp;&nbsp;(All)&nbsp;&nbsp;&nbsp;&nbsp;</option>
+        <option value="Current" {% if term == "Current" %}selected{% endif %}>Current</option>
+        <option value="Long Term" {% if term == "Long Term" %}selected{% endif %}>Long Term</option>
+      </select>
       <select hx-post="{% url 'agenda:tasks-filter-user' %}"
               hx-target="#tasks"
               hx-swap="#outerHTML"
-              class="select-user {% if user_id %}toggle-active{% endif %}"
+              class="select-property {% if user_id %}toggle-active{% endif %}"
               name="user">
-        <option value="">All</option>
+        <option value="">Users&nbsp;&nbsp;(All)&nbsp;&nbsp;&nbsp;&nbsp;</option>
         {% for user in users %}
           <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
         {% endfor %}
@@ -68,6 +80,7 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
+      <th>Term</th>
       <th>
         User
         <button class="btn-sort"
@@ -114,6 +127,9 @@
              data-bs-toggle="modal"
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
+        </td>
+        <td class="term {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
+          {% include "agenda/tasks/term.html" %}
         </td>
         <td class="user {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
           {% include "agenda/tasks/user.html" %}
