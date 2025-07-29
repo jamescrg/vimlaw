@@ -21,7 +21,7 @@
         <button class="{% if filter_label == "today" %}toggle-active{% endif %}"
                 hx-post="{% url 'activity:time-filter-quick' 'today' %}">Today</button>
         <select hx-post="{% url 'activity:time-filter-user' %}"
-                class="select-user"
+                class="select-property"
                 name="user">
           <option value="">All</option>
           {% for user in users %}

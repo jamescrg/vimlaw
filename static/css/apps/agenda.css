@@ -106,11 +106,15 @@ th.priority .bi-caret-up {
 }
 
 .tasks-table .user {
-  width: 120px;
+  width: 140px;
 }
 
 .tasks-table .date {
   width: 170px;
+}
+
+.tasks-table .term {
+  width: 140px;
 }
 
 .task-date {

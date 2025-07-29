@@ -56,10 +56,10 @@
   margin: 3px 0 0 0;
 }
 
-.select-user {
+.select-property {
   background-color: var(--stone-150);
   border: solid 1px var(--stone-200);
-  color: var(--stone-700);
+  color: var(--button-toolbar);
   padding: 5px;
 }
 

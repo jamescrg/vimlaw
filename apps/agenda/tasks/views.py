@@ -68,13 +68,20 @@ def tasks_add(request):
             return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
     else:
-        # save the currently selected matter in the add task form
-        # so multiple tasks can quickly be added to a matter
-        tasks_matter = request.session.get("tasks_matter")
 
         # get the currently filtered user if available
         filter_data = request.session.get("tasks_filter", {})
         user_id = filter_data.get("user")
+
+        # automatically populate to the current matter
+        tasks_matter = filter_data.get("matter")
+
+        # if no current matter is set, use the matter to which
+        # the most recently saved task was assigned
+        if not tasks_matter:
+            tasks_matter = request.session.get("tasks_matter")
+
+        term = filter_data.get("term")
         if user_id and user_id != "":
             try:
                 initial_user = CustomUser.objects.get(pk=int(user_id))
@@ -84,7 +91,11 @@ def tasks_add(request):
             initial_user = request.user
 
         form = TaskForm(
-            initial={"user": initial_user, "matter": tasks_matter},
+            initial={
+                "user": initial_user,
+                "matter": tasks_matter,
+                "term": term,
+            },
             use_required_attribute=False,
         )
 
@@ -225,10 +236,28 @@ def tasks_filter_quick(request, quick_filter):
 
 
 @login_required
+def tasks_filter_matter(request):
+    filter_data = request.session.get("tasks_filter", {})
+    matter = request.POST.get("matter")
+    filter_data["matter"] = matter
+    request.session["tasks_filter"] = filter_data
+    return redirect("agenda:tasks-list")
+
+
+@login_required
 def tasks_filter_user(request):
     filter_data = request.session.get("tasks_filter", {})
     user = request.POST.get("user")
     filter_data["user"] = user
+    request.session["tasks_filter"] = filter_data
+    return redirect("agenda:tasks-list")
+
+
+@login_required
+def tasks_filter_term(request):
+    filter_data = request.session.get("tasks_filter", {})
+    term = request.POST.get("term")
+    filter_data["term"] = term
     request.session["tasks_filter"] = filter_data
     return redirect("agenda:tasks-list")
 
@@ -243,6 +272,7 @@ def tasks_filter_default(request):
         "matter": None,
         "user": request.user.id,
         "order_by": "priority",
+        "term": "Current",
     }
     request.session["tasks_filter"] = filter_data
     request.session.modified = True
@@ -308,6 +338,14 @@ def tasks_user(request, task_id, user):
     task = get_object_or_404(Task, pk=task_id)
     user = get_object_or_404(CustomUser, pk=user)
     task.user = user
+    task.save()
+    return redirect("agenda:tasks-list")
+
+
+@login_required
+def tasks_term(request, task_id, term):
+    task = get_object_or_404(Task, pk=task_id)
+    task.term = term
     task.save()
     return redirect("agenda:tasks-list")
 
