@@ -138,7 +138,7 @@ def tasks_add_quick(request):
     if focus:
         task.focus = focus
     else:
-        task.focus = "Current"
+        task.focus = "Long Term"
 
     # auto populate the matter
     matter_id = filter_data.get("matter", None)
