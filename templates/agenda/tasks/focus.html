@@ -2,16 +2,16 @@
   <button class="button-link"
           type="button"
           data-bs-toggle="dropdown"
-          aria-expanded="false">{{ task.term|default:"No term set." }}</button>
+          aria-expanded="false">{{ task.focus|default:"None set" }}</button>
   <ul class="dropdown-menu">
     <li>
       <a class="dropdown-item"
          href="#"
-         hx-get="{% url 'agenda:tasks-task-term' task_id=task.id term="Current" %}"
+         hx-get="{% url 'agenda:tasks-task-focus' task_id=task.id focus="Current" %}"
          hx-target="#tasks">Current</a>
       <a class="dropdown-item"
          href="#"
-         hx-get="{% url 'agenda:tasks-task-term' task_id=task.id term="Long Term" %}"
+         hx-get="{% url 'agenda:tasks-task-focus' task_id=task.id focus="Long Term" %}"
          hx-target="#tasks">Long Term</a>
     </li>
   </ul>

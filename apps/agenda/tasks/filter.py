@@ -10,7 +10,7 @@ STATUS_CHOICES = (
     ("Complete", "Complete"),
 )
 
-TERM_CHOICES = (
+FOCUS_CHOICES = (
     ("Current", "Current"),
     ("Long Term", "Long Term"),
 )
@@ -51,7 +51,7 @@ class TasksOrderingFilter(django_filters.OrderingFilter):
 
 class TasksFilter(django_filters.FilterSet):
     status = django_filters.ChoiceFilter(choices=STATUS_CHOICES, empty_label="All")
-    term = django_filters.ChoiceFilter(choices=TERM_CHOICES, empty_label="All")
+    focus = django_filters.ChoiceFilter(choices=FOCUS_CHOICES, empty_label="All")
     date_due = django_filters.DateFromToRangeFilter(
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"})
     )
@@ -76,4 +76,4 @@ class TasksFilter(django_filters.FilterSet):
 
     class Meta:
         model = Task
-        fields = ["status", "term", "date_due", "matter", "user"]
+        fields = ["status", "focus", "date_due", "matter", "user"]

@@ -19,18 +19,18 @@ from apps.agenda.tasks.views import (
     tasks_edit,
     tasks_filter,
     tasks_filter_default,
+    tasks_filter_focus,
     tasks_filter_matter,
     tasks_filter_quick,
     tasks_filter_sort,
-    tasks_filter_term,
     tasks_filter_user,
+    tasks_focus,
     tasks_index,
     tasks_list,
     tasks_matter,
     tasks_priority,
     tasks_select,
     tasks_status,
-    tasks_term,
     tasks_user,
 )
 
@@ -55,9 +55,9 @@ urlpatterns = [
         name="tasks-task-user",
     ),
     path(
-        "agenda/tasks/<int:task_id>/task-term/<str:term>",
-        tasks_term,
-        name="tasks-task-term",
+        "agenda/tasks/<int:task_id>/task-focus/<str:focus>",
+        tasks_focus,
+        name="tasks-task-focus",
     ),
     path(
         "agenda/tasks/<int:task_id>/task-matter/<int:matter_id>",
@@ -77,7 +77,7 @@ urlpatterns = [
         "agenda/tasks/filter/matter/", tasks_filter_matter, name="tasks-filter-matter"
     ),
     path("agenda/tasks/filter/user/", tasks_filter_user, name="tasks-filter-user"),
-    path("agenda/tasks/filter/term/", tasks_filter_term, name="tasks-filter-term"),
+    path("agenda/tasks/filter/focus/", tasks_filter_focus, name="tasks-filter-focus"),
     path(
         "agenda/tasks/filter/default/",
         tasks_filter_default,

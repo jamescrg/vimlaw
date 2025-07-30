@@ -81,7 +81,7 @@ def tasks_add(request):
         if not tasks_matter:
             tasks_matter = request.session.get("tasks_matter")
 
-        term = filter_data.get("term")
+        focus = filter_data.get("focus")
         if user_id and user_id != "":
             try:
                 initial_user = CustomUser.objects.get(pk=int(user_id))
@@ -94,7 +94,7 @@ def tasks_add(request):
             initial={
                 "user": initial_user,
                 "matter": tasks_matter,
-                "term": term,
+                "focus": focus,
             },
             use_required_attribute=False,
         )
@@ -133,12 +133,12 @@ def tasks_add_quick(request):
         user_id = request.user.id
     task.user = CustomUser.objects.filter(pk=int(user_id)).get()
 
-    # auto populate the term
-    term = filter_data.get("term", None)
-    if term:
-        task.term = term
+    # auto populate the focus
+    focus = filter_data.get("focus", None)
+    if focus:
+        task.focus = focus
     else:
-        task.term = "Current"
+        task.focus = "Current"
 
     # auto populate the matter
     matter_id = filter_data.get("matter", None)
@@ -268,10 +268,10 @@ def tasks_filter_user(request):
 
 
 @login_required
-def tasks_filter_term(request):
+def tasks_filter_focus(request):
     filter_data = request.session.get("tasks_filter", {})
-    term = request.POST.get("term")
-    filter_data["term"] = term
+    focus = request.POST.get("focus")
+    filter_data["focus"] = focus
     request.session["tasks_filter"] = filter_data
     return redirect("agenda:tasks-list")
 
@@ -286,7 +286,7 @@ def tasks_filter_default(request):
         "matter": None,
         "user": request.user.id,
         "order_by": "priority",
-        "term": "Current",
+        "focus": "Current",
     }
     request.session["tasks_filter"] = filter_data
     request.session.modified = True
@@ -357,9 +357,9 @@ def tasks_user(request, task_id, user):
 
 
 @login_required
-def tasks_term(request, task_id, term):
+def tasks_focus(request, task_id, focus):
     task = get_object_or_404(Task, pk=task_id)
-    task.term = term
+    task.focus = focus
     task.save()
     return redirect("agenda:tasks-list")
 

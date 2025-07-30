@@ -11,7 +11,7 @@ class TaskAdmin(admin.ModelAdmin):
         "description",
         "status",
         "matter",
-        "term",
+        "focus",
     )
 
 

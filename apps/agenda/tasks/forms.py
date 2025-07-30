@@ -16,7 +16,7 @@ class TaskForm(forms.ModelForm):
             "priority",
             "user",
             "date_due",
-            "term",
+            "focus",
         )
 
         STATUSES = (
@@ -43,7 +43,7 @@ class TaskForm(forms.ModelForm):
             "status": forms.Select(choices=STATUSES),
             "date_due": forms.DateInput(attrs={"type": "date"}),
             "priority": forms.Select(choices=PRIORITIES),
-            "term": forms.Select(),
+            "focus": forms.Select(),
         }
 
     def __init__(self, *args, **kwargs):

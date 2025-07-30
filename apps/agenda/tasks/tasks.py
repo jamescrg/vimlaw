@@ -20,7 +20,7 @@ def get_list_data(request):
         user_id = int(user_id) if user_id not in (None, "") else None
         matter_id = filter_data.get("matter")
         matter_id = int(matter_id) if matter_id not in (None, "") else None
-        term = filter_data.get("term")
+        focus = filter_data.get("focus")
 
     else:
         default_filter = {
@@ -28,13 +28,13 @@ def get_list_data(request):
             "matter": None,
             "order_by": "priority",
             "user": request.user.id,
-            "term": "",
+            "focus": "",
         }
         filter = TasksFilter(default_filter)
         tasks = filter.qs
         user_id = request.user.id
         matter_id = None
-        term = ""
+        focus = ""
 
     pagination = CustomPaginator(
         tasks, per_page=20, request=request, session_key="tasks_pagination"
@@ -50,7 +50,7 @@ def get_list_data(request):
         "users": CustomUser.objects.filter(is_active=True).order_by("username"),
         "user_id": user_id,
         "matter_id": matter_id,
-        "term": term,
+        "focus": focus,
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }
 
