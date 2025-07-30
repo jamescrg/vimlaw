@@ -119,6 +119,12 @@ def tasks_add(request):
 def tasks_add_quick(request):
 
     task = Task()
+
+    # prevent creation of tasks without a description
+    if not request.POST["description"]:
+        return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
+
+    # set task description and some property values
     task.description = request.POST["description"]
     task.status = "Pending"
     task.date_due = date.today().strftime("%Y-%m-%d")
