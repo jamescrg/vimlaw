@@ -124,12 +124,26 @@ def tasks_add_quick(request):
     task.date_due = date.today().strftime("%Y-%m-%d")
     task.priority = 3
 
-    # set user the the currently selected filter value
+    # get filter values to auto populate task properties
     filter_data = request.session.get("tasks_filter", {})
+
+    # auto populate the user
     user_id = filter_data.get("user", None)
     if not user_id:
         user_id = request.user.id
     task.user = CustomUser.objects.filter(pk=int(user_id)).get()
+
+    # auto populate the term
+    term = filter_data.get("term", None)
+    if term:
+        task.term = term
+    else:
+        task.term = "Current"
+
+    # auto populate the matter
+    matter_id = filter_data.get("matter", None)
+    if matter_id:
+        task.matter = Matter.objects.filter(pk=int(matter_id)).get()
 
     task.save()
     return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})

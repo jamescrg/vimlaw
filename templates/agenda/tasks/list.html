@@ -47,10 +47,27 @@
           <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
         {% endfor %}
       </select>
+      <button class="{% if filter_label == "today" %}toggle-active{% endif %}"
+              hx-post="{% url 'agenda:tasks-filter-quick' 'today' %}">
+        <i class="bi bi-calendar-event"></i> &nbsp;Today
+      </button>
+      <button class="{% if filter_label == "week" %}toggle-active{% endif %}"
+              hx-post="{% url 'agenda:tasks-filter-quick' 'week' %}">
+        <i class="bi bi-calendar2"></i> &nbsp;This Week
+      </button>
     </div>
   </div>
 </div>
-<div class="tasks-add-quick"></div>
+<div class="toolbar tasks-add-quick">
+  <input type="text"
+         class="tasks-add-quick-input"
+         placeholder=" + Quick Task"
+         autofocus
+         name="description"
+         hx-post="{% url 'agenda:tasks-add-quick' %}"
+         hx-trigger="keyup[keyCode==13]">
+</input>
+</div>
 <div class="table-container table-responsive-xl">
   <table class="table tasks-table">
     <tr>
