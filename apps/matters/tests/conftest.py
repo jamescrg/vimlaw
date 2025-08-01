@@ -176,6 +176,8 @@ def fact(user, matter):
 def fact_data(fact):
     exclude_keys = {"_state", "id"}
     fact_data = {
-        key: value for key, value in fact.__dict__.items() if key not in exclude_keys
+        key: value
+        for key, value in fact.__dict__.items()
+        if key not in exclude_keys and value is not None
     }
     return fact_data

@@ -11,3 +11,13 @@
   color: var(--stone-400);
   font-size: 0.9em;
 }
+
+.activity-row {
+  border-top: 2px solid var(--stone-300);
+  font-weight: 600;
+}
+
+.empty-entries {
+  color: var(--stone-500);
+  font-style: italic;
+}

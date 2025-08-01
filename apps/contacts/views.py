@@ -56,7 +56,7 @@ def add(request):
 
     if client_folder_id:
         selected_folder = None
-    elif contact_folder_id:
+    elif contact_folder_id and contact_folder_id != "unsorted":
         selected_folder_id = request.session["contacts_selected_folder_id"]
         selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
     else:
@@ -126,7 +126,7 @@ def edit(request, id):
 
     if client_folder_id:
         selected_folder = None
-    elif contact_folder_id:
+    elif contact_folder_id and contact_folder_id != "unsorted":
         selected_folder_id = request.session["contacts_selected_folder_id"]
         selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
     else:

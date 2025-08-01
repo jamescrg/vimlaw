@@ -40,7 +40,7 @@
           <td class="numeric">-</td>
           <td class="numeric">${{ total_expenses|floatformat:2|intcomma }}</td>
         </tr>
-        <tr style="border-top: 2px solid var(--stone-300); font-weight: 600;">
+        <tr class="activity-row">
           <td class="total">Total Activity</td>
           <td class="numeric total">{{ time_entries_count|add:expense_entries_count }} entries</td>
           <td class="numeric total">{{ total_hours|floatformat:1 }} hours</td>
@@ -92,7 +92,7 @@
         </table>
       </div>
     {% else %}
-      <p style="color: var(--stone-500); font-style: italic;">No time entries found for the selected criteria.</p>
+      <p class="empty-entries">No time entries found for the selected criteria.</p>
     {% endif %}
   </div>
   <!-- Expenses Section -->
@@ -131,7 +131,7 @@
         </table>
       </div>
     {% else %}
-      <p style="color: var(--stone-500); font-style: italic;">No expenses found for the selected criteria.</p>
+      <p class="empty-entries">No expenses found for the selected criteria.</p>
     {% endif %}
   </div>
 {% else %}
