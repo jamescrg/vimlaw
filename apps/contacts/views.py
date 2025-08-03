@@ -13,9 +13,11 @@ from config.helpers import format_phone
 
 @login_required
 def contact_index(request, contact_id=None):
+    # If a contact ID is provided, set it as the selected contact in the session
     if contact_id:
         request.session["selected_contact_id"] = contact_id
     else:
+        # Preserve the contact ID in the URL if it exists in the session
         selected_contact_id = request.session.get("selected_contact_id")
         if selected_contact_id:
             return redirect(

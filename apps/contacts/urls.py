@@ -19,6 +19,7 @@ app_name = "contacts"
 
 urlpatterns = [
     path("contacts/", contact_index, name="contact-index"),
+    # Used to preserve the selected contact ID in the URL instead of only selecting it
     path("contacts/<int:contact_id>/", contact_index, name="contact-index-with-id"),
     path("contacts/<int:id>", select, name="select"),
     path("contacts/add", add, name="add"),
