@@ -127,7 +127,6 @@ def tasks_add_quick(request):
     # set task description and some property values
     task.description = request.POST["description"]
     task.status = "Pending"
-    task.date_due = date.today().strftime("%Y-%m-%d")
     task.priority = 3
 
     # get filter values to auto populate task properties
