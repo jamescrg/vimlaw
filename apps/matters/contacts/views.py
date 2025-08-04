@@ -12,7 +12,6 @@ from apps.trust.trust import get_confirmed_client_balance
 @login_required
 def index(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
 
     # Get client trust balance
     client_trust_balance = 0
@@ -29,7 +28,6 @@ def index(request, id):
         "app": "matters",
         "subapp": "contacts",
         "matter": matter,
-        "proceeding": proceeding,
         "relationship_groups": relationship_groups,
         "client_trust_balance": client_trust_balance,
         "balance_due": balance_due,

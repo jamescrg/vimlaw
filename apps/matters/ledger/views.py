@@ -15,8 +15,6 @@ from apps.trust.trust import get_confirmed_client_balance
 @login_required
 def ledger_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
-
     ledger_data = get_ledger_data(matter)
 
     # Get client trust balance
@@ -28,7 +26,6 @@ def ledger_index(request, id):
         "app": "matters",
         "subapp": "ledger",
         "matter": matter,
-        "proceeding": proceeding,
         "client_trust_balance": client_trust_balance,
     } | ledger_data
 

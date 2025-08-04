@@ -18,12 +18,12 @@
           <table class="table matter-contacts">
             {% if group == "Client" and matter.client %}
               <tr>
-                <td class="relationship">Client</td>
-                <td class="name">
+                <td class="relationship main-client">Client</td>
+                <td class="name main-client">
                   <a href={% url 'contacts:select' id=matter.client.id %}>{{ matter.client.name }}</a>
                 </td>
-                <td class="phone1">{{ matter.client.phone1|default:'' }}</td>
-                <td class="email">{{ matter.client.email|default:'' }}</td>
+                <td class="phone1 main-client">{{ matter.client.phone1|default:'' }}</td>
+                <td class="email main-client">{{ matter.client.email|default:'' }}</td>
               </tr>
             {% endif %}
             {% for relationship in relationships %}

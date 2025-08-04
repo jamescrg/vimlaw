@@ -106,6 +106,8 @@
   --selected-background: hsl(252, 32%, 91%);
   --selected-color: hsl(24, 6%, 35%);
   --selected-border: hsl(252, 22%, 85%);
+
+  --client-background: hsl(252, 12%, 91%);
 }
 
 .true-bool {

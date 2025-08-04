@@ -98,6 +98,28 @@ Matter List
 Matter Details
 ========================================================================== */
 
+.matter-title {
+  background: var(--stone-200);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: 0;
+  padding-bottom: 0.5rem;
+}
+
+.matter-subnav {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.matter-title .toolbar {
+  padding-bottom: 0;
+}
+
+.matter-title .toolbar a,
+.matter-title .toolbar button {
+  border: solid 1px var(--stone-300);
+}
+
 .matter-data {
   align-items: flex-start;
   display: flex;

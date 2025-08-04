@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   {% load humanize %}
-  <div class="section">
+  <div class="section matter-title">
     <div class="toolbar">
       <div class="toolbar-left">
         <h1>{{ matter.name }}</h1>
@@ -25,64 +25,8 @@
         </div>
       </div>
     </div>
-    <div class="matter-data">
-      <table>
-        <tr>
-          <th>Matter No.</th>
-          <td>{{ matter.id }}</td>
-        </tr>
-        <tr>
-          <th>Client</th>
-          {% if matter.client %}
-            <td>
-              <a href={% url 'contacts:select' id=matter.client.id %}>{{ matter.client.name }}</a>
-            </td>
-          {% else %}
-            <td>No Client</td>
-          {% endif %}
-        </tr>
-      </table>
-      <table>
-        <tr>
-          <th>Total Cost</th>
-          <td class="numeric">${{ matter.value.total.net_fees_and_expenses|floatformat:2|intcomma }}</td>
-        </tr>
-        <tr>
-          <th>Unbilled</th>
-          <td class="numeric">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
-        </tr>
-      </table>
-      <table>
-        <tr>
-          <th>Trust</th>
-          <td class="numeric">
-            {% if matter.client %}
-              <a href="{% url 'trust:client-index' id=matter.client.id %}">${{ client_trust_balance|floatformat:2|intcomma }}</a>
-            {% else %}
-              ${{ client_trust_balance|floatformat:2|intcomma }}
-            {% endif %}
-          </td>
-        </tr>
-        <tr>
-          <th>Balance Due</th>
-          <td class="numeric">${{ balance_due|floatformat:2|intcomma }}</td>
-        </tr>
-      </table>
-      {% if proceeding %}
-        <table>
-          <tr>
-            <th>Forum</th>
-            <td>{{ proceeding.forum }}</td>
-          </tr>
-          <tr>
-            <th>Case No.</th>
-            <td>{{ proceeding.case_number }}</td>
-          </tr>
-        </table>
-      {% endif %}
-    </div>
   </div>
-  <div class="subnav">
+  <div class="subnav matter-subnav">
     <ul>
       <li {% if subapp == 'rates' %}class="active"{% endif %}>
         <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
