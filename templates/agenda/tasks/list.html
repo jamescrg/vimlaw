@@ -79,13 +79,12 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th>
-        Due
-        <button class="btn-sort"
+      <th class="priority">
+        <button class="btn-sort btn-task-status"
                 hx-target="#tasks"
                 hx-swap="innerHTML"
-                hx-post="{% url 'agenda:tasks-filter-sort' 'date_due' %}">
-          <i class="bi bi-chevron-expand"></i>
+                hx-post="{% url 'agenda:tasks-filter-sort' 'priority' %}">
+          <i class="bi bi-exclamation-square"></i>
         </button>
       </th>
       <th>Focus</th>
@@ -98,12 +97,13 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th class="priority">
-        <button class="btn-sort btn-task-status"
+      <th>
+        Due
+        <button class="btn-sort"
                 hx-target="#tasks"
                 hx-swap="innerHTML"
-                hx-post="{% url 'agenda:tasks-filter-sort' 'priority' %}">
-          <i class="bi bi-exclamation-square"></i>
+                hx-post="{% url 'agenda:tasks-filter-sort' 'date_due' %}">
+          <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
     </tr>
@@ -112,7 +112,7 @@
         <td class="status">{% include "agenda/tasks/status.html" %}</td>
         <td class="matter {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}">
           {% if task.matter %}
-            <a href="{% url 'matters:detail' task.matter.id %}">{{ task.matter_display_name }}</a>
+            <a href="{% url 'matters:detail' task.matter.id %}">{{ task.matter.name }}</a>
           {% else %}
             Admin
           {% endif %}
@@ -127,8 +127,8 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
-        <td class="date {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
-          {% include "agenda/tasks/date-display.html" %}
+        <td class="priority {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}">
+          {% include "agenda/tasks/priority.html" %}
         </td>
         <td class="focus {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
           {% include "agenda/tasks/focus.html" %}
@@ -136,8 +136,8 @@
         <td class="user {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
           {% include "agenda/tasks/user.html" %}
         </td>
-        <td class="priority {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}">
-          {% include "agenda/tasks/priority.html" %}
+        <td class="date {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
+          {% include "agenda/tasks/date-display.html" %}
         </td>
       </tr>
     {% endfor %}
