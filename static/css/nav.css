@@ -16,12 +16,6 @@
 
 }
 
-/* applies to the active page's anchor tag */
-.nav-active {
-  background: var(--stone-300);
-  border-radius: 5px 5px 0 0;
-}
-
 .navbar-toggler-icon {
   color: var(--link);
   font-size: 1.8rem;
@@ -47,4 +41,38 @@
 .navbar-nav .settings-link {
   font-size: 1.2rem;
   padding: 10px 25px 7px 25px !important;
+}
+
+/* applies to the active page's anchor tag */
+.nav-active {
+  background: var(--stone-300);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+}
+
+/* Create rounded bottom corners on the outside edges of active tab */
+.nav-active::before,
+.nav-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  width: 8px;
+  height: 9px;
+  background: var(--stone-350); /* navbar background color */
+}
+
+/* Left outside corner */
+.nav-active::before {
+  border-bottom-right-radius: 8px;
+  box-shadow: 0 0 0 8px var(--stone-300); /* active tab background */
+  clip-path: inset(25% 0 0 50%);
+  left: -8px;
+}
+
+/* Right outside corner */
+.nav-active::after {
+  border-bottom-left-radius: 8px;
+  box-shadow: 0 0 0 8px var(--stone-300); /* active tab background */
+  clip-path: inset(25% 50% 0 0);
+  right: -8px;
 }

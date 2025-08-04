@@ -3,28 +3,57 @@
   background: var(--stone-200);
   border-radius: 3px 3px 0 0;
   margin-bottom: 0;
-  padding: 10px 0;
+  padding: 12px 0 10px 0;
 }
 
 .subnav ul {
   border-radius: 3px 3px 0 0;
-  margin: 5px 0 0 0;
+  margin: 8px 0 0 0;
   padding: 0;
 }
 
 .subnav li {
   display: inline;
-  padding: 0.5rem 1rem 1rem 1rem;
+  padding: 0.6rem 1rem 0.6rem 1rem;
 }
 
 .subnav a {
   color: var(--stone-600);
   margin: 0;
-  padding-bottom: 0.6rem;
+  padding-bottom: 0.4rem;
 }
 
+/* applies to the active page's list item */
 .subnav .active {
   background-color: var(--stone-100);
-  border-radius: 3px 3px 0 0;
-  padding-bottom: 0.
+  border-radius: 6px 6px 0 0;
+  padding-bottom: 0.7rem;
+  position: relative;
+}
+
+/* Create rounded bottom corners on the outside edges of active tab */
+.subnav .active::before,
+.subnav .active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  width: 8px;
+  height: 9px;
+  background: var(--stone-200); /* subnav background color */
+}
+
+/* Left outside corner */
+.subnav .active::before {
+  border-bottom-right-radius: 8px;
+  box-shadow: 0 0 0 8px var(--stone-100); /* active tab background */
+  clip-path: inset(25% 0 0 50%);
+  left: -8px;
+}
+
+/* Right outside corner */
+.subnav .active::after {
+  border-bottom-left-radius: 8px;
+  box-shadow: 0 0 0 8px var(--stone-100); /* active tab background */
+  clip-path: inset(25% 50% 0 0);
+  right: -8px;
 }
