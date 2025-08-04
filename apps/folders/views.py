@@ -20,7 +20,15 @@ def select(request, folder_id, folder_type):
         request.session["contacts_selected_folder_id"] = folder_id
         request.session["contacts_selected_client_folder_id"] = None
 
-    return redirect("contacts:contact-index")
+    selected_contact_id = request.session.get("selected_contact_id")
+
+    # Preserve the selected contact ID in the URL if it exists
+    if selected_contact_id:
+        return redirect(
+            "contacts:contact-index-with-id", contact_id=selected_contact_id
+        )
+    else:
+        return redirect("contacts:contact-index")
 
 
 @login_required
