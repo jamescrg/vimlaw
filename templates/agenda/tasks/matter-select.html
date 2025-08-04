@@ -1,0 +1,22 @@
+<div id="matter-dropdown-{{ task.matter.id }}" class="dropdown">
+  <button type="button"
+          id="matter-button"
+          class="button-link"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ task.matter.name }}</button>
+  <ul class="dropdown-menu"
+      hx-target="#matter-dropdown-{{ task.matter.id }}"
+      hx-swap="outerHTML">
+    <li>
+      <a class="dropdown-item"
+         href="{% url 'matters:detail' task.matter.id %}">Go to Matter</a>
+    </li>
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-post="{% url 'agenda:tasks-filter-matter' task.matter.id %}"
+         hx-target="#tasks"
+         hx-swap="#outerHTML">Filter by Matter</a>
+    </li>
+  </ul>
+</div>
