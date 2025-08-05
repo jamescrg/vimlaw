@@ -41,7 +41,7 @@
         </div>
         <div class="header-right">
           <h3 class="text-right">Intakes Report</h3>
-          <p class="text-right">Monthly Summary by Practice Area</p>
+          <p class="text-right">Monthly Summary</p>
           {% if date_from or date_to %}
             <p class="text-right">
               {% if date_from %}From: {{ date_from }}{% endif %}
@@ -53,6 +53,7 @@
         </div>
       </div>
       <div class="section">
+        <h2>Practice Area</h2>
         <table class="intakes-table">
           <thead>
             <tr>
@@ -106,6 +107,72 @@
                     {% if percentages_by_practice_area|get_item:practice_area %}
                       <br>
                       <span class="percentage">({{ percentages_by_practice_area|get_item:practice_area }}%)</span>
+                    {% endif %}
+                  </td>
+                {% endfor %}
+                <td class="total-column">
+                  <strong>{{ total_intakes }}</strong>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      <div class="section page-break-before">
+        <h2>Rate of Conversion</h2>
+        <table class="intakes-table">
+          <thead>
+            <tr>
+              <th class="month-column">Month</th>
+              {% for status in intake_statuses %}<th class="practice-area-column">{{ status }}</th>{% endfor %}
+              <th class="total-column">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in status_data %}
+              <tr>
+                <td class="month-column">{{ item.month }}</td>
+                {% for status in intake_statuses %}
+                  <td class="practice-area-column">
+                    {% if item.statuses|get_item:status %}
+                      {{ item.statuses|get_item:status }}
+                      {% if item.percentages|get_item:status %}
+                        <span class="percentage">({{ item.percentages|get_item:status }}%)</span>
+                      {% endif %}
+                    {% else %}
+                      0
+                    {% endif %}
+                  </td>
+                {% endfor %}
+                <td class="total-column">
+                  <strong>{{ item.total }}</strong>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="{{ intake_statuses|length|add:2 }}" class="center">
+                  No intakes found
+                  {% if date_from or date_to %}for the selected date range{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            {% if status_data %}
+              <tr class="totals-row">
+                <td class="month-column">
+                  <strong>Total</strong>
+                </td>
+                {% for status in intake_statuses %}
+                  <td class="practice-area-column">
+                    <strong>
+                      {% if totals_by_status|get_item:status %}
+                        {{ totals_by_status|get_item:status }}
+                      {% else %}
+                        0
+                      {% endif %}
+                    </strong>
+                    {% if percentages_by_status|get_item:status %}
+                      <br>
+                      <span class="percentage">({{ percentages_by_status|get_item:status }}%)</span>
                     {% endif %}
                   </td>
                 {% endfor %}

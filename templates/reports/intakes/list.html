@@ -2,7 +2,7 @@
 {% load dict_extras %}
 <div class="toolbar">
   <div class="toolbar-left">
-    <h2>Intakes Report - Monthly Summary by Practice Area</h2>
+    <h1>Intakes Report</h1>
     <div class="filter-tools">
       <button type="button"
               class="btn-icon"
@@ -21,6 +21,7 @@
     </div>
   </div>
 </div>
+<h2 class="reports-section-heading">Practice Area</h2>
 <div class="table-container">
   <table class="table">
     <tr>
@@ -84,8 +85,72 @@
     {% endif %}
   </table>
 </div>
+<h2 class="reports-section-heading">Rate of Conversion</h2>
+<div class="table-container">
+  <table class="table">
+    <tr>
+      <th>Month</th>
+      {% for status in intake_statuses %}<th class="numeric">{{ status }}</th>{% endfor %}
+      <th class="numeric">
+        <strong>Total</strong>
+      </th>
+    </tr>
+    {% for item in status_data %}
+      <tr>
+        <td>{{ item.month }}</td>
+        {% for status in intake_statuses %}
+          <td class="numeric">
+            {% if item.statuses|get_item:status %}
+              {{ item.statuses|get_item:status }}
+              {% if item.percentages|get_item:status %}
+                <small class="text-muted">({{ item.percentages|get_item:status }}%)</small>
+              {% endif %}
+            {% else %}
+              0
+            {% endif %}
+          </td>
+        {% endfor %}
+        <td class="numeric">
+          <strong>{{ item.total }}</strong>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="{{ intake_statuses|length|add:2 }}" class="center">
+          No intakes found
+          {% if date_from or date_to %}for the selected date range{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    {% if status_data %}
+      <tr class="table-total">
+        <td>
+          <strong>Total</strong>
+        </td>
+        {% for status in intake_statuses %}
+          <td class="numeric">
+            <strong>
+              {% if totals_by_status|get_item:status %}
+                {{ totals_by_status|get_item:status }}
+                {% if percentages_by_status|get_item:status %}
+                  <br>
+                  <small class="text-muted">({{ percentages_by_status|get_item:status }}%)</small>
+                {% endif %}
+              {% else %}
+                0
+              {% endif %}
+            </strong>
+          </td>
+        {% endfor %}
+        <td class="numeric">
+          <strong>{{ total_intakes }}</strong>
+        </td>
+      </tr>
+    {% endif %}
+  </table>
+</div>
 {% if date_from or date_to %}
-  <div class="filter-info">
+  <div class="filter-info reports-filter-info">
     <p>
       Filtered by:
       {% if date_from %}From {{ date_from }}{% endif %}
