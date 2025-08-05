@@ -1,6 +1,5 @@
 {% load humanize %}
 <tr id="matter-{{ matter.id }}">
-  <td class="id">{{ matter.id }}</td>
   <td class="name">
     <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name }}</a>
   </td>
@@ -11,6 +10,5 @@
        hx-swap="innerHTML"
        hx-get="{% url 'matters:edit-description' matter_id=matter.id %}">{{ matter.description }}</a>
   </td>
-  <td class="numeric unbilled">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
-  <td class="numeric balance-due">${{ matter.balance_due|floatformat:2|intcomma }}</td>
+  <td class="id">{{ matter.id }}</td>
 </tr>

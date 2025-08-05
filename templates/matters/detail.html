@@ -4,7 +4,7 @@
   <div class="section matter-title">
     <div class="toolbar">
       <div class="toolbar-left">
-        <h1>{{ matter.id }} | {{ matter.name }}</h1>
+        <h1>{{ matter.name }}</h1>
         <div class="filter-tools">
           <button class="icon-green"
                   hx-get="/activity/time/add/{{ matter.id }}/matters"
@@ -23,6 +23,9 @@
             <i class="bi bi-pencil"></i>
           </a>
         </div>
+      </div>
+      <div class="toolbar-right">
+        <h2>No. {{ matter.id }}</h2>
       </div>
     </div>
   </div>
