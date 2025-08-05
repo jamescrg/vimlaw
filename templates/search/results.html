@@ -9,7 +9,7 @@
               <td class="-matter-name">
                 <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name }}</a>
               </td>
-              <td>{{ matter.description }}</td>
+              <td>{{ matter.work_status }}</td>
               <td class="matter-status">{{ matter.status }}</td>
             </tr>
           {% endfor %}

@@ -1,12 +1,12 @@
 <div>
   <input autofocus
-         class="edit-matter-description-input"
+         class="edit-matter-work-status-input"
          type="text"
-         name="description"
-         hx-post="{% url 'matters:update-description' id=matter.id %}"
+         name="work_status"
+         hx-post="{% url 'matters:update-work-status' id=matter.id %}"
          hx-target="#matter-{{ matter.id }}"
          hx-trigger="change, blur, keyup[key=='Enter']"
          onfocus="moveFocusToEnd(this)"
          hx-swap="outerHTML"
-         value="{{ matter.description }}" />
+         value="{{ matter.work_status }}" />
 </div>

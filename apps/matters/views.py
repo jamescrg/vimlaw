@@ -196,16 +196,16 @@ def delete(request, id):
 
 
 @login_required
-def edit_description(request, matter_id):
+def edit_work_status(request, matter_id):
     matter = get_object_or_404(Matter, pk=matter_id)
     context = {"matter": matter}
-    return render(request, "matters/edit-description.html", context)
+    return render(request, "matters/edit-work-status.html", context)
 
 
 @login_required
-def update_description(request, id):
+def update_work_status(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    matter.description = request.POST.get("description")
+    matter.work_status = request.POST.get("work_status")
     matter.save()
 
     if request.session.get("matters-view"):

@@ -13,7 +13,7 @@ from .views import (
     delete,
     detail,
     edit,
-    edit_description,
+    edit_work_status,
     filter,
     filter_quick,
     filter_quick_status,
@@ -21,7 +21,7 @@ from .views import (
     matter_list,
     order_by,
     print,
-    update_description,
+    update_work_status,
 )
 
 app_name = "matters"
@@ -35,14 +35,14 @@ urlpatterns = [
     path("matters/<int:id>/edit", edit, name="edit"),
     path("matters/<int:id>/delete", delete, name="delete"),
     path(
-        "matters/edit-description/<int:matter_id>",
-        edit_description,
-        name="edit-description",
+        "matters/edit-work-status/<int:matter_id>",
+        edit_work_status,
+        name="edit-work-status",
     ),
     path(
-        "matters/<int:id>/update-description",
-        update_description,
-        name="update-description",
+        "matters/<int:id>/update-work-status",
+        update_work_status,
+        name="update-work-status",
     ),
     path("matters/<int:id>/print", print, name="print"),
     # Contacts

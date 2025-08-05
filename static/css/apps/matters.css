@@ -8,7 +8,7 @@ Matter Form
   width: 400px;
 }
 
-.matter-form #id_description {
+.matter-form #id_work_status {
   width: 400px;
 }
 
@@ -40,7 +40,7 @@ Matter Form
   margin-bottom: 15px;
 }
 
-.edit-matter-description-input {
+.edit-matter-work-status-input {
   background: inherit;
   border: none;
   padding: 0;
@@ -71,7 +71,7 @@ Matter List
   width: fit-content;
 }
 
-/* inline form for updating description / status */
+/* inline form for updating work status */
 .edit-status {
   background: inherit;
   border: none;

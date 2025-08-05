@@ -12,7 +12,7 @@ class MatterForm(forms.ModelForm):
             "status",
             "name",
             "date_start",
-            "description",
+            "work_status",
             "practice_area",
             "firm",
             "client_reference_id",

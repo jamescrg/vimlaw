@@ -106,11 +106,11 @@ def test_filter_order(client):
     assert client.session["matter_filter"]["order_by"] == "name"
 
 
-def test_edit_description(client, user, matter):
+def test_edit_work_status(client, user, matter):
     data = {
-        "description": "New edited description",
+        "work_status": "New edited work status",
     }
-    response = client.post(f"/matters/edit-description/{matter.id}", data)
+    response = client.post(f"/matters/edit-work-status/{matter.id}", data)
     assert response.status_code == 200
 
 
