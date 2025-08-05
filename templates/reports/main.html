@@ -2,9 +2,9 @@
 {% block content %}
   <div class="subnav">
     <ul>
-      <!-- <li {% if subapp == "revenue" %}class="active"{% endif %}> -->
-      <!--   <a href="{% url 'reports:revenue-index' %}">Revenue</a> -->
-      <!-- </li> -->
+      <li {% if subapp == "revenue" %}class="active"{% endif %}>
+        <a href="{% url 'reports:revenue-index' %}">Revenue</a>
+      </li>
       <li {% if subapp == "activity" %}class="active"{% endif %}>
         <a href="{% url 'reports:activity-index' %}">Activity</a>
       </li>
