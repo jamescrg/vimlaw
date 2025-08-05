@@ -61,6 +61,12 @@ Table
   margin-top: 20px;
 }
 
+.section h2 {
+  margin: 15px 0 8px 0;
+  font-size: 14pt;
+  color: #333;
+}
+
 .intakes-table {
   width: 100%;
   border-collapse: collapse;
@@ -120,6 +126,10 @@ Typography
 ========================================================================== */
 
 .llc {
-  font-size: 8pt;
-  vertical-align: super;
+  font-size: 9pt;
+  vertical-align: baseline;
+}
+
+.page-break-before {
+  page-break-before: always;
 }

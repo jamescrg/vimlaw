@@ -27,6 +27,16 @@ PRACTICE_AREAS = [
     "Construction",
 ]
 
+# Define intake statuses to match the choices in forms
+INTAKE_STATUSES = [
+    "Open",
+    "Pending",
+    "Accepted",
+    "Referred Out",
+    "Client Declined",
+    "Unresponsive",
+]
+
 
 @login_required
 @staff_member_required
@@ -66,7 +76,7 @@ def intakes_index(request):
         intakes.annotate(month=TruncMonth("date"))
         .values("month")
         .distinct()
-        .order_by("-month")
+        .order_by("month")
     )
 
     # Build data structure with counts by practice area
@@ -115,14 +125,59 @@ def intakes_index(request):
             percentage = (totals_by_practice_area[practice_area] / total_intakes) * 100
             percentages_by_practice_area[practice_area] = round(percentage, 1)
 
+    # Build data structure with counts by status (for conversion table)
+    status_data = []
+    totals_by_status = defaultdict(int)
+
+    for month_data in months_with_intakes:
+        if month_data["month"]:
+            month_str = month_data["month"].strftime("%B %Y")
+            row = {
+                "month": month_str,
+                "month_sort": month_data["month"],
+                "statuses": {},
+                "total": 0,
+            }
+
+            # Get counts for each status for this month
+            for status in INTAKE_STATUSES:
+                count = intakes.filter(
+                    date__year=month_data["month"].year,
+                    date__month=month_data["month"].month,
+                    status=status,
+                ).count()
+                row["statuses"][status] = count
+                row["total"] += count
+                totals_by_status[status] += count
+
+            # Calculate percentages for this month
+            row["percentages"] = {}
+            if row["total"] > 0:
+                for status in INTAKE_STATUSES:
+                    percentage = (row["statuses"][status] / row["total"]) * 100
+                    row["percentages"][status] = round(percentage, 1)
+
+            status_data.append(row)
+
+    # Calculate overall percentages for each status
+    percentages_by_status = {}
+    if total_intakes > 0:
+        for status in INTAKE_STATUSES:
+            percentage = (totals_by_status[status] / total_intakes) * 100
+            percentages_by_status[status] = round(percentage, 1)
+
     context = {
         "app": "reports",
         "subapp": "intakes",
         "intake_data": intake_data,
+        "status_data": status_data,
         "total_intakes": total_intakes,
         "totals_by_practice_area": dict(totals_by_practice_area),
+        "totals_by_status": dict(totals_by_status),
         "percentages_by_practice_area": percentages_by_practice_area,
+        "percentages_by_status": percentages_by_status,
         "practice_areas": PRACTICE_AREAS,
+        "intake_statuses": INTAKE_STATUSES,
         "date_from": date_from,
         "date_to": date_to,
     }
@@ -168,7 +223,7 @@ def intakes_list(request):
         intakes.annotate(month=TruncMonth("date"))
         .values("month")
         .distinct()
-        .order_by("-month")
+        .order_by("month")
     )
 
     # Build data structure with counts by practice area
@@ -217,14 +272,59 @@ def intakes_list(request):
             percentage = (totals_by_practice_area[practice_area] / total_intakes) * 100
             percentages_by_practice_area[practice_area] = round(percentage, 1)
 
+    # Build data structure with counts by status (for conversion table)
+    status_data = []
+    totals_by_status = defaultdict(int)
+
+    for month_data in months_with_intakes:
+        if month_data["month"]:
+            month_str = month_data["month"].strftime("%B %Y")
+            row = {
+                "month": month_str,
+                "month_sort": month_data["month"],
+                "statuses": {},
+                "total": 0,
+            }
+
+            # Get counts for each status for this month
+            for status in INTAKE_STATUSES:
+                count = intakes.filter(
+                    date__year=month_data["month"].year,
+                    date__month=month_data["month"].month,
+                    status=status,
+                ).count()
+                row["statuses"][status] = count
+                row["total"] += count
+                totals_by_status[status] += count
+
+            # Calculate percentages for this month
+            row["percentages"] = {}
+            if row["total"] > 0:
+                for status in INTAKE_STATUSES:
+                    percentage = (row["statuses"][status] / row["total"]) * 100
+                    row["percentages"][status] = round(percentage, 1)
+
+            status_data.append(row)
+
+    # Calculate overall percentages for each status
+    percentages_by_status = {}
+    if total_intakes > 0:
+        for status in INTAKE_STATUSES:
+            percentage = (totals_by_status[status] / total_intakes) * 100
+            percentages_by_status[status] = round(percentage, 1)
+
     context = {
         "app": "reports",
         "subapp": "intakes",
         "intake_data": intake_data,
+        "status_data": status_data,
         "total_intakes": total_intakes,
         "totals_by_practice_area": dict(totals_by_practice_area),
+        "totals_by_status": dict(totals_by_status),
         "percentages_by_practice_area": percentages_by_practice_area,
+        "percentages_by_status": percentages_by_status,
         "practice_areas": PRACTICE_AREAS,
+        "intake_statuses": INTAKE_STATUSES,
         "date_from": date_from,
         "date_to": date_to,
     }

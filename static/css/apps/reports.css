@@ -21,3 +21,13 @@
   color: var(--stone-500);
   font-style: italic;
 }
+
+/* Intakes report specific styles */
+.reports-section-heading {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.reports-filter-info {
+  margin-top: 1.5rem;
+}
