@@ -22,16 +22,36 @@
         <a class="{% if filter_label == "today" %}toggle-active{% endif %}"
            href="#"
            hx-post="{% url 'activity:expenses-filter-quick' 'today' %}">Today</a>
-        <form hx-post="{% url 'activity:expenses-filter-user' %}"
-              hx-trigger="change from:select">
-          {% csrf_token %}
-          <select class="select-property" name="user">
-            <option value="">All</option>
-            {% for user in users %}
-              <option value="{{ user.id }}" {% if user.id == user_id %}selected{% endif %}>{{ user.username|title }}</option>
-            {% endfor %}
-          </select>
-        </form>
+        <button type="button"
+                id="expenses-user-filter"
+                class="select-btn extra-small-btn {% if selected_user %}toggle-active{% endif %}"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          {{ selected_user|default:"All" }}
+          <small>
+            <i class="bi bi-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu"
+            hx-target="#expenses-user-filter"
+            hx-swap="outerHTML">
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'activity:expenses-filter-user' 0 %}"
+               hx-target="#expense-table"
+               hx-swap="outerHTML">All</a>
+          </li>
+          {% for user in users %}
+            <li>
+              <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'activity:expenses-filter-user' user.id %}"
+                 hx-target="#expense-table"
+                 hx-swap="outerHTML">{{ user.username|title }}</a>
+            </li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
     <div class="toolbar-right">

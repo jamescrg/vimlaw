@@ -54,7 +54,11 @@ urlpatterns = [
         time_filter_matter,
         name="time-filter-matter",
     ),
-    path("activity/time/filter/user/", time_filter_user, name="time-filter-user"),
+    path(
+        "activity/time/filter/user/<int:user_id>/",
+        time_filter_user,
+        name="time-filter-user",
+    ),
     path(
         "activity/time/filter/order_by/<str:order>", order_by_time, name="time-order-by"
     ),
@@ -85,7 +89,7 @@ urlpatterns = [
         name="expenses-filter-quick",
     ),
     path(
-        "activity/expenses/filter/user/",
+        "activity/expenses/filter/user/<int:user_id>/",
         expenses_filter_user,
         name="expenses-filter-user",
     ),

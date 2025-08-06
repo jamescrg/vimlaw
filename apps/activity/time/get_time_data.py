@@ -62,6 +62,12 @@ def get_time_data(request):
         entries, per_page=10, request=request, session_key="time_pagination"
     )
 
+    selected_user = None
+    if user_id:
+        selected_user = (
+            CustomUser.objects.filter(id=user_id).first().username.capitalize()
+        )
+
     context = {
         "edit": False,
         "objects": pagination.get_object_list(),
@@ -71,6 +77,7 @@ def get_time_data(request):
         "number_entries": number_entries,
         "summary": summary,
         "users": users,
+        "selected_user": selected_user,
         "user_id": user_id,
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,
     }

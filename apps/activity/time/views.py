@@ -145,11 +145,10 @@ def time_filter_quick(request, quick_filter):
 
 
 @login_required
-def time_filter_user(request):
+def time_filter_user(request, user_id):
     filter_data = request.session.get("time_filter", {})
-    user = request.POST.get("user")
+    filter_data["user"] = user_id
 
-    filter_data["user"] = user
     request.session["time_filter"] = filter_data
 
     return HttpResponse(status=204, headers={"HX-Trigger": "timeChanged"})

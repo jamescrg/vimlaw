@@ -106,13 +106,12 @@ def expenses_filter_quick(request, quick_filter):
 
 
 @login_required
-def expenses_filter_user(request):
+def expenses_filter_user(request, user_id):
     filter_data = request.session.get("expenses_filter", {})
-
-    user = request.POST.get("user")
-    filter_data["user"] = user
+    filter_data["user"] = user_id
 
     request.session["expenses_filter"] = filter_data
+
     return HttpResponse(status=204, headers={"HX-Trigger": "expensesChanged"})
 
 
