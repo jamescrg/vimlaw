@@ -32,6 +32,7 @@
 
   --amber-400: #f59e0b;
   --amber-500: #eab308;
+  --amber-desaturated: hsl(45, 93%, 47%);
 
   --blue-600: #2563eb;
   --blue-700: #1d4ed8;
@@ -83,6 +84,7 @@
   --teal-700: #047857;
   --teal-800: #115e59;
 
+  --yellow-50: hsl(55, 97%, 85%);
   --yellow-100: #fef9c3;
   --yellow-200: #fef08a;
   --yellow-300: #fde047;
@@ -109,6 +111,7 @@
   --selected-border: hsl(252, 22%, 85%);
 
   --client-background: hsl(252, 12%, 91%);
+  --highlighted: var(--stone-125);
 }
 
 .true-bool {
@@ -125,4 +128,9 @@
 
 .delete-link:hover {
   color: var(--orange-700);
+}
+
+.highlighted {
+  background: var(--highlighted) !important;
+  font-weight: 500;
 }

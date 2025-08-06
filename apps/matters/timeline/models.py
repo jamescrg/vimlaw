@@ -9,7 +9,7 @@ class Fact(models.Model):
     date = models.DateField(null=True)
     time = models.TimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
     description = models.CharField(max_length=150, null=True)
-    citation = models.CharField(max_length=155, blank=True, null=True)
+    citation = models.CharField(max_length=255, blank=True, null=True)
     emphasis = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):

@@ -45,14 +45,12 @@ def timeline_index(request, id):
 def timeline_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
-    facts = Fact.objects.filter(matter=matter.id).order_by("date")
+    facts = Fact.objects.filter(matter=matter.id).order_by("date", "time")
 
     context = {
         "app": "matters",
         "subapp": "timeline",
         "matter": matter,
-        "proceeding": proceeding,
         "facts": facts,
     }
 
