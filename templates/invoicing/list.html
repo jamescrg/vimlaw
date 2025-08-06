@@ -1,23 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="subnav">
-    <ul>
-      <li {% if subapp == "invoices" %}class="active"{% endif %}>
-        <a href="{% url 'invoicing:invoices-index' %}">Invoices</a>
-      </li>
-      <li {% if subapp == "payments" %}class="active"{% endif %}>
-        <a href="{% url 'invoicing:payments-index' %}">Payments</a>
-      </li>
-      <li {% if subapp == "credits" %}class="active"{% endif %}>
-        <a href="{% url 'invoicing:credits-index' %}">Credits</a>
-      </li>
-      <li {% if subapp == "collection" %}class="active"{% endif %}>
-        <a href="{% url 'invoicing:collection-index' %}">Collection</a>
-      </li>
-    </ul>
-  </div>
-  <div class="section subsection">
-    {% block subcontent %}
-    {% endblock subcontent %}
+  <div id="content" class="container content">
+    <div class="subnav">
+      <ul>
+        <li {% if subapp == "invoices" %}class="active"{% endif %}>
+          <a href="{% url 'invoicing:invoices-index' %}">Invoices</a>
+        </li>
+        <li {% if subapp == "payments" %}class="active"{% endif %}>
+          <a href="{% url 'invoicing:payments-index' %}">Payments</a>
+        </li>
+        <li {% if subapp == "credits" %}class="active"{% endif %}>
+          <a href="{% url 'invoicing:credits-index' %}">Credits</a>
+        </li>
+        <li {% if subapp == "collection" %}class="active"{% endif %}>
+          <a href="{% url 'invoicing:collection-index' %}">Collection</a>
+        </li>
+      </ul>
+    </div>
+    <div class="section subsection">
+      {% block subcontent %}
+      {% endblock subcontent %}
+    </div>
   </div>
 {% endblock content %}

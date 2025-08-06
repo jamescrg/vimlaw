@@ -110,6 +110,8 @@ th.priority .bi-caret-up {
 }
 
 .tasks-table .date {
+  overflow: visible;
+  white-space: nowrap;
   width: 120px;
 }
 

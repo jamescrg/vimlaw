@@ -1,64 +1,66 @@
 {% extends "base.html" %}
 {% block content %}
   {% load humanize %}
-  <div class="section matter-title">
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <h1>{{ matter.name }}</h1>
-        <div class="filter-tools">
-          <button class="icon-green"
-                  hx-get="/activity/time/add/{{ matter.id }}/matters"
-                  hx-target="#htmx-modal-container"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">+ Time</button>
-          <button class="icon-green"
-                  hx-get="/activity/expenses/add/{{ matter.id }}/matters"
-                  hx-target="#htmx-modal-container"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">+ Expense</button>
-          <a href={% url 'matters:print' id=matter.id %}>
-            <i class="bi bi-printer"></i>
-          </a>
-          <a href={% url 'matters:edit' id=matter.id %}>
-            <i class="bi bi-pencil"></i>
-          </a>
+  <div id="content" class="container content">
+    <div class="section matter-title">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <h1>{{ matter.name }}</h1>
+          <div class="filter-tools">
+            <button class="icon-green"
+                    hx-get="/activity/time/add/{{ matter.id }}/matters"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">+ Time</button>
+            <button class="icon-green"
+                    hx-get="/activity/expenses/add/{{ matter.id }}/matters"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">+ Expense</button>
+            <a href={% url 'matters:print' id=matter.id %}>
+              <i class="bi bi-printer"></i>
+            </a>
+            <a href={% url 'matters:edit' id=matter.id %}>
+              <i class="bi bi-pencil"></i>
+            </a>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <h2>No. {{ matter.id }}</h2>
         </div>
       </div>
-      <div class="toolbar-right">
-        <h2>No. {{ matter.id }}</h2>
-      </div>
     </div>
-  </div>
-  <div class="subnav matter-subnav">
-    <ul>
-      <li {% if subapp == 'rates' %}class="active"{% endif %}>
-        <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
-      </li>
-      <li {% if subapp == 'activity' %}class="active"{% endif %}>
-        <a href={% url 'matters:activity-index' id=matter.id %}>Activity</a>
-      </li>
-      <li {% if subapp == 'events' %}class="active"{% endif %}>
-        <a href={% url 'matters:events-index' id=matter.id %}>Events</a>
-      </li>
-      <li {% if subapp == 'contacts' %}class="active"{% endif %}>
-        <a href={% url 'matters:contacts' id=matter.id %}>Contacts</a>
-      </li>
-      <li {% if subapp == 'proceedings' %}class="active"{% endif %}>
-        <a href={% url 'matters:proceedings-index' id=matter.id %}>Proceedings</a>
-      </li>
-      <li {% if subapp == 'settlement' %}class="active"{% endif %}>
-        <a href={% url 'matters:settlement-index' id=matter.id %}>Settlement</a>
-      </li>
-      <li {% if subapp == 'timeline' %}class="active"{% endif %}>
-        <a href={% url 'matters:timeline-index' id=matter.id %}>Timeline</a>
-      </li>
-      <li {% if subapp == 'ledger' %}class="active"{% endif %}>
-        <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>
-      </li>
-    </ul>
-  </div>
-  <div class="section subsection">
-    {% block subcontent %}
-    {% endblock subcontent %}
+    <div class="subnav matter-subnav">
+      <ul>
+        <li {% if subapp == 'rates' %}class="active"{% endif %}>
+          <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
+        </li>
+        <li {% if subapp == 'activity' %}class="active"{% endif %}>
+          <a href={% url 'matters:activity-index' id=matter.id %}>Activity</a>
+        </li>
+        <li {% if subapp == 'events' %}class="active"{% endif %}>
+          <a href={% url 'matters:events-index' id=matter.id %}>Events</a>
+        </li>
+        <li {% if subapp == 'contacts' %}class="active"{% endif %}>
+          <a href={% url 'matters:contacts' id=matter.id %}>Contacts</a>
+        </li>
+        <li {% if subapp == 'proceedings' %}class="active"{% endif %}>
+          <a href={% url 'matters:proceedings-index' id=matter.id %}>Proceedings</a>
+        </li>
+        <li {% if subapp == 'settlement' %}class="active"{% endif %}>
+          <a href={% url 'matters:settlement-index' id=matter.id %}>Settlement</a>
+        </li>
+        <li {% if subapp == 'timeline' %}class="active"{% endif %}>
+          <a href={% url 'matters:timeline-index' id=matter.id %}>Timeline</a>
+        </li>
+        <li {% if subapp == 'ledger' %}class="active"{% endif %}>
+          <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>
+        </li>
+      </ul>
+    </div>
+    <div class="section subsection">
+      {% block subcontent %}
+      {% endblock subcontent %}
+    </div>
   </div>
 {% endblock content %}

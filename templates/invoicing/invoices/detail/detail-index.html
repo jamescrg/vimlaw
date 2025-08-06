@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
   {% load humanize %}
-  <div id="time"
-       hx-trigger="load, invoiceDetailChanged from:body"
-       hx-get="{% url 'invoicing:invoices-detail' invoice.id %}"
-       hx-target="this">{% include "invoicing/invoices/detail/detail.html" %}</div>
+  <div id="content" class="container content">
+    <div id="time"
+         hx-trigger="load, invoiceDetailChanged from:body"
+         hx-get="{% url 'invoicing:invoices-detail' invoice.id %}"
+         hx-target="this">{% include "invoicing/invoices/detail/detail.html" %}</div>
+  </div>
 {% endblock content %}

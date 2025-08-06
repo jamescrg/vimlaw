@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="subnav">
-    <ul>
-      <li {% if subapp == "time" %}class="active"{% endif %}>
-        <a href="{% url 'activity:time-index' %}">Time</a>
-      </li>
-      <li {% if subapp == "expenses" %}class="active"{% endif %}>
-        <a href="{% url 'activity:expenses-index' %}">Expenses</a>
-      </li>
-    </ul>
-  </div>
-  <div class="section subsection">
-    {% block subcontent %}
-    {% endblock subcontent %}
+  <div id="content" class="container content">
+    <div class="subnav">
+      <ul>
+        <li {% if subapp == "time" %}class="active"{% endif %}>
+          <a href="{% url 'activity:time-index' %}">Time</a>
+        </li>
+        <li {% if subapp == "expenses" %}class="active"{% endif %}>
+          <a href="{% url 'activity:expenses-index' %}">Expenses</a>
+        </li>
+      </ul>
+    </div>
+    <div class="section subsection">
+      {% block subcontent %}
+      {% endblock subcontent %}
+    </div>
   </div>
 {% endblock content %}

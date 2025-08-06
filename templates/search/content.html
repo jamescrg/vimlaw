@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="row search">
-    {% include "search/form.html" %}
-    {% if results %}
-      {% include "search/results.html" %}
-    {% endif %}
+  <div id="content" class="container content">
+    <div class="row search">
+      {% include "search/form.html" %}
+      {% if results %}
+        {% include "search/results.html" %}
+      {% endif %}
+    </div>
   </div>
 {% endblock content %}

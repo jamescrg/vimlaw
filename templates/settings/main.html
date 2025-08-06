@@ -1,28 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="subnav">
-    <ul>
-      <li {% if subapp == "profile" %}class="active"{% endif %}>
-        <a href="{% url 'settings:profile-index' %}">Profile</a>
-      </li>
-      <li {% if subapp == "session" %}class="active"{% endif %}>
-        <a href="{% url 'settings:settings' %}">Session</a>
-      </li>
-      {% if user.role == 'ADMIN' %}
-        <!--<li {% if subapp == "company" %}class="active"{% endif %}>-->
-        <!--  <a href="{% url 'settings:company-index' %}">Company</a>-->
-        <!--</li>-->
-        <li {% if subapp == "users" %}class="active"{% endif %}>
-          <a href="{% url 'settings:users-index' %}">Users</a>
+  <div id="content" class="container content">
+    <div class="subnav">
+      <ul>
+        <li {% if subapp == "profile" %}class="active"{% endif %}>
+          <a href="{% url 'settings:profile-index' %}">Profile</a>
         </li>
-        <li {% if subapp == "integrations" %}class="active"{% endif %}>
-          <a href="{% url 'settings:integrations-index' %}">Integrations</a>
+        <li {% if subapp == "session" %}class="active"{% endif %}>
+          <a href="{% url 'settings:settings' %}">Session</a>
         </li>
-      {% endif %}
-    </ul>
-  </div>
-  <div class="section subsection">
-    {% block subcontent %}
-    {% endblock subcontent %}
+        {% if user.role == 'ADMIN' %}
+          <!--<li {% if subapp == "company" %}class="active"{% endif %}>-->
+          <!--  <a href="{% url 'settings:company-index' %}">Company</a>-->
+          <!--</li>-->
+          <li {% if subapp == "users" %}class="active"{% endif %}>
+            <a href="{% url 'settings:users-index' %}">Users</a>
+          </li>
+          <li {% if subapp == "integrations" %}class="active"{% endif %}>
+            <a href="{% url 'settings:integrations-index' %}">Integrations</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="section subsection">
+      {% block subcontent %}
+      {% endblock subcontent %}
+    </div>
   </div>
 {% endblock content %}

@@ -62,10 +62,8 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% include "modals.html" %}
   {% include "nav.html" %}
-  <div id="content" class="container content">
-    {% block content %}
-    {% endblock content %}
-  </div>
+  {% block content %}
+  {% endblock content %}
   <!-- javascript -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

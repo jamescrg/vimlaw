@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-  {% load humanize %}
-  <div id="contacts">{% include "contacts/content.html" %}</div>
+  <div id="content" class="container content">
+    {% load humanize %}
+    <div id="contacts">{% include "contacts/content.html" %}</div>
+  </div>
 {% endblock content %}
