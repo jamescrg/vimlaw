@@ -26,7 +26,7 @@
         <tr>
           <th class="date-time">Date</th>
           <th class="description">Description</th>
-          <th class="citation">Citations</th>
+          <th class="citations">Citations</th>
         </tr>
         {% for fact in facts %}
           <tr>
@@ -43,7 +43,9 @@
                  data-bs-toggle="modal"
                  data-bs-target="#htmx-modal-container">{{ fact.description }}</a>
             </td>
-            <td class="citation {% if fact.emphasis == 'Yes' %}highlighted{% endif %}">{{ fact.citations|default_if_none:'' }}</td>
+            <td class="citations{% if fact.emphasis == 'Yes' %} highlighted{% endif %}">
+              {{ fact.citations|default_if_none:'' }}
+            </td>
           </tr>
         {% endfor %}
       {% endif %}
