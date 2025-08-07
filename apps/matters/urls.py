@@ -150,6 +150,26 @@ urlpatterns = [
     ),
     path("matters/<int:id>/timeline/print", timeline.print, name="timeline-print"),
     path("matters/<int:pk>/timeline/pdf/", timeline.timeline_pdf, name="timeline-pdf"),
+    path(
+        "matters/<int:matter_id>/timeline/<int:fact_id>/edit-description",
+        timeline.edit_fact_description,
+        name="timeline-edit-description",
+    ),
+    path(
+        "matters/<int:matter_id>/timeline/<int:fact_id>/update-description",
+        timeline.update_fact_description,
+        name="timeline-update-description",
+    ),
+    path(
+        "matters/<int:matter_id>/timeline/<int:fact_id>/edit-citations",
+        timeline.edit_fact_citations,
+        name="timeline-edit-citations",
+    ),
+    path(
+        "matters/<int:matter_id>/timeline/<int:fact_id>/update-citations",
+        timeline.update_fact_citations,
+        name="timeline-update-citations",
+    ),
     path("matters/filter", filter, name="filter"),
     path("matters/order-by/<str:order>", order_by, name="order-by"),
     path("matters/filter-quick/<str:quick_filter>/", filter_quick, name="filter-quick"),

@@ -167,3 +167,47 @@ def timeline_pdf(request, pk):
     os.unlink(file.name)
 
     return response
+
+
+@login_required
+def edit_fact_description(request, matter_id, fact_id):
+    fact = get_object_or_404(Fact, pk=fact_id)
+    matter = get_object_or_404(Matter, pk=matter_id)
+    context = {"fact": fact, "matter": matter}
+    return render(request, "matters/timeline/edit-description.html", context)
+
+
+@login_required
+def update_fact_description(request, matter_id, fact_id):
+    fact = get_object_or_404(Fact, pk=fact_id)
+    matter = get_object_or_404(Matter, pk=matter_id)
+    fact.description = request.POST.get("description")
+    fact.save()
+
+    context = {
+        "matter": matter,
+        "fact": fact,
+    }
+    return render(request, "matters/timeline/fact-row.html", context)
+
+
+@login_required
+def edit_fact_citations(request, matter_id, fact_id):
+    fact = get_object_or_404(Fact, pk=fact_id)
+    matter = get_object_or_404(Matter, pk=matter_id)
+    context = {"fact": fact, "matter": matter}
+    return render(request, "matters/timeline/edit-citations.html", context)
+
+
+@login_required
+def update_fact_citations(request, matter_id, fact_id):
+    fact = get_object_or_404(Fact, pk=fact_id)
+    matter = get_object_or_404(Matter, pk=matter_id)
+    fact.citations = request.POST.get("citations")
+    fact.save()
+
+    context = {
+        "matter": matter,
+        "fact": fact,
+    }
+    return render(request, "matters/timeline/fact-row.html", context)
