@@ -128,7 +128,7 @@ def tasks_add(request, id):
             initial={
                 "user": initial_user,
                 "matter": matter,
-                "focus": focus,
+                "focus": focus if focus else "Long Term",  # Default to Long Term
             },
             use_required_attribute=False,
         )
