@@ -19,31 +19,31 @@ Display
 
 
 .fact-color-blue {
-  background: hsl(210, 50%, 95%) !important;
+  background: var(--sky-50) !important; /* Using sky instead of blue for better distinction */
 }
 
 .fact-color-gray {
-  background: hsl(0, 0%, 95%) !important;
+  background: var(--slate-50) !important; /* Using slate for better gray contrast */
 }
 
 .fact-color-green {
-  background: hsl(120, 50%, 95%) !important;
+  background: var(--green-50) !important;
 }
 
 .fact-color-orange {
-  background: hsl(30, 50%, 95%) !important;
+  background: var(--orange-50) !important;
 }
 
 .fact-color-purple {
-  background: hsl(270, 50%, 95%) !important;
+  background: var(--purple-50) !important;
 }
 
 .fact-color-red {
-  background: hsl(0, 50%, 95%) !important;
+  background: var(--red-50) !important;
 }
 
 .fact-color-yellow {
-  background: hsl(55, 50%, 95%) !important;
+  background: var(--yellow-50) !important;
 }
 
 .edit-fact-description-input {

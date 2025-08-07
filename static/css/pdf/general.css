@@ -152,29 +152,29 @@ Fact Color Classes
 ========================================================================== */
 
 .fact-color-blue td {
-  background-color: hsl(210, 50%, 95%) !important;
+  background-color: var(--sky-50) !important; /* Using sky instead of blue for better distinction */
 }
 
 .fact-color-gray td {
-  background-color: hsl(0, 0%, 95%) !important;
+  background-color: var(--slate-50) !important; /* Using slate for better gray contrast */
 }
 
 .fact-color-green td {
-  background-color: hsl(120, 50%, 95%) !important;
+  background-color: var(--green-50) !important;
 }
 
 .fact-color-orange td {
-  background-color: hsl(30, 50%, 95%) !important;
+  background-color: var(--orange-50) !important;
 }
 
 .fact-color-purple td {
-  background-color: hsl(270, 50%, 95%) !important;
+  background-color: var(--purple-50) !important;
 }
 
 .fact-color-red td {
-  background-color: hsl(0, 50%, 95%) !important;
+  background-color: var(--red-50) !important;
 }
 
 .fact-color-yellow td {
-  background-color: hsl(55, 50%, 95%) !important;
+  background-color: var(--yellow-50) !important;
 }
