@@ -21,7 +21,7 @@
     </div>
   </div>
   <div class="table-container">
-    <table class="table timeline-list">
+    <table id="timeline-list" class="table timeline-list">
       {% if facts %}
         <tr>
           <th class="date-time">Date</th>
@@ -29,24 +29,7 @@
           <th class="citations">Citations</th>
         </tr>
         {% for fact in facts %}
-          <tr>
-            <td class="date-time {% if fact.emphasis == 'Yes' %}highlighted{% endif %}">
-              {{ fact.date|date:'Y-m-d' }} {{ fact.time|time:'g:i A' }}
-            </td>
-            <td class="description {% if fact.emphasis == 'Yes' %}highlighted{% endif %}">
-              <a href="#"
-                 type="button"
-                 class="btn-icon"
-                 hx-get="/matters/{{ matter.id }}/timeline/{{ fact.id }}/edit"
-                 hx-target="#htmx-modal-container"
-                 hx-trigger="click"
-                 data-bs-toggle="modal"
-                 data-bs-target="#htmx-modal-container">{{ fact.description }}</a>
-            </td>
-            <td class="citations{% if fact.emphasis == 'Yes' %} highlighted{% endif %}">
-              {{ fact.citations|default_if_none:'' }}
-            </td>
-          </tr>
+          {% include "matters/timeline/fact-row.html" %}
         {% endfor %}
       {% endif %}
     </table>

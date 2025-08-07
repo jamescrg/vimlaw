@@ -84,7 +84,7 @@
   --teal-700: #047857;
   --teal-800: #115e59;
 
-  --yellow-50: hsl(55, 97%, 85%);
+  --yellow-50: hsl(55, 47%, 94%);
   --yellow-100: #fef9c3;
   --yellow-200: #fef08a;
   --yellow-300: #fde047;
@@ -111,7 +111,9 @@
   --selected-border: hsl(252, 22%, 85%);
 
   --client-background: hsl(252, 12%, 91%);
-  --highlighted: var(--stone-125);
+  /* --highlighted: var(--stone-125); */
+  --highlighted: var(--yellow-50);
+
 }
 
 .true-bool {
