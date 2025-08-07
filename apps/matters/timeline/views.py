@@ -5,13 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
-from apps.matters.proceedings.models import Proceeding
 from apps.matters.timeline.forms import FactForm
 from apps.matters.timeline.generate_timeline import generate_timeline
 from apps.matters.timeline.models import Fact
-from apps.trust.trust import get_confirmed_client_balance
 
 
 @login_required
@@ -20,22 +17,11 @@ def timeline_index(request, id):
 
     facts = Fact.objects.filter(matter=matter.id).order_by("date")
 
-    # Get client trust balance
-    client_trust_balance = 0
-    if matter.client:
-        client_trust_balance = get_confirmed_client_balance(matter.client.id)
-
-    # Get balance due from ledger
-    ledger_data = get_ledger_data(matter)
-    balance_due = ledger_data.get("balance_due", 0)
-
     context = {
         "app": "matters",
         "subapp": "timeline",
         "matter": matter,
         "facts": facts,
-        "client_trust_balance": client_trust_balance,
-        "balance_due": balance_due,
     }
 
     return render(request, "matters/timeline/main.html", context)
@@ -60,7 +46,6 @@ def timeline_list(request, id):
 @login_required
 def add(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
@@ -84,7 +69,6 @@ def add(request, id):
         "app": "matters",
         "subapp": "timeline",
         "matter": matter,
-        "proceeding": proceeding,
         "edit": False,
         "add": True,
         "action": f"/matters/{id}/timeline/add",
@@ -97,7 +81,6 @@ def add(request, id):
 @login_required
 def edit(request, id, fact_id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     fact = get_object_or_404(Fact, pk=fact_id)
 
     # if applicable, process any post data submitted by user
@@ -121,7 +104,6 @@ def edit(request, id, fact_id):
         "app": "matters",
         "subapp": "timeline",
         "matter": matter,
-        "proceeding": proceeding,
         "fact": fact,
         "edit": True,
         "add": False,

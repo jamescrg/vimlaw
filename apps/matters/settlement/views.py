@@ -4,38 +4,22 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
-from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.forms import SettlementEntryForm
 from apps.matters.settlement.models import SettlementEntry
-from apps.trust.trust import get_confirmed_client_balance
 
 
 @login_required
 def settlement_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
     entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
-
-    # Get client trust balance
-    client_trust_balance = 0
-    if matter.client:
-        client_trust_balance = get_confirmed_client_balance(matter.client.id)
-
-    # Get balance due from ledger
-    ledger_data = get_ledger_data(matter)
-    balance_due = ledger_data.get("balance_due", 0)
 
     context = {
         "app": "matters",
         "subapp": "settlement",
         "matter": matter,
-        "proceeding": proceeding,
         "entries": entries,
-        "client_trust_balance": client_trust_balance,
-        "balance_due": balance_due,
     }
 
     return render(request, "matters/settlement/main.html", context)
@@ -45,14 +29,12 @@ def settlement_index(request, id):
 def settlement_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
 
     context = {
         "app": "matters",
         "subapp": "settlement",
         "matter": matter,
-        "proceeding": proceeding,
         "entries": entries,
     }
 
@@ -62,7 +44,6 @@ def settlement_list(request, id):
 @login_required
 def add(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
@@ -88,7 +69,6 @@ def add(request, id):
         "app": "matters",
         "subapp": "settlement",
         "matter": matter,
-        "proceeding": proceeding,
         "edit": False,
         "add": True,
         "action": f"/matters/{id}/settlement/add",
@@ -101,7 +81,6 @@ def add(request, id):
 @login_required
 def edit(request, id, entry_id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
     entry = get_object_or_404(SettlementEntry, pk=entry_id)
 
     # if applicable, process any post data submitted by user
@@ -127,7 +106,6 @@ def edit(request, id, entry_id):
         "app": "matters",
         "subapp": "settlement",
         "matter": matter,
-        "proceeding": proceeding,
         "entry": entry,
         "edit": True,
         "add": False,

@@ -3,38 +3,22 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from apps.accounts.models import CustomUser
-from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
-from apps.matters.proceedings.models import Proceeding
 from apps.matters.rates.forms import RateForm
 from apps.matters.rates.models import Rate
-from apps.trust.trust import get_confirmed_client_balance
 
 
 @login_required
 def rate_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
 
     rates = Rate.objects.filter(matter=matter).order_by("user__username")
-
-    # Get client trust balance
-    client_trust_balance = 0
-    if matter.client:
-        client_trust_balance = get_confirmed_client_balance(matter.client.id)
-
-    # Get balance due from ledger
-    ledger_data = get_ledger_data(matter)
-    balance_due = ledger_data.get("balance_due", 0)
 
     context = {
         "app": "matters",
         "subapp": "rates",
         "matter": matter,
-        "proceeding": proceeding,
         "rates": rates,
-        "client_trust_balance": client_trust_balance,
-        "balance_due": balance_due,
     }
 
     return render(request, "matters/rates/main.html", context)
@@ -43,27 +27,14 @@ def rate_index(request, id):
 @login_required
 def rate_list(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     rates = Rate.objects.filter(matter=matter).order_by("user__username")
-
-    # Get client trust balance
-    client_trust_balance = 0
-    if matter.client:
-        client_trust_balance = get_confirmed_client_balance(matter.client.id)
-
-    # Get balance due from ledger
-    ledger_data = get_ledger_data(matter)
-    balance_due = ledger_data.get("balance_due", 0)
 
     context = {
         "app": "matters",
         "subapp": "rates",
         "matter": matter,
-        "proceeding": proceeding,
         "rates": rates,
-        "client_trust_balance": client_trust_balance,
-        "balance_due": balance_due,
     }
 
     return render(request, "matters/rates/list.html", context)
@@ -72,7 +43,6 @@ def rate_list(request, id):
 @login_required
 def add(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
 
     # if applicable, process any post data submitted by user
     if request.method == "POST":
@@ -103,7 +73,6 @@ def add(request, id):
         "app": "matters",
         "subapp": "rates",
         "matter": matter,
-        "proceeding": proceeding,
         "edit": False,
         "add": True,
         "action": f"/matters/{id}/rates/add",
