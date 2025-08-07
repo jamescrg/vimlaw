@@ -12,16 +12,16 @@ class FactForm(forms.ModelForm):
             "time",
             "description",
             "citations",
-            "emphasis",
-        )
-
-        EMPHASIS_OPTIONS = (
-            ("No", "No"),
-            ("Yes", "Yes"),
+            "color",
         )
 
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
-            "time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
-            "emphasis": forms.Select(choices=EMPHASIS_OPTIONS),
+            "time": forms.TimeInput(
+                attrs={"type": "time", "tabindex": "5"}, format="%H:%M"
+            ),
+            "description": forms.TextInput(
+                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
+            "color": forms.Select(),
         }

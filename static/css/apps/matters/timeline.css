@@ -15,7 +15,49 @@ Display
 
 
 .timeline-list .citations {
-  width: 350px;
+  width: 350px}
+
+
+.fact-color-blue {
+  background: hsl(210, 47%, 94%) !important;
+}
+
+.fact-color-gray {
+  background: hsl(0, 0%, 94%) !important;
+}
+
+.fact-color-green {
+  background: hsl(120, 47%, 94%) !important;
+}
+
+.fact-color-orange {
+  background: hsl(30, 47%, 94%) !important;
+}
+
+.fact-color-purple {
+  background: hsl(270, 47%, 94%) !important;
+}
+
+.fact-color-red {
+  background: hsl(0, 47%, 94%) !important;
+}
+
+.fact-color-yellow {
+  background: hsl(55, 47%, 94%) !important;
+}
+
+.edit-fact-description-input {
+  background: inherit;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+.edit-fact-citations-input {
+  background: inherit;
+  border: none;
+  padding: 0;
+  width: 100%;
 }
 
 

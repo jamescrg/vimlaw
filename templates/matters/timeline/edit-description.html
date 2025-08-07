@@ -1,0 +1,12 @@
+<div>
+  <input autofocus
+         class="edit-fact-description-input"
+         type="text"
+         name="description"
+         hx-post="{% url 'matters:timeline-update-description' matter_id=matter.id fact_id=fact.id %}"
+         hx-target="#fact-{{ fact.id }}"
+         hx-trigger="change, blur, keyup[key=='Enter']"
+         onfocus="moveFocusToEnd(this)"
+         hx-swap="outerHTML"
+         value="{{ fact.description }}" />
+</div>
