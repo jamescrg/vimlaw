@@ -47,7 +47,7 @@
       <ul>
         {% for relationship in relationships %}
           <li>
-            <a href={% url 'matters:detail' id=relationship.matter.id %}>{{ relationship.matter.name }}</a> -
+            <a href={% url 'matters:contacts' id=relationship.matter.id %}>{{ relationship.matter.name }}</a> -
             {{ relationship.matter.status }}
           </li>
         {% endfor %}

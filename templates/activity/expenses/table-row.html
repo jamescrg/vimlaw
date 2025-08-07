@@ -2,7 +2,7 @@
 <td class="date">{{ expense.date|date:'Y-m-d' }}</td>
 <td class="user">{{ expense.user.initials }}</td>
 <td class="matter">
-  <a href={% url 'matters:detail' id=expense.matter.id %}>{{ expense.matter.name }}</a>
+  <a href={% url 'matters:activity-index' id=expense.matter.id %}>{{ expense.matter.name }}</a>
 </td>
 <td class="actions">
   {% if expense.invoice and not expense.invoice.status == 'DRAFT' %}
