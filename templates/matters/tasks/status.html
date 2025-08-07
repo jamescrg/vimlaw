@@ -1,0 +1,12 @@
+<a href="#"
+   class="task-status-link"
+   id="task-{{ task.id }}"
+   hx-post="{% url 'matters:tasks-status' matter.id task.id %}"
+   hx-target="#matterTasks"
+   hx-swap="outerHTML">
+  {% if task.status == "Complete" %}
+    <i class="bi bi-check-square"></i>
+  {% else %}
+    <i class="bi bi-square"></i>
+  {% endif %}
+</a>

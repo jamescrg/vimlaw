@@ -1,0 +1,17 @@
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ task.user.username|title }}</button>
+  <ul class="dropdown-menu">
+    {% for user in users %}
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'matters:tasks-user' matter.id task.id user.id %}"
+           hx-target="#matterTasks"
+           hx-swap="outerHTML">{{ user.username|title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,0 +1,9 @@
+<input autofocus
+       type="date"
+       name="date_due"
+       class="task-date"
+       value="{{ task.date_due|date:'Y-m-d' }}"
+       hx-post="{% url 'matters:tasks-date' matter.id task.id %}"
+       hx-target="#matterTasks"
+       hx-swap="outerHTML"
+       hx-trigger="blur delay:100ms, keyup[key=='Enter'], change" />

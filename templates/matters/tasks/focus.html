@@ -1,0 +1,21 @@
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ task.focus|default:"None set" }}</button>
+  <ul class="dropdown-menu">
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-post="{% url 'matters:tasks-focus' matter.id task.id 'Current' %}"
+         hx-target="#matterTasks"
+         hx-swap="outerHTML">Current</a>
+      <li></li>
+      <a class="dropdown-item"
+         href="#"
+         hx-post="{% url 'matters:tasks-focus' matter.id task.id 'Long Term' %}"
+         hx-target="#matterTasks"
+         hx-swap="outerHTML">Long Term</a>
+    </li>
+  </ul>
+</div>

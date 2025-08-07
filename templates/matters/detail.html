@@ -41,6 +41,9 @@
         <li {% if subapp == 'events' %}class="active"{% endif %}>
           <a href={% url 'matters:events-index' id=matter.id %}>Events</a>
         </li>
+        <li {% if subapp == 'tasks' %}class="active"{% endif %}>
+          <a href={% url 'matters:tasks-index' id=matter.id %}>Tasks</a>
+        </li>
         <li {% if subapp == 'contacts' %}class="active"{% endif %}>
           <a href={% url 'matters:contacts' id=matter.id %}>Contacts</a>
         </li>

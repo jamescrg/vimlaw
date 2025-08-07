@@ -1,0 +1,17 @@
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ task.priority }}</button>
+  <ul class="dropdown-menu">
+    {% for i in '12345'|make_list %}
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'matters:tasks-priority' matter.id task.id forloop.counter %}"
+           hx-target="#matterTasks"
+           hx-swap="outerHTML">{{ forloop.counter }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

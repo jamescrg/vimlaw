@@ -7,6 +7,7 @@ from .ledger import views as ledger
 from .proceedings import views as proceedings
 from .rates import views as matters_rates
 from .settlement import views as settlement
+from .tasks import views as tasks
 from .timeline import views as timeline
 from .views import (
     add,
@@ -90,6 +91,57 @@ urlpatterns = [
     # events
     path("matters/<int:id>/events/", events.events_index, name="events-index"),
     path("matters/<int:id>/events/list/", events.events_list, name="events"),
+    # tasks
+    path("matters/<int:id>/tasks/", tasks.tasks_index, name="tasks-index"),
+    path("matters/<int:id>/tasks/list/", tasks.tasks_list, name="tasks-list"),
+    path("matters/<int:id>/tasks/add", tasks.tasks_add, name="tasks-add"),
+    path(
+        "matters/<int:id>/tasks/<int:task_id>/edit", tasks.tasks_edit, name="tasks-edit"
+    ),
+    path(
+        "matters/<int:id>/tasks/<int:task_id>/delete",
+        tasks.tasks_delete,
+        name="tasks-delete",
+    ),
+    path("matters/<int:id>/tasks/filter", tasks.tasks_filter, name="tasks-filter"),
+    path(
+        "matters/<int:id>/tasks/filter-user/<int:user_id>",
+        tasks.tasks_filter_user,
+        name="tasks-filter-user",
+    ),
+    path(
+        "matters/<int:id>/tasks/filter-focus/<str:focus>",
+        tasks.tasks_filter_focus,
+        name="tasks-filter-focus",
+    ),
+    path(
+        "matters/<int:id>/tasks/<int:task_id>/status",
+        tasks.tasks_status,
+        name="tasks-status",
+    ),
+    path(
+        "matters/<int:id>/tasks/<int:task_id>/priority/<int:priority>",
+        tasks.tasks_priority,
+        name="tasks-priority",
+    ),
+    path(
+        "matters/<int:id>/tasks/<int:task_id>/user/<int:user_id>",
+        tasks.tasks_user,
+        name="tasks-user",
+    ),
+    path(
+        "matters/<int:id>/tasks/<int:task_id>/focus/<str:focus>",
+        tasks.tasks_focus,
+        name="tasks-focus",
+    ),
+    path(
+        "matters/<int:id>/tasks/<int:task_id>/date", tasks.tasks_date, name="tasks-date"
+    ),
+    path(
+        "matters/<int:id>/tasks/filter-sort/<str:order>",
+        tasks.tasks_filter_sort,
+        name="tasks-filter-sort",
+    ),
     # proceedings
     path(
         "matters/<int:id>/proceedings/",
