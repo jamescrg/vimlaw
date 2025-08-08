@@ -1,0 +1,10 @@
+<div class="toolbar tasks-add-quick">
+  <input type="text"
+         class="tasks-add-quick-input"
+         placeholder=" + Quick Task"
+         autofocus
+         name="description"
+         hx-post="{% url 'matters:tasks-add-quick' matter.id %}"
+         hx-trigger="keyup[keyCode==13]">
+</input>
+</div>

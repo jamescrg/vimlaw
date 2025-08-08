@@ -96,6 +96,11 @@ urlpatterns = [
     path("matters/<int:id>/tasks/list/", tasks.tasks_list, name="tasks-list"),
     path("matters/<int:id>/tasks/add", tasks.tasks_add, name="tasks-add"),
     path(
+        "matters/<int:id>/tasks/add-quick",
+        tasks.tasks_add_quick,
+        name="tasks-add-quick",
+    ),
+    path(
         "matters/<int:id>/tasks/<int:task_id>/edit", tasks.tasks_edit, name="tasks-edit"
     ),
     path(

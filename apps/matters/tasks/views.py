@@ -26,7 +26,8 @@ def get_matter_tasks_data(request, matter_id):
     if has_existing_filter:
         filter_data = {
             **filter_data,
-            "order_by": filter_data.get("order_by", "-priority"),
+            "status": filter_data.get("status", "Pending"),
+            "order_by": filter_data.get("order_by", "priority"),
             "matter": matter_id,
         }
         filter = TasksFilter(filter_data)
@@ -39,7 +40,7 @@ def get_matter_tasks_data(request, matter_id):
         default_filter = {
             "status": "Pending",
             "matter": matter_id,
-            "order_by": "-priority",
+            "order_by": "priority",
             "user": None,  # All users
             "focus": "",  # All focus values
         }
@@ -149,6 +150,43 @@ def tasks_add(request, id):
     }
 
     return render(request, "matters/tasks/form.html", context)
+
+
+@login_required
+def tasks_add_quick(request, id):
+    matter = get_object_or_404(Matter, pk=id)
+    task = Task()
+
+    # prevent creation of tasks without a description
+    if not request.POST["description"]:
+        return HttpResponse(
+            status=204, headers={"HX-Trigger": "matterTasksListChanged"}
+        )
+
+    # set task description and some property values
+    task.description = request.POST["description"]
+    task.status = "Pending"
+    task.priority = 3
+    task.matter = matter  # Always assign to the current matter
+
+    # get filter values to auto populate task properties
+    filter_data = request.session.get("matter_tasks_filter", {})
+
+    # auto populate the user
+    user_id = filter_data.get("user", None)
+    if not user_id:
+        user_id = request.user.id
+    task.user = CustomUser.objects.filter(pk=int(user_id)).get()
+
+    # auto populate the focus
+    focus = filter_data.get("focus", None)
+    if focus:
+        task.focus = focus
+    else:
+        task.focus = "Long Term"
+
+    task.save()
+    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
 
 
 @login_required
