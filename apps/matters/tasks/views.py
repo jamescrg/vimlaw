@@ -23,6 +23,9 @@ def get_matter_tasks_data(request, matter_id):
     # Check if we have meaningful filter data (more than just the matter key)
     has_existing_filter = any(key != "matter" for key in filter_data.keys())
 
+    # Always start with a queryset filtered by the current matter
+    matter_queryset = Task.objects.filter(matter=matter)
+
     if has_existing_filter:
         filter_data = {
             **filter_data,
@@ -30,7 +33,7 @@ def get_matter_tasks_data(request, matter_id):
             "order_by": filter_data.get("order_by", "priority"),
             "matter": matter_id,
         }
-        filter = TasksFilter(filter_data)
+        filter = TasksFilter(filter_data, queryset=matter_queryset)
         tasks = filter.qs
         user_id = filter_data.get("user")
         user_id = int(user_id) if user_id not in (None, "") else None
@@ -44,7 +47,7 @@ def get_matter_tasks_data(request, matter_id):
             "user": None,  # All users
             "focus": "",  # All focus values
         }
-        filter = TasksFilter(default_filter)
+        filter = TasksFilter(default_filter, queryset=matter_queryset)
         tasks = filter.qs
         user_id = None
         focus = ""
