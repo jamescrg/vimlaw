@@ -167,7 +167,6 @@ def fact(user, matter):
         date="2020-08-07",
         description="Email to OC",
         citations="Evidence",
-        emphasis="Yes",
     )
     return fact
 

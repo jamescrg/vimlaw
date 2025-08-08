@@ -112,7 +112,6 @@ def test_fact_content(fact, user, matter):
         "date": "2020-08-07",
         "description": "Email to OC",
         "citations": "Evidence",
-        "emphasis": "Yes",
     }
     for key, val in expected_values.items():
         assert getattr(fact, key) == val
