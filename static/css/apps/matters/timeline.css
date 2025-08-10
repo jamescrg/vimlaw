@@ -23,7 +23,7 @@ Display
 }
 
 .fact-color-gray {
-  background: var(--slate-50) !important; /* Using slate for better gray contrast */
+  background: var(--stone-125) !important; /* Using slate for better gray contrast */
 }
 
 .fact-color-green {
