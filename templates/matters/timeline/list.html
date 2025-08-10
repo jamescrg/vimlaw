@@ -9,6 +9,30 @@
                 data-bs-target="#htmx-modal-container">
           <i class="bi bi-plus-lg"></i>
         </button>
+        <form class="filter-form"
+              hx-get="/matters/{{ matter.id }}/timeline/list"
+              hx-target="#timeline-container"
+              hx-trigger="change, keyup delay:500ms from:input[name='keyword']">
+          <label for="date_start">From</label>
+          <input type="date"
+                 id="date_start"
+                 name="date_start"
+                 placeholder="Start Date"
+                 value="{{ request.GET.date_start }}"
+                 class="form-control filter-input">
+          <label for="date_end">To</label>
+          <input type="date"
+                 id="date_end"
+                 name="date_end"
+                 placeholder="End Date"
+                 value="{{ request.GET.date_end }}"
+                 class="form-control filter-input">
+          <label for="keyword">Search</label>
+          <input type="text"
+                 name="keyword"
+                 value="{{ request.GET.keyword }}"
+                 class="form-control filter-input">
+        </form>
       </div>
     </div>
     <div class="toolbar-right">
@@ -20,18 +44,20 @@
       {% endif %}
     </div>
   </div>
-  <div class="table-container">
-    <table id="timeline-list" class="table timeline-list">
-      {% if facts %}
-        <tr>
-          <th class="date-time">Date</th>
-          <th class="description">Description</th>
-          <th class="citations">Citations</th>
-        </tr>
-        {% for fact in facts %}
-          {% include "matters/timeline/fact-row.html" %}
-        {% endfor %}
-      {% endif %}
-    </table>
+  <div id="timeline-container">
+    <div class="table-container">
+      <table id="timeline-list" class="table timeline-list">
+        {% if facts %}
+          <tr>
+            <th class="date-time">Date</th>
+            <th class="description">Description</th>
+            <th class="citations">Citations</th>
+          </tr>
+          {% for fact in facts %}
+            {% include "matters/timeline/fact-row.html" %}
+          {% endfor %}
+        {% endif %}
+      </table>
+    </div>
   </div>
 {% endblock subcontent %}

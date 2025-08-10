@@ -6,6 +6,7 @@ from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from apps.matters.models import Matter
+from apps.matters.timeline.filter import TimelineFilter
 from apps.matters.timeline.forms import FactForm
 from apps.matters.timeline.generate_timeline import generate_timeline
 from apps.matters.timeline.models import Fact
@@ -33,12 +34,21 @@ def timeline_list(request, id):
 
     facts = Fact.objects.filter(matter=matter.id).order_by("date", "time")
 
+    # Apply filters if present
+    filterset = TimelineFilter(request.GET, queryset=facts)
+    facts = filterset.qs
+
     context = {
         "app": "matters",
         "subapp": "timeline",
         "matter": matter,
         "facts": facts,
+        "filterset": filterset,
     }
+
+    # If it's an HTMX request, return only the table content
+    if request.headers.get("HX-Request"):
+        return render(request, "matters/timeline/table.html", context)
 
     return render(request, "matters/timeline/list.html", context)
 

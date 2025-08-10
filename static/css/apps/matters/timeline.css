@@ -4,6 +4,14 @@
 Display
 ------------------------------------------------*/
 
+.filter-form input {
+  margin-right: 1.2rem;
+}
+
+.filter-form label {
+  font-weight: 500;
+  /* margin-left: 1rem; */
+}
 
 .timeline-list {
   margin: 10px 0 5px 0;
@@ -86,4 +94,32 @@ Form
 .timeline-form .print-link {
   margin-top: 15px;
   text-align: right;
+}
+
+/*------------------------------------------------
+Filter form
+------------------------------------------------*/
+
+.filter-form {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.filter-form .filter-input {
+  border: solid 1px var(--stone-300);
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  height: 32px;
+}
+
+.filter-form input[type="date"].filter-input {
+  background: var(--stone-25);
+  width: 140px;
+}
+
+.filter-form input[type="text"].filter-input {
+  background: var(--stone-25);
+  width: 250px;
 }

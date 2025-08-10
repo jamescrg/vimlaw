@@ -1,0 +1,14 @@
+<div class="table-container">
+  <table id="timeline-list" class="table timeline-list">
+    {% if facts %}
+      <tr>
+        <th class="date-time">Date</th>
+        <th class="description">Description</th>
+        <th class="citations">Citations</th>
+      </tr>
+      {% for fact in facts %}
+        {% include "matters/timeline/fact-row.html" %}
+      {% endfor %}
+    {% endif %}
+  </table>
+</div>
