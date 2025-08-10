@@ -54,7 +54,12 @@
       </ul>
       <ul class="navbar-nav ms-auto">
         <li {% if app == 'search' %}class="nav-active"{% endif %}>
-          <a class="nav-link" href={% url 'search:search' %}>
+          <a class="nav-link"
+             href="#"
+             hx-get="{% url 'search:search' %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container">
             <i class="bi bi-search"></i>
           </a>
         </li>

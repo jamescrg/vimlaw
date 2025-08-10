@@ -1,19 +1,33 @@
-<div class="search-form">
-  <div class="input-group">
-    <label for="search-text"></label>
-    <input type="text"
-           id="search-text"
-           class="search-text"
-           name="search_text"
-           hx-post="/search/results"
-           hx-trigger="keyup changed delay:500ms, search"
-           hx-target="#search-results"
-           autocomplete="off"
-           placeholder="Search for matters, contacts, proceedings, intakes . . ."
-           autofocus />
-    <span class="input-group-text" id="basic-addon2">
-      <i class="bi bi-search"></i>
-    </span>
+<div class="modal-dialog modal-xl">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Search</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="search-form">
+        <div class="input-group">
+          <label for="search-text"></label>
+          <input type="text"
+                 id="search-text"
+                 class="search-text"
+                 name="search_text"
+                 hx-post="/search/results"
+                 hx-trigger="keyup changed delay:500ms, search"
+                 hx-target="#search-results"
+                 autocomplete="off"
+                 placeholder="Search for matters, contacts, proceedings, intakes . . ."
+                 autofocus />
+          <span class="input-group-text" id="basic-addon2">
+            <i class="bi bi-search"></i>
+          </span>
+        </div>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
   </div>
 </div>
-<div id="search-results"></div>

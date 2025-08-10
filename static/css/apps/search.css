@@ -3,24 +3,25 @@
 /* search form */
 /* ------------------------------------------------------------------------- */
 
-.search-form {
-  margin: 20px 20px;
-  padding: 0;
-	text-align: center;
+.modal-dialog {
+  width: 1000px !important;
 }
 
 .search-text {
   background: var(--stone-50);
   border: 1px solid var(--stone-350);
+  border-bottom-left-radius: 5px !important;
+  border-top-left-radius: 5px !important;
   margin: 0;
   padding: 0.5rem;
-  width: 80%;
+  width: 70%;
 }
 
-.search .input-group {
+.search-form .input-group {
   margin: 0 auto;
-  max-width: 800px;
-	width: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
 }
 
 .search .input-group-text {
@@ -42,38 +43,38 @@
 /* ------------------------------------------------------------------------- */
 
 .search-results-title {
-	font-size: 1.5em;
-	padding: 12px;
+	font-size: 1.2em;
+	padding-top: 2rem;
+  padding-bottom: 0.5rem;
 }
 
-.search-results {
-  background: #f4f4f4;
-  border-radius: 5px;
-  margin-bottom: 40px;
-  padding: 15px;
-}
-
-
-.search .matter-name {
+.search-results .matter-name {
   width: 250px;
 }
 
-.search .matter-status {
+.search-results .matter-status {
+  width: 100px;
+}
+
+.search-results .proceeding-case-number {
   width: 150px;
 }
 
-.search .contact-folder {
-	width: 150px;
+.search-results .proceeding-status {
+  width: 150px;
 }
 
-.search .contact-name {
-	width: 250px;
+.search-results .contact-folder {
+  width: 150px;
 }
 
-.search .contact-phone1 {
-	width: 150px;
+.search-results .contact-phone1,
+.search-results .intake-phone {
+  width: 150px;
 }
 
-.search .contact-email {
+.search-results .contact-email,
+.search-results .intake-email {
 	text-align: right;
+  width: 300px;
 }
