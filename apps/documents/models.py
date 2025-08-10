@@ -39,13 +39,19 @@ class Label(models.Model):
         super().save(*args, **kwargs)
 
 
+def document_upload_path(instance, filename):
+    file_name = instance.name if instance.name else filename
+
+    return f"documents/{instance.matter.name}_{instance.matter_id}/{file_name}"
+
+
 class Document(models.Model):
     matter = models.ForeignKey(
         Matter, on_delete=models.CASCADE, related_name="documents"
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    file = models.FileField(upload_to="documents/%Y/%m/%d/")
+    file = models.FileField(upload_to=document_upload_path)
     labels = models.ManyToManyField(Label, related_name="documents", blank=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
