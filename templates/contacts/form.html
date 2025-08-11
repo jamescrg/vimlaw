@@ -18,11 +18,11 @@
       <form hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
             role="form"
-            class="form-responsive form-spacious contacts-form">
+            class="form-compact col2 contacts-form">
         {% csrf_token %}
         {% if intake_id %}<input type="hidden" name="intake_id" value="{{ intake_id }}" />{% endif %}
         {{ form }}
-        <div class="flex-center-space">
+        <div class="flex-center-space span2">
           <div>
             <button type="submit" class="submit">Submit</button>
           </div>

@@ -43,14 +43,39 @@ class ContactForm(forms.ModelForm):
 
         widgets = {
             "name": forms.TextInput(
-                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+                attrs={
+                    "autofocus": "autofocus",
+                    "onfocus": "moveFocusToEnd(this)",
+                    "class": "span2",
+                }
             ),
-            "address": forms.Textarea(),
-            "notes": forms.Textarea(),
+            "company": forms.TextInput(attrs={"class": "span2"}),
+            "email": forms.TextInput(attrs={"class": "span2"}),
+            "address": forms.Textarea(
+                attrs={
+                    "class": "span2",
+                    "rows": "3",
+                }
+            ),
+            "notes": forms.Textarea(
+                attrs={
+                    "class": "span2",
+                    "rows": "3",
+                }
+            ),
             "phone1_label": forms.Select(choices=PHONE_LABELS),
             "phone2_label": forms.Select(choices=PHONE_LABELS),
             "phone3_label": forms.Select(choices=PHONE_LABELS),
             "client_status": forms.Select(choices=CLIENT_STATUSES),
+        }
+
+        labels = {
+            "phone1": "Phone 1",
+            "phone2": "Phone 2",
+            "phone3": "Phone 3",
+            "phone1_label": "For",
+            "phone2_label": "For",
+            "phone3_label": "For",
         }
 
     def __init__(self, *args, **kwargs):
