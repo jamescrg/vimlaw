@@ -20,7 +20,12 @@
             <a href={% url 'matters:print' id=matter.id %}>
               <i class="bi bi-printer"></i>
             </a>
-            <a href={% url 'matters:edit' id=matter.id %}>
+            <a href="#"
+               hx-get="{% url 'matters:edit' id=matter.id %}"
+               hx-target="#htmx-modal-container"
+               hx-trigger="click"
+               data-bs-toggle="modal"
+               data-bs-target="#htmx-modal-container">
               <i class="bi bi-pencil"></i>
             </a>
           </div>

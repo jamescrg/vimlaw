@@ -12,7 +12,12 @@
           <i class="bi bi-cloud-upload"></i>
         {% endif %}
       </a>
-      <a href={% url 'contacts:edit' id=selected_contact.id %}><i class="bi bi-pencil"></i></a>
+      <a href="#"
+         hx-get="{% url 'contacts:edit' id=selected_contact.id %}"
+         hx-target="#htmx-modal-container"
+         hx-trigger="click"
+         data-bs-toggle="modal"
+         data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i></a>
     </div>
   </div>
   <div class="contact-item">

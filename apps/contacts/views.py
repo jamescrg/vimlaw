@@ -125,7 +125,7 @@ def add(request):
         "client_folders": CLIENT_FOLDERS,
     }
 
-    return render(request, "contacts/content-form.html", context)
+    return render(request, "contacts/form.html", context)
 
 
 @login_required
@@ -198,7 +198,7 @@ def edit(request, id):
         "client_folders": CLIENT_FOLDERS,
     }
 
-    return render(request, "contacts/content-form.html", context)
+    return render(request, "contacts/form.html", context)
 
 
 @login_required
@@ -307,7 +307,7 @@ def add_intake(request, id):
         "intake_id": id,
     }
 
-    return render(request, "contacts/content-form.html", context)
+    return render(request, "contacts/form.html", context)
 
 
 @login_required

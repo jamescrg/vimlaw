@@ -12,7 +12,12 @@
                 <i class="bi bi-person-check"></i>
               </a>
             {% else %}
-              <a href={% url 'contacts:add-intake' id=intake.id %}>
+              <a href="#"
+                 hx-get="{% url 'contacts:add-intake' id=intake.id %}"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click"
+                 data-bs-toggle="modal"
+                 data-bs-target="#htmx-modal-container">
                 <i class="bi bi-person-plus"></i>
               </a>
             {% endif %}
