@@ -4,7 +4,7 @@
       <div class="section">
         <div class="toolbar">
           <div class="toolbar-left">
-            <h1>{{ intake.name }}</h1>
+            <h1>{{ intake.name|slice:":23" }}</h1>
           </div>
           <div class="toolbar-right">
             {% if contact %}

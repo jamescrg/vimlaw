@@ -9,12 +9,17 @@ from config.settings import CustomFormRendererCompact
 class CreditsForm(forms.ModelForm):
     class Meta:
         model = Credit
-        fields = ["matter", "date", "detail", "amount"]
+        fields = [
+            "date",
+            "matter",
+            "amount",
+            "detail",
+        ]
         widgets = {
-            "matter": forms.Select(attrs={"class": "span2"}),
-            "date": forms.DateInput(attrs={"type": "date", "class": "span2"}),
-            "detail": forms.TextInput(attrs={"required": False, "class": "span2"}),
-            "amount": forms.TextInput(attrs={"class": "span2"}),
+            "matter": forms.Select(attrs={"class": ""}),
+            "date": forms.DateInput(attrs={"type": "date", "class": ""}),
+            "amount": forms.TextInput(attrs={"class": ""}),
+            "detail": forms.TextInput(attrs={"required": False, "class": "span3"}),
         }
 
     def __init__(self, *args, **kwargs):

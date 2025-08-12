@@ -13,15 +13,15 @@ class PaymentForm(forms.ModelForm):
             "matter",
             "date",
             "payment_method",
-            "detail",
             "amount",
+            "detail",
         ]
         widgets = {
-            "matter": forms.Select(attrs={"class": "span2"}),
             "date": forms.DateInput(attrs={"type": "date"}),
+            "matter": forms.Select(attrs={"class": ""}),
             "payment_method": forms.Select(),
+            "amount": forms.TextInput(attrs={"class": ""}),
             "detail": forms.TextInput(attrs={"required": False, "class": "span2"}),
-            "amount": forms.TextInput(attrs={"class": "span2"}),
         }
 
     def __init__(self, *args, **kwargs):

@@ -12,10 +12,10 @@ class IntakeForm(forms.ModelForm):
         model = Intake
 
         fields = (
-            "name",
-            "address",
             "status",
             "date",
+            "name",
+            "address",
             "phone",
             "email",
             "practice_area",
@@ -54,9 +54,13 @@ class IntakeForm(forms.ModelForm):
 
         widgets = {
             "name": forms.TextInput(
-                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+                attrs={
+                    "autofocus": "autofocus",
+                    "onfocus": "moveFocusToEnd(this)",
+                    "class": "span2",
+                }
             ),
-            "address": forms.TextInput(),
+            "address": forms.TextInput(attrs={"class": "span2"}),
             "status": forms.Select(choices=STATUSES),
             "practice_area": forms.Select(choices=PRACTICE_AREAS),
             "source": forms.Select(choices=SOURCES),

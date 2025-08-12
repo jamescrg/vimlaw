@@ -15,8 +15,8 @@ class InvoiceForm(forms.ModelForm):
             "date_issued",
             "message",
             "comment",
-            "discount",
             "show_comp",
+            "discount",
         ]
         widgets = {
             "matter": forms.Select(attrs={"class": "span2"}),
@@ -24,8 +24,8 @@ class InvoiceForm(forms.ModelForm):
             "date_limit": forms.DateInput(attrs={"type": "date"}),
             "message": forms.Textarea(attrs={"rows": 3, "class": "span2"}),
             "comment": forms.Textarea(attrs={"rows": 3, "class": "span2"}),
-            "discount": forms.TextInput(attrs={"class": "span2"}),
-            "show_comp": forms.CheckboxInput(attrs={"class": "span2"}),
+            "discount": forms.TextInput(attrs={"class": ""}),
+            "show_comp": forms.CheckboxInput(attrs={"class": ""}),
         }
 
     def clean_matter(self):

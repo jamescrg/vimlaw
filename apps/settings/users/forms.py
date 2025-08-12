@@ -34,8 +34,8 @@ class CreateUserForm(forms.ModelForm):
             "role",
         ]
         widgets = {
-            "username": forms.TextInput(attrs={"class": "span2"}),
-            "password": forms.PasswordInput(attrs={"class": "span2"}),
+            "username": forms.TextInput(attrs={"class": ""}),
+            "password": forms.PasswordInput(attrs={"class": ""}),
         }
 
     def __init__(self, *args, **kwargs):

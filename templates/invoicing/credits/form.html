@@ -12,7 +12,7 @@
       <form hx-post="{% url 'invoicing:credits-add' %}"
             hx-target="#htmx-modal-container"
             role="form"
-            class="form-compact">
+            class="form-compact col3">
         {% csrf_token %} {{ form }}
         <div class="flex-center-space span2">
           <div>
