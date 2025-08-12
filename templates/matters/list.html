@@ -4,7 +4,12 @@
     <div class="toolbar">
       <div class="toolbar-left">
         <div class="filter-tools">
-          <a href={% url 'matters:add' %}><i class="bi bi-plus-lg"></i></a>
+          <a href="#"
+             hx-get="{% url 'matters:add' %}"
+             hx-target="#htmx-modal-container"
+             hx-trigger="click"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container"><i class="bi bi-plus-lg"></i></a>
           <button hx-get="/matters/filter"
                   hx-target="#htmx-modal-container"
                   class="{% if filter_label == "custom" %}toggle-active{% endif %}"

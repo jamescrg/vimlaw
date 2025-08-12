@@ -1,5 +1,7 @@
 from django import forms
 
+from config.settings import CustomFormRendererCompact
+
 from .models import Fact
 
 
@@ -20,8 +22,17 @@ class FactForm(forms.ModelForm):
             "time": forms.TimeInput(
                 attrs={"type": "time", "tabindex": "5"}, format="%H:%M"
             ),
-            "description": forms.TextInput(
-                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            "description": forms.Textarea(
+                attrs={
+                    "autofocus": "autofocus",
+                    "onfocus": "moveFocusToEnd(this)",
+                    "class": "span2",
+                    "rows": 3,
+                }
             ),
             "color": forms.Select(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()

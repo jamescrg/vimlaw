@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">Edit User</h1>
@@ -12,11 +12,10 @@
       <form hx-post="{{ request.path }}"
             hx-target="#htmx-modal-container"
             role="form"
-            class="form-responsive tasks-form">
+            class="form-compact col2">
         {% csrf_token %}
         {{ form }}
-        <br />
-        <div class="flex-center-space">
+        <div class="flex-center-space span2">
           <div>
             <button type="submit" class="submit">Submit</button>
           </div>

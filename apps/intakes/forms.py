@@ -2,6 +2,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
+from config.settings import CustomFormRendererCompact
+
 from .models import Intake, Note
 
 
@@ -10,10 +12,10 @@ class IntakeForm(forms.ModelForm):
         model = Intake
 
         fields = (
-            "status",
-            "date",
             "name",
             "address",
+            "status",
+            "date",
             "phone",
             "email",
             "practice_area",
@@ -54,7 +56,7 @@ class IntakeForm(forms.ModelForm):
             "name": forms.TextInput(
                 attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
             ),
-            "address": forms.Textarea(),
+            "address": forms.TextInput(),
             "status": forms.Select(choices=STATUSES),
             "practice_area": forms.Select(choices=PRACTICE_AREAS),
             "source": forms.Select(choices=SOURCES),
@@ -65,6 +67,10 @@ class IntakeForm(forms.ModelForm):
             "date": "Open Date",
             "practice_area": "Practice Area",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()
 
     def clean_name(self):
         name = self.cleaned_data["name"]
@@ -124,3 +130,7 @@ class NoteForm(forms.ModelForm):
             "time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
             "type": forms.Select(choices=TYPES),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()

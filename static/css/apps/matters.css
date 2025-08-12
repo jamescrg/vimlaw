@@ -4,40 +4,11 @@
 Matter Form
 ========================================================================== */
 
-.matter-form #id_name {
-  width: 400px;
-}
-
-.matter-form #id_work_status {
-  width: 400px;
-}
-
-.matter-form #id_practice_area {
-  width: 250px;
-}
-
-.matter-form #id_firm {
-  width: 250px;
-}
-
-.matter-form #id_clio_matter_id {
-  width: 400px;
-}
-
-.matter-form #id_client_reference_id {
-  width: 400px;
-}
-
-.matter-form #id_rate {
-  width: 80px;
-}
-
-.matter-form .delete {
-  float: right;
-}
-
-.matter-form .delete li {
-  margin-bottom: 15px;
+/* Modal-specific styles */
+.matter-form input,
+.matter-form select,
+.matter-form textarea {
+  width: 100%;
 }
 
 .edit-matter-work-status-input {

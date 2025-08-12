@@ -144,7 +144,11 @@ th.priority .bi-caret-up {
   text-decoration: line-through;
 }
 
-.tasks-form #id_description {
-  max-width: 500px;
+.tasks-form #id_description,
+.tasks-form #id_matter,
+.tasks-form #id_focus,
+.tasks-form #id_user,
+.tasks-form #id_priority,
+.tasks-form #id_date {
   width: 100%
 }

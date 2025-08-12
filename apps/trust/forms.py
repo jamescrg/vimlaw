@@ -1,12 +1,13 @@
 from django import forms
 
+from config.settings import CustomFormRendererCompact
+
 from .models import Transaction
 
 
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
-
         fields = (
             "contact",
             "date",
@@ -32,15 +33,23 @@ class TransactionForm(forms.ModelForm):
         )
 
         widgets = {
+            "contact": forms.Select(attrs={"class": "span2"}),
             "date": forms.DateInput(attrs={"type": "date"}),
             "type": forms.Select(choices=TYPE_CHOICES),
-            "description": forms.TextInput(
-                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            "description": forms.Textarea(
+                attrs={
+                    "autofocus": "autofocus",
+                    "onfocus": "moveFocusToEnd(this)",
+                    "class": "span2",
+                    "rows": 3,
+                }
             ),
+            "amount": forms.TextInput(),
             "confirmed": forms.Select(choices=CONFIRMED_CHOICES),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()
 
         self.fields["contact"].label = "Client"

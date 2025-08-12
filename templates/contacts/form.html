@@ -1,36 +1,41 @@
-<div class="col-sm-9 col-sm-push-3">
-  <div class="section">
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <h1>
-          {% if not edit %}
-            Add Contact
-          {% else %}
-            Edit Contact
-          {% endif %}
-        </h1>
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if not edit %}
+          Add Contact
+        {% else %}
+          Edit Contact
+        {% endif %}
+      </h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
       </div>
     </div>
-    <form {% if action_type == 'db_update' %}action="{{ action }}"{% else %}hx-post="{{ action }}"{% endif %}
-          method="post"
-          role="form"
-          class="form-responsive contacts-form">
-      {% csrf_token %}
-      {% if intake_id %}<input type="hidden" name="intake_id" value="{{ intake_id }}" />{% endif %}
-      {{ form }}
-      <br />
-      <div class="flex-center-space">
-        <div>
-          <button type="submit" class="submit">Submit</button>
+    <div class="modal-body">
+      <form hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-compact col2 contacts-form">
+        {% csrf_token %}
+        {% if intake_id %}<input type="hidden" name="intake_id" value="{{ intake_id }}" />{% endif %}
+        {{ form }}
+        <div class="flex-center-space span2">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
+          <div>
+            {% if edit %}
+              <a href="#"
+                 class="delete-link"
+                 hx-confirm="Are you sure you want to delete this record?"
+                 hx-delete="{% url 'contacts:delete' id=contact.id %}">Delete Contact</a>
+            {% endif %}
+          </div>
         </div>
-        <div>
-          {% if edit %}
-            <a onclick="return confirm('Are you sure you want to delete this record?')"
-               class="delete-link"
-               href="{% url 'contacts:delete' id=contact.id %}">Delete Contact</a>
-          {% endif %}
-        </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>

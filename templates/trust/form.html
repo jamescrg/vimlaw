@@ -18,11 +18,11 @@
       <form id="transaction"
             hx-target="#htmx-modal-container"
             hx-post="{% if edit %}{% url 'trust:edit' id=transaction.id %}{% else %}{% url 'trust:add' %}{% endif %}"
-            class="form-responsive trust-transaction-form">
+            role="form"
+            class="form-compact col2">
         {% csrf_token %}
         {{ form }}
-        <br />
-        <div class="flex-center-space">
+        <div class="flex-center-space span2">
           <div>
             <button type="submit" class="submit">Submit</button>
           </div>

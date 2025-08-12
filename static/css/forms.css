@@ -28,24 +28,6 @@ textarea {
 
 select {
   background: white;
-  max-width: 200px;
-}
-
-input[type="date"] {
-  max-width: 140px;
-}
-
-input[type="time"] {
-  max-width: 140px;
-}
-
-input[type="password"] {
-  max-width: 200px;
-}
-
-textarea {
-  height: 100px;
-  max-width: 550px;
 }
 
 .form-control:focus {
@@ -56,7 +38,7 @@ textarea {
 
 .submit {
   background: var(--button-form);
-  border: solid 1px var(--stone-600);
+  border: solid 1px var(--button-form);
   border-radius: 5px;
   color: var(--stone-200);
   padding: 4px 10px;
@@ -74,83 +56,125 @@ textarea {
   padding-top: 1rem;
 }
 
-/* responsive layout */
+/* spacious layout */
 
-.form-responsive {
+.form-spacious {
   display: grid;
   gap: 0.5rem;
 }
 
-.form-responsive > label {
+.form-spacious > label {
   font-weight: 600;
 }
 
-.form-responsive > div {
+.form-spacious > div {
   margin-block-end: 1rem;
 }
 
 @media screen and (min-width: 800px) and (max-width: 1199px) {
-  .form-responsive {
+  .form-spacious {
     grid-template-columns: 1fr 3fr;
   }
 
-  .modal-md .form-responsive {
+  .modal-md .form-spacious {
     grid-template-columns: 1fr 2fr;
   }
 
-  .modal-lg .form-responsive {
+  .modal-lg .form-spacious {
     grid-template-columns: 1fr 4fr;
   }
 }
 
 @media screen and (min-width: 1200px) {
-  .form-responsive {
+  .form-spacious {
     grid-template-columns: 1fr 4fr;
   }
 
-  .modal-md .form-responsive {
+  .modal-md .form-spacious {
     grid-template-columns: 1fr 2fr;
   }
 
-  .modal-lg .form-responsive {
+  .modal-lg .form-spacious {
     grid-template-columns: 1fr 4fr;
   }
 }
 
-/*------------------------------------------------
-Time entry form
-------------------------------------------------*/
-
-#id_matter {
-  width: auto;
+.form-spacious input[type="date"] {
+  max-width: 400px;
 }
 
-#id_actions {
-  max-width: 500px;
-  vertical-align: top;
-  width: 95%;
+.form-spacious input[type="time"] {
+  max-width: 140px;
 }
 
-#id_hours {
-  max-width: 80px;
+.form-spacious input[type="password"] {
+  max-width: 200px;
 }
 
-#id_firm_rate {
-  max-width: 80px;
+.form-spacious textarea {
+  height: 100px;
+  max-width: 550px;
 }
 
-#id_comp {
-  max-width: 80px;
+/* compact layout */
+
+.form-compact {
+  display: grid;
+  gap: 1rem;
 }
 
-#id_entered {
-  max-width: 80px;
+.form-compact select,
+.form-compact input[type="date"],
+.form-compact input[type="time"],
+.form-compact input[type="text"],
+.form-compact input[type="password"],
+.form-compact input[type="number"],
+.form-compact input[type="email"],
+.form-compact textarea {
+  width: 100%;
 }
 
-/*------------------------------------------------
-Expense entry form
-------------------------------------------------*/
+.col2 {
+  grid-template-columns: 1fr 1fr;
+}
 
-#id_amount {
-  max-width: 120px;
+.col3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.col5 {
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+
+.form-compact .form-group:has(div > .span2) {
+  grid-column: span 2;
+}
+
+.form-compact .form-group:has(div > .span3) {
+  grid-column: span 3;
+}
+
+.form-compact .form-group:has(div > .span5) {
+  grid-column: span 5;
+}
+
+.form-compact .span2 {
+  grid-column: span 2;
+}
+
+.form-compact .span3 {
+  grid-column: span 3;
+}
+
+.form-compact .span5 {
+  grid-column: span 5;
+}
+
+.form-compact .form-group label {
+  margin-bottom: 0.5rem;
+}
+
+.form-compact .flex-center-space {
+  padding-bottom: 0.5rem;
+  padding-top: 0.35rem;
 }

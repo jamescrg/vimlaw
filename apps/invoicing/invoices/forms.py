@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from django import forms
 
 from apps.invoicing.invoices.models import Invoice
+from config.settings import CustomFormRendererCompact
 
 
 class InvoiceForm(forms.ModelForm):
@@ -14,15 +15,17 @@ class InvoiceForm(forms.ModelForm):
             "date_issued",
             "message",
             "comment",
-            "show_comp",
             "discount",
+            "show_comp",
         ]
         widgets = {
+            "matter": forms.Select(attrs={"class": "span2"}),
             "date_issued": forms.DateInput(attrs={"type": "date"}),
             "date_limit": forms.DateInput(attrs={"type": "date"}),
-            "message": forms.Textarea(attrs={"rows": 3}),
-            "comment": forms.Textarea(attrs={"rows": 3}),
-            "discount": forms.TextInput(attrs={"class": "discount"}),
+            "message": forms.Textarea(attrs={"rows": 3, "class": "span2"}),
+            "comment": forms.Textarea(attrs={"rows": 3, "class": "span2"}),
+            "discount": forms.TextInput(attrs={"class": "span2"}),
+            "show_comp": forms.CheckboxInput(attrs={"class": "span2"}),
         }
 
     def clean_matter(self):
@@ -35,6 +38,7 @@ class InvoiceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()
 
         today = datetime.now().date()
 
@@ -59,13 +63,18 @@ class EditInvoiceForm(forms.ModelForm):
             "date_issued",
             "message",
             "comment",
-            "show_comp",
             "discount",
+            "show_comp",
         ]
         widgets = {
             "date_issued": forms.DateInput(attrs={"type": "date"}),
             "date_limit": forms.DateInput(attrs={"type": "date"}),
-            "message": forms.Textarea(attrs={"rows": 3}),
-            "comment": forms.Textarea(attrs={"rows": 3}),
-            "discount": forms.TextInput(attrs={"class": "discount"}),
+            "message": forms.Textarea(attrs={"rows": 3, "class": "span2"}),
+            "comment": forms.Textarea(attrs={"rows": 3, "class": "span2"}),
+            "discount": forms.TextInput(attrs={"class": "span2"}),
+            "show_comp": forms.CheckboxInput(attrs={"class": "span2"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()

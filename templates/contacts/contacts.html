@@ -5,7 +5,12 @@
         <h1>Contacts</h1>
       </div>
       <div class="toolbar-right">
-        <a href={% url 'contacts:add' %}>
+        <a href="#"
+           hx-get="{% url 'contacts:add' %}"
+           hx-target="#htmx-modal-container"
+           hx-trigger="click"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">
           <i class="bi bi-plus-lg"></i>
         </a>
       </div>

@@ -1,6 +1,7 @@
 from django import forms
 
 from apps.matters.proceedings.models import Proceeding
+from config.settings import CustomFormRendererCompact
 
 
 class ProceedingForm(forms.ModelForm):
@@ -33,3 +34,7 @@ class ProceedingForm(forms.ModelForm):
             "date_filed": "Date Filed",
             "case_number": "Case Number",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()

@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">Add Payment</h1>
@@ -9,14 +9,15 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive invoices-add"
-            hx-post="{% url 'invoicing:payments-add' %}"
+      <form hx-post="{% url 'invoicing:payments-add' %}"
             hx-target="#htmx-modal-container"
-            role="form">
+            role="form"
+            class="form-compact col2">
         {% csrf_token %} {{ form }}
-        <br />
-        <div class="flex-center-space">
-          <button type="submit" class="submit">Submit</button>
+        <div class="flex-center-space span2">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
         </div>
       </form>
     </div>

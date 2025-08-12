@@ -259,8 +259,15 @@ LOGGING = {
 # CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 
-class CustomFormRenderer(TemplatesSetting):
-    form_template_name = "components/form-fields-template.html"
+class CustomFormRendererSpacious(TemplatesSetting):
+    form_template_name = "components/form-fields-template-spacious.html"
+    label_suffix = ""
 
 
-FORM_RENDERER = "config.settings.CustomFormRenderer"
+class CustomFormRendererCompact(TemplatesSetting):
+    form_template_name = "components/form-fields-template-compact.html"
+    label_suffix = ""
+
+
+FORM_RENDERER = "config.settings.CustomFormRendererSpacious"
+FORM_SETTINGS = {"label_suffix": ""}

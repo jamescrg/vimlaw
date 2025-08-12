@@ -1,18 +1,21 @@
 from django import forms
 
+from config.settings import CustomFormRendererCompact
+
 from .models import ExpenseEntry
 
 
 class ExpenseEntryForm(forms.ModelForm):
+
     class Meta:
         model = ExpenseEntry
 
         fields = (
-            "date",
             "matter",
-            "category",
+            "date",
             "description",
             "amount",
+            "category",
             "comp",
             "entered",
         )
@@ -41,9 +44,18 @@ class ExpenseEntryForm(forms.ModelForm):
             "matter": forms.Select(attrs={"onchange": "updateRate()"}),
             "date": forms.DateInput(attrs={"type": "date"}),
             "description": forms.Textarea(
-                attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+                attrs={
+                    "autofocus": "autofocus",
+                    "onfocus": "moveFocusToEnd(this)",
+                    "rows": "3",
+                    "class": "span2",
+                }
             ),
             "comp": forms.Select(choices=COMP_CHOICES),
             "entered": forms.Select(choices=ENTERED_CHOICES),
             "category": forms.Select(choices=CATEGORY_CHOICES),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()

@@ -1,4 +1,3 @@
-
 /* ==========================================================================
 Summary
 ========================================================================== */
@@ -84,28 +83,4 @@ Summary and History
 
 .table-container .id {
   width: 100px;
-}
-
-/* ==========================================================================
-Trust Transaction Form
-========================================================================== */
-
-.trust-transaction-form #id_type {
-  width: 140px;
-}
-
-.trust-transaction-form #id_description {
-  width: 550px;
-}
-
-.trust-transaction-form #id_amount {
-  width: 140px;
-}
-
-.trust-transaction-form #id_entered {
-  width: 70px;
-}
-
-.trust-transaction-form #id_confirmed {
-  width: 70px;
 }

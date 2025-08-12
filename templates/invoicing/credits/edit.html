@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">Edit Credit</h1>
@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive invoices-add"
+      <form class="form-compact col2"
             hx-post="{% url 'invoicing:credits-edit' credit.id %}"
             hx-target="#htmx-modal-container"
             role="form">

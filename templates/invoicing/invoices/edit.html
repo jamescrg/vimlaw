@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">Edit Invoice</h1>
@@ -11,7 +11,7 @@
     <div class="modal-body">
       <h2>{{ invoice.matter }}</h2>
       <br />
-      <form class="form-responsive invoices-add"
+      <form class="form-compact"
             hx-target="#htmx-modal-container"
             hx-post="{% url 'invoicing:invoices-edit' invoice.id %}">
         {% csrf_token %}

@@ -17,7 +17,7 @@
     <div class="modal-body">
       <form hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
-            class="form-responsive intake-note-form">
+            class="form-responsive form-spacious intake-note-form">
         {% csrf_token %}
         {{ form }}
         <br />

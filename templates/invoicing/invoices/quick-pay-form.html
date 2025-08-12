@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive invoices-add"
+      <form class="form-responsive form-spacious invoices-add"
             hx-post="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type=payment_type %}"
             hx-target="#htmx-modal-container"
             role="form">

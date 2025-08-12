@@ -12,15 +12,15 @@ List View
 }
 
 .intake-date {
-  width: 120px
+  width: 120px;
 }
 
 .intake-phone {
-  width: 180px
+  width: 180px;
 }
 
 .intake-source {
-  width: 180px
+  width: 180px;
 }
 
 .intake-status {
@@ -28,39 +28,11 @@ List View
 }
 
 .intake-practice-area {
-  width: 180px
+  width: 180px;
 }
 
 .intake-list th a {
   color: inherit;
-}
-
-/* ==========================================================================
-Intakes form
-========================================================================== */
-
-#id_name {
-  max-width: 400px;
-  width: 100%;
-}
-
-#id_address {
-  max-width: 400px;
-  width: 100%;
-}
-
-#id_phone {
-  max-width: 400px;
-  width: 100%;
-}
-
-#id_email {
-  max-width: 400px;
-  width: 100%;
-}
-
-.intake-contact {
-  float: right;
 }
 
 /* ==========================================================================
@@ -80,7 +52,6 @@ Intakes form
   align-items: center;
   display: flex;
   justify-content: space-between;
-
 }
 
 .intake-note-title button {
@@ -120,17 +91,6 @@ Intakes form
 }
 
 /* ==========================================================================
-Notes Form
-========================================================================== */
-
-.intake-note-form #id_details {
-  min-height: 300px;
-  resize: both;
-  width: 600px;
-}
-
-
-/* ==========================================================================
 Markdown
 ========================================================================== */
 
@@ -145,7 +105,7 @@ Markdown
 }
 
 .intake-note-details h3 {
-  font-size: 1.0em;
+  font-size: 1em;
   font-weight: 600;
 }
 

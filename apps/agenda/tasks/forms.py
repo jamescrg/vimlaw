@@ -2,19 +2,21 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.agenda.tasks.models import Task
+from config.settings import CustomFormRendererCompact
 
 
 class TaskForm(forms.ModelForm):
+
     class Meta:
         model = Task
 
         fields = (
             "matter",
-            "description",
-            "priority",
-            "user",
-            "date_due",
             "focus",
+            "description",
+            "user",
+            "priority",
+            "date_due",
         )
 
         STATUSES = (
@@ -36,16 +38,24 @@ class TaskForm(forms.ModelForm):
                 attrs={
                     "autofocus": "autofocus",
                     "onfocus": "moveFocusToEnd(this)",
+                    "class": "span3",
                 }
             ),
+            "matter": forms.Select(
+                attrs={
+                    "class": "span2",
+                }
+            ),
+            "focus": forms.Select(attrs={"class": "span1"}),
+            "user": forms.Select(attrs={"class": ""}),
             "status": forms.Select(choices=STATUSES),
-            "date_due": forms.DateInput(attrs={"type": "date"}),
+            "date_due": forms.DateInput(attrs={"type": "date", "class": ""}),
             "priority": forms.Select(choices=PRIORITIES),
-            "focus": forms.Select(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()
         self.fields["priority"].initial = 3
 
     def clean_description(self):

@@ -10,7 +10,7 @@
     </div>
     <div class="modal-body">
       <form action="{% url 'activity:expenses-add' id=matter_id request_app='matters' %}"
-            class="form-responsive expenses-form"
+            class="form-compact"
             method="post"
             role="form">
         {% csrf_token %}

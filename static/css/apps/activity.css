@@ -3,40 +3,14 @@
 Time entry form
 ========================================================================== */
 
-.time-form #id_matter {
-  width: auto;
-}
-
-.time-form #id_actions {
-  max-width: 500px;
-  vertical-align: top;
-  width: 95%;
-}
-
-.time-form #id_hours {
-  max-width: 80px;
-}
-
-.time-form #id_firm_rate {
-  max-width: 80px;
-}
-
-.time-form #id_comp {
-  max-width: 80px;
-}
-
-.time-form #id_entered {
-  max-width: 80px;
-}
+/* styles set on forms.css to allow rendering from matter detail */
 
 
 /* ==========================================================================
 Expenses form
 ========================================================================== */
 
-.expenses-form #id_amount {
-  max-width: 120px;
-}
+/* styles set on forms.css to allow rendering from matter detail */
 
 
 /* ==========================================================================

@@ -1,4 +1,4 @@
-<div class="modal-dialog">
+<div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">
@@ -18,11 +18,10 @@
       <form id="rate"
             hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
-            class="form-responsive">
+            class="form-compact col2">
         {% csrf_token %}
         {{ form }}
-        <br />
-        <div class="flex-center-space">
+        <div class="flex-center-space span2">
           <div>
             <button type="submit" class="submit">Submit</button>
           </div>
