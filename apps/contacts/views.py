@@ -12,50 +12,36 @@ from config.helpers import format_phone
 
 
 @login_required
-def contact_index(request, contact_id=None):
-    # If a contact ID is provided, set it as the selected contact in the session
-    if contact_id:
-        request.session["selected_contact_id"] = contact_id
-    else:
-        # Preserve the contact ID in the URL if it exists in the session
-        selected_contact_id = request.session.get("selected_contact_id")
-        if selected_contact_id:
-            return redirect(
-                "contacts:contact-index-with-id", contact_id=selected_contact_id
-            )
-
+def index(request):
     context = get_list_data(request)
-
     return render(request, "contacts/main.html", context)
 
 
 @login_required
-def select(request, id):
-    # Check if coming from reports
-    from_reports = request.GET.get("from") == "reports"
+def select(request, contact_id):
 
-    if from_reports:
-        # Set client status filter to "current" when coming from reports
+    # check for contact in database
+    contact = get_object_or_404(Contact, pk=contact_id)
+
+    # set selected contact
+    request.session["selected_contact_id"] = contact_id
+
+    # set view to show contact's client status
+    if contact.client_status == "Client":
+        pass
         request.session["contacts_selected_client_folder_id"] = "current"
-        request.session["contacts_selected_folder_id"] = None
+
     else:
-        # Normal behavior
-        # Real folder from database
-        contact_folder_id = request.session.get(
-            "contacts_selected_folder_id", "unsorted"
-        )
+        pass
+        request.session["contacts_selected_client_folder_id"] = "former"
 
-        # Client Status folders
-        client_folder_id = request.session.get("contacts_selected_client_folder_id")
+    # set view to show contact's folder
+    if contact.folder:
+        request.session["contacts_selected_folder_id"] = contact.folder.id
+    else:
+        request.session["contacts_selected_folder_id"] = None
 
-        if client_folder_id:
-            request.session["contacts_selected_folder_id"] = client_folder_id
-        else:
-            request.session["contacts_selected_folder_id"] = contact_folder_id
-
-    request.session["selected_contact_id"] = id
-
-    return redirect("contacts:contact-index-with-id", contact_id=id)
+    return redirect("contacts:index")
 
 
 @login_required
@@ -98,7 +84,7 @@ def add(request):
                 new.folder.id if new.folder else 0
             )
 
-            return redirect("contacts:contact-index-with-id", contact_id=new.id)
+            return redirect("contacts:select", contact_id=new.id)
 
     # if no post data has been submitted, show the contact form
     else:
@@ -166,7 +152,7 @@ def edit(request, id):
 
             contact.save()
 
-            return redirect("contacts:contact-index-with-id", contact_id=id)
+            return redirect("contacts:select", contact_id=id)
 
     else:
         if selected_folder:
@@ -220,7 +206,7 @@ def delete(request, id):
     if request.session.get("selected_contact_id", False):
         del request.session["selected_contact_id"]
 
-    return redirect("contacts:contact-index")
+    return redirect("contacts:index")
 
 
 @login_required
@@ -249,7 +235,7 @@ def assign_store(request, id):
     )
     relationship.save()
 
-    return redirect("contacts:contact-index-with-id", contact_id=id)
+    return redirect("contacts:index", contact_id=id)
 
 
 @login_required
@@ -271,7 +257,7 @@ def remove_store(request):
     relationship = get_object_or_404(Relationship, pk=request.POST["relationship_id"])
     contact_id = relationship.contact.id
     relationship.delete()
-    return redirect("contacts:contact-index-with-id", contact_id=contact_id)
+    return redirect("contacts:index", contact_id=contact_id)
 
 
 @login_required
@@ -319,7 +305,7 @@ def toggle_google_sync(request, id):
     else:
         contact.google_id = google.add_contact(contact)
     contact.save()
-    return redirect("contacts:contact-index-with-id", contact_id=id)
+    return redirect("contacts:index", contact_id=id)
 
 
 @login_required

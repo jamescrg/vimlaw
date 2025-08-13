@@ -6,9 +6,18 @@
       </div>
     </div>
     <ul class="list-group">
-      {% for folder in client_folders %}
-        {% include "folders/folder.html" %}
-      {% endfor %}
+      <li class="folder-item-container list-group-item{% if client_status == 'Current' %} item-selected-highlight{% endif %}">
+        <div>
+          <i class="bi bi-folder"></i>
+          <a href="{% url 'folders:client' 'Current' %}">Current</a>
+        </div>
+      </li>
+      <li class="folder-item-container list-group-item{% if client_status == 'Former' %} item-selected-highlight{% endif %}">
+        <div>
+          <i class="bi bi-folder"></i>
+          <a href="{% url 'folders:client' 'Former' %}">Former</a>
+        </div>
+      </li>
     </ul>
   </div>
 </div>

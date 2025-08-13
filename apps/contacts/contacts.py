@@ -10,42 +10,24 @@ from apps.trust.models import Transaction
 
 def get_list_data(request):
     folders = Folder.objects.filter(app="contacts").order_by("name")
-    folders = list(folders)
 
-    folders.append({"id": "unsorted", "name": "Unsorted"})
+    folders = Folder.objects.filter(app="contacts").order_by("name")
+    client_status = request.session.get("contacts_client_status")
+    selected_folder_id = request.session.get("contacts_selected_folder_id")
 
-    # Real folder from database
-    contact_folder_id = request.session.get("contacts_selected_folder_id")
-
-    # Client Status folders
-    client_folder_id = request.session.get("contacts_selected_client_folder_id")
-
-    if client_folder_id:
-        # Case: Client Status folder is selected
-        selected_folder = None
-    elif contact_folder_id:
-        # Fetch real folder if real folder is selected
-        selected_folder_id = request.session["contacts_selected_folder_id"]
-        if selected_folder_id == "unsorted":
-            selected_folder = None
-        else:
-            selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
+    if selected_folder_id:
+        selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
     else:
-        # Case: No folder is selected
         selected_folder = None
 
-    if selected_folder:
+    if client_status:
+        contacts = Contact.objects.filter(client_status=client_status)
+
+    elif selected_folder:
         contacts = Contact.objects.filter(folder_id=selected_folder_id)
+
     else:
-        # Filter contacts based on Client Status
-        if client_folder_id == "current":
-            contacts = Contact.objects.filter(client_status="Current")
-            selected_folder = {"id": "current", "name": "Current"}
-        elif client_folder_id == "former":
-            contacts = Contact.objects.filter(client_status="Former")
-            selected_folder = {"id": "former", "name": "Former"}
-        else:
-            contacts = Contact.objects.filter(folder_id__isnull=True)
+        contacts = Contact.objects.filter(folder_id__isnull=True)
 
     contacts = contacts.order_by("name")
 
@@ -87,6 +69,7 @@ def get_list_data(request):
         "app": "contacts",
         "edit": False,
         "folders": folders,
+        "client_status": client_status,
         "selected_folder": selected_folder,
         "contacts": contacts,
         "selected_contact": selected_contact,

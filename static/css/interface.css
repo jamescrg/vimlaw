@@ -57,9 +57,14 @@
   color: var(--selected-color) !important;
 }
 
+.item-selected-highlight {
+  background: var(--stone-150) !important;
+}
+
+
 .select-btn {
-  display: flex;
   align-items: center;
+  display: flex;
   justify-content: space-between;
 }
 

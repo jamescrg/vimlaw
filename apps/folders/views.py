@@ -12,23 +12,31 @@ def list(request):
 
 
 @login_required
-def select(request, folder_id, folder_type):
-    if folder_type == "current" or folder_type == "former":
-        request.session["contacts_selected_client_folder_id"] = folder_id
+def select(request, folder_id):
+
+    saved_folder = request.session["contacts_selected_folder_id"]
+    if folder_id == saved_folder:
         request.session["contacts_selected_folder_id"] = None
     else:
         request.session["contacts_selected_folder_id"] = folder_id
-        request.session["contacts_selected_client_folder_id"] = None
 
-    selected_contact_id = request.session.get("selected_contact_id")
+    request.session["contacts_client_status"] = None
 
-    # Preserve the selected contact ID in the URL if it exists
-    if selected_contact_id:
-        return redirect(
-            "contacts:contact-index-with-id", contact_id=selected_contact_id
-        )
+    return redirect("contacts:index")
+
+
+@login_required
+def client_status(request, status):
+
+    saved_status = request.session["contacts_client_status"]
+    if status == saved_status:
+        request.session["contacts_client_status"] = None
     else:
-        return redirect("contacts:contact-index")
+        request.session["contacts_client_status"] = status
+
+    request.session["contacts_selected_folder_id"] = None
+
+    return redirect("contacts:index")
 
 
 @login_required

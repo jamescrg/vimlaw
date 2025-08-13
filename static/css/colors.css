@@ -339,3 +339,31 @@
 .highlighted {
   background: var(--highlighted) !important;
 }
+
+.highlight-blue {
+  background: var(--sky-50) !important;
+}
+
+.highlight-gray {
+  background: var(--stone-125) !important;
+}
+
+.highlight-green {
+  background: var(--green-50) !important;
+}
+
+.highlight-orange {
+  background: var(--orange-50) !important;
+}
+
+.highlight-purple {
+  background: var(--purple-50) !important;
+}
+
+.highlight-red {
+  background: var(--red-50) !important;
+}
+
+.highlight-yellow {
+  background: var(--yellow-50) !important;
+}
