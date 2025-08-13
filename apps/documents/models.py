@@ -40,9 +40,10 @@ class Label(models.Model):
 
 
 def document_upload_path(instance, filename):
+    file_extension = filename.split(".")[-1].lower()
     file_name = instance.name if instance.name else filename
 
-    return f"documents/{instance.matter.name}_{instance.matter_id}/{file_name}"
+    return f"documents/{instance.matter.name}_{instance.matter_id}/{file_name}.{file_extension}"
 
 
 class Document(models.Model):

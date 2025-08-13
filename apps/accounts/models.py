@@ -20,6 +20,9 @@ class CustomUser(AbstractUser):
 
     @property
     def full_name(self):
+        if not self.first_name or not self.last_name:
+            return self.username.capitalize()
+
         return f"{self.first_name.capitalize()} {self.last_name.capitalize()}"
 
     @property

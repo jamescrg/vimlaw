@@ -1,0 +1,33 @@
+{% block content %}
+  <div class="section">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-tools">
+          <a href="#"
+          "><i class="bi bi-plus-lg"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="table-container">
+      <table id="documents-list" class="table docuemtn-list">
+        <tr>
+          <th>Name</th>
+          <th class="matter-name">Matter</th>
+          <th>Description</th>
+          <th>Uploaded by</th>
+          <td class="download">
+            <i class="bi bi-download"></i>
+          </td>
+        </tr>
+        {% if objects %}
+          {% for document in objects %}
+            {% include "documents/row.html" %}
+          {% endfor %}
+        {% endif %}
+      </table>
+    </div>
+    <div class="flex-start-space">
+      <div>{% include "pagination.html" %}</div>
+    </div>
+  </div>
+{% endblock content %}
