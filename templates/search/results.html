@@ -55,7 +55,7 @@
         {% for contact in contacts %}
           <tr>
             <td class="contact-name">
-              <a href={% url 'contacts:select' id=contact.id %}>{{ contact.name }}</a>
+              <a href={% url 'contacts:go-to-contact' contact_id=contact.id %}>{{ contact.name }}</a>
             </td>
             <td class="contact-phone1">{{ contact.phone1 }}</td>
             <td class="contact-email">{{ contact.email }}</td>

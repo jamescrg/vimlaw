@@ -52,7 +52,7 @@
     {% for client_info in client_data %}
       <tr>
         <td>
-          <a href="{% url 'contacts:select' id=client_info.client.id %}?from=reports">{{ client_info.client.name }}</a>
+          <a href="{% url 'contacts:go-to-contact' contact_id=client_info.client.id %}?from=reports">{{ client_info.client.name }}</a>
         </td>
         <td class="numeric">
           {% if client_info.total_hours > 0 %}
