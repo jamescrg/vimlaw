@@ -14,7 +14,7 @@ def list(request):
 @login_required
 def client_status(request, status):
 
-    saved_status = request.session["contacts_client_status"]
+    saved_status = request.session.get("contacts_client_status")
     if status == saved_status:
         request.session["contacts_client_status"] = None
     else:

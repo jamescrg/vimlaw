@@ -20,7 +20,8 @@ def index(request):
 @login_required
 def select(request, contact_id):
     request.session["selected_contact_id"] = contact_id
-    return redirect("contacts:index")
+    context = get_list_data(request)
+    return render(request, "contacts/main.html", context)
 
 
 @login_required
@@ -39,7 +40,8 @@ def go_to_contact(request, contact_id):
         request.session["contacts_client_status"] = None
         request.session["contacts_selected_folder_id"] = None
 
-    return redirect("contacts:index")
+    context = get_list_data(request)
+    return render(request, "contacts/main.html", context)
 
 
 @login_required
