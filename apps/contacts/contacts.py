@@ -9,7 +9,6 @@ from apps.trust.models import Transaction
 
 
 def get_list_data(request):
-    folders = Folder.objects.filter(app="contacts").order_by("name")
 
     folders = Folder.objects.filter(app="contacts").order_by("name")
     client_status = request.session.get("contacts_client_status")
@@ -20,12 +19,14 @@ def get_list_data(request):
     else:
         selected_folder = None
 
+    # if a contact has both a client_status and a folder
+    # pull the list of contacts matching the client_status
+    # otherwise pull the list of contacts matching the folder
+    # if neither value is set, get all contacts without a folder
     if client_status:
         contacts = Contact.objects.filter(client_status=client_status)
-
     elif selected_folder:
         contacts = Contact.objects.filter(folder_id=selected_folder_id)
-
     else:
         contacts = Contact.objects.filter(folder_id__isnull=True)
 

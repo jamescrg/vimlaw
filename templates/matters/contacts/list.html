@@ -20,7 +20,7 @@
               <tr>
                 <td class="relationship main-client">Client</td>
                 <td class="name main-client">
-                  <a href={% url 'contacts:select' id=matter.client.id %}>{{ matter.client.name }}</a>
+                  <a href={% url 'contacts:go-to-contact' contact_id=matter.client.id %}>{{ matter.client.name }}</a>
                 </td>
                 <td class="phone1 main-client">{{ matter.client.phone1|default:'' }}</td>
                 <td class="email main-client">{{ matter.client.email|default:'' }}</td>
@@ -32,7 +32,7 @@
                   <a href={% url 'matters:contacts-assign-edit' id=relationship.id %}>{{ relationship.role.name }}</a>
                 </td>
                 <td class="name">
-                  <a href={% url 'contacts:select' id=relationship.contact.id %}>{{ relationship.contact.name }}</a>
+                  <a href="{% url 'contacts:go-to-contact' contact_id=relationship.contact.id %}">{{ relationship.contact.name }}</a>
                 </td>
                 <td class="phone1">{{ relationship.contact.phone1|default:'' }}</td>
                 <td class="email">{{ relationship.contact.email|default:'' }}</td>

@@ -12,20 +12,6 @@ def list(request):
 
 
 @login_required
-def select(request, folder_id):
-
-    saved_folder = request.session["contacts_selected_folder_id"]
-    if folder_id == saved_folder:
-        request.session["contacts_selected_folder_id"] = None
-    else:
-        request.session["contacts_selected_folder_id"] = folder_id
-
-    request.session["contacts_client_status"] = None
-
-    return redirect("contacts:index")
-
-
-@login_required
 def client_status(request, status):
 
     saved_status = request.session["contacts_client_status"]
@@ -34,7 +20,29 @@ def client_status(request, status):
     else:
         request.session["contacts_client_status"] = status
 
+    # unset the selected folder
     request.session["contacts_selected_folder_id"] = None
+
+    # unset the selected contact
+    request.session["selected_contact_id"] = None
+
+    return redirect("contacts:index")
+
+
+@login_required
+def select(request, folder_id):
+
+    saved_folder = request.session["contacts_selected_folder_id"]
+    if folder_id == saved_folder:
+        request.session["contacts_selected_folder_id"] = None
+    else:
+        request.session["contacts_selected_folder_id"] = folder_id
+
+    # unset the selected client status
+    request.session["contacts_client_status"] = None
+
+    # unset the selected contact
+    request.session["selected_contact_id"] = None
 
     return redirect("contacts:index")
 

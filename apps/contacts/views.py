@@ -5,7 +5,7 @@ import apps.contacts.google as google
 from apps.contacts.contacts import get_list_data
 from apps.contacts.forms import ContactForm
 from apps.contacts.models import Contact
-from apps.folders.models import CLIENT_FOLDERS, Folder
+from apps.folders.models import Folder
 from apps.intakes.models import Intake
 from apps.matters.models import Matter, Relationship, Role
 from config.helpers import format_phone
@@ -19,26 +19,24 @@ def index(request):
 
 @login_required
 def select(request, contact_id):
-
-    # check for contact in database
-    contact = get_object_or_404(Contact, pk=contact_id)
-
-    # set selected contact
     request.session["selected_contact_id"] = contact_id
+    return redirect("contacts:index")
 
-    # set view to show contact's client status
-    if contact.client_status == "Client":
-        pass
-        request.session["contacts_selected_client_folder_id"] = "current"
 
+@login_required
+def go_to_contact(request, contact_id):
+    contact = get_object_or_404(Contact, pk=contact_id)
+    request.session["selected_contact_id"] = contact.id
+
+    if contact.client_status == "Current" or contact.client_status == "Former":
+        request.session["contacts_client_status"] = contact.client_status
+        request.session["contacts_selected_folder_id"] = None
+
+    elif contact.folder:
+        request.session["contacts_client_status"] = None
+        request.session["contacts_selected_folder_id"] = contact.folder_id
     else:
-        pass
-        request.session["contacts_selected_client_folder_id"] = "former"
-
-    # set view to show contact's folder
-    if contact.folder:
-        request.session["contacts_selected_folder_id"] = contact.folder.id
-    else:
+        request.session["contacts_client_status"] = None
         request.session["contacts_selected_folder_id"] = None
 
     return redirect("contacts:index")
@@ -46,89 +44,63 @@ def select(request, contact_id):
 
 @login_required
 def add(request):
-    folders = Folder.objects.filter(app="contacts").order_by("name")
 
-    contact_folder_id = request.session.get("contacts_selected_folder_id")
-
-    client_folder_id = request.session.get("contacts_selected_client_folder_id")
-
-    if client_folder_id:
-        selected_folder = None
-    elif contact_folder_id and contact_folder_id != "unsorted":
-        selected_folder_id = request.session["contacts_selected_folder_id"]
-        selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
-    else:
-        selected_folder = None
+    selected_folder_id = request.session.get("contacts_selected_folder_id")
+    client_status = request.session.get("contacts_client_status")
 
     if request.method == "POST":
         form = ContactForm(request.POST, use_required_attribute=False)
         if form.is_valid():
-            # initialize contact data
+
+            # initialize the contact
             contact = form.save(commit=False)
             contact.user = request.user
             contact.phone1 = format_phone(contact.phone1)
             contact.phone2 = format_phone(contact.phone2)
             contact.phone3 = format_phone(contact.phone3)
 
+            # link to its intake, if applicable
             intake_id = request.POST.get("intake_id")
             if intake_id:
                 intake = get_object_or_404(Intake, pk=intake_id)
                 contact.intake = intake
 
+            # save the contact
             contact.save()
 
-            # select newest contact for user
+            # select newest contact for display
             new = Contact.objects.all().latest("id")
-            request.session["selected_contact_id"] = new.id
-            request.session["contacts_selected_folder_id"] = (
-                new.folder.id if new.folder else 0
-            )
+            return redirect("contacts:go-to-contact", contact_id=new.id)
 
-            return redirect("contacts:select", contact_id=new.id)
-
-    # if no post data has been submitted, show the contact form
     else:
-        if selected_folder:
+        if selected_folder_id:
             form = ContactForm(
-                initial={"folder": selected_folder.id}, use_required_attribute=False
+                initial={"folder": selected_folder_id}, use_required_attribute=False
+            )
+        elif client_status:
+            form = ContactForm(
+                initial={"client_status": client_status}, use_required_attribute=False
             )
         else:
             form = ContactForm(use_required_attribute=False)
 
-    form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
-        "name"
-    )
+        form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
+            "name"
+        )
 
-    context = {
-        "app": "contacts",
-        "action_type": "db_update",
-        "edit": False,
-        "add": True,
-        "action": "/contacts/add",
-        "folders": folders,
-        "selected_folder": selected_folder,
-        "form": form,
-        "client_folders": CLIENT_FOLDERS,
-    }
+        context = {
+            "app": "contacts",
+            "edit": False,
+            "add": True,
+            "action": "/contacts/add",
+            "form": form,
+        }
 
     return render(request, "contacts/form.html", context)
 
 
 @login_required
 def edit(request, id):
-    folders = Folder.objects.filter(app="contacts").order_by("name")
-
-    contact_folder_id = request.session.get("contacts_selected_folder_id")
-
-    client_folder_id = request.session.get("contacts_selected_client_folder_id")
-
-    if client_folder_id:
-        selected_folder = None
-    elif contact_folder_id and contact_folder_id != "unsorted":
-        selected_folder_id = request.session["contacts_selected_folder_id"]
-        selected_folder = get_object_or_404(Folder, pk=selected_folder_id)
-    else:
-        selected_folder = None
 
     contact = get_object_or_404(Contact, pk=id)
 
@@ -155,36 +127,20 @@ def edit(request, id):
             return redirect("contacts:select", contact_id=id)
 
     else:
-        if selected_folder:
-            form = ContactForm(
-                instance=contact,
-                initial={"folder": selected_folder.id},
-                use_required_attribute=False,
-            )
-        else:
-            form = ContactForm(instance=contact, use_required_attribute=False)
+        form = ContactForm(instance=contact, use_required_attribute=False)
+        form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
+            "name"
+        )
 
-    form.fields["folder"].queryset = Folder.objects.filter(app="contacts").order_by(
-        "name"
-    )
+        context = {
+            "app": "contacts",
+            "edit": True,
+            "action": f"/contacts/{id}/edit",
+            "contact": contact,
+            "form": form,
+        }
 
-    google_connected = google.check_credentials()
-
-    context = {
-        "app": "contacts",
-        "action_type": "db_update",
-        "edit": True,
-        "add": False,
-        "action": f"/contacts/{id}/edit",
-        "folders": folders,
-        "selected_folder": selected_folder,
-        "contact": contact,
-        "google_connected": google_connected,
-        "form": form,
-        "client_folders": CLIENT_FOLDERS,
-    }
-
-    return render(request, "contacts/form.html", context)
+        return render(request, "contacts/form.html", context)
 
 
 @login_required
@@ -305,7 +261,7 @@ def toggle_google_sync(request, id):
     else:
         contact.google_id = google.add_contact(contact)
     contact.save()
-    return redirect("contacts:index", contact_id=id)
+    return redirect("contacts:index")
 
 
 @login_required

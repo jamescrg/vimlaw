@@ -7,6 +7,7 @@ from apps.contacts.views import (
     assign_store,
     delete,
     edit,
+    go_to_contact,
     google_list,
     index,
     remove,
@@ -20,6 +21,7 @@ app_name = "contacts"
 urlpatterns = [
     path("contacts/", index, name="index"),
     path("contacts/<int:contact_id>", select, name="select"),
+    path("go_to_contact/<int:contact_id>", go_to_contact, name="go-to-contact"),
     path("contacts/add", add, name="add"),
     path("contacts/<int:id>/edit", edit, name="edit"),
     path("contacts/<int:id>/delete", delete, name="delete"),
