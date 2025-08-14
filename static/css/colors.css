@@ -367,3 +367,7 @@
 .highlight-yellow {
   background: var(--yellow-50) !important;
 }
+
+.money-positive {
+  color: var(--lime-700) !important;
+}

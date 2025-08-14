@@ -1,5 +1,6 @@
 {% block subcontent %}
   {% load humanize %}
+  {% load mathfilters %}
   <div class="toolbar">
     <div class="toolbar-left">
       <h2>Ledger</h2>
@@ -101,11 +102,13 @@
               {% endif %}
             </td>
             {% if transaction.transaction_type == 'Charge' %}
-              <td class="numeric urgent">-${{ transaction.amount|floatformat:2|intcomma }}</td>
+              <td class="numeric urgent">${{ transaction.amount|floatformat:2|intcomma }}</td>
             {% else %}
-              <td class="numeric">${{ transaction.amount|floatformat:2|intcomma }}</td>
+              <td class="numeric">-${{ transaction.amount|floatformat:2|intcomma }}</td>
             {% endif %}
-            <td class="numeric">${{ transaction.balance|floatformat:2|intcomma }}</td>
+            <td class="numeric{% if transaction.balance <= 0 %} money-positive{% endif %}">
+              ${{ transaction.balance|abs|floatformat:2|intcomma }}
+            </td>
           </tr>
         {% endfor %}
       </table>

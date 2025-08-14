@@ -1,6 +1,7 @@
 {% load humanize %}
 {% load static %}
 {% load cache_buster %}
+{% load mathfilters %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -63,9 +64,9 @@
                   <td class="transaction-type">{{ transaction.transaction_type }}</td>
                   <td>{{ transaction.description }}</td>
                   {% if transaction.transaction_type == 'Charge' %}
-                    <td class="money urgent">-${{ transaction.amount|floatformat:2|intcomma }}</td>
+                    <td class="money urgent">${{ transaction.amount|floatformat:2|intcomma }}</td>
                   {% else %}
-                    <td class="money">${{ transaction.amount|floatformat:2|intcomma }}</td>
+                    <td class="money">-${{ transaction.amount|floatformat:2|intcomma }}</td>
                   {% endif %}
                   <td class="money">${{ transaction.balance|floatformat:2|intcomma }}</td>
                 </tr>
@@ -76,8 +77,12 @@
               <div class="totals-table">
                 <table class="table">
                   <tr>
-                    <td class="current-balance strong">Current Balance</td>
-                    <td class="money balance-due">${{ balance_due|floatformat:2|intcomma }}</td>
+                    {% if balance_due >= 0 %}
+                      <td class="current-balance strong">Current Balance Due</td>
+                    {% else %}
+                      <td class="current-balance strong">Surplus Funds</td>
+                    {% endif %}
+                    <td class="money balance-due">${{ balance_due|abs|floatformat:2|intcomma }}</td>
                   </tr>
                 </table>
               </div>
