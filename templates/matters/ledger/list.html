@@ -50,13 +50,13 @@
             <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
             <td class="type">{{ transaction.transaction_type }}</td>
             <td>
-              {% if 'Invoice' in transaction.description %}
-                <a href="{% url 'invoicing:invoices-detail-index' transaction.id %}">{{ transaction.description }}</a>
-              {% elif 'Payment' in transaction.description %}
+              {% if 'Invoice' in transaction.detail %}
+                <a href="{% url 'invoicing:invoices-detail-index' transaction.id %}">{{ transaction.detail }}</a>
+              {% elif 'Payment' in transaction.detail %}
                 <button class="button-link"
                         type="button"
                         data-bs-toggle="dropdown"
-                        aria-expanded="false">{{ transaction.description }}</button>
+                        aria-expanded="false">{{ transaction.detail }}</button>
                 <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
                   <li>
                     <a class="dropdown-item"
@@ -74,11 +74,11 @@
                        hx-delete="{% url 'invoicing:payments-delete' transaction.id %}">Delete</a>
                   </li>
                 </ul>
-              {% elif 'Credit' in transaction.description %}
+              {% elif 'Credit' in transaction.detail %}
                 <button class="button-link"
                         type="button"
                         data-bs-toggle="dropdown"
-                        aria-expanded="false">{{ transaction.description }}</button>
+                        aria-expanded="false">{{ transaction.detail }}</button>
                 <ul class="dropdown-menu" aria-labeledby="creditsDropdown">
                   <li>
                     <a class="dropdown-item"
@@ -97,7 +97,7 @@
                   </li>
                 </ul>
               {% else %}
-                {{ transaction.description }}
+                {{ transaction.detail }}
               {% endif %}
             </td>
             {% if transaction.transaction_type == 'Charge' %}
