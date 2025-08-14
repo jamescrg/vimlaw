@@ -57,28 +57,26 @@
           </li>
         {% endfor %}
       </ul>
+      <div class="contacts-assignment">
+        <a href="#"
+           hx-get="/contacts/{{ selected_contact.id }}/assign"
+           hx-target="#htmx-modal-container"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">Assign</a>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="#"
+           hx-get="/contacts/{{ selected_contact.id }}/remove"
+           hx-target="#htmx-modal-container"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">Remove</a>
+      </div>
     </div>
   {% endif %}
   <div class="contact-item"></div>
   {% if selected_contact.intake %}
-    <div class="contact-item">
-      <a href={% url 'intakes:detail-index' id=selected_contact.intake.id %}>View Intake</a>
-    </div>
+    <a href={% url 'intakes:detail-index' id=selected_contact.intake.id %}>View Intake</a>&nbsp;&nbsp;&nbsp;&nbsp;
   {% endif %}
   {% if trust %}
     <a href={% url 'trust:client-index' selected_contact.id %}>View Trust</a>
   {% endif %}
-  <div class="contacts-assignment">
-    <a href="#"
-       hx-get="/contacts/{{ selected_contact.id }}/assign"
-       hx-target="#htmx-modal-container"
-       data-bs-toggle="modal"
-       data-bs-target="#htmx-modal-container">Assign</a>
-    &nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="#"
-       hx-get="/contacts/{{ selected_contact.id }}/remove"
-       hx-target="#htmx-modal-container"
-       data-bs-toggle="modal"
-       data-bs-target="#htmx-modal-container">Remove</a>
-  </div>
 </div>

@@ -30,12 +30,13 @@
       <div class="toolbar-right">
         <button class="button-link"
                 hx-get="{% url 'folders:add' %}"
-                hx-target="#add-folder">
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
           <i class="bi bi-plus-lg"></i>
         </button>
       </div>
     </div>
-    <div id="add-folder"></div>
     <ul class="list-group">
       {% if folders %}
         {% for folder in folders %}

@@ -15,9 +15,10 @@
     <li>
       <a class="dropdown-item"
          href="#"
-         hx-target="#show-folder-{{ folder.id }}"
-         hx-swap="innerHTML"
-         hx-get="{% url 'folders:edit' folder_id=folder.id %}">Edit</a>
+         hx-get="{% url 'folders:edit' folder_id=folder.id %}"
+         hx-target="#htmx-modal-container"
+         data-bs-toggle="modal"
+         data-bs-target="#htmx-modal-container">Edit</a>
     </li>
     <li>
       <a class="dropdown-item"

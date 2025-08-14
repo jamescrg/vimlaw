@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.folders.folders import get_list_data
+from apps.folders.forms import FolderForm
 from apps.folders.models import Folder
 
 
@@ -49,35 +50,49 @@ def select(request, folder_id):
 
 @login_required
 def add(request):
-    return render(request, "folders/add.html")
+    if request.method == "POST":
+        form = FolderForm(request.POST)
+        if form.is_valid():
+            folder = form.save(commit=False)
+            folder.app = "contacts"
+            folder.save()
+            context = get_list_data(request)
+            response = render(request, "folders/list.html", context)
+            response.status_code = 202  # This will trigger modal close
+            return response
+    else:
+        form = FolderForm()
 
-
-@login_required
-def insert(request):
-    folder = Folder()
-    folder.user_id = request.user.id
-    folder.name = request.POST["name"]
-    folder.app = "contacts"
-    if folder.name:
-        folder.save()
-    context = get_list_data(request)
-    return render(request, "folders/list.html", context)
+    context = {
+        "form": form,
+        "action": "/folders/add/",
+        "edit": False,
+    }
+    return render(request, "folders/form.html", context)
 
 
 @login_required
 def edit(request, folder_id):
     folder = get_object_or_404(Folder, pk=folder_id)
-    context = {"folder": folder}
-    return render(request, "folders/edit.html", context)
 
+    if request.method == "POST":
+        form = FolderForm(request.POST, instance=folder)
+        if form.is_valid():
+            form.save()
+            context = get_list_data(request)
+            response = render(request, "folders/list.html", context)
+            response.status_code = 202  # This will trigger modal close
+            return response
+    else:
+        form = FolderForm(instance=folder)
 
-@login_required
-def update(request, folder_id):
-    folder = get_object_or_404(Folder, pk=folder_id)
-    folder.name = request.POST["name"]
-    folder.save()
-    context = {"folder": folder}
-    return render(request, "folders/folder.html", context)
+    context = {
+        "form": form,
+        "action": f"/folders/edit/{folder_id}",
+        "edit": True,
+        "folder": folder,
+    }
+    return render(request, "folders/form.html", context)
 
 
 @login_required
@@ -89,4 +104,6 @@ def delete(request, folder_id):
         del request.session["contacts_selected_folder_id"]
 
     context = get_list_data(request)
-    return render(request, "folders/list.html", context)
+    response = render(request, "folders/list.html", context)
+    response.status_code = 202  # This will trigger modal close
+    return response
