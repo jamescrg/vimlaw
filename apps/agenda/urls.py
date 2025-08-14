@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.agenda.events.views import (
     events_add,
+    events_deadline_form,
     events_deadline_results,
     events_delete,
     events_edit,
@@ -106,6 +107,11 @@ urlpatterns = [
         "events/deadline-results",
         events_deadline_results,
         name="events-deadline-results",
+    ),
+    path(
+        "events/deadline-form",
+        events_deadline_form,
+        name="events-deadline-form",
     ),
     path("events/add/<int:matter_id>", events_add, name="events-add-matter"),
     path(

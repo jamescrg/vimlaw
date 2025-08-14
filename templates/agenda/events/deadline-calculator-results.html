@@ -1,15 +1,15 @@
-<table>
+<table class="deadline-calculator-results">
   <tr>
-    <td>Deadline</td>
+    <th>Deadline</th>
     <td {% if not results.next_workday %}class="strong"{% endif %}>{{ results.deadline|date:"Y-m-d" }}</td>
   </tr>
   <tr>
-    <td>Weekday</td>
+    <th>Weekday</th>
     <td>{{ results.deadline_weekday }}</td>
   </tr>
   {% if results.next_workday %}
     <tr>
-      <td>Next Business Day</td>
+      <th>Next Business Day</th>
       <td class="strong">{{ results.next_workday|date:"Y-m-d" }}</td>
     </tr>
   {% endif %}

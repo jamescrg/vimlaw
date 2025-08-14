@@ -10,11 +10,11 @@ class EventForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = (
-            "description",
+            "status",
+            "party",
             "date",
             "matter",
-            "party",
-            "status",
+            "description",
         )
         PARTIES = (
             ("Client", "Client"),
