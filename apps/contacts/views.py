@@ -227,9 +227,8 @@ def remove(request, id):
 @login_required
 def remove_store(request):
     relationship = get_object_or_404(Relationship, pk=request.POST["relationship_id"])
-    contact_id = relationship.contact.id
     relationship.delete()
-    return redirect("contacts:index", contact_id=contact_id)
+    return redirect("contacts:index")
 
 
 @login_required
