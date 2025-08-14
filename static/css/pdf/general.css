@@ -15,6 +15,7 @@ Page Setup
 
 .template {
   font-family: "Noto Serif", serif;
+  /* font-family: "Times New Roman", serif; */
   font-size: 11pt;
   position: relative;
   width: 100%;
@@ -75,7 +76,7 @@ Content
 }
 
 h3 {
-  font-family: "Times New Roman", serif;
+  /* font-family: "Times New Roman", serif; */
   font-size: 11pt;
   margin-bottom: 12pt;
   margin-top: 11pt;
@@ -87,12 +88,9 @@ h3 {
   width: 100%;
 }
 
-.table th {
-  font-family: "Times New Roman", serif;
-}
-
 .table th,
 .table td {
+  /* font-family: "Times New Roman", serif; */
   border: solid 1px lightgray;
   font-size: 10pt;
   padding: 6pt;
@@ -119,7 +117,7 @@ h3 {
 }
 
 .table .total {
-  font-family: "Times New Roman", serif;
+  /* font-family: "Times New Roman", serif; */
   font-weight: 600;
 }
 

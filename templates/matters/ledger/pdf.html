@@ -43,6 +43,7 @@
           <h3 class="text-right">Matter Ledger</h3>
           <p class="text-right">Matter {{ matter.id }}</p>
           <p class="text-right">"{{ matter.name }}"</p>
+          <p class="text-right">{{ current_date }}</p>
           {% if matter.client_reference_id %}<p class="text-right">{{ matter.client_reference_id }}</p>{% endif %}
         </div>
       </div>
@@ -71,27 +72,29 @@
                   <td class="money">${{ transaction.balance|floatformat:2|intcomma }}</td>
                 </tr>
               {% endfor %}
+              <tr>
+                {% if balance_due >= 0 %}
+                  <td colspan="4">Balance Due</td>
+                {% else %}
+                  <td colspan="4">Surplus Funds</td>
+                {% endif %}
+                <td class="money balance-due">${{ balance_due|abs|floatformat:2|intcomma }}</td>
+              </tr>
             </table>
-            <div class="flex-start-space">
-              <br />
-              <div class="totals-table">
-                <table class="table">
-                  <tr>
-                    {% if balance_due >= 0 %}
-                      <td class="current-balance strong">Current Balance Due</td>
-                    {% else %}
-                      <td class="current-balance strong">Surplus Funds</td>
-                    {% endif %}
-                    <td class="money balance-due">${{ balance_due|abs|floatformat:2|intcomma }}</td>
-                  </tr>
-                </table>
-              </div>
-            </div>
           </div>
-        {% else %}
-          No transactions found.
-        {% endif %}
+        </div>
       </div>
+    {% else %}
+      No transactions found.
+    {% endif %}
+    <div class="section trust-balance">
+      <h3>Trust Account</h3>
+      <table class="table ledger">
+        <tr>
+          <td>Funds on Retainer</td>
+          <td class="money">${{ client_trust_balance|floatformat:2|intcomma }}</td>
+        </tr>
+      </table>
     </div>
   </body>
 </html>
