@@ -25,29 +25,30 @@ def select(request, contact_id):
     # identify the contact
     contact = get_object_or_404(Contact, pk=contact_id)
 
+    # if the contact exists (no 404 error thrown above)
     # persist the id of the selected contact
     request.session["selected_contact_id"] = contact.id
 
-    # check whether a the user is viewing a list of contacts
-    # based on client status, or whether the user is
+    # check whether a the user is last viewed a list of contacts
+    # based on client status, or whether the user was
     # viewing a specific folder
     client_status = request.session.get("contacts_client_status")
     folder = request.session.get("contacts_selected_folder_id")
 
-    # if the user is viewing a list of clients,
-    # set the list to match the contact
+    # if the user was viewing a list of contacts by client_status,
+    # set the list to match the client_status of the contact
     if client_status and client_status != "Nonclient":
-        if client_status != "Nonclient":
-            request.session["contacts_client_status"] = contact.client_status
-            request.session["contacts_selected_folder_id"] = None
+        request.session["contacts_client_status"] = contact.client_status
+        request.session["contacts_selected_folder_id"] = None
 
-    # if the viewer is viewing a list of folders,
-    # set the list to match the folder
+    # else if the viewer was viewing a list of folders,
+    # update the list to match the folder for the selected contact
     elif folder or contact.folder:
         request.session["contacts_client_status"] = None
         request.session["contacts_selected_folder_id"] = contact.folder_id
 
-    # if the user is viewing unsorted contacts
+    # else if the user was viewing unsorted contacts
+    # and the selected contact does not have a folder
     # remove all sorting parameters
     else:
         request.session["contacts_client_status"] = None
