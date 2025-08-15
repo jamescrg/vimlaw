@@ -46,12 +46,14 @@
           <th class="numeric">Amount</th>
           <th class="numeric">Balance</th>
         </tr>
+        {# list of transactions -------------------------------------- #}
         {% for transaction in transactions %}
           <tr>
             <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
             <td class="type">{{ transaction.transaction_type }}</td>
             <td>
-              {% if 'Invoice' in transaction.detail %}
+              {# invoices -------------------------------------- #}
+              {% if 'Invoice' in transaction.description %}
                 <a href="{% url 'invoicing:invoices-detail-index' transaction.id %}">{{ transaction.description }}</a>
               {% elif 'Payment' in transaction.description %}
                 <button class="button-link"
