@@ -5,16 +5,37 @@
         <div class="filter-tools">
           <a href="#"
           "><i class="bi bi-plus-lg"></i></a>
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'documents:filter' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-filter"></i> &nbsp;Filter
+        </button>
         </div>
       </div>
     </div>
     <div class="table-container">
       <table id="documents-list" class="table docuemtn-list">
         <tr>
-          <th>Name</th>
-          <th class="matter-name">Matter</th>
+          <th>Name
+          <a href="#" hx-get="{% url 'documents:sort' 'name' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+          </th>
+          <th class="matter-name">Matter
+          <a href="#" hx-get="{% url 'documents:sort' 'matter' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+          </th>
           <th>Description</th>
-          <th>Uploaded by</th>
+          <th>Uploaded by
+            <a href="#" hx-get="{% url 'documents:sort' 'uploaded_by' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </a>
+          </th>
           <td class="download">
             <i class="bi bi-download"></i>
           </td>
