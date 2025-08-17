@@ -26,6 +26,104 @@ textarea {
   padding: 0.4rem;
 }
 
+/* Dropzone styling to match form field styles */
+.dropzone {
+  border: solid 1px var(--stone-300) !important;
+  border-radius: 3px !important;
+  background: white !important;
+  padding: 1rem !important;
+  cursor: pointer;
+  text-align: center;
+  color: var(--stone-600);
+  font-size: 0.9rem;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone:hover {
+  border-color: var(--stone-400) !important;
+  background: var(--stone-50) !important;
+}
+
+.dropzone.dz-drag-hover {
+  border-color: var(--button-form) !important;
+  background: var(--stone-100) !important;
+}
+
+.dropzone .dz-message {
+  margin: 0 !important;
+  font-weight: normal !important;
+}
+
+/* Custom dropzone file preview styling */
+.dropzone .dz-preview {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--stone-100);
+  border: solid 1px var(--stone-300);
+  border-radius: 3px;
+  padding: 0.5rem;
+  margin: 0.5rem 0 0 0 !important;
+  width: 100% !important;
+  min-height: auto !important;
+}
+
+.dropzone .dz-preview .dz-filename-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.dropzone .dz-preview .dz-filename {
+  font-size: 0.9rem;
+  color: var(--stone-700);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropzone .dz-preview .dz-size {
+  font-size: 0.8rem;
+  color: var(--stone-500);
+  flex-shrink: 0;
+}
+
+.dropzone .dz-preview .dz-remove {
+  color: var(--orange-800);
+  text-decoration: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.dropzone .dz-preview .dz-remove:hover {
+  background: var(--stone-200);
+  color: var(--orange-900);
+}
+
+.dropzone .dz-preview .dz-remove i {
+  cursor: pointer;
+}
+
+/* Hide default dropzone elements */
+.dropzone .dz-preview .dz-image,
+.dropzone .dz-preview .dz-progress,
+.dropzone .dz-preview .dz-success-mark,
+.dropzone .dz-preview .dz-error-mark,
+.dropzone .dz-preview .dz-error-message,
+.dropzone .dz-preview .dz-details {
+  display: none !important;
+}
+
 select {
   background: white;
 }

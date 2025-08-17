@@ -3,8 +3,15 @@
     <div class="toolbar">
       <div class="toolbar-left">
         <div class="filter-tools">
-          <a href="#"
-          "><i class="bi bi-plus-lg"></i></a>
+          <button type="button"
+                  class="btn-icon"
+                  hx-get="{% url 'documents:add' %}"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
           <button type="button"
                   class="btn-icon"
                   hx-get="{% url 'documents:filter' %}"

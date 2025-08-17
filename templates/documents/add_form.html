@@ -1,0 +1,43 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Add Document</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form action="{% url 'documents:add' %}"
+            method="post"
+            role="form"
+            class="form-compact col2"
+            enctype="multipart/form-data"
+            hx-post="{% url 'documents:add' %}"
+            hx-target="#htmx-modal-container"
+            id="document-form">
+        {% csrf_token %}
+        {{ form }}
+        <div class="span2">
+          <label>File</label>
+          <div id="document-dropzone" class="dropzone"></div>
+          {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+              {% if error|stringformat:"s"|slice:":13" == "FILE_REQUIRED" %}
+                <ul class="errorlist">
+                  <li>{{ error|slice:"14:" }}</li>
+                </ul>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div class="flex-center-space span2">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

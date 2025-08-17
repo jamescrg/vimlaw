@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 from apps.documents.filters import DocumentsFilter
+from apps.documents.forms import DocumentsForm
 from apps.documents.get_document_data import get_document_data
 from apps.documents.models import Document
 
@@ -73,6 +74,35 @@ def documents_sort(request, order):
     request.session["documents_filter"] = filter_data
 
     return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+
+@login_required
+def documents_add(request):
+    if request.method == "POST":
+        form = DocumentsForm(request.POST, use_required_attribute=False)
+
+        uploaded_file = request.FILES.get("file")
+
+        # Validate file is uploaded
+        if not uploaded_file:
+            form.add_error(None, "FILE_REQUIRED: Please select a file to upload.")
+
+        if form.is_valid() and uploaded_file:
+            document = form.save(commit=False)
+
+            document.uploaded_by = request.user
+            document.file = uploaded_file
+
+            document.save()
+
+            return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+        # Form has errors
+        return render(request, "documents/add_form.html", {"form": form})
+    else:
+        form = DocumentsForm(use_required_attribute=False)
+
+        return render(request, "documents/add_form.html", {"form": form})
 
 
 @login_required

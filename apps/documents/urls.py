@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.documents.views import (
+    documents_add,
     documents_filter,
     documents_list,
     documents_sort,
@@ -12,6 +13,7 @@ app_name = "documents"
 
 urlpatterns = [
     path("documents/", index, name="index"),
+    path("documents/add/", documents_add, name="add"),
     path("documents/list/", documents_list, name="list"),
     path("documents/filter/", documents_filter, name="filter"),
     path("documents/sort/<str:order>/", documents_sort, name="sort"),
