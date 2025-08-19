@@ -50,6 +50,7 @@ class Document(models.Model):
     matter = models.ForeignKey(
         Matter, on_delete=models.CASCADE, related_name="documents"
     )
+    date = models.DateField(blank=True, null=True)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     file = models.FileField(upload_to=document_upload_path)
