@@ -133,6 +133,7 @@ class NoteForm(forms.ModelForm):
             "date": forms.DateInput(attrs={"type": "date"}),
             "time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
             "type": forms.Select(choices=TYPES),
+            "details": forms.Textarea(attrs={"class": "span3", "rows": "8"}),
         }
 
     def __init__(self, *args, **kwargs):

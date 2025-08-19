@@ -17,11 +17,11 @@
     <div class="modal-body">
       <form hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
-            class="form-responsive form-spacious intake-note-form">
+            class="form-responsive form-compact col3 intake-note-form">
         {% csrf_token %}
         {{ form }}
         <br />
-        <div class="flex-center-space">
+        <div class="flex-center-space span3">
           <div>
             <button type="submit" class="submit">Submit</button>
           </div>
