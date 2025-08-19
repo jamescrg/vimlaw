@@ -149,8 +149,8 @@ select {
 }
 
 .add-event {
-  margin-top: 1rem;
   border-top: solid 1px var(--stone-200);
+  margin-top: 1rem;
   padding-top: 1rem;
 }
 
@@ -161,15 +161,15 @@ select {
   gap: 0.5rem;
 }
 
-.form-spacious > label {
+.form-spacious>label {
   font-weight: 600;
 }
 
-.form-spacious > div {
+.form-spacious>div {
   margin-block-end: 1rem;
 }
 
-@media screen and (min-width: 800px) and (max-width: 1199px) {
+@media screen and (width >= 800px) and (width <= 1199px) {
   .form-spacious {
     grid-template-columns: 1fr 3fr;
   }
@@ -183,7 +183,7 @@ select {
   }
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (width >= 1200px) {
   .form-spacious {
     grid-template-columns: 1fr 4fr;
   }
