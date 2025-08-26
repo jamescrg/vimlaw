@@ -2,7 +2,7 @@
 {% block content %}
   {% load humanize %}
   <div id="content" class="container content">
-    <div class="section matter-title">
+    <div class="section detail-title">
       <div class="toolbar">
         <div class="toolbar-left">
           <h1>{{ matter.name }}</h1>
@@ -35,7 +35,7 @@
         </div>
       </div>
     </div>
-    <div class="subnav matter-subnav">
+    <div class="subnav detail-subnav">
       <ul>
         <li {% if subapp == 'rates' %}class="active"{% endif %}>
           <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>

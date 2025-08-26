@@ -11,6 +11,7 @@ from apps.invoicing.credits.views import (
     order_by_credits,
 )
 from apps.invoicing.invoices.views import (
+    invoice_details_index,
     invoice_expense_entries,
     invoice_expense_entries_index,
     invoice_ledes_98b,
@@ -89,6 +90,11 @@ urlpatterns = [
         "invoicing/invoices-edit-status/<int:pk>/<str:status>/<str:view>/",
         invoices_edit_status,
         name="invoices-edit-status",
+    ),
+    path(
+        "invoicing/invoices-detail/<int:pk>/details-index/",
+        invoice_details_index,
+        name="invoice-details-index",
     ),
     path(
         "invoicing/invoices-detail/<int:pk>/pdf-preview-index/",

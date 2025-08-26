@@ -63,6 +63,13 @@
   padding: 5px;
 }
 
+.toolbar-right {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+}
+
 .toolbar-right > a,
 .toolbar-right button {
   margin-left: 1rem;
@@ -80,4 +87,31 @@
 
 .subsection {
   border-radius: 0 0 3px 3px;
+}
+
+
+/* ==========================================================================
+Detail Views
+========================================================================== */
+
+.detail-title {
+  background: var(--stone-200);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: 0;
+  padding-bottom: 0.5rem;
+}
+
+.detail-title .toolbar {
+  padding-bottom: 0;
+}
+
+.detail-title .toolbar > a,
+.detail-title .toolbar button {
+  border: solid 1px var(--stone-300);
+}
+
+.detail-subnav {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }

@@ -8,30 +8,30 @@
       hx-target="#status-dropdown-{{ invoice.id }}"
       hx-swap="outerHTML">
     <li>
-      <a class="dropdown-item"
+      <a class="dropdown-item {% if invoice.status == "DRAFT" %}toggle-active{% endif %}"
          href="#"
          hx-post="{% url 'invoicing:invoices-edit-status' pk=invoice.id status='DRAFT' view=view %}">Draft</a>
     </li>
     <li>
-      <a class="dropdown-item"
+      <a class="dropdown-item {% if invoice.status == "APPROVED" %}toggle-active{% endif %}"
          href="#"
          hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'invoicing:invoices-edit-status' pk=invoice.id status='APPROVED' view=view %}">Approved</a>
     </li>
     <li>
-      <a class="dropdown-item"
+      <a class="dropdown-item {% if invoice.status == "SENT" %}toggle-active{% endif %}"
          href="#"
          hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'invoicing:invoices-edit-status' pk=invoice.id status='SENT' view=view %}">Sent</a>
     </li>
     <li>
-      <a class="dropdown-item"
+      <a class="dropdown-item {% if invoice.status == "PAID" %}toggle-active{% endif %}"
          href="#"
          hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'invoicing:invoices-edit-status' pk=invoice.id status='PAID' view=view %}">Paid</a>
     </li>
     <li>
-      <a class="dropdown-item"
+      <a class="dropdown-item {% if invoice.status == "WAIVED" %}toggle-active{% endif %}"
          href="#"
          hx-target="#status-dropdown-{{ invoice.id }}"
          hx-post="{% url 'invoicing:invoices-edit-status' pk=invoice.id status='WAIVED' view=view %}">Waived</a>

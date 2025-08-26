@@ -77,11 +77,6 @@ Matter Details
   padding-bottom: 0.5rem;
 }
 
-.matter-subnav {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
 .matter-title .toolbar {
   padding-bottom: 0;
 }
@@ -89,6 +84,11 @@ Matter Details
 .matter-title .toolbar a,
 .matter-title .toolbar button {
   border: solid 1px var(--stone-300);
+}
+
+.matter-subnav {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .matter-data {
