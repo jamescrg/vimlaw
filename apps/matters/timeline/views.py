@@ -46,11 +46,7 @@ def timeline_list(request, id):
         "filterset": filterset,
     }
 
-    # If it's an HTMX request, return only the table content
-    if request.headers.get("HX-Request"):
-        return render(request, "matters/timeline/table.html", context)
-
-    return render(request, "matters/timeline/list.html", context)
+    return render(request, "matters/timeline/table.html", context)
 
 
 @login_required

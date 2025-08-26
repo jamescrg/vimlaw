@@ -44,20 +44,9 @@
       {% endif %}
     </div>
   </div>
-  <div id="timeline-container">
-    <div class="table-container">
-      <table id="timeline-list" class="table timeline-list">
-        {% if facts %}
-          <tr>
-            <th class="date-time">Date</th>
-            <th class="description">Description</th>
-            <th class="citations">Citations</th>
-          </tr>
-          {% for fact in facts %}
-            {% include "matters/timeline/fact-row.html" %}
-          {% endfor %}
-        {% endif %}
-      </table>
-    </div>
-  </div>
+  <div id="timeline-container"
+       hx-trigger="matterTimelineChanged from:body"
+       hx-get="{% url 'matters:timeline' matter.id %}"
+       hx-target="this"
+       hx-swap="innerHTML">{% include "matters/timeline/table.html" %}</div>
 {% endblock subcontent %}
