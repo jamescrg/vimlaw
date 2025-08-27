@@ -63,7 +63,7 @@ def get_matter_tasks_data(request, matter_id):
     list_data = {
         "pagination": pagination,
         "session_key": "matter_tasks_pagination",
-        "trigger_key": "matterTasksListChanged",
+        "trigger_key": "tasksListChanged",
         "objects": pagination.get_object_list(),
         "matter": matter,
         "today": today,
@@ -111,9 +111,7 @@ def tasks_add(request, id):
             task.status = "Pending"
             task.matter = matter  # Automatically assign to the current matter
             task.save()
-            return HttpResponse(
-                status=204, headers={"HX-Trigger": "matterTasksListChanged"}
-            )
+            return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
     else:
         # Get the currently filtered user if available
         filter_data = request.session.get("matter_tasks_filter", {})
@@ -162,9 +160,7 @@ def tasks_add_quick(request, id):
 
     # prevent creation of tasks without a description
     if not request.POST["description"]:
-        return HttpResponse(
-            status=204, headers={"HX-Trigger": "matterTasksListChanged"}
-        )
+        return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
     # set task description and some property values
     task.description = request.POST["description"]
@@ -189,7 +185,7 @@ def tasks_add_quick(request, id):
         task.focus = "Long Term"
 
     task.save()
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -203,9 +199,7 @@ def tasks_edit(request, id, task_id):
         if form.is_valid():
             task = form.save(commit=False)
             task.save()
-            return HttpResponse(
-                status=204, headers={"HX-Trigger": "matterTasksListChanged"}
-            )
+            return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
     else:
         form = TaskForm(instance=task)
 
@@ -233,7 +227,7 @@ def tasks_delete(request, id, task_id):
     matter = get_object_or_404(Matter, pk=id)
     task = get_object_or_404(Task, pk=task_id, matter=matter)
     task.delete()
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -246,9 +240,7 @@ def tasks_filter(request, id):
         filter_data = request.POST.copy()
         filter_data["matter"] = id  # Ensure matter is always set
         request.session["matter_tasks_filter"] = filter_data
-        return HttpResponse(
-            status=204, headers={"HX-Trigger": "matterTasksListChanged"}
-        )
+        return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
     else:
         filter_data = request.session.get("matter_tasks_filter", {})
         filter_data["matter"] = id  # Ensure matter is always set
@@ -281,7 +273,7 @@ def tasks_filter_user(request, id, user_id):
     filter_data["user"] = user_id if user_id != 0 else None
 
     request.session["matter_tasks_filter"] = filter_data
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -295,7 +287,7 @@ def tasks_filter_focus(request, id, focus):
 
     filter_data["focus"] = focus
     request.session["matter_tasks_filter"] = filter_data
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -309,7 +301,7 @@ def tasks_status(request, id, task_id):
     else:
         task.status = "Complete"
     task.save()
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -319,7 +311,7 @@ def tasks_priority(request, id, task_id, priority):
     task = get_object_or_404(Task, pk=task_id, matter=matter)
     task.priority = priority
     task.save()
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -330,7 +322,7 @@ def tasks_user(request, id, task_id, user_id):
     user = get_object_or_404(CustomUser, pk=user_id)
     task.user = user
     task.save()
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -340,7 +332,7 @@ def tasks_focus(request, id, task_id, focus):
     task = get_object_or_404(Task, pk=task_id, matter=matter)
     task.focus = focus
     task.save()
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
 @login_required
@@ -358,9 +350,7 @@ def tasks_date(request, id, task_id):
             date_due = None
         task.date_due = date_due
         task.save()
-        return HttpResponse(
-            status=204, headers={"HX-Trigger": "matterTasksListChanged"}
-        )
+        return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
     else:
         context = {
             "task": task,
@@ -384,4 +374,4 @@ def tasks_filter_sort(request, id, order):
 
     filter_data["order_by"] = new_order
     request.session["matter_tasks_filter"] = filter_data
-    return HttpResponse(status=204, headers={"HX-Trigger": "matterTasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
