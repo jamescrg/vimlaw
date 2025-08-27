@@ -37,8 +37,9 @@ def documents_list(request, id):
 
 
 @login_required
-def matters_documents_sort(request, order):
+def matters_documents_sort(request, id, order):
     filter_data = request.session.get("matters_documents_filter", {})
+    filter_data["matter"] = id
 
     current_order = filter_data.get("order_by", "")
 

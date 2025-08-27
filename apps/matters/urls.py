@@ -253,7 +253,7 @@ urlpatterns = [
         "matters/<int:id>/documents/list/", documents.documents_list, name="documents"
     ),
     path(
-        "matters/documents/sort/<str:order>/",
+        "matters/<int:id>/documents/sort/<str:order>/",
         documents.matters_documents_sort,
         name="documents-sort",
     ),

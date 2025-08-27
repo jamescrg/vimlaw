@@ -17,7 +17,8 @@
       <tr>
         <th>
           Name
-          <a href="#" hx-get="{% url 'matters:documents-sort' 'name' %}">
+          <a href="#"
+             hx-get="{% url 'matters:documents-sort' id=matter.id order='name' %}">
             <i class="bi bi-chevron-expand"></i>
           </a>
         </th>
@@ -25,7 +26,8 @@
         <th>Date</th>
         <th>
           Uploaded by
-          <a href="#" hx-get="{% url 'matters:documents-sort' 'uploaded_by' %}">
+          <a href="#"
+             hx-get="{% url 'matters:documents-sort' id=matter.id order='uploaded_by' %}">
             <i class="bi bi-chevron-expand"></i>
           </a>
         </th>

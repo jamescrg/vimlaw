@@ -1,18 +1,23 @@
 from apps.documents.filters import DocumentsFilter
-from apps.documents.models import Document
 
 
 def get_matter_documents(request, matter):
-    filter_data = request.session.get("matters_documents_filter")
+    filter_data = request.session.get("matters_documents_filter", {})
 
-    if filter_data:
+    has_existing_filter = any(key != "matter" for key in filter_data.keys())
+
+    if has_existing_filter:
+        filter_data = {
+            **filter_data,
+            "matter": matter.id,
+        }
+
         filter = DocumentsFilter(filter_data)
-        documents = filter.qs
     else:
-        documents = (
-            Document.objects.filter(matter=matter)
-            .select_related("matter", "uploaded_by")
-            .order_by("-uploaded_at")
-        )
+        default_filter = {"matter": matter.id, "order_by": "-uploaded_at"}
+
+        filter = DocumentsFilter(default_filter)
+
+    documents = filter.qs
 
     return {"documents": documents}
