@@ -1,4 +1,5 @@
 {
+"ignore": "H023",
 "indent": "2",
 "format_css": true,
 "css": {

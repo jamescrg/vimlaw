@@ -27,11 +27,9 @@
       <div id="contact-address">
         {{ selected_contact.address|linebreaks }}
         <button type="button"
-          class="copy-btn btn btn-sm btn-outline-secondary"
-          {# djlint:off #}
+                class="copy-btn btn btn-sm btn-outline-secondary"
                 data-copy="{{ selected_contact.name }}&#10;{{ selected_contact.address }}"
-          {# djlint:on #}
-          title="Copy address">
+                title="Copy address">
           <i class="bi bi-clipboard"></i>
         </button>
       </div>
