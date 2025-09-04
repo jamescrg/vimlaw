@@ -79,8 +79,13 @@ def documents_sort(request, order):
 
 @login_required
 def documents_add(request, matter_id=None):
+
     if request.method == "POST":
+
         form = DocumentsForm(request.POST, use_required_attribute=False)
+        form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+            "name"
+        )
 
         uploaded_file = request.FILES.get("file")
 
@@ -100,9 +105,10 @@ def documents_add(request, matter_id=None):
 
         # Form has errors
         return render(request, "documents/form.html", {"form": form, "edit": False})
-    else:
-        form = DocumentsForm(use_required_attribute=False)
 
+    else:
+
+        form = DocumentsForm(use_required_attribute=False)
         form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
             "name"
         )
