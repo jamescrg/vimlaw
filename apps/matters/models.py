@@ -1,6 +1,8 @@
+from django.core.files.storage import default_storage as storage
 from django.db import models
 
 from apps.contacts.models import Contact
+from apps.documents.utils import sanitize_filename
 
 
 class Matter(models.Model):
@@ -45,6 +47,34 @@ class Matter(models.Model):
                 Contact.objects.filter(pk=self.client.pk).update(
                     client_status="Current"
                 )
+
+        # Check if updating an existing matter
+        if self.pk:
+            old_matter = Matter.objects.get(pk=self.pk)
+
+            # Matter name has changed
+            if old_matter.name != self.name:
+                matter_documents = self.documents.all()
+
+                for document in matter_documents:
+                    old_path = document.file.name
+
+                    file_extension = old_path.split(".")[-1].lower()
+                    sanitized_matter_name = sanitize_filename(self.name)
+
+                    new_path = (
+                        f"documents/{sanitized_matter_name}/{self.id}/"
+                        f"{document.category.lower()}/{document.name}.{file_extension}"
+                    )
+
+                    if storage.exists(old_path):
+                        # Move the file to the new path in Digital Ocean
+                        storage.save(new_path, document.file)
+                        storage.delete(old_path)
+
+                        # Rename the file path in the database
+                        document.file.name = new_path
+                        document.save(update_fields=["file"])
 
         super().save(*args, **kwargs)
 
