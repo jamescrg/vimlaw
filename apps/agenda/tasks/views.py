@@ -255,7 +255,6 @@ def tasks_filter_quick(request, quick_filter):
 
 @login_required
 def tasks_filter_matter(request, matter_id):
-    print(f"Matter ID: {matter_id}")
     filter_data = request.session.get("tasks_filter", {})
     filter_data["matter"] = matter_id
 

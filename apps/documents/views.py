@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from apps.documents.filters import DocumentsFilter
 from apps.documents.forms import DocumentsForm
@@ -61,6 +61,16 @@ def documents_filter(request):
 
 
 @login_required
+def documents_filter_matter(request, matter_id):
+    filter_data = request.session.get("documents_filter", {})
+    filter_data["matter"] = matter_id
+
+    request.session["documents_filter"] = filter_data
+
+    return redirect("documents:list")
+
+
+@login_required
 def documents_sort(request, order):
     filter_data = request.session.get("documents_filter", {})
 
@@ -79,9 +89,7 @@ def documents_sort(request, order):
 
 @login_required
 def documents_add(request, matter_id=None):
-
     if request.method == "POST":
-
         form = DocumentsForm(request.POST, use_required_attribute=False)
         form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
             "name"
@@ -107,7 +115,6 @@ def documents_add(request, matter_id=None):
         return render(request, "documents/form.html", {"form": form, "edit": False})
 
     else:
-
         form = DocumentsForm(use_required_attribute=False)
         form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
             "name"
