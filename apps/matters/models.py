@@ -62,10 +62,21 @@ class Matter(models.Model):
                     file_extension = old_path.split(".")[-1].lower()
                     sanitized_matter_name = sanitize_filename(self.name)
 
-                    new_path = (
-                        f"documents/{sanitized_matter_name}/{self.id}/"
-                        f"{document.category.lower()}/{document.name}.{file_extension}"
-                    )
+                    if document.proceeding and document.proceeding.case_number:
+                        case_number = sanitize_filename(document.proceeding.case_number)
+
+                        new_path = (
+                            f"documents/{self.id}_{sanitized_matter_name}/"
+                            f"{document.category.capitalize()}/"
+                            f"{document.proceeding.id}_{case_number}/"
+                            f"{document.name}.{file_extension}"
+                        )
+                    else:
+                        new_path = (
+                            f"documents/{self.id}_{sanitized_matter_name}/"
+                            f"{document.category.capitalize()}/"
+                            f"{document.name}.{file_extension}"
+                        )
 
                     if storage.exists(old_path):
                         # Move the file to the new path in Digital Ocean

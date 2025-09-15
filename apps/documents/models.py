@@ -49,7 +49,16 @@ def document_upload_path(instance, filename):
     matter_name = instance.matter.name if instance.matter else "unknown"
     matter_name = sanitize_filename(matter_name)
 
-    return f"documents/{matter_name}/{instance.matter_id}/{instance.category.lower()}/{file_name}.{file_extension}"
+    if instance.proceeding and instance.proceeding.case_number:
+        case_number = sanitize_filename(instance.proceeding.case_number)
+
+        return (
+            f"documents/{instance.matter_id}_{matter_name}/"
+            f"{instance.category.capitalize()}/{instance.proceeding.id}_{case_number}/"
+            f"{file_name}.{file_extension}"
+        )
+
+    return f"documents/{instance.matter_id}_{matter_name}/{instance.category.capitalize()}/{file_name}.{file_extension}"
 
 
 class Document(models.Model):
@@ -113,11 +122,12 @@ class Document(models.Model):
         if self.pk:
             old_document = Document.objects.get(pk=self.pk)
 
-            # Update file path if matter, name, or category has changed
+            # Update file path if matter, name, category or proceeding has changed
             if (
                 old_document.matter != self.matter
                 or old_document.name != self.name
                 or old_document.category != self.category
+                or old_document.proceeding != self.proceeding
             ):
                 old_path = old_document.file.name
                 new_path = document_upload_path(self, self.file.name)
