@@ -8,6 +8,7 @@ from apps.documents.views import (
     documents_list,
     documents_sort,
     download_document,
+    get_proceedings,
     index,
 )
 
@@ -23,4 +24,5 @@ urlpatterns = [
     path("documents/filter/", documents_filter, name="filter"),
     path("documents/sort/<str:order>/", documents_sort, name="sort"),
     path("documents/download/<int:document_id>/", download_document, name="download"),
+    path("documents/get-proceedings/", get_proceedings, name="get-proceedings"),
 ]

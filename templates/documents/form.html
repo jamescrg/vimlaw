@@ -50,7 +50,7 @@
             {% if edit %}
               <a class="delete-link"
                  href="#!"
-                 hx-confirm="Are you sure  you want to delete this document?"
+                 hx-confirm="Are you sure you want to delete this document?"
                  hx-delete="{% url 'documents:delete' document.id %}"
                  hx-target="#htmx-modal-container">Delete Document</a>
             {% endif %}

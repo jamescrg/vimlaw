@@ -320,7 +320,7 @@ def invoices_add(request):
         for matter in matter_list:
             unbilled_amount = matter.value["unbilled"]["net_fees_and_expenses"]
             matters_with_unbilled.append(
-                (matter.id, f"{matter.name}\u00A0\u00A0\u00A0(${unbilled_amount:,.2f})")
+                (matter.id, f"{matter.name}\u00a0\u00a0\u00a0(${unbilled_amount:,.2f})")
             )
 
         form.fields["matter"].queryset = matter_list

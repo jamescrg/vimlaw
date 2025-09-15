@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 from apps.matters.models import Matter
+from apps.matters.proceedings.models import Proceeding
 
 User = get_user_model()
 
@@ -64,6 +65,9 @@ class Document(models.Model):
         max_length=20,
         choices=CATEGORY_CHOICES,
         default="Evidence",
+    )
+    proceeding = models.ForeignKey(
+        Proceeding, on_delete=models.SET_NULL, null=True, blank=True
     )
     file = models.FileField(upload_to=document_upload_path)
     labels = models.ManyToManyField(Label, related_name="documents", blank=True)
