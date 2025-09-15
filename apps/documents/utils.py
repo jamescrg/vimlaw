@@ -17,6 +17,9 @@ def sanitize_filename(filename):
     # Trim whitespace and dots from the end
     filename = filename.strip(" .")
 
+    # Replace spaces with underscores
+    filename = filename.replace(" ", "_")
+
     # Ensure it's not empty after sanitization
     if not filename:
         return "unknown"

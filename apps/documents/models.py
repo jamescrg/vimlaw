@@ -44,7 +44,9 @@ class Label(models.Model):
 
 def document_upload_path(instance, filename):
     file_extension = filename.split(".")[-1].lower()
+
     file_name = instance.name if instance.name else filename
+    file_name = sanitize_filename(file_name)
 
     matter_name = instance.matter.name if instance.matter else "unknown"
     matter_name = sanitize_filename(matter_name)
