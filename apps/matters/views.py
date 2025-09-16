@@ -191,8 +191,22 @@ def edit(request, id):
 @login_required
 def delete(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    matter.delete()
-    return redirect("/matters")
+
+    connected_documents = matter.documents.all()
+
+    if request.method == "GET":
+        context = {
+            "matter": matter,
+            "connected_documents": connected_documents,
+            "has_documents": connected_documents.exists(),
+        }
+
+        return render(request, "matters/delete_confirmation.html", context)
+
+    elif request.method == "DELETE":
+        matter.delete()
+
+        return HttpResponse(status=204, headers={"HX-Redirect": "/matters"})
 
 
 @login_required
