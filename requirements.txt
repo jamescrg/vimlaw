@@ -1,4 +1,4 @@
-Django==4.2.22
+Django==4.2.24
 pytest==8.4.1
 python-dateutil==2.9.0
 google-api-python-client==2.136.0
