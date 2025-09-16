@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.core.files.storage import default_storage as storage
 from django.db import models
 
+from apps.documents.utils import sanitize_filename
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 
@@ -42,9 +44,23 @@ class Label(models.Model):
 
 def document_upload_path(instance, filename):
     file_extension = filename.split(".")[-1].lower()
-    file_name = instance.name if instance.name else filename
 
-    return f"documents/{instance.matter_id}/{file_name}.{file_extension}"
+    file_name = instance.name if instance.name else filename
+    file_name = sanitize_filename(file_name)
+
+    matter_name = instance.matter.name if instance.matter else "unknown"
+    matter_name = sanitize_filename(matter_name)
+
+    if instance.proceeding and instance.proceeding.case_number:
+        case_number = sanitize_filename(instance.proceeding.case_number)
+
+        return (
+            f"documents/{instance.matter_id}_{matter_name}/"
+            f"{instance.category.capitalize()}/{instance.proceeding.id}_{case_number}/"
+            f"{file_name}.{file_extension}"
+        )
+
+    return f"documents/{instance.matter_id}_{matter_name}/{instance.category.capitalize()}/{file_name}.{file_extension}"
 
 
 class Document(models.Model):
@@ -103,5 +119,25 @@ class Document(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()
+
+        # Check if updating an existing document
+        if self.pk:
+            old_document = Document.objects.get(pk=self.pk)
+
+            # Update file path if matter, name, category or proceeding has changed
+            if (
+                old_document.matter != self.matter
+                or old_document.name != self.name
+                or old_document.category != self.category
+                or old_document.proceeding != self.proceeding
+            ):
+                old_path = old_document.file.name
+                new_path = document_upload_path(self, self.file.name)
+
+                if storage.exists(old_path):
+                    storage.save(new_path, self.file)
+                    storage.delete(old_path)
+
+                    self.file.name = new_path
 
         super().save(*args, **kwargs)
