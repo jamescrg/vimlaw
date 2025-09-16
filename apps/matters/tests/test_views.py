@@ -64,9 +64,20 @@ def test_edit_post(client, user, matter):
     assert found
 
 
-def test_delete(client, matter):
+def test_delete_confirmation(client, matter):
     response = client.get(f"/matters/{matter.id}/delete")
-    assert response.status_code == 302
+    assert response.status_code == 200
+
+    assertTemplateUsed(response, "matters/delete_confirmation.html")
+
+    found = Matter.objects.filter(pk=matter.id).exists()
+    assert found
+
+
+def test_delete_confirm(client, matter):
+    response = client.delete(f"/matters/{matter.id}/delete")
+    assert response.status_code == 204
+
     found = Matter.objects.filter(pk=matter.id).exists()
     assert not found
 
