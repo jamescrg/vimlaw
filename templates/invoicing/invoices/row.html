@@ -5,7 +5,7 @@
   </td>
   <td class="date">{{ invoice.date_issued|date:"Y-m-d" }}</td>
   <td class="matter">
-    <a href="{% url 'matters:ledger' id=invoice.matter.id %}">{{ invoice.matter.name|slice:":35" }}</a>
+    <a href="{% url 'matters:ledger' id=invoice.matter.id|default:0 %}">{{ invoice.matter.name|slice:":35" }}</a>
   </td>
   <td class="status">{% include "invoicing/invoices/status.html" %}</td>
   <td class="amount">${{ invoice.value.net_fees|floatformat:2|intcomma }}</td>
