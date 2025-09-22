@@ -63,17 +63,26 @@ class Matter(models.Model):
                     sanitized_matter_name = sanitize_filename(self.name)
 
                     if document.proceeding and document.proceeding.case_number:
-                        case_number = sanitize_filename(document.proceeding.case_number)
+                        case_number = (
+                            sanitize_filename(document.proceeding.case_number)
+                            if document.proceeding.case_number
+                            else "UnknownCase"
+                        )
+                        forum = (
+                            sanitize_filename(document.proceeding.forum)
+                            if document.proceeding.forum
+                            else "UnknownForum"
+                        )
 
                         new_path = (
-                            f"documents/{self.id}_{sanitized_matter_name}/"
+                            f"documents/{sanitized_matter_name}_{self.id}/"
                             f"{document.category.capitalize()}/"
-                            f"{document.proceeding.id}_{case_number}/"
+                            f"{forum}_{case_number}_{document.proceeding.id}/"
                             f"{document.name}.{file_extension}"
                         )
                     else:
                         new_path = (
-                            f"documents/{self.id}_{sanitized_matter_name}/"
+                            f"documents/{sanitized_matter_name}_{self.id}/"
                             f"{document.category.capitalize()}/"
                             f"{document.name}.{file_extension}"
                         )

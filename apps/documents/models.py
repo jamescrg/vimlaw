@@ -52,15 +52,24 @@ def document_upload_path(instance, filename):
     matter_name = sanitize_filename(matter_name)
 
     if instance.proceeding and instance.proceeding.case_number:
-        case_number = sanitize_filename(instance.proceeding.case_number)
+        case_number = (
+            sanitize_filename(instance.proceeding.case_number)
+            if instance.proceeding.case_number
+            else "UnknownCase"
+        )
+        forum = (
+            sanitize_filename(instance.proceeding.forum)
+            if instance.proceeding.forum
+            else "UnknownForum"
+        )
 
         return (
-            f"documents/{instance.matter_id}_{matter_name}/"
-            f"{instance.category.capitalize()}/{instance.proceeding.id}_{case_number}/"
+            f"documents/{matter_name}_{instance.matter_id}/"
+            f"{instance.category.capitalize()}/{forum}_{case_number}_{instance.proceeding.id}/"
             f"{file_name}.{file_extension}"
         )
 
-    return f"documents/{instance.matter_id}_{matter_name}/{instance.category.capitalize()}/{file_name}.{file_extension}"
+    return f"documents/{matter_name}_{instance.matter_id}/{instance.category.capitalize()}/{file_name}.{file_extension}"
 
 
 class Document(models.Model):
