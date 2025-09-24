@@ -18,6 +18,7 @@ class DocumentsFilter(django_filters.FilterSet):
             ("matter__name", "matter"),
             ("uploaded_by__first_name", "uploaded_by"),
             ("uploaded_at", "uploaded_at"),
+            ("date", "date"),
         ]
     )
 

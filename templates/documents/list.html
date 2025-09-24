@@ -57,7 +57,12 @@
     <div class="table-container">
       <table id="documents-list" class="table">
         <tr>
-          <th>Date</th>
+          <th>
+            Date
+            <a href="#" hx-get="{% url 'documents:sort' 'date' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </a>
+          </th>
           <th>
             Document
             <a href="#" hx-get="{% url 'documents:sort' 'name' %}">
