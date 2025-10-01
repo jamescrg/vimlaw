@@ -29,24 +29,26 @@ class DocumentsForm(forms.ModelForm):
 
         self.renderer = CustomFormRendererCompact()
 
-        # Add HTMX attributes to matter field
         self.fields["matter"].widget.attrs.update(
             {
-                "hx-get": "/documents/get-proceedings/",
-                "hx-target": "#id_proceeding",
+                "hx-get": "/documents/get-proceedings-and-labels/",
+                "hx-target": "closest form",
                 "hx-trigger": "change",
                 "hx-include": "this",
+                "hx-swap": "none",
             }
         )
 
         # Initially show no proceedings
         self.fields["proceeding"].queryset = Proceeding.objects.none()
+        self.fields["labels"].queryset = Label.objects.none()
 
         # If editing and has a matter, show proceedings for that matter
         if self.instance.pk and self.instance.matter:
             self.fields["proceeding"].queryset = (
                 self.instance.matter.proceeding_set.all()
             )
+            self.fields["labels"].queryset = self.instance.matter.labels.all()
 
 
 class LabelsForm(forms.ModelForm):

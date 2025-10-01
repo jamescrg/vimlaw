@@ -13,7 +13,7 @@ from apps.documents.views import (
     documents_sort,
     download_document,
     edit_label,
-    get_proceedings,
+    get_proceedings_and_labels,
     index,
     labels_filter,
     labels_index,
@@ -45,7 +45,11 @@ urlpatterns = [
     ),
     path("documents/sort/<str:order>/", documents_sort, name="sort"),
     path("documents/download/<int:document_id>/", download_document, name="download"),
-    path("documents/get-proceedings/", get_proceedings, name="get-proceedings"),
+    path(
+        "documents/get-proceedings-and-labels/",
+        get_proceedings_and_labels,
+        name="get-proceedings-and-labels",
+    ),
     # Labels
     path("documents/labels/", labels_index, name="labels-index"),
     path("documents/labels/list/", labels_list, name="labels-list"),

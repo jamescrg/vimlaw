@@ -116,10 +116,13 @@ def documents_add(request, matter_id=None):
                 form.fields["proceeding"].queryset = (
                     submitted_matter.proceeding_set.all()
                 )
+                form.fields["labels"].queryset = submitted_matter.labels.all()
             except Matter.DoesNotExist:
                 form.fields["proceeding"].queryset = Proceeding.objects.none()
+                form.fields["labels"].queryset = Label.objects.none()
         else:
             form.fields["proceeding"].queryset = Proceeding.objects.none()
+            form.fields["labels"].queryset = Label.objects.none()
 
         uploaded_file = request.FILES.get("file")
 
@@ -209,10 +212,13 @@ def documents_edit(request, document_id):
                 form.fields["proceeding"].queryset = (
                     submitted_matter.proceeding_set.all()
                 )
+                form.fields["labels"].queryset = submitted_matter.labels.all()
             except Matter.DoesNotExist:
                 form.fields["proceeding"].queryset = Proceeding.objects.none()
+                form.fields["labels"].queryset = Label.objects.none()
         else:
             form.fields["proceeding"].queryset = Proceeding.objects.none()
+            form.fields["labels"].queryset = Label.objects.none()
 
         uploaded_file = request.FILES.get("file")
 
@@ -305,22 +311,43 @@ def download_document(request, document_id):
 
 
 @login_required
-def get_proceedings(request):
+def get_proceedings_and_labels(request):
     matter_id = request.GET.get("matter")
+
     proceedings = []
+    labels = []
 
     if matter_id:
         try:
             matter = Matter.objects.get(id=matter_id)
+
             proceedings = matter.proceeding_set.all().order_by("date_filed")
+            labels = matter.labels.all().order_by("name")
         except Matter.DoesNotExist:
             pass
 
-    return render(
+    proceedings_html = render(
         request,
         "documents/documents/proceeding_options.html",
         {"proceedings": proceedings},
-    )
+    ).content.decode("utf-8")
+
+    labels_html = render(
+        request,
+        "documents/documents/label_options.html",
+        {"labels": labels},
+    ).content.decode("utf-8")
+
+    combined_html = f"""
+        <select id="id_proceeding" hx-swap-oob="outerHTML" name="proceeding">
+            {proceedings_html}
+        </select>
+        <select id="id_labels" hx-swap-oob="outerHTML" multiple class="span2" name="labels">
+            {labels_html}
+        </select>
+    """
+
+    return HttpResponse(combined_html)
 
 
 @login_required

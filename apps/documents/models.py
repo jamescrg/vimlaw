@@ -93,25 +93,6 @@ class Document(models.Model):
         db_table = "app_document"
         ordering = ["-uploaded_at"]
 
-    def clean(self):
-        # Skip ManyToMany validation if object hasn't been saved yet
-        if self.pk:
-            # Validate all labels belong to the same matter as the document
-            for label in self.labels.all():
-                if label.matter != self.matter:
-                    raise ValueError(
-                        f"Label '{label.name}' does not belong to matter '{self.matter.name}'"
-                    )
-
-            # Validate no duplicate labels (labels with same name) on the document
-            label_names = [label.name for label in self.labels.all()]
-            if len(label_names) != len(set(label_names)):
-                raise ValueError(
-                    "Document cannot have multiple labels with the same name"
-                )
-
-        super().clean()
-
     def save(self, *args, **kwargs):
         self.full_clean()
 
