@@ -146,6 +146,7 @@ def documents_add(request, matter_id=None):
             document.file = uploaded_file
 
             document.save()
+            form.save_m2m()
 
             return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
 
@@ -230,8 +231,6 @@ def documents_edit(request, document_id):
             else:
                 upload_path = document_upload_path(document, document.file.name)
 
-            print(f"Upload Path: {upload_path}")
-
             all_documents = Document.objects.exclude(id=document.id)
 
             if all_documents.filter(file=upload_path).exists():
@@ -246,6 +245,7 @@ def documents_edit(request, document_id):
                 )
 
             document.save()
+            form.save_m2m()
 
             return HttpResponse(
                 status=204,
