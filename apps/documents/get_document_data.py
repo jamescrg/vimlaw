@@ -1,5 +1,5 @@
 from apps.documents.filters import DocumentsFilter
-from apps.documents.models import Document
+from apps.documents.models import Document, Label
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
@@ -35,9 +35,6 @@ def get_document_data(request):
 
     matter_ids = Document.objects.values_list("matter_id", flat=True).distinct()
     matter_list = Matter.objects.filter(id__in=matter_ids).order_by("name")
-
-    # Get labels that are used by documents
-    from apps.documents.models import Label
 
     label_ids = (
         Document.objects.values_list("labels", flat=True)
