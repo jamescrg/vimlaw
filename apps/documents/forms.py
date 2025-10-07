@@ -54,12 +54,36 @@ class DocumentsForm(forms.ModelForm):
 class BulkDocumentsForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ["matter"]
+        fields = ["matter", "proceeding", "labels"]
+        widgets = {
+            "labels": forms.SelectMultiple(attrs={"class": "span2"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.renderer = CustomFormRendererCompact()
+
+        self.fields["matter"].widget.attrs.update(
+            {
+                "hx-get": "/documents/get-proceedings-and-labels/",
+                "hx-target": "closest form",
+                "hx-trigger": "change",
+                "hx-include": "this",
+                "hx-swap": "none",
+            }
+        )
+
+        # Initially show no proceedings
+        self.fields["proceeding"].queryset = Proceeding.objects.none()
+        self.fields["labels"].queryset = Label.objects.none()
+
+        # If editing and has a matter, show proceedings for that matter
+        if self.instance.pk and self.instance.matter:
+            self.fields["proceeding"].queryset = (
+                self.instance.matter.proceeding_set.all()
+            )
+            self.fields["labels"].queryset = self.instance.matter.labels.all()
 
 
 class LabelsForm(forms.ModelForm):

@@ -289,15 +289,37 @@ def bulk_document_update(request):
             "name"
         )
 
-        if form.is_valid():
-            updated_fields = []
-            for field in form.cleaned_data:
-                if form.cleaned_data[field] not in (None, "", []):
-                    updated_fields.append(field)
+        submitted_matter_id = request.POST.get("matter")
+        if submitted_matter_id:
+            try:
+                submitted_matter = Matter.objects.get(id=submitted_matter_id)
+                form.fields["proceeding"].queryset = (
+                    submitted_matter.proceeding_set.all()
+                )
+                form.fields["labels"].queryset = submitted_matter.labels.all()
+            except Matter.DoesNotExist:
+                form.fields["proceeding"].queryset = Proceeding.objects.none()
+                form.fields["labels"].queryset = Label.objects.none()
+        else:
+            form.fields["proceeding"].queryset = Proceeding.objects.none()
+            form.fields["labels"].queryset = Label.objects.none()
 
-            Document.objects.filter(id__in=selected_documents).update(
-                **{field: form.cleaned_data[field] for field in updated_fields}
-            )
+        if form.is_valid():
+            matter = form.cleaned_data.get("matter")
+            proceeding = form.cleaned_data.get("proceeding")
+            labels = form.cleaned_data.get("labels")
+
+            documents = Document.objects.filter(id__in=selected_documents)
+
+            for document in documents:
+                if matter:
+                    document.matter = matter
+                if proceeding:
+                    document.proceeding = proceeding
+                if labels:
+                    document.labels.set(labels)
+
+                document.save()
 
             request.session["selected_documents"] = []
 
@@ -321,6 +343,12 @@ def bulk_document_update(request):
 def documents_delete(request, document_id):
     try:
         Document.objects.get(id=document_id).delete()
+
+        selected_documents = request.session.get("selected_documents", [])
+        if document_id in selected_documents:
+            selected_documents.remove(document_id)
+
+            request.session["selected_documents"] = selected_documents
     except Document.DoesNotExist:
         return HttpResponse(status=404)
 
@@ -548,5 +576,12 @@ def toggle_document_select(request, document_id):
         selected_documents.append(document_id)
 
     request.session["selected_documents"] = selected_documents
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+
+@login_required
+def clear_document_selection(request):
+    request.session["selected_documents"] = []
 
     return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})

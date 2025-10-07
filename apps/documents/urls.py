@@ -3,6 +3,7 @@ from django.urls import path
 from apps.documents.views import (
     add_label,
     bulk_document_update,
+    clear_document_selection,
     delete_label,
     documents_add,
     documents_delete,
@@ -52,6 +53,14 @@ urlpatterns = [
         name="get-proceedings-and-labels",
     ),
     path("documents/bulk-update/", bulk_document_update, name="bulk-update"),
+    path(
+        "documents/toggle-select/<int:document_id>/",
+        toggle_document_select,
+        name="toggle-select",
+    ),
+    path(
+        "documents/clear-selection/", clear_document_selection, name="clear-selection"
+    ),
     # Labels
     path("documents/labels/", labels_index, name="labels-index"),
     path("documents/labels/list/", labels_list, name="labels-list"),
@@ -60,9 +69,4 @@ urlpatterns = [
     path("documents/labels/delete/<int:label_id>/", delete_label, name="delete-label"),
     path("documents/labels/filter/", labels_filter, name="filter-labels"),
     path("documents/labels/sort/<str:order>/", labels_sort, name="sort-labels"),
-    path(
-        "documents/toggle-select/<int:document_id>/",
-        toggle_document_select,
-        name="toggle-select",
-    ),
 ]

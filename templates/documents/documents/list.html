@@ -94,6 +94,13 @@
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container"
                   class="btn-icon">Bulk Actions ({{ selected_documents|length }})</button>
+          <button type="button"
+                  hx-post="{% url 'documents:clear-selection' %}"
+                  hx-target="#documents"
+                  hx-swap="outerHTML"
+                  class="btn-icon">
+            <i class="bi bi-x-lg"></i> Clear
+          </button>
         {% endif %}
       </div>
     </div>
