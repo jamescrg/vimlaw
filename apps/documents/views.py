@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
 from apps.documents.filters import DocumentsFilter, LabelsFilter
-from apps.documents.forms import DocumentsForm, LabelsForm
+from apps.documents.forms import BulkDocumentsForm, DocumentsForm, LabelsForm
 from apps.documents.get_document_data import get_document_data
 from apps.documents.get_label_data import get_label_data
 from apps.documents.models import Document, Label, document_upload_path
@@ -274,6 +274,47 @@ def documents_edit(request, document_id):
             "documents/documents/form.html",
             {"form": form, "document": document, "edit": True},
         )
+
+
+@login_required
+def bulk_document_update(request):
+    selected_documents = request.session.get("selected_documents", [])
+
+    if not selected_documents:
+        return HttpResponse(status=400, content="No documents selected.")
+
+    if request.method == "POST":
+        form = BulkDocumentsForm(request.POST, use_required_attribute=False)
+        form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+            "name"
+        )
+
+        if form.is_valid():
+            updated_fields = []
+            for field in form.cleaned_data:
+                if form.cleaned_data[field] not in (None, "", []):
+                    updated_fields.append(field)
+
+            Document.objects.filter(id__in=selected_documents).update(
+                **{field: form.cleaned_data[field] for field in updated_fields}
+            )
+
+            request.session["selected_documents"] = []
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "documentsChanged"},
+            )
+
+        return render(request, "documents/documents/bulk_form.html", {"form": form})
+    else:
+        form = BulkDocumentsForm(use_required_attribute=False)
+
+        form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+            "name"
+        )
+
+        return render(request, "documents/documents/bulk_form.html", {"form": form})
 
 
 @login_required

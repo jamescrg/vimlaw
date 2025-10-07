@@ -86,6 +86,15 @@
             </li>
           {% endfor %}
         </ul>
+        {% if selected_documents %}
+          <button type="button"
+                  hx-get="{% url 'documents:bulk-update' %}"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container"
+                  class="btn-icon">Bulk Actions ({{ selected_documents|length }})</button>
+        {% endif %}
       </div>
     </div>
   </div>

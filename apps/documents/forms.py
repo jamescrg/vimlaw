@@ -51,6 +51,17 @@ class DocumentsForm(forms.ModelForm):
             self.fields["labels"].queryset = self.instance.matter.labels.all()
 
 
+class BulkDocumentsForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ["matter"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.renderer = CustomFormRendererCompact()
+
+
 class LabelsForm(forms.ModelForm):
     class Meta:
         model = Label

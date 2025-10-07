@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.documents.views import (
     add_label,
+    bulk_document_update,
     delete_label,
     documents_add,
     documents_delete,
@@ -50,6 +51,7 @@ urlpatterns = [
         get_proceedings_and_labels,
         name="get-proceedings-and-labels",
     ),
+    path("documents/bulk-update/", bulk_document_update, name="bulk-update"),
     # Labels
     path("documents/labels/", labels_index, name="labels-index"),
     path("documents/labels/list/", labels_list, name="labels-list"),
