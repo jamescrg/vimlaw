@@ -10,7 +10,7 @@ class DocumentsFilter(django_filters.FilterSet):
         queryset=Matter.objects.filter(documents__isnull=False)
         .distinct()
         .order_by("name"),
-        empty_label="All",
+        empty_label=None,
     )
     order_by = django_filters.OrderingFilter(
         fields=[

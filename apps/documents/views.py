@@ -64,8 +64,16 @@ def documents_filter(request):
 @login_required
 def documents_filter_matter(request, matter_id):
     filter_data = request.session.get("documents_filter", {})
-    filter_data["matter"] = matter_id
 
+    # If matter_id is 0, redirect to the first available matter
+    if matter_id == 0:
+        matter_ids = Document.objects.values_list("matter_id", flat=True).distinct()
+        first_matter = Matter.objects.filter(id__in=matter_ids).order_by("name").first()
+
+        if first_matter:
+            matter_id = first_matter.id
+
+    filter_data["matter"] = matter_id
     request.session["documents_filter"] = filter_data
 
     return redirect("documents:list")

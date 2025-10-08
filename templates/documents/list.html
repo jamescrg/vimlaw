@@ -23,10 +23,10 @@
           </button>
           <button type="button"
                   id="documents-matter-filter"
-                  class="select-btn large-btn {% if selected_matter %}toggle-active{% endif %}"
+                  class="select-btn large-btn toggle-active"
                   data-bs-toggle="dropdown"
                   aria-expanded="false">
-            {{ selected_matter|default:"Matters (All)" }}
+            {{ selected_matter|default:"Select Matter" }}
             <small>
               <i class="bi bi-chevron-down"></i>
             </small>
@@ -34,13 +34,6 @@
           <ul class="dropdown-menu"
               hx-target="#documents-matter-filter"
               hx-swap="outerHTML">
-            <li>
-              <a class="dropdown-item"
-                 href="#"
-                 hx-post="{% url 'documents:filter-matter' 0 %}"
-                 hx-target="#documents"
-                 hx-swap="#outerHTML">Matters&nbsp;&nbsp;(All)</a>
-            </li>
             {% for matter in matters %}
               <li>
                 <a class="dropdown-item {% if matter.id == matter_id %}active{% endif %}"
