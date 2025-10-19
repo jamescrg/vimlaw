@@ -2,10 +2,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
-from apps.documents.filters import DocumentsFilter
-from apps.documents.forms import DocumentsForm
+from apps.documents.filters import DocumentsFilter, LabelsFilter
+from apps.documents.forms import BulkDocumentsForm, DocumentsForm, LabelsForm
 from apps.documents.get_document_data import get_document_data
-from apps.documents.models import Document, document_upload_path
+from apps.documents.get_label_data import get_label_data
+from apps.documents.models import Document, Label, document_upload_path
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 
@@ -16,9 +17,10 @@ def index(request):
 
     context = {
         "app": "documents",
+        "subapp": "documents",
     } | documents_data
 
-    return render(request, "documents/main.html", context)
+    return render(request, "documents/documents/main.html", context)
 
 
 @login_required
@@ -27,9 +29,10 @@ def documents_list(request):
 
     context = {
         "app": "documents",
+        "subapp": "documents",
     } | documents_data
 
-    return render(request, "documents/list.html", context)
+    return render(request, "documents/documents/list.html", context)
 
 
 @login_required
@@ -58,13 +61,23 @@ def documents_filter(request):
                 .order_by("-uploaded_at"),
             )
 
-        return render(request, "documents/filter.html", {"filter": filter})
+        return render(request, "documents/documents/filter.html", {"filter": filter})
 
 
 @login_required
 def documents_filter_matter(request, matter_id):
     filter_data = request.session.get("documents_filter", {})
     filter_data["matter"] = matter_id
+
+    request.session["documents_filter"] = filter_data
+
+    return redirect("documents:list")
+
+
+@login_required
+def documents_filter_label(request, label_id):
+    filter_data = request.session.get("documents_filter", {})
+    filter_data["label"] = label_id
 
     request.session["documents_filter"] = filter_data
 
@@ -103,10 +116,13 @@ def documents_add(request, matter_id=None):
                 form.fields["proceeding"].queryset = (
                     submitted_matter.proceeding_set.all()
                 )
+                form.fields["labels"].queryset = submitted_matter.labels.all()
             except Matter.DoesNotExist:
                 form.fields["proceeding"].queryset = Proceeding.objects.none()
+                form.fields["labels"].queryset = Label.objects.none()
         else:
             form.fields["proceeding"].queryset = Proceeding.objects.none()
+            form.fields["labels"].queryset = Label.objects.none()
 
         uploaded_file = request.FILES.get("file")
 
@@ -133,11 +149,14 @@ def documents_add(request, matter_id=None):
             document.file = uploaded_file
 
             document.save()
+            form.save_m2m()
 
             return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
 
         # Form has errors
-        return render(request, "documents/form.html", {"form": form, "edit": False})
+        return render(
+            request, "documents/documents/form.html", {"form": form, "edit": False}
+        )
 
     else:
         form = DocumentsForm(use_required_attribute=False)
@@ -162,7 +181,9 @@ def documents_add(request, matter_id=None):
             except Matter.DoesNotExist:
                 pass
 
-        return render(request, "documents/form.html", {"form": form, "edit": False})
+        return render(
+            request, "documents/documents/form.html", {"form": form, "edit": False}
+        )
 
 
 @login_required
@@ -191,10 +212,13 @@ def documents_edit(request, document_id):
                 form.fields["proceeding"].queryset = (
                     submitted_matter.proceeding_set.all()
                 )
+                form.fields["labels"].queryset = submitted_matter.labels.all()
             except Matter.DoesNotExist:
                 form.fields["proceeding"].queryset = Proceeding.objects.none()
+                form.fields["labels"].queryset = Label.objects.none()
         else:
             form.fields["proceeding"].queryset = Proceeding.objects.none()
+            form.fields["labels"].queryset = Label.objects.none()
 
         uploaded_file = request.FILES.get("file")
 
@@ -213,8 +237,6 @@ def documents_edit(request, document_id):
             else:
                 upload_path = document_upload_path(document, document.file.name)
 
-            print(f"Upload Path: {upload_path}")
-
             all_documents = Document.objects.exclude(id=document.id)
 
             if all_documents.filter(file=upload_path).exists():
@@ -229,6 +251,7 @@ def documents_edit(request, document_id):
                 )
 
             document.save()
+            form.save_m2m()
 
             return HttpResponse(
                 status=204,
@@ -248,15 +271,84 @@ def documents_edit(request, document_id):
 
         return render(
             request,
-            "documents/form.html",
+            "documents/documents/form.html",
             {"form": form, "document": document, "edit": True},
         )
+
+
+@login_required
+def bulk_document_update(request):
+    selected_documents = request.session.get("selected_documents", [])
+
+    if not selected_documents:
+        return HttpResponse(status=400, content="No documents selected.")
+
+    if request.method == "POST":
+        form = BulkDocumentsForm(request.POST, use_required_attribute=False)
+        form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+            "name"
+        )
+
+        submitted_matter_id = request.POST.get("matter")
+        if submitted_matter_id:
+            try:
+                submitted_matter = Matter.objects.get(id=submitted_matter_id)
+                form.fields["proceeding"].queryset = (
+                    submitted_matter.proceeding_set.all()
+                )
+                form.fields["labels"].queryset = submitted_matter.labels.all()
+            except Matter.DoesNotExist:
+                form.fields["proceeding"].queryset = Proceeding.objects.none()
+                form.fields["labels"].queryset = Label.objects.none()
+        else:
+            form.fields["proceeding"].queryset = Proceeding.objects.none()
+            form.fields["labels"].queryset = Label.objects.none()
+
+        if form.is_valid():
+            matter = form.cleaned_data.get("matter")
+            proceeding = form.cleaned_data.get("proceeding")
+            labels = form.cleaned_data.get("labels")
+
+            documents = Document.objects.filter(id__in=selected_documents)
+
+            for document in documents:
+                if matter:
+                    document.matter = matter
+                if proceeding:
+                    document.proceeding = proceeding
+                if labels:
+                    document.labels.set(labels)
+
+                document.save()
+
+            request.session["selected_documents"] = []
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "documentsChanged"},
+            )
+
+        return render(request, "documents/documents/bulk_form.html", {"form": form})
+    else:
+        form = BulkDocumentsForm(use_required_attribute=False)
+
+        form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+            "name"
+        )
+
+        return render(request, "documents/documents/bulk_form.html", {"form": form})
 
 
 @login_required
 def documents_delete(request, document_id):
     try:
         Document.objects.get(id=document_id).delete()
+
+        selected_documents = request.session.get("selected_documents", [])
+        if document_id in selected_documents:
+            selected_documents.remove(document_id)
+
+            request.session["selected_documents"] = selected_documents
     except Document.DoesNotExist:
         return HttpResponse(status=404)
 
@@ -288,17 +380,208 @@ def download_document(request, document_id):
 
 
 @login_required
-def get_proceedings(request):
+def get_proceedings_and_labels(request):
     matter_id = request.GET.get("matter")
+
     proceedings = []
+    labels = []
 
     if matter_id:
         try:
             matter = Matter.objects.get(id=matter_id)
+
             proceedings = matter.proceeding_set.all().order_by("date_filed")
+            labels = matter.labels.all().order_by("name")
         except Matter.DoesNotExist:
             pass
 
-    return render(
-        request, "documents/proceeding_options.html", {"proceedings": proceedings}
-    )
+    proceedings_html = render(
+        request,
+        "documents/documents/proceeding_options.html",
+        {"proceedings": proceedings},
+    ).content.decode("utf-8")
+
+    labels_html = render(
+        request,
+        "documents/documents/label_options.html",
+        {"labels": labels},
+    ).content.decode("utf-8")
+
+    combined_html = f"""
+        <select id="id_proceeding" hx-swap-oob="outerHTML" name="proceeding">
+            {proceedings_html}
+        </select>
+        <select id="id_labels" hx-swap-oob="outerHTML" multiple class="span2" name="labels">
+            {labels_html}
+        </select>
+    """
+
+    return HttpResponse(combined_html)
+
+
+@login_required
+def labels_index(request):
+    label_data = get_label_data(request)
+
+    context = {
+        "app": "documents",
+        "subapp": "labels",
+    } | label_data
+
+    return render(request, "documents/labels/main.html", context)
+
+
+@login_required
+def labels_list(request):
+    label_data = get_label_data(request)
+
+    context = {
+        "app": "documents",
+        "subapp": "labels",
+    } | label_data
+
+    return render(request, "documents/labels/list.html", context)
+
+
+@login_required
+def add_label(request):
+    if request.method == "POST":
+        form = LabelsForm(request.POST, use_required_attribute=False)
+        form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+            "name"
+        )
+
+        if form.is_valid():
+            form.save()
+
+            return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
+
+        return render(
+            request, "documents/labels/form.html", {"form": form, "edit": False}
+        )
+    else:
+        form = LabelsForm(use_required_attribute=False)
+        form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
+            "name"
+        )
+
+        return render(
+            request, "documents/labels/form.html", {"form": form, "edit": False}
+        )
+
+
+@login_required
+def edit_label(request, label_id):
+    try:
+        label = Label.objects.get(id=label_id)
+    except Label.DoesNotExist:
+        return HttpResponse(status=404)
+
+    matter_list = Matter.objects.filter(status="Open").order_by("name")
+
+    if label.matter not in matter_list:
+        matter_list |= Matter.objects.filter(pk=label.matter.id)
+
+    if request.method == "POST":
+        form = LabelsForm(request.POST, instance=label, use_required_attribute=False)
+
+        form.fields["matter"].queryset = matter_list
+
+        if form.is_valid():
+            form.save()
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "labelsChanged"},
+            )
+
+        return render(
+            request,
+            "documents/labels/form.html",
+            {"form": form, "label": label, "edit": True},
+        )
+    else:
+        form = LabelsForm(instance=label, use_required_attribute=False)
+
+        form.fields["matter"].queryset = matter_list
+
+        return render(
+            request,
+            "documents/labels/form.html",
+            {"form": form, "label": label, "edit": True},
+        )
+
+
+@login_required
+def labels_filter(request):
+    if request.method == "POST":
+        request.session["labels_filter"] = request.POST
+
+        return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
+    else:
+        filter_data = request.session.get("labels_filter", {})
+
+        if filter_data:
+            filter = LabelsFilter(
+                filter_data,
+                queryset=Label.objects.all()
+                .select_related("matter")
+                .order_by("matter__name", "name"),
+            )
+        else:
+            default_filter = {"order_by": "name"}
+
+            filter = LabelsFilter(
+                default_filter,
+                queryset=Label.objects.all().select_related("matter").order_by("name"),
+            )
+
+        return render(request, "documents/labels/filter.html", {"filter": filter})
+
+
+@login_required
+def labels_sort(request, order):
+    filter_data = request.session.get("labels_filter", {})
+
+    current_order = filter_data.get("order_by", "")
+
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session["labels_filter"] = filter_data
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
+
+
+@login_required
+def delete_label(request, label_id):
+    try:
+        Label.objects.get(id=label_id).delete()
+    except Label.DoesNotExist:
+        return HttpResponse(status=404)
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
+
+
+@login_required
+def toggle_document_select(request, document_id):
+    selected_documents = request.session.get("selected_documents", [])
+
+    if document_id in selected_documents:
+        selected_documents.remove(document_id)
+    else:
+        selected_documents.append(document_id)
+
+    request.session["selected_documents"] = selected_documents
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+
+@login_required
+def clear_document_selection(request):
+    request.session["selected_documents"] = []
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})

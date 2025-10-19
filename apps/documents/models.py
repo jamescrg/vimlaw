@@ -21,26 +21,6 @@ class Label(models.Model):
         db_table = "app_label"
         ordering = ["name"]
 
-    def clean(self):
-        # Validate the color field to ensure it is a valid hex code
-        if not self.color.startswith("#") or len(self.color) != 7:
-            raise ValueError("Color must be a valid hex code in the format #RRGGBB")
-
-        # Validate only one label per matter with the same name
-        if (
-            Label.objects.filter(matter=self.matter, name=self.name)
-            .exclude(id=self.id)
-            .exists()
-        ):
-            raise ValueError("A label with this name already exists for this matter.")
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-
-        super().save(*args, **kwargs)
-
 
 def document_upload_path(instance, filename):
     file_extension = filename.split(".")[-1].lower()
@@ -112,25 +92,6 @@ class Document(models.Model):
     class Meta:
         db_table = "app_document"
         ordering = ["-uploaded_at"]
-
-    def clean(self):
-        # Skip ManyToMany validation if object hasn't been saved yet
-        if self.pk:
-            # Validate all labels belong to the same matter as the document
-            for label in self.labels.all():
-                if label.matter != self.matter:
-                    raise ValueError(
-                        f"Label '{label.name}' does not belong to matter '{self.matter.name}'"
-                    )
-
-            # Validate no duplicate labels (labels with same name) on the document
-            label_names = [label.name for label in self.labels.all()]
-            if len(label_names) != len(set(label_names)):
-                raise ValueError(
-                    "Document cannot have multiple labels with the same name"
-                )
-
-        super().clean()
 
     def save(self, *args, **kwargs):
         self.full_clean()

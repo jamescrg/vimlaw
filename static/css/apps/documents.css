@@ -1,5 +1,17 @@
-
-
 .uploaded_at {
   width: 250px;
+}
+
+.checkmark {
+  width: 30px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.checkmark input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+  vertical-align: middle;
 }

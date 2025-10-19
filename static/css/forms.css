@@ -250,8 +250,15 @@ select {
 .form-compact input[type="password"],
 .form-compact input[type="number"],
 .form-compact input[type="email"],
+.form-compact input[type="color"],
 .form-compact textarea {
   width: 100%;
+}
+
+.form-compact input[type="color"] {
+  height: 36px;
+  background-color: white;
+  border: solid 1px var(--stone-300);
 }
 
 .col2 {

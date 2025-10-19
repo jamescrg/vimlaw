@@ -1,0 +1,40 @@
+<tr>
+  <td class="checkmark">
+    <input type="checkbox"
+           name="document_select"
+           value="{{ document.id }}"
+           {% if document.id in selected_documents %}checked{% endif %}
+           hx-post="{% url 'documents:toggle-select' document.id %}"
+           hx-trigger="change"
+           hx-target="closest tr"
+           hx-swap="outerHTML">
+  </td>
+  <td class="td-date">{{ document.date|date:'Y-m-d' }}</td>
+  <td>
+    <a href="#"
+       hx-get="{% url 'documents:edit' document.id %}"
+       hx-target="#htmx-modal-container"
+       hx-trigger="click"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">{{ document.name }}</a>
+    {% if document.description %}
+      |
+      {{ document.description }}
+    {% endif %}
+    {% if document.labels.exists %}
+      {% load color_utils %}
+      {% for label in document.labels.all %}
+        <span class="badge"
+              style="background-color: {{ label.color }};
+                     color: {{ label.color|contrast_color }};
+                     margin-left: 5px">{{ label.name }}</span>
+      {% endfor %}
+    {% endif %}
+  </td>
+  <td class="uploaded_at">{{ document.uploaded_at }}</td>
+  <td>
+    <a href="{% url 'documents:download' document.id %}" class="button-link">
+      <i class="bi bi-download"></i>
+    </a>
+  </td>
+</tr>

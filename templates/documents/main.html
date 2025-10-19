@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-{% block content %}
-  <div id="content" class="container content">
-    <div id="documents"
-         hx-trigger="documentsChanged from:body"
-         hx-get="{% url 'documents:list' %}"
-         hx-target="this">{% include "documents/list.html" %}</div>
-  </div>
-{% endblock content %}

@@ -1,0 +1,18 @@
+{% load color_utils %}
+<tr>
+  <td>
+    <a href="#"
+       hx-get="{% url 'documents:edit-label' label.id %}"
+       hx-target="#htmx-modal-container"
+       hx-trigger="click"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">
+      <span class="badge"
+            style="background-color: {{ label.color }};
+                   color: {{ label.color|contrast_color }}">{{ label.name }}</span>
+    </a>
+  </td>
+  <td class="matter">
+    <a href="{% url 'matters:tasks-index' id=label.matter.id|default:0 %}">{{ label.matter.name|slice:":35" }}</a>
+  </td>
+</tr>
