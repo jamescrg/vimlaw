@@ -20,6 +20,7 @@ def get_pending_client_balance(contact_id):
     contact = get_object_or_404(Contact, pk=contact_id)
     transactions = Transaction.objects.filter(contact=contact)
     balance = calculate_balance(transactions)
+    print(contact.name, ": ", balance)
     return balance
 
 
@@ -96,7 +97,7 @@ def get_clients_asymmetric():
 
         client_balance = get_asymmetric_client_balance(contact.id)
 
-        if client_balance > 0:
+        if client_balance != 0:
             new_contact = {
                 "id": contact.id,
                 "name": contact.name,
