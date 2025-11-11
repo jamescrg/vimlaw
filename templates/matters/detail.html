@@ -64,9 +64,6 @@
         <li {% if subapp == 'ledger' %}class="active"{% endif %}>
           <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>
         </li>
-        <li {% if subapp == 'documents' %}class="active"{% endif %}>
-          <a href={% url 'matters:documents-index' id=matter.id %}>Documents</a>
-        </li>
       </ul>
     </div>
     <div class="section subsection">

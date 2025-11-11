@@ -1,7 +1,0 @@
-{% extends "documents/index.html" %}
-{% block subcontent %}
-  <div id="documents"
-       hx-trigger="documentsChanged from:body"
-       hx-get="{% url 'documents:list' %}"
-       hx-target="this">{% include "documents/documents/list.html" %}</div>
-{% endblock subcontent %}
