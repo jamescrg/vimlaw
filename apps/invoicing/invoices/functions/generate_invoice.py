@@ -1,3 +1,4 @@
+from datetime import date
 from tempfile import NamedTemporaryFile
 
 from django.core.handlers.wsgi import WSGIRequest
@@ -37,7 +38,14 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
         "expenses": expenses,
     }
 
-    html_string = render_to_string("invoicing/invoices/invoice.html", context)
+    # Select template based on invoice issue date
+    cutoff_date = date(2025, 11, 10)
+    if invoice.date_issued <= cutoff_date:
+        template_name = "invoicing/invoices/invoice-cb.html"
+    else:
+        template_name = "invoicing/invoices/invoice-craig.html"
+
+    html_string = render_to_string(template_name, context)
     base_url = request.build_absolute_uri("/").rstrip("/")
     html = HTML(string=html_string, base_url=base_url)
 
