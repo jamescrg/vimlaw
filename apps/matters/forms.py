@@ -26,7 +26,10 @@ class MatterForm(forms.ModelForm):
             ("Closed", "Closed"),
         )
 
-        FIRMS = (("Campbell & Brannon", "Campbell & Brannon"),)
+        FIRMS = (
+            ("Craig Legal", "Craig Legal"),
+            ("Campbell & Brannon", "Campbell & Brannon"),
+        )
 
         PRACTICE_AREAS = (
             ("CB", "CB"),
@@ -79,3 +82,7 @@ class MatterForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
+
+        # Set Craig Legal as default for new matters
+        if not self.instance.pk:
+            self.fields["firm"].initial = "Craig Legal"
