@@ -23,8 +23,6 @@ urlpatterns = [
     path("", include("apps.matters.urls")),
     # Contacts App
     path("", include("apps.contacts.urls")),
-    # Documents App
-    path("", include("apps.documents.urls")),
     # Activity App
     path("", include("apps.activity.urls")),
     # Trust App
