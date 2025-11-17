@@ -15,6 +15,7 @@ from apps.activity.expenses.views import (
 )
 from apps.activity.time.views import (
     order_by_time,
+    set_rate,
     time_add,
     time_delete,
     time_edit,
@@ -36,6 +37,7 @@ urlpatterns = [
     path("activity/time/add", time_add, name="time-add"),
     path("activity/time/add/<int:id>/<str:request_app>", time_add, name="time-add"),
     path("activity/time/<int:id>/edit", time_edit, name="time-edit"),
+    path("activity/time/set-rate/<int:matter_id>", set_rate, name="set-rate"),
     path("activity/time/export/<str:format>", time_export_to_csv, name="time-export"),
     path("activity/time/<int:id>/delete", time_delete, name="time-delete"),
     path(

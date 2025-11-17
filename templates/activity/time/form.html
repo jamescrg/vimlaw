@@ -1,20 +1,3 @@
-<!-- -------------------------------------------------------- -->
-<!-- Javascript Rate Picker -->
-<!-- -------------------------------------------------------- -->
-<script type="text/javascript">
-
-    let rates = [];
-
-    // pulls a specific matter, if user has selected one
-    // otherwise, pulls a list of all open matters
-
-    // for each matter, creates javascript array value
-    // key  = matterId, value = hourlyRate
-    {% for matter, rate in matter_rates.items %}
-        rates[{{ matter }}] = {{ rate }}
-    {% endfor %}
-
-</script>
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">

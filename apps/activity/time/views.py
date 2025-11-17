@@ -245,14 +245,6 @@ def time_add(request, id=None, request_app="activity"):
         "name"
     )
 
-    matter_rates = {}
-    for matter in matter_list:
-        try:
-            rate = Rate.objects.filter(matter=matter, user=request.user).get()
-            matter_rates.update({matter.id: rate.matter_rate})
-        except ObjectDoesNotExist:
-            matter_rates.update({matter.id: request.user.user_rate})
-
     # if a single matter is selected,  pull that matter as a quersyset
     if id:
         selected_matter = Matter.objects.filter(id=id)
@@ -273,7 +265,6 @@ def time_add(request, id=None, request_app="activity"):
         "action": "/activity/time/add",
         "form": form,
         "matter_list": matter_list,
-        "matter_rates": matter_rates,
         "matter_id": id,
     }
 
@@ -320,14 +311,6 @@ def time_edit(request, id):
         # set the form fields
         form.fields["matter"].queryset = matter_list
 
-        matter_rates = {}
-        for matter in matter_list:
-            try:
-                rate = Rate.objects.filter(matter=matter, user=request.user).get()
-                matter_rates.update({matter.id: rate.matter_rate})
-            except ObjectDoesNotExist:
-                matter_rates.update({matter.id: request.user.user_rate})
-
     context = {
         "app": "activity",
         "edit": True,
@@ -336,7 +319,6 @@ def time_edit(request, id):
         "entry": entry,
         "form": form,
         "matter_list": matter_list,
-        "matter_rates": matter_rates,
     }
 
     return render(request, "activity/time/form.html", context)
@@ -476,3 +458,21 @@ def time_export_to_csv(request, format):
         write_standard_csv(entries, response)
 
     return response
+
+
+@login_required
+def set_rate(request, matter_id):
+    """
+    AJAX endpoint to get the rate for a matter and return it as plain text
+    """
+    try:
+        matter = Matter.objects.get(pk=matter_id)
+        try:
+            rate = Rate.objects.filter(matter=matter, user=request.user).get()
+            rate_value = rate.matter_rate
+        except ObjectDoesNotExist:
+            rate_value = request.user.user_rate
+    except Matter.DoesNotExist:
+        rate_value = request.user.user_rate
+
+    return HttpResponse(rate_value)
