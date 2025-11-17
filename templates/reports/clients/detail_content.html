@@ -1,7 +1,7 @@
 {% load humanize %}
 <div class="toolbar">
   <div class="toolbar-left">
-    <h2>Client Activity Detail</h2>
+    <h2>Client Statement</h2>
     <div class="filter-tools">
       <button type="button"
               class="btn-icon"
@@ -49,91 +49,95 @@
       </table>
     </div>
   </div>
-  <!-- Time Entries Section -->
-  <div class="section">
-    <h1>Time Entries</h1>
-    {% if time_entries_count > 0 %}
-      <div class="table-container">
-        <table class="table activity">
-          <tr>
-            <th class="date">Date</th>
-            <th class="user">User</th>
-            <th class="matter">Matter</th>
-            <th class="actions">Actions</th>
-            <th class="numeric hours">Hours</th>
-            <th class="numeric rate">Rate</th>
-            <th class="numeric fee">Fee</th>
-          </tr>
-          {% for activity in activities %}
-            {% if activity.type == "time" %}
+  <!-- Matter Sections -->
+  {% for matter_data in matters_data %}
+    <div class="section">
+      <h1>{{ matter_data.matter.name }}</h1>
+      <!-- Time Entries for this matter -->
+      <h2>Time Entries</h2>
+      {% if matter_data.time_entries %}
+        <div class="table-container">
+          <table class="table activity">
+            <tr>
+              <th class="date">Date</th>
+              <th class="user">User</th>
+              <th class="actions">Actions</th>
+              <th class="numeric hours">Hours</th>
+              <th class="numeric rate">Rate</th>
+              <th class="numeric fee">Fee</th>
+            </tr>
+            {% for entry in matter_data.time_entries %}
               <tr>
-                <td class="date">{{ activity.date|date:'Y-m-d' }}</td>
-                <td class="user">{{ activity.user }}</td>
-                <td class="matter">{{ activity.matter }}</td>
-                <td class="actions">{{ activity.description }}</td>
-                <td class="hours">{{ activity.hours|floatformat:1 }}</td>
+                <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
+                <td class="user">{{ entry.user.username }}</td>
+                <td class="actions">{{ entry.actions }}</td>
+                <td class="hours">{{ entry.hours|floatformat:1 }}</td>
                 <td class="rate">
-                  {% if activity.comp %}
+                  {% if entry.comp %}
                     comp
                   {% else %}
-                    ${{ activity.rate }}
+                    ${{ entry.rate }}
                   {% endif %}
                 </td>
                 <td class="fee">
-                  {% if activity.comp %}
+                  {% if entry.comp %}
                     comp
                   {% else %}
-                    ${{ activity.amount|floatformat:2|intcomma }}
+                    ${{ entry.fee|floatformat:2|intcomma }}
                   {% endif %}
                 </td>
               </tr>
-            {% endif %}
-          {% endfor %}
-        </table>
-      </div>
-    {% else %}
-      <p class="empty-entries">No time entries found for the selected criteria.</p>
-    {% endif %}
-  </div>
-  <!-- Expenses Section -->
-  <div class="section">
-    <h1>Expenses</h1>
-    {% if expense_entries_count > 0 %}
-      <div class="table-container">
-        <table class="table activity">
-          <tr>
-            <th class="date">Date</th>
-            <th class="user">User</th>
-            <th class="matter">Matter</th>
-            <th class="actions">Description</th>
-            <th class="numeric hours">Amount</th>
-          </tr>
-          {% for activity in activities %}
-            {% if activity.type == "expense" %}
+            {% endfor %}
+            <tr class="total-row">
+              <td colspan="3" class="total">Total Time Entries</td>
+              <td class="hours total">{{ matter_data.total_hours|floatformat:1 }}</td>
+              <td class="rate total"></td>
+              <td class="fee total">${{ matter_data.total_fees|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% else %}
+        <p class="empty-entries">No time entries for this matter.</p>
+      {% endif %}
+      <!-- Expenses for this matter -->
+      <h2>Expenses</h2>
+      {% if matter_data.expense_entries %}
+        <div class="table-container">
+          <table class="table activity">
+            <tr>
+              <th class="date">Date</th>
+              <th class="user">User</th>
+              <th class="actions">Description</th>
+              <th class="numeric hours">Amount</th>
+            </tr>
+            {% for entry in matter_data.expense_entries %}
               <tr>
-                <td class="date">{{ activity.date|date:'Y-m-d' }}</td>
-                <td class="user">{{ activity.user }}</td>
-                <td class="matter">{{ activity.matter }}</td>
+                <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
+                <td class="user">{{ entry.user.username }}</td>
                 <td class="actions">
-                  {% if activity.category %}{{ activity.category }} -{% endif %}
-                  {{ activity.description }}
+                  {% if entry.category %}{{ entry.category }} -{% endif %}
+                  {{ entry.slug }}
                 </td>
                 <td class="hours">
-                  {% if activity.comp %}
+                  {% if entry.comp %}
                     comp
                   {% else %}
-                    ${{ activity.amount|floatformat:2|intcomma }}
+                    ${{ entry.amount|floatformat:2|intcomma }}
                   {% endif %}
                 </td>
               </tr>
-            {% endif %}
-          {% endfor %}
-        </table>
-      </div>
-    {% else %}
-      <p class="empty-entries">No expenses found for the selected criteria.</p>
-    {% endif %}
-  </div>
+            {% endfor %}
+            <tr class="total-row">
+              <td colspan="3" class="total">Total Expenses</td>
+              <td class="hours total">${{ matter_data.total_expenses|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% else %}
+        <p class="empty-entries">No expenses for this matter.</p>
+      {% endif %}
+    </div>
+  {% endfor %}
 {% else %}
   <div class="no-data">
     <p>Please select a client and date range to view activity details.</p>

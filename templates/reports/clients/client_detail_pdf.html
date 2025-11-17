@@ -78,87 +78,91 @@
           </tr>
         </table>
       </div>
-      <!-- Time Entries Section -->
-      {% if time_entries_count > 0 %}
+      <!-- Matter Sections -->
+      {% for matter_data in matters_data %}
         <div class="section">
-          <h3>Time Entries</h3>
-          <table class="table">
-            <tr>
-              <th class="text-left">Date</th>
-              <th class="text-left">Matter</th>
-              <th class="text-left">Description</th>
-              <th class="text-left">User</th>
-              <th class="text-right">Hours</th>
-              <th class="text-right">Rate</th>
-              <th class="money">Fee</th>
-            </tr>
-            {% for entry in time_entries %}
+          <h3>{{ matter_data.matter.name }}</h3>
+          <!-- Time Entries for this matter -->
+          <h4>Time Entries</h4>
+          {% if matter_data.time_entries %}
+            <table class="table">
               <tr>
-                <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
-                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.matter.name|default:"-" }}</td>
-                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }}</td>
-                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.user.username|default:"-" }}</td>
-                <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours|floatformat:1 }}</td>
-                <td class="text-right {% if entry.comp %}comp{% endif %}">
-                  {% if entry.comp %}
-                    comp
-                  {% else %}
-                    ${{ entry.rate }}
-                  {% endif %}
-                </td>
-                <td class="money {% if entry.comp %}comp{% endif %}">
-                  {% if entry.comp %}
-                    comp
-                  {% else %}
-                    ${{ entry.fee|floatformat:2|intcomma }}
-                  {% endif %}
-                </td>
+                <th class="text-left">Date</th>
+                <th class="text-left">Description</th>
+                <th class="text-left">User</th>
+                <th class="text-right">Hours</th>
+                <th class="text-right">Rate</th>
+                <th class="money">Fee</th>
               </tr>
-            {% endfor %}
-            <tr>
-              <td colspan="6">Total Time Entries</td>
-              <td class="money">${{ total_fees|floatformat:2|intcomma }}</td>
-            </tr>
-          </table>
-        </div>
-      {% endif %}
-      <!-- Expenses Section -->
-      {% if expense_entries_count > 0 %}
-        <div class="section">
-          <h3>Expenses</h3>
-          <table class="table">
-            <tr>
-              <th class="text-left">Date</th>
-              <th class="text-left">Matter</th>
-              <th class="text-left">Description</th>
-              <th class="text-left">User</th>
-              <th class="money">Amount</th>
-            </tr>
-            {% for entry in expense_entries %}
+              {% for entry in matter_data.time_entries %}
+                <tr>
+                  <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                  <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }}</td>
+                  <td class="{% if entry.comp %} comp{% endif %}">{{ entry.user.username|default:"-" }}</td>
+                  <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours|floatformat:1 }}</td>
+                  <td class="text-right {% if entry.comp %}comp{% endif %}">
+                    {% if entry.comp %}
+                      comp
+                    {% else %}
+                      ${{ entry.rate }}
+                    {% endif %}
+                  </td>
+                  <td class="money {% if entry.comp %}comp{% endif %}">
+                    {% if entry.comp %}
+                      comp
+                    {% else %}
+                      ${{ entry.fee|floatformat:2|intcomma }}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
               <tr>
-                <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
-                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.matter.name|default:"-" }}</td>
-                <td class="{% if entry.comp %} comp{% endif %}">
-                  {% if entry.category %}{{ entry.category }} -{% endif %}
-                  {{ entry.description }}
-                </td>
-                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.user.username|default:"-" }}</td>
-                <td class="money{% if entry.comp %} comp{% endif %}">
-                  {% if entry.comp %}
-                    comp
-                  {% else %}
-                    ${{ entry.amount|floatformat:2|intcomma }}
-                  {% endif %}
-                </td>
+                <td colspan="3" class="total">Total Time Entries</td>
+                <td class="text-right total">{{ matter_data.total_hours|floatformat:1 }}</td>
+                <td class="text-right total"></td>
+                <td class="money total">${{ matter_data.total_fees|floatformat:2|intcomma }}</td>
               </tr>
-            {% endfor %}
-            <tr>
-              <td colspan="4">Total Expenses</td>
-              <td class="money">${{ total_expenses|floatformat:2|intcomma }}</td>
-            </tr>
-          </table>
+            </table>
+          {% else %}
+            <p>No time entries for this matter.</p>
+          {% endif %}
+          <!-- Expenses for this matter -->
+          <h4>Expenses</h4>
+          {% if matter_data.expense_entries %}
+            <table class="table">
+              <tr>
+                <th class="text-left">Date</th>
+                <th class="text-left">Description</th>
+                <th class="text-left">User</th>
+                <th class="money">Amount</th>
+              </tr>
+              {% for entry in matter_data.expense_entries %}
+                <tr>
+                  <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                  <td class="{% if entry.comp %} comp{% endif %}">
+                    {% if entry.category %}{{ entry.category }} -{% endif %}
+                    {{ entry.slug }}
+                  </td>
+                  <td class="{% if entry.comp %} comp{% endif %}">{{ entry.user.username|default:"-" }}</td>
+                  <td class="money{% if entry.comp %} comp{% endif %}">
+                    {% if entry.comp %}
+                      comp
+                    {% else %}
+                      ${{ entry.amount|floatformat:2|intcomma }}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+              <tr>
+                <td colspan="3" class="total">Total Expenses</td>
+                <td class="money total">${{ matter_data.total_expenses|floatformat:2|intcomma }}</td>
+              </tr>
+            </table>
+          {% else %}
+            <p>No expenses for this matter.</p>
+          {% endif %}
         </div>
-      {% endif %}
+      {% endfor %}
       <!-- Final Total Section -->
       <div class="section">
         <h3>Report Total</h3>

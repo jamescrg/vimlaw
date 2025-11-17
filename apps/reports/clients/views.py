@@ -252,8 +252,7 @@ def client_detail(request):
     date_to = filter_data.get("date_to")
 
     client = None
-    time_entries = []
-    expense_entries = []
+    matters_data = []
 
     if client_id:
         try:
@@ -261,7 +260,7 @@ def client_detail(request):
 
             # Get time entries
             time_entries = TimeEntry.objects.filter(matter__client=client).order_by(
-                "-date", "-id"
+                "matter__name", "-date", "-id"
             )
             if date_from:
                 time_entries = time_entries.filter(date__gte=date_from)
@@ -271,67 +270,78 @@ def client_detail(request):
             # Get expense entries
             expense_entries = ExpenseEntry.objects.filter(
                 matter__client=client
-            ).order_by("-date", "-id")
+            ).order_by("matter__name", "-date", "-id")
             if date_from:
                 expense_entries = expense_entries.filter(date__gte=date_from)
             if date_to:
                 expense_entries = expense_entries.filter(date__lte=date_to)
 
+            # Group entries by matter
+            from collections import defaultdict
+
+            matters_dict = defaultdict(
+                lambda: {"time_entries": [], "expense_entries": []}
+            )
+
+            for entry in time_entries:
+                matter_key = entry.matter.id if entry.matter else None
+                if matter_key:
+                    matters_dict[matter_key]["matter"] = entry.matter
+                    matters_dict[matter_key]["time_entries"].append(entry)
+
+            for entry in expense_entries:
+                matter_key = entry.matter.id if entry.matter else None
+                if matter_key:
+                    if "matter" not in matters_dict[matter_key]:
+                        matters_dict[matter_key]["matter"] = entry.matter
+                    matters_dict[matter_key]["expense_entries"].append(entry)
+
+            # Convert to list and calculate totals per matter
+            for matter_id, data in matters_dict.items():
+                matter_time_entries = data["time_entries"]
+                matter_expense_entries = data["expense_entries"]
+
+                matters_data.append(
+                    {
+                        "matter": data["matter"],
+                        "time_entries": matter_time_entries,
+                        "expense_entries": matter_expense_entries,
+                        "total_hours": sum(
+                            entry.hours for entry in matter_time_entries
+                        ),
+                        "total_fees": sum(entry.fee for entry in matter_time_entries),
+                        "total_expenses": sum(
+                            entry.amount for entry in matter_expense_entries
+                        ),
+                    }
+                )
+
+            # Sort matters by name
+            matters_data.sort(key=lambda x: x["matter"].name)
+
         except Contact.DoesNotExist:
             pass
 
-    # Combine and sort activities by date
-    activities = []
-
-    for entry in time_entries:
-        activities.append(
-            {
-                "type": "time",
-                "date": entry.date,
-                "matter": entry.matter.name if entry.matter else "",
-                "description": entry.actions,
-                "hours": entry.hours,
-                "rate": entry.rate,
-                "amount": entry.fee,
-                "user": entry.user.username if entry.user else "",
-                "comp": entry.comp,
-                "entered": entry.entered,
-                "invoiced": entry.invoice is not None,
-            }
-        )
-
-    for entry in expense_entries:
-        activities.append(
-            {
-                "type": "expense",
-                "date": entry.date,
-                "matter": entry.matter.name if entry.matter else "",
-                "description": entry.slug,
-                "amount": entry.amount,
-                "category": entry.category,
-                "user": entry.user.username if entry.user else "",
-                "comp": entry.comp,
-                "entered": entry.entered,
-                "invoiced": entry.invoice is not None,
-            }
-        )
-
-    # Sort activities by date (newest first)
-    activities.sort(
-        key=lambda x: x["date"] if x["date"] else datetime.min.date(), reverse=True
+    # Calculate overall totals
+    total_hours = sum(matter["total_hours"] for matter in matters_data)
+    total_fees = sum(matter["total_fees"] for matter in matters_data)
+    total_expenses = sum(matter["total_expenses"] for matter in matters_data)
+    time_entries_count = sum(len(matter["time_entries"]) for matter in matters_data)
+    expense_entries_count = sum(
+        len(matter["expense_entries"]) for matter in matters_data
     )
 
     context = {
         "app": "reports",
         "subapp": "client-detail",
         "client": client,
-        "activities": activities,
+        "matters_data": matters_data,
         "filter_data": filter_data,
-        "time_entries_count": len(time_entries),
-        "expense_entries_count": len(expense_entries),
-        "total_hours": sum(entry.hours for entry in time_entries),
-        "total_fees": sum(entry.fee for entry in time_entries),
-        "total_expenses": sum(entry.amount for entry in expense_entries),
+        "time_entries_count": time_entries_count,
+        "expense_entries_count": expense_entries_count,
+        "total_hours": total_hours,
+        "total_fees": total_fees,
+        "total_expenses": total_expenses,
     }
 
     # Return partial template for HTMX requests
