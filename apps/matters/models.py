@@ -7,6 +7,7 @@ class Matter(models.Model):
     user_id = models.IntegerField(null=True)
     name = models.CharField(max_length=50, null=True)
     work_status = models.CharField(max_length=255, null=True)
+    description = models.CharField(max_length=255, null=True)
     status = models.CharField(max_length=50, null=True)
     date_start = models.DateField(null=True)
     date_end = models.DateField(blank=True, null=True)

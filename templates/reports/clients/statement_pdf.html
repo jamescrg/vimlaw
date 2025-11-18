@@ -48,7 +48,7 @@
           {% endif %}
         </div>
       </div>
-      <!-- Summary Section -->
+      <!-- Activity Summary Section -->
       <div class="section">
         <h3>Activity Summary</h3>
         <table class="table invoice-totals">
@@ -94,10 +94,35 @@
           {% endif %}
         </table>
       </div>
-      <!-- Matter Sections -->
-      {% for matter_data in matters_data %}
-        <div class="section">
-          <h3>{{ matter_data.matter.name }}</h3>
+      <!-- Matters Summary Section -->
+      <div class="section">
+        <h3>Matters Summary</h3>
+        <table class="table">
+          <tr>
+            <th class="text-left">Status</th>
+            <th class="text-left">Matter Name</th>
+            <th class="text-left">Practice Area</th>
+            <th class="text-left">Work Status</th>
+            <th class="money">Total Activity</th>
+            <th class="money">Current Month</th>
+          </tr>
+          {% for matter_data in matters_data %}
+            <tr>
+              <td>{{ matter_data.matter.status }}</td>
+              <td>{{ matter_data.matter.name }}</td>
+              <td>{{ matter_data.matter.practice_area }}</td>
+              <td>{{ matter_data.matter.work_status }}</td>
+              <td class="money">${{ matter_data.total_activity|floatformat:2|intcomma }}</td>
+              <td class="money">${{ matter_data.current_month_activity|floatformat:2|intcomma }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <!-- Matters Detail Section -->
+      <div class="section">
+        <h3>Matters Detail</h3>
+        {% for matter_data in matters_data %}
+          <h4>{{ matter_data.matter.name }}</h4>
           <!-- Time Entries for this matter -->
           {% if matter_data.time_entries %}
             <table class="table">

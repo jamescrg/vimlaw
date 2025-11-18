@@ -73,10 +73,39 @@
         </table>
       </div>
     </div>
-    <!-- Matter Sections -->
+    <!-- Matters Summary Section -->
+    <div class="section">
+      <h1>Matters Summary</h1>
+      <div class="table-container">
+        <table class="table">
+          <tr>
+            <th>Status</th>
+            <th>Matter Name</th>
+            <th>Practice Area</th>
+            <th>Work Status</th>
+            <th class="numeric">Total Activity</th>
+            <th class="numeric">Current Month</th>
+          </tr>
+          {% for matter_data in matters_data %}
+            <tr>
+              <td>{{ matter_data.matter.status }}</td>
+              <td>{{ matter_data.matter.name }}</td>
+              <td>{{ matter_data.matter.practice_area }}</td>
+              <td>{{ matter_data.matter.work_status }}</td>
+              <td class="numeric">${{ matter_data.total_activity|floatformat:2|intcomma }}</td>
+              <td class="numeric">${{ matter_data.current_month_activity|floatformat:2|intcomma }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+    <!-- Matters Detail Section -->
+    <div class="section">
+      <h1>Matters Detail</h1>
+    </div>
     {% for matter_data in matters_data %}
       <div class="section">
-        <h1>{{ matter_data.matter.name }}</h1>
+        <h2>{{ matter_data.matter.name }}</h2>
         <!-- Time Entries for this matter -->
         {% if matter_data.time_entries %}
           <div class="table-container">
