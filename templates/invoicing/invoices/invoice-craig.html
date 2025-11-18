@@ -9,6 +9,7 @@
     <meta name="keywords" content="" />
     <title>{{ invoice.matter.name }} - {{ invoice.date_issued }}</title>
     <link rel="shortcut icon" href={% static 'images/briefcase-fill.svg' %} />
+    <link rel="stylesheet" href={% static_v 'css/colors.css' %} />
     <link rel="stylesheet" href={% static_v 'css/pdf/general.css' %} />
     <link rel="stylesheet" href={% static_v 'css/pdf/invoice-craig.css' %} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -45,10 +46,10 @@
         <h3>Hourly Fees</h3>
         <table class="table">
           <tr>
-            <th class="text-left">Date</th>
-            <th class="text-left">Description</th>
-            <th class="text-right">Qty</th>
-            <th class="money">Total</th>
+            <th class="text-left hl-gray">Date</th>
+            <th class="text-left hl-gray">Description</th>
+            <th class="text-right hl-gray">Qty</th>
+            <th class="money hl-gray">Total</th>
           </tr>
           {% for entry in time_entries %}
             <tr>
@@ -110,6 +111,26 @@
           </table>
         </div>
       {% endif %}
+      {% if confirmed_balance > 0 %}
+        <div class="section">
+          <h3>Funds in Trust</h3>
+          <table class="table">
+            <tr>
+              <td>Retainer Balance *</td>
+              <td class="money">${{ confirmed_balance|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+          <p class="trust-caption">
+            * Please note: these funds are not applied as billed. They are held for the full duration of the matter as described in Paragraph 4.3 of the Attorney Client Agreement, and if applicable, the Retainer Addendum. This invoice does not indicate any change in your trust balance. Please pay the amount due highlighted below.
+          </p>
+        </div>
+      {% endif %}
+      {% if invoice.message %}
+        <div class="section">
+          <h3>Client Message</h3>
+          <p class="note">{{ invoice.message }}</p>
+        </div>
+      {% endif %}
       <div class="section">
         <h3>Invoice Total</h3>
         <table class="table invoice-totals">
@@ -128,17 +149,11 @@
             </tr>
           {% endif %}
           <tr>
-            <td class="total">Total Due</td>
-            <td class="money total">${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
+            <td class="total hl-yellow">Total Due (Please Pay)</td>
+            <td class="money total hl-yellow">${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
           </tr>
         </table>
       </div>
-      {% if invoice.message %}
-        <div class="section">
-          <h3>Client Message</h3>
-          <p class="note">{{ invoice.message }}</p>
-        </div>
-      {% endif %}
     </div>
   </body>
 </html>

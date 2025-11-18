@@ -44,4 +44,26 @@ Content
 
 .invoice-totals {
   page-break-inside: avoid;
+  table-layout: fixed;
+}
+
+.invoice-totals td:first-child {
+  width: auto;
+}
+
+.invoice-totals .money {
+  width: 0.8in;
+}
+
+.trust-caption {
+  font-size: 10pt;
+  color: var(--stone-700);
+  margin-top: 10pt;
+  margin-bottom: 0;
+  text-align: justify;
+}
+
+h3 {
+  font-size: 13pt;
+  font-weight: normal;
 }

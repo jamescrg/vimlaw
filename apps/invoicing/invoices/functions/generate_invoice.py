@@ -8,6 +8,7 @@ from weasyprint import HTML
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
 from apps.invoicing.invoices.models import Invoice
+from apps.trust.trust import get_confirmed_client_balance
 
 
 def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFile:
@@ -32,10 +33,16 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
             comp=invoice.show_comp,
         ).order_by("date")
 
+    # Get confirmed trust balance for the client
+    confirmed_balance = 0
+    if invoice.matter.client:
+        confirmed_balance = get_confirmed_client_balance(invoice.matter.client.id)
+
     context = {
         "invoice": invoice,
         "time_entries": time_entries,
         "expenses": expenses,
+        "confirmed_balance": confirmed_balance,
     }
 
     # Select template based on invoice issue date
