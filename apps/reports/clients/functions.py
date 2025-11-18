@@ -71,6 +71,32 @@ def generate_client_statement_pdf(
         )
         net_expenses = gross_expenses - comp_expenses
 
+        # Calculate total activity (entire matter, all-time)
+        total_activity = data["matter"].value["total"]["net_fees_and_expenses"]
+
+        # Calculate current month activity
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+
+        current_month_time = [
+            entry
+            for entry in matter_time_entries
+            if entry.date.month == current_month and entry.date.year == current_year
+        ]
+        current_month_expenses = [
+            entry
+            for entry in matter_expense_entries
+            if entry.date.month == current_month and entry.date.year == current_year
+        ]
+
+        current_month_fees = sum(
+            entry.fee for entry in current_month_time if not entry.comp
+        )
+        current_month_expense_total = sum(
+            entry.amount for entry in current_month_expenses if not entry.comp
+        )
+        current_month_activity = current_month_fees + current_month_expense_total
+
         matters_data.append(
             {
                 "matter": data["matter"],
@@ -83,6 +109,8 @@ def generate_client_statement_pdf(
                 "gross_expenses": gross_expenses,
                 "comp_expenses": comp_expenses,
                 "net_expenses": net_expenses,
+                "total_activity": total_activity,
+                "current_month_activity": current_month_activity,
                 # For backwards compatibility
                 "total_fees": net_fees,
                 "total_expenses": net_expenses,

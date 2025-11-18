@@ -14,7 +14,11 @@ Client Statement PDF Styles
 }
 
 h3 {
-  font-size: 12pt;
+  font-size: 13pt;
+  font-weight: normal;
+}
+
+h4 {
   font-weight: normal;
 }
 
@@ -22,7 +26,22 @@ h3 {
 Statement-specific Colors
 ========================================================================== */
 
-/* Pale yellow background for Amount Due row */
-.amount-due-row td {
+/* Light gray background for Activity Summary left column */
+.invoice-totals td:first-child {
+  background-color: var(--gray-100); /* #f3f4f6 */
+}
+
+/* Pale yellow background for Amount Due numeric value only */
+.amount-due-row td:last-child {
   background-color: var(--yellow-50); /* #fefce8 */
+}
+
+/* Light gray background for all table header rows */
+.table th {
+  background-color: var(--gray-100); /* #f3f4f6 */
+}
+
+
+.total {
+  font-weight: 500;
 }
