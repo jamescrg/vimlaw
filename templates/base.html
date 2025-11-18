@@ -4,9 +4,15 @@
 <head>
   <meta charset="UTF-8" content="" />
   <title>LawAdmin</title>
-  <link rel="icon"
-        type="image/x-icon"
-        href="{% static 'images/briefcase-fill.svg' %}" />
+  {% if env == 'dev' %}
+    <link rel="icon"
+          type="image/x-icon"
+          href="{% static 'images/briefcase-fill-dev.svg' %}" />
+  {% else %}
+    <link rel="icon"
+          type="image/x-icon"
+          href="{% static 'images/briefcase-fill.svg' %}" />
+  {% endif %}
   <!-- set viewport for mobile devices -->
   <meta name="viewport" content="width = device-width, initial-scale = 1" />
   <!-- Icons -->
@@ -59,8 +65,17 @@
   <link rel="stylesheet"
         href="{% static_v 'css/apps/matters/timeline.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/apps/matters/ledger.css' %}" />
+  {% if env == 'dev' %}
+    <link rel="stylesheet" href="{% static_v 'css/dev.css' %}" />
+  {% endif %}
 </head>
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<body class="{% if env == 'dev' %}env-dev{% endif %}"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  {% if env == 'dev' %}
+    <div class="dev-banner">
+      <span>⚠️ DEVELOPMENT ENVIRONMENT</span>
+    </div>
+  {% endif %}
   {% include "modals.html" %}
   {% include "nav.html" %}
   {% block content %}
