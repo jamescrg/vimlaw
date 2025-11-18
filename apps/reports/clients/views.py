@@ -13,7 +13,7 @@ from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
 from apps.management.filter_manager import FilterManager
 
-from .filters import ClientReportFilter, ClientStatementFilter
+from .filters import ClientReportFilter
 from .functions import generate_client_statement_pdf
 
 
@@ -224,11 +224,37 @@ def clients_filter(request):
 @login_required
 @staff_member_required
 def client_statement_filter(request):
-    filter_manager = FilterManager(
-        request, ClientStatementFilter, "client_statement_filter"
-    )
+    if request.method == "POST":
+        # Convert month/year inputs to date_from and date_to
+        month_num = request.POST.get("month_num")
+        year_str = request.POST.get("year")
+        client_id = request.POST.get("client")
 
-    if filter_manager.process_filter():
+        filter_data = {}
+
+        if client_id:
+            filter_data["client"] = client_id
+
+        if month_num and year_str:
+            import calendar
+
+            month = int(month_num)
+            year = int(year_str)
+
+            # Get first day of month
+            first_day = datetime(year, month, 1).date()
+
+            # Get last day of month
+            last_day_num = calendar.monthrange(year, month)[1]
+            last_day = datetime(year, month, last_day_num).date()
+
+            filter_data["date_from"] = first_day.strftime("%Y-%m-%d")
+            filter_data["date_to"] = last_day.strftime("%Y-%m-%d")
+            filter_data["month_num"] = month_num
+            filter_data["year"] = year_str
+
+        request.session["client_statement_filter"] = filter_data
+
         return HttpResponse(
             status=204, headers={"HX-Trigger": "clientStatementChanged"}
         )
@@ -237,10 +263,14 @@ def client_statement_filter(request):
     filter_data = request.session.get("client_statement_filter", {})
     clients = Contact.objects.filter(client_status="Current").order_by("name")
 
+    # Generate year list (5 years back, current year, 2 years forward)
+    current_year = datetime.now().year
+    years = range(current_year - 5, current_year + 3)
+
     return render(
         request,
         "reports/clients/statement_filter.html",
-        {"filter_data": filter_data, "clients": clients},
+        {"filter_data": filter_data, "clients": clients, "years": years},
     )
 
 

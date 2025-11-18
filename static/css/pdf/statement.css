@@ -1,0 +1,17 @@
+/* ==========================================================================
+Client Statement PDF Styles
+========================================================================== */
+
+/* Activity Summary table - narrow entries and hours columns */
+.invoice-totals td:nth-child(2),
+.invoice-totals td:nth-child(3) {
+  width: 0.9in;
+}
+
+/* Time entry columns - equal width for hours, rate, fee */
+.table th:nth-last-child(3),
+.table td:nth-last-child(3),
+.table th:nth-last-child(2):not(.money),
+.table td:nth-last-child(2):not(.money) {
+  width: 0.6in;
+}

@@ -104,7 +104,7 @@ def generate_client_statement_pdf(
         "current_date": datetime.now().date(),
     }
 
-    html_string = render_to_string("reports/clients/client_statement_pdf.html", context)
+    html_string = render_to_string("reports/clients/statement_pdf.html", context)
 
     if request:
         base_url = request.build_absolute_uri("/").rstrip("/")

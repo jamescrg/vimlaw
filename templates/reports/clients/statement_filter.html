@@ -19,25 +19,41 @@
             <option value="">Select Client</option>
             {% for client in clients %}
               <option value="{{ client.id }}"
-                      {% if filter_data.client == client.id|stringformat:"s" %}selected{% endif %}>
+                      {% if filter_data.client|stringformat:"s" == client.id|stringformat:"s" %}selected{% endif %}>
                 {{ client.name }}
               </option>
             {% endfor %}
           </select>
         </div>
-        <label for="date_from">From Date:</label>
+        <label for="month_select">Month:</label>
         <div>
-          <input type="date"
-                 id="date_from"
-                 name="date_from"
-                 value="{{ filter_data.date_from }}">
+          <select id="month_select" name="month_num">
+            <option value="">Select Month</option>
+            <option value="1" {% if filter_data.month_num == "1" %}selected{% endif %}>January</option>
+            <option value="2" {% if filter_data.month_num == "2" %}selected{% endif %}>February</option>
+            <option value="3" {% if filter_data.month_num == "3" %}selected{% endif %}>March</option>
+            <option value="4" {% if filter_data.month_num == "4" %}selected{% endif %}>April</option>
+            <option value="5" {% if filter_data.month_num == "5" %}selected{% endif %}>May</option>
+            <option value="6" {% if filter_data.month_num == "6" %}selected{% endif %}>June</option>
+            <option value="7" {% if filter_data.month_num == "7" %}selected{% endif %}>July</option>
+            <option value="8" {% if filter_data.month_num == "8" %}selected{% endif %}>August</option>
+            <option value="9" {% if filter_data.month_num == "9" %}selected{% endif %}>September</option>
+            <option value="10" {% if filter_data.month_num == "10" %}selected{% endif %}>October</option>
+            <option value="11" {% if filter_data.month_num == "11" %}selected{% endif %}>November</option>
+            <option value="12" {% if filter_data.month_num == "12" %}selected{% endif %}>December</option>
+          </select>
         </div>
-        <label for="date_to">To Date:</label>
+        <label for="year_select">Year:</label>
         <div>
-          <input type="date"
-                 id="date_to"
-                 name="date_to"
-                 value="{{ filter_data.date_to }}">
+          <select id="year_select" name="year">
+            <option value="">Select Year</option>
+            {% for year in years %}
+              <option value="{{ year }}"
+                      {% if filter_data.year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>
+                {{ year }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
         <br />
         <div class="flex-center-space limited-width">
