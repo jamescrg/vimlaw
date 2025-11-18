@@ -9,6 +9,7 @@
     <meta name="keywords" content="" />
     <title>Client Statement - {{ client.name }}</title>
     <link rel="shortcut icon" href={% static 'images/briefcase-fill.svg' %} />
+    <link rel="stylesheet" href={% static_v 'css/colors.css' %} />
     <link rel="stylesheet" href={% static_v 'css/pdf/general.css' %} />
     <link rel="stylesheet" href={% static_v 'css/pdf/invoice-craig.css' %} />
     <link rel="stylesheet" href={% static_v 'css/pdf/statement.css' %} />
@@ -64,7 +65,7 @@
             <td class="money">${{ total_expenses|floatformat:2|intcomma }}</td>
           </tr>
           <tr>
-            <td>Total Activity</td>
+            <td class="total">Total Activity</td>
             <td class="text-right total">{{ time_entries_count|add:expense_entries_count }} entries</td>
             <td class="text-right total">{{ total_hours|floatformat:1 }} hours</td>
             <td class="money total">${{ total_fees|add:total_expenses|floatformat:2|intcomma }}</td>
@@ -84,8 +85,8 @@
               <td class="text-right">-</td>
               <td class="money">${{ prepayment|floatformat:2|intcomma }}</td>
             </tr>
-            <tr>
-              <td>Amount Due</td>
+            <tr class="amount-due-row">
+              <td class="total">Amount Due</td>
               <td class="text-right total">-</td>
               <td class="text-right total">-</td>
               <td class="money total">${{ amount_due|floatformat:2|intcomma }}</td>

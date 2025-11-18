@@ -17,3 +17,12 @@ h3 {
   font-size: 12pt;
   font-weight: normal;
 }
+
+/* ==========================================================================
+Statement-specific Colors
+========================================================================== */
+
+/* Pale yellow background for Amount Due row */
+.amount-due-row td {
+  background-color: var(--yellow-50); /* #fefce8 */
+}
