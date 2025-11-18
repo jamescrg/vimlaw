@@ -14,10 +14,10 @@ class MatterForm(forms.ModelForm):
             "date_start",
             "client",
             "name",
+            "description",
             "work_status",
             "practice_area",
             "firm",
-            "client_reference_id",
         )
 
         STATUSES = (
@@ -51,6 +51,11 @@ class MatterForm(forms.ModelForm):
                     "class": "span2",
                 }
             ),
+            "description": forms.TextInput(
+                attrs={
+                    "class": "span2",
+                }
+            ),
             "work_status": forms.TextInput(
                 attrs={
                     "class": "span2",
@@ -58,11 +63,6 @@ class MatterForm(forms.ModelForm):
             ),
             "status": forms.Select(
                 choices=STATUSES,
-            ),
-            "client_reference_id": forms.TextInput(
-                attrs={
-                    "class": "span2",
-                }
             ),
             "client": forms.Select(
                 attrs={
