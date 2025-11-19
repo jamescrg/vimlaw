@@ -8,33 +8,11 @@
   </div>
 </div>
 <div class="table-container">
-  <table class="table unbilled-list unbilled-totals">
-    <tr class="total-row">
-      <td class="unbilled-matter">
-        <strong>Totals</strong>
-      </td>
-      <td class="numeric unbilled-hours">
-        <strong>{{ total_hours|floatformat:1 }}</strong>
-      </td>
-      <td class="numeric unbilled-col">
-        <strong>${{ total_fees|floatformat:2|intcomma }}</strong>
-      </td>
-      <td class="numeric unbilled-col">
-        <strong>${{ total_expenses|floatformat:2|intcomma }}</strong>
-      </td>
-      <td class="numeric unbilled-col">
-        <strong>${{ total_activity|floatformat:2|intcomma }}</strong>
-      </td>
-      <td class="numeric unbilled-col"></td>
-      <td class="numeric unbilled-col"></td>
-    </tr>
-  </table>
-  <br />
   <table class="table unbilled-list">
     <tr>
       <th class="unbilled-matter">
         Matter
-        <a href="#" hx-post="{% url 'agenda:unbilled-sort' 'name' %}">
+        <a href="#" hx-post="{% url 'invoicing:unbilled-sort' 'name' %}">
           <i class="bi bi-chevron-expand"></i>
         </a>
       </th>
@@ -42,15 +20,16 @@
       <th class="numeric unbilled-col">Fees</th>
       <th class="numeric unbilled-col">Expenses</th>
       <th class="numeric unbilled-col">
-        Total Activity
-        <a href="#" hx-post="{% url 'agenda:unbilled-sort' 'total_activity' %}">
+        Activity
+        <a href="#"
+           hx-post="{% url 'invoicing:unbilled-sort' 'total_activity' %}">
           <i class="bi bi-chevron-expand"></i>
         </a>
       </th>
       <th class="numeric unbilled-col">Trust</th>
       <th class="numeric unbilled-col">
         Clearance
-        <a href="#" hx-post="{% url 'agenda:unbilled-sort' 'clearance' %}">
+        <a href="#" hx-post="{% url 'invoicing:unbilled-sort' 'clearance' %}">
           <i class="bi bi-chevron-expand"></i>
         </a>
       </th>
@@ -70,6 +49,29 @@
         </td>
       </tr>
     {% endfor %}
+    <tr class="total-row">
+      <td class="unbilled-matter">
+        <strong>Totals</strong>
+      </td>
+      <td class="numeric unbilled-hours">
+        <strong>{{ total_hours|floatformat:1 }}</strong>
+      </td>
+      <td class="numeric unbilled-col">
+        <strong>${{ total_fees|floatformat:2|intcomma }}</strong>
+      </td>
+      <td class="numeric unbilled-col">
+        <strong>${{ total_expenses|floatformat:2|intcomma }}</strong>
+      </td>
+      <td class="numeric unbilled-col">
+        <strong>${{ total_activity|floatformat:2|intcomma }}</strong>
+      </td>
+      <td class="numeric unbilled-col">
+        <strong>${{ total_trust|floatformat:2|intcomma }}</strong>
+      </td>
+      <td class="numeric unbilled-col">
+        <strong>${{ total_clearance|floatformat:2|intcomma }}</strong>
+      </td>
+    </tr>
   </table>
   <div>{% include "pagination.html" %}</div>
 </div>

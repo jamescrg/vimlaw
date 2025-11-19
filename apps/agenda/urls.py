@@ -1,6 +1,5 @@
 from django.urls import path
 
-from apps.agenda.collection.views import collection_index, collection_list
 from apps.agenda.events.views import (
     events_add,
     events_deadline_form,
@@ -35,7 +34,6 @@ from apps.agenda.tasks.views import (
     tasks_status,
     tasks_user,
 )
-from apps.agenda.unbilled.views import unbilled_index, unbilled_list, unbilled_sort
 
 app_name = "agenda"
 
@@ -103,11 +101,6 @@ urlpatterns = [
     ),
     path("events/", events_index, name="events-index"),
     path("events/list/", events_list, name="events-list"),
-    path("unbilled/", unbilled_index, name="unbilled-index"),
-    path("unbilled/list/", unbilled_list, name="unbilled-list"),
-    path("unbilled/sort/<str:order>/", unbilled_sort, name="unbilled-sort"),
-    path("collection/", collection_index, name="collection-index"),
-    path("collection/list/", collection_list, name="collection-list"),
     path("events/add", events_add, name="events-add"),
     path("events/add/<str:origin>", events_add, name="events-add-origin"),
     path(

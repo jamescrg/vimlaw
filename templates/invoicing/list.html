@@ -3,6 +3,9 @@
   <div id="content" class="container content">
     <div class="subnav">
       <ul>
+        <li {% if subapp == "unbilled" %}class="active"{% endif %}>
+          <a href="{% url 'invoicing:unbilled-index' %}">Unbilled</a>
+        </li>
         <li {% if subapp == "invoices" %}class="active"{% endif %}>
           <a href="{% url 'invoicing:invoices-index' %}">Invoices</a>
         </li>
@@ -11,6 +14,9 @@
         </li>
         <li {% if subapp == "credits" %}class="active"{% endif %}>
           <a href="{% url 'invoicing:credits-index' %}">Credits</a>
+        </li>
+        <li {% if subapp == "collection" %}class="active"{% endif %}>
+          <a href="{% url 'invoicing:collection-index' %}">Collection</a>
         </li>
       </ul>
     </div>

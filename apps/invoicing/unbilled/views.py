@@ -1,37 +1,33 @@
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from apps.agenda.unbilled.unbilled import get_unbilled_data
+from apps.invoicing.unbilled.unbilled import get_unbilled_data
 
 
 @login_required
-@staff_member_required
 def unbilled_index(request):
-    """Unbilled view - Admin only."""
+    """Unbilled view."""
     context = get_unbilled_data(request)
 
     context = context | {
-        "app": "agenda",
+        "app": "invoicing",
         "subapp": "unbilled",
     }
 
-    return render(request, "agenda/unbilled/main.html", context)
+    return render(request, "invoicing/unbilled/main.html", context)
 
 
 @login_required
-@staff_member_required
 def unbilled_list(request):
-    """Unbilled list view for HTMX - Admin only."""
+    """Unbilled list view for HTMX."""
     context = get_unbilled_data(request)
 
-    return render(request, "agenda/unbilled/list.html", context)
+    return render(request, "invoicing/unbilled/list.html", context)
 
 
 @login_required
-@staff_member_required
 def unbilled_sort(request, order):
-    """Handle sorting for unbilled list - Admin only."""
+    """Handle sorting for unbilled list."""
     filter_data = request.session.get("unbilled_filter", {})
 
     current_order = filter_data.get("order_by", "")
@@ -46,4 +42,4 @@ def unbilled_sort(request, order):
     request.session["unbilled_filter"] = filter_data
     request.session.modified = True
 
-    return redirect("agenda:unbilled-list")
+    return redirect("invoicing:unbilled-list")
