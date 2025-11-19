@@ -13,6 +13,9 @@
           <li {% if subapp == "unbilled" %}class="active"{% endif %}>
             <a href="{% url 'agenda:unbilled-index' %}">Unbilled</a>
           </li>
+          <li {% if subapp == "collection" %}class="active"{% endif %}>
+            <a href="{% url 'agenda:collection-index' %}">Collection</a>
+          </li>
         {% endif %}
       </ul>
     </div>
