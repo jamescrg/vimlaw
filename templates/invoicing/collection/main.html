@@ -1,8 +1,0 @@
-{% extends "invoicing/list.html" %}
-{% block subcontent %}
-  {% load humanize %}
-  <div id="collection"
-       hx-trigger="collectionChanged from:body"
-       hx-get="{% url 'invoicing:collection-list' %}"
-       hx-target="this">{% include "invoicing/collection/list.html" %}</div>
-{% endblock subcontent %}

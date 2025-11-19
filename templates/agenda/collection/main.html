@@ -1,0 +1,8 @@
+{% extends "agenda/list.html" %}
+{% block subcontent %}
+  {% load humanize %}
+  <div id="collection"
+       hx-trigger="collectionChanged from:body"
+       hx-get="{% url 'agenda:collection-list' %}"
+       hx-target="this">{% include "agenda/collection/list.html" %}</div>
+{% endblock subcontent %}
