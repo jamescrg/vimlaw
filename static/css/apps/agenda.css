@@ -155,3 +155,28 @@ th.priority .bi-caret-up {
 .tasks-form #id_date {
   width: 100%
 }
+
+
+/* ==========================================================================
+ Unbilled
+========================================================================== */
+
+.clearance-negative {
+  color: var(--orange-800);
+}
+
+.unbilled-list .unbilled-col {
+  width: 13%;
+}
+
+.unbilled-list .unbilled-matter {
+  width: auto;
+}
+
+.unbilled-list .unbilled-hours {
+  width: 10%;
+}
+
+.unbilled-totals td {
+  background: var(--stone-150);
+}

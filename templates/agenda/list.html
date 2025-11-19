@@ -9,6 +9,11 @@
         <li {% if subapp == "tasks" %}class="active"{% endif %}>
           <a href="{% url 'agenda:tasks-select' %}">Tasks</a>
         </li>
+        {% if user.is_staff %}
+          <li {% if subapp == "unbilled" %}class="active"{% endif %}>
+            <a href="{% url 'agenda:unbilled-index' %}">Unbilled</a>
+          </li>
+        {% endif %}
       </ul>
     </div>
     <div class="section subsection">
