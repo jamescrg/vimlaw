@@ -1,4 +1,61 @@
-{% extends "contacts/detail.html" %}
-{% block subcontent %}
-  {% include "contacts/matters/list.html" %}
-{% endblock subcontent %}
+{% load humanize %}
+<div class="contact-tab-content">
+  {# Related Matters List - Grouped by Status #}
+  {% if relationships %}
+    <div class="contact-matters-section">
+      {% regroup relationships by matter.status as status_groups %}
+      {% for status_group in status_groups %}
+        <div class="matter-status-group">
+          <div class="matter-status-heading">{{ status_group.grouper }}</div>
+          <div class="table-container">
+            <table class="table matter-list">
+              <tbody>
+                {% for relationship in status_group.list %}
+                  <tr id="matter-{{ relationship.matter.id }}">
+                    <td class="name">
+                      <a href="{% url 'matters:contacts' id=relationship.matter.id %}">{{ relationship.matter.name }}</a>
+                    </td>
+                    <td class="id">
+                      {% if relationship.matter.client_reference_id %}
+                        {{ relationship.matter.client_reference_id }}
+                      {% else %}
+                        {{ relationship.matter.id }}
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="contact-empty-state">
+      <p>This contact is not associated with any matters.</p>
+    </div>
+  {% endif %}
+  {# Matter Assignment Actions #}
+  <div class="contact-matter-actions">
+    <div class="action-buttons">
+      <a href="#"
+         class="btn btn-outline-primary"
+         hx-get="/contacts/{{ selected_contact.id }}/assign"
+         hx-target="#htmx-modal-container"
+         data-bs-toggle="modal"
+         data-bs-target="#htmx-modal-container">
+        <i class="bi bi-plus-circle"></i>
+        Assign to Matter
+      </a>
+      <a href="#"
+         class="btn btn-outline-primary"
+         hx-get="/contacts/{{ selected_contact.id }}/remove"
+         hx-target="#htmx-modal-container"
+         data-bs-toggle="modal"
+         data-bs-target="#htmx-modal-container">
+        <i class="bi bi-dash-circle"></i>
+        Remove from Matter
+      </a>
+    </div>
+  </div>
+</div>

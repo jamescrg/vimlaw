@@ -56,14 +56,14 @@
 </div>
 <div class="section subsection">
   {% if contact_subapp == 'details' %}
-    {% include "contacts/details/list.html" %}
+    {% include "contacts/details/main.html" %}
   {% elif contact_subapp == 'matters' %}
-    {% include "contacts/matters/list.html" %}
+    {% include "contacts/matters/main.html" %}
   {% elif contact_subapp == 'trust' %}
-    {% include "contacts/trust/list.html" %}
+    {% include "contacts/trust/main.html" %}
   {% elif contact_subapp == 'intake' %}
-    {% include "contacts/intake/list.html" %}
+    {% include "contacts/intake/main.html" %}
   {% else %}
-    {% include "contacts/details/list.html" %}
+    {% include "contacts/details/main.html" %}
   {% endif %}
 </div>

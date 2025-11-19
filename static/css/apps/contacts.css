@@ -10,11 +10,11 @@
 }
 
 .contact .section {
-  padding-bottom: 1rem;
+  padding-top: 1rem;
 }
 
 .contact-tab-content {
-  padding-top: 1rem;
+  padding-top: 0.5rem;
 }
 
 .contact-top-right a {
@@ -165,16 +165,13 @@
 
 /* Notes Section */
 .contact-notes-section {
-  margin-top: 24px;
-  padding-top: 24px;
   border-top: 1px solid var(--stone-200);
+  padding-top: 1rem;
 }
 
-.contact-notes-section h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--stone-700);
+.contact-notes-section > p {
+  margin-bottom: 0.5rem;
+  margin-left: 4px;
 }
 
 .contact-notes {
@@ -186,104 +183,31 @@
 }
 
 /* Matters Tab */
-.contact-matters-section h3,
-.contact-matter-actions h3,
-.contact-trust-section h3,
-.contact-intake-section h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--stone-700);
-}
 
 .matter-status-group {
-  margin-bottom: 32px;
+  margin-bottom: 1rem;
 }
 
 .matter-status-heading {
-  font-size: 1rem;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
 
-.matters-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.matter-status-group:last-child {
+  margin-bottom: 0;
 }
 
-.matter-item {
-  padding: 12px;
-  border: 1px solid var(--stone-200);
-  border-radius: 6px;
-  margin-bottom: 8px;
-  transition: background-color 0.2s;
-}
-
-.matter-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.matter-details {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.matter-name {
-  font-weight: 500;
-  color: var(--stone-700);
-  text-decoration: none;
-}
-
-.matter-number {
-  font-size: 0.75rem;
-  color: var(--stone-500);
-  font-weight: 400;
-}
-
-.matter-status {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.matter-status.status-open {
-  background-color: var(--green-100);
-  color: var(--green-700);
-}
-
-.matter-status.status-pending {
-  background-color: var(--yellow-100);
-  color: var(--yellow-700);
-}
-
-.matter-status.status-complete {
-  background-color: var(--blue-100);
-  color: var(--blue-700);
-}
-
-.matter-status.status-closed {
-  background-color: var(--stone-200);
-  color: var(--stone-600);
-}
 
 .action-buttons {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  margin-top: 1rem;
 }
 
 .action-buttons .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.5rem;
 }
 
 .action-buttons .btn-outline-primary:hover {
@@ -305,52 +229,8 @@
 
 /* Trust Tab */
 .contact-trust-section {
-  margin-bottom: 32px;
 }
 
-.trust-balance-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.balance-card {
-  background-color: var(--stone-50);
-  border: 1px solid var(--stone-200);
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.balance-label {
-  font-size: 0.875rem;
-  color: var(--stone-600);
-  margin-bottom: 8px;
-}
-
-.balance-amount {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: var(--stone-900);
-}
-
-.trust-balance-amount {
-  text-align: right;
-  font-weight: 600;
-}
-
-.balance-positive {
-  color: var(--green-600);
-}
-
-.balance-negative {
-  color: var(--red-600);
-}
-
-.contact-trust-section .action-buttons,
-.contact-intake-section {
-  margin-top: 16px;
-}
 
 .contact-trust-section .btn-outline-primary {
   color: var(--stone-700);
@@ -365,7 +245,6 @@
 
 .intake-description {
   color: var(--stone-600);
-  margin-bottom: 20px;
 }
 
 /* Empty State */

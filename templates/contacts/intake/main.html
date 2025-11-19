@@ -1,4 +1,21 @@
-{% extends "contacts/detail.html" %}
-{% block subcontent %}
-  {% include "contacts/intake/list.html" %}
-{% endblock subcontent %}
+<div class="contact-tab-content">
+  {# Intake Information #}
+  {% if selected_contact.intake %}
+    <div class="contact-intake-section">
+      <p class="intake-description">
+        This contact was created from an intake submission. Click below to view it on the Intakes tab.
+      </p>
+      <div class="action-buttons">
+        <a href="{% url 'intakes:detail-index' id=selected_contact.intake.id %}"
+           class="btn btn-outline-primary">
+          <i class="bi bi-file-earmark-text"></i>
+          View Intake Details
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="contact-intake-section">
+      <p class="intake-description">This contact was not created from an intake submission.</p>
+    </div>
+  {% endif %}
+</div>

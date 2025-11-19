@@ -1,4 +1,33 @@
-{% extends "contacts/detail.html" %}
-{% block subcontent %}
-  {% include "contacts/trust/list.html" %}
-{% endblock subcontent %}
+{% load humanize %}
+<div class="contact-tab-content">
+  {# Trust Balance Section #}
+  {% if trust %}
+    <div class="contact-trust-section">
+      <div class="table-container">
+        <table class="table">
+          <tbody>
+            <tr>
+              <td>Confirmed Balance</td>
+              <td class="numeric">${{ confirmed_balance|floatformat:2|intcomma }}</td>
+            </tr>
+            <tr>
+              <td>Pending Balance</td>
+              <td class="numeric">${{ pending_balance|floatformat:2|intcomma }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="action-buttons">
+        <a href="{% url 'trust:client-index' selected_contact.id %}"
+           class="btn btn-outline-primary">
+          <i class="bi bi-journal-text"></i>
+          View Full Trust Ledger
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="contact-empty-state">
+      <p>This contact has no trust account activity.</p>
+    </div>
+  {% endif %}
+</div>
