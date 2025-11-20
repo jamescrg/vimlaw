@@ -8,6 +8,7 @@ from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
 from apps.agenda.tasks.forms import TaskForm
 from apps.agenda.tasks.models import Task
+from apps.agenda.tasks.services import process_quick_task_description
 from apps.agenda.tasks.tasks import get_list_data
 from apps.matters.models import Matter
 
@@ -123,32 +124,11 @@ def tasks_add_quick(request):
     if not request.POST["description"]:
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
-    # Get the description and extract first word for smart matter matching
-    description = request.POST["description"].strip()
-    words = description.split(None, 1)  # Split on whitespace, max 2 parts
-
-    # Try to match first word to a matter
-    matched_matter = None
-    if words:
-        first_word = words[0]
-
-        # Find matters whose name starts with the first word (case-insensitive)
-        matching_matters = Matter.objects.filter(
-            status__in=["Pending", "Open"], name__istartswith=first_word
-        ).order_by("name")
-
-        if matching_matters.exists():
-            # Use the first match alphabetically
-            matched_matter = matching_matters.first()
-
-            # Remove the first word from description if there are more words
-            if len(words) > 1:
-                description = words[1]
-            else:
-                # If only one word and it matched a matter, don't create empty task
-                return HttpResponse(
-                    status=204, headers={"HX-Trigger": "tasksListChanged"}
-                )
+    # Process description with intelligent matter matching
+    last_matter_id = request.session.get("last_quick_task_matter")
+    description, matched_matter, use_smart_matching = process_quick_task_description(
+        request.POST["description"], last_matter_id
+    )
 
     # Prevent creation of tasks with empty description after processing
     if not description.strip():
@@ -157,7 +137,7 @@ def tasks_add_quick(request):
     # set task description and some property values
     task.description = description
     task.status = "Pending"
-    task.priority = 5
+    task.priority = 1
 
     # get filter values to auto populate task properties
     filter_data = request.session.get("tasks_filter", {})
@@ -175,8 +155,8 @@ def tasks_add_quick(request):
     else:
         task.focus = "Current"
 
-    # Set matter: prefer matched_matter from smart matching, then filter matter
-    if matched_matter:
+    # Set matter: use smart matching if applicable, otherwise use filter matter
+    if use_smart_matching:
         task.matter = matched_matter
     else:
         matter_id = filter_data.get("matter", None)
@@ -184,6 +164,13 @@ def tasks_add_quick(request):
             task.matter = Matter.objects.filter(pk=int(matter_id)).get()
 
     task.save()
+
+    # Store the matter ID (or None for Admin) in session for next quick task
+    if task.matter:
+        request.session["last_quick_task_matter"] = task.matter.id
+    else:
+        request.session["last_quick_task_matter"] = None
+
     return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
