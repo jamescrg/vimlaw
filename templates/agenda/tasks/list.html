@@ -173,7 +173,7 @@
     </tr>
     {% if show_upcoming_tasks and upcoming_tasks %}
       {% for task in upcoming_tasks %}
-        <tr class="upcoming-task {% if task.date_due == today %}due-today{% endif %}">
+        <tr class="upcoming-task {% if task.date_due == today %}due-today{% else %}upcoming-not-today{% endif %}">
           <td class="priority {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}">
             {% include "agenda/tasks/priority.html" %}
           </td>

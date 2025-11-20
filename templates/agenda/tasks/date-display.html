@@ -1,3 +1,12 @@
-<a href="#"
-   hx-get="/agenda/tasks/{{ task.id }}/task-date"
-   hx-target="closest td">{{ task.date_due|date:'Y-m-d' }}</a>
+{% if task.date_due %}
+  <a href="#"
+     hx-get="/agenda/tasks/{{ task.id }}/task-date"
+     hx-target="closest td">{{ task.date_due|date:'Y-m-d' }}</a>
+{% else %}
+  <a href="#"
+     class="empty-date-icon"
+     hx-get="/agenda/tasks/{{ task.id }}/task-date"
+     hx-target="closest td">
+    <i class="bi bi-calendar-plus"></i>
+  </a>
+{% endif %}

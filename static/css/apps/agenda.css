@@ -59,7 +59,11 @@
 }
 
 .tasks-table .due-today {
-  background: var(--yellow-50);
+  background: var(--hl-orange);
+}
+
+.tasks-table .upcoming-not-today {
+  background: var(--hl-yellow);
 }
 
 .tasks-add-quick-input {
@@ -130,6 +134,18 @@ th.priority .bi-caret-up {
   overflow: visible;
   white-space: nowrap;
   width: 120px;
+}
+
+.tasks-table .date .empty-date-icon {
+  color: var(--stone-400);
+  display: block;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+
+.tasks-table .date:hover .empty-date-icon {
+  opacity: 1;
 }
 
 .tasks-table .focus {
