@@ -1,38 +1,6 @@
-<div class="matter-cell-content">
-  <div class="dropdown">
-    <button class="button-link"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false">
-      {% if task.matter %}
-        {{ task.matter.name|default:"Admin" }}
-      {% else %}
-        Admin
-      {% endif %}
-    </button>
-    <ul class="dropdown-menu">
-      <li>
-        <a class="dropdown-item"
-           href="#"
-           hx-get="{% url 'agenda:tasks-task-matter' task_id=task.id matter_id=0 %}"
-           hx-target="#tasks">Admin</a>
-      </li>
-      {% for matter in matters %}
-        <li>
-          <a class="dropdown-item"
-             href="#"
-             hx-get="{% url 'agenda:tasks-task-matter' task_id=task.id matter_id=matter.id %}"
-             hx-target="#tasks">{{ matter.name }}</a>
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% if task.matter %}
-    <a href="{% url 'matters:tasks-index' id=task.matter.id %}"
-       class="matter-detail-icon"
-       title="View Matter Tasks"
-       onclick="event.stopPropagation();">
-      <i class="bi bi-box-arrow-up-right"></i>
-    </a>
-  {% endif %}
-</div>
+{% if task.matter %}
+  <a href="{% url 'matters:tasks-index' id=task.matter.id %}"
+     class="matter-link">{{ task.matter.name }}</a>
+{% else %}
+  <a href="{% url 'agenda:tasks-select' %}">Admin</a>
+{% endif %}
