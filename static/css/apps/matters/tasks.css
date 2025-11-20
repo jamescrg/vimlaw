@@ -1,0 +1,8 @@
+
+.toolbar-left .filter-tools .return-to-agenda {
+  color: var(--link);
+}
+
+.return-to-agenda:hover {
+  color: var(--link-hover);
+}

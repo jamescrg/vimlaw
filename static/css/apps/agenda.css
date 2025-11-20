@@ -66,29 +66,13 @@
   color: var(--stone-300);
 }
 
-.matter-cell-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+.filter-tools .return-to-agenda {
+  margin-left: 1rem;
+  color: var(--link);
 }
 
-.matter-detail-icon {
-  color: var(--stone-400);
-  font-size: 0.9rem;
-  margin-left: 8px;
-  opacity: 0;
-  transition: opacity 0.2s;
-  flex-shrink: 0;
-}
-
-.matter-cell-content:hover .matter-detail-icon {
-  opacity: 0.7;
-}
-
-.matter-detail-icon:hover {
-  opacity: 1 !important;
-  color: var(--stone-500);
+.filter-tools .return-to-agenda:hover {
+  color: var(--link-hover);
 }
 
 .tasks-btn-status {
