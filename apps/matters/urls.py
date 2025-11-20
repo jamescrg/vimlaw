@@ -125,6 +125,11 @@ urlpatterns = [
         name="tasks-status",
     ),
     path(
+        "matters/<int:id>/tasks/<int:task_id>/status/<str:status>",
+        tasks.tasks_set_status,
+        name="tasks-set-status",
+    ),
+    path(
         "matters/<int:id>/tasks/<int:task_id>/priority/<int:priority>",
         tasks.tasks_priority,
         name="tasks-priority",

@@ -88,14 +88,6 @@
 <div class="table-container table-responsive-xl">
   <table class="table tasks-table">
     <tr>
-      <th class="status">
-        <button class="btn-sort btn-task-status"
-                hx-target="#matterTasks"
-                hx-swap="innerHTML"
-                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'status' %}">
-          <i class="bi bi-check-square"></i>
-        </button>
-      </th>
       <th class="priority">
         <button class="btn-sort btn-task-status"
                 hx-target="#matterTasks"
@@ -105,45 +97,38 @@
         </button>
       </th>
       <th class="description">
-        Description
         <button class="btn-sort"
                 hx-target="#matterTasks"
                 hx-swap="innerHTML"
-                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'description' %}">
-          <i class="bi bi-chevron-expand"></i>
-        </button>
+                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'description' %}">Description</button>
+      </th>
+      <th class="status">
+        <button class="btn-sort"
+                hx-target="#matterTasks"
+                hx-swap="innerHTML"
+                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'status' %}">Status</button>
       </th>
       <th>
-        Focus
         <button class="btn-sort"
                 hx-target="#matterTasks"
                 hx-swap="innerHTML"
-                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'focus' %}">
-          <i class="bi bi-chevron-expand"></i>
-        </button>
+                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'focus' %}">Focus</button>
       </th>
       <th>
-        User
         <button class="btn-sort"
                 hx-target="#matterTasks"
                 hx-swap="innerHTML"
-                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'user' %}">
-          <i class="bi bi-chevron-expand"></i>
-        </button>
+                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'user' %}">User</button>
       </th>
       <th>
-        Due
         <button class="btn-sort"
                 hx-target="#matterTasks"
                 hx-swap="innerHTML"
-                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'date_due' %}">
-          <i class="bi bi-chevron-expand"></i>
-        </button>
+                hx-post="{% url 'matters:tasks-filter-sort' matter.id 'date_due' %}">Due</button>
       </th>
     </tr>
     {% for task in objects %}
       <tr>
-        <td class="status">{% include "matters/tasks/status.html" %}</td>
         <td class="priority {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}">
           {% include "matters/tasks/priority.html" %}
         </td>
@@ -157,6 +142,7 @@
              data-bs-target="#htmx-modal-container"
              hx-swap="innerHTML">{{ task.description }}</a>
         </td>
+        <td class="status">{% include "matters/tasks/status.html" %}</td>
         <td class="focus {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
           {% include "matters/tasks/focus.html" %}
         </td>

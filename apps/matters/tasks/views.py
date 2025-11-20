@@ -305,6 +305,16 @@ def tasks_status(request, id, task_id):
 
 
 @login_required
+def tasks_set_status(request, id, task_id, status):
+    """Set task status for a matter"""
+    matter = get_object_or_404(Matter, pk=id)
+    task = get_object_or_404(Task, pk=task_id, matter=matter)
+    task.status = status
+    task.save()
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
+
+
+@login_required
 def tasks_priority(request, id, task_id, priority):
     """Change task priority for a matter"""
     matter = get_object_or_404(Matter, pk=id)
