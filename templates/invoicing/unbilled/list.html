@@ -37,7 +37,7 @@
     {% for matter in matters %}
       <tr>
         <td class="unbilled-matter">
-          <a href="{% url 'matters:ledger' matter.id %}">{{ matter.name }}</a>
+          <a href="{% url 'matters:ledger' matter.id %}">{{ matter.name|truncatechars:32 }}</a>
           <a href="#"
              hx-get="{% url 'invoicing:invoices-add' %}?matter={{ matter.id }}"
              hx-target="#htmx-modal-container"

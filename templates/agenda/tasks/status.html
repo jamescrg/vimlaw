@@ -1,11 +1,20 @@
-<a href="#"
-   class="task-status-link"
-   id="task-{{ task.id }}"
-   hx-get="{% url 'agenda:tasks-task-status' task.id %}"
-   hx-target="#tasks">
-  {% if task.status == "Complete" %}
-    <i class="bi bi-check-square"></i>
-  {% else %}
-    <i class="bi bi-square"></i>
-  {% endif %}
-</a>
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ task.status }}</button>
+  <ul class="dropdown-menu">
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'agenda:tasks-set-status' task_id=task.id status='Pending' %}"
+         hx-target="#tasks">Pending</a>
+    </li>
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'agenda:tasks-set-status' task_id=task.id status='Complete' %}"
+         hx-target="#tasks">Complete</a>
+    </li>
+  </ul>
+</div>

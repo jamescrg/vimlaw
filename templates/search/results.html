@@ -11,7 +11,7 @@
         {% for matter in matters %}
           <tr>
             <td class="matter-name">
-              <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name }}</a>
+              <a href={% url 'matters:detail' id=matter.id %}>{{ matter.name|truncatechars:32 }}</a>
             </td>
             <td>{{ matter.work_status|slice:":30" }}</td>
             <td class="matter-status">{{ matter.status }}</td>
@@ -33,7 +33,7 @@
         {% for proceeding in proceedings %}
           <tr>
             <td class="matter-name">
-              <a href={% url 'matters:proceedings-index' id=proceeding.matter.id %}>{{ proceeding.matter.name }}</a>
+              <a href={% url 'matters:proceedings-index' id=proceeding.matter.id %}>{{ proceeding.matter.name|truncatechars:32 }}</a>
             </td>
             <td>{{ proceeding.forum }}</td>
             <td class="proceeding-case-number">{{ proceeding.case_number }}</td>

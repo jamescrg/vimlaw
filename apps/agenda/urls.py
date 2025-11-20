@@ -31,6 +31,7 @@ from apps.agenda.tasks.views import (
     tasks_matter,
     tasks_priority,
     tasks_select,
+    tasks_set_status,
     tasks_status,
     tasks_user,
 )
@@ -45,6 +46,11 @@ urlpatterns = [
     path("agenda/tasks/<int:id>/edit", tasks_edit, name="tasks-edit"),
     path("agenda/tasks/<int:id>/delete", tasks_delete, name="tasks-delete"),
     path("agenda/tasks/<int:id>/task-status", tasks_status, name="tasks-task-status"),
+    path(
+        "agenda/tasks/<int:task_id>/task-status/<str:status>",
+        tasks_set_status,
+        name="tasks-set-status",
+    ),
     path(
         "agenda/tasks/<int:task_id>/task-priority/<int:priority>",
         tasks_priority,

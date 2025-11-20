@@ -88,10 +88,7 @@ th.priority .bi-caret-up {
 }
 
 .tasks-table .status {
-  padding-left: 7px !important;
-  padding-right: 7px !important;
-  text-align: center;
-  width: 20px;
+  width: 100px;
 }
 
 .tasks-table .priority {
@@ -118,7 +115,7 @@ th.priority .bi-caret-up {
 }
 
 .tasks-table .user {
-  width: 120px;
+  width: 100px;
 }
 
 .tasks-table .date {
@@ -128,7 +125,7 @@ th.priority .bi-caret-up {
 }
 
 .tasks-table .focus {
-  width: 120px;
+  width: 100px;
 }
 
 .task-date {

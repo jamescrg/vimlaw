@@ -13,7 +13,7 @@
                 {% for relationship in status_group.list %}
                   <tr id="matter-{{ relationship.matter.id }}">
                     <td class="name">
-                      <a href="{% url 'matters:contacts' id=relationship.matter.id %}">{{ relationship.matter.name }}</a>
+                      <a href="{% url 'matters:contacts' id=relationship.matter.id %}">{{ relationship.matter.name|truncatechars:32 }}</a>
                     </td>
                     <td class="id">
                       {% if relationship.matter.client_reference_id %}

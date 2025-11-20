@@ -14,7 +14,7 @@
       {% for matter in matters %}
         <tr>
           <td>
-            <a href="{% url 'matters:ledger' matter.id %}">{{ matter.name }}</a>
+            <a href="{% url 'matters:ledger' matter.id %}">{{ matter.name|truncatechars:32 }}</a>
           </td>
           <td class="numeric">${{ matter.billed|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ matter.paid|floatformat:2|intcomma }}</td>

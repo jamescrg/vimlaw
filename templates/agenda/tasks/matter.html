@@ -1,6 +1,6 @@
 {% if task.matter %}
   <a href="{% url 'matters:tasks-index' id=task.matter.id %}"
-     class="matter-link">{{ task.matter.name }}</a>
+     class="matter-link">{{ task.matter.name|truncatechars:32 }}</a>
 {% else %}
   <a href="{% url 'agenda:tasks-select' %}">Admin</a>
 {% endif %}

@@ -337,6 +337,14 @@ def tasks_status(request, id):
 
 
 @login_required
+def tasks_set_status(request, task_id, status):
+    task = get_object_or_404(Task, pk=task_id)
+    task.status = status
+    task.save()
+    return redirect("agenda:tasks-list")
+
+
+@login_required
 def tasks_change_user(request, task_id):
     task = get_object_or_404(Task, pk=task_id)
     user = get_object_or_404(CustomUser, pk=request.POST["user"])
