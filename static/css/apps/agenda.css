@@ -112,8 +112,11 @@ th.priority .bi-caret-up {
 }
 
 /* Fix dropdown overflow issues */
-.table-container.table-responsive-xl {
-  overflow: visible !important;
+#tasks .table-container {
+  overflow-x: auto;
+  overflow-y: clip;
+  padding-bottom: 200px;
+  margin-bottom: -200px;
 }
 
 .tasks-table tbody {
