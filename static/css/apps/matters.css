@@ -87,11 +87,6 @@ Matter Details
   border: solid 1px var(--stone-300);
 }
 
-.matter-subnav {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
 .matter-data {
   align-items: flex-start;
   display: flex;

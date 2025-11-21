@@ -35,7 +35,7 @@
         </div>
       </div>
     </div>
-    <div class="subnav detail-subnav">
+    <nav class="navbar navbar-sub detail-subnav">
       <ul>
         <li {% if subapp == 'rates' %}class="active"{% endif %}>
           <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
@@ -65,7 +65,7 @@
           <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>
         </li>
       </ul>
-    </div>
+    </nav>
     <div class="section subsection">
       {% block subcontent %}
       {% endblock subcontent %}

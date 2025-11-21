@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="subnav">
+    <nav class="navbar navbar-sub">
       <ul>
         <li {% if subapp == "time" %}class="active"{% endif %}>
           <a href="{% url 'activity:time-index' %}">Time</a>
@@ -10,7 +10,7 @@
           <a href="{% url 'activity:expenses-index' %}">Expenses</a>
         </li>
       </ul>
-    </div>
+    </nav>
     <div class="section subsection">
       {% block subcontent %}
       {% endblock subcontent %}

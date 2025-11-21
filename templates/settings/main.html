@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="subnav">
+    <nav class="navbar navbar-sub">
       <ul>
         <li {% if subapp == "profile" %}class="active"{% endif %}>
           <a href="{% url 'settings:profile-index' %}">Profile</a>
@@ -21,7 +21,7 @@
           </li>
         {% endif %}
       </ul>
-    </div>
+    </nav>
     <div class="section subsection">
       {% block subcontent %}
       {% endblock subcontent %}

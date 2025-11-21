@@ -44,7 +44,7 @@
     </div>
   </div>
 </div>
-<div class="subnav detail-subnav">
+<nav class="navbar navbar-sub detail-subnav">
   <ul>
     <li {% if not contact_subapp or contact_subapp == 'details' %}class="active"{% endif %}>
       <a href="{% url 'contacts:detail-details' selected_contact.id %}">Details</a>
@@ -61,7 +61,7 @@
       </li>
     {% endif %}
   </ul>
-</div>
+</nav>
 <div class="section subsection">
   {% if contact_subapp == 'details' %}
     {% include "contacts/details/main.html" %}

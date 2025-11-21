@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="subnav">
+    <nav class="navbar navbar-sub">
       <ul>
         <li {% if subapp == "dash" %}class="active"{% endif %}>
           <a href="{% url 'agenda:dash-index' %}">Dash</a>
@@ -13,7 +13,7 @@
           <a href="{% url 'agenda:tasks-select' %}">Tasks</a>
         </li>
       </ul>
-    </div>
+    </nav>
     <div class="section subsection">
       {% block subcontent %}
       {% endblock subcontent %}

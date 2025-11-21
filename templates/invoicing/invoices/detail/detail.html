@@ -57,7 +57,7 @@
       </div>
     </div>
   </div>
-  <div class="subnav detail-subnav">
+  <nav class="navbar navbar-sub detail-subnav">
     <ul>
       <li {% if subapp == "details" %}class="active"{% endif %}>
         <a href="#"
@@ -76,7 +76,7 @@
            hx-post="{% url 'invoicing:invoice-pdf-preview-index' invoice.id %}">Review</a>
       </li>
     </ul>
-  </div>
+  </nav>
   <div class="section">
     {% block subcontent %}
     {% endblock subcontent %}

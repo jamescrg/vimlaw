@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="subnav">
+    <nav class="navbar navbar-sub">
       <ul>
         <li {% if subapp == "unbilled" %}class="active"{% endif %}>
           <a href="{% url 'invoicing:unbilled-index' %}">Unbilled</a>
@@ -19,7 +19,7 @@
           <a href="{% url 'invoicing:collection-index' %}">Collection</a>
         </li>
       </ul>
-    </div>
+    </nav>
     <div class="section subsection">
       {% block subcontent %}
       {% endblock subcontent %}

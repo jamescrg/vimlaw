@@ -237,7 +237,7 @@ th.priority .bi-caret-up {
   text-align: center;
 }
 
-th {
+.dashboard-table th {
   background: var(--stone-150);
 }
 

@@ -1,42 +1,37 @@
 <nav class="navbar">
-  <div class="container nav-container">
+  <div class="container">
     <div class="nav-scroll-container">
-      <ul class="nav navbar-nav">
-        <li class="nav-item {% if app == 'agenda' %}nav-active{% endif %}">
-          <a id="nav-agenda" class="nav-link" href={% url 'agenda:tasks-index' %}>Agenda</a>
+      <ul>
+        <li {% if app == 'agenda' %}class="active"{% endif %}>
+          <a id="nav-agenda" href={% url 'agenda:tasks-index' %}>Agenda</a>
         </li>
-        <li class="nav-item {% if app == 'matters' %}nav-active{% endif %}">
-          <a id="nav-matters" class="nav-link" href={% url 'matters:index' %}>Matters</a>
+        <li {% if app == 'matters' %}class="active"{% endif %}>
+          <a id="nav-matters" href={% url 'matters:index' %}>Matters</a>
         </li>
-        <li class="nav-item {% if app == 'contacts' %}nav-active{% endif %}">
-          <a id="nav-contacts" class="nav-link" href="{% url 'contacts:index' %}">Contacts</a>
+        <li {% if app == 'contacts' %}class="active"{% endif %}>
+          <a id="nav-contacts" href="{% url 'contacts:index' %}">Contacts</a>
         </li>
-        <li class="nav-item {% if app == 'activity' %}nav-active{% endif %}">
-          <a id="nav-activity"
-             class="nav-link"
-             href="{% url 'activity:time-index' %}">Activity</a>
+        <li {% if app == 'activity' %}class="active"{% endif %}>
+          <a id="nav-activity" href="{% url 'activity:time-index' %}">Activity</a>
         </li>
-        <li class="nav-item {% if app == 'invoicing' %}nav-active{% endif %}">
-          <a id="nav-invoicing"
-             class="nav-link"
-             href="{% url 'invoicing:unbilled-index' %}">Invoicing</a>
+        <li {% if app == 'invoicing' %}class="active"{% endif %}>
+          <a id="nav-invoicing" href="{% url 'invoicing:unbilled-index' %}">Invoicing</a>
         </li>
-        <li class="nav-item {% if app == 'trust' %}nav-active{% endif %}">
-          <a id="nav-trust" class="nav-link" href={% url 'trust:index' %}>Trust</a>
+        <li {% if app == 'trust' %}class="active"{% endif %}>
+          <a id="nav-trust" href={% url 'trust:index' %}>Trust</a>
         </li>
-        <li class="nav-item {% if app == 'intakes' %}nav-active{% endif %}">
-          <a id="nav-intakes" class="nav-link" href={% url 'intakes:index' %}>Intakes</a>
+        <li {% if app == 'intakes' %}class="active"{% endif %}>
+          <a id="nav-intakes" href={% url 'intakes:index' %}>Intakes</a>
         </li>
         {% if user.is_staff %}
-          <li class="nav-item {% if app == 'reports' %}nav-active{% endif %}">
-            <a id="nav-reports" class="nav-link" href={% url 'reports:index' %}>Reports</a>
+          <li {% if app == 'reports' %}class="active"{% endif %}>
+            <a id="nav-reports" href={% url 'reports:index' %}>Reports</a>
           </li>
         {% endif %}
       </ul>
-      <ul class="navbar-nav ms-auto">
-        <li {% if app == 'search' %}class="nav-active"{% endif %}>
-          <a class="nav-link"
-             href="#"
+      <ul class="navbar-right">
+        <li {% if app == 'search' %}class="active"{% endif %}>
+          <a href="#"
              hx-get="{% url 'search:search' %}"
              hx-target="#htmx-modal-container"
              data-bs-toggle="modal"
@@ -44,8 +39,8 @@
             <i class="bi bi-search"></i>
           </a>
         </li>
-        <li {% if app == 'settings' %}class="nav-active"{% endif %}>
-          <a class="nav-link settings-link" href={% url 'settings:settings' %}>
+        <li {% if app == 'settings' %}class="active"{% endif %}>
+          <a class="settings-link" href={% url 'settings:settings' %}>
             <i class="bi bi-person-circle"></i>
           </a>
         </li>
