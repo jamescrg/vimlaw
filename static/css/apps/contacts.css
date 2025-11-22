@@ -127,6 +127,31 @@
   gap: 8px;
 }
 
+.contact-phone-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.contact-phone-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.contact-call-btn {
+  flex-shrink: 0;
+}
+
+/* Hide call buttons on larger screens */
+@media (min-width: 769px) {
+  .contact-call-btn {
+    display: none;
+  }
+}
+
 .contact-info-section .contact-card {
   margin-bottom: 0;
 }
@@ -134,11 +159,6 @@
 .contact-phone-list .contact-item:last-child {
   margin-bottom: 0;
   padding-bottom: 0;
-}
-
-.contact-card-icon {
-  color: var(--stone-400);
-  flex-shrink: 0;
 }
 
 .card-copy-btn-right {
@@ -156,11 +176,6 @@
   align-items: center;
   padding: 8px 0;
   gap: 8px;
-}
-
-.contact-info-section .bi {
-  color: var(--stone-400);
-  width: 16px;
 }
 
 /* Notes Section */

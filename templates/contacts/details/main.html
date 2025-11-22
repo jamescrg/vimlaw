@@ -60,21 +60,42 @@
       <div class="contact-card">
         <div class="contact-phone-list">
           {% if selected_contact.phone1 %}
-            <div class="contact-item">
-              <i class="bi bi-telephone"></i>
-              {{ selected_contact.phone1|phone_number }} - {{ selected_contact.phone1_label|lower }}
+            <div class="contact-item contact-phone-item">
+              <div class="contact-phone-text">
+                <i class="bi bi-telephone"></i>
+                {{ selected_contact.phone1|phone_number }} - {{ selected_contact.phone1_label|lower }}
+              </div>
+              <a href="tel:{{ selected_contact.phone1|phone_tel }}"
+                 class="btn btn-sm copy-btn contact-call-btn"
+                 title="Call">
+                <i class="bi bi-telephone-outbound"></i>
+              </a>
             </div>
           {% endif %}
           {% if selected_contact.phone2 %}
-            <div class="contact-item">
-              <i class="bi bi-telephone"></i>
-              {{ selected_contact.phone2|phone_number }} - {{ selected_contact.phone2_label|lower }}
+            <div class="contact-item contact-phone-item">
+              <div class="contact-phone-text">
+                <i class="bi bi-telephone"></i>
+                {{ selected_contact.phone2|phone_number }} - {{ selected_contact.phone2_label|lower }}
+              </div>
+              <a href="tel:{{ selected_contact.phone2|phone_tel }}"
+                 class="btn btn-sm copy-btn contact-call-btn"
+                 title="Call">
+                <i class="bi bi-telephone-outbound"></i>
+              </a>
             </div>
           {% endif %}
           {% if selected_contact.phone3 %}
-            <div class="contact-item">
-              <i class="bi bi-telephone"></i>
-              {{ selected_contact.phone3|phone_number }} - {{ selected_contact.phone3_label|lower }}
+            <div class="contact-item contact-phone-item">
+              <div class="contact-phone-text">
+                <i class="bi bi-telephone"></i>
+                {{ selected_contact.phone3|phone_number }} - {{ selected_contact.phone3_label|lower }}
+              </div>
+              <a href="tel:{{ selected_contact.phone3|phone_tel }}"
+                 class="btn btn-sm copy-btn contact-call-btn"
+                 title="Call">
+                <i class="bi bi-telephone-outbound"></i>
+              </a>
             </div>
           {% endif %}
         </div>
