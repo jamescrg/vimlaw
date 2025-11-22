@@ -1,0 +1,58 @@
+
+/* ==========================================================================
+ Events
+========================================================================== */
+
+.events {
+  margin-bottom: 1.5rem;
+}
+
+.events-table {
+  width: 100%;
+}
+
+.events-table .date {
+  max-width: 120px;
+}
+
+.events-table .party {
+  width: 120px;
+}
+
+.events-table .matter {
+  width: 250px;
+}
+
+.events-table .duration {
+  width: 100px;
+}
+
+.events-table .location {
+  width: 120px;
+}
+
+.events-form {
+  margin-top: 1rem;
+}
+
+.events-form #id_description {
+  max-width: 500px;
+  width: 100%
+}
+
+.deadline-calculator-form {
+  margin-top: 1rem;
+}
+
+
+.deadline-calculator-results {
+  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.deadline-calculator-results td {
+  text-align: right;
+  width: 50%;
+}

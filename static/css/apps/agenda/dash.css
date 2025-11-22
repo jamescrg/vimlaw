@@ -1,0 +1,96 @@
+
+/* ==========================================================================
+ Dashboard
+========================================================================== */
+
+.dashboard {
+  padding: 1rem 0;
+}
+
+.dashboard-card {
+  overflow: hidden;
+}
+
+.dashboard .gap-custom {
+  gap: 2rem;
+}
+
+.dashboard-table {
+  width: 100%;
+}
+
+.dashboard-table .due-today {
+  background: var(--hl-yellow);
+}
+
+.dashboard-table .due-tomorrow {
+  background: var(--hl-yellow);
+}
+
+.dashboard-table .empty-message {
+  color: var(--stone-500);
+  font-style: italic;
+  text-align: center;
+}
+
+.dashboard-table th {
+  background: var(--stone-150);
+}
+
+/* Dashboard Events Table - match events-table column widths */
+.dashboard-table.events {
+  margin-bottom: 0;
+}
+
+.dashboard-table.events .date {
+  max-width: 160px;
+}
+
+.dashboard-table.events .matter {
+  width: 250px;
+}
+
+.dashboard-table.events .location {
+  width: 120px;
+}
+
+.dashboard-table.events .party {
+  width: 120px;
+}
+
+/* Dashboard Tasks Table - match tasks-table column widths */
+.dashboard-table.tasks .matter {
+  width: 250px;
+}
+
+.dashboard-table.tasks .description {
+}
+
+.dashboard-table.tasks .user {
+  width: 100px;
+}
+
+.dashboard-table.tasks .date {
+  white-space: nowrap;
+  width: 120px;
+}
+
+.unbilled-table th:nth-child(1),
+.unbilled-table td:nth-child(1) {
+  width: 43%;
+}
+
+.unbilled-table th:nth-child(2),
+.unbilled-table td:nth-child(2) {
+  width: 23%;
+}
+
+.unbilled-table th:nth-child(3),
+.unbilled-table td:nth-child(3) {
+  width: 34%;
+}
+
+.show-more {
+  font-weight: normal;
+  font-size: 0.875rem;
+}

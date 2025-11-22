@@ -1,0 +1,133 @@
+
+/* ==========================================================================
+ Tasks
+========================================================================== */
+
+.tasks-add-quick-input {
+  background: var(--stone-25);
+  color: var(--stone-600);
+  padding-left: 1rem;
+  width: 705px;
+}
+
+
+.tasks-add-quick-input::placeholder {
+  color: var(--stone-300);
+}
+
+.tasks-btn-status {
+  color: var(--stone-400);
+}
+
+th.priority .bi-caret-up {
+  font-size: 1.1rem;
+}
+
+.tasks-table .priority {
+  overflow: visible;
+  padding-left: 7px !important;
+  padding-right: 7px !important;
+  text-align: center;
+  width: 20px;
+}
+
+.tasks-table .priority .dropdown-menu {
+  min-width: 44px;
+  position: absolute;
+  z-index: 1050;
+}
+
+.tasks-table .matter {
+  width: 250px;
+}
+
+.tasks-table .description {
+  min-width: 500px;
+}
+
+.tasks-table .status {
+  width: 140px;
+}
+
+.tasks-table .user {
+  width: 140px;
+}
+
+.tasks-table .date {
+  overflow: visible;
+  white-space: nowrap;
+  width: 140px;
+}
+
+.tasks-table .date .dropdown-menu {
+  min-width: 44px;
+}
+
+/* Fix dropdown overflow issues */
+#tasks .table-container {
+  overflow-x: auto;
+  overflow-y: clip;
+  padding-bottom: 200px;
+  margin-bottom: -200px;
+}
+
+.tasks-table tbody {
+  overflow: visible;
+}
+
+.tasks-table {
+  overflow: visible;
+}
+
+#matterTasks .tasks-table {
+  max-width: 1000px;
+}
+
+.status .bi-chevron-expand {
+  margin: 0;
+}
+
+.tasks-table .date .empty-date-icon {
+  color: var(--stone-400);
+  display: block;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+
+.tasks-table .date:hover .empty-date-icon {
+  opacity: 1;
+}
+
+.task-date {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  width: 140px;
+}
+
+.tasks-table .priority i {
+  margin: 0;
+}
+
+.tasks-table .menu {
+  margin: 0;
+  padding: 0;
+  width: 10px;
+}
+
+.tasks-table .complete,
+.tasks-table .complete a,
+.tasks-table .complete .button-link {
+  color: var(--stone-400);
+  text-decoration: line-through;
+}
+
+.tasks-form #id_description,
+.tasks-form #id_matter,
+.tasks-form #id_user,
+.tasks-form #id_priority,
+.tasks-form #id_date {
+  width: 100%
+}
