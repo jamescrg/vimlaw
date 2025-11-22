@@ -95,3 +95,58 @@ Filter form
   background: var(--stone-25);
   width: 150px;
 }
+
+/*------------------------------------------------
+Responsive
+------------------------------------------------*/
+
+@media (max-width: 1000px) {
+  /* Timeline toolbar: h2 and add button on first line, inputs wrap below */
+  .timeline-toolbar .toolbar-left {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .timeline-toolbar .toolbar-left h2 {
+    margin-bottom: 1rem;
+  }
+
+  .timeline-toolbar .toolbar-left .filter-tools > button {
+    margin-bottom: 1rem;
+  }
+
+  .timeline-toolbar .filter-form {
+    flex: 1 1 100%;
+  }
+
+  .timeline-toolbar .toolbar-right {
+    display: none;
+  }
+
+  .filter-form {
+    flex-wrap: wrap;
+  }
+
+  .filter-form input[type="date"].filter-input-date,
+  .filter-form input[type="text"].filter-input-date {
+    width: 120px;
+  }
+
+  .filter-form .filter-input {
+    min-width: 120px;
+  }
+
+  /* Keep description column width on smaller screens */
+  .timeline-list .description {
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-form input[type="date"].filter-input-date,
+  .filter-form input[type="text"].filter-input-date,
+  .filter-form .filter-input {
+    width: 100%;
+    min-width: 200px;
+  }
+}
