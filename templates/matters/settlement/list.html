@@ -2,6 +2,7 @@
   {% load humanize %}
   <div class="toolbar">
     <div class="toolbar-left">
+      <h2>Settlement</h2>
       <div class="filter-tools">
         <button hx-get="/matters/{{ matter.id }}/settlement/add"
                 hx-target="#htmx-modal-container"

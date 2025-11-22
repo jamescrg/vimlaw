@@ -146,17 +146,21 @@ Detail Views
   .detail-title .toolbar-left {
     flex-direction: row;
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
 
   .detail-title .toolbar-left h1 {
     margin-right: 1rem;
-    margin-bottom: 0;
+    margin-bottom: 1rem;
+    flex: 1 1 100%;
+  }
+
+  .detail-title .toolbar-left .filter-tools {
+    flex: 0 1 auto;
   }
 
   .detail-title .toolbar-right {
-    display: flex;
-    gap: 0.75rem;
+    /* display: none; */
   }
 
   /* Remove left margin from copy button on small screens */

@@ -1,26 +1,26 @@
 {% block subcontent %}
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <h2>Pending Events</h2>
+  {% if pending_events %}
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <h2>Pending Events</h2>
+        <div class="filter-tools">
+          <button hx-get="/events/add/{{ matter.id }}/matters"
+                  hx-target="#htmx-modal-container"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="toolbar-right">
-      <button hx-get="/events/add/{{ matter.id }}/matters"
-              hx-target="#htmx-modal-container"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
-        <i class="bi bi-plus-lg"></i>
-      </button>
-    </div>
-  </div>
-  <div class="table-container">
-    <table class="table events-list">
-      <tr>
-        <th>Date</th>
-        <th>Party</th>
-        <th>Description</th>
-        <th>Status</th>
-      </tr>
-      {% if pending_events %}
+    <div class="table-container">
+      <table class="table events-list">
+        <tr>
+          <th>Date</th>
+          <th>Party</th>
+          <th>Description</th>
+          <th>Status</th>
+        </tr>
         {% for event in pending_events %}
           <tr>
             <td class="date">{{ event.date|date:"Y-m-d" }}</td>
@@ -40,10 +40,19 @@
     </table>
   </div>
   {% if past_events %}
-    <br />
     <div class="toolbar">
       <div class="toolbar-left">
         <h2>Past Events</h2>
+        {% if not pending_events %}
+          <div class="filter-tools">
+            <button hx-get="/events/add/{{ matter.id }}/matters"
+                    hx-target="#htmx-modal-container"
+                    data-bs-toggle="modal"
+                    data-bs-target="#htmx-modal-container">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        {% endif %}
       </div>
     </div>
     <div class="table-container">

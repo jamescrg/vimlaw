@@ -1,4 +1,5 @@
 {% block subcontent %}
+  {% load humanize %}
   <div class="toolbar">
     <div class="toolbar-left">
       <h2>Time Entries</h2>
@@ -8,18 +9,96 @@
       <a href="{% url 'matters:activity-report' matter.id %}">Activity Report</a>
     </div>
   </div>
-  <div class="table-container">
-    <table class="table matter-activity">
-      {% if entries %}
-        {% for entry in entries %}
-          <tr>
-            <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
-            <td>{{ entry.actions }}</td>
-            <td class="hours">{{ entry.hours }}</td>
-          </tr>
-        {% endfor %}
+  <div id="matterActivityTable">
+    <div class="table-container">
+      <table class="table matter-activity">
+        <tr>
+          <th class="date">
+            Date
+            <a href="#"
+               hx-post="{% url 'matters:activity-sort' matter.id %}"
+               hx-target="#matterActivityTable"
+               hx-swap="outerHTML">
+              <i class="bi bi-chevron-expand"></i>
+            </a>
+          </th>
+          <th class="user">User</th>
+          <th class="actions">Actions</th>
+          <th class="numeric hours">Hours</th>
+          <th class="numeric rate">Rate</th>
+          <th class="numeric fee">Fee</th>
+        </tr>
+        {% if entries %}
+          {% for entry in entries %}
+            <tr id="time-{{ entry.id }}">
+              <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
+              <td class="user">{{ entry.user.initials }}</td>
+              <td class="actions">
+                {% if entry.invoice and not entry.invoice.status == 'DRAFT' %}
+                  {{ entry.actions }}
+                {% else %}
+                  <a href="#"
+                     hx-get="{% url 'activity:time-edit' id=entry.id %}"
+                     hx-target="#htmx-modal-container"
+                     hx-trigger="click"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container">{{ entry.actions }}</a>
+                {% endif %}
+              </td>
+              <td class="hours numeric">{{ entry.hours|floatformat:1 }}</td>
+              <td class="rate numeric">
+                {% if entry.comp %}
+                  comp
+                {% else %}
+                  ${{ entry.rate }}
+                {% endif %}
+              </td>
+              <td class="fee numeric">
+                {% if entry.comp %}
+                  comp
+                {% else %}
+                  ${{ entry.fee|floatformat:2|intcomma }}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </table>
+    </div>
+    <div class="flex-start-space">
+      <div>{% include "pagination.html" %}</div>
+      {% if summary %}
+        <div class="totals-table">
+          <table>
+            <tr>
+              <td>Total Hours</td>
+              <td class="numeric">{{ summary.total_hours|floatformat:1 }}</td>
+            </tr>
+            <tr>
+              <td>Comp Hours</td>
+              <td class="numeric">{{ summary.comp_hours|floatformat:1 }}</td>
+            </tr>
+            <tr>
+              <th>Net Hours</th>
+              <td class="numeric total">{{ summary.net_hours|floatformat:1 }}</td>
+            </tr>
+          </table>
+          <table>
+            <tr>
+              <td>Total Fees</td>
+              <td class="numeric">${{ summary.total_fees|floatformat:2|intcomma }}</td>
+            </tr>
+            <tr>
+              <td>Comp Fees</td>
+              <td class="numeric">${{ summary.comp_fees|floatformat:2|intcomma }}</td>
+            </tr>
+            <tr>
+              <th>Net Fees</th>
+              <td class="numeric total">${{ summary.net_fees|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
       {% endif %}
-    </table>
-    {% include "pagination.html" %}
+    </div>
   </div>
 {% endblock subcontent %}
