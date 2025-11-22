@@ -105,6 +105,7 @@
   align-items: flex-start;
   gap: 12px;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .contact-card-text {
@@ -141,11 +142,17 @@
   flex: 1;
 }
 
+.contact-phone-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .contact-call-btn {
   flex-shrink: 0;
 }
 
-/* Hide call buttons on larger screens */
+/* Hide call buttons on desktop, show only on mobile */
 @media (min-width: 769px) {
   .contact-call-btn {
     display: none;
@@ -168,9 +175,36 @@
 
 .contact-card-buttons {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 1rem;
   flex-shrink: 0;
+}
+
+/* Mobile: buttons wrap on top */
+@media (max-width: 768px) {
+  .contact-card-content-with-copy {
+    flex-direction: column-reverse;
+  }
+
+  .contact-card-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .contact-phone-item {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+
+  .contact-phone-text {
+    width: 100%;
+  }
+
+  .contact-phone-buttons {
+    width: 100%;
+    justify-content: flex-start;
+    margin-bottom: 0.5rem;
+  }
 }
 
 /* Contact Info Section */
