@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.management.base import BaseCommand
 
 import apps.agenda.events.google as google
@@ -11,8 +13,11 @@ class Command(BaseCommand):
 
         try:
             google.sync_from_google()
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.stdout.write(
-                self.style.SUCCESS("✓ Google Calendar sync completed successfully")
+                self.style.SUCCESS(
+                    f"✓ Google Calendar sync completed successfully at {timestamp}"
+                )
             )
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"✗ Sync failed: {e}"))
