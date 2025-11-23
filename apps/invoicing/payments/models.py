@@ -23,3 +23,14 @@ class Payment(models.Model):
     @property
     def method_display(self):
         return dict(PAYMENT_METHOD_CHOICES).get(self.payment_method)
+
+    @property
+    def amount_unallocated(self):
+        """Calculate the amount of this payment not yet allocated to invoices."""
+        allocated = (
+            self.applications.aggregate(models.Sum("amount_applied"))[
+                "amount_applied__sum"
+            ]
+            or 0
+        )
+        return self.amount - allocated

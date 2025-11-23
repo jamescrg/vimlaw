@@ -37,6 +37,7 @@ from apps.invoicing.invoices.views import (
 from apps.invoicing.payments.views import (
     order_by_payments,
     payments_add,
+    payments_allocate,
     payments_delete,
     payments_edit,
     payments_filter,
@@ -144,6 +145,11 @@ urlpatterns = [
         "invoicing/payments-delete/<int:pk>/", payments_delete, name="payments-delete"
     ),
     path("invoicing/payments-edit/<int:pk>/", payments_edit, name="payments-edit"),
+    path(
+        "invoicing/payments-allocate/<int:pk>/",
+        payments_allocate,
+        name="payments-allocate",
+    ),
     path("invoicing/payments-filter/", payments_filter, name="payments-filter"),
     path(
         "invoicing/payments-filter/order-by/<str:order>",

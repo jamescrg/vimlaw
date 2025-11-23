@@ -3,6 +3,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponse, get_object_or_404, render
 
+from apps.invoicing.applications.models import PaymentApplication
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.get_payment_data import get_payment_data
 from apps.matters.models import Matter
@@ -98,6 +99,54 @@ def payments_edit(request, pk):
         "invoicing/payments/edit.html",
         {"form": form, "payment": payment},
     )
+
+
+@login_required
+def payments_allocate(request, pk):
+    payment = get_object_or_404(Payment, pk=pk)
+
+    # Get unpaid invoices for this payment's matter
+    unpaid_invoices = (
+        Invoice.objects.filter(matter=payment.matter, status="SENT")
+        .select_related("matter")
+        .order_by("date_issued")
+    )
+
+    # Build list with amount_remaining for each invoice
+    invoice_data = []
+    for invoice in unpaid_invoices:
+        remaining = invoice.amount_remaining
+        if remaining > 0:
+            invoice_data.append({"invoice": invoice, "amount_remaining": remaining})
+
+    if request.method == "POST":
+        # Create PaymentApplication records from form data
+        for invoice_dict in invoice_data:
+            invoice = invoice_dict["invoice"]
+            amount_key = f"amount_{invoice.id}"
+            amount_applied = request.POST.get(amount_key)
+
+            if amount_applied and float(amount_applied) > 0:
+                PaymentApplication.objects.create(
+                    payment=payment, invoice=invoice, amount_applied=amount_applied
+                )
+
+        return HttpResponse(
+            status=204,
+            headers={
+                "HX-Trigger": json.dumps(
+                    {"paymentsChanged": "", "matterLedgerChanged": ""}
+                )
+            },
+        )
+
+    context = {
+        "payment": payment,
+        "invoice_data": invoice_data,
+        "amount_unallocated": payment.amount_unallocated,
+    }
+
+    return render(request, "invoicing/payments/allocate.html", context)
 
 
 @login_required

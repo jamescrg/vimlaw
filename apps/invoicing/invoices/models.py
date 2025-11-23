@@ -62,6 +62,35 @@ class Invoice(models.Model):
         return dict(INVOICE_STATUS).get(self.status)
 
     @property
+    def amount_remaining(self):
+        """
+        Calculate the amount still owed on this invoice after allocations.
+
+        Hybrid approach for backward compatibility:
+        - If status is "PAID" and no allocations exist, return 0 (legacy invoices)
+        - Otherwise, calculate based on allocations (new allocation system)
+        """
+        total = self.value["final_total"]
+        payment_allocated = (
+            self.applications.aggregate(models.Sum("amount_applied"))[
+                "amount_applied__sum"
+            ]
+            or 0
+        )
+        credit_allocated = (
+            self.credit_applications.aggregate(models.Sum("amount_applied"))[
+                "amount_applied__sum"
+            ]
+            or 0
+        )
+
+        # Legacy support: PAID invoices without allocations are considered fully paid
+        if self.status == "PAID" and payment_allocated == 0 and credit_allocated == 0:
+            return 0
+
+        return total - payment_allocated - credit_allocated
+
+    @property
     def value(self):
         from apps.activity.time.models import TimeEntry
 

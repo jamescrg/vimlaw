@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from apps.invoicing.applications.models import CreditApplication, PaymentApplication
 from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
@@ -39,6 +40,36 @@ class CreditsAdmin(admin.ModelAdmin):
     search_fields = ["matter__name", "detail"]
 
 
+class PaymentApplicationAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "payment",
+        "invoice",
+        "amount_applied",
+        "created_at",
+    ]
+    list_filter = ["payment__matter", "invoice__matter"]
+    search_fields = ["payment__id", "invoice__id"]
+    ordering = ["-created_at"]
+    autocomplete_fields = ["payment", "invoice"]
+
+
+class CreditApplicationAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "credit",
+        "invoice",
+        "amount_applied",
+        "created_at",
+    ]
+    list_filter = ["credit__matter", "invoice__matter"]
+    search_fields = ["credit__id", "invoice__id"]
+    ordering = ["-created_at"]
+    autocomplete_fields = ["credit", "invoice"]
+
+
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Payment, PaymentAdmin)
 admin.site.register(Credit, CreditsAdmin)
+admin.site.register(PaymentApplication, PaymentApplicationAdmin)
+admin.site.register(CreditApplication, CreditApplicationAdmin)

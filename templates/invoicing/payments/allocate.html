@@ -1,0 +1,119 @@
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Allocate Payment #{{ payment.id }}</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <p>
+          <strong>Matter:</strong> {{ payment.matter }}
+        </p>
+        <p>
+          <strong>Payment Date:</strong> {{ payment.date }}
+        </p>
+        <p>
+          <strong>Payment Amount:</strong> ${{ payment.amount }}
+        </p>
+        <p>
+          <strong>Unallocated Amount:</strong> <span id="unallocated-amount">${{ amount_unallocated }}</span>
+        </p>
+      </div>
+      {% if invoice_data %}
+        <form hx-post="{% url 'invoicing:payments-allocate' payment.id %}"
+              hx-target="#htmx-modal-container"
+              role="form">
+          {% csrf_token %}
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Invoice #</th>
+                <th>Date Issued</th>
+                <th>Amount Due</th>
+                <th>Amount to Apply</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in invoice_data %}
+                <tr>
+                  <td>{{ item.invoice.id }}</td>
+                  <td>{{ item.invoice.date_issued }}</td>
+                  <td>${{ item.amount_remaining }}</td>
+                  <td>
+                    <input type="number"
+                           name="amount_{{ item.invoice.id }}"
+                           step="0.01"
+                           min="0"
+                           max="{{ item.amount_remaining }}"
+                           placeholder="0.00"
+                           class="form-control form-control-sm allocation-input"
+                           data-max="{{ item.amount_remaining }}">
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+              <strong>Total to Allocate:</strong> <span id="total-allocated">$0.00</span>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary" id="submit-btn">Submit</button>
+            </div>
+          </div>
+        </form>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('.allocation-input');
+            const totalSpan = document.getElementById('total-allocated');
+            const unallocatedSpan = document.getElementById('unallocated-amount');
+            const submitBtn = document.getElementById('submit-btn');
+            const maxUnallocated = parseFloat({{ amount_unallocated }});
+
+            function updateTotals() {
+              let total = 0;
+              let hasError = false;
+
+              inputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                const max = parseFloat(input.dataset.max);
+
+                if (value > max) {
+                  input.classList.add('is-invalid');
+                  hasError = true;
+                } else {
+                  input.classList.remove('is-invalid');
+                }
+
+                total += value;
+              });
+
+              if (total > maxUnallocated) {
+                hasError = true;
+                totalSpan.classList.add('text-danger');
+              } else {
+                totalSpan.classList.remove('text-danger');
+              }
+
+              totalSpan.textContent = '$' + total.toFixed(2);
+              unallocatedSpan.textContent = '$' + (maxUnallocated - total).toFixed(2);
+              submitBtn.disabled = hasError || total === 0;
+            }
+
+            inputs.forEach(input => {
+              input.addEventListener('input', updateTotals);
+            });
+
+            updateTotals();
+          });
+        </script>
+      {% else %}
+        <div class="alert alert-info">No unpaid invoices found for this matter.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
