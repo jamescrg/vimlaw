@@ -580,7 +580,18 @@ def abbreviation_codes_json(request):
     """Return abbreviation codes as JSON for client-side preview"""
     from django.http import JsonResponse
 
-    codes = AbbreviationCode.objects.filter(is_active=True).values("code", "expansion")
+    codes = (
+        AbbreviationCode.objects.filter(is_active=True)
+        .values("code", "expansion")
+        .order_by("code")
+    )
     codes_dict = {code["code"]: code["expansion"] for code in codes}
 
     return JsonResponse(codes_dict)
+
+
+@login_required
+def abbreviation_codes_reference(request):
+    """Return abbreviation codes table for reference in time entry form"""
+    codes = AbbreviationCode.objects.filter(is_active=True).order_by("code")
+    return render(request, "activity/time/codes/reference.html", {"codes": codes})

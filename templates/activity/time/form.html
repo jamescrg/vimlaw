@@ -43,10 +43,17 @@
                  hx-confirm="Are you sure  you want to delete this record?"
                  hx-delete="{% url 'activity:time-delete' id=entry.id %}"
                  hx-target="#htmx-modal-container">Delete Entry</a>
+            {% else %}
+              <a class="button-link codes-reference-link"
+                 href="#"
+                 hx-get="{% url 'activity:codes-reference' %}"
+                 hx-target="#codes-reference-container"
+                 hx-swap="innerHTML">View Abbreviation Codes</a>
             {% endif %}
           </div>
         </div>
       </form>
+      {% if not edit %}<div id="codes-reference-container"></div>{% endif %}
     </div>
   </div>
 </div>

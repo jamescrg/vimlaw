@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-lg" id="codes-modal-dialog">
+<div class="modal-dialog modal-md" id="codes-modal-dialog">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">Abbreviation Codes</h1>
@@ -36,9 +36,7 @@
           </tr>
           {% for code in codes %}
             <tr>
-              <td class="code-column">
-                <code>{{ code.code }}</code>
-              </td>
+              <td class="code-column">{{ code.code }}</td>
               <td class="expansion-column">{{ code.expansion }}</td>
               {% if request.user.role == "ADMIN" %}
                 <td class="actions center-data">

@@ -65,7 +65,7 @@ Activity summary table
 
 
 /* ==========================================================================
- Table Action Icons
+Codes Table Action Icons
 ========================================================================== */
 
 .codes-table .edit-icon-button {
@@ -74,4 +74,31 @@ Activity summary table
 
 .codes-table .edit-icon {
   color: var(--stone-600);
+}
+
+/* .codes-table .code-column { */
+/*   text-align: left; */
+/* } */
+
+
+/* ==========================================================================
+ Codes Reference Table
+========================================================================== */
+
+#codes-reference-container {
+  /* border-top: 1px solid var(--stone-200); */
+}
+
+.codes-reference-table-container {
+  margin-top: 0.5rem;
+}
+
+.codes-reference-table {
+  margin: 0;
+}
+
+.codes-reference-table th {
+  background-color: var(--stone-100);
+  color: var(--stone-700);
+  font-weight: 500;
 }
