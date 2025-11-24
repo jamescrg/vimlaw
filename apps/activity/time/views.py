@@ -513,11 +513,13 @@ def abbreviation_code_add(request):
         form = AbbreviationCodeForm(request.POST)
         if form.is_valid():
             form.save()
-            return HttpResponse(status=204, headers={"HX-Trigger": "codesChanged"})
+            # Return the updated codes list to replace the form dialog
+            codes = AbbreviationCode.objects.filter(is_active=True).order_by("code")
+            return render(request, "activity/time/codes/list.html", {"codes": codes})
     else:
         form = AbbreviationCodeForm()
 
-    context = {"form": form, "action": "/activity/time/codes/add", "edit": False}
+    context = {"form": form, "action": "/activity/time/codes/add/", "edit": False}
 
     return render(request, "activity/time/codes/form.html", context)
 
@@ -535,13 +537,15 @@ def abbreviation_code_edit(request, id):
         form = AbbreviationCodeForm(request.POST, instance=code)
         if form.is_valid():
             form.save()
-            return HttpResponse(status=204, headers={"HX-Trigger": "codesChanged"})
+            # Return the updated codes list to replace the form dialog
+            codes = AbbreviationCode.objects.filter(is_active=True).order_by("code")
+            return render(request, "activity/time/codes/list.html", {"codes": codes})
     else:
         form = AbbreviationCodeForm(instance=code)
 
     context = {
         "form": form,
-        "action": f"/activity/time/codes/{id}/edit",
+        "action": f"/activity/time/codes/{id}/edit/",
         "edit": True,
         "code": code,
     }
@@ -562,7 +566,9 @@ def abbreviation_code_delete(request, id):
         # Soft delete by setting is_active to False
         code.is_active = False
         code.save()
-        return HttpResponse(status=204, headers={"HX-Trigger": "codesChanged"})
+        # Return the updated codes list to replace the delete confirmation dialog
+        codes = AbbreviationCode.objects.filter(is_active=True).order_by("code")
+        return render(request, "activity/time/codes/list.html", {"codes": codes})
 
     context = {"code": code}
 

@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog modal-lg" id="codes-modal-dialog">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">Abbreviation Codes</h1>
@@ -14,18 +14,17 @@
          hx-get="{% url 'activity:codes-list' %}"
          hx-swap="outerHTML">
       <div class="toolbar">
-        <div class="toolbar-left">
+        <div class="toolbar-left"></div>
+        <div class="toolbar-right">
           {% if request.user.role == "ADMIN" %}
             <button type="button"
                     class="btn-icon"
                     hx-get="{% url 'activity:codes-add' %}"
-                    hx-target="#htmx-modal-container">
+                    hx-target="#codes-modal-dialog"
+                    hx-swap="outerHTML">
               <i class="bi bi-plus-lg"></i> Add Code
             </button>
           {% endif %}
-        </div>
-        <div class="toolbar-right">
-          <span class="text-muted">Count: <strong>{{ codes|length }}</strong></span>
         </div>
       </div>
       <div class="table-container">
@@ -33,7 +32,7 @@
           <tr>
             <th>Code</th>
             <th>Expansion</th>
-            {% if request.user.role == "ADMIN" %}<th class="actions">Actions</th>{% endif %}
+            {% if request.user.role == "ADMIN" %}<th class="actions center-data">Actions</th>{% endif %}
           </tr>
           {% for code in codes %}
             <tr>
@@ -42,20 +41,23 @@
               </td>
               <td class="expansion-column">{{ code.expansion }}</td>
               {% if request.user.role == "ADMIN" %}
-                <td class="actions">
-                  <button class="button-link"
+                <td class="actions center-data">
+                  <button class="button-link edit-icon-button"
                           type="button"
                           hx-get="{% url 'activity:codes-edit' code.id %}"
-                          hx-target="#htmx-modal-container"
+                          hx-target="#codes-modal-dialog"
+                          hx-swap="outerHTML"
                           title="Edit">
-                    <i class="bi bi-pencil"></i>
+                    <i class="bi bi-pencil edit-icon"></i>
                   </button>
-                  <button class="button-link delete-link"
+                  <button class="button-link"
                           type="button"
-                          hx-get="{% url 'activity:codes-delete' code.id %}"
-                          hx-target="#htmx-modal-container"
+                          hx-post="{% url 'activity:codes-delete' code.id %}"
+                          hx-target="#codes-modal-dialog"
+                          hx-swap="outerHTML"
+                          hx-confirm="Are you sure you want to delete this code?"
                           title="Delete">
-                    <i class="bi bi-trash"></i>
+                    <i class="bi bi-x-circle delete-icon"></i>
                   </button>
                 </td>
               {% endif %}

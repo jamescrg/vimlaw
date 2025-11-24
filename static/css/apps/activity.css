@@ -61,3 +61,17 @@ Activity summary table
 .summary table td {
   width: 50%;
 }
+
+
+
+/* ==========================================================================
+ Table Action Icons
+========================================================================== */
+
+.codes-table .edit-icon-button {
+  margin-right: 1.5rem;
+}
+
+.codes-table .edit-icon {
+  color: var(--stone-600);
+}

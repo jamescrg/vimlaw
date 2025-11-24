@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-md">
+<div class="modal-dialog modal-md" id="codes-modal-dialog">
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">
@@ -16,7 +16,8 @@
     </div>
     <div class="modal-body">
       <form hx-post="{{ action }}"
-            hx-target="#htmx-modal-container"
+            hx-target="#codes-modal-dialog"
+            hx-swap="outerHTML"
             class="form-compact">
         {% csrf_token %}
         {{ form }}
@@ -29,7 +30,8 @@
             <button type="button"
                     class="button-link"
                     hx-get="{% url 'activity:codes-list' %}"
-                    hx-target="#htmx-modal-container">Cancel</button>
+                    hx-target="#codes-modal-dialog"
+                    hx-swap="outerHTML">Cancel</button>
           </div>
         </div>
       </form>

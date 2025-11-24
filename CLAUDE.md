@@ -125,3 +125,5 @@ djlint --profile django --reformat templates/
 - djLint for Django template formatting
 - Pre-commit hooks enforce code quality
 - Migrations excluded from linting (see .pre-commit-config.yaml)
+
+- do not use inline styles in HTML

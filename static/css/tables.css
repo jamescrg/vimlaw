@@ -134,3 +134,20 @@ th {
   font-style: italic;
   text-align: center;
 }
+
+
+/* ==========================================================================
+ Table Action Icons
+========================================================================== */
+
+.edit-icon-button {
+  margin-right: 1.5rem;
+}
+
+.edit-icon {
+  color: var(--stone-600);
+}
+
+.delete-icon {
+  color: var(--urgent);
+}
