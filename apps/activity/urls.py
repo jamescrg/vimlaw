@@ -14,6 +14,11 @@ from apps.activity.expenses.views import (
     order_by_expenses,
 )
 from apps.activity.time.views import (
+    abbreviation_code_add,
+    abbreviation_code_delete,
+    abbreviation_code_edit,
+    abbreviation_codes_json,
+    abbreviation_codes_list,
     order_by_time,
     set_rate,
     time_add,
@@ -64,6 +69,18 @@ urlpatterns = [
     path(
         "activity/time/filter/order_by/<str:order>", order_by_time, name="time-order-by"
     ),
+    # Abbreviation code management URLs
+    path("activity/time/codes/", abbreviation_codes_list, name="codes-list"),
+    path("activity/time/codes/add/", abbreviation_code_add, name="codes-add"),
+    path(
+        "activity/time/codes/<int:id>/edit/", abbreviation_code_edit, name="codes-edit"
+    ),
+    path(
+        "activity/time/codes/<int:id>/delete/",
+        abbreviation_code_delete,
+        name="codes-delete",
+    ),
+    path("activity/time/codes/json/", abbreviation_codes_json, name="codes-json"),
     path("activity/expenses/", expenses_index, name="expenses-index"),
     path("activity/expenses/list/", expenses_list, name="expenses-list"),
     path("activity/expenses/add", expenses_add, name="expenses-add"),

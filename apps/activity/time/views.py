@@ -12,8 +12,8 @@ from apps.matters.rates.models import Rate
 
 from .export import write_clio_csv, write_standard_csv
 from .filter import TimeEntryFilter
-from .forms import TimeEntryForm
-from .models import TimeEntry
+from .forms import AbbreviationCodeForm, TimeEntryForm
+from .models import AbbreviationCode, TimeEntry
 
 
 def calculate_rate_for_matter(matter, user):
@@ -219,35 +219,10 @@ def time_add(request, id=None, request_app="activity"):
             entry = form.save(commit=False)
             entry.user_id = request.user.id
 
-            codes = {
-                "attn ": "attention ",
-                "Attn ": "Attention ",
-                "mot ": "motion ",
-                "Mot ": "Motion ",
-                "Aff ": "Affidavit ",
-                "conf ": "conference ",
-                "Conf ": "Conference ",
-                "conf. ": "conference ",
-                "Conf. ": "Conference ",
-                " resp ": " response ",
-                " Resp ": " Response ",
-                " opp ": " opposition ",
-                " Opp ": " Opposition ",
-                " vm ": " voicemail ",
-                " vm.": " voicemail.",
-                "Vm ": "Voicemail ",
-                " Vm.": " Left voicemail.",
-                "dep ": "deposition",
-                "Dep ": "Deposition",
-                " OC": " opposing counsel",
-                " SMF": " Statement of Material Facts",
-                " SM": " Special Master",
-                " MSJ": " Motion for Summary Judgment",
-                " MTD": " Motion to Dismiss",
-            }
-
-            for key, val in codes.items():
-                entry.actions = entry.actions.replace(key, val)
+            # Apply abbreviation codes from database
+            codes = AbbreviationCode.objects.filter(is_active=True)
+            for code in codes:
+                entry.actions = entry.actions.replace(code.code, code.expansion)
 
             entry.save()
 
@@ -510,3 +485,96 @@ def set_rate(request, matter_id):
         rate_value = request.user.user_rate
 
     return HttpResponse(rate_value)
+
+
+# ============================================================================
+# Abbreviation Code Management Views
+# ============================================================================
+
+
+@login_required
+def abbreviation_codes_list(request):
+    """Display all abbreviation codes in a modal"""
+    codes = AbbreviationCode.objects.filter(is_active=True).order_by("code")
+
+    context = {"codes": codes}
+
+    return render(request, "activity/time/codes/list.html", context)
+
+
+@login_required
+def abbreviation_code_add(request):
+    """Add a new abbreviation code - Admin only"""
+    # Check if user is admin
+    if request.user.role != "ADMIN":
+        return HttpResponse("Permission denied. Admin access required.", status=403)
+
+    if request.method == "POST":
+        form = AbbreviationCodeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204, headers={"HX-Trigger": "codesChanged"})
+    else:
+        form = AbbreviationCodeForm()
+
+    context = {"form": form, "action": "/activity/time/codes/add", "edit": False}
+
+    return render(request, "activity/time/codes/form.html", context)
+
+
+@login_required
+def abbreviation_code_edit(request, id):
+    """Edit an existing abbreviation code - Admin only"""
+    # Check if user is admin
+    if request.user.role != "ADMIN":
+        return HttpResponse("Permission denied. Admin access required.", status=403)
+
+    code = get_object_or_404(AbbreviationCode, pk=id)
+
+    if request.method == "POST":
+        form = AbbreviationCodeForm(request.POST, instance=code)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204, headers={"HX-Trigger": "codesChanged"})
+    else:
+        form = AbbreviationCodeForm(instance=code)
+
+    context = {
+        "form": form,
+        "action": f"/activity/time/codes/{id}/edit",
+        "edit": True,
+        "code": code,
+    }
+
+    return render(request, "activity/time/codes/form.html", context)
+
+
+@login_required
+def abbreviation_code_delete(request, id):
+    """Delete (soft delete) an abbreviation code - Admin only"""
+    # Check if user is admin
+    if request.user.role != "ADMIN":
+        return HttpResponse("Permission denied. Admin access required.", status=403)
+
+    code = get_object_or_404(AbbreviationCode, pk=id)
+
+    if request.method == "POST":
+        # Soft delete by setting is_active to False
+        code.is_active = False
+        code.save()
+        return HttpResponse(status=204, headers={"HX-Trigger": "codesChanged"})
+
+    context = {"code": code}
+
+    return render(request, "activity/time/codes/delete-confirm.html", context)
+
+
+@login_required
+def abbreviation_codes_json(request):
+    """Return abbreviation codes as JSON for client-side preview"""
+    from django.http import JsonResponse
+
+    codes = AbbreviationCode.objects.filter(is_active=True).values("code", "expansion")
+    codes_dict = {code["code"]: code["expansion"] for code in codes}
+
+    return JsonResponse(codes_dict)

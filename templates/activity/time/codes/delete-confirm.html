@@ -1,0 +1,33 @@
+<div class="modal-dialog modal-sm">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Delete Abbreviation Code</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete this abbreviation code?</p>
+      <div class="code-preview">
+        <code>{{ code.code }}</code> → {{ code.expansion }}
+      </div>
+      <br />
+      <div class="flex-center-space">
+        <div>
+          <button type="button"
+                  class="submit delete-btn"
+                  hx-post="{% url 'activity:codes-delete' code.id %}"
+                  hx-target="#htmx-modal-container">Delete</button>
+        </div>
+        <div>
+          <button type="button"
+                  class="button-link"
+                  hx-get="{% url 'activity:codes-list' %}"
+                  hx-target="#htmx-modal-container">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

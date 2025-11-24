@@ -53,6 +53,15 @@
       </div>
     </div>
     <div class="toolbar-right">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'activity:codes-list' %}"
+              hx-target="#htmx-modal-container"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container"
+              title="View Abbreviation Codes">
+        <i class="bi bi-code-square"></i>
+      </button>
       <div class="dropdown">
         <button class="btn-icon"
                 type="button"

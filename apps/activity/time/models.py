@@ -34,3 +34,18 @@ class TimeEntry(models.Model):
             return self.hours * self.rate
         else:
             return 0
+
+
+class AbbreviationCode(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    expansion = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.code} → {self.expansion}"
+
+    class Meta:
+        db_table = "abbreviation_codes"
+        ordering = ["code"]

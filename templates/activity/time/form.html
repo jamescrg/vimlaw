@@ -17,9 +17,20 @@
     <div class="modal-body">
       <form hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
-            class="form-compact col2 time-form">
+            class="form-compact col2 time-form"
+            id="time-entry-form">
         {% csrf_token %}
-        {{ form }}
+        {{ form.matter }}
+        {{ form.date }}
+        {{ form.actions }}
+        <div id="actions-preview" class="actions-preview span2">
+          <small class="text-muted">Preview:</small>
+          <div id="actions-preview-text"></div>
+        </div>
+        {{ form.hours }}
+        {{ form.rate }}
+        {{ form.comp }}
+        {{ form.entered }}
         <br />
         <div class="flex-center-space span2">
           <div>

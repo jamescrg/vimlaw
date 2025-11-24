@@ -1,0 +1,38 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if edit %}
+          Edit Abbreviation Code
+        {% else %}
+          Add Abbreviation Code
+        {% endif %}
+      </h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
+            class="form-compact">
+        {% csrf_token %}
+        {{ form }}
+        <br />
+        <div class="flex-center-space">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
+          <div>
+            <button type="button"
+                    class="button-link"
+                    hx-get="{% url 'activity:codes-list' %}"
+                    hx-target="#htmx-modal-container">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

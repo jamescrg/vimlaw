@@ -1,0 +1,73 @@
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Abbreviation Codes</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body"
+         id="codes-table"
+         hx-trigger="codesChanged from:body"
+         hx-get="{% url 'activity:codes-list' %}"
+         hx-swap="outerHTML">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          {% if request.user.role == "ADMIN" %}
+            <button type="button"
+                    class="btn-icon"
+                    hx-get="{% url 'activity:codes-add' %}"
+                    hx-target="#htmx-modal-container">
+              <i class="bi bi-plus-lg"></i> Add Code
+            </button>
+          {% endif %}
+        </div>
+        <div class="toolbar-right">
+          <span class="text-muted">Count: <strong>{{ codes|length }}</strong></span>
+        </div>
+      </div>
+      <div class="table-container">
+        <table class="table codes-table">
+          <tr>
+            <th>Code</th>
+            <th>Expansion</th>
+            {% if request.user.role == "ADMIN" %}<th class="actions">Actions</th>{% endif %}
+          </tr>
+          {% for code in codes %}
+            <tr>
+              <td class="code-column">
+                <code>{{ code.code }}</code>
+              </td>
+              <td class="expansion-column">{{ code.expansion }}</td>
+              {% if request.user.role == "ADMIN" %}
+                <td class="actions">
+                  <button class="button-link"
+                          type="button"
+                          hx-get="{% url 'activity:codes-edit' code.id %}"
+                          hx-target="#htmx-modal-container"
+                          title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="button-link delete-link"
+                          type="button"
+                          hx-get="{% url 'activity:codes-delete' code.id %}"
+                          hx-target="#htmx-modal-container"
+                          title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              {% endif %}
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="{% if request.user.role == 'ADMIN' %}3{% else %}2{% endif %}"
+                  class="empty-message">No abbreviation codes found.</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
