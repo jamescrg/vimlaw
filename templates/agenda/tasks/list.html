@@ -86,7 +86,12 @@
          data-custom-order-active="{% if current_order == 'custom_order' %}true{% else %}false{% endif %}">
     <thead>
       <tr>
-        <th class="matter">Matter</th>
+        <th class="matter">
+          <div class="matter-cell-content">
+            <i class="bi bi-grip-vertical drag-handle"></i>
+            <span>Matter</span>
+          </div>
+        </th>
         <th class="description">Description</th>
         <th class="status">Status</th>
         <th>User</th>
@@ -106,7 +111,7 @@
         <tr data-task-id="{{ task.id }}">
           <td class="matter {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}">
             <div class="matter-cell-content">
-              {% if current_order == 'custom_order' %}<i class="bi bi-grip-vertical drag-handle"></i>{% endif %}
+              <i class="bi bi-grip-vertical drag-handle"></i>
               {% include "agenda/tasks/matter.html" %}
             </div>
           </td>

@@ -7,7 +7,7 @@
   background: var(--stone-25);
   color: var(--stone-600);
   padding-left: 1rem;
-  width: 705px;
+  width: 535px;
 }
 
 
@@ -21,12 +21,19 @@
 
 .tasks-table .matter {
   width: 250px;
+  min-width: 250px;
+  max-width: 250px;
 }
 
 .matter-cell-content {
   display: flex;
   align-items: center;
   gap: 1rem;
+  width: 100%;
+}
+
+.drag-handle {
+  color: var(--stone-400);
 }
 
 .tasks-table .description {

@@ -12,6 +12,22 @@ document.body.addEventListener('htmx:afterSwap', function(event) {
     }
 });
 
+function getCSRFToken() {
+    const bodyElement = document.querySelector('body');
+    const hxHeaders = bodyElement.getAttribute('hx-headers');
+
+    if (hxHeaders) {
+        try {
+            const headers = JSON.parse(hxHeaders);
+            return headers['X-CSRFToken'] || '';
+        } catch (e) {
+            console.error('Failed to parse CSRF token from hx-headers');
+            return '';
+        }
+    }
+    return '';
+}
+
 function initializeTaskSortable() {
     const tasksTable = document.querySelector('.tasks-table');
     const tasksTbody = document.getElementById('tasks-sortable');
@@ -39,26 +55,12 @@ function initializeTaskSortable() {
             const taskRows = tasksTbody.querySelectorAll('tr[data-task-id]');
             const taskIds = Array.from(taskRows).map(row => row.dataset.taskId);
 
-            // Get CSRF token from the body's hx-headers attribute
-            const bodyElement = document.querySelector('body');
-            const hxHeaders = bodyElement.getAttribute('hx-headers');
-            let csrfToken = '';
-
-            if (hxHeaders) {
-                try {
-                    const headers = JSON.parse(hxHeaders);
-                    csrfToken = headers['X-CSRFToken'];
-                } catch (e) {
-                    console.error('Failed to parse CSRF token from hx-headers');
-                }
-            }
-
             // Send the new order to the server
             fetch('/agenda/tasks/update-order/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
+                    'X-CSRFToken': getCSRFToken()
                 },
                 body: JSON.stringify({
                     task_ids: taskIds
@@ -68,8 +70,6 @@ function initializeTaskSortable() {
             .then(data => {
                 if (data.success) {
                     console.log('Task order updated successfully');
-                    // Optional: Show a brief success indicator
-                    showFeedback('Order saved', 'success');
                 } else {
                     console.error('Failed to update task order:', data.error);
                     showFeedback('Failed to save order', 'error');
