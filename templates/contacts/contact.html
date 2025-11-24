@@ -49,10 +49,10 @@
     <li {% if not contact_subapp or contact_subapp == 'details' %}class="active"{% endif %}>
       <a href="{% url 'contacts:detail-details' selected_contact.id %}">Details</a>
     </li>
+    <li {% if contact_subapp == 'matters' %}class="active"{% endif %}>
+      <a href="{% url 'contacts:detail-matters' selected_contact.id %}">Matters</a>
+    </li>
     {% if selected_contact.client_status == 'Current' or selected_contact.client_status == 'Pending' or selected_contact.client_status == 'Former' %}
-      <li {% if contact_subapp == 'matters' %}class="active"{% endif %}>
-        <a href="{% url 'contacts:detail-matters' selected_contact.id %}">Matters</a>
-      </li>
       <li {% if contact_subapp == 'trust' %}class="active"{% endif %}>
         <a href="{% url 'contacts:detail-trust' selected_contact.id %}">Trust</a>
       </li>
