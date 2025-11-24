@@ -49,6 +49,7 @@ function initializeTaskSortable() {
         animation: 150,
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
+        // forceFallback: true, // Disable native drag-and-drop to remove cursor icon
 
         onEnd: function(evt) {
             // Collect all task IDs in the new order
@@ -126,31 +127,11 @@ style.textContent = `
     }
 
     .sortable-ghost {
-        background: transparent !important;
-        height: 2px !important;
-        border-top: 2px solid var(--stone-400) !important;
-        border-bottom: none !important;
+        opacity: 0.4;
     }
 
-    .sortable-ghost td {
-        border: none !important;
-        padding: 0 !important;
-        height: 0 !important;
-        background: transparent !important;
-        overflow: hidden !important;
-        font-size: 0 !important;
-        line-height: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    .sortable-ghost td * {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    .sortable-drag {
-        opacity: 1;
-        cursor: grabbing !important;
+    .sortable-chosen {
+        background-color: #f0f0f0;
     }
 
     .drag-handle {
