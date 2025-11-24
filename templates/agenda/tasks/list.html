@@ -88,16 +88,51 @@
       <tr>
         <th class="matter">
           <div class="matter-cell-content">
-            <i class="bi bi-grip-vertical drag-handle"></i>
+            <button class="btn-sort btn-drag-handle {% if current_order == 'custom_order' %}active{% endif %}"
+                    hx-target="#tasks"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'agenda:tasks-filter-sort' 'custom_order' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </button>
             <span>Matter</span>
+            <button class="btn-sort {% if current_order == 'matter__name' %}active{% endif %}"
+                    hx-target="#tasks"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'agenda:tasks-filter-sort' 'matter__name' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </button>
           </div>
         </th>
-        <th class="description">Description</th>
-        <th class="status">Status</th>
-        <th>User</th>
+        <th class="description">
+          Description
+          <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
+                  hx-target="#tasks"
+                  hx-swap="innerHTML"
+                  hx-post="{% url 'agenda:tasks-filter-sort' 'description' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </button>
+        </th>
+        <th class="status">
+          Status
+          <button class="btn-sort {% if current_order == 'status' %}active{% endif %}"
+                  hx-target="#tasks"
+                  hx-swap="innerHTML"
+                  hx-post="{% url 'agenda:tasks-filter-sort' 'status' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </button>
+        </th>
+        <th>
+          User
+          <button class="btn-sort {% if current_order == 'user__username' %}active{% endif %}"
+                  hx-target="#tasks"
+                  hx-swap="innerHTML"
+                  hx-post="{% url 'agenda:tasks-filter-sort' 'user__username' %}">
+            <i class="bi bi-chevron-expand"></i>
+          </button>
+        </th>
         <th>
           Due
-          <button class="btn-sort"
+          <button class="btn-sort {% if current_order == 'date_due' %}active{% endif %}"
                   hx-target="#tasks"
                   hx-swap="innerHTML"
                   hx-post="{% url 'agenda:tasks-filter-sort' 'date_due' %}">

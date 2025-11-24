@@ -348,7 +348,7 @@ def tasks_filter_default(request):
         "date_due_min": None,
         "matter": None,
         "user": request.user.id,
-        "order_by": "priority",
+        "order_by": "custom_order",
     }
     request.session["tasks_filter"] = filter_data
     request.session.modified = True
