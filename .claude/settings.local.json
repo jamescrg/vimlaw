@@ -14,7 +14,8 @@
       "Bash(black:*)",
       "Bash(flake8:*)",
       "Bash(python:*)",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(xargs ls:*)"
     ],
     "deny": []
   }

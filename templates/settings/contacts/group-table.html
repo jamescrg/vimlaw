@@ -52,7 +52,7 @@
                 <li>
                   <a class="dropdown-item"
                      hx-post="{% url 'settings:delete-group' group.id %}"
-                     hx-confirm="Are you sure you want to delete this group?">Delete</a>
+                     hx-confirm="Are you sure? This will also delete any contact relationships using this group.">Delete</a>
                 </li>
               </ul>
             </div>

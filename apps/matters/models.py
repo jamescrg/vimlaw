@@ -230,8 +230,8 @@ class Relationship(models.Model):
         on_delete=models.CASCADE,
     )
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
-    role = models.ForeignKey(Role, on_delete=models.PROTECT)
-    group = models.ForeignKey(Group, on_delete=models.PROTECT)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     class Meta:
         db_table = "app_matter_relationship"

@@ -2,7 +2,6 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.db import models
-from django.db.models import ProtectedError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
@@ -107,13 +106,8 @@ def edit_role(request, role_id):
 
 @login_required
 def delete_role(request, role_id):
-    try:
-        Role.objects.get(id=role_id).delete()
-        return HttpResponse(status=204, headers={"HX-Trigger": "roleListReload"})
-    except ProtectedError:
-        error_message = "Cannot delete role: it is in use by one or more relationships."
-        trigger = f'{{"showToast": {{"message": "{error_message}", "type": "error"}}}}'
-        return HttpResponse(status=200, headers={"HX-Trigger": trigger})
+    Role.objects.get(id=role_id).delete()
+    return HttpResponse(status=204, headers={"HX-Trigger": "roleListReload"})
 
 
 # Group views
@@ -190,15 +184,8 @@ def edit_group(request, group_id):
 
 @login_required
 def delete_group(request, group_id):
-    try:
-        Group.objects.get(id=group_id).delete()
-        return HttpResponse(status=204, headers={"HX-Trigger": "groupListReload"})
-    except ProtectedError:
-        error_message = (
-            "Cannot delete group: it is in use by one or more relationships."
-        )
-        trigger = f'{{"showToast": {{"message": "{error_message}", "type": "error"}}}}'
-        return HttpResponse(status=200, headers={"HX-Trigger": trigger})
+    Group.objects.get(id=group_id).delete()
+    return HttpResponse(status=204, headers={"HX-Trigger": "groupListReload"})
 
 
 @login_required
