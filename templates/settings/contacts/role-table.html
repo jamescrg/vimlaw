@@ -26,20 +26,13 @@
   <table class="table settings-table">
     <thead>
       <tr>
-        <th class="status-col">Status</th>
         <th>Name</th>
+        <th class="status-col">Status</th>
       </tr>
     </thead>
     <tbody>
       {% for role in roles %}
         <tr>
-          <td class="status-col">
-            {% if role.is_active %}
-              Active
-            {% else %}
-              Inactive
-            {% endif %}
-          </td>
           <td>
             <button class="button-link"
                     type="button"
@@ -60,6 +53,13 @@
                    hx-confirm="Are you sure you want to delete this role?">Delete</a>
               </li>
             </ul>
+          </td>
+          <td class="status-col">
+            {% if role.is_active %}
+              Active
+            {% else %}
+              Inactive
+            {% endif %}
           </td>
         </tr>
       {% empty %}

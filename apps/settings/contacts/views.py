@@ -1,7 +1,11 @@
+import json
+
 from django.contrib.auth.decorators import login_required
+from django.db import models
 from django.db.models import ProtectedError
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
 
 from apps.matters.models import Group, Role
 from apps.settings.contacts.forms import GroupForm, RoleForm
@@ -145,7 +149,11 @@ def add_group(request):
         form = GroupForm(request.POST)
 
         if form.is_valid():
-            form.save()
+            group = form.save(commit=False)
+            # Auto-assign order: new groups go to the end
+            max_order = Group.objects.aggregate(models.Max("order"))["order__max"] or 0
+            group.order = max_order + 1
+            group.save()
 
             return HttpResponse(status=204, headers={"HX-Trigger": "groupListReload"})
     else:
@@ -191,3 +199,28 @@ def delete_group(request, group_id):
         )
         trigger = f'{{"showToast": {{"message": "{error_message}", "type": "error"}}}}'
         return HttpResponse(status=200, headers={"HX-Trigger": trigger})
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_group_order(request):
+    """Update order for groups based on drag-and-drop reordering."""
+    try:
+        data = json.loads(request.body)
+        group_ids = data.get("group_ids", [])
+
+        if not group_ids:
+            return JsonResponse(
+                {"success": False, "error": "No group IDs provided"}, status=400
+            )
+
+        # Assign sequential order values
+        for index, group_id in enumerate(group_ids):
+            Group.objects.filter(id=group_id).update(order=index + 1)
+
+        return JsonResponse({"success": True})
+
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)

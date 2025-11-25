@@ -17,7 +17,7 @@ class RoleForm(forms.ModelForm):
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Group
-        fields = ["name", "order", "is_active"]
+        fields = ["name", "is_active"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

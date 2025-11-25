@@ -57,7 +57,7 @@ Settings Contacts - Two Column Layout
 
 .settings-contacts-container {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   align-items: flex-start;
 }
 
@@ -82,7 +82,18 @@ Settings Contacts - Two Column Layout
   width: 70px;
 }
 
-.settings-table .order-col {
-  width: 60px;
-  text-align: right;
+/* Groups table - name cell with drag handle */
+.groups-table .name-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.groups-table .drag-handle {
+  cursor: grab;
+  color: var(--stone-400);
+}
+
+.groups-table .drag-handle:active {
+  cursor: grabbing;
 }

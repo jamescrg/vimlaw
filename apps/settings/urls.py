@@ -101,4 +101,9 @@ urlpatterns = [
         contact_urls.delete_group,
         name="delete-group",
     ),
+    path(
+        "settings/contacts/groups/update-order/",
+        contact_urls.update_group_order,
+        name="update-group-order",
+    ),
 ]
