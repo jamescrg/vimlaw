@@ -11,7 +11,6 @@ from apps.intakes.filter_intakes import IntakeFilter
 from apps.intakes.forms import IntakeForm, NoteForm
 from apps.intakes.intakes import get_table_data
 from apps.intakes.models import Intake, Note, UserIntakeView
-from config.helpers import format_phone
 
 
 @login_required
@@ -162,7 +161,6 @@ def add(request):
         if form.is_valid():
             intake = form.save(commit=False)
             intake.user_id = request.user.id
-            intake.phone = format_phone(intake.phone)
             intake.save()
 
             return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
@@ -190,7 +188,6 @@ def edit(request, id):
         form = IntakeForm(request.POST, instance=intake, use_required_attribute=False)
         if form.is_valid():
             intake = form.save(commit=False)
-            intake.phone = format_phone(intake.phone)
             intake.save()
             return HttpResponse(
                 status=204, headers={"HX-Trigger": "intakeDetailChanged"}

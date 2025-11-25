@@ -11,7 +11,7 @@ class Intake(models.Model):
     disputed_property = models.CharField(max_length=255, blank=True, null=True)
     value = models.IntegerField(blank=True, null=True)
     phone = models.CharField(max_length=50, blank=True, null=True)
-    email = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(max_length=100, blank=True, null=True)
     practice_area = models.CharField(max_length=50, null=True)
     source = models.CharField(max_length=50, null=True)
     status = models.CharField(max_length=50, default="Open")

@@ -51,20 +51,50 @@ def dictfetchall(cursor):
     return [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
 
 
-def format_phone(original):
-    if original:
-        new = (
-            original.replace(" ", "")
-            .replace("-", "")
-            .replace(".", "")
-            .replace("(", "")
-            .replace(")", "")
-        )
-        if new.isnumeric() and len(new) == 10:
-            # return f'({new[:3]}) {new[3:6]}-{new[6:]}'
-            return f"{new[:3]}.{new[3:6]}.{new[6:]}"
-        else:
-            return original
+def normalize_phone(value):
+    """
+    Normalize phone to raw digits with optional extension.
+    Returns (normalized_value, is_valid).
+
+    Examples:
+        "(406) 363-1234" -> ("4063631234", True)
+        "1-406-363-1234" -> ("4063631234", True)
+        "406.363.1234 x123" -> ("4063631234x123", True)
+        "invalid" -> ("invalid", False)
+    """
+    if not value:
+        return value, True
+
+    value = value.strip()
+
+    # Extract extension if present
+    extension = ""
+    ext_patterns = [" x", " ext", " ext.", ","]
+    lower = value.lower()
+    for pattern in ext_patterns:
+        if pattern in lower:
+            idx = lower.index(pattern)
+            ext_part = value[idx:].lower()
+            # Extract just the digits from extension
+            ext_digits = "".join(c for c in ext_part if c.isdigit())
+            if ext_digits:
+                extension = f"x{ext_digits}"
+            value = value[:idx]
+            break
+
+    # Strip all non-numeric characters
+    digits = "".join(c for c in value if c.isdigit())
+
+    # Handle +1 country code
+    if len(digits) == 11 and digits.startswith("1"):
+        digits = digits[1:]
+
+    # Validate: must be exactly 10 digits
+    if len(digits) == 10:
+        return digits + extension, True
+
+    # Invalid - return original
+    return value.strip() + (" " + extension if extension else ""), False
 
 
 class MultipleOrderingFilter(django_filters.OrderingFilter):

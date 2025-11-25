@@ -9,7 +9,6 @@ from apps.contacts.models import Contact
 from apps.folders.models import Folder
 from apps.intakes.models import Intake
 from apps.matters.models import Matter, Relationship, Role
-from config.helpers import format_phone
 
 
 @login_required
@@ -72,9 +71,6 @@ def add(request):
             # initialize the contact
             contact = form.save(commit=False)
             contact.user = request.user
-            contact.phone1 = format_phone(contact.phone1)
-            contact.phone2 = format_phone(contact.phone2)
-            contact.phone3 = format_phone(contact.phone3)
 
             # link to its intake, if applicable
             intake_id = request.POST.get("intake_id")
@@ -152,9 +148,6 @@ def edit(request, id):
         if form.is_valid():
             contact = form.save(commit=False)
             contact.user_id = request.user.id
-            contact.phone1 = format_phone(contact.phone1)
-            contact.phone2 = format_phone(contact.phone2)
-            contact.phone3 = format_phone(contact.phone3)
 
             # if the contact is saved in google, update the changes in google
             if google.check_credentials() and contact.google_id:

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 
+from config.helpers import normalize_phone
 from config.settings import CustomFormRendererCompact
 
 from .models import Intake, Note
@@ -117,20 +117,13 @@ class IntakeForm(forms.ModelForm):
         return disputed_property
 
     def clean_phone(self):
-        phone = self.cleaned_data["phone"]
-        if phone:
-            if len(phone) >= 20:
-                raise ValidationError("Phone number must be fewer than 20 characters.")
-        return phone
-
-    def clean_email(self):
-        email = self.cleaned_data["email"]
-        if email:
-            try:
-                validate_email(email)
-            except (ValidationError, AttributeError):
-                raise ValidationError("Invalid email address.")
-        return email
+        value = self.cleaned_data.get("phone")
+        if value:
+            normalized, is_valid = normalize_phone(value)
+            if not is_valid:
+                raise ValidationError("Enter a valid 10-digit US phone number.")
+            return normalized
+        return value
 
 
 class NoteForm(forms.ModelForm):

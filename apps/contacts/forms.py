@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 
+from config.helpers import normalize_phone
 from config.settings import CustomFormRendererCompact
 
 from .models import Contact
@@ -106,34 +106,31 @@ class ContactForm(forms.ModelForm):
         return address
 
     def clean_phone1(self):
-        phone1 = self.cleaned_data["phone1"]
-        if phone1:
-            if len(phone1) >= 20:
-                raise ValidationError("Phone number must be fewer than 20 characters.")
-        return phone1
+        value = self.cleaned_data.get("phone1")
+        if value:
+            normalized, is_valid = normalize_phone(value)
+            if not is_valid:
+                raise ValidationError("Enter a valid 10-digit US phone number.")
+            return normalized
+        return value
 
     def clean_phone2(self):
-        phone2 = self.cleaned_data["phone2"]
-        if phone2:
-            if len(phone2) >= 20:
-                raise ValidationError("Phone number must be fewer than 20 characters.")
-        return phone2
+        value = self.cleaned_data.get("phone2")
+        if value:
+            normalized, is_valid = normalize_phone(value)
+            if not is_valid:
+                raise ValidationError("Enter a valid 10-digit US phone number.")
+            return normalized
+        return value
 
     def clean_phone3(self):
-        phone3 = self.cleaned_data["phone3"]
-        if phone3:
-            if len(phone3) >= 20:
-                raise ValidationError("Phone number must be fewer than 20 characters.")
-        return phone3
-
-    def clean_email(self):
-        email = self.cleaned_data["email"]
-        if email:
-            try:
-                validate_email(email)
-            except (ValidationError, AttributeError):
-                raise ValidationError("Invalid email address.")
-        return email
+        value = self.cleaned_data.get("phone3")
+        if value:
+            normalized, is_valid = normalize_phone(value)
+            if not is_valid:
+                raise ValidationError("Enter a valid 10-digit US phone number.")
+            return normalized
+        return value
 
     def clean_notes(self):
         notes = self.cleaned_data["notes"]

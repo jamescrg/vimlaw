@@ -34,17 +34,26 @@ def test_intake_address(intake_data):
 
 
 def test_intake_phone_and_email(intake_data):
-    data = intake_data
-    data["phone"] = "0" * 21
-    form = IntakeForm(intake_data)
+    # Test invalid phone number (not 10 digits)
+    data = intake_data.copy()
+    data["phone"] = "123"  # Too short
+    form = IntakeForm(data)
     assert not form.is_valid()
-    assert "must be fewer" in form.errors["phone"][0]
+    assert "10-digit" in form.errors["phone"][0]
 
-    data = intake_data
-    data["email"] = "s" * 10
-    form = IntakeForm(intake_data)
+    # Test valid phone number normalizes to digits
+    data = intake_data.copy()
+    data["phone"] = "(406) 363-1234"
+    form = IntakeForm(data)
+    assert form.is_valid()
+    assert form.cleaned_data["phone"] == "4063631234"
+
+    # Test invalid email
+    data = intake_data.copy()
+    data["email"] = "not-an-email"
+    form = IntakeForm(data)
     assert not form.is_valid()
-    assert "Invalid email" in form.errors["email"][0]
+    assert "email" in form.errors["email"][0].lower()
 
 
 def test_note_form_valid(note_data):
