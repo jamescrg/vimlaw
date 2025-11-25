@@ -9,13 +9,28 @@ from apps.settings.contacts.forms import GroupForm, RoleForm
 
 @login_required
 def contacts_index(request):
-    roles = Role.objects.all().order_by("name")
+    # Get filter from session, default to "active"
+    group_filter = request.session.get("settings_group_filter", "active")
+    role_filter = request.session.get("settings_role_filter", "active")
+
     groups = Group.objects.all().order_by("order")
+    if group_filter == "active":
+        groups = groups.filter(is_active=True)
+    elif group_filter == "inactive":
+        groups = groups.filter(is_active=False)
+
+    roles = Role.objects.all().order_by("name")
+    if role_filter == "active":
+        roles = roles.filter(is_active=True)
+    elif role_filter == "inactive":
+        roles = roles.filter(is_active=False)
 
     context = {
         "subapp": "contacts",
         "roles": roles,
         "groups": groups,
+        "group_filter": group_filter,
+        "role_filter": role_filter,
     }
 
     return render(request, "settings/contacts/index.html", context)
@@ -23,13 +38,26 @@ def contacts_index(request):
 
 @login_required
 def role_list(request):
+    role_filter = request.session.get("settings_role_filter", "active")
+
     roles = Role.objects.all().order_by("name")
+    if role_filter == "active":
+        roles = roles.filter(is_active=True)
+    elif role_filter == "inactive":
+        roles = roles.filter(is_active=False)
 
     context = {
         "roles": roles,
+        "role_filter": role_filter,
     }
 
     return render(request, "settings/contacts/role-table.html", context)
+
+
+@login_required
+def role_filter(request, status):
+    request.session["settings_role_filter"] = status
+    return HttpResponse(status=204, headers={"HX-Trigger": "roleListReload"})
 
 
 @login_required
@@ -89,13 +117,26 @@ def delete_role(request, role_id):
 
 @login_required
 def group_list(request):
+    group_filter = request.session.get("settings_group_filter", "active")
+
     groups = Group.objects.all().order_by("order")
+    if group_filter == "active":
+        groups = groups.filter(is_active=True)
+    elif group_filter == "inactive":
+        groups = groups.filter(is_active=False)
 
     context = {
         "groups": groups,
+        "group_filter": group_filter,
     }
 
     return render(request, "settings/contacts/group-table.html", context)
+
+
+@login_required
+def group_filter(request, status):
+    request.session["settings_group_filter"] = status
+    return HttpResponse(status=204, headers={"HX-Trigger": "groupListReload"})
 
 
 @login_required

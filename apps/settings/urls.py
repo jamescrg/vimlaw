@@ -68,6 +68,11 @@ urlpatterns = [
     # Contacts (Groups and Roles)
     path("settings/contacts/", contact_urls.contacts_index, name="contacts-index"),
     path("settings/contacts/roles/", contact_urls.role_list, name="role-list"),
+    path(
+        "settings/contacts/roles/filter/<str:status>/",
+        contact_urls.role_filter,
+        name="role-filter",
+    ),
     path("settings/contacts/roles/add/", contact_urls.add_role, name="add-role"),
     path(
         "settings/contacts/roles/edit/<int:role_id>/",
@@ -80,6 +85,11 @@ urlpatterns = [
         name="delete-role",
     ),
     path("settings/contacts/groups/", contact_urls.group_list, name="group-list"),
+    path(
+        "settings/contacts/groups/filter/<str:status>/",
+        contact_urls.group_filter,
+        name="group-filter",
+    ),
     path("settings/contacts/groups/add/", contact_urls.add_group, name="add-group"),
     path(
         "settings/contacts/groups/edit/<int:group_id>/",

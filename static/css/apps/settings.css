@@ -50,3 +50,39 @@ Miscellaneous
   margin-top: 1rem;
   color: var(--orange-800);
 }
+
+/* ==========================================================================
+Settings Contacts - Two Column Layout
+========================================================================== */
+
+.settings-contacts-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.settings-contacts-column {
+  flex: 1;
+  max-width: 400px;
+}
+
+@media (max-width: 768px) {
+  .settings-contacts-container {
+    flex-direction: column;
+  }
+
+  .settings-contacts-column {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* Settings Table */
+.settings-table .status-col {
+  width: 70px;
+}
+
+.settings-table .order-col {
+  width: 60px;
+  text-align: right;
+}

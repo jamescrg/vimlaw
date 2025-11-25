@@ -2,10 +2,12 @@
 {% block subcontent %}
   <div class="settings-contacts-container">
     <div id="groups"
+         class="settings-contacts-column"
          hx-trigger="groupListReload from:body"
          hx-get="{% url 'settings:group-list' %}"
          hx-target="this">{% include "settings/contacts/group-table.html" %}</div>
     <div id="roles"
+         class="settings-contacts-column"
          hx-trigger="roleListReload from:body"
          hx-get="{% url 'settings:role-list' %}"
          hx-target="this">{% include "settings/contacts/role-table.html" %}</div>

@@ -216,8 +216,8 @@ def delete(request, id):
 @login_required
 def assign(request, id):
     matters = Matter.objects.filter(status="Open").order_by("name")
-    groups = Group.objects.all().order_by("order")
-    roles = Role.objects.all().order_by("name")
+    groups = Group.objects.filter(is_active=True).order_by("order")
+    roles = Role.objects.filter(is_active=True).order_by("name")
 
     context = {
         "app": "contacts",

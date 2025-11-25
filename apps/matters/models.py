@@ -203,6 +203,7 @@ class Matter(models.Model):
 class Group(models.Model):
     name = models.CharField(max_length=50)
     order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -214,6 +215,7 @@ class Group(models.Model):
 
 class Role(models.Model):
     name = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.name}"

@@ -7,7 +7,7 @@ from config.settings import CustomFormRendererCompact
 class RoleForm(forms.ModelForm):
     class Meta:
         model = Role
-        fields = ["name"]
+        fields = ["name", "is_active"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,7 +17,7 @@ class RoleForm(forms.ModelForm):
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Group
-        fields = ["name", "order"]
+        fields = ["name", "order", "is_active"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -191,9 +191,11 @@ def assign_results(request, id):
 def assign_role(request, matter_id, contact_id):
     matter = get_object_or_404(Matter, pk=matter_id)
     contact = get_object_or_404(Contact, pk=contact_id)
-    groups = Group.objects.all()
-    roles = Role.objects.exclude(name__in=["Client", "Client (Invoicing)"]).order_by(
-        "name"
+    groups = Group.objects.filter(is_active=True)
+    roles = (
+        Role.objects.filter(is_active=True)
+        .exclude(name__in=["Client", "Client (Invoicing)"])
+        .order_by("name")
     )
 
     context = {
@@ -228,9 +230,11 @@ def assign_edit(request, id):
 
     matter = get_object_or_404(Matter, pk=relationship.matter_id)
     contact = get_object_or_404(Contact, pk=relationship.contact_id)
-    groups = Group.objects.all()
-    roles = Role.objects.exclude(name__in=["Client", "Client (Invoicing)"]).order_by(
-        "name"
+    groups = Group.objects.filter(is_active=True)
+    roles = (
+        Role.objects.filter(is_active=True)
+        .exclude(name__in=["Client", "Client (Invoicing)"])
+        .order_by("name")
     )
 
     context = {
