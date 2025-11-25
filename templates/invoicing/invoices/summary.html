@@ -10,8 +10,12 @@
       <td class="numeric">${{ total_expenses|floatformat:2|intcomma }}</td>
     </tr>
     <tr>
-      <th>Total Charges</th>
-      <td class="numeric total">${{ total|floatformat:2|intcomma }}</td>
+      <td>Total Charges</td>
+      <td class="numeric">${{ total|floatformat:2|intcomma }}</td>
+    </tr>
+    <tr>
+      <th>Total Amount Due</th>
+      <td class="numeric total">${{ total_amount_due|floatformat:2|intcomma }}</td>
     </tr>
   </table>
 </div>

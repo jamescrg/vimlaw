@@ -129,8 +129,9 @@ th {
  Empty Table Message
 ========================================================================== */
 
-.empty-message {
-  color: var(--stone-500);
+td.empty-message {
+  padding: 1.5rem !important;
+  color: var(--stone-600);
   font-style: italic;
   text-align: center;
 }

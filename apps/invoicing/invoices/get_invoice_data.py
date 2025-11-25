@@ -19,6 +19,7 @@ def get_invoice_data(request):
     total_fees = sum(invoice.value["net_fees"] for invoice in invoices)
     total_expenses = sum(invoice.value["net_expenses"] for invoice in invoices)
     total = total_fees + total_expenses
+    total_amount_due = sum(invoice.amount_remaining for invoice in invoices)
 
     pagination = CustomPaginator(
         invoices, per_page=20, request=request, session_key="invoices_pagination"
@@ -40,6 +41,7 @@ def get_invoice_data(request):
         "total_fees": total_fees,
         "total_expenses": total_expenses,
         "total": total,
+        "total_amount_due": total_amount_due,
         "status_options": INVOICE_STATUS,
         "selected_status": selected_status,
         "current_order": current_order,
