@@ -12,7 +12,7 @@
 
 .navbar li {
   display: inline-block;
-  padding: 0.5rem 1.5rem 0.5rem 1.5rem;
+  padding: 0.6rem 1.5rem 0.4rem 1.5rem;
 }
 
 .navbar a {
@@ -46,8 +46,7 @@
 }
 
 .navbar-sub li {
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 0.5rem 1rem 0.4rem 1rem;
 }
 
 .navbar-sub .active {
