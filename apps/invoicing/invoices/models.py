@@ -92,18 +92,42 @@ class Invoice(models.Model):
 
     @property
     def value(self):
-        from apps.activity.time.models import TimeEntry
-
-        time_entries = TimeEntry.objects.filter(invoice=self.id)
-        gross_fees = sum(entry.fee for entry in time_entries)
-        comp_fees = sum(entry.fee for entry in time_entries.filter(comp=1))
-        net_fees = gross_fees - comp_fees
+        from django.db.models import Case, DecimalField, F, Sum, Value, When
 
         from apps.activity.expenses.models import ExpenseEntry
+        from apps.activity.time.models import TimeEntry
 
-        expense_entries = ExpenseEntry.objects.filter(invoice=self.id)
-        gross_expenses = sum(entry.amount for entry in expense_entries)
-        comp_expenses = sum(entry.amount for entry in expense_entries.filter(comp=1))
+        # Aggregate fees using database-level calculation
+        fee_result = TimeEntry.objects.filter(invoice=self.id).aggregate(
+            gross_fees=Sum(
+                F("hours") * F("rate"),
+                output_field=DecimalField(max_digits=10, decimal_places=2),
+            ),
+            comp_fees=Sum(
+                Case(
+                    When(comp=1, then=F("hours") * F("rate")),
+                    default=Value(0),
+                    output_field=DecimalField(max_digits=10, decimal_places=2),
+                )
+            ),
+        )
+        gross_fees = fee_result["gross_fees"] or 0
+        comp_fees = fee_result["comp_fees"] or 0
+        net_fees = gross_fees - comp_fees
+
+        # Aggregate expenses using database-level calculation
+        expense_result = ExpenseEntry.objects.filter(invoice=self.id).aggregate(
+            gross_expenses=Sum("amount"),
+            comp_expenses=Sum(
+                Case(
+                    When(comp=1, then=F("amount")),
+                    default=Value(0),
+                    output_field=DecimalField(max_digits=10, decimal_places=2),
+                )
+            ),
+        )
+        gross_expenses = expense_result["gross_expenses"] or 0
+        comp_expenses = expense_result["comp_expenses"] or 0
         net_expenses = gross_expenses - comp_expenses
 
         pre_discount_total = net_fees + net_expenses

@@ -67,23 +67,57 @@ class Matter(models.Model):
 
     @property
     def value(self):
+        from django.db.models import Case, DecimalField, F, Sum, Value, When
+
         from apps.activity.expenses.models import ExpenseEntry
         from apps.activity.time.models import TimeEntry
         from apps.invoicing.invoices.models import Invoice
         from apps.invoicing.payments.models import Payment
 
-        # total fees
-        time_entries = TimeEntry.objects.filter(matter=self)
-        gross_fees = sum(entry.fee for entry in time_entries)
-        comp_fees = sum(entry.fee for entry in time_entries.filter(comp=1))
+        # Helper to build fee/expense aggregation dict
+        def aggregate_fees(queryset):
+            """Aggregate time entry fees using database-level calculation."""
+            result = queryset.aggregate(
+                gross_fees=Sum(
+                    F("hours") * F("rate"),
+                    output_field=DecimalField(max_digits=10, decimal_places=2),
+                ),
+                comp_fees=Sum(
+                    Case(
+                        When(comp=1, then=F("hours") * F("rate")),
+                        default=Value(0),
+                        output_field=DecimalField(max_digits=10, decimal_places=2),
+                    )
+                ),
+            )
+            gross = result["gross_fees"] or 0
+            comp = result["comp_fees"] or 0
+            return gross, comp
+
+        def aggregate_expenses(queryset):
+            """Aggregate expense amounts using database-level calculation."""
+            result = queryset.aggregate(
+                gross_expenses=Sum("amount"),
+                comp_expenses=Sum(
+                    Case(
+                        When(comp=1, then=F("amount")),
+                        default=Value(0),
+                        output_field=DecimalField(max_digits=10, decimal_places=2),
+                    )
+                ),
+            )
+            gross = result["gross_expenses"] or 0
+            comp = result["comp_expenses"] or 0
+            return gross, comp
+
+        # Total fees and expenses (all entries for this matter)
+        gross_fees, comp_fees = aggregate_fees(TimeEntry.objects.filter(matter=self))
         net_fees = gross_fees - comp_fees
 
-        # total expenses
-        expenses = ExpenseEntry.objects.filter(matter=self)
-        gross_expenses = sum(expense.amount for expense in expenses)
-        comp_expenses = sum(expense.amount for expense in expenses.filter(comp=1))
+        gross_expenses, comp_expenses = aggregate_expenses(
+            ExpenseEntry.objects.filter(matter=self)
+        )
         net_expenses = gross_expenses - comp_expenses
-        net_fees_and_expenses = net_fees + net_expenses
 
         total = {
             "gross_fees": gross_fees,
@@ -92,38 +126,54 @@ class Matter(models.Model):
             "gross_expenses": gross_expenses,
             "comp_expenses": comp_expenses,
             "net_expenses": net_expenses,
-            "net_fees_and_expenses": net_fees_and_expenses,
+            "net_fees_and_expenses": net_fees + net_expenses,
         }
 
-        # unbilled fees
-        time_entries = time_entries.filter(matter=self, entered=0, invoice__isnull=True)
-        gross_fees = sum(entry.fee for entry in time_entries)
-        comp_fees = sum(entry.fee for entry in time_entries.filter(comp=1))
-        net_fees = gross_fees - comp_fees
+        # Unbilled fees and expenses (entered=0, no invoice)
+        unbilled_gross_fees, unbilled_comp_fees = aggregate_fees(
+            TimeEntry.objects.filter(matter=self, entered=0, invoice__isnull=True)
+        )
+        unbilled_net_fees = unbilled_gross_fees - unbilled_comp_fees
 
-        # unbilled expenses
-        expenses = expenses.filter(matter=self, entered=0, invoice__isnull=True)
-        gross_expenses = sum(expense.amount for expense in expenses)
-        comp_expenses = sum(expense.amount for expense in expenses.filter(comp=1))
-        net_expenses = gross_expenses - comp_expenses
-        net_fees_and_expenses = net_fees + net_expenses
+        unbilled_gross_expenses, unbilled_comp_expenses = aggregate_expenses(
+            ExpenseEntry.objects.filter(matter=self, entered=0, invoice__isnull=True)
+        )
+        unbilled_net_expenses = unbilled_gross_expenses - unbilled_comp_expenses
 
         unbilled = {
-            "gross_fees": gross_fees,
-            "comp_fees": comp_fees,
-            "net_fees": net_fees,
-            "gross_expenses": gross_expenses,
-            "comp_expenses": comp_expenses,
-            "net_expenses": net_expenses,
-            "net_fees_and_expenses": net_fees_and_expenses,
+            "gross_fees": unbilled_gross_fees,
+            "comp_fees": unbilled_comp_fees,
+            "net_fees": unbilled_net_fees,
+            "gross_expenses": unbilled_gross_expenses,
+            "comp_expenses": unbilled_comp_expenses,
+            "net_expenses": unbilled_net_expenses,
+            "net_fees_and_expenses": unbilled_net_fees + unbilled_net_expenses,
         }
 
-        billed = {}
-        for key in total.keys():
-            billed[key] = total[key] - unbilled[key]
+        # Billed = total - unbilled
+        billed = {key: total[key] - unbilled[key] for key in total.keys()}
 
-        invoices = Invoice.objects.filter(matter=self, status__in=["SENT", "PAID"])
-        billed_invoices = sum(invoice.value["final_total"] for invoice in invoices)
+        # Invoice totals - aggregate from time/expense entries on SENT/PAID invoices
+        invoice_fees, invoice_comp_fees = aggregate_fees(
+            TimeEntry.objects.filter(matter=self, invoice__status__in=["SENT", "PAID"])
+        )
+        invoice_expenses, invoice_comp_expenses = aggregate_expenses(
+            ExpenseEntry.objects.filter(
+                matter=self, invoice__status__in=["SENT", "PAID"]
+            )
+        )
+        invoice_discount = (
+            Invoice.objects.filter(matter=self, status__in=["SENT", "PAID"]).aggregate(
+                total_discount=Sum("discount")
+            )["total_discount"]
+            or 0
+        )
+
+        billed_invoices = (
+            (invoice_fees - invoice_comp_fees)
+            + (invoice_expenses - invoice_comp_expenses)
+            - invoice_discount
+        )
 
         payment_sum = (
             Payment.objects.filter(matter=self).aggregate(models.Sum("amount"))[
@@ -132,22 +182,18 @@ class Matter(models.Model):
             or 0
         )
 
-        invoice_due = billed_invoices - payment_sum
-
         invoices = {
             "billed": billed_invoices,
             "payment_sum": payment_sum,
-            "due": invoice_due,
+            "due": billed_invoices - payment_sum,
         }
 
-        value = {
+        return {
             "total": total,
             "unbilled": unbilled,
             "billed": billed,
             "invoices": invoices,
         }
-
-        return value
 
 
 class Role(models.Model):
