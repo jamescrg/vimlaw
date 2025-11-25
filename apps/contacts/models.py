@@ -32,3 +32,8 @@ class Contact(models.Model):
 
     class Meta:
         db_table = "app_contact"
+        indexes = [
+            models.Index(fields=["client_status"]),
+            models.Index(fields=["user"]),
+            models.Index(fields=["folder"]),
+        ]

@@ -23,6 +23,10 @@ class ExpenseEntry(models.Model):
 
     class Meta:
         db_table = "app_expenses"
+        indexes = [
+            models.Index(fields=["date"]),
+            models.Index(fields=["matter"]),
+        ]
 
     @property
     def slug(self):

@@ -31,6 +31,9 @@ class Event(models.Model):
 
     class Meta:
         db_table = "app_event"
+        indexes = [
+            models.Index(fields=["matter"]),
+        ]
 
 
 class CalendarSyncState(models.Model):

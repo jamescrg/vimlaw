@@ -25,6 +25,10 @@ class Matter(models.Model):
 
     class Meta:
         db_table = "app_matter"
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["client"]),
+        ]
 
     def save(self, *args, **kwargs):
         if self.status == "Closed":

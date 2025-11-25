@@ -23,6 +23,10 @@ class TimeEntry(models.Model):
 
     class Meta:
         db_table = "app_activity"
+        indexes = [
+            models.Index(fields=["date"]),
+            models.Index(fields=["matter"]),
+        ]
 
     @property
     def fee(self):
