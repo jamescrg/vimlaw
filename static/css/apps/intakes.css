@@ -7,6 +7,10 @@ List View
   width: 100%;
 }
 
+.intake-details td {
+  white-space: normal;
+}
+
 .intake-details .strong {
   width: 10.5rem;
 }

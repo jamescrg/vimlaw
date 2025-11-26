@@ -33,20 +33,26 @@ def get_table_data(request):
     )
     view_times = {v["intake_id"]: v["last_viewed_at"] for v in user_views}
 
-    # Check each intake for new notes
+    # Check each intake for new notes by other users
     intake_list = pagination.get_object_list()
     for intake in intake_list:
         # Only check for badges on open intakes
         if intake.status == "Open":
             last_viewed = view_times.get(intake.id)
             if last_viewed:
-                # Check if there are notes created after last view (precise datetime)
-                intake.has_new_notes = Note.objects.filter(
-                    intake=intake, created_at__gt=last_viewed
-                ).exists()
+                # Check if there are notes created after last view by other users
+                intake.has_new_notes = (
+                    Note.objects.filter(intake=intake, created_at__gt=last_viewed)
+                    .exclude(user=request.user)
+                    .exists()
+                )
             else:
-                # Never viewed - always show badge
-                intake.has_new_notes = True
+                # Never viewed - show badge if there are notes by other users
+                intake.has_new_notes = (
+                    Note.objects.filter(intake=intake)
+                    .exclude(user=request.user)
+                    .exists()
+                )
         else:
             intake.has_new_notes = False
 
