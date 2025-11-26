@@ -45,6 +45,7 @@ Activity list table
 
 .activity .actions {
   min-width: 18rem;
+  white-space: normal;
 }
 
 .activity .hours {
