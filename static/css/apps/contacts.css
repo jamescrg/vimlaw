@@ -238,6 +238,10 @@
   line-height: 1.6;
 }
 
+.contact-notes :last-child {
+  margin-bottom: 0;
+}
+
 /* Matters Tab */
 
 .contact-matters-list {

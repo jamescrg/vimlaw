@@ -160,6 +160,18 @@ class ContactForm(forms.ModelForm):
                 raise ValidationError("Website URL must be fewer than 255 characters.")
         return website
 
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email:
+            return email.lower()
+        return email
+
+    def clean_email2(self):
+        email = self.cleaned_data.get("email2")
+        if email:
+            return email.lower()
+        return email
+
     def clean_notes(self):
         notes = self.cleaned_data["notes"]
         if notes:

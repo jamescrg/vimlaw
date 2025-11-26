@@ -4,6 +4,7 @@
     <h2>Related Contacts</h2>
     <div class="filter-tools">
       <a href="#"
+         class="icon-green"
          hx-get="{% url 'matters:contacts-assign' id=matter.id %}"
          hx-target="#htmx-modal-container"
          hx-trigger="click"
