@@ -3,7 +3,7 @@ List View
 ========================================================================== */
 
 .invoices {
-  min-width: 82rem;
+  min-width: 72.5rem;
 }
 
 .invoices .invoice-id {
@@ -11,7 +11,7 @@ List View
 }
 
 .invoices .date {
-  width: 8.75rem;
+  width: 9.5rem;
 }
 
 .invoices .matter {
@@ -20,16 +20,16 @@ List View
 
 .invoices .amount {
   text-align: right;
-  width: 9.5rem;
+  width: 7.5rem;
 }
 
 .invoices .status {
-  width: 9.5rem;
+  width: 7rem;
 }
 
-.download {
+.invoices .download {
   text-align: center;
-  width: 3.25rem;
+  width: 3rem;
 }
 
 .invoices-delete,
@@ -97,15 +97,19 @@ Payments
 ========================================================================== */
 
 .payments {
-  min-width: 77.5rem;
+  min-width: 74rem;
 }
 
 .payments .id {
   width: 5rem;
 }
 
+.payments .date {
+  width: 7.5rem;
+}
+
 .payments .matter {
-  width: 19rem;
+  width: 16rem;
 }
 
 .payments .method {
@@ -116,13 +120,9 @@ Payments
   min-width: 18rem;
 }
 
-.payments .date {
-  width: 7.5rem;
-}
-
 .payments .amount {
   text-align: right;
-  width: 9.5rem;
+  width: 9rem;
 }
 
 /* ==========================================================================
@@ -130,28 +130,28 @@ Credits
 ========================================================================== */
 
 .credits {
-  min-width: 68rem;
+  min-width: 65rem;
 }
 
 .credits .id {
   width: 5rem;
 }
 
+.credits .date {
+  width: 7.5rem;
+}
+
 .credits .matter {
-  width: 19rem;
+  width: 16rem;
 }
 
 .credits .detail {
   min-width: 18rem;
 }
 
-.credits .date {
-  width: 7.5rem;
-}
-
 .credits .amount {
   text-align: right;
-  width: 9.5rem;
+  width: 9rem;
 }
 
 /* ==========================================================================

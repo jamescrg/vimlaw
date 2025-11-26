@@ -55,7 +55,7 @@
           <tr>
             <td class="date">{{ transaction.date|date:'Y-m-d' }}</td>
             <td class="type">{{ transaction.transaction_type }}</td>
-            <td>
+            <td class="description dropdown-cell">
               {# invoices -------------------------------------- #}
               {% if 'Invoice' in transaction.description %}
                 <a href="{% url 'invoicing:invoices-detail-index' transaction.id %}">{{ transaction.description }}</a>

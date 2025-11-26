@@ -1,7 +1,7 @@
 {% load humanize %}
 <tr id="matter-{{ matter.id }}">
   <td class="name">
-    <a href={% url 'matters:contacts' id=matter.id %}>{{ matter.name|truncatechars:32 }}</a>
+    <a href={% url 'matters:contacts' id=matter.id %}>{{ matter.name }}</a>
   </td>
   <td id="show-matter-work-status-{{ matter.id }}">
     <a class="button-link show-status-form-button"

@@ -45,7 +45,7 @@ Summary and History
 }
 
 .trust-transactions {
-  min-width: 62rem;
+  min-width: 79rem;
   width: 100%;
 }
 
@@ -75,12 +75,12 @@ Summary and History
 
 .trust-transactions .amount {
   text-align: right;
-  width: 7.5rem;
+  width: 12rem;
 }
 
 .trust-transactions .check {
   text-align: center;
-  width: 2.75rem;
+  width: 3rem;
 }
 
 .table-container .id {

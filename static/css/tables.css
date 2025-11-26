@@ -16,6 +16,10 @@
   min-width: 75rem;
 }
 
+.width100 {
+  width: 100%;
+}
+
 .table-column-fluid {
     /* No 'width' property */
     min-width: 10rem; /* Ensures a minimum space */
@@ -26,15 +30,20 @@ th {
   font-weight: 500;
   padding: 0.5rem 1rem !important;
   vertical-align: top;
+  white-space: nowrap;
 }
 
 td {
   border: solid 1px var(--stone-200);
   overflow: hidden;
   padding: 0.5rem 1rem !important;
-  text-overflow: ellipsis; /* Puts "..." at the end */
+  text-overflow: ellipsis;
   vertical-align: top;
-  white-space: nowrap;     /* Prevents wrapping to keep content on one line */
+  white-space: nowrap;
+}
+
+td.dropdown-cell {
+  overflow: visible;
 }
 
 thead {

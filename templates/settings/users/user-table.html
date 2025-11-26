@@ -24,9 +24,9 @@
   </div>
 </div>
 <div class="table-container">
-  <table class="table">
+  <table class="table users-table">
     <tr>
-      <th>
+      <th class="username">
         Username
         <button class="btn-sort {% if current_order == 'username' %}active{% endif %}"
                 hx-target="#users"
@@ -35,8 +35,8 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th>Name</th>
-      <th>
+      <th class="name">Name</th>
+      <th class="email">
         E-Mail
         <button class="btn-sort {% if current_order == 'email' %}active{% endif %}"
                 hx-target="#users"
@@ -45,7 +45,7 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th>
+      <th class="role">
         Role
         <button class="btn-sort {% if current_order == 'role' %}active{% endif %}"
                 hx-target="#users"
@@ -54,7 +54,7 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th>
+      <th class="initials">
         Initials
         <button class="btn-sort {% if current_order == 'initials' %}active{% endif %}"
                 hx-target="#users"
@@ -63,7 +63,7 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th>
+      <th class="attorney">
         Attorney
         <button class="btn-sort {% if current_order == 'is_attorney' %}active{% endif %}"
                 hx-target="#users"
@@ -72,8 +72,8 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th>
-        Hourly Rate
+      <th class="rate">
+        Rate
         <button class="btn-sort {% if current_order == 'user_rate' %}active{% endif %}"
                 hx-target="#users"
                 hx-swap="innerHTML"
@@ -81,7 +81,7 @@
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th class="center-data">
+      <th class="is-active center-data">
         Active
         <button class="btn-sort {% if current_order == 'is_active' %}active{% endif %}"
                 hx-target="#users"
@@ -93,7 +93,7 @@
     </tr>
     {% for user in users %}
       <tr>
-        <td>
+        <td class="dropdown-cell">
           <div class="dropdown">
             <button class="button-link"
                     type="button"
@@ -117,7 +117,7 @@
         </td>
         <td>{{ user.full_name }}</td>
         <td>{{ user.email }}</td>
-        <td>
+        <td class="dropdown-cell">
           <div class="dropdown">
             <button class="button-link"
                     type="button"

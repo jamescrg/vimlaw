@@ -160,8 +160,8 @@
                data-bs-target="#htmx-modal-container"
                hx-swap="innerHTML">{{ task.description }}</a>
           </td>
-          <td class="status">{% include "agenda/tasks/status.html" %}</td>
-          <td class="user {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
+          <td class="status dropdown-cell">{% include "agenda/tasks/status.html" %}</td>
+          <td class="user dropdown-cell {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">
             {% include "agenda/tasks/user.html" %}
           </td>
           <td class="date {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}">

@@ -7,12 +7,12 @@
   <td class="matter">
     <a href="{% url 'matters:ledger' id=invoice.matter.id|default:0 %}">{{ invoice.matter.name|truncatechars:32 }}</a>
   </td>
-  <td class="status">{% include "invoicing/invoices/status.html" %}</td>
+  <td class="status dropdown-cell">{% include "invoicing/invoices/status.html" %}</td>
   <td class="amount">${{ invoice.value.net_fees|floatformat:2|intcomma }}</td>
   <td class="amount">${{ invoice.value.net_expenses|floatformat:2|intcomma }}</td>
   <td class="amount total">${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
   <td class="amount">${{ invoice.amount_remaining|floatformat:2|intcomma }}</td>
-  <td class="download">
+  <td class="download dropdown-cell">
     <div class="dropdown">
       <button class="button-link"
               type="button"

@@ -79,7 +79,44 @@ Settings Contacts - Two Column Layout
 
 /* Settings Table */
 .settings-table .status-col {
-  width: 4.375rem;
+  width: 4.5rem;
+}
+
+/* Users Table */
+.users-table {
+  min-width: 62rem;
+}
+
+.users-table .username {
+  width: 10rem;
+}
+
+.users-table .name {
+  width: 10rem;
+}
+
+.users-table .email {
+  min-width: 16rem;
+}
+
+.users-table .role {
+  width: 6rem;
+}
+
+.users-table .initials {
+  width: 8rem;
+}
+
+.users-table .attorney {
+  width: 8rem;
+}
+
+.users-table .rate {
+  width: 6rem;
+}
+
+.users-table .is-active {
+  width: 8rem;
 }
 
 /* Groups table - name cell with drag handle */
