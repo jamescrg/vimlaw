@@ -22,7 +22,7 @@ def get_ledger_data(matter):
     # Add invoices to transactions (only SENT, PAID, WAIVED, etc. - not DRAFT or APPROVED)
     if invoices:
         for invoice in invoices:
-            affects_balance = invoice.status in ["SENT", "PAID"]
+            affects_balance = invoice.status in ["SENT", "DEFERRED", "PAID"]
             invoice_dict = {
                 "id": invoice.id,
                 "date": invoice.date_issued,

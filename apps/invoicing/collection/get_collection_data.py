@@ -51,9 +51,11 @@ def get_collection_data(request):
         ),
     )
 
-    # Subquery to get total billed for a matter (sum of SENT/PAID invoice final_totals)
+    # Subquery to get total billed for a matter (sum of SENT/DEFERRED/PAID invoice final_totals)
     billed_subquery = (
-        invoices_with_totals.filter(matter=OuterRef("pk"), status__in=["SENT", "PAID"])
+        invoices_with_totals.filter(
+            matter=OuterRef("pk"), status__in=["SENT", "DEFERRED", "PAID"]
+        )
         .values("matter")
         .annotate(total=Sum("final_total"))
         .values("total")

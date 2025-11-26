@@ -34,6 +34,10 @@
            hx-post="{% url 'invoicing:invoices-filter-status' "SENT" %}">Sent</a>
         <a type="button"
            href="#"
+           class="btn-icon {% if selected_status == "DEFERRED" %}toggle-active{% endif %}"
+           hx-post="{% url 'invoicing:invoices-filter-status' "DEFERRED" %}">Deferred</a>
+        <a type="button"
+           href="#"
            class="btn-icon {% if selected_status == "PAID" %}toggle-active{% endif %}"
            hx-post="{% url 'invoicing:invoices-filter-status' "PAID" %}">Paid</a>
       </div>

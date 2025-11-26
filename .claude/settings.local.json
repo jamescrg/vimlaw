@@ -18,7 +18,10 @@
       "Bash(xargs ls:*)",
       "Bash(djlint:*)",
       "Bash(source venv/bin/activate)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(xargs -I {} bash -c 'echo \"\"\"\"=== {} ===\"\"\"\" && head -20 {}')",
+      "Bash(cat:*)",
+      "Bash(awk:*)"
     ],
     "deny": []
   }
