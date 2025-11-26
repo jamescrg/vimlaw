@@ -68,7 +68,7 @@
             <td class="intake-practice-area">
               {% if intake.source %}{{ intake.practice_area|slice:':14' }}{% endif %}
             </td>
-            <td class="intake-status">{% include "intakes/intake-status.html" %}</td>
+            <td class="intake-status dropdown-cell">{% include "intakes/intake-status.html" %}</td>
           </tr>
         {% empty %}
           <tr>
