@@ -56,3 +56,37 @@ class Task(models.Model):
             return display_name
         else:
             return "Admin"
+
+
+class TaskNote(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="notes")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
+    date = models.DateField(null=True)
+    time = models.TimeField(null=True)
+    details = models.TextField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "app_task_note"
+        ordering = ["-date", "-time"]
+
+    def __str__(self):
+        return f"Note for {self.task.description} on {self.date}"
+
+
+class UserTaskNoteView(models.Model):
+    """Tracks when users last viewed task notes for badge notification system."""
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    last_viewed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "app_user_task_note_view"
+        unique_together = ("user", "task")
+        indexes = [
+            models.Index(fields=["user", "task"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} viewed {self.task.description} notes at {self.last_viewed_at}"

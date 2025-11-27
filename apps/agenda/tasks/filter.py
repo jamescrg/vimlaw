@@ -7,7 +7,6 @@ from apps.matters.models import Matter
 
 STATUS_CHOICES = (
     ("Pending", "Pending"),
-    ("In Progress", "In Progress"),
     ("Complete", "Complete"),
 )
 

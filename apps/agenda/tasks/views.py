@@ -1,13 +1,14 @@
 from datetime import date, datetime, timedelta
 
+import markdown
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
-from apps.agenda.tasks.forms import TaskForm
-from apps.agenda.tasks.models import Task
+from apps.agenda.tasks.forms import TaskForm, TaskNoteForm
+from apps.agenda.tasks.models import Task, TaskNote, UserTaskNoteView
 from apps.agenda.tasks.services import process_quick_task_description
 from apps.agenda.tasks.tasks import get_list_data
 from apps.matters.models import Matter
@@ -458,3 +459,86 @@ def clear_tasks(request):
     filter = TasksFilter(filter_data)
     filter.qs.filter(status="Complete").delete()
     return redirect("agenda:tasks-list")
+
+
+@login_required
+def tasks_add_note(request, id):
+    task = get_object_or_404(Task, pk=id)
+
+    if request.method == "POST":
+        form = TaskNoteForm(request.POST, use_required_attribute=False)
+        if form.is_valid():
+            note = form.save(commit=False)
+            note.task = task
+            note.user = request.user
+            note.save()
+            return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
+    else:
+        form = TaskNoteForm(
+            initial={
+                "date": date.today(),
+                "time": datetime.now().strftime("%H:%M"),
+            },
+            use_required_attribute=False,
+        )
+
+    context = {
+        "task": task,
+        "form": form,
+        "edit": False,
+        "action": f"/agenda/tasks/{id}/add-note/",
+    }
+    return render(request, "agenda/tasks/form_note.html", context)
+
+
+@login_required
+def tasks_notes(request, id):
+    task = get_object_or_404(Task, pk=id)
+    notes = task.notes.all()
+
+    # Track view for badge notification system
+    UserTaskNoteView.objects.update_or_create(
+        user=request.user,
+        task=task,
+        # last_viewed_at auto-updates with auto_now=True
+    )
+
+    # Process markdown in note details
+    for note in notes:
+        if note.details:
+            note.details = markdown.markdown(note.details)
+
+    context = {
+        "task": task,
+        "notes": notes,
+    }
+    return render(request, "agenda/tasks/notes.html", context)
+
+
+@login_required
+def tasks_edit_note(request, id):
+    note = get_object_or_404(TaskNote, pk=id)
+
+    if request.method == "POST":
+        form = TaskNoteForm(request.POST, instance=note, use_required_attribute=False)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
+    else:
+        form = TaskNoteForm(instance=note, use_required_attribute=False)
+
+    context = {
+        "task": note.task,
+        "note": note,
+        "form": form,
+        "edit": True,
+        "action": f"/agenda/tasks/note/{id}/edit/",
+    }
+    return render(request, "agenda/tasks/form_note.html", context)
+
+
+@login_required
+def tasks_delete_note(request, id):
+    note = get_object_or_404(TaskNote, pk=id)
+    note.delete()
+    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})

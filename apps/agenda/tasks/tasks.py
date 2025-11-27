@@ -2,6 +2,7 @@ from datetime import date
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
+from apps.agenda.tasks.models import TaskNote, UserTaskNoteView
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
@@ -53,6 +54,35 @@ def get_list_data(request):
         tasks, per_page=20, request=request, session_key="tasks_pagination"
     )
 
+    # Get user's note view history for badge notification system
+    user_note_views = UserTaskNoteView.objects.filter(user=request.user).values(
+        "task_id", "last_viewed_at"
+    )
+    view_times = {v["task_id"]: v["last_viewed_at"] for v in user_note_views}
+
+    # Check each task for notes and new notes
+    task_list = pagination.get_object_list()
+    for task in task_list:
+        task.has_notes = task.notes.exists()
+        if task.has_notes:
+            last_viewed = view_times.get(task.id)
+            if last_viewed:
+                # Check if there are notes created after last view by other users
+                task.has_new_notes = (
+                    TaskNote.objects.filter(task=task, created_at__gt=last_viewed)
+                    .exclude(user=request.user)
+                    .exists()
+                )
+            else:
+                # Never viewed - show as new if there are notes by other users
+                task.has_new_notes = (
+                    TaskNote.objects.filter(task=task)
+                    .exclude(user=request.user)
+                    .exists()
+                )
+        else:
+            task.has_new_notes = False
+
     selected_matter = None
     if matter_id:
         selected_matter = Matter.objects.filter(id=matter_id).first()
@@ -71,7 +101,7 @@ def get_list_data(request):
         "pagination": pagination,
         "session_key": "tasks_pagination",
         "trigger_key": "tasksListChanged",
-        "objects": pagination.get_object_list(),
+        "objects": task_list,
         "matters": Matter.objects.filter(status__in=["Pending", "Open"]).order_by(
             "name"
         ),

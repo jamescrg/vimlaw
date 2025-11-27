@@ -211,14 +211,3 @@ Value Inline Edit
   padding: 0.25rem 0.5rem;
   margin-right: 0.5rem;
 }
-
-/* ==========================================================================
-Badge Icon (New Notes Indicator)
-========================================================================== */
-
-.intake-badge-icon {
-  color: var(--purple-800);
-  font-size: 1rem;
-  margin-left: 0.5rem;
-  vertical-align: middle;
-}

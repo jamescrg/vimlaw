@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from apps.agenda.tasks.models import Task
+from apps.agenda.tasks.models import Task, TaskNote
 from config.settings import CustomFormRendererCompact
 
 
@@ -15,14 +15,13 @@ class TaskForm(forms.ModelForm):
             "description",
             "user",
             "priority",
-            "date_due",
             "status",
+            "date_due",
             "date_completed",
         )
 
         STATUSES = (
             ("Pending", "Pending"),
-            ("In Progress", "In Progress"),
             ("Complete", "Complete"),
         )
 
@@ -76,3 +75,32 @@ class TaskForm(forms.ModelForm):
         #     raise ValidationError("This field is required")
 
         return matter
+
+
+class TaskNoteForm(forms.ModelForm):
+    class Meta:
+        model = TaskNote
+        fields = ("date", "time", "details")
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date"}),
+            "time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
+            "details": forms.Textarea(
+                attrs={
+                    "class": "span3",
+                    "rows": "4",
+                    "maxlength": "200",
+                    "placeholder": "Please use this for status updates only "
+                    "and add any contact information to Contacts.",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()
+
+    def clean_details(self):
+        details = self.cleaned_data.get("details", "")
+        if details and len(details) > 200:
+            raise ValidationError("Note is limited to 200 characters.")
+        return details

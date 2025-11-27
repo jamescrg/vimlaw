@@ -10,3 +10,95 @@
 .filter-tools .return-to-agenda:hover {
   color: var(--link-hover);
 }
+
+/* ==========================================================================
+ Task Notes
+========================================================================== */
+
+.task-notes .toolbar {
+  border-bottom: solid 1px var(--stone-200);
+}
+
+.task-note {
+  border-bottom: solid 1px var(--stone-200);
+  padding: 1rem 0 1rem 0.5rem;
+}
+
+.task-note-title {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.task-note-title-left {
+  display: flex;
+  align-items: center;
+}
+
+.task-note-date-time {
+  margin-right: 1rem;
+}
+
+.task-note-username {
+  color: var(--stone-500);
+  margin-right: 1rem;
+}
+
+/* Markdown styling for task notes */
+.task-note-details h1 {
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+.task-note-details h2 {
+  font-size: 1.25em;
+  font-weight: 600;
+}
+
+.task-note-details h3 {
+  font-size: 1.125em;
+  font-weight: 600;
+}
+
+.task-note-details strong {
+  font-weight: 600;
+}
+
+.task-note-details ul {
+  list-style-type: disc;
+  margin: 0 0 0 1rem;
+}
+
+.task-note-details ol {
+  list-style-type: decimal;
+  margin: 0 0 0 1rem;
+}
+
+.task-note-details p {
+  margin: 1rem 0 0 0.5rem;
+}
+
+.task-note-details p:first-child {
+  margin-top: 0.5rem;
+}
+
+.task-note-details a {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.task-note-details a:hover {
+  color: var(--link-hover);
+}
+
+.task-notes .empty-message {
+  padding: 1rem;
+  color: var(--stone-500);
+}
+
+.task-note-form .char-counter {
+  color: var(--stone-500);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  text-align: left;
+}

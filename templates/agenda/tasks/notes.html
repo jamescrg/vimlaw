@@ -1,0 +1,41 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Notes</h1>
+      <div>
+        <a class="btn-icon"
+           href="#"
+           hx-get="{% url 'agenda:tasks-add-note' id=task.id %}"
+           hx-target="#htmx-modal-container"
+           hx-trigger="click">
+          <i class="bi bi-plus-lg"></i>
+        </a>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="task-notes">
+        {% for note in notes %}
+          <div class="task-note">
+            <div class="task-note-title">
+              <div class="task-note-title-left">
+                <a href="#"
+                   hx-get="{% url 'agenda:tasks-edit-note' id=note.id %}"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click">
+                  <span class="task-note-date-time">{{ note.date|date:"M j, Y" }} {{ note.time|time:"g:i A" }}</span>
+                </a>
+                <span class="task-note-username">{{ note.user.username|title }}</span>
+              </div>
+            </div>
+            <div class="task-note-details">{{ note.details|safe }}</div>
+          </div>
+        {% empty %}
+          <p class="empty-message">No notes yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

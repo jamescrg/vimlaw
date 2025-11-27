@@ -115,11 +115,11 @@
   width: 0.75rem;
 }
 
-.tasks-table .complete,
-.tasks-table .complete a,
+/* .tasks-table .complete, */
+.tasks-table .complete > a,
 .tasks-table .complete .button-link {
-  color: var(--stone-400);
-  text-decoration: line-through;
+  color: var(--stone-500);
+  font-variant: strikethrough;
 }
 
 .tasks-form #id_description,

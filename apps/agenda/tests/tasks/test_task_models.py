@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from apps.agenda.tasks.models import Task
+from apps.agenda.tasks.models import Task, TaskNote
 
 pytestmark = pytest.mark.django_db
 
@@ -39,17 +39,6 @@ def test_date_completed_cleared_on_status_pending(task):
     assert task.date_completed is None
 
 
-def test_date_completed_cleared_on_status_in_progress(task):
-    """date_completed should be cleared when status changes from Complete to In Progress"""
-    task.status = "Complete"
-    task.save()
-    assert task.date_completed is not None
-
-    task.status = "In Progress"
-    task.save()
-    assert task.date_completed is None
-
-
 def test_date_completed_not_changed_when_already_complete(task):
     """date_completed should not change when saving an already Complete task"""
     task.status = "Complete"
@@ -70,3 +59,38 @@ def test_new_task_with_complete_status(user):
         priority=1,
     )
     assert task.date_completed == date.today()
+
+
+def test_task_note_creation(task, user):
+    """TaskNote can be created and associated with a task"""
+    note = TaskNote.objects.create(
+        task=task,
+        user=user,
+        date=date.today(),
+        details="Test note content",
+    )
+    assert note.task == task
+    assert note.user == user
+    assert note.details == "Test note content"
+    assert task.notes.count() == 1
+
+
+def test_task_note_string(task, user):
+    """TaskNote string representation"""
+    note = TaskNote.objects.create(
+        task=task,
+        user=user,
+        date=date.today(),
+        details="Test note",
+    )
+    assert str(note) == f"Note for {task.description} on {date.today()}"
+
+
+def test_task_notes_cascade_delete(task, user):
+    """TaskNotes should be deleted when task is deleted"""
+    TaskNote.objects.create(task=task, user=user, date=date.today(), details="Note 1")
+    TaskNote.objects.create(task=task, user=user, date=date.today(), details="Note 2")
+    assert TaskNote.objects.count() == 2
+
+    task.delete()
+    assert TaskNote.objects.count() == 0

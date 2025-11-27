@@ -27,7 +27,8 @@
           </div>
           <div>
             {% if edit %}
-              <a hx-confirm='Are you sure you want to delete this record?'
+              <a class="delete-link"
+                 hx-confirm='Are you sure you want to delete this record?'
                  href="#"
                  hx-post="{% url 'intakes:delete_note' id=note.id %}">Delete Note</a>
             {% endif %}

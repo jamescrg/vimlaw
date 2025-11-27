@@ -1,0 +1,73 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if edit %}
+          Edit Note
+        {% else %}
+          Add Note
+        {% endif %}
+      </h1>
+      <div>
+        <a class="btn-icon"
+           href="#"
+           hx-get="{% url 'agenda:tasks-notes' id=task.id %}"
+           hx-target="#htmx-modal-container"
+           hx-trigger="click">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
+            class="form-responsive form-compact col3 task-note-form">
+        {% csrf_token %}
+        {{ form }}
+        <div class="char-counter">
+          <span id="char-count">200</span> characters remaining
+        </div>
+        <br />
+        <div class="flex-center-space span3">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
+          <div>
+            {% if edit %}
+              <a class="delete-link"
+                 hx-confirm='Are you sure you want to delete this note?'
+                 href="#"
+                 hx-post="{% url 'agenda:tasks-delete-note' id=note.id %}">Delete</a>
+            {% endif %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  (function() {
+    const textarea = document.querySelector('.task-note-form textarea');
+    const counter = document.getElementById('char-count');
+    const maxLength = 200;
+
+    function updateCounter() {
+      const remaining = maxLength - textarea.value.length;
+      counter.textContent = remaining;
+      if (remaining < 0) {
+        counter.style.color = 'var(--orange-800)';
+      } else {
+        counter.style.color = '';
+      }
+    }
+
+    if (textarea) {
+      textarea.setAttribute('maxlength', maxLength);
+      textarea.addEventListener('input', updateCounter);
+      updateCounter();
+    }
+  })();
+</script>

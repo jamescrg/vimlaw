@@ -154,17 +154,50 @@
               data-label="Priority">{% include "agenda/tasks/priority.html" %}</td>
           <td class="matter {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}"
               data-label="Matter">{% include "agenda/tasks/matter.html" %}</td>
-          <td class="description {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"
+          <td class="description dropdown-cell {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"
               data-label="Description">
-            <a href="#"
-               hx-get="/agenda/tasks/{{ task.id }}/edit"
-               hx-target="#htmx-modal-container"
-               hx-trigger="click"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"
-               hx-swap="innerHTML">{{ task.description }}</a>
+            <div class="dropdown">
+              <a href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ task.description }}
+                {% if task.has_notes %}
+                  <i class="bi bi-sticky note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
+                {% endif %}
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-get="{% url 'agenda:tasks-edit' id=task.id %}"
+                     hx-target="#htmx-modal-container"
+                     hx-trigger="click"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container">Edit</a>
+                </li>
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-get="{% url 'agenda:tasks-add-note' id=task.id %}"
+                     hx-target="#htmx-modal-container"
+                     hx-trigger="click"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container">Add Note</a>
+                </li>
+                {% if task.notes.exists %}
+                  <li>
+                    <a class="dropdown-item"
+                       href="#"
+                       hx-get="{% url 'agenda:tasks-notes' id=task.id %}"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"
+                       data-bs-toggle="modal"
+                       data-bs-target="#htmx-modal-container">View Notes</a>
+                  </li>
+                {% endif %}
+              </ul>
+            </div>
           </td>
-          <td class="status dropdown-cell" data-label="Status">{% include "agenda/tasks/status.html" %}</td>
+          <td class="status dropdown-cell {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}"
+              data-label="Status">{% include "agenda/tasks/status.html" %}</td>
           <td class="user dropdown-cell {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"
               data-label="User">{% include "agenda/tasks/user.html" %}</td>
           <td class="date {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"
