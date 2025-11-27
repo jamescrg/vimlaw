@@ -60,3 +60,22 @@ def test_note_form_valid(note_data):
     data = note_data
     form = NoteForm(data)
     assert form.is_valid()
+
+
+# -----------------------------------------------------
+# clean_disputed_property tests
+# -----------------------------------------------------
+def test_disputed_property_too_long(intake_data):
+    data = intake_data.copy()
+    data["disputed_property"] = "x" * 251  # Over 250 char limit
+    form = IntakeForm(data)
+    assert not form.is_valid()
+    assert "disputed_property" in form.errors
+    assert "250 characters" in form.errors["disputed_property"][0]
+
+
+def test_disputed_property_valid(intake_data):
+    data = intake_data.copy()
+    data["disputed_property"] = "123 Main Street, Test City"
+    form = IntakeForm(data)
+    assert form.is_valid()

@@ -128,3 +128,4 @@ djlint --profile django --reformat templates/
 
 - do not use inline styles in HTML
 - css values should snap to a 4px grid
+- tests run slowly on this server, when testing, please run targeted unit tests to cover recent changes
