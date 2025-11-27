@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.folders.models import Folder
@@ -10,12 +11,33 @@ class Task(models.Model):
     folder = models.ForeignKey(Folder, on_delete=models.SET_NULL, null=True)
     description = models.CharField(max_length=200, blank=True, null=True)
     date_due = models.DateField(blank=True, null=True)
+    date_completed = models.DateField(blank=True, null=True)
     matter = models.ForeignKey(Matter, on_delete=models.CASCADE, blank=True, null=True)
     status = models.CharField(max_length=50, blank=True, null=True)
     priority = models.IntegerField(default=1)
     custom_order = models.DecimalField(
         max_digits=18, decimal_places=8, null=True, blank=True, default=None
     )
+
+    def save(self, *args, **kwargs):
+        # Auto-set date_completed when status changes to Complete
+        if self.pk:
+            try:
+                old_task = Task.objects.get(pk=self.pk)
+                old_status = old_task.status
+            except Task.DoesNotExist:
+                old_status = None
+        else:
+            old_status = None
+
+        # Set date_completed when status becomes Complete
+        if self.status == "Complete" and old_status != "Complete":
+            self.date_completed = timezone.now().date()
+        # Clear date_completed when status changes from Complete to something else
+        elif self.status != "Complete" and old_status == "Complete":
+            self.date_completed = None
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.description} : {self.id}"
