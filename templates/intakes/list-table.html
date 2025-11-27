@@ -14,7 +14,7 @@
                   hx-target="#htmx-modal-container"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">
-            <i class="bi bi-filter"></i> &nbsp;Filter
+            <i class="bi bi-filter"></i>Filter
           </button>
           <button href="#"
                   class="{% if filter_label == "all" %} toggle-active {% endif %}"
@@ -31,7 +31,7 @@
         </div>
       </div>
       <div class="toolbar-right">
-        Count: <strong>{{ number_intakes }}</strong>
+        <span class="count">Count:</span><strong>{{ number_intakes }}</strong>
       </div>
     </div>
     <div class="table-container">

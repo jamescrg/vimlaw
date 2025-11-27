@@ -15,7 +15,7 @@
                   class="{% if filter_label == "custom" %}toggle-active{% endif %}"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container">
-            <i class="bi bi-filter"></i> &nbsp;Filter
+            <i class="bi bi-filter"></i>Filter
           </button>
           <button class="{% if filter_label == "Pending" %}toggle-active{% endif %}"
                   hx-post="{% url 'matters:filter-quick-status' 'Pending' %}">Pending</button>
@@ -26,7 +26,7 @@
         </div>
       </div>
       <div class="toolbar-right">
-        Count:&nbsp;<strong>{{ number_matters }}</strong>
+        <span class="count">Count:</span><strong>{{ number_matters }}</strong>
       </div>
     </div>
     <div class="table-container">

@@ -45,6 +45,11 @@
   color: var(--stone-400);
 }
 
+.bi-calendar-week,
+.bi-arrow-up-left-circle {
+  margin-right: 0.5rem;
+}
+
 .spin,
 i.spin {
   animation: spin 1s linear infinite;

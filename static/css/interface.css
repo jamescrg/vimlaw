@@ -58,7 +58,7 @@
 }
 
 .item-selected-highlight {
-  background: var(--stone-150) !important;
+  background: var(--hl-gray) !important;
 }
 
 

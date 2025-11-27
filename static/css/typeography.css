@@ -52,3 +52,7 @@ code {
   margin-left: 1.25rem;
   white-space: pre-wrap;
 }
+
+.count {
+  margin-right: 0.5rem;
+}

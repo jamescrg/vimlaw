@@ -3,6 +3,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
 from apps.invoicing.applications.models import CreditApplication
 from apps.invoicing.credits.filters import CreditsFilter
@@ -209,13 +210,27 @@ def credits_apply(request, pk):
 
         # If validation errors, return them
         if errors:
+            existing_applications = list(
+                CreditApplication.objects.filter(credit=credit)
+                .select_related("invoice")
+                .order_by("created_at")
+            )
+            for app in existing_applications:
+                app.delete_url = reverse(
+                    "invoicing:credits-application-delete", args=[app.id]
+                )
             context = {
-                "credit": credit,
+                "source": credit,
+                "source_type": "credit",
+                "apply_url": reverse("invoicing:credits-apply", args=[credit.id]),
                 "invoice_data": invoice_data,
                 "amount_unapplied": credit.amount_unapplied,
+                "existing_applications": existing_applications,
                 "errors": errors,
             }
-            return render(request, "invoicing/credits/apply.html", context, status=400)
+            return render(
+                request, "invoicing/applications/apply.html", context, status=400
+            )
 
         # Create applications and track affected invoices
         affected_invoices = set()
@@ -242,20 +257,24 @@ def credits_apply(request, pk):
         )
 
     # Get existing applications for this credit
-    existing_applications = (
+    existing_applications = list(
         CreditApplication.objects.filter(credit=credit)
         .select_related("invoice")
         .order_by("created_at")
     )
+    for app in existing_applications:
+        app.delete_url = reverse("invoicing:credits-application-delete", args=[app.id])
 
     context = {
-        "credit": credit,
+        "source": credit,
+        "source_type": "credit",
+        "apply_url": reverse("invoicing:credits-apply", args=[credit.id]),
         "invoice_data": invoice_data,
         "amount_unapplied": credit.amount_unapplied,
         "existing_applications": existing_applications,
     }
 
-    return render(request, "invoicing/credits/apply.html", context)
+    return render(request, "invoicing/applications/apply.html", context)
 
 
 @login_required
@@ -280,20 +299,24 @@ def credits_delete_application(request, pk):
         if remaining > 0:
             invoice_data.append({"invoice": invoice, "amount_remaining": remaining})
 
-    existing_applications = (
+    existing_applications = list(
         CreditApplication.objects.filter(credit=credit)
         .select_related("invoice")
         .order_by("created_at")
     )
+    for app in existing_applications:
+        app.delete_url = reverse("invoicing:credits-application-delete", args=[app.id])
 
     context = {
-        "credit": credit,
+        "source": credit,
+        "source_type": "credit",
+        "apply_url": reverse("invoicing:credits-apply", args=[credit.id]),
         "invoice_data": invoice_data,
         "amount_unapplied": credit.amount_unapplied,
         "existing_applications": existing_applications,
     }
 
-    response = render(request, "invoicing/credits/apply.html", context)
+    response = render(request, "invoicing/applications/apply.html", context)
     response["HX-Trigger"] = json.dumps(
         {"creditsChanged": "", "matterLedgerChanged": ""}
     )

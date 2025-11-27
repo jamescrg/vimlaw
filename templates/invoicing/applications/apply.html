@@ -2,7 +2,7 @@
 <div class="modal-dialog modal-lg">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Apply Payment #{{ payment.id }}</h1>
+      <h1 class="modal-title">Apply {{ source_type|title }} #{{ source.id }}</h1>
       <div>
         <a href="#" data-bs-dismiss="modal">
           <i class="bi bi-x-lg"></i>
@@ -26,20 +26,20 @@
                 <strong>Matter</strong>
               </td>
               <td>
-                <strong>{{ payment.matter }}</strong>
+                <strong>{{ source.matter }}</strong>
               </td>
             </tr>
             <tr>
               <td>
-                <strong>Payment Date</strong>
+                <strong>{{ source_type|title }} Date</strong>
               </td>
-              <td>{{ payment.date|date:"Y-m-d" }}</td>
+              <td>{{ source.date|date:"Y-m-d" }}</td>
             </tr>
             <tr>
               <td>
-                <strong>Payment Amount</strong>
+                <strong>{{ source_type|title }} Amount</strong>
               </td>
-              <td class="numeric">${{ payment.amount|floatformat:2|intcomma }}</td>
+              <td class="numeric">${{ source.amount|floatformat:2|intcomma }}</td>
             </tr>
             <tr>
               <td>
@@ -75,7 +75,7 @@
                     <td class="text-right">${{ application.amount_applied|floatformat:2|intcomma }}</td>
                     <td class="text-center">
                       <a href="#"
-                         hx-delete="{% url 'invoicing:payments-application-delete' application.id %}"
+                         hx-delete="{{ application.delete_url }}"
                          hx-confirm="Delete this application?"
                          hx-target="#application-content"
                          hx-select="#application-content"
@@ -91,8 +91,7 @@
           </div>
         {% endif %}
         {% if invoice_data %}
-          <h6 class="mb-2">Add New Applications</h6>
-          <form hx-post="{% url 'invoicing:payments-apply' payment.id %}"
+          <form hx-post="{{ apply_url }}"
                 hx-target="#htmx-modal-container"
                 role="form">
             {% csrf_token %}
@@ -125,19 +124,13 @@
                 {% endfor %}
               </tbody>
             </table>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-              <div>
-                <button type="submit" class="btn btn-primary" id="submit-btn">Submit</button>
-              </div>
-              <div class="to-apply">
-                <strong>Total to Apply:</strong> <span id="total-applied">&nbsp;&nbsp;$0.00</span>
-              </div>
+            <div class="mt-3">
+              <button type="submit" class="btn btn-primary" id="submit-btn">Submit</button>
             </div>
           </form>
           <script>
           (function() {
             const inputs = document.querySelectorAll('.application-input');
-            const totalSpan = document.getElementById('total-applied');
             const unappliedSpan = document.getElementById('unapplied-amount');
             const submitBtn = document.getElementById('submit-btn');
             const maxUnapplied = parseFloat({{ amount_unapplied }});
@@ -160,15 +153,16 @@
                 total += value;
               });
 
+              const remaining = maxUnapplied - total;
+
               if (total > maxUnapplied) {
                 hasError = true;
-                totalSpan.classList.add('text-danger');
+                unappliedSpan.classList.add('text-danger');
               } else {
-                totalSpan.classList.remove('text-danger');
+                unappliedSpan.classList.remove('text-danger');
               }
 
-              totalSpan.textContent = '$' + total.toFixed(2);
-              unappliedSpan.textContent = '$' + (maxUnapplied - total).toFixed(2);
+              unappliedSpan.textContent = '$' + remaining.toFixed(2);
               submitBtn.disabled = hasError || total === 0;
             }
 

@@ -59,7 +59,7 @@
     </thead>
     <tbody>
       {% for item in contacts %}
-        <tr class="{% if item.is_client %}hl-gray{% elif item.band %}band-alt{% endif %}">
+        <tr class="{% if item.is_client %}hl-slate{% elif item.band %}band-alt{% endif %}">
           <td>{{ item.group }}</td>
           <td>
             {% if item.is_client %}

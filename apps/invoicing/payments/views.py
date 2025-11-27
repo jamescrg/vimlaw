@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponse, get_object_or_404, render
+from django.urls import reverse
 
 from apps.invoicing.applications.models import PaymentApplication
 from apps.invoicing.invoices.models import Invoice
@@ -167,13 +168,27 @@ def payments_apply(request, pk):
 
         # If validation errors, return them
         if errors:
+            existing_applications = list(
+                PaymentApplication.objects.filter(payment=payment)
+                .select_related("invoice")
+                .order_by("created_at")
+            )
+            for app in existing_applications:
+                app.delete_url = reverse(
+                    "invoicing:payments-application-delete", args=[app.id]
+                )
             context = {
-                "payment": payment,
+                "source": payment,
+                "source_type": "payment",
+                "apply_url": reverse("invoicing:payments-apply", args=[payment.id]),
                 "invoice_data": invoice_data,
                 "amount_unapplied": payment.amount_unapplied,
+                "existing_applications": existing_applications,
                 "errors": errors,
             }
-            return render(request, "invoicing/payments/apply.html", context, status=400)
+            return render(
+                request, "invoicing/applications/apply.html", context, status=400
+            )
 
         # Create applications and track affected invoices
         affected_invoices = set()
@@ -200,20 +215,24 @@ def payments_apply(request, pk):
         )
 
     # Get existing applications for this payment
-    existing_applications = (
+    existing_applications = list(
         PaymentApplication.objects.filter(payment=payment)
         .select_related("invoice")
         .order_by("created_at")
     )
+    for app in existing_applications:
+        app.delete_url = reverse("invoicing:payments-application-delete", args=[app.id])
 
     context = {
-        "payment": payment,
+        "source": payment,
+        "source_type": "payment",
+        "apply_url": reverse("invoicing:payments-apply", args=[payment.id]),
         "invoice_data": invoice_data,
         "amount_unapplied": payment.amount_unapplied,
         "existing_applications": existing_applications,
     }
 
-    return render(request, "invoicing/payments/apply.html", context)
+    return render(request, "invoicing/applications/apply.html", context)
 
 
 @login_required
@@ -238,20 +257,24 @@ def payments_delete_application(request, pk):
         if remaining > 0:
             invoice_data.append({"invoice": invoice, "amount_remaining": remaining})
 
-    existing_applications = (
+    existing_applications = list(
         PaymentApplication.objects.filter(payment=payment)
         .select_related("invoice")
         .order_by("created_at")
     )
+    for app in existing_applications:
+        app.delete_url = reverse("invoicing:payments-application-delete", args=[app.id])
 
     context = {
-        "payment": payment,
+        "source": payment,
+        "source_type": "payment",
+        "apply_url": reverse("invoicing:payments-apply", args=[payment.id]),
         "invoice_data": invoice_data,
         "amount_unapplied": payment.amount_unapplied,
         "existing_applications": existing_applications,
     }
 
-    response = render(request, "invoicing/payments/apply.html", context)
+    response = render(request, "invoicing/applications/apply.html", context)
     response["HX-Trigger"] = json.dumps(
         {"paymentsChanged": "", "matterLedgerChanged": ""}
     )

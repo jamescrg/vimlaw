@@ -303,23 +303,26 @@
   /* Semantic colors */
   --link: var(--lime-800);
   --link-hover: var(--lime-800);
-  --button-form: var(--link);
+  --button-primary-background: var(--link);
+  --button-primary-color: var(--stone-300);
+  --button-secondary-background: var(--stone-300);
+  --button-secondary-color: var(--stone-600);
   --button-toolbar: var(--stone-600);
   --urgent: var(--orange-800);
   --true: var(--lime-700);
   --false: var(--urgent);
   --icon-green: var(--lime-800);
-  --icon-purple: var(--purple-950);
+  --icon-purple: var(--purple-800);
   --icon-yellow: var(--yellow-700);
   --icon-blue: var(--sky-800);
   --add: var(--icon-green);
-  --selected-background: oklch(0.915 0.02 295.2);
+  --selected-background: var(--purple-muted);
   --selected-color: oklch(0.466 0.011 56.1);
   --selected-border: oklch(0.866 0.023 295.1);
 
   /* highlights */
-  --hl-blue: var(--sky-50);
-  --hl-blue-gray: oklch(0.977 0.004 236.5);
+  --hl-blue: var(--blue-50);
+  --hl-slate: var(--slate-100);
   --hl-gray: var(--stone-125);
   --hl-green: var(--lime-50);
   --hl-orange: var(--orange-50);
@@ -327,10 +330,12 @@
   --hl-red: var(--red-50);
   --hl-yellow: var(--yellow-50);
 
+  --slate-muted: oklch(0.968 0.004 247.9);
+  --purple-muted: oklch(0.915 0.02 295.2);
 }
 
 .hl-blue { background: var(--hl-blue) !important; }
-.hl-blue-gray { background: var(--hl-blue-gray) !important; }
+.hl-slate { background: var(--slate-muted) !important; }
 .hl-gray { background: var(--hl-gray) !important; }
 .hl-green { background: var(--hl-green) !important; }
 .hl-orange { background: var(--hl-orange) !important; }
