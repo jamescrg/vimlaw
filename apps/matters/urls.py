@@ -109,6 +109,22 @@ urlpatterns = [
     # events
     path("matters/<int:id>/events/", events.events_index, name="events-index"),
     path("matters/<int:id>/events/list/", events.events_list, name="events"),
+    path(
+        "matters/<int:id>/events/filter-status/",
+        events.events_filter_status,
+        {"status": ""},
+        name="events-filter-status-all",
+    ),
+    path(
+        "matters/<int:id>/events/filter-status/<str:status>",
+        events.events_filter_status,
+        name="events-filter-status",
+    ),
+    path(
+        "matters/<int:id>/events/filter-sort/<str:order>",
+        events.events_filter_sort,
+        name="events-filter-sort",
+    ),
     # tasks
     path("matters/<int:id>/tasks/", tasks.tasks_index, name="tasks-index"),
     path("matters/<int:id>/tasks/list/", tasks.tasks_list, name="tasks-list"),

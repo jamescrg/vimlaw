@@ -1,9 +1,9 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Notes</h1>
+      <h1 class="modal-title">Task Notes</h1>
       <div>
-        <a class="btn-icon"
+        <a class="btn-icon task-notes-add"
            href="#"
            hx-get="{% url 'agenda:tasks-add-note' id=task.id %}"
            hx-target="#htmx-modal-container"
@@ -16,6 +16,10 @@
       </div>
     </div>
     <div class="modal-body">
+      <div class="task-notes-header">
+        <h2>{{ task.matter.name }}</h2>
+        <div class="task-notes-description">{{ task.description }}</div>
+      </div>
       <div class="task-notes">
         {% for note in notes %}
           <div class="task-note">

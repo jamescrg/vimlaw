@@ -128,3 +128,11 @@
 .tasks-form #id_date {
   width: 100%
 }
+
+.task-notes-header h2 {
+  margin-bottom: 0.5rem;
+}
+
+.task-notes-description {
+  margin-bottom: 1rem;
+}

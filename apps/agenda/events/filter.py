@@ -12,7 +12,7 @@ PARTY_CHOICES = (
 
 STATUS_CHOICES = (
     ("Pending", "Pending"),
-    ("Completed", "Completed"),
+    ("Complete", "Complete"),
     ("Missed", "Missed"),
 )
 
@@ -38,7 +38,10 @@ class EventFilter(django_filters.FilterSet):
     order_by = django_filters.OrderingFilter(
         fields=(
             ("date", "date"),
-            ("matter", "matter"),
+            ("matter__name", "matter__name"),
+            ("description", "description"),
+            ("party", "party"),
+            ("status", "status"),
         ),
         empty_label=None,
     )

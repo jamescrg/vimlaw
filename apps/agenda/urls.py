@@ -10,6 +10,8 @@ from apps.agenda.events.views import (
     events_edit,
     events_filter,
     events_filter_quick,
+    events_filter_sort,
+    events_filter_status,
     events_index,
     events_list,
     events_select,
@@ -153,6 +155,22 @@ urlpatterns = [
         "events/filter/quick/<str:quick_filter>",
         events_filter_quick,
         name="events-filter-quick",
+    ),
+    path(
+        "events/filter/status/",
+        events_filter_status,
+        {"status": ""},
+        name="events-filter-status-all",
+    ),
+    path(
+        "events/filter/status/<str:status>",
+        events_filter_status,
+        name="events-filter-status",
+    ),
+    path(
+        "events/filter/sort/<str:order>",
+        events_filter_sort,
+        name="events-filter-sort",
     ),
     path("dash/", dash_index, name="dash-index"),
 ]

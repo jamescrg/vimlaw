@@ -75,6 +75,36 @@ def events_filter_quick(request, quick_filter):
 
 
 @login_required
+def events_filter_status(request, status):
+    events_filter = request.session.get("events_filter", {})
+    events_filter["status"] = status if status else ""
+    request.session["events_filter"] = events_filter
+    request.session.modified = True
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
+
+
+@login_required
+def events_filter_sort(request, order):
+    filter_data = request.session.get("events_filter", {})
+
+    current_order = filter_data.get("order_by", "")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else ""
+
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session["events_filter"] = filter_data
+    request.session.modified = True
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
+
+
+@login_required
 def events_add(request, matter_id=None, origin="events"):
     # identify the origin of the request (events or agenda)
     if request.method == "GET":

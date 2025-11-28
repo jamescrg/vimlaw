@@ -37,6 +37,10 @@
   width: 8rem;
 }
 
+.events-table .status {
+  width: 8rem;
+}
+
 /* form */
 
 .events-form {
@@ -46,6 +50,15 @@
 .events-form #id_description {
   max-width: 31.5rem;
   width: 100%
+}
+
+.deadline-calculator-link a {
+  background: var(--stone-150);
+  border: solid 1px var(--stone-200);
+  border-radius: 4px;
+  color: var(--button-toolbar);
+  outline: none;
+  padding: 0.25rem 0.5rem;
 }
 
 .deadline-calculator-form {

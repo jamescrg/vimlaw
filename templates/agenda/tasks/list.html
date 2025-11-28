@@ -160,7 +160,13 @@
               <a href="#" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ task.description }}
                 {% if task.has_notes %}
-                  <i class="bi bi-sticky note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
+                  <a href="#"
+                     hx-get="{% url 'agenda:tasks-notes' id=task.id %}"
+                     hx-target="#htmx-modal-container"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container">
+                    <i class="bi bi-sticky note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
+                  </a>
                 {% endif %}
               </a>
               <ul class="dropdown-menu">
@@ -173,15 +179,17 @@
                      data-bs-toggle="modal"
                      data-bs-target="#htmx-modal-container">Edit</a>
                 </li>
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-get="{% url 'agenda:tasks-notes' id=task.id %}"
-                     hx-target="#htmx-modal-container"
-                     hx-trigger="click"
-                     data-bs-toggle="modal"
-                     data-bs-target="#htmx-modal-container">Notes</a>
-                </li>
+                {% if not task.has_notes %}
+                  <li>
+                    <a class="dropdown-item"
+                       href="#"
+                       hx-get="{% url 'agenda:tasks-notes' id=task.id %}"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"
+                       data-bs-toggle="modal"
+                       data-bs-target="#htmx-modal-container">Add Note</a>
+                  </li>
+                {% endif %}
               </ul>
             </div>
           </td>

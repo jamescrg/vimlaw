@@ -28,7 +28,7 @@ class EventForm(forms.ModelForm):
         )
         STATUSES = (
             ("Pending", "Pending"),
-            ("Completed", "Completed"),
+            ("Complete", "Complete"),
             ("Missed", "Missed"),
         )
         widgets = {

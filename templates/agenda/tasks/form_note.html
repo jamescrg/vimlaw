@@ -28,7 +28,7 @@
         {% csrf_token %}
         {{ form }}
         <div class="char-counter">
-          <span id="char-count">200</span> characters remaining
+          <span id="char-count">300</span> characters remaining
         </div>
         <br />
         <div class="flex-center-space span3">
@@ -52,7 +52,7 @@
   (function() {
     const textarea = document.querySelector('.task-note-form textarea');
     const counter = document.getElementById('char-count');
-    const maxLength = 200;
+    const maxLength = 300;
 
     function updateCounter() {
       const remaining = maxLength - textarea.value.length;

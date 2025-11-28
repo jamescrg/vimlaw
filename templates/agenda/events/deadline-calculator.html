@@ -3,7 +3,9 @@
     <a href="#"
        hx-get="{% url 'agenda:events-deadline-form' %}"
        hx-target="#deadline-calculator-form"
-       hx-trigger="click">Calculate Deadline</a>
+       hx-trigger="click">
+      <i class="bi bi-calendar-week"></i>Deadline Calculator
+    </a>
   </div>
   <div id="deadline-calculator-form">{# form to be loaded here #}</div>
   <div id="deadline-calculator-results" class="calc-results">{# results to be loaded here #}</div>

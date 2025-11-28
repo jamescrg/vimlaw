@@ -16,8 +16,42 @@
                 data-bs-target="#htmx-modal-container">
           <i class="bi bi-filter"></i>Filter
         </button>
-        <a href="#"
-           hx-post="{% url 'agenda:events-filter-quick' 'events-pending' %}">Pending</a>
+        <button type="button"
+                id="events-status-filter"
+                class="select-btn filter-dropdown-button {% if events_filter_status %}toggle-active{% endif %}"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          {{ events_filter_status|default:"All Statuses" }}
+          <small>
+            <i class="bi bi-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item {% if not events_filter_status %}active{% endif %}"
+               href="#"
+               hx-post="{% url 'agenda:events-filter-status-all' %}"
+               hx-target="#events">All Statuses</a>
+          </li>
+          <li>
+            <a class="dropdown-item {% if events_filter_status == 'Pending' %}active{% endif %}"
+               href="#"
+               hx-post="{% url 'agenda:events-filter-status' 'Pending' %}"
+               hx-target="#events">Pending</a>
+          </li>
+          <li>
+            <a class="dropdown-item {% if events_filter_status == 'Complete' %}active{% endif %}"
+               href="#"
+               hx-post="{% url 'agenda:events-filter-status' 'Complete' %}"
+               hx-target="#events">Complete</a>
+          </li>
+          <li>
+            <a class="dropdown-item {% if events_filter_status == 'Missed' %}active{% endif %}"
+               href="#"
+               hx-post="{% url 'agenda:events-filter-status' 'Missed' %}"
+               hx-target="#events">Missed</a>
+          </li>
+        </ul>
       </div>
     </div>
     <div class="toolbar-right">
@@ -32,47 +66,93 @@
   </div>
   <div class="table-container">
     <table class="table full-width-table events-table">
-      <tr>
-        <th class="date">Date</th>
-        <th class="matter">Matter</th>
-        <th class="description">Description</th>
-        <th class="duration">Duration</th>
-        <th class="location">Location</th>
-        <th class="party">Party</th>
-      </tr>
-      {% for event in objects %}
+      <thead>
         <tr>
-          <td>
-            {{ event.date|date:"Y-m-d" }}
-            {% if event.start_time %}{{ event.start_time|time:"g:i A" }}{% endif %}
-          </td>
-          <td>
-            <a href={% url 'matters:events-index' id=event.matter.id %}>{{ event.matter.name }}</a>
-          </td>
-          <td class="{% if event.date < third_day and event.status == "Pending" %}urgent{% endif %}">
-            <a href="#"
-               type="button"
-               class="btn-icon"
-               hx-get="/events/{{ event.id }}/edit"
-               hx-target="#htmx-modal-container"
-               hx-trigger="click"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container">{{ event.description }}</a>
-          </td>
-          <td>
-            {% if event.duration %}
-              {{ event.duration }} hr
-              {% if event.duration != 1 %}s{% endif %}
-            {% endif %}
-          </td>
-          <td>{{ event.location|default:"" }}</td>
-          <td>{{ event.party }}</td>
+          <th class="date">
+            Date
+            <button class="btn-sort {% if current_order == 'date' %}active{% endif %}"
+                    hx-target="#events"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'agenda:events-filter-sort' 'date' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </button>
+          </th>
+          <th class="matter">
+            Matter
+            <button class="btn-sort {% if current_order == 'matter__name' %}active{% endif %}"
+                    hx-target="#events"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'agenda:events-filter-sort' 'matter__name' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </button>
+          </th>
+          <th class="description">
+            Description
+            <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
+                    hx-target="#events"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'agenda:events-filter-sort' 'description' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </button>
+          </th>
+          <th class="duration">Duration</th>
+          <th class="location">Location</th>
+          <th class="party">
+            Party
+            <button class="btn-sort {% if current_order == 'party' %}active{% endif %}"
+                    hx-target="#events"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'agenda:events-filter-sort' 'party' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </button>
+          </th>
+          <th class="status">
+            Status
+            <button class="btn-sort {% if current_order == 'status' %}active{% endif %}"
+                    hx-target="#events"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'agenda:events-filter-sort' 'status' %}">
+              <i class="bi bi-chevron-expand"></i>
+            </button>
+          </th>
         </tr>
-      {% empty %}
-        <tr>
-          <td colspan="6" class="empty-message">No events found.</td>
-        </tr>
-      {% endfor %}
+      </thead>
+      <tbody>
+        {% for event in objects %}
+          <tr>
+            <td>
+              {{ event.date|date:"Y-m-d" }}
+              {% if event.start_time %}{{ event.start_time|time:"g:i A" }}{% endif %}
+            </td>
+            <td>
+              <a href={% url 'matters:events-index' id=event.matter.id %}>{{ event.matter.name }}</a>
+            </td>
+            <td class="{% if event.date < third_day and event.status == "Pending" %}urgent{% endif %}">
+              <a href="#"
+                 type="button"
+                 class="btn-icon"
+                 hx-get="/events/{{ event.id }}/edit"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click"
+                 data-bs-toggle="modal"
+                 data-bs-target="#htmx-modal-container">{{ event.description }}</a>
+            </td>
+            <td>
+              {% if event.duration %}
+                {{ event.duration }} hr
+                {% if event.duration != 1 %}s{% endif %}
+              {% endif %}
+            </td>
+            <td>{{ event.location|default:"" }}</td>
+            <td>{{ event.party }}</td>
+            <td>{{ event.status }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="empty-message">No events found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
     {% include "pagination.html" %}
   </div>

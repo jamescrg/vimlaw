@@ -55,6 +55,11 @@ def get_table_data(request):
         else:
             event.duration = None
 
+    current_order = filter.data.get("order_by", "date")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else "date"
+    current_order = current_order.lstrip("-")
+
     table_data["pagination"] = pagination
     table_data["session_key"] = "events_pagination"
     table_data["trigger_key"] = "eventsChanged"
@@ -63,5 +68,7 @@ def get_table_data(request):
         status__in=["Pending", "Open"]
     ).order_by("name")
     table_data["users"] = CustomUser.objects.all().order_by("username")
+    table_data["events_filter_status"] = filter.data.get("status")
+    table_data["current_order"] = current_order
 
     return table_data

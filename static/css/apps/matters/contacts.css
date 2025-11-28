@@ -17,6 +17,10 @@
   width: 10rem;
 }
 
+.matter-contacts td {
+  vertical-align: middle;
+}
+
 .matter-contacts tr.band-alt td {
   background-color: var(--hl-gray) !important;
 }
