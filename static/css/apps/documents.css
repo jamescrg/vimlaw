@@ -1,17 +1,274 @@
-.uploaded_at {
-  width: 15.625rem;
+/* Documents List Table */
+#documents-list.table-fixed {
+  table-layout: fixed;
+  min-width: 60rem;
 }
 
-.checkmark {
-  width: 1.875rem;
+/* Column widths */
+#documents-list .col-select {
+  width: 3rem;
   text-align: center;
-  vertical-align: middle;
+  padding: 0.5rem;
 }
 
-.checkmark input[type="checkbox"] {
+#documents-list th.col-select {
+  text-align: center;
+}
+
+.col-select i {
+  color: var(--stone-400);
+}
+
+#documents-list .col-date {
+  width: 11rem;
+}
+
+#documents-list .col-category {
+  width: 10rem;
+}
+
+#documents-list .col-document {
+  /* Variable width - takes remaining space */
+}
+
+#documents-list .col-proceeding {
+  width: 16.5rem;
+}
+
+/* Checkbox styling */
+#documents-list .col-select input[type="checkbox"] {
+  appearance: none;
   width: 1rem;
   height: 1rem;
   cursor: pointer;
   margin: 0;
   vertical-align: middle;
+  background-color: var(--stone-50);
+  border: 1px solid var(--stone-400);
+  border-radius: 0.125rem;
+}
+
+#documents-list .col-select input[type="checkbox"]:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%2378716c' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* OCR badge in document column */
+#documents-list .col-document .badge {
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+
+/* Text overflow handling */
+#documents-list td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+/* Document cell with description */
+#documents-list .col-document {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+#documents-list .doc-name {
+  /* Allow wrapping for document name */
+}
+
+#documents-list .doc-description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* Ghost action buttons - inline after name */
+#documents-list .doc-actions {
+  margin-left: 1rem;
+  white-space: nowrap;
+}
+
+#documents-list .doc-actions .action-btn + .action-btn {
+  margin-left: 0.75rem;
+}
+
+#documents-list .doc-actions .action-btn {
+  color: var(--stone-400);
+  /* padding: 0.25rem; */
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+#documents-list tr:hover .doc-actions .action-btn {
+  opacity: 1;
+}
+
+#documents-list .doc-actions .action-btn:hover {
+  color: var(--stone-600);
+}
+
+/* Inline date input */
+#documents-list .doc-date-input {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  width: 9rem;
+}
+
+/* Dropdown cells */
+#documents-list .dropdown-cell .dropdown {
+  display: inline;
+}
+
+#documents-list .dropdown-cell .button-link {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--link);
+  cursor: pointer;
+  text-align: left;
+}
+
+#documents-list .dropdown-cell .button-link:hover {
+  color: var(--link-hover);
+}
+
+/* Ghost buttons for empty date/proceeding */
+#documents-list .col-date .empty-value-icon,
+#documents-list .col-proceeding .empty-value-icon {
+  color: var(--stone-400);
+  display: block;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+
+#documents-list .col-date:hover .empty-value-icon,
+#documents-list .col-proceeding:hover .empty-value-icon {
+  opacity: 1;
+}
+
+/* Spin animation for OCR processing */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+/* Highlights List Table */
+.highlights-list.table-fixed {
+  table-layout: fixed;
+  min-width: 40rem;
+}
+
+/* Highlights document filter dropdown */
+#highlights-document-filter {
+  width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.highlights-list .col-document {
+  width: 15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.highlights-list .col-slug {
+  width: 15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.highlights-list .col-text {
+  /* Variable width - takes remaining space */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--stone-500);
+}
+
+.highlights-list .col-page {
+  width: 3rem;
+  text-align: center;
+}
+
+.ocr-badge {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  background-color: var(--stone-200);
+  color: var(--stone-600);
+  font-size: 0.85rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+}
+
+.ocr-badge.ocr-failed {
+  background-color: var(--red-100);
+  color: var(--red-700);
+}
+
+/* Timeline source badges */
+.timeline-list td {
+  overflow: visible;
+}
+
+.timeline-list .source-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.timeline-list .source-badge .badge-link {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background-color: var(--stone-200);
+  color: var(--stone-600);
+  border-radius: 0.25rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.timeline-list .source-badge .badge-link:hover {
+  background-color: var(--stone-300);
+  color: var(--stone-700);
+}
+
+.timeline-list .source-badge .badge-link i {
+  margin-right: 0.25rem;
+}
+
+/* Add source ghost button */
+.timeline-list .add-source-btn {
+  display: inline-block;
+  margin-left: 0.5rem;
+  color: var(--stone-400);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.timeline-list tr:hover .add-source-btn {
+  opacity: 1;
+}
+
+.timeline-list .add-source-btn:hover {
+  color: var(--stone-600);
 }

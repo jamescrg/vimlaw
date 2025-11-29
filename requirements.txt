@@ -17,3 +17,8 @@ django-cleanup==8.1.0
 django-filter==24.3
 pytest-xdist==3.8.0
 django-storages[s3]==1.14.6
+django-q2==1.7.2
+pytesseract==0.3.13
+pdf2image==1.17.0
+pypdf==5.1.0
+ocrmypdf==16.7.0

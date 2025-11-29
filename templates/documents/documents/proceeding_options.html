@@ -1,0 +1,6 @@
+<option value="">---------</option>
+{% for proceeding in proceedings %}
+  <option value="{{ proceeding.id }}">
+    {% if proceeding.case_number %}{{ proceeding.case_number }}{% endif %}
+  </option>
+{% endfor %}

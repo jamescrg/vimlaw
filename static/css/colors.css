@@ -227,6 +227,7 @@
 
   /* Purple */
   --purple-50: oklch(0.977 0.014 308.3);
+  --purple-75: oklch(0.9615 0.0235 307.75);
   --purple-100: oklch(0.946 0.033 307.2);
   --purple-200: oklch(0.902 0.06 306.7);
   --purple-300: oklch(0.827 0.108 306.4);
@@ -326,7 +327,7 @@
   --hl-gray: var(--stone-125);
   --hl-green: var(--lime-50);
   --hl-orange: var(--orange-50);
-  --hl-purple: var(--purple-50);
+  --hl-purple: var(--purple-75);
   --hl-red: var(--red-50);
   --hl-yellow: var(--yellow-50);
 

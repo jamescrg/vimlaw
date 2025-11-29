@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en" mozdisallowselectionprint>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="PDF document viewer">
+    <meta name="keywords" content="pdf, viewer, document">
+    <title>PDF Viewer</title>
+    <link rel="stylesheet" href="pdf_viewer.css">
+    <style>
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #viewerContainer {
+        position: absolute;
+        overflow: auto;
+        width: 100%;
+        top: 40px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+
+      #viewer {
+        margin: 0 auto;
+      }
+
+      #toolbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: #d6d3d1;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        gap: 10px;
+        z-index: 100;
+      }
+
+      #toolbar button {
+        background: #57534e;
+        border: none;
+        color: #fafaf9;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 3px;
+      }
+
+      #toolbar button:hover {
+        background: #44403c;
+      }
+
+      #pageNumber {
+        width: 50px;
+        text-align: center;
+        background: #57534e;
+        border: none;
+        color: #fafaf9;
+        padding: 5px;
+        border-radius: 3px;
+      }
+
+      #toolbar span {
+        color: #57534e;
+      }
+
+      #zoomSelect {
+        background: #57534e;
+        border: none;
+        color: #fafaf9;
+        padding: 5px;
+        border-radius: 3px;
+      }
+
+      .toolbarSeparator {
+        width: 1px;
+        height: 20px;
+        background: #666;
+        margin: 0 5px;
+      }
+
+      #createHighlightBtn {
+        margin-left: auto;
+      }
+
+      /* Highlight overlay styles */
+      .highlight-overlay {
+        position: absolute;
+        pointer-events: auto;
+        cursor: pointer;
+        mix-blend-mode: multiply;
+        z-index: 1;
+      }
+
+      .highlight-overlay:hover {
+        filter: brightness(0.85);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <button id="previous" title="Previous Page">◀</button>
+      <input type="number" id="pageNumber" value="1" min="1">
+      <span>/ <span id="numPages">-</span></span>
+      <button id="next" title="Next Page">▶</button>
+      <div class="toolbarSeparator"></div>
+      <button id="zoomOut" title="Zoom Out">−</button>
+      <select id="zoomSelect">
+        <option value="0.5">50%</option>
+        <option value="0.75">75%</option>
+        <option value="1" selected>100%</option>
+        <option value="1.25">125%</option>
+        <option value="1.5">150%</option>
+        <option value="2">200%</option>
+      </select>
+      <button id="zoomIn" title="Zoom In">+</button>
+      <div class="toolbarSeparator"></div>
+      <button id="createHighlightBtn" title="Create highlight from selected text">+ Highlight</button>
+    </div>
+    <div id="viewerContainer">
+      <div id="viewer" class="pdfViewer"></div>
+    </div>
+    <script type="module">
+    console.log('Viewer script starting...');
+
+    let pdfjsLib, pdfjsViewer;
+    try {
+      pdfjsLib = await import('../build/pdf.js');
+      console.log('PDF.js loaded');
+    } catch (e) {
+      console.error('Failed to load pdf.js:', e);
+      document.getElementById('viewer').innerHTML = '<p style="padding: 20px; color: red;">Failed to load PDF.js library: ' + e.message + '</p>';
+      throw e;
+    }
+
+    try {
+      pdfjsViewer = await import('./pdf_viewer.js');
+      console.log('PDF Viewer loaded');
+    } catch (e) {
+      console.error('Failed to load pdf_viewer.js:', e);
+      document.getElementById('viewer').innerHTML = '<p style="padding: 20px; color: red;">Failed to load PDF Viewer: ' + e.message + '</p>';
+      throw e;
+    }
+
+    // Set worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '../build/pdf.worker.js';
+
+    // Get URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const pdfUrl = params.get('file');
+    const initialPage = parseInt(params.get('page')) || 1;
+
+    console.log('PDF URL:', pdfUrl);
+
+    if (!pdfUrl) {
+      document.getElementById('viewer').innerHTML = '<p style="padding: 20px; color: red;">No PDF file specified</p>';
+      throw new Error('No PDF file specified');
+    }
+
+    // Initialize viewer
+    const container = document.getElementById('viewerContainer');
+    const eventBus = new pdfjsViewer.EventBus();
+
+    const pdfLinkService = new pdfjsViewer.PDFLinkService({
+      eventBus,
+    });
+
+    const pdfViewer = new pdfjsViewer.PDFViewer({
+      container,
+      eventBus,
+      linkService: pdfLinkService,
+      textLayerMode: 2, // Enable text layer
+    });
+
+    pdfLinkService.setViewer(pdfViewer);
+
+    // Expose viewer for parent window
+    window.pdfViewer = pdfViewer;
+    window.eventBus = eventBus;
+
+    // Current selection data
+    let currentSelection = null;
+
+    // Load PDF
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    loadingTask.promise.then(pdf => {
+      document.getElementById('numPages').textContent = pdf.numPages;
+      document.getElementById('pageNumber').max = pdf.numPages;
+
+      pdfViewer.setDocument(pdf);
+      pdfLinkService.setDocument(pdf);
+
+      // Notify parent that viewer is ready
+      window.parent.postMessage({ type: 'viewerReady', numPages: pdf.numPages }, '*');
+
+      // Navigate to initial page
+      if (initialPage > 1) {
+        pdfViewer.currentPageNumber = initialPage;
+      }
+    }).catch(err => {
+      console.error('Error loading PDF:', err);
+      document.getElementById('viewer').innerHTML = '<p style="padding: 20px; color: red;">Error loading PDF: ' + err.message + '</p>';
+    });
+
+    // Page change events
+    eventBus.on('pagechanging', evt => {
+      document.getElementById('pageNumber').value = evt.pageNumber;
+      window.parent.postMessage({ type: 'pageChanged', page: evt.pageNumber }, '*');
+    });
+
+    // Toolbar controls
+    document.getElementById('previous').addEventListener('click', () => {
+      if (pdfViewer.currentPageNumber > 1) {
+        pdfViewer.currentPageNumber--;
+      }
+    });
+
+    document.getElementById('next').addEventListener('click', () => {
+      if (pdfViewer.currentPageNumber < pdfViewer.pagesCount) {
+        pdfViewer.currentPageNumber++;
+      }
+    });
+
+    document.getElementById('pageNumber').addEventListener('change', evt => {
+      const page = parseInt(evt.target.value);
+      if (page >= 1 && page <= pdfViewer.pagesCount) {
+        pdfViewer.currentPageNumber = page;
+      }
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      const current = pdfViewer.currentScale;
+      pdfViewer.currentScale = Math.max(0.25, current - 0.25);
+      updateZoomSelect();
+    });
+
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      const current = pdfViewer.currentScale;
+      pdfViewer.currentScale = Math.min(4, current + 0.25);
+      updateZoomSelect();
+    });
+
+    document.getElementById('zoomSelect').addEventListener('change', evt => {
+      pdfViewer.currentScale = parseFloat(evt.target.value);
+    });
+
+    function updateZoomSelect() {
+      const scale = pdfViewer.currentScale;
+      const select = document.getElementById('zoomSelect');
+      const options = select.options;
+      for (let i = 0; i < options.length; i++) {
+        if (Math.abs(parseFloat(options[i].value) - scale) < 0.01) {
+          select.selectedIndex = i;
+          return;
+        }
+      }
+    }
+
+    // Text selection handling
+    document.addEventListener('mouseup', () => {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+
+      if (text) {
+        // Find which page the selection is on
+        const anchorNode = selection.anchorNode;
+        const pageDiv = anchorNode?.parentElement?.closest('.page');
+        const textLayer = pageDiv?.querySelector('.textLayer');
+        if (!pageDiv || !textLayer) {
+          currentSelection = null;
+          return;
+        }
+
+        const pageNumber = parseInt(pageDiv.dataset.pageNumber);
+        const range = selection.getRangeAt(0);
+        const rects = range.getClientRects();
+        // Use textLayer as reference for coordinates
+        const textLayerRect = textLayer.getBoundingClientRect();
+
+        const scale = pdfViewer.currentScale;
+        const selectionRects = [];
+        for (let i = 0; i < rects.length; i++) {
+          const rect = rects[i];
+          if (rect.width < 2 || rect.height < 5) continue;
+
+          // Normalize to scale 1.0 for storage, relative to textLayer
+          selectionRects.push({
+            left: (rect.left - textLayerRect.left) / scale,
+            top: (rect.top - textLayerRect.top) / scale,
+            width: rect.width / scale,
+            height: rect.height / scale,
+          });
+        }
+
+        if (selectionRects.length > 0) {
+          currentSelection = {
+            text,
+            page: pageNumber,
+            rects: selectionRects,
+          };
+          // Notify parent of selection change
+          window.parent.postMessage({ type: 'selectionChanged', selection: currentSelection }, '*');
+        }
+      } else {
+        currentSelection = null;
+        window.parent.postMessage({ type: 'selectionCleared' }, '*');
+      }
+    });
+
+    // Create highlight button
+    document.getElementById('createHighlightBtn').addEventListener('click', () => {
+      if (currentSelection) {
+        window.parent.postMessage({ type: 'createHighlight', selection: currentSelection }, '*');
+      }
+    });
+
+    // Listen for messages from parent
+    window.addEventListener('message', evt => {
+      const data = evt.data;
+
+      switch (data.type) {
+        case 'setHighlights':
+          renderHighlights(data.highlights);
+          break;
+
+        case 'scrollToHighlight':
+          scrollToHighlight(data.highlightId, data.page);
+          break;
+
+        case 'goToPage':
+          pdfViewer.currentPageNumber = data.page;
+          break;
+
+        case 'setZoom':
+          pdfViewer.currentScale = data.scale;
+          updateZoomSelect();
+          break;
+      }
+    });
+
+    // Store highlights data for rendering
+    let highlightsByPage = {};
+
+    // Render highlights on pages
+    function renderHighlights(highlights) {
+      // Remove existing highlights
+      document.querySelectorAll('.highlight-overlay').forEach(el => el.remove());
+
+      // Group highlights by page
+      highlightsByPage = {};
+      highlights.forEach(h => {
+        if (!highlightsByPage[h.page_number]) highlightsByPage[h.page_number] = [];
+        highlightsByPage[h.page_number].push(h);
+      });
+
+      // Render on already-rendered pages
+      Object.keys(highlightsByPage).forEach(pageNum => {
+        const pageDiv = document.querySelector(`.page[data-page-number="${pageNum}"]`);
+        if (pageDiv && pageDiv.querySelector('.textLayer')) {
+          renderHighlightsOnPage(parseInt(pageNum), pageDiv);
+        }
+      });
+    }
+
+    // Single listener for page renders (set up once)
+    eventBus.on('pagerendered', evt => {
+      const pageHighlights = highlightsByPage[evt.pageNumber];
+      if (pageHighlights) {
+        // Small delay to ensure text layer is fully rendered
+        setTimeout(() => {
+          renderHighlightsOnPage(evt.pageNumber, evt.source.div);
+        }, 50);
+      }
+    });
+
+    function renderHighlightsOnPage(pageNum, pageDiv) {
+      const pageHighlights = highlightsByPage[pageNum];
+      if (!pageHighlights) return;
+
+      const textLayer = pageDiv.querySelector('.textLayer');
+      if (!textLayer) return;
+
+      // Remove existing highlights on this page first
+      textLayer.querySelectorAll('.highlight-overlay').forEach(el => el.remove());
+
+      const scale = pdfViewer.currentScale;
+
+      pageHighlights.forEach(highlight => {
+        const coords = highlight.coordinates;
+        if (!coords || !coords.rects) return;
+
+        coords.rects.forEach((rect) => {
+          const div = document.createElement('div');
+          div.className = 'highlight-overlay';
+          div.dataset.highlightId = highlight.id;
+
+          // Handle both coordinate formats: {x1,y1,x2,y2} and {left,top,width,height}
+          const left = rect.left !== undefined ? rect.left : rect.x1;
+          const top = rect.top !== undefined ? rect.top : rect.y1;
+          const width = rect.width !== undefined ? rect.width : (rect.x2 - rect.x1);
+          const height = rect.height !== undefined ? rect.height : (rect.y2 - rect.y1);
+
+          // Apply scale to normalized coordinates
+          div.style.left = `${left * scale}px`;
+          div.style.top = `${top * scale}px`;
+          div.style.width = `${width * scale}px`;
+          div.style.height = `${height * scale}px`;
+          div.style.backgroundColor = highlight.color;
+          div.title = highlight.title;
+
+          div.addEventListener('click', () => {
+            window.parent.postMessage({ type: 'highlightClicked', highlightId: highlight.id }, '*');
+          });
+
+          // Insert at beginning of textLayer so highlights are behind text
+          textLayer.insertBefore(div, textLayer.firstChild);
+        });
+      });
+    }
+
+    function scrollToHighlight(highlightId, page) {
+      // Go to page first
+      pdfViewer.currentPageNumber = page;
+
+      // Then scroll to highlight after page renders
+      setTimeout(() => {
+        const highlight = document.querySelector(`.highlight-overlay[data-highlight-id="${highlightId}"]`);
+        if (highlight) {
+          highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+<div class="modal-dialog modal-sm">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Add Source</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-compact">
+        <div class="form-group combobox-container">
+          <label for="sources-search-input">Search</label>
+          <div class="combobox-input-wrapper">
+            <input type="search"
+                   id="sources-search-input"
+                   name="q"
+                   hx-get="{% url 'documents:fact-sources-search' fact.id %}"
+                   hx-target="#sources-results"
+                   hx-trigger="keyup changed delay:300ms, search"
+                   autocomplete="off"
+                   placeholder="Search documents and highlights..."
+                   autofocus>
+          </div>
+          <div id="sources-results"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

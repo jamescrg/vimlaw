@@ -37,10 +37,16 @@ Make sure to have the following installed on your machine:
 ### Additional Machine Requirements
 
 The application needs additional software to be installed on the machine
-where the application will be running. The additional software is:
+where the application will be running:
 
-- Pango
-  - Install: `sudo apt-get install -y libpangocairo-1.0-0`
+```bash
+sudo apt-get install -y libpangocairo-1.0-0 tesseract-ocr ghostscript poppler-utils
+```
+
+- **Pango** (`libpangocairo-1.0-0`) - Required by WeasyPrint for PDF generation
+- **Tesseract** (`tesseract-ocr`) - OCR engine for text extraction from scanned PDFs
+- **Ghostscript** (`ghostscript`) - Required by ocrmypdf for PDF processing
+- **Poppler** (`poppler-utils`) - Required by pdf2image for PDF to image conversion
 
 ### Setting up PostgreSQL
 

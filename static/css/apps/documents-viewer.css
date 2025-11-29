@@ -1,0 +1,284 @@
+/* Document Viewer Styles */
+
+:root {
+  --stone-50: #fafaf9;
+  --stone-100: #f5f5f4;
+  --stone-200: #e7e5e4;
+  --stone-300: #d6d3d1;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #57534e;
+  --stone-700: #44403c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: "Open Sans", sans-serif;
+}
+
+/* Toolbar */
+#viewer-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: var(--stone-100);
+  border-bottom: 1px solid var(--stone-300);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
+}
+
+.toolbar-left,
+.toolbar-center,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.document-title {
+  font-weight: 600;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matter-name {
+  color: var(--stone-500);
+  font-size: 0.875rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: var(--stone-300);
+}
+
+#page-input {
+  width: 48px;
+  text-align: center;
+  border: 1px solid var(--stone-300);
+  border-radius: 4px;
+  padding: 4px;
+}
+
+#zoom-level {
+  min-width: 48px;
+  text-align: center;
+}
+
+/* Main Container */
+#main-container {
+  position: fixed;
+  top: 48px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+}
+
+/* PDF Container */
+#pdf-container {
+  flex: 1;
+  overflow: auto;
+  background: var(--stone-200);
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+#viewer {
+  position: relative;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+#loading-indicator {
+  padding: 40px;
+  text-align: center;
+  color: var(--stone-500);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* PDF Page */
+.pdf-page-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.pdf-page-container:last-child {
+  margin-bottom: 0;
+}
+
+.pdf-page {
+  display: block;
+}
+
+/* Text Layer - use PDF.js viewer CSS, just customize selection color */
+.textLayer ::selection {
+  background: rgba(0, 100, 200, 0.35);
+}
+
+/* Highlight Layer */
+.highlight-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.highlight-overlay {
+  position: absolute;
+  opacity: 0.4;
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.highlight-overlay:hover {
+  opacity: 0.6;
+}
+
+/* Highlights Sidebar */
+#highlights-sidebar {
+  width: 280px;
+  background: white;
+  border-left: 1px solid var(--stone-300);
+  overflow-y: auto;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+#highlights-sidebar h4 {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  color: var(--stone-700);
+}
+
+.highlight-item {
+  padding: 12px;
+  border: 1px solid var(--stone-200);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  position: relative;
+}
+
+.highlight-item:hover {
+  background: var(--stone-50);
+}
+
+.highlight-item.active {
+  background: var(--stone-100);
+  border-color: var(--stone-400);
+}
+
+.highlight-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  padding-right: 24px;
+}
+
+.highlight-meta {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  margin-bottom: 4px;
+}
+
+.highlight-text {
+  font-size: 0.875rem;
+  color: var(--stone-600);
+  line-height: 1.4;
+}
+
+.highlight-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.highlight-actions .btn {
+  padding: 0;
+  color: var(--stone-400);
+}
+
+.highlight-actions .btn:hover {
+  color: var(--stone-700);
+}
+
+.no-highlights {
+  color: var(--stone-400);
+  text-align: center;
+  padding: 20px;
+  font-size: 0.875rem;
+}
+
+/* Modal */
+.selected-text-preview {
+  background: var(--stone-100);
+  padding: 12px;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toolbar-left .matter-name {
+    display: none;
+  }
+
+  #highlights-sidebar {
+    width: 240px;
+  }
+}
+
+@media (max-width: 576px) {
+  .toolbar-left {
+    display: none;
+  }
+
+  #highlights-sidebar {
+    position: fixed;
+    right: -280px;
+    top: 48px;
+    bottom: 0;
+    transition: right 0.3s;
+    z-index: 50;
+  }
+
+  #highlights-sidebar.open {
+    right: 0;
+  }
+}

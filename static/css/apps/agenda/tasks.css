@@ -54,6 +54,7 @@
 
 .tasks-table .description {
   min-width: 31.5rem;
+  white-space: normal;
 }
 
 .tasks-table .status {
@@ -67,7 +68,7 @@
 .tasks-table .date {
   overflow: visible;
   white-space: nowrap;
-  width: 8rem;
+  width: 11rem;
 }
 
 .tasks-table .date .dropdown-menu {

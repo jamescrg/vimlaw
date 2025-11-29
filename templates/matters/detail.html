@@ -17,6 +17,8 @@
                     hx-target="#htmx-modal-container"
                     data-bs-toggle="modal"
                     data-bs-target="#htmx-modal-container">+ Expense</button>
+            <a href="{% url 'documents:select-matter' matter.id %}"
+               class="icon-green">Documents <i class="bi bi-arrow-up-right-circle ms-2"></i></a>
             <a href={% url 'matters:print' id=matter.id %}>
               <i class="bi bi-printer"></i>
             </a>
@@ -57,9 +59,6 @@
         </li>
         <li {% if subapp == 'settlement' %}class="active"{% endif %}>
           <a href={% url 'matters:settlement-index' id=matter.id %}>Settlement</a>
-        </li>
-        <li {% if subapp == 'timeline' %}class="active"{% endif %}>
-          <a href={% url 'matters:timeline-index' id=matter.id %}>Timeline</a>
         </li>
         <li {% if subapp == 'ledger' %}class="active"{% endif %}>
           <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>

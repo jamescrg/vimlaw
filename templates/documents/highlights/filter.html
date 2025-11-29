@@ -1,0 +1,27 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Filter Highlights</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form class="form-responsive form-spacious filter"
+            hx-target="#htmx-modal-container"
+            hx-post="{% url 'documents:highlights-filter' %}">
+        {% csrf_token %}
+        {{ filter.form }}
+        <br />
+        <div class="flex-center-space limited-width">
+          <button type="submit" class="submit">Apply</button>
+          <a class="btn-icon"
+             href="#"
+             hx-post="{% url 'management:clear-filters' session_key='highlights_filter' trigger='highlightsChanged' %}">Restore Defaults</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

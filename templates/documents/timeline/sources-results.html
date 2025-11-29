@@ -1,0 +1,35 @@
+{% if query %}
+  {% if documents or highlights %}
+    <ul class="assign-results">
+      {% for document in documents %}
+        <li>
+          <a href="#"
+             hx-post="{% url 'documents:fact-add-source' fact.id %}"
+             hx-vals='{"type": "document", "id": "{{ document.id }}"}'
+             hx-target="#fact-{{ fact.id }}"
+             hx-swap="outerHTML"
+             data-bs-dismiss="modal">
+            <i class="bi bi-file-earmark-text"></i>
+            {{ document.name|truncatechars:40 }}
+          </a>
+        </li>
+      {% endfor %}
+      {% for highlight in highlights %}
+        <li>
+          <a href="#"
+             hx-post="{% url 'documents:fact-add-source' fact.id %}"
+             hx-vals='{"type": "highlight", "id": "{{ highlight.id }}"}'
+             hx-target="#fact-{{ fact.id }}"
+             hx-swap="outerHTML"
+             data-bs-dismiss="modal">
+            <i class="bi bi-exclamation-circle me-1"></i>
+            {{ highlight.slug|truncatechars:30 }}
+            <small class="text-muted">- {{ highlight.document.name|truncatechars:20 }}</small>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">No results found</p>
+  {% endif %}
+{% endif %}

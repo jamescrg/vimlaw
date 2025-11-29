@@ -86,7 +86,8 @@ djlint --profile django --reformat templates/
 - **intakes/**: Client intake management
 - **trust/**: Trust accounting functionality
 - **reports/**: Reporting system (activity/, clients/, revenue/)
-- **folders/**: Document organization
+- **documents/**: Document management and PDF deep linking
+- **folders/**: Contact organization
 - **search/**: Global search functionality
 - **settings/**: Application settings (company/, profile/, users/, integrations/)
 
@@ -119,6 +120,7 @@ djlint --profile django --reformat templates/
 
 ### Code Standards
 
+Please run pre-commit hooks and fix any linting errors on all significant changes:
 - Black code formatting
 - isort for import sorting
 - flake8 for linting
@@ -129,3 +131,12 @@ djlint --profile django --reformat templates/
 - do not use inline styles in HTML
 - css values should snap to a 4px grid
 - tests run slowly on this server, when testing, please run targeted unit tests to cover recent changes
+
+
+## Template: Django & HTMX Project (IMPORTANT)
+
+Technology Stack: This project uses HTMX (via CDN). We do not use a separate JavaScript framework (React, Vue, etc.) for UI logic.
+
+HATEOAS Principle: All front-end interactivity (AJAX calls, form submissions, dynamic updates) MUST be implemented using HTMX attributes (hx-get, hx-post, hx-target, hx-swap, etc.) placed directly on HTML elements.
+
+Response Content: Django Views handling HTMX requests MUST return only a partial HTML template fragment (a snippet, not a full page) to be swapped into the DOM. Do NOT return JSON unless it's for a highly specific, justified edge case (e.g., uploading a file).

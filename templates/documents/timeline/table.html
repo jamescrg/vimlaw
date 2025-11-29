@@ -1,0 +1,15 @@
+<div class="table-container">
+  <table id="timeline-list" class="table timeline-list">
+    <tr>
+      <th class="date-time">Date and Time</th>
+      <th class="description">Description</th>
+    </tr>
+    {% for fact in facts %}
+      {% include "documents/timeline/fact-row.html" %}
+    {% empty %}
+      <tr>
+        <td colspan="2" class="empty-message">No timeline entries found for this matter.</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>

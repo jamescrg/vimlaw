@@ -122,20 +122,22 @@ const initializeDocumentDropzone = () => {
           const submitButton = form.querySelector('button[type="submit"]');
           const originalText = submitButton.innerHTML;
 
-          // Loading state
-          submitButton.disabled = true;
-          submitButton.innerHTML =
-            '<i class="bi bi-arrow-repeat spin"></i> Uploading...';
-
           const formData = new FormData(form);
 
           // Add file from dropzone to form
           const allFiles = this.files || [];
           const realFiles = allFiles.filter(file => !file.isExistingFile && file instanceof File);
-          if (realFiles.length > 0) {
+          const hasNewFile = realFiles.length > 0;
+          if (hasNewFile) {
             const file = realFiles[0];
             formData.append("file", file);
           }
+
+          // Loading state - show "Uploading..." only if there's a new file
+          submitButton.disabled = true;
+          submitButton.innerHTML = hasNewFile
+            ? '<i class="bi bi-arrow-repeat spin"></i> Uploading...'
+            : '<i class="bi bi-arrow-repeat spin"></i> Saving...';
 
           fetch(form.action, {
             method: "POST",

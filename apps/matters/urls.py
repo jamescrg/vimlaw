@@ -8,7 +8,6 @@ from .proceedings import views as proceedings
 from .rates import views as matters_rates
 from .settlement import views as settlement
 from .tasks import views as tasks
-from .timeline import views as timeline
 from .views import (
     add,
     delete,
@@ -234,42 +233,6 @@ urlpatterns = [
         "matters/<int:matter_id>/settlement/<int:entry_id>/delete",
         settlement.delete,
         name="settlement-delete",
-    ),
-    # Timeline
-    path("matters/<int:id>/timeline/", timeline.timeline_index, name="timeline-index"),
-    path("matters/<int:id>/timeline/list/", timeline.timeline_list, name="timeline"),
-    path("matters/<int:id>/timeline/add", timeline.add, name="timeline-add"),
-    path(
-        "matters/<int:id>/timeline/<int:fact_id>/edit",
-        timeline.edit,
-        name="timeline-edit",
-    ),
-    path(
-        "matters/<int:matter_id>/timeline/<int:fact_id>/delete",
-        timeline.delete,
-        name="timeline-delete",
-    ),
-    path("matters/<int:id>/timeline/print", timeline.print, name="timeline-print"),
-    path("matters/<int:pk>/timeline/pdf/", timeline.timeline_pdf, name="timeline-pdf"),
-    path(
-        "matters/<int:matter_id>/timeline/<int:fact_id>/edit-description",
-        timeline.edit_fact_description,
-        name="timeline-edit-description",
-    ),
-    path(
-        "matters/<int:matter_id>/timeline/<int:fact_id>/update-description",
-        timeline.update_fact_description,
-        name="timeline-update-description",
-    ),
-    path(
-        "matters/<int:matter_id>/timeline/<int:fact_id>/edit-citations",
-        timeline.edit_fact_citations,
-        name="timeline-edit-citations",
-    ),
-    path(
-        "matters/<int:matter_id>/timeline/<int:fact_id>/update-citations",
-        timeline.update_fact_citations,
-        name="timeline-update-citations",
     ),
     path("matters/filter", filter, name="filter"),
     path("matters/order-by/<str:order>", order_by, name="order-by"),

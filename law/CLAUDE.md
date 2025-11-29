@@ -6,7 +6,7 @@ code in this repository.
 ## Project Overview
 
 Law-Admin is a Django-based law practice management application. It manages
-matters, contacts, deadlines, time entries, expenses, trust accounting,
+matters, contacts, deadlines, time entries, expenses, trust accounting, documents,
 and intakes with support for multiple users/timekeepers.
 
 ## Development Commands

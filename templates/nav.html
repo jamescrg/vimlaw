@@ -23,6 +23,9 @@
         <li {% if app == 'intakes' %}class="active"{% endif %}>
           <a id="nav-intakes" href={% url 'intakes:index' %}>Intakes</a>
         </li>
+        <li {% if app == 'documents' %}class="active"{% endif %}>
+          <a id="nav-documents" href={% url 'documents:index' %}>Documents</a>
+        </li>
         {% if user.is_staff %}
           <li {% if app == 'reports' %}class="active"{% endif %}>
             <a id="nav-reports" href={% url 'reports:index' %}>Reports</a>

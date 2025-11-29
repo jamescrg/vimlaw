@@ -1,0 +1,82 @@
+<tr id="fact-{{ fact.id }}"
+    class="{% if fact.color %}hl-{{ fact.color|lower }}{% endif %}">
+  <td class="date-time{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
+    <a href="#"
+       type="button"
+       class="btn-icon"
+       hx-get="{% url 'documents:timeline-edit' fact.id %}"
+       hx-target="#htmx-modal-container"
+       hx-trigger="click"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">{{ fact.date|date:'Y-m-d' }}
+      {% if fact.time %}{{ fact.time|time:'g:i A' }}{% endif %}
+    </a>
+  </td>
+  <td id="show-fact-description-{{ fact.id }}"
+      class="description{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
+    <a class="button-link show-description-form-button"
+       href="#"
+       hx-target="#show-fact-description-{{ fact.id }}"
+       hx-swap="innerHTML"
+       hx-get="{% url 'documents:timeline-edit-description' fact.id %}">{{ fact.description }}</a>
+    {% for document in fact.documents.all %}
+      <span class="source-badge dropdown">
+        <a href="#" class="badge-link" data-bs-toggle="dropdown">
+          <i class="bi bi-file-earmark-text"></i> {{ document.name|truncatechars:20 }}
+        </a>
+        <ul class="dropdown-menu">
+          {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
+            <li>
+              <a class="dropdown-item"
+                 href="{% url 'documents:viewer' document.id %}"
+                 target="_blank">View</a>
+            </li>
+          {% endif %}
+          <li>
+            <a class="dropdown-item"
+               href="{% url 'documents:download' document.id %}">Download</a>
+          </li>
+          <li>
+            <a class="dropdown-item text-danger"
+               href="#"
+               hx-post="{% url 'documents:fact-remove-source' fact.id %}"
+               hx-vals='{"type": "document", "id": "{{ document.id }}"}'
+               hx-target="#fact-{{ fact.id }}"
+               hx-swap="outerHTML">Remove</a>
+          </li>
+        </ul>
+      </span>
+    {% endfor %}
+    {% for highlight in fact.highlights.all %}
+      <span class="source-badge dropdown">
+        <a href="#" class="badge-link" data-bs-toggle="dropdown">
+          <i class="bi bi-pen-fill"></i> {{ highlight.slug|truncatechars:20 }}
+        </a>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item"
+               href="{% url 'documents:highlight-link' highlight.id %}"
+               target="_blank">View</a>
+          </li>
+          <li>
+            <a class="dropdown-item text-danger"
+               href="#"
+               hx-post="{% url 'documents:fact-remove-source' fact.id %}"
+               hx-vals='{"type": "highlight", "id": "{{ highlight.id }}"}'
+               hx-target="#fact-{{ fact.id }}"
+               hx-swap="outerHTML">Remove</a>
+          </li>
+        </ul>
+      </span>
+    {% endfor %}
+    <a href="#"
+       class="add-source-btn"
+       hx-get="{% url 'documents:fact-sources' fact.id %}"
+       hx-target="#htmx-modal-container"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container"
+       title="Add source">
+      <i class="bi bi-plus-circle"></i>
+    </a>
+  </td>
+</tr>

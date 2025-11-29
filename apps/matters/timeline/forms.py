@@ -13,7 +13,6 @@ class FactForm(forms.ModelForm):
             "date",
             "time",
             "description",
-            "citations",
             "color",
         )
 

@@ -1,0 +1,18 @@
+[Unit]
+Description=Django-Q Cluster for Law Admin
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=james
+Group=james
+WorkingDirectory=/home/james/law
+ExecStart=/home/james/.venvs/law/bin/python manage.py qcluster
+Restart=always
+RestartSec=10
+
+# Environment variables (adjust path if using .env differently)
+EnvironmentFile=/home/james/law/config/.env
+
+[Install]
+WantedBy=multi-user.target

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "apps.activity",
     "apps.agenda",
     "apps.contacts",
+    "apps.documents",
     "apps.folders",
     "apps.intakes",
     "apps.lab",
@@ -72,7 +73,21 @@ INSTALLED_APPS = [
     "apps.management",
     "django_filters",
     "django_cleanup.apps.CleanupConfig",
+    "django_q",
 ]
+
+# Django-Q2 Configuration
+Q_CLUSTER = {
+    "name": "law_admin",
+    "workers": 2,
+    "recycle": 500,
+    "timeout": 600,  # 10 minutes for OCR tasks
+    "retry": 900,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",
+    "catch_up": False,
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

@@ -1,0 +1,8 @@
+{% extends "documents/index.html" %}
+{% block subcontent %}
+  {% load humanize %}
+  <div id="timeline"
+       hx-trigger="timelineChanged from:body"
+       hx-get="{% url 'documents:timeline-list' %}"
+       hx-target="this">{% include "documents/timeline/list.html" %}</div>
+{% endblock subcontent %}

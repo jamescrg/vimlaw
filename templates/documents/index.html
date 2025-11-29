@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+  <div id="content" class="container content">
+    <div class="section detail-title">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <h1>{{ matter.name|default:"Select a Matter" }}</h1>
+          <div class="filter-tools">
+            <button type="button"
+                    class="select-btn"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+              Change &nbsp;
+              <small>
+                <i class="bi bi-chevron-down"></i>
+              </small>
+            </button>
+            <ul class="dropdown-menu">
+              {% for m in matters %}
+                <li>
+                  <a class="dropdown-item {% if m.id == matter.id %}active{% endif %}"
+                     href="{% url 'documents:select-matter' m.id %}">{{ m.name }}</a>
+                </li>
+              {% empty %}
+                <li>
+                  <span class="dropdown-item text-muted">No matters available</span>
+                </li>
+              {% endfor %}
+            </ul>
+            {% if matter %}
+              <a href="{% url 'matters:contacts' id=matter.id %}" class="icon-green"><i class="bi bi-arrow-up-left-circle"></i> Matter Details</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="navbar navbar-sub detail-subnav">
+      <ul>
+        <li {% if subapp == "documents" %}class="active"{% endif %}>
+          <a href="{% url 'documents:index' %}">Documents</a>
+        </li>
+        <li {% if subapp == "highlights" %}class="active"{% endif %}>
+          <a href="{% url 'documents:highlights-index' %}">Highlights</a>
+        </li>
+        <li {% if subapp == "timeline" %}class="active"{% endif %}>
+          <a href="{% url 'documents:timeline-index' %}">Timeline</a>
+        </li>
+      </ul>
+    </nav>
+    <div class="section subsection">
+      {% block subcontent %}
+      {% endblock subcontent %}
+    </div>
+  </div>
+{% endblock content %}

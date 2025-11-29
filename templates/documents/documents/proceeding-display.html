@@ -1,0 +1,35 @@
+{% if proceedings %}
+  <div class="dropdown">
+    {% if document.proceeding %}
+      <button class="button-link"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">{{ document.proceeding.forum }} - {{ document.proceeding.case_number }}</button>
+    {% else %}
+      <a href="#"
+         class="empty-value-icon"
+         data-bs-toggle="dropdown"
+         aria-expanded="false">
+        <i class="bi bi-briefcase-fill"></i>
+      </a>
+    {% endif %}
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item {% if not document.proceeding %}active{% endif %}"
+           href="#"
+           hx-get="{% url 'documents:document-proceeding' document.id 0 %}"
+           hx-target="#documents">-</a>
+      </li>
+      {% for proc in proceedings %}
+        <li>
+          <a class="dropdown-item {% if document.proceeding.id == proc.id %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'documents:document-proceeding' document.id proc.id %}"
+             hx-target="#documents">{{ proc.forum }} - {{ proc.case_number }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% else %}
+  {% if document.proceeding %}{{ document.proceeding.forum }} - {{ document.proceeding.case_number }}{% endif %}
+{% endif %}

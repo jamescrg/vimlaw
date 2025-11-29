@@ -1,0 +1,24 @@
+{% if document.file.name|slice:"-4:"|lower == ".pdf" %}
+  {% if document.ocr_status == 'pending' %}
+    <span class="ocr-badge"
+          hx-get="{% url 'documents:ocr-badge' document.id %}"
+          hx-trigger="every 3s"
+          hx-target="this"
+          hx-swap="outerHTML">ocr pending</span>
+  {% elif document.ocr_status == 'processing' %}
+    <span class="ocr-badge"
+          hx-get="{% url 'documents:ocr-badge' document.id %}"
+          hx-trigger="every 3s"
+          hx-target="this"
+          hx-swap="outerHTML">
+      {% if document.page_count and document.ocr_pages_done %}
+        ocr running ({{ document.ocr_pages_done }}/{{ document.page_count }})
+      {% else %}
+        ocr running
+      {% endif %}
+    </span>
+  {% elif document.ocr_status == 'failed' %}
+    <span class="ocr-badge ocr-failed"
+          title="{{ document.ocr_error|truncatechars:100 }}">ocr failed</span>
+  {% endif %}
+{% endif %}

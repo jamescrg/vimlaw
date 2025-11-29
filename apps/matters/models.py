@@ -1,3 +1,4 @@
+from django.core.files.storage import default_storage as storage
 from django.db import models
 
 from apps.contacts.models import Contact
@@ -70,6 +71,62 @@ class Matter(models.Model):
                 Contact.objects.filter(pk=self.client.pk).update(
                     client_status="Current"
                 )
+
+        # Check if updating an existing matter
+        if self.pk:
+            old_matter = Matter.objects.get(pk=self.pk)
+
+            # Matter name has changed - update document file paths
+            if old_matter.name != self.name:
+                from apps.documents.utils import sanitize_filename
+
+                matter_documents = self.documents.all()
+
+                for document in matter_documents:
+                    old_path = document.file.name
+
+                    file_extension = old_path.split(".")[-1].lower()
+                    sanitized_matter_name = sanitize_filename(self.name)
+
+                    full_file_name = f"{document.name}.{file_extension}"
+
+                    if document.category == "Record" and document.date:
+                        file_name = f"{document.date}_{document.name}"
+                        full_file_name = f"{file_name}.{file_extension}"
+
+                    if document.proceeding and document.proceeding.case_number:
+                        case_number = (
+                            sanitize_filename(document.proceeding.case_number)
+                            if document.proceeding.case_number
+                            else "UnknownCase"
+                        )
+                        forum = (
+                            sanitize_filename(document.proceeding.forum)
+                            if document.proceeding.forum
+                            else "UnknownForum"
+                        )
+
+                        new_path = (
+                            f"documents/{sanitized_matter_name}_{self.id}/"
+                            f"{document.category.capitalize()}/"
+                            f"{forum}_{case_number}_{document.proceeding.id}/"
+                            f"{full_file_name}"
+                        )
+                    else:
+                        new_path = (
+                            f"documents/{sanitized_matter_name}_{self.id}/"
+                            f"{document.category.capitalize()}/"
+                            f"{full_file_name}"
+                        )
+
+                    if storage.exists(old_path):
+                        # Move the file to the new path in storage
+                        storage.save(new_path, document.file)
+                        storage.delete(old_path)
+
+                        # Rename the file path in the database
+                        document.file.name = new_path
+                        document.save(update_fields=["file"])
 
         super().save(*args, **kwargs)
 

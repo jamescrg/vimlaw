@@ -22,9 +22,16 @@ class Fact(models.Model):
     date = models.DateField(null=True)
     time = models.TimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
     description = models.CharField(max_length=150, null=True)
-    citations = models.CharField(max_length=255, blank=True, null=True)
     color = models.CharField(
         max_length=10, choices=COLOR_CHOICES, blank=True, null=True, default=None
+    )
+
+    # Source references
+    documents = models.ManyToManyField(
+        "documents.Document", blank=True, related_name="facts"
+    )
+    highlights = models.ManyToManyField(
+        "documents.Highlight", blank=True, related_name="facts"
     )
 
     def __str__(self):

@@ -1,0 +1,136 @@
+<div>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'documents:add' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'documents:filter' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-filter"></i> &nbsp;Filter
+        </button>
+        <button type="button"
+                id="documents-category-filter"
+                class="select-btn filter-dropdown-button {% if selected_category %}toggle-active{% endif %}"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          {{ selected_category|default:"All Categories" }}
+          <small>
+            <i class="bi bi-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item {% if not selected_category %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'documents:filter-category-clear' %}"
+               hx-target="#documents">All Categories</a>
+          </li>
+          <li>
+            <a class="dropdown-item {% if selected_category == 'Correspondence' %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'documents:filter-category' 'Correspondence' %}"
+               hx-target="#documents">Correspondence</a>
+          </li>
+          <li>
+            <a class="dropdown-item {% if selected_category == 'Discovery' %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'documents:filter-category' 'Discovery' %}"
+               hx-target="#documents">Discovery</a>
+          </li>
+          <li>
+            <a class="dropdown-item {% if selected_category == 'Evidence' %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'documents:filter-category' 'Evidence' %}"
+               hx-target="#documents">Evidence</a>
+          </li>
+          <li>
+            <a class="dropdown-item {% if selected_category == 'Record' %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'documents:filter-category' 'Record' %}"
+               hx-target="#documents">Record</a>
+          </li>
+        </ul>
+        <input type="text"
+               id="documents-keyword-input"
+               name="keyword"
+               placeholder="Search..."
+               value="{{ selected_keyword|default:'' }}"
+               class="filter-input"
+               hx-get="{% url 'documents:filter-keyword' %}"
+               hx-target="#documents"
+               hx-trigger="keyup changed delay:500ms"
+               hx-include="this">
+        {% if selected_documents %}
+          <button type="button"
+                  hx-get="{% url 'documents:bulk-update' %}"
+                  hx-target="#htmx-modal-container"
+                  hx-trigger="click"
+                  data-bs-toggle="modal"
+                  data-bs-target="#htmx-modal-container"
+                  class="btn-icon">Bulk Actions ({{ selected_documents|length }})</button>
+          <button type="button"
+                  hx-post="{% url 'documents:clear-selection' %}"
+                  hx-target="#documents"
+                  hx-swap="outerHTML"
+                  class="btn-icon">
+            <i class="bi bi-x-lg"></i> Clear
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="table-container">
+    <table id="documents-list" class="table table-fixed">
+      <colgroup>
+        <col class="col-select">
+        <col class="col-category">
+        <col class="col-date">
+        <col class="col-document">
+        <col class="col-proceeding">
+      </colgroup>
+      <tr>
+        <th class="col-select">
+          <i class="bi bi-check2-square"></i>
+        </th>
+        <th class="col-category">Category</th>
+        <th class="col-date">
+          Date
+          <button class="btn-sort {% if 'date' in current_order %}active{% endif %}"
+                  hx-get="{% url 'documents:sort' 'date' %}"
+                  hx-target="#documents">
+            <i class="bi bi-chevron-expand"></i>
+          </button>
+        </th>
+        <th class="col-document">
+          Document
+          <button class="btn-sort {% if 'name' in current_order %}active{% endif %}"
+                  hx-get="{% url 'documents:sort' 'name' %}"
+                  hx-target="#documents">
+            <i class="bi bi-chevron-expand"></i>
+          </button>
+        </th>
+        <th class="col-proceeding">Proceeding</th>
+      </tr>
+      {% if objects %}
+        {% for document in objects %}
+          {% include "documents/documents/row.html" %}
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>
+  <div class="flex-start-space">
+    <div>{% include "pagination.html" %}</div>
+  </div>
+</div>

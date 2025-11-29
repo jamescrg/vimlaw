@@ -1,0 +1,82 @@
+{% load humanize %}
+<div class="toolbar">
+  <div class="toolbar-left">
+    <div class="filter-tools">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'documents:highlights-filter' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="bi bi-filter"></i> Filter
+      </button>
+      <button type="button"
+              id="highlights-document-filter"
+              class="select-btn filter-dropdown-button {% if selected_document %}toggle-active{% endif %}"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        {{ selected_document.name|default:"All Documents" }}
+        <small>
+          <i class="bi bi-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item {% if not selected_document %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'documents:highlights-filter-document' %}"
+             hx-target="#highlights">All Documents</a>
+        </li>
+        {% for doc in documents %}
+          <li>
+            <a class="dropdown-item {% if selected_document.id == doc.id %}active{% endif %}"
+               href="#"
+               hx-post="{% url 'documents:highlights-filter-document' doc.id %}"
+               hx-target="#highlights">{{ doc.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      <input type="text"
+             id="highlights-keyword-input"
+             name="keyword"
+             placeholder="Keyword"
+             value="{{ keyword }}"
+             class="filter-input"
+             hx-post="{% url 'documents:highlights-filter-keyword' %}"
+             hx-target="#highlights"
+             hx-trigger="keyup changed delay:500ms"
+             hx-include="this">
+    </div>
+  </div>
+</div>
+<div class="table-container">
+  <table class="table highlights-list table-fixed">
+    <tr>
+      <th class="col-document">Document</th>
+      <th class="col-slug">Slug</th>
+      <th class="col-text">Text</th>
+      <th class="col-page">Pg</th>
+    </tr>
+    {% for highlight in highlights %}
+      <tr>
+        <td class="col-document">
+          <a href="{% url 'documents:viewer' highlight.document.id %}"
+             target="_blank">{{ highlight.document.name|truncatechars:40 }}</a>
+        </td>
+        <td class="col-slug">
+          <a href="{% url 'documents:highlight-link' highlight.id %}"
+             target="_blank">{{ highlight.slug|default:"Untitled"|truncatechars:40 }}</a>
+        </td>
+        <td class="col-text">{{ highlight.text|truncatechars:100 }}</td>
+        <td class="col-page">{{ highlight.page_number }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4" class="empty-message">
+          No highlights yet. Create highlights by selecting text in the document viewer.
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>

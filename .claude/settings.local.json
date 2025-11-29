@@ -26,7 +26,17 @@
       "Bash(__NEW_LINE__ cd /home/james/law grep -roh '\\.[a-zA-Z_-][a-zA-Z0-9_-]*' static/css/)",
       "Bash(__NEW_LINE__ cd /home/james/law grep -roh '#[a-zA-Z_-][a-zA-Z0-9_-]*' static/css/)",
       "Bash(python3:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(pip install:*)",
+      "Bash(curl:*)",
+      "Bash(npm pack:*)",
+      "Bash(tar:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm search:*)",
+      "Bash(wget:*)",
+      "Bash(chmod:*)",
+      "WebFetch(domain:ocrmypdf.readthedocs.io)"
     ],
     "deny": []
   }

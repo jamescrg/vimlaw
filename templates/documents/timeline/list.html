@@ -1,0 +1,52 @@
+{% load humanize %}
+<div class="toolbar timeline-toolbar">
+  <div class="toolbar-left">
+    <div class="filter-tools">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'documents:timeline-add' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+      <form class="filter-form"
+            hx-get="{% url 'documents:timeline-list' %}"
+            hx-target="#timeline"
+            hx-trigger="change, keyup delay:500ms from:input[name='keyword']">
+        <input type="text"
+               onfocus="(this.type='date')"
+               onblur="(this.type='text')"
+               id="date_start"
+               name="date_start"
+               placeholder="Start Date"
+               value="{{ request.GET.date_start }}"
+               class="filter-input-date">
+        <input type="text"
+               onfocus="(this.type='date')"
+               onblur="(this.type='text')"
+               id="date_end"
+               name="date_end"
+               placeholder="End Date"
+               value="{{ request.GET.date_end }}"
+               class="filter-input-date">
+        <input type="text"
+               id="timeline-keyword-input"
+               name="keyword"
+               placeholder="Keyword"
+               value="{{ request.GET.keyword }}"
+               class="filter-input">
+      </form>
+    </div>
+  </div>
+  <div class="toolbar-right">
+    {% if facts %}
+      <a href="{% url 'documents:timeline-pdf' %}"
+         target="_blank"
+         type="button"
+         class="btn-icon">Download PDF</a>
+    {% endif %}
+  </div>
+</div>
+{% include "documents/timeline/table.html" %}
