@@ -22,6 +22,7 @@ from apps.documents.views import (
     documents_list,
     documents_sort,
     download_document,
+    edit_highlight,
     edit_label,
     fact_add_source,
     fact_remove_source,
@@ -143,6 +144,11 @@ urlpatterns = [
         "documents/<int:document_id>/highlights/add/",
         add_highlight,
         name="add-highlight",
+    ),
+    path(
+        "documents/highlights/<int:highlight_id>/edit/",
+        edit_highlight,
+        name="edit-highlight",
     ),
     path(
         "documents/highlights/<int:highlight_id>/delete/",

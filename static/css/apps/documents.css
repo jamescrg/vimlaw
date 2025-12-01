@@ -210,6 +210,22 @@
   text-align: center;
 }
 
+/* Highlight view ghost button */
+.highlights-list .highlight-view-btn {
+  margin-left: 0.5rem;
+  color: var(--stone-400);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.highlights-list tr:hover .highlight-view-btn {
+  opacity: 1;
+}
+
+.highlights-list .highlight-view-btn:hover {
+  color: var(--stone-600);
+}
+
 .ocr-badge {
   margin-left: 0.5rem;
   vertical-align: middle;

@@ -796,7 +796,34 @@ def delete_highlight(request, highlight_id):
 
     # Check permission (creator or allow all authenticated users for now)
     highlight.delete()
+
+    # Return empty response for HTMX (removes the row), JSON for JS
+    if request.headers.get("HX-Request"):
+        return HttpResponse("")
     return JsonResponse({"success": True})
+
+
+@login_required
+def edit_highlight(request, highlight_id):
+    """Edit a highlight's slug and color."""
+    highlight = get_object_or_404(Highlight, id=highlight_id)
+
+    if request.method == "POST":
+        highlight.slug = request.POST.get("slug", highlight.slug)
+        highlight.color = request.POST.get("color", highlight.color)
+        highlight.save(update_fields=["slug", "color"])
+
+        return render(
+            request,
+            "documents/highlights/row.html",
+            {"highlight": highlight},
+        )
+
+    return render(
+        request,
+        "documents/highlights/edit.html",
+        {"highlight": highlight},
+    )
 
 
 @login_required
