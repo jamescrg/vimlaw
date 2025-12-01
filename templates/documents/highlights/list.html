@@ -59,18 +59,7 @@
       <th class="col-page">Pg</th>
     </tr>
     {% for highlight in highlights %}
-      <tr>
-        <td class="col-document">
-          <a href="{% url 'documents:viewer' highlight.document.id %}"
-             target="_blank">{{ highlight.document.name|truncatechars:40 }}</a>
-        </td>
-        <td class="col-slug">
-          <a href="{% url 'documents:highlight-link' highlight.id %}"
-             target="_blank">{{ highlight.slug|default:"Untitled"|truncatechars:40 }}</a>
-        </td>
-        <td class="col-text">{{ highlight.text|truncatechars:100 }}</td>
-        <td class="col-page">{{ highlight.page_number }}</td>
-      </tr>
+      {% include "documents/highlights/row.html" %}
     {% empty %}
       <tr>
         <td colspan="4" class="empty-message">

@@ -1,0 +1,97 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Edit Highlight</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form class="form-compact"
+            hx-post="{% url 'documents:edit-highlight' highlight.id %}"
+            hx-target="#highlight-row-{{ highlight.id }}"
+            hx-swap="outerHTML">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="highlight-color">Color</label>
+          <select class="form-control" id="highlight-color" name="color">
+            <option value="yellow"
+                    {% if highlight.color == "yellow" %}selected{% endif %}>Yellow</option>
+            <option value="green" {% if highlight.color == "green" %}selected{% endif %}>Green</option>
+            <option value="blue" {% if highlight.color == "blue" %}selected{% endif %}>Blue</option>
+            <option value="orange"
+                    {% if highlight.color == "orange" %}selected{% endif %}>Orange</option>
+            <option value="red" {% if highlight.color == "red" %}selected{% endif %}>Red</option>
+            <option value="purple"
+                    {% if highlight.color == "purple" %}selected{% endif %}>Purple</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="highlight-slug">Slug</label>
+          <input type="text"
+                 class="form-control"
+                 id="highlight-slug"
+                 name="slug"
+                 value="{{ highlight.slug }}"
+                 required>
+        </div>
+        <div class="highlight-meta-row">
+          <div class="form-group">
+            <label>Document</label>
+            <div class="highlight-info-card highlight-document">{{ highlight.document.name }}</div>
+          </div>
+          <div class="form-group">
+            <label>Page</label>
+            <div class="highlight-info-card">{{ highlight.page_number }}</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Text</label>
+          <div class="highlight-info-card highlight-text-preview">{{ highlight.text }}</div>
+        </div>
+        <div class="flex-center-space">
+          <div>
+            <button type="submit" class="submit" data-bs-dismiss="modal">Save</button>
+          </div>
+          <div>
+            <a class="delete-link"
+               href="#"
+               hx-confirm="Are you sure you want to delete this highlight?"
+               hx-post="{% url 'documents:delete-highlight' highlight.id %}"
+               hx-target="#highlight-row-{{ highlight.id }}"
+               hx-swap="outerHTML"
+               data-bs-dismiss="modal">Delete</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+  .highlight-info-card {
+    padding: 0.5rem 0.75rem;
+    background: var(--stone-50);
+    border: 1px solid var(--stone-200);
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+  }
+
+  .highlight-text-preview {
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  .highlight-meta-row {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 1rem;
+  }
+
+  .highlight-document {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+</style>

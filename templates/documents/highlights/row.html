@@ -1,0 +1,21 @@
+<tr id="highlight-row-{{ highlight.id }}">
+  <td class="col-document">
+    <a href="{% url 'documents:viewer' highlight.document.id %}"
+       target="_blank">{{ highlight.document.name|truncatechars:40 }}</a>
+  </td>
+  <td class="col-slug">
+    <a href="#"
+       hx-get="{% url 'documents:edit-highlight' highlight.id %}"
+       hx-target="#htmx-modal-container"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">{{ highlight.slug|default:"Untitled"|truncatechars:40 }}</a>
+    <a href="{% url 'documents:highlight-link' highlight.id %}"
+       target="_blank"
+       class="highlight-view-btn"
+       title="View in document">
+      <i class="bi bi-box-arrow-up-right"></i>
+    </a>
+  </td>
+  <td class="col-text">{{ highlight.text|truncatechars:100 }}</td>
+  <td class="col-page">{{ highlight.page_number }}</td>
+</tr>
