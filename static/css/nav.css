@@ -19,6 +19,8 @@
   color: var(--color-nav);
   margin: 0;
   padding-bottom: 0.5rem;
+  position: relative;
+  top: 0.2rem;
 }
 
 .navbar .active {
@@ -29,7 +31,7 @@
 .navbar .settings-link {
   font-size: 1.25rem;
   position: relative;
-  top: -0.25rem;
+  top: -0.1rem;
 }
 
 /* ==========================================================================
@@ -47,6 +49,11 @@
 
 .navbar-sub li {
   padding: 0.5rem 1rem 0.5rem 1rem;
+}
+
+.navbar-sub a {
+  position: relative;
+  top: 0.05rem;
 }
 
 .navbar-sub .active {

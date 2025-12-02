@@ -327,9 +327,9 @@
   --background-lighter: var(--stone-50);
   --background-nav: var(--stone-350);
   --color-nav: var(--stone-600);
-  --background-nav-tab-active: var(stone-300);
+  --background-nav-tab-active: var(--background-body);
   --background-subnav: var(--stone-200);
-  --background-subnav-tab-active: var(--stone-100);
+  --background-subnav-tab-active: var(--background-text);
 
 
   /* highlights */

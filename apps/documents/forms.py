@@ -1,9 +1,15 @@
 from django import forms
 
-from apps.documents.models import Document, Label
+from apps.documents.models import Document, Highlight, Label
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from config.settings import CustomFormRendererCompact
+
+# Importance choices for select widget (1-10)
+importance = []
+for i in range(1, 11):
+    importance.append((i, f"Importance {i}"))
+IMPORTANCE = tuple(importance)
 
 
 class ProceedingChoiceField(forms.ModelChoiceField):
@@ -34,11 +40,13 @@ class DocumentsForm(forms.ModelForm):
             "date",
             "name",
             "description",
+            "importance",
         ]
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
             "description": forms.Textarea(attrs={"rows": 3, "class": "span2"}),
             "name": forms.TextInput(attrs={"class": "span2", "autofocus": True}),
+            "importance": forms.Select(choices=IMPORTANCE),
         }
 
     def __init__(self, *args, matter=None, **kwargs):
@@ -103,6 +111,22 @@ class BulkDocumentsForm(forms.ModelForm):
             )
         else:
             self.fields["proceeding"].queryset = Proceeding.objects.none()
+
+
+class HighlightForm(forms.ModelForm):
+    class Meta:
+        model = Highlight
+        fields = ["color", "slug", "importance"]
+        widgets = {
+            "color": forms.Select(),
+            "slug": forms.TextInput(attrs={"class": "span2"}),
+            "importance": forms.Select(choices=IMPORTANCE),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.renderer = CustomFormRendererCompact()
 
 
 class LabelsForm(forms.ModelForm):

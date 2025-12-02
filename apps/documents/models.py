@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from apps.matters.models import Matter
@@ -78,6 +79,10 @@ class Document(models.Model):
     # Full-text search
     search_vector = SearchVectorField(null=True, blank=True)
 
+    importance = models.PositiveIntegerField(
+        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+
     def __str__(self):
         return self.name
 
@@ -126,6 +131,10 @@ class Highlight(models.Model):
 
     # Full-text search
     search_vector = SearchVectorField(null=True, blank=True)
+
+    importance = models.PositiveIntegerField(
+        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
 
     class Meta:
         db_table = "app_document_highlight"

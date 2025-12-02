@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from apps.matters.models import Matter
@@ -32,6 +33,10 @@ class Fact(models.Model):
     )
     highlights = models.ManyToManyField(
         "documents.Highlight", blank=True, related_name="facts"
+    )
+
+    importance = models.PositiveIntegerField(
+        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
 
     def __str__(self):

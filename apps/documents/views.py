@@ -8,7 +8,12 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.documents.filters import DocumentsFilter, HighlightsFilter, LabelsFilter
-from apps.documents.forms import BulkDocumentsForm, DocumentsForm, LabelsForm
+from apps.documents.forms import (
+    BulkDocumentsForm,
+    DocumentsForm,
+    HighlightForm,
+    LabelsForm,
+)
 from apps.documents.get_document_data import get_document_data, get_selected_matter
 from apps.documents.get_label_data import get_label_data
 from apps.documents.models import Document, Highlight, Label
@@ -820,24 +825,25 @@ def delete_highlight(request, highlight_id):
 
 @login_required
 def edit_highlight(request, highlight_id):
-    """Edit a highlight's slug and color."""
+    """Edit a highlight's slug, color, and importance."""
     highlight = get_object_or_404(Highlight, id=highlight_id)
 
     if request.method == "POST":
-        highlight.slug = request.POST.get("slug", highlight.slug)
-        highlight.color = request.POST.get("color", highlight.color)
-        highlight.save(update_fields=["slug", "color"])
-
-        return render(
-            request,
-            "documents/highlights/row.html",
-            {"highlight": highlight},
-        )
+        form = HighlightForm(request.POST, instance=highlight)
+        if form.is_valid():
+            form.save()
+            return render(
+                request,
+                "documents/highlights/row.html",
+                {"highlight": highlight},
+            )
+    else:
+        form = HighlightForm(instance=highlight)
 
     return render(
         request,
         "documents/highlights/edit.html",
-        {"highlight": highlight},
+        {"highlight": highlight, "form": form},
     )
 
 

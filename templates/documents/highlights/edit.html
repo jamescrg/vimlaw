@@ -14,31 +14,7 @@
             hx-target="#highlight-card-{{ highlight.id }}"
             hx-swap="outerHTML">
         {% csrf_token %}
-        <div class="highlight-edit-grid">
-          <div class="form-group">
-            <label for="highlight-color">Color</label>
-            <select class="form-control" id="highlight-color" name="color">
-              <option value="yellow"
-                      {% if highlight.color == "yellow" %}selected{% endif %}>Yellow</option>
-              <option value="green" {% if highlight.color == "green" %}selected{% endif %}>Green</option>
-              <option value="blue" {% if highlight.color == "blue" %}selected{% endif %}>Blue</option>
-              <option value="orange"
-                      {% if highlight.color == "orange" %}selected{% endif %}>Orange</option>
-              <option value="red" {% if highlight.color == "red" %}selected{% endif %}>Red</option>
-              <option value="purple"
-                      {% if highlight.color == "purple" %}selected{% endif %}>Purple</option>
-            </select>
-          </div>
-          <div class="form-group highlight-slug-group">
-            <label for="highlight-slug">Slug</label>
-            <input type="text"
-                   class="form-control"
-                   id="highlight-slug"
-                   name="slug"
-                   value="{{ highlight.slug }}"
-                   required>
-          </div>
-        </div>
+        <div class="highlight-edit-grid">{{ form }}</div>
         <div class="flex-center-space">
           <div>
             <button type="submit" class="submit" data-bs-dismiss="modal">Save</button>

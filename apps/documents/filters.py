@@ -6,6 +6,9 @@ from apps.documents.models import Document, Highlight, Label
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 
+# Importance choices for filter widget (1-10)
+IMPORTANCE_CHOICES = [("", "All")] + [(i, f"Importance {i}") for i in range(1, 11)]
+
 
 class ProceedingChoiceFilter(django_filters.ModelChoiceFilter):
     """Custom filter to display proceedings as 'Forum - Case Number'."""
@@ -40,6 +43,12 @@ class DocumentsFilter(django_filters.FilterSet):
         empty_label="All",
         label="Proceeding",
     )
+    importance = django_filters.NumberFilter(
+        field_name="importance",
+        lookup_expr="lte",
+        label="Importance",
+        widget=forms.Select(choices=IMPORTANCE_CHOICES),
+    )
     order_by = django_filters.OrderingFilter(
         fields=[
             ("name", "name"),
@@ -55,6 +64,7 @@ class DocumentsFilter(django_filters.FilterSet):
             "date_to",
             "category",
             "proceeding",
+            "importance",
             "order_by",
         ]
 
@@ -83,6 +93,12 @@ class HighlightsFilter(django_filters.FilterSet):
         label="Document",
     )
     keyword = django_filters.CharFilter(method="filter_keyword", label="Keyword")
+    importance = django_filters.NumberFilter(
+        field_name="importance",
+        lookup_expr="lte",
+        label="Importance",
+        widget=forms.Select(choices=IMPORTANCE_CHOICES),
+    )
     order_by = django_filters.OrderingFilter(
         fields=[
             ("document__name", "document"),
@@ -97,7 +113,7 @@ class HighlightsFilter(django_filters.FilterSet):
 
     class Meta:
         model = Highlight
-        fields = ["document", "keyword", "order_by"]
+        fields = ["document", "keyword", "importance", "order_by"]
 
     def __init__(self, *args, matter=None, **kwargs):
         super().__init__(*args, **kwargs)

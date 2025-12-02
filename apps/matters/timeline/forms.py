@@ -4,6 +4,12 @@ from config.settings import CustomFormRendererCompact
 
 from .models import Fact
 
+# Importance choices for select widget (1-10)
+importance = []
+for i in range(1, 11):
+    importance.append((i, f"Importance {i}"))
+IMPORTANCE = tuple(importance)
+
 
 class FactForm(forms.ModelForm):
     class Meta:
@@ -14,6 +20,7 @@ class FactForm(forms.ModelForm):
             "time",
             "description",
             "color",
+            "importance",
         )
 
         widgets = {
@@ -30,6 +37,7 @@ class FactForm(forms.ModelForm):
                 }
             ),
             "color": forms.Select(),
+            "importance": forms.Select(choices=IMPORTANCE),
         }
 
     def __init__(self, *args, **kwargs):
