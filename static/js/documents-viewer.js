@@ -444,7 +444,7 @@ class DocumentViewer {
 
     try {
       const response = await fetch(
-        `/documents/${this.documentId}/highlights/add/`,
+        `/files/${this.documentId}/highlights/add/`,
         {
           method: "POST",
           body: formData,
