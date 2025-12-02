@@ -12,7 +12,7 @@ let preservedDropzoneFiles = [];
 
 const initializeDocumentDropzone = () => {
   const dropzoneElement = document.querySelector("#document-dropzone");
-  const form = document.querySelector("#document-form");
+  const form = document.querySelector("#file-form");
 
   if (dropzoneElement && form) {
     // Preserve files from existing dropzone before destroying
@@ -85,7 +85,7 @@ const initializeDocumentDropzone = () => {
             preview.classList.add("dz-success", "clickable-preview");
 
             const documentId = form.action.split("/").slice(-2, -1)[0]; // Extract ID from URL
-            const downloadUrl = `/documents/download/${documentId}/`;
+            const downloadUrl = `/files/download/${documentId}/`;
 
             preview.style.cursor = "pointer";
             preview.title = "Click to download and view current file";
@@ -164,7 +164,7 @@ const initializeDocumentDropzone = () => {
                 }
 
                 document.body.dispatchEvent(
-                  new CustomEvent("documentsChanged"),
+                  new CustomEvent("filesChanged"),
                 );
               } else {
                 // Form validation errors - update content

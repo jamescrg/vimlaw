@@ -19,7 +19,7 @@ class ProceedingChoiceField(forms.ModelChoiceField):
         return f"{obj.forum} - {obj.case_number}"
 
 
-class DocumentsForm(forms.ModelForm):
+class FilesForm(forms.ModelForm):
     matter = forms.ModelChoiceField(
         queryset=Matter.objects.none(),
         required=True,
@@ -88,7 +88,7 @@ class DocumentsForm(forms.ModelForm):
         return cleaned_data
 
 
-class BulkDocumentsForm(forms.ModelForm):
+class BulkFilesForm(forms.ModelForm):
     proceeding = ProceedingChoiceField(
         queryset=Proceeding.objects.none(),
         required=False,
@@ -124,8 +124,9 @@ class HighlightForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Remove matter kwarg if passed (no longer needed)
+        kwargs.pop("matter", None)
         super().__init__(*args, **kwargs)
-
         self.renderer = CustomFormRendererCompact()
 
 
@@ -136,13 +137,16 @@ class LabelsForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(attrs={"class": "span2"}),
             "matter": forms.Select(attrs={"class": "span1"}),
-            "color": forms.TextInput(attrs={"type": "color", "class": "span1"}),
+            "color": forms.Select(attrs={"class": "span1"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.renderer = CustomFormRendererCompact()
+        # Allow empty selection for global labels
+        self.fields["matter"].required = False
+        self.fields["matter"].empty_label = "Global (all matters)"
 
 
 class FactForm(forms.ModelForm):
@@ -175,5 +179,7 @@ class FactForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Remove matter kwarg if passed (no longer needed)
+        kwargs.pop("matter", None)
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()

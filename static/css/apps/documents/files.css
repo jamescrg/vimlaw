@@ -1,23 +1,23 @@
-/* Documents List Table */
-#documents-list.table-fixed {
+/* Files List Table */
+#files-list.table-fixed {
   table-layout: fixed;
   min-width: 60rem;
 }
 
 /* Fix dropdown overflow issues */
-#documents .table-container {
+#files .table-container {
   overflow-x: auto;
   overflow-y: visible;
 }
 
 /* Column widths */
-#documents-list .col-select {
+#files-list .col-select {
   width: 3rem;
   text-align: center;
   padding: 0.5rem;
 }
 
-#documents-list th.col-select {
+#files-list th.col-select {
   text-align: center;
 }
 
@@ -25,38 +25,38 @@
   color: var(--stone-400);
 }
 
-#documents-list .col-date {
+#files-list .col-date {
   width: 11rem;
 }
 
-#documents-list .col-category {
+#files-list .col-category {
   width: 10rem;
 }
 
-#documents-list .col-document {
+#files-list .col-document {
   /* Variable width - takes remaining space */
 }
 
-#documents-list .col-proceeding {
+#files-list .col-proceeding {
   width: 16.5rem;
 }
 
-#documents-list .col-importance {
+#files-list .col-importance {
   width: 3rem;
   text-align: center;
   overflow: visible;
 }
 
-#documents-list .col-importance .btn-sort {
+#files-list .col-importance .btn-sort {
   margin: 0;
 }
 
-#documents-list .col-importance .dropdown-menu {
+#files-list .col-importance .dropdown-menu {
   min-width: 2rem;
 }
 
 /* Checkbox styling */
-#documents-list .col-select input[type="checkbox"] {
+#files-list .col-select input[type="checkbox"] {
   appearance: none;
   width: 1rem;
   height: 1rem;
@@ -68,54 +68,54 @@
   border-radius: 0.125rem;
 }
 
-#documents-list .col-select input[type="checkbox"]:checked {
+#files-list .col-select input[type="checkbox"]:checked {
   background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%2378716c' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-/* OCR badge in document column */
-#documents-list .col-document .badge {
+/* OCR badge in file column */
+#files-list .col-document .badge {
   margin-left: 0.25rem;
   vertical-align: middle;
 }
 
 /* Text overflow handling */
-#documents-list td {
+#files-list td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: top;
 }
 
-/* Document cell with description */
-#documents-list .col-document {
+/* File cell with description */
+#files-list .col-document {
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
-#documents-list .doc-name {
-  /* Allow wrapping for document name */
+#files-list .file-name {
+  /* Allow wrapping for file name */
 }
 
-#documents-list .doc-description {
+#files-list .file-description {
   font-size: 0.875rem;
   color: var(--text-muted);
 }
 
 /* Ghost action buttons - inline after name */
-#documents-list .doc-actions {
+#files-list .file-actions {
   margin-left: 1rem;
   white-space: nowrap;
 }
 
-#documents-list .doc-actions .action-btn + .action-btn {
+#files-list .file-actions .action-btn + .action-btn {
   margin-left: 0.75rem;
 }
 
-#documents-list .doc-actions .action-btn {
+#files-list .file-actions .action-btn {
   color: var(--stone-400);
   /* padding: 0.25rem; */
   text-decoration: none;
@@ -123,15 +123,15 @@
   transition: opacity 0.15s, color 0.15s;
 }
 
-#documents-list tr:hover .doc-actions .action-btn {
+#files-list tr:hover .file-actions .action-btn {
   opacity: 1;
 }
 
-#documents-list .doc-actions .action-btn:hover {
+#files-list .file-actions .action-btn:hover {
   color: var(--stone-600);
 }
 
-#documents-list .doc-actions button.action-btn {
+#files-list .file-actions button.action-btn {
   background: none;
   border: none;
   padding: 0;
@@ -139,7 +139,7 @@
 }
 
 /* Inline date input */
-#documents-list .doc-date-input {
+#files-list .file-date-input {
   background: none;
   border: none;
   margin: 0;
@@ -148,11 +148,11 @@
 }
 
 /* Dropdown cells */
-#documents-list .dropdown-cell .dropdown {
+#files-list .dropdown-cell .dropdown {
   display: inline;
 }
 
-#documents-list .dropdown-cell .button-link {
+#files-list .dropdown-cell .button-link {
   padding: 0;
   background: none;
   border: none;
@@ -161,13 +161,13 @@
   text-align: left;
 }
 
-#documents-list .dropdown-cell .button-link:hover {
+#files-list .dropdown-cell .button-link:hover {
   color: var(--link-hover);
 }
 
 /* Ghost buttons for empty date/proceeding */
-#documents-list .col-date .empty-value-icon,
-#documents-list .col-proceeding .empty-value-icon {
+#files-list .col-date .empty-value-icon,
+#files-list .col-proceeding .empty-value-icon {
   color: var(--stone-400);
   display: block;
   opacity: 0;
@@ -175,8 +175,8 @@
   transition: opacity 0.2s;
 }
 
-#documents-list .col-date:hover .empty-value-icon,
-#documents-list .col-proceeding:hover .empty-value-icon {
+#files-list .col-date:hover .empty-value-icon,
+#files-list .col-proceeding:hover .empty-value-icon {
   opacity: 1;
 }
 
@@ -210,3 +210,68 @@
   background-color: var(--red-100);
   color: var(--red-700);
 }
+
+/*------------------------------------------------
+Label badges
+------------------------------------------------*/
+
+#files-list .file-labels {
+  margin-top: 0.25rem;
+}
+
+#files-list .label-badge {
+  display: inline-block;
+  margin-right: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+#files-list .label-badge .badge-link {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+#files-list .label-badge .badge-link:hover {
+  opacity: 0.8;
+}
+
+/* Add label ghost button */
+#files-list .add-label-btn {
+  display: inline-block;
+  color: var(--stone-400);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+#files-list tr:hover .add-label-btn {
+  opacity: 1;
+}
+
+#files-list .add-label-btn:hover {
+  color: var(--stone-600);
+}
+
+/*------------------------------------------------
+Label color classes
+------------------------------------------------*/
+
+.label-blue,
+.label-gray,
+.label-green,
+.label-orange,
+.label-purple,
+.label-red,
+.label-yellow {
+  border: 1px solid var(--stone-300);
+  color: var(--stone-600);
+}
+
+.label-blue { background-color: var(--blue-100); }
+.label-gray { background-color: var(--stone-125); }
+.label-green { background-color: var(--green-100); }
+.label-orange { background-color: var(--orange-100); }
+.label-purple { background-color: var(--purple-100); }
+.label-red { background-color: var(--red-100); }
+.label-yellow { background-color: var(--yellow-100); }

@@ -4,7 +4,7 @@
       <div class="filter-tools">
         <button type="button"
                 class="btn-icon"
-                hx-get="{% url 'documents:add' %}"
+                hx-get="{% url 'documents:files-add' %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 data-bs-toggle="modal"
@@ -13,7 +13,7 @@
         </button>
         <button type="button"
                 class="btn-icon"
-                hx-get="{% url 'documents:filter' %}"
+                hx-get="{% url 'documents:files-filter' %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 data-bs-toggle="modal"
@@ -21,7 +21,7 @@
           <i class="bi bi-filter"></i>Filter
         </button>
         <button type="button"
-                id="documents-category-filter"
+                id="files-category-filter"
                 class="select-btn filter-dropdown-button {% if selected_category %}toggle-active{% endif %}"
                 data-bs-toggle="dropdown"
                 aria-expanded="false">
@@ -34,55 +34,55 @@
           <li>
             <a class="dropdown-item {% if not selected_category %}active{% endif %}"
                href="#"
-               hx-get="{% url 'documents:filter-category-clear' %}"
-               hx-target="#documents">All Categories</a>
+               hx-get="{% url 'documents:files-filter-category-clear' %}"
+               hx-target="#files">All Categories</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Correspondence' %}active{% endif %}"
                href="#"
-               hx-get="{% url 'documents:filter-category' 'Correspondence' %}"
-               hx-target="#documents">Correspondence</a>
+               hx-get="{% url 'documents:files-filter-category' 'Correspondence' %}"
+               hx-target="#files">Correspondence</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Discovery' %}active{% endif %}"
                href="#"
-               hx-get="{% url 'documents:filter-category' 'Discovery' %}"
-               hx-target="#documents">Discovery</a>
+               hx-get="{% url 'documents:files-filter-category' 'Discovery' %}"
+               hx-target="#files">Discovery</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Evidence' %}active{% endif %}"
                href="#"
-               hx-get="{% url 'documents:filter-category' 'Evidence' %}"
-               hx-target="#documents">Evidence</a>
+               hx-get="{% url 'documents:files-filter-category' 'Evidence' %}"
+               hx-target="#files">Evidence</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Record' %}active{% endif %}"
                href="#"
-               hx-get="{% url 'documents:filter-category' 'Record' %}"
-               hx-target="#documents">Record</a>
+               hx-get="{% url 'documents:files-filter-category' 'Record' %}"
+               hx-target="#files">Record</a>
           </li>
         </ul>
         <input type="text"
-               id="documents-keyword-input"
+               id="files-keyword-input"
                name="keyword"
                placeholder="Keyword Search"
                value="{{ selected_keyword|default:'' }}"
                class="filter-input keyword-input"
-               hx-get="{% url 'documents:filter-keyword' %}"
-               hx-target="#documents-table"
+               hx-get="{% url 'documents:files-filter-keyword' %}"
+               hx-target="#files-table"
                hx-trigger="keyup changed delay:500ms"
                hx-include="this">
         {% if selected_documents %}
           <button type="button"
-                  hx-get="{% url 'documents:bulk-update' %}"
+                  hx-get="{% url 'documents:files-bulk-update' %}"
                   hx-target="#htmx-modal-container"
                   hx-trigger="click"
                   data-bs-toggle="modal"
                   data-bs-target="#htmx-modal-container"
                   class="btn-icon">Bulk Actions ({{ selected_documents|length }})</button>
           <button type="button"
-                  hx-post="{% url 'documents:clear-selection' %}"
-                  hx-target="#documents"
+                  hx-post="{% url 'documents:files-clear-selection' %}"
+                  hx-target="#files"
                   hx-swap="outerHTML"
                   class="btn-icon">
             <i class="bi bi-x-lg"></i> Clear
@@ -91,5 +91,5 @@
       </div>
     </div>
   </div>
-  <div id="documents-table">{% include "documents/documents/table.html" %}</div>
+  <div id="files-table">{% include "documents/files/table.html" %}</div>
 </div>

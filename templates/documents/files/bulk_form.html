@@ -11,7 +11,7 @@
     <div class="modal-body">
       <form id="transaction"
             hx-target="#htmx-modal-container"
-            hx-post="{% url 'documents:bulk-update' %}"
+            hx-post="{% url 'documents:files-bulk-update' %}"
             role="form"
             class="form-compact col2">
         {% csrf_token %}

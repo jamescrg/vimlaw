@@ -3,20 +3,21 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.documents.filters import (
-    DocumentsFilter,
+    FilesFilter,
     HighlightsFilter,
     LabelsFilter,
     TimelineFilter,
 )
 from apps.documents.forms import (
-    BulkDocumentsForm,
-    DocumentsForm,
+    BulkFilesForm,
     FactForm,
+    FilesForm,
     HighlightForm,
     LabelsForm,
 )
@@ -33,10 +34,10 @@ def index(request):
 
     context = {
         "app": "documents",
-        "subapp": "documents",
+        "subapp": "files",
     } | documents_data
 
-    return render(request, "documents/documents/main.html", context)
+    return render(request, "documents/files/main.html", context)
 
 
 @login_required
@@ -51,19 +52,19 @@ def select_matter(request, matter_id):
 
 
 @login_required
-def documents_list(request):
+def files_list(request):
     documents_data = get_document_data(request)
 
     context = {
         "app": "documents",
-        "subapp": "documents",
+        "subapp": "files",
     } | documents_data
 
-    return render(request, "documents/documents/list.html", context)
+    return render(request, "documents/files/list.html", context)
 
 
 @login_required
-def documents_filter(request):
+def files_filter(request):
     matter, matters = get_selected_matter(request)
 
     if request.method == "POST":
@@ -75,7 +76,7 @@ def documents_filter(request):
         }
         request.session["documents_filter"] = filter_data
 
-        return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+        return HttpResponse(status=204, headers={"HX-Trigger": "filesChanged"})
     else:
         filter_data = request.session.get("documents_filter", {})
 
@@ -88,29 +89,27 @@ def documents_filter(request):
             else Document.objects.none()
         )
 
-        filter_obj = DocumentsFilter(
+        filter_obj = FilesFilter(
             filter_data or {"order_by": "-uploaded_at"},
             queryset=queryset,
             matter=matter,
         )
 
-        return render(
-            request, "documents/documents/filter.html", {"filter": filter_obj}
-        )
+        return render(request, "documents/files/filter.html", {"filter": filter_obj})
 
 
 @login_required
-def documents_filter_matter(request, matter_id):
+def files_filter_matter(request, matter_id):
     filter_data = request.session.get("documents_filter", {})
     filter_data["matter"] = matter_id
 
     request.session["documents_filter"] = filter_data
 
-    return redirect("documents:list")
+    return redirect("documents:files-list")
 
 
 @login_required
-def documents_filter_category(request, category=None):
+def files_filter_category(request, category=None):
     filter_data = request.session.get("documents_filter", {})
     if category:
         filter_data["category"] = category
@@ -119,11 +118,11 @@ def documents_filter_category(request, category=None):
 
     request.session["documents_filter"] = filter_data
 
-    return redirect("documents:list")
+    return redirect("documents:files-list")
 
 
 @login_required
-def documents_filter_keyword(request):
+def files_filter_keyword(request):
     filter_data = request.session.get("documents_filter", {})
     keyword = request.GET.get("keyword", "").strip()
     if keyword:
@@ -135,21 +134,21 @@ def documents_filter_keyword(request):
 
     # Render just the table partial (for search input updates)
     documents_data = get_document_data(request)
-    return render(request, "documents/documents/table.html", documents_data)
+    return render(request, "documents/files/table.html", documents_data)
 
 
 @login_required
-def documents_filter_label(request, label_id):
+def files_filter_label(request, label_id):
     filter_data = request.session.get("documents_filter", {})
     filter_data["label"] = label_id
 
     request.session["documents_filter"] = filter_data
 
-    return redirect("documents:list")
+    return redirect("documents:files-list")
 
 
 @login_required
-def documents_sort(request, order):
+def files_sort(request, order):
     filter_data = request.session.get("documents_filter", {})
 
     current_order = filter_data.get("order_by", "")
@@ -162,7 +161,7 @@ def documents_sort(request, order):
     filter_data["order_by"] = new_order
     request.session["documents_filter"] = filter_data
 
-    return redirect("documents:list")
+    return redirect("documents:files-list")
 
 
 @login_required
@@ -181,14 +180,14 @@ def document_date(request, document_id):
         # Return the updated date display
         return render(
             request,
-            "documents/documents/date-display.html",
+            "documents/files/date-display.html",
             {"document": document},
         )
 
     # GET - return the edit input
     return render(
         request,
-        "documents/documents/date-edit.html",
+        "documents/files/date-edit.html",
         {"document": document},
     )
 
@@ -199,7 +198,7 @@ def document_category(request, document_id, category):
     document = get_object_or_404(Document, id=document_id)
     document.category = category
     document.save()
-    return redirect("documents:list")
+    return redirect("documents:files-list")
 
 
 @login_required
@@ -216,7 +215,7 @@ def document_proceeding(request, document_id, proceeding_id):
         document.proceeding = proceeding
 
     document.save()
-    return redirect("documents:list")
+    return redirect("documents:files-list")
 
 
 @login_required
@@ -225,7 +224,7 @@ def document_importance(request, document_id, importance):
     document = get_object_or_404(Document, id=document_id)
     document.importance = importance
     document.save()
-    return redirect("documents:list")
+    return redirect("documents:files-list")
 
 
 @login_required
@@ -242,7 +241,7 @@ def highlight_importance(request, highlight_id, importance):
 
 
 @login_required
-def documents_add(request, matter_id=None):
+def files_add(request, matter_id=None):
     # Get selected matter from session
     matter, matters = get_selected_matter(request)
 
@@ -250,7 +249,7 @@ def documents_add(request, matter_id=None):
         return HttpResponse("No matter selected", status=400)
 
     if request.method == "POST":
-        form = DocumentsForm(request.POST, matter=matter, use_required_attribute=False)
+        form = FilesForm(request.POST, matter=matter, use_required_attribute=False)
         uploaded_file = request.FILES.get("file")
 
         # Validate file is uploaded
@@ -285,27 +284,27 @@ def documents_add(request, matter_id=None):
                     ocr_status="not_applicable"
                 )
 
-            return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+            return HttpResponse(status=204, headers={"HX-Trigger": "filesChanged"})
 
         # Form has errors
         return render(
             request,
-            "documents/documents/form.html",
+            "documents/files/form.html",
             {"form": form, "edit": False, "matter": matter},
         )
 
     else:
-        form = DocumentsForm(matter=matter, use_required_attribute=False)
+        form = FilesForm(matter=matter, use_required_attribute=False)
 
         return render(
             request,
-            "documents/documents/form.html",
+            "documents/files/form.html",
             {"form": form, "edit": False, "matter": matter},
         )
 
 
 @login_required
-def documents_edit(request, document_id):
+def files_edit(request, document_id):
     try:
         document = Document.objects.get(id=document_id)
     except Document.DoesNotExist:
@@ -316,7 +315,7 @@ def documents_edit(request, document_id):
     old_matter_id = document.matter_id
 
     if request.method == "POST":
-        form = DocumentsForm(
+        form = FilesForm(
             request.POST, instance=document, matter=matter, use_required_attribute=False
         )
 
@@ -379,29 +378,27 @@ def documents_edit(request, document_id):
 
             return HttpResponse(
                 status=204,
-                headers={"HX-Trigger": "documentsChanged"},
+                headers={"HX-Trigger": "filesChanged"},
             )
 
         # Form has errors
         return render(
             request,
-            "documents/documents/form.html",
+            "documents/files/form.html",
             {"form": form, "document": document, "edit": True, "matter": matter},
         )
     else:
-        form = DocumentsForm(
-            instance=document, matter=matter, use_required_attribute=False
-        )
+        form = FilesForm(instance=document, matter=matter, use_required_attribute=False)
 
         return render(
             request,
-            "documents/documents/form.html",
+            "documents/files/form.html",
             {"form": form, "document": document, "edit": True, "matter": matter},
         )
 
 
 @login_required
-def bulk_document_update(request):
+def bulk_files_update(request):
     matter, matters = get_selected_matter(request)
     selected_documents = request.session.get("selected_documents", [])
 
@@ -409,9 +406,7 @@ def bulk_document_update(request):
         return HttpResponse(status=400, content="No documents selected.")
 
     if request.method == "POST":
-        form = BulkDocumentsForm(
-            request.POST, matter=matter, use_required_attribute=False
-        )
+        form = BulkFilesForm(request.POST, matter=matter, use_required_attribute=False)
 
         if form.is_valid():
             proceeding = form.cleaned_data.get("proceeding")
@@ -431,26 +426,26 @@ def bulk_document_update(request):
 
             return HttpResponse(
                 status=204,
-                headers={"HX-Trigger": "documentsChanged"},
+                headers={"HX-Trigger": "filesChanged"},
             )
 
         return render(
             request,
-            "documents/documents/bulk_form.html",
+            "documents/files/bulk_form.html",
             {"form": form, "matter": matter},
         )
     else:
-        form = BulkDocumentsForm(matter=matter, use_required_attribute=False)
+        form = BulkFilesForm(matter=matter, use_required_attribute=False)
 
         return render(
             request,
-            "documents/documents/bulk_form.html",
+            "documents/files/bulk_form.html",
             {"form": form, "matter": matter},
         )
 
 
 @login_required
-def documents_delete(request, document_id):
+def files_delete(request, document_id):
     try:
         Document.objects.get(id=document_id).delete()
 
@@ -462,7 +457,7 @@ def documents_delete(request, document_id):
     except Document.DoesNotExist:
         return HttpResponse(status=404)
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "filesChanged"})
 
 
 @login_required
@@ -515,19 +510,25 @@ def get_proceedings_and_labels(request):
             matter = Matter.objects.get(id=matter_id)
 
             proceedings = matter.proceeding_set.all().order_by("date_filed")
-            labels = matter.labels.all().order_by("name")
+            # Include global labels + matter-specific labels
+            labels = Label.objects.filter(Q(matter=None) | Q(matter=matter)).order_by(
+                "matter", "name"
+            )
         except Matter.DoesNotExist:
             pass
+    else:
+        # No matter selected - show only global labels
+        labels = Label.objects.filter(matter=None).order_by("name")
 
     proceedings_html = render(
         request,
-        "documents/documents/proceeding_options.html",
+        "documents/files/proceeding_options.html",
         {"proceedings": proceedings},
     ).content.decode("utf-8")
 
     labels_html = render(
         request,
-        "documents/documents/label_options.html",
+        "documents/files/label_options.html",
         {"labels": labels},
     ).content.decode("utf-8")
 
@@ -603,8 +604,9 @@ def edit_label(request, label_id):
 
     matter_list = Matter.objects.filter(status="Open").order_by("name")
 
-    if label.matter not in matter_list:
-        matter_list |= Matter.objects.filter(pk=label.matter.id)
+    # Include closed matter if label belongs to one
+    if label.matter and label.matter not in matter_list:
+        matter_list = matter_list | Matter.objects.filter(pk=label.matter.id)
 
     if request.method == "POST":
         form = LabelsForm(request.POST, instance=label, use_required_attribute=False)
@@ -690,8 +692,119 @@ def delete_label(request, label_id):
     return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
 
 
+def _get_object_for_labels(object_type, object_id):
+    """Helper to get object and matter by type for label operations."""
+    if object_type == "document":
+        obj = get_object_or_404(Document, id=object_id)
+        matter = obj.matter
+        row_template = "documents/files/row.html"
+        context_key = "document"
+    elif object_type == "highlight":
+        obj = get_object_or_404(Highlight, id=object_id)
+        matter = obj.document.matter if obj.document else None
+        row_template = "documents/highlights/row.html"
+        context_key = "highlight"
+    elif object_type == "fact":
+        obj = get_object_or_404(Fact, id=object_id)
+        matter = obj.matter
+        row_template = "documents/timeline/fact-row.html"
+        context_key = "fact"
+    else:
+        return None, None, None, None
+    return obj, matter, row_template, context_key
+
+
 @login_required
-def toggle_document_select(request, document_id):
+def labels_apply_modal(request, object_type, object_id):
+    """Open modal to apply labels to an object."""
+    obj, matter, _, _ = _get_object_for_labels(object_type, object_id)
+    if obj is None:
+        return HttpResponse("Invalid object type", status=400)
+
+    return render(
+        request,
+        "documents/labels/apply-modal.html",
+        {"object": obj, "object_type": object_type, "matter": matter},
+    )
+
+
+@login_required
+def labels_search(request, object_type, object_id):
+    """Search labels for apply modal."""
+    obj, matter, _, _ = _get_object_for_labels(object_type, object_id)
+    if obj is None:
+        return HttpResponse("Invalid object type", status=400)
+
+    query = request.GET.get("q", "").strip()
+
+    # Get available labels (global + matter-specific)
+    if matter:
+        labels = Label.objects.filter(Q(matter=None) | Q(matter=matter))
+    else:
+        labels = Label.objects.filter(matter=None)
+
+    # Filter by search query
+    if query:
+        labels = labels.filter(name__icontains=query)
+
+    # Exclude already-applied labels
+    existing_label_ids = obj.labels.values_list("id", flat=True)
+    labels = labels.exclude(id__in=existing_label_ids)
+
+    # Order: global first, then matter-specific, alphabetically
+    labels = labels.order_by("matter", "name")
+
+    return render(
+        request,
+        "documents/labels/apply-results.html",
+        {"labels": labels, "object": obj, "object_type": object_type},
+    )
+
+
+@login_required
+def add_label_to(request, object_type, object_id):
+    """Add a label to an object."""
+    obj, matter, row_template, context_key = _get_object_for_labels(
+        object_type, object_id
+    )
+    if obj is None:
+        return HttpResponse("Invalid object type", status=400)
+
+    label_id = request.POST.get("label_id")
+    if label_id:
+        try:
+            label = Label.objects.get(id=label_id)
+            obj.labels.add(label)
+        except Label.DoesNotExist:
+            pass
+
+    context = {context_key: obj, "importance_choices": range(1, 11)}
+    return render(request, row_template, context)
+
+
+@login_required
+def remove_label_from(request, object_type, object_id):
+    """Remove a label from an object."""
+    obj, matter, row_template, context_key = _get_object_for_labels(
+        object_type, object_id
+    )
+    if obj is None:
+        return HttpResponse("Invalid object type", status=400)
+
+    label_id = request.POST.get("label_id")
+    if label_id:
+        try:
+            label = Label.objects.get(id=label_id)
+            obj.labels.remove(label)
+        except Label.DoesNotExist:
+            pass
+
+    context = {context_key: obj, "importance_choices": range(1, 11)}
+    return render(request, row_template, context)
+
+
+@login_required
+def toggle_file_select(request, document_id):
     selected_documents = request.session.get("selected_documents", [])
 
     if document_id in selected_documents:
@@ -701,19 +814,19 @@ def toggle_document_select(request, document_id):
 
     request.session["selected_documents"] = selected_documents
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "filesChanged"})
 
 
 @login_required
-def clear_document_selection(request):
+def clear_file_selection(request):
     request.session["selected_documents"] = []
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": "filesChanged"})
 
 
 @login_required
-def document_row(request, document_id):
-    """Return a single document row (for HTMX polling of OCR status)."""
+def file_row(request, document_id):
+    """Return a single file row (for HTMX polling of OCR status)."""
     document = get_object_or_404(Document, id=document_id)
     selected_documents = request.session.get("selected_documents", [])
     matter = document.matter
@@ -721,7 +834,7 @@ def document_row(request, document_id):
 
     return render(
         request,
-        "documents/documents/row.html",
+        "documents/files/row.html",
         {
             "document": document,
             "selected_documents": selected_documents,
@@ -737,7 +850,7 @@ def ocr_badge(request, document_id):
 
     return render(
         request,
-        "documents/documents/ocr-badge.html",
+        "documents/files/ocr-badge.html",
         {"document": document},
     )
 
@@ -870,7 +983,7 @@ def edit_highlight(request, highlight_id):
             return render(
                 request,
                 "documents/highlights/row.html",
-                {"highlight": highlight},
+                {"highlight": highlight, "importance_choices": range(1, 11)},
             )
     else:
         form = HighlightForm(instance=highlight)

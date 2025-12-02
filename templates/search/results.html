@@ -100,7 +100,7 @@
               {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
                 <a href="{% url 'documents:viewer' document.id %}" target="_blank">{{ document.name }}</a>
               {% else %}
-                <a href="{% url 'documents:download' document.id %}">{{ document.name }}</a>
+                <a href="{% url 'documents:files-download' document.id %}">{{ document.name }}</a>
               {% endif %}
               {% if document.description %}
                 <br>

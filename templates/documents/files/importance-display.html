@@ -8,15 +8,15 @@
       <li>
         <a class="dropdown-item"
            href="#"
-           hx-get="{% url 'documents:document-importance' document.id forloop.counter %}"
-           hx-target="#documents">{{ forloop.counter }}</a>
+           hx-get="{% url 'documents:file-importance' document.id forloop.counter %}"
+           hx-target="#files">{{ forloop.counter }}</a>
       </li>
     {% endfor %}
     <li>
       <a class="dropdown-item"
          href="#"
-         hx-get="{% url 'documents:document-importance' document.id 10 %}"
-         hx-target="#documents">10</a>
+         hx-get="{% url 'documents:file-importance' document.id 10 %}"
+         hx-target="#files">10</a>
     </li>
   </ul>
 </div>

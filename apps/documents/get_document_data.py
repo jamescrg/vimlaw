@@ -1,6 +1,6 @@
 from django.db.models import Count
 
-from apps.documents.filters import DocumentsFilter
+from apps.documents.filters import FilesFilter
 from apps.documents.models import Document, Label
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
@@ -53,7 +53,7 @@ def get_document_data(request):
 
     # Apply additional filters if present
     if filter_data:
-        filter_obj = DocumentsFilter(filter_data, queryset=documents, matter=matter)
+        filter_obj = FilesFilter(filter_data, queryset=documents, matter=matter)
         documents = filter_obj.qs
 
     pagination = CustomPaginator(
@@ -96,7 +96,7 @@ def get_document_data(request):
         "matters": matters,
         "pagination": pagination,
         "session_key": "documents_pagination",
-        "trigger_key": "documentsChanged",
+        "trigger_key": "filesChanged",
         "objects": pagination.get_object_list(),
         "labels": label_list,
         "selected_category": selected_category,

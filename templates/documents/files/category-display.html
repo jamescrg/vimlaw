@@ -7,26 +7,26 @@
     <li>
       <a class="dropdown-item {% if document.category == 'Correspondence' %}active{% endif %}"
          href="#"
-         hx-get="{% url 'documents:document-category' document.id 'Correspondence' %}"
-         hx-target="#documents">Correspondence</a>
+         hx-get="{% url 'documents:file-category' document.id 'Correspondence' %}"
+         hx-target="#files">Correspondence</a>
     </li>
     <li>
       <a class="dropdown-item {% if document.category == 'Discovery' %}active{% endif %}"
          href="#"
-         hx-get="{% url 'documents:document-category' document.id 'Discovery' %}"
-         hx-target="#documents">Discovery</a>
+         hx-get="{% url 'documents:file-category' document.id 'Discovery' %}"
+         hx-target="#files">Discovery</a>
     </li>
     <li>
       <a class="dropdown-item {% if document.category == 'Evidence' %}active{% endif %}"
          href="#"
-         hx-get="{% url 'documents:document-category' document.id 'Evidence' %}"
-         hx-target="#documents">Evidence</a>
+         hx-get="{% url 'documents:file-category' document.id 'Evidence' %}"
+         hx-target="#files">Evidence</a>
     </li>
     <li>
       <a class="dropdown-item {% if document.category == 'Record' %}active{% endif %}"
          href="#"
-         hx-get="{% url 'documents:document-category' document.id 'Record' %}"
-         hx-target="#documents">Record</a>
+         hx-get="{% url 'documents:file-category' document.id 'Record' %}"
+         hx-target="#files">Record</a>
     </li>
   </ul>
 </div>

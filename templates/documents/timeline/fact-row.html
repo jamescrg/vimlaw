@@ -31,7 +31,7 @@
           {% endif %}
           <li>
             <a class="dropdown-item"
-               href="{% url 'documents:download' document.id %}">Download</a>
+               href="{% url 'documents:files-download' document.id %}">Download</a>
           </li>
           <li>
             <a class="dropdown-item text-danger"
@@ -74,6 +74,18 @@
        data-bs-target="#htmx-modal-container"
        title="Add source">
       <i class="bi bi-plus-circle"></i>
+    </a>
+    {% for label in fact.labels.all %}
+      {% include "documents/labels/badge.html" with object_type="fact" object=fact %}
+    {% endfor %}
+    <a href="#"
+       class="add-label-btn"
+       hx-get="{% url 'documents:labels-apply-modal' 'fact' fact.id %}"
+       hx-target="#htmx-modal-container"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container"
+       title="Add label">
+      <i class="bi bi-tag"></i>
     </a>
   </td>
   <td class="importance{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">

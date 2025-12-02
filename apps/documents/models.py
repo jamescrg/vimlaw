@@ -11,16 +11,37 @@ User = get_user_model()
 
 
 class Label(models.Model):
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, related_name="labels")
+    COLOR_CHOICES = [
+        ("blue", "Blue"),
+        ("gray", "Gray"),
+        ("green", "Green"),
+        ("orange", "Orange"),
+        ("purple", "Purple"),
+        ("red", "Red"),
+        ("yellow", "Yellow"),
+    ]
+
+    matter = models.ForeignKey(
+        Matter, on_delete=models.CASCADE, related_name="labels", null=True, blank=True
+    )
     name = models.CharField(max_length=100)
-    color = models.CharField(max_length=7, default="#FFFFFF")  # Hex color code
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default="gray")
 
     def __str__(self):
         return self.name
 
+    @property
+    def is_global(self):
+        return self.matter is None
+
     class Meta:
         db_table = "app_label"
         ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["matter", "name"], name="unique_label_per_matter"
+            )
+        ]
 
 
 def document_upload_path(instance, filename):
@@ -135,6 +156,7 @@ class Highlight(models.Model):
     importance = models.PositiveIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
+    labels = models.ManyToManyField(Label, related_name="highlights", blank=True)
 
     class Meta:
         db_table = "app_document_highlight"
@@ -180,6 +202,7 @@ class Fact(models.Model):
     importance = models.PositiveIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
+    labels = models.ManyToManyField(Label, related_name="facts", blank=True)
 
     def __str__(self):
         return f"{self.description}"

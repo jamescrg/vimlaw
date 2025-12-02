@@ -27,13 +27,13 @@ const OCRStatusPoller = {
 
   async checkStatus(documentId) {
     try {
-      const response = await fetch(`/documents/ocr-status/${documentId}/`);
+      const response = await fetch(`/files/ocr-status/${documentId}/`);
       const data = await response.json();
 
       if (data.status === "completed" || data.status === "failed") {
         this.stopPolling(documentId);
         // Trigger refresh of the documents list
-        document.body.dispatchEvent(new CustomEvent("documentsChanged"));
+        document.body.dispatchEvent(new CustomEvent("filesChanged"));
       }
     } catch (error) {
       console.error("Error checking OCR status:", error);

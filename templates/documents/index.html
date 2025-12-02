@@ -35,14 +35,17 @@
     </div>
     <nav class="navbar navbar-sub detail-subnav">
       <ul>
-        <li {% if subapp == "documents" %}class="active"{% endif %}>
-          <a href="{% url 'documents:index' %}">Documents</a>
+        <li {% if subapp == "files" %}class="active"{% endif %}>
+          <a href="{% url 'documents:index' %}">Files</a>
         </li>
         <li {% if subapp == "highlights" %}class="active"{% endif %}>
           <a href="{% url 'documents:highlights-index' %}">Highlights</a>
         </li>
         <li {% if subapp == "timeline" %}class="active"{% endif %}>
           <a href="{% url 'documents:timeline-index' %}">Timeline</a>
+        </li>
+        <li {% if subapp == "labels" %}class="active"{% endif %}>
+          <a href="{% url 'documents:labels-index' %}">Labels</a>
         </li>
       </ul>
     </nav>

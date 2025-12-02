@@ -1,5 +1,5 @@
 <div class="table-container">
-  <table id="documents-list" class="table table-fixed">
+  <table id="files-list" class="table table-fixed">
     <colgroup>
       <col class="col-select">
       <col class="col-category">
@@ -16,24 +16,24 @@
       <th class="col-date">
         Date
         <button class="btn-sort {% if 'date' in current_order %}active{% endif %}"
-                hx-get="{% url 'documents:sort' 'date' %}"
-                hx-target="#documents">
+                hx-get="{% url 'documents:files-sort' 'date' %}"
+                hx-target="#files">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
       <th class="col-document">
-        Document
+        File
         <button class="btn-sort {% if 'name' in current_order %}active{% endif %}"
-                hx-get="{% url 'documents:sort' 'name' %}"
-                hx-target="#documents">
+                hx-get="{% url 'documents:files-sort' 'name' %}"
+                hx-target="#files">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
       <th class="col-proceeding">Proceeding</th>
       <th class="col-importance">
         <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
-                hx-get="{% url 'documents:sort' 'importance' %}"
-                hx-target="#documents"
+                hx-get="{% url 'documents:files-sort' 'importance' %}"
+                hx-target="#files"
                 title="Sort by importance">
           <i class="bi bi-flag"></i>
         </button>
@@ -41,7 +41,7 @@
     </tr>
     {% if objects %}
       {% for document in objects %}
-        {% include "documents/documents/row.html" %}
+        {% include "documents/files/row.html" %}
       {% endfor %}
     {% endif %}
   </table>

@@ -16,7 +16,7 @@ class ProceedingChoiceFilter(django_filters.ModelChoiceFilter):
         self.field.label_from_instance = lambda obj: f"{obj.forum} - {obj.case_number}"
 
 
-class DocumentsFilter(django_filters.FilterSet):
+class FilesFilter(django_filters.FilterSet):
     keyword = django_filters.CharFilter(
         method="filter_keyword",
         label="Keyword",

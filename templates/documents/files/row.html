@@ -1,25 +1,25 @@
-<tr data-document-id="{{ document.id }}">
+<tr id="document-{{ document.id }}" data-document-id="{{ document.id }}">
   <td class="col-select">
     <input type="checkbox"
            name="document_select"
            value="{{ document.id }}"
            {% if document.id in selected_documents %}checked{% endif %}
-           hx-post="{% url 'documents:toggle-select' document.id %}"
+           hx-post="{% url 'documents:files-toggle-select' document.id %}"
            hx-trigger="change"
            hx-target="closest tr"
            hx-swap="outerHTML">
   </td>
-  <td class="col-category dropdown-cell">{% include "documents/documents/category-display.html" %}</td>
-  <td class="col-date">{% include "documents/documents/date-display.html" %}</td>
+  <td class="col-category dropdown-cell">{% include "documents/files/category-display.html" %}</td>
+  <td class="col-date">{% include "documents/files/date-display.html" %}</td>
   <td class="col-document">
-    <div class="doc-name">
+    <div class="file-name">
       <a href="#"
-         hx-get="{% url 'documents:edit' document.id %}"
+         hx-get="{% url 'documents:files-edit' document.id %}"
          hx-target="#htmx-modal-container"
          data-bs-toggle="modal"
          data-bs-target="#htmx-modal-container">{{ document.name }}</a>
-      {% include "documents/documents/ocr-badge.html" %}
-      <span class="doc-actions">
+      {% include "documents/files/ocr-badge.html" %}
+      <span class="file-actions">
         {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
           <a href="{% url 'documents:viewer' document.id %}"
              target="_blank"
@@ -28,7 +28,7 @@
             <i class="bi bi-box-arrow-up-right"></i>
           </a>
         {% endif %}
-        <a href="{% url 'documents:download' document.id %}"
+        <a href="{% url 'documents:files-download' document.id %}"
            class="action-btn"
            title="Download">
           <i class="bi bi-download"></i>
@@ -48,8 +48,22 @@
         {% endif %}
       </span>
     </div>
-    {% if document.description %}<div class="doc-description">{{ document.description }}</div>{% endif %}
+    {% if document.description %}<div class="file-description">{{ document.description }}</div>{% endif %}
+    <div class="file-labels">
+      {% for label in document.labels.all %}
+        {% include "documents/labels/badge.html" with object_type="document" object=document %}
+      {% endfor %}
+      <a href="#"
+         class="add-label-btn"
+         hx-get="{% url 'documents:labels-apply-modal' 'document' document.id %}"
+         hx-target="#htmx-modal-container"
+         data-bs-toggle="modal"
+         data-bs-target="#htmx-modal-container"
+         title="Add label">
+        <i class="bi bi-tag"></i>
+      </a>
+    </div>
   </td>
-  <td class="col-proceeding dropdown-cell">{% include "documents/documents/proceeding-display.html" %}</td>
-  <td class="col-importance dropdown-cell">{% include "documents/documents/importance-display.html" %}</td>
+  <td class="col-proceeding dropdown-cell">{% include "documents/files/proceeding-display.html" %}</td>
+  <td class="col-importance dropdown-cell">{% include "documents/files/importance-display.html" %}</td>
 </tr>

@@ -1,4 +1,4 @@
-<article class="highlight-card" id="highlight-card-{{ highlight.id }}">
+<article class="highlight-card" id="highlight-{{ highlight.id }}">
   <div class="highlight-card-date">{{ highlight.document.date|date:"F j, Y"|default:"No date" }}</div>
   <div class="highlight-card-content">
     {% include "documents/highlights/importance-badge.html" %}
@@ -36,5 +36,19 @@
     <cite class="highlight-card-citation">
       {{ highlight.document.name }}, p. {{ highlight.page_number }}.
     </cite>
+    <div class="highlight-labels">
+      {% for label in highlight.labels.all %}
+        {% include "documents/labels/badge.html" with object_type="highlight" object=highlight %}
+      {% endfor %}
+      <a href="#"
+         class="add-label-btn"
+         hx-get="{% url 'documents:labels-apply-modal' 'highlight' highlight.id %}"
+         hx-target="#htmx-modal-container"
+         data-bs-toggle="modal"
+         data-bs-target="#htmx-modal-container"
+         title="Add label">
+        <i class="bi bi-tag"></i>
+      </a>
+    </div>
   </div>
 </article>

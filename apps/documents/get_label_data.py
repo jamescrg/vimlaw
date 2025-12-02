@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from apps.documents.filters import LabelsFilter
 from apps.documents.get_document_data import get_selected_matter
 from apps.documents.models import Label
@@ -7,18 +9,17 @@ from apps.management.pagination import CustomPaginator
 def get_label_data(request):
     matter, matters = get_selected_matter(request)
 
-    if not matter:
-        return {
-            "matter": None,
-            "matters": matters,
-            "objects": [],
-            "pagination": None,
-        }
-
     filter_data = request.session.get("labels_filter", {})
 
-    # Filter labels by the selected matter
-    labels = Label.objects.filter(matter=matter).order_by("name")
+    # Show global labels + matter-specific labels (if matter selected)
+    if matter:
+        labels = Label.objects.filter(Q(matter=None) | Q(matter=matter))
+    else:
+        # No matter selected - show only global labels
+        labels = Label.objects.filter(matter=None)
+
+    # Order: global labels first, then matter labels, alphabetically within each
+    labels = labels.order_by("matter", "name")
 
     if filter_data:
         filter_obj = LabelsFilter(filter_data, queryset=labels)

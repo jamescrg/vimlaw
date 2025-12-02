@@ -140,6 +140,49 @@
   font-size: 0.625rem;
 }
 
+/*------------------------------------------------
+Label badges
+------------------------------------------------*/
+
+.highlight-labels {
+  margin-top: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.highlight-card .label-badge {
+  display: inline-block;
+  margin-right: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.highlight-card .label-badge .badge-link {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.highlight-card .label-badge .badge-link:hover {
+  opacity: 0.8;
+}
+
+/* Add label ghost button */
+.highlight-card .add-label-btn {
+  display: inline-block;
+  color: var(--stone-400);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.highlight-card:hover .add-label-btn {
+  opacity: 1;
+}
+
+.highlight-card .add-label-btn:hover {
+  color: var(--stone-600);
+}
+
 /* Edit Modal */
 .highlight-edit-grid {
   display: grid;

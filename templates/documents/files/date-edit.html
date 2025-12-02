@@ -1,8 +1,8 @@
 <input autofocus
        type="date"
        name="date"
-       class="doc-date-input"
+       class="file-date-input"
        value="{{ document.date|date:'Y-m-d' }}"
-       hx-post="{% url 'documents:document-date' document.id %}"
+       hx-post="{% url 'documents:file-date' document.id %}"
        hx-target="closest td"
        hx-trigger="blur delay:100ms, keyup[key=='Enter'], change">

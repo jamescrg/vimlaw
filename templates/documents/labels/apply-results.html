@@ -1,0 +1,19 @@
+{% if labels %}
+  <ul class="assign-results">
+    {% for label in labels %}
+      <li>
+        <a href="#"
+           hx-post="{% url 'documents:add-label-to' object_type object.id %}"
+           hx-vals='{"label_id": "{{ label.id }}"}'
+           hx-target="#{{ object_type }}-{{ object.id }}"
+           hx-swap="outerHTML"
+           data-bs-dismiss="modal">
+          <span class="badge label-{{ label.color }}">{{ label.name }}</span>
+          {% if label.is_global %}<small class="text-muted">(Global)</small>{% endif %}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="text-muted">No labels available</p>
+{% endif %}
