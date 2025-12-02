@@ -174,35 +174,19 @@
   min-width: 40rem;
 }
 
-/* Highlights document filter dropdown */
-#highlights-document-filter {
-  width: 16rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-}
 
 .highlights-list .col-document {
-  width: 15rem;
+  width: 25rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .highlights-list .col-slug {
-  width: 20rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.highlights-list .col-text {
   /* Variable width - takes remaining space */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--stone-500);
 }
 
 .highlights-list .col-page {

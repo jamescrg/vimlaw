@@ -16,14 +16,5 @@
       <i class="bi bi-box-arrow-up-right"></i>
     </a>
   </td>
-  <td class="col-text">
-    <button type="button"
-            class="btn btn-sm copy-btn"
-            data-copy="{{ highlight.text }}"
-            title="Copy text">
-      <i class="bi bi-clipboard"></i>
-    </button>
-    {{ highlight.text|truncatechars:100 }}
-  </td>
   <td class="col-page">{{ highlight.page_number }}</td>
 </tr>

@@ -87,19 +87,17 @@ class HighlightsFilter(django_filters.FilterSet):
         fields=[
             ("document__name", "document"),
             ("slug", "slug"),
-            ("created_at", "created_at"),
         ],
         field_labels={
             "document__name": "Document",
             "slug": "Slug",
-            "created_at": "Date Created",
         },
         label="Order By",
     )
 
     class Meta:
         model = Highlight
-        fields = ["document", "order_by"]
+        fields = ["document", "keyword", "order_by"]
 
     def __init__(self, *args, matter=None, **kwargs):
         super().__init__(*args, **kwargs)

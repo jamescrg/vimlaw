@@ -31,8 +31,10 @@ from apps.documents.views import (
     get_proceedings_and_labels,
     highlight_link,
     highlights_filter,
+    highlights_filter_default,
     highlights_filter_document,
     highlights_filter_keyword,
+    highlights_filter_sort,
     highlights_index,
     highlights_list,
     index,
@@ -178,6 +180,16 @@ urlpatterns = [
         "documents/highlights/filter/keyword/",
         highlights_filter_keyword,
         name="highlights-filter-keyword",
+    ),
+    path(
+        "documents/highlights/filter/sort/<str:order>/",
+        highlights_filter_sort,
+        name="highlights-filter-sort",
+    ),
+    path(
+        "documents/highlights/filter/default/",
+        highlights_filter_default,
+        name="highlights-filter-default",
     ),
     # Timeline subapp
     path("documents/timeline/", timeline_index, name="timeline-index"),

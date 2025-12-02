@@ -17,9 +17,7 @@
         <br />
         <div class="flex-center-space limited-width">
           <button type="submit" class="submit">Apply</button>
-          <a class="btn-icon"
-             href="#"
-             hx-post="{% url 'management:clear-filters' session_key='highlights_filter' trigger='highlightsChanged' %}">Restore Defaults</a>
+          <a href="{% url 'documents:highlights-filter-default' %}">Restore Defaults</a>
         </div>
       </form>
     </div>

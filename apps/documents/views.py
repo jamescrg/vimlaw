@@ -918,13 +918,21 @@ def get_highlights_data(request, matter):
         if document_id:
             selected_document = documents.filter(id=document_id).first()
 
-        # Handle custom ordering for document (add page_number as secondary sort)
+        # Handle custom ordering with secondary sorts
         if order_by == "document":
-            highlights = highlights.order_by("document__name", "page_number")
+            highlights = highlights.order_by("document__name", "slug", "page_number")
         elif order_by == "-document":
-            highlights = highlights.order_by("-document__name", "-page_number")
+            highlights = highlights.order_by("-document__name", "slug", "page_number")
+        elif order_by == "slug":
+            highlights = highlights.order_by("slug", "document__name", "page_number")
+        elif order_by == "-slug":
+            highlights = highlights.order_by("-slug", "document__name", "page_number")
         elif not order_by:
-            highlights = highlights.order_by("-created_at")
+            # Default: order by document, then slug
+            highlights = highlights.order_by("document__name", "slug", "page_number")
+
+    # Determine current_order for template (strip leading '-' for base field)
+    current_order = order_by if order_by else "document"
 
     return {
         "highlights": highlights,
@@ -932,6 +940,7 @@ def get_highlights_data(request, matter):
         "selected_document": selected_document,
         "keyword": keyword,
         "order_by": order_by,
+        "current_order": current_order,
     }
 
 
@@ -971,15 +980,13 @@ def highlights_filter_document(request, document_id=None):
     filter_data = request.session.get("highlights_filter", {})
 
     if document_id:
-        filter_data["document"] = [str(document_id)]
+        filter_data["document"] = document_id  # Store as int
     else:
-        filter_data.pop("document", None)
+        filter_data["document"] = ""  # Empty string for "All"
 
     request.session["highlights_filter"] = filter_data
 
-    matter, _ = get_selected_matter(request)
-    context = get_highlights_data(request, matter)
-    return render(request, "documents/highlights/list.html", context)
+    return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
 
 
 @login_required
@@ -988,16 +995,11 @@ def highlights_filter_keyword(request):
     filter_data = request.session.get("highlights_filter", {})
     keyword = request.POST.get("keyword", "").strip()
 
-    if keyword:
-        filter_data["keyword"] = [keyword]
-    else:
-        filter_data.pop("keyword", None)
+    filter_data["keyword"] = keyword  # Store as simple string
 
     request.session["highlights_filter"] = filter_data
 
-    matter, _ = get_selected_matter(request)
-    context = get_highlights_data(request, matter)
-    return render(request, "documents/highlights/list.html", context)
+    return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
 
 
 @login_required
@@ -1006,7 +1008,13 @@ def highlights_filter(request):
     matter, matters = get_selected_matter(request)
 
     if request.method == "POST":
-        request.session["highlights_filter"] = dict(request.POST)
+        # Store POST values directly (matching tasks pattern)
+        filter_data = {
+            key: value
+            for key, value in request.POST.items()
+            if key != "csrfmiddlewaretoken"
+        }
+        request.session["highlights_filter"] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
 
     # GET - show filter modal
@@ -1025,6 +1033,36 @@ def highlights_filter(request):
     }
 
     return render(request, "documents/highlights/filter.html", context)
+
+
+@login_required
+def highlights_filter_sort(request, order):
+    """Sort highlights by field, toggling asc/desc."""
+    filter_data = request.session.get("highlights_filter", {})
+    current_order = filter_data.get("order_by", "")
+
+    # Toggle direction if same field
+    if current_order == order:
+        filter_data["order_by"] = f"-{order}"
+    elif current_order == f"-{order}":
+        filter_data["order_by"] = order
+    else:
+        filter_data["order_by"] = order
+
+    request.session["highlights_filter"] = filter_data
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
+
+
+@login_required
+def highlights_filter_default(request):
+    """Reset highlights filter to defaults."""
+    request.session["highlights_filter"] = {
+        "document": "",
+        "keyword": "",
+        "order_by": "document",
+    }
+    return redirect("documents:highlights-index")
 
 
 # =============================================================================
