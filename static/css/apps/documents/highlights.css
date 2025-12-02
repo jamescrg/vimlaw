@@ -1,0 +1,58 @@
+/* Document filter dropdown */
+#highlights-document-filter {
+  display: inline-flex;
+  align-items: center;
+  width: 16rem;
+}
+
+#highlights-document-filter .doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keyword input */
+#highlights-keyword-input.filter-input {
+  width: 16rem;
+}
+
+/* Highlights List Table */
+.highlights-list.table-fixed {
+  table-layout: fixed;
+  min-width: 40rem;
+}
+
+.highlights-list .col-document {
+  width: 25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.highlights-list .col-slug {
+  /* Variable width - takes remaining space */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.highlights-list .col-page {
+  width: 8rem;
+  text-align: center;
+}
+
+/* Highlight view ghost button */
+.highlights-list .highlight-view-btn {
+  margin-left: 1rem;
+  color: var(--stone-400);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.highlights-list tr:hover .highlight-view-btn {
+  opacity: 1;
+}
+
+.highlights-list .highlight-view-btn:hover {
+  color: var(--stone-600);
+}

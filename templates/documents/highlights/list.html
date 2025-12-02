@@ -16,7 +16,7 @@
               class="select-btn filter-dropdown-button {% if selected_document %}toggle-active{% endif %}"
               data-bs-toggle="dropdown"
               aria-expanded="false">
-        {{ selected_document.name|default:"All Documents"|truncatechars:20 }}
+        <span class="doc-name">{{ selected_document.name|default:"All Documents" }}</span>
         <small>
           <i class="bi bi-chevron-down"></i>
         </small>

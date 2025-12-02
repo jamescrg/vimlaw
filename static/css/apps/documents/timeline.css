@@ -1,0 +1,46 @@
+/* Timeline source badges */
+.timeline-list td {
+  overflow: visible;
+}
+
+.timeline-list .source-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.timeline-list .source-badge .badge-link {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background-color: var(--stone-200);
+  color: var(--stone-600);
+  border-radius: 0.25rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.timeline-list .source-badge .badge-link:hover {
+  background-color: var(--stone-300);
+  color: var(--stone-700);
+}
+
+.timeline-list .source-badge .badge-link i {
+  margin-right: 0.25rem;
+}
+
+/* Add source ghost button */
+.timeline-list .add-source-btn {
+  display: inline-block;
+  margin-left: 0.5rem;
+  color: var(--stone-400);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.timeline-list tr:hover .add-source-btn {
+  opacity: 1;
+}
+
+.timeline-list .add-source-btn:hover {
+  color: var(--stone-600);
+}
