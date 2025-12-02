@@ -1030,6 +1030,7 @@ def highlights_for_document(request, document_id):
 @login_required
 def highlights_filter_keyword(request):
     """Filter highlights by keyword (inline search)."""
+    matter, _ = get_selected_matter(request)
     filter_data = request.session.get("highlights_filter", {})
     keyword = request.POST.get("keyword", "").strip()
 
@@ -1037,7 +1038,9 @@ def highlights_filter_keyword(request):
 
     request.session["highlights_filter"] = filter_data
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
+    # Render just the cards partial (for search input updates)
+    context = get_highlights_data(request, matter)
+    return render(request, "documents/highlights/cards.html", context)
 
 
 @login_required
@@ -1128,9 +1131,15 @@ def get_timeline_data(request, matter):
     if isinstance(current_order, list):
         current_order = current_order[0] if current_order else "date"
 
+    # Get keyword value
+    keyword = filter_data.get("keyword", "")
+    if isinstance(keyword, list):
+        keyword = keyword[0] if keyword else ""
+
     return {
         "facts": facts,
         "current_order": current_order,
+        "keyword": keyword,
     }
 
 
@@ -1442,3 +1451,22 @@ def timeline_sort(request, order):
     request.session.modified = True
 
     return redirect("documents:timeline-list")
+
+
+@login_required
+def timeline_filter_keyword(request):
+    """Filter timeline by keyword (inline search)."""
+    matter, _ = get_selected_matter(request)
+    filter_data = request.session.get("timeline_filter", {})
+    keyword = request.GET.get("keyword", "").strip()
+
+    if keyword:
+        filter_data["keyword"] = keyword
+    else:
+        filter_data.pop("keyword", None)
+
+    request.session["timeline_filter"] = filter_data
+
+    # Render just the table partial (for search input updates)
+    context = get_timeline_data(request, matter)
+    return render(request, "documents/timeline/table.html", context)

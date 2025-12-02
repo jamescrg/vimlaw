@@ -44,20 +44,14 @@
       <input type="text"
              id="highlights-keyword-input"
              name="keyword"
-             placeholder="Keyword"
+             placeholder="Keyword Search"
              value="{{ keyword }}"
-             class="filter-input"
+             class="filter-input keyword-input"
              hx-post="{% url 'documents:highlights-filter-keyword' %}"
-             hx-target="#highlights"
+             hx-target="#highlights-cards"
              hx-trigger="keyup changed delay:500ms"
              hx-include="this">
     </div>
   </div>
 </div>
-<div class="highlights-cards">
-  {% for highlight in highlights %}
-    {% include "documents/highlights/row.html" %}
-  {% empty %}
-    <p class="empty-message">No highlights yet. Create highlights by selecting text in the document viewer.</p>
-  {% endfor %}
-</div>
+<div id="highlights-cards">{% include "documents/highlights/cards.html" %}</div>

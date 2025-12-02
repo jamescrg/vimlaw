@@ -1,0 +1,7 @@
+<div class="highlights-cards">
+  {% for highlight in highlights %}
+    {% include "documents/highlights/row.html" %}
+  {% empty %}
+    <p class="empty-message">No highlights yet. Create highlights by selecting text in the document viewer.</p>
+  {% endfor %}
+</div>

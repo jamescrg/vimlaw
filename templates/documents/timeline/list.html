@@ -20,6 +20,16 @@
               data-bs-target="#htmx-modal-container">
         <i class="bi bi-filter"></i> Filter
       </button>
+      <input type="text"
+             id="timeline-keyword-input"
+             name="keyword"
+             placeholder="Keyword Search"
+             value="{{ keyword }}"
+             class="filter-input keyword-input"
+             hx-get="{% url 'documents:timeline-filter-keyword' %}"
+             hx-target="#timeline-table"
+             hx-trigger="keyup changed delay:500ms"
+             hx-include="this">
     </div>
   </div>
   <div class="toolbar-right">
@@ -31,4 +41,4 @@
     {% endif %}
   </div>
 </div>
-{% include "documents/timeline/table.html" %}
+<div id="timeline-table">{% include "documents/timeline/table.html" %}</div>

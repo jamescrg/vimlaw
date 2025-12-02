@@ -12,7 +12,7 @@
 }
 
 /* Keyword input */
-#highlights-keyword-input.filter-input {
+.keyword-input.filter-input {
   width: 16rem;
 }
 
