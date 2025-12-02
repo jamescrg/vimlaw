@@ -129,7 +129,7 @@ Please run pre-commit hooks and fix any linting errors on all significant change
 - Migrations excluded from linting (see .pre-commit-config.yaml)
 
 - do not use inline styles in HTML
-- css values should snap to a 4px grid
+- css values should be in rems and snap to a 0.25rem grid
 - tests run slowly on this server, when testing, please run targeted unit tests to cover recent changes
 
 

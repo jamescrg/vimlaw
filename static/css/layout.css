@@ -4,8 +4,8 @@ html {
 }
 
 body {
-  background: var(--stone-300);
-  color: var(--stone-600);
+  background: var(--background-body);
+  color: var(--color-primary);
   font-family: 'Open Sans', sans-serif;
   font-size: 1em;
   min-height: 100%;

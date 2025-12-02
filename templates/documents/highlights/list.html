@@ -54,37 +54,10 @@
     </div>
   </div>
 </div>
-<div class="table-container">
-  <table class="table highlights-list table-fixed">
-    <thead>
-      <tr>
-        <th class="col-document">
-          Document
-          <button class="btn-sort {% if current_order == 'document' or current_order == '-document' %}active{% endif %}"
-                  hx-post="{% url 'documents:highlights-filter-sort' 'document' %}">
-            <i class="bi bi-chevron-expand"></i>
-          </button>
-        </th>
-        <th class="col-slug">
-          Slug
-          <button class="btn-sort {% if current_order == 'slug' or current_order == '-slug' %}active{% endif %}"
-                  hx-post="{% url 'documents:highlights-filter-sort' 'slug' %}">
-            <i class="bi bi-chevron-expand"></i>
-          </button>
-        </th>
-        <th class="col-page">Pg</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for highlight in highlights %}
-        {% include "documents/highlights/row.html" %}
-      {% empty %}
-        <tr>
-          <td colspan="3" class="empty-message">
-            No highlights yet. Create highlights by selecting text in the document viewer.
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="highlights-cards">
+  {% for highlight in highlights %}
+    {% include "documents/highlights/row.html" %}
+  {% empty %}
+    <p class="empty-message">No highlights yet. Create highlights by selecting text in the document viewer.</p>
+  {% endfor %}
 </div>

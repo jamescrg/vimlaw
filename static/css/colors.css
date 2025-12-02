@@ -320,6 +320,17 @@
   --selected-background: var(--purple-muted);
   --selected-color: oklch(0.466 0.011 56.1);
   --selected-border: oklch(0.866 0.023 295.1);
+  --color-primary: var(--stone-600);
+  --color-darker: var(--stone-800);
+  --background-body: var(--stone-300);
+  --background-text: var(--stone-100);
+  --background-lighter: var(--stone-50);
+  --background-nav: var(--stone-350);
+  --color-nav: var(--stone-600);
+  --background-nav-tab-active: var(stone-300);
+  --background-subnav: var(--stone-200);
+  --background-subnav-tab-active: var(--stone-100);
+
 
   /* highlights */
   --hl-blue: var(--blue-50);

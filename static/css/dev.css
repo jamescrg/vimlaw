@@ -6,7 +6,7 @@ Development Environment Styles
 .dev-banner {
   background-color: var(--orange-700);
   color: white;
-  letter-spacing: 3px;
+  letter-spacing: 0.25rem;
   text-align: center;
   padding: 0.25rem 0;
   font-size: 0.75rem;

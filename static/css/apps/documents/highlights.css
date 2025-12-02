@@ -16,43 +16,96 @@
   width: 16rem;
 }
 
-/* Highlights List Table */
-.highlights-list.table-fixed {
-  table-layout: fixed;
-  min-width: 40rem;
+/* Highlights Cards Container */
+.highlights-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.highlights-list .col-document {
-  width: 25rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Individual Card */
+.highlight-card {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--stone-200);
 }
 
-.highlights-list .col-slug {
-  /* Variable width - takes remaining space */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.highlight-card:first-child {
+  border-top: 1px solid var(--stone-200);
 }
 
-.highlights-list .col-page {
-  width: 8rem;
-  text-align: center;
+/* Left Panel - Date */
+.highlight-card-date {
+  flex-shrink: 0;
+  width: 10rem;
+  color: var(--color-primary);
 }
 
-/* Highlight view ghost button */
-.highlights-list .highlight-view-btn {
+/* Right Panel - Content */
+.highlight-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Slug Heading */
+.highlight-card-slug {
+  margin: 0 0 0.75rem 0;
+  font-weight: 500;
+}
+
+
+/* Highlight Background for Slug */
+.highlight-card-slug span {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Ghost buttons */
+.highlight-card .highlight-edit-btn,
+.highlight-card .highlight-view-btn,
+.highlight-card .highlight-copy-btn,
+.highlight-card .highlight-link-btn {
   margin-left: 1rem;
   color: var(--stone-400);
   opacity: 0;
   transition: opacity 0.15s, color 0.15s;
 }
 
-.highlights-list tr:hover .highlight-view-btn {
+.highlight-card .highlight-copy-btn,
+.highlight-card .highlight-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.highlight-card:hover .highlight-edit-btn,
+.highlight-card:hover .highlight-view-btn,
+.highlight-card:hover .highlight-copy-btn,
+.highlight-card:hover .highlight-link-btn {
   opacity: 1;
 }
 
-.highlights-list .highlight-view-btn:hover {
+.highlight-card .highlight-edit-btn:hover,
+.highlight-card .highlight-view-btn:hover,
+.highlight-card .highlight-copy-btn:hover,
+.highlight-card .highlight-link-btn:hover {
   color: var(--stone-600);
+}
+
+/* Highlight Text */
+.highlight-card-text {
+  padding: 0.75rem;
+  background: var(--background-text);
+  color: var(--color-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Citation */
+.highlight-card-citation {
+  display: block;
+  font-style: normal;
+  color: var(--color-primary);
+  padding: 0.75rem;
 }

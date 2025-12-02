@@ -28,13 +28,13 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 48px;
+  height: 3rem;
   background: var(--stone-100);
   border-bottom: 1px solid var(--stone-300);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 1rem;
   z-index: 100;
 }
 
@@ -43,12 +43,12 @@ body {
 .toolbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .document-title {
   font-weight: 600;
-  max-width: 300px;
+  max-width: 19rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -57,7 +57,7 @@ body {
 .matter-name {
   color: var(--stone-500);
   font-size: 0.875rem;
-  max-width: 200px;
+  max-width: 12.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -65,27 +65,27 @@ body {
 
 .divider {
   width: 1px;
-  height: 24px;
+  height: 1.5rem;
   background: var(--stone-300);
 }
 
 #page-input {
-  width: 48px;
+  width: 3rem;
   text-align: center;
   border: 1px solid var(--stone-300);
   border-radius: 4px;
-  padding: 4px;
+  padding: 0.25rem;
 }
 
 #zoom-level {
-  min-width: 48px;
+  min-width: 3rem;
   text-align: center;
 }
 
 /* Main Container */
 #main-container {
   position: fixed;
-  top: 48px;
+  top: 3rem;
   left: 0;
   right: 0;
   bottom: 0;
@@ -99,7 +99,7 @@ body {
   background: var(--stone-200);
   display: flex;
   justify-content: center;
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 #viewer {
@@ -109,7 +109,7 @@ body {
 }
 
 #loading-indicator {
-  padding: 40px;
+  padding: 2.5rem;
   text-align: center;
   color: var(--stone-500);
 }
@@ -131,7 +131,7 @@ body {
 /* PDF Page */
 .pdf-page-container {
   position: relative;
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .pdf-page-container:last-child {
@@ -169,25 +169,25 @@ body {
 
 /* Highlights Sidebar */
 #highlights-sidebar {
-  width: 280px;
+  width: 17.5rem;
   background: white;
   border-left: 1px solid var(--stone-300);
   overflow-y: auto;
-  padding: 16px;
+  padding: 1rem;
   flex-shrink: 0;
 }
 
 #highlights-sidebar h4 {
-  margin: 0 0 16px 0;
+  margin: 0 0 1rem 0;
   font-size: 1rem;
   color: var(--stone-700);
 }
 
 .highlight-item {
-  padding: 12px;
+  padding: 0.75rem;
   border: 1px solid var(--stone-200);
   border-radius: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   cursor: pointer;
   transition: background-color 0.15s;
   position: relative;
@@ -204,14 +204,14 @@ body {
 
 .highlight-title {
   font-weight: 600;
-  margin-bottom: 4px;
-  padding-right: 24px;
+  margin-bottom: 0.25rem;
+  padding-right: 1.5rem;
 }
 
 .highlight-meta {
   font-size: 0.75rem;
   color: var(--stone-500);
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 }
 
 .highlight-text {
@@ -222,8 +222,8 @@ body {
 
 .highlight-actions {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 0.5rem;
+  right: 0.5rem;
 }
 
 .highlight-actions .btn {
@@ -238,16 +238,16 @@ body {
 .no-highlights {
   color: var(--stone-400);
   text-align: center;
-  padding: 20px;
+  padding: 1.25rem;
   font-size: 0.875rem;
 }
 
 /* Modal */
 .selected-text-preview {
   background: var(--stone-100);
-  padding: 12px;
+  padding: 0.75rem;
   border-radius: 4px;
-  max-height: 150px;
+  max-height: 9.5rem;
   overflow-y: auto;
   font-size: 0.875rem;
   line-height: 1.5;
@@ -260,7 +260,7 @@ body {
   }
 
   #highlights-sidebar {
-    width: 240px;
+    width: 15rem;
   }
 }
 
@@ -271,8 +271,8 @@ body {
 
   #highlights-sidebar {
     position: fixed;
-    right: -280px;
-    top: 48px;
+    right: -17.5rem;
+    top: 3rem;
     bottom: 0;
     transition: right 0.3s;
     z-index: 50;

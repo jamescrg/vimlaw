@@ -1,6 +1,6 @@
 
 .navbar {
-	background: var(--stone-350);
+	background: var(--background-nav);
   margin-bottom: 0;
   padding: 0.25rem 0 0 0;
 }
@@ -16,13 +16,13 @@
 }
 
 .navbar a {
-  color: var(--stone-600);
+  color: var(--color-nav);
   margin: 0;
   padding-bottom: 0.5rem;
 }
 
 .navbar .active {
-  background: var(--stone-300);
+  background: var(--background-nav-tab-active);
   border-radius: 5px 5px 0 0;
 }
 
@@ -37,7 +37,7 @@
 ========================================================================== */
 
 .navbar-sub {
-  background: var(--stone-200);
+  background: var(--background-subnav);
   border-radius: 5px 5px 0 0;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .navbar-sub .active {
-  background-color: var(--stone-100);
+  background-color: var(--background-subnav-tab-active);
 }
 
 

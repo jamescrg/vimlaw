@@ -7,7 +7,7 @@
 }
 
 .filter input[type="date"] {
-  margin-left: 0.2rem;
+  margin-left: 0.25rem;
   width: 8.5rem;
 }
 
@@ -27,7 +27,7 @@ textarea {
   border: solid 1px var(--stone-300);
   border-radius: 3px;
   outline: none;
-  padding: 0.4rem;
+  padding: 0.5rem;
 }
 
 /* Dropzone styling to match form field styles */
@@ -256,7 +256,7 @@ select {
   .form-compact input,
   .form-compact select,
   .form-compact textarea {
-    padding: 0.6rem;
+    padding: 0.5rem;
     font-size: 1rem;
   }
 }
@@ -335,7 +335,7 @@ select {
 
 .form-compact .flex-center-space {
   padding-bottom: 0.5rem;
-  padding-top: 0.35rem;
+  padding-top: 0.25rem;
 }
 
 /* Combobox styles */

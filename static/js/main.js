@@ -64,6 +64,35 @@ htmx.on("hidden.bs.modal", () => {
   document.getElementById("htmx-modal-container").innerHTML = "";
 });
 
+// Highlight copy buttons (delegated for HTMX compatibility)
+document.addEventListener('click', function(e) {
+  const copyBtn = e.target.closest('.highlight-copy-btn');
+  const linkBtn = e.target.closest('.highlight-link-btn');
+
+  if (copyBtn) {
+    const data = copyBtn.getAttribute('data-copy');
+    copyToClipboard(copyBtn, data);
+  } else if (linkBtn) {
+    const url = linkBtn.getAttribute('data-url');
+    const fullUrl = window.location.origin + url;
+    copyToClipboard(linkBtn, fullUrl);
+  }
+});
+
+function copyToClipboard(button, data) {
+  navigator.clipboard.writeText(data).then(() => {
+    const originalHtml = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-check-lg"></i>';
+    button.style.color = 'green';
+    setTimeout(() => {
+      button.innerHTML = originalHtml;
+      button.style.color = '';
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy value: ', err);
+  });
+}
+
 // Copy value logic
 document.addEventListener('DOMContentLoaded', function() {
   const copyButtons = document.querySelectorAll('.copy-btn');
