@@ -3,7 +3,7 @@
   margin: 1rem 0 0 0.25rem;
 }
 
-.matter-contacts {
+table.matter-contacts {
   min-width: 79rem;
   width: 100%;
 }
@@ -95,7 +95,7 @@
   padding: 0;
 }
 
-.assign-results li {
+.matter-contacts .assign-results li {
   background: var(--stone-50);
   border: solid 1px var(--stone-300);
   border-top: none;
@@ -103,17 +103,17 @@
   width: 100%;
 }
 
-.assign-results li:hover {
+.matter-contacts .assign-results li:hover {
   background: var(--stone-100);
 }
 
-.assign-results li > a {
+.matter-contacts .assign-results li > a {
   display: block;
   padding: 0.5rem;
   width: 100%;
 }
 
-.assign-results li a.focused {
+.matter-contacts .assign-results li a.focused {
   background: var(--hl-blue);
 }
 

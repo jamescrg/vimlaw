@@ -71,21 +71,40 @@ tr:hover .add-label-btn {
 Label assignment modal
 ------------------------------------------------*/
 
-.assign-results {
+#labels-search-input {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+#labels-results .assign-results {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.assign-results li {
-  padding: 0.25rem 0;
+#labels-results .assign-results li {
+  background: var(--stone-50);
+  border: solid 1px var(--stone-300);
+  border-top: none;
+  padding: 0.75rem;
 }
 
-.assign-results a {
+#labels-results .assign-results li:last-child {
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+#labels-results .assign-results li:hover {
+  background: var(--stone-100);
+}
+
+#labels-results .assign-results a {
   text-decoration: none;
 }
 
-.assign-results a:hover .badge {
+#labels-results .assign-results a:hover .badge {
   opacity: 0.8;
 }
 

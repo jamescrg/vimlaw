@@ -43,6 +43,12 @@ class FilesFilter(django_filters.FilterSet):
         empty_label="All",
         label="Proceeding",
     )
+    label = django_filters.ModelChoiceFilter(
+        method="filter_label",
+        queryset=Label.objects.none(),
+        empty_label="All Labels",
+        label="Label",
+    )
     importance = django_filters.NumberFilter(
         field_name="importance",
         lookup_expr="lte",
@@ -66,6 +72,7 @@ class FilesFilter(django_filters.FilterSet):
             "date_to",
             "category",
             "proceeding",
+            "label",
             "importance",
             "order_by",
         ]
@@ -76,6 +83,9 @@ class FilesFilter(django_filters.FilterSet):
             self.filters["proceeding"].queryset = Proceeding.objects.filter(
                 matter=matter
             ).order_by("forum", "case_number")
+            self.filters["label"].queryset = Label.objects.filter(
+                Q(matter=matter) | Q(matter__isnull=True)
+            ).order_by("name")
 
     def filter_keyword(self, queryset, name, value):
         """Filter documents by keyword in name or description."""
@@ -83,6 +93,12 @@ class FilesFilter(django_filters.FilterSet):
             return queryset.filter(
                 Q(name__icontains=value) | Q(description__icontains=value)
             )
+        return queryset
+
+    def filter_label(self, queryset, name, value):
+        """Filter documents by label."""
+        if value:
+            return queryset.filter(labels=value)
         return queryset
 
 
@@ -95,6 +111,12 @@ class HighlightsFilter(django_filters.FilterSet):
         label="Document",
     )
     keyword = django_filters.CharFilter(method="filter_keyword", label="Keyword")
+    label = django_filters.ModelChoiceFilter(
+        method="filter_label",
+        queryset=Label.objects.none(),
+        empty_label="All Labels",
+        label="Label",
+    )
     importance = django_filters.NumberFilter(
         field_name="importance",
         lookup_expr="lte",
@@ -114,7 +136,7 @@ class HighlightsFilter(django_filters.FilterSet):
 
     class Meta:
         model = Highlight
-        fields = ["document", "keyword", "importance", "order_by"]
+        fields = ["document", "keyword", "label", "importance", "order_by"]
 
     def __init__(self, *args, matter=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,11 +144,20 @@ class HighlightsFilter(django_filters.FilterSet):
             self.filters["document"].queryset = Document.objects.filter(
                 matter=matter
             ).order_by("name")
+            self.filters["label"].queryset = Label.objects.filter(
+                Q(matter=matter) | Q(matter__isnull=True)
+            ).order_by("name")
 
     def filter_keyword(self, queryset, name, value):
         """Filter highlights by keyword in slug or text."""
         if value:
             return queryset.filter(Q(slug__icontains=value) | Q(text__icontains=value))
+        return queryset
+
+    def filter_label(self, queryset, name, value):
+        """Filter highlights by label."""
+        if value:
+            return queryset.filter(labels=value)
         return queryset
 
 
@@ -164,6 +195,12 @@ class TimelineFilter(django_filters.FilterSet):
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     keyword = django_filters.CharFilter(method="filter_keyword", label="Keyword")
+    label = django_filters.ModelChoiceFilter(
+        method="filter_label",
+        queryset=Label.objects.none(),
+        empty_label="All Labels",
+        label="Label",
+    )
     importance = django_filters.NumberFilter(
         field_name="importance",
         lookup_expr="lte",
@@ -185,9 +222,29 @@ class TimelineFilter(django_filters.FilterSet):
 
     class Meta:
         model = Fact
-        fields = ["date_start", "date_end", "keyword", "importance", "order_by"]
+        fields = [
+            "date_start",
+            "date_end",
+            "keyword",
+            "label",
+            "importance",
+            "order_by",
+        ]
+
+    def __init__(self, *args, matter=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if matter:
+            self.filters["label"].queryset = Label.objects.filter(
+                Q(matter=matter) | Q(matter__isnull=True)
+            ).order_by("name")
 
     def filter_keyword(self, queryset, name, value):
         if value:
             return queryset.filter(Q(description__icontains=value))
+        return queryset
+
+    def filter_label(self, queryset, name, value):
+        """Filter facts by label."""
+        if value:
+            return queryset.filter(labels=value)
         return queryset

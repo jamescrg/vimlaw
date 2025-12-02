@@ -9,7 +9,7 @@
            hx-swap="outerHTML"
            data-bs-dismiss="modal">
           <span class="badge label-{{ label.color }}">{{ label.name }}</span>
-          {% if label.is_global %}<small class="text-muted">(Global)</small>{% endif %}
+          {% if label.is_global %}&nbsp; (Global){% endif %}
         </a>
       </li>
     {% endfor %}
