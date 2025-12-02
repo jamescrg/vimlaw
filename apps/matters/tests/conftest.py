@@ -3,11 +3,11 @@ from django.test import Client
 
 from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
+from apps.documents.models import Fact
 from apps.folders.models import Folder
 from apps.matters.models import Group, Matter, PracticeArea, Relationship, Role
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
-from apps.matters.timeline.models import Fact
 
 
 @pytest.fixture

@@ -4,12 +4,12 @@ from django.http.response import Http404
 from django.template.loader import render_to_string
 from weasyprint import HTML
 
+from apps.documents.models import Fact
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
-from apps.matters.timeline.models import Fact
 
 
-def generate_pdf(matter_id, request):
+def generate_timeline_pdf(matter_id, request):
     """
     Generate a timeline PDF for the given matter
     """

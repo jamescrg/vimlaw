@@ -5,11 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
+from apps.documents.filters import TimelineFilter
+from apps.documents.forms import FactForm
+from apps.documents.generate_pdf import generate_timeline_pdf
+from apps.documents.models import Fact
 from apps.matters.models import Matter
-from apps.matters.timeline.filter import TimelineFilter
-from apps.matters.timeline.forms import FactForm
-from apps.matters.timeline.generate_pdf import generate_pdf
-from apps.matters.timeline.models import Fact
 
 
 @login_required
@@ -143,7 +143,7 @@ def print(request, id):
 @login_required
 def timeline_pdf(request, pk):
     matter = get_object_or_404(Matter, pk=pk)
-    file = generate_pdf(matter.id, request)
+    file = generate_timeline_pdf(matter.id, request)
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 

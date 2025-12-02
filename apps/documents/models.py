@@ -146,3 +146,43 @@ class Highlight(models.Model):
 
     def __str__(self):
         return f"{self.slug} - Page {self.page_number}"
+
+
+class Fact(models.Model):
+    """Timeline fact/event for a matter."""
+
+    COLOR_CHOICES = [
+        (None, "None"),
+        ("Blue", "Blue"),
+        ("Gray", "Gray"),
+        ("Green", "Green"),
+        ("Orange", "Orange"),
+        ("Purple", "Purple"),
+        ("Red", "Red"),
+        ("Yellow", "Yellow"),
+    ]
+
+    user = models.ForeignKey(
+        "accounts.CustomUser", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
+    date = models.DateField(null=True)
+    time = models.TimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
+    description = models.CharField(max_length=150, null=True)
+    color = models.CharField(
+        max_length=10, choices=COLOR_CHOICES, blank=True, null=True, default=None
+    )
+
+    # Source references
+    documents = models.ManyToManyField("Document", blank=True, related_name="facts")
+    highlights = models.ManyToManyField("Highlight", blank=True, related_name="facts")
+
+    importance = models.PositiveIntegerField(
+        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+
+    def __str__(self):
+        return f"{self.description}"
+
+    class Meta:
+        db_table = "app_fact"

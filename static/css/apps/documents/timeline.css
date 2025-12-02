@@ -1,3 +1,131 @@
+/*------------------------------------------------
+Display
+------------------------------------------------*/
+
+.filter-form input {
+  margin-right: 1.25rem;
+}
+
+.filter-form label {
+  font-weight: 500;
+}
+
+.timeline-list {
+  margin: 0.75rem 0 0.25rem 0;
+  min-width: 52.5rem;
+}
+
+.timeline-list .date-time {
+  width: 12.5rem;
+  position: relative;
+  padding-right: 2rem;
+}
+
+.timeline-list .date-time span {
+  display: inline;
+}
+
+/* Edit fact ghost button */
+.timeline-list .edit-fact-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--stone-400);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.timeline-list tr:hover .edit-fact-btn {
+  opacity: 1;
+}
+
+.timeline-list .edit-fact-btn:hover {
+  color: var(--stone-600);
+}
+
+.timeline-list .description {
+  min-width: 18rem;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.timeline-list .citations {
+  width: 22rem;
+}
+
+.edit-fact-description-input {
+  background: inherit;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+.edit-fact-citations-input {
+  background: inherit;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+/*------------------------------------------------
+Form
+------------------------------------------------*/
+
+.timeline-form #id_fact {
+  border: none;
+  width: 44rem;
+}
+
+.timeline-form #id_description {
+  width: 31.5rem;
+}
+
+.timeline-form #id_citations {
+  width: 22rem;
+}
+
+.timeline-form #id_emphasis {
+  width: 7.5rem;
+}
+
+.timeline-form .print-link {
+  margin-top: 1rem;
+  text-align: right;
+}
+
+/*------------------------------------------------
+Filter form
+------------------------------------------------*/
+
+.toolbar .filter-tools {
+  align-items: center;
+}
+
+.filter-form {
+  display: inline-flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-form .filter-input {
+  border: solid 1px var(--stone-300);
+}
+
+.filter-form input[type="date"].filter-input-date {
+  background: var(--stone-25);
+  width: 9.5rem;
+}
+
+.filter-form input[type="text"].filter-input-date {
+  background: var(--stone-25);
+  width: 9.5rem;
+}
+
+/*------------------------------------------------
+Overflow fixes
+------------------------------------------------*/
+
 /* Fix dropdown overflow issues */
 .table-container:has(.timeline-list) {
   overflow: visible;
@@ -7,7 +135,9 @@
   overflow: visible;
 }
 
-/* Timeline source badges */
+/*------------------------------------------------
+Source badges
+------------------------------------------------*/
 
 .timeline-list .source-badge {
   display: inline-block;
@@ -51,7 +181,73 @@
   color: var(--stone-600);
 }
 
-/* Sources modal search results */
+/*------------------------------------------------
+Assign results
+------------------------------------------------*/
+
+.assign-results a {
+  color: var(--color-primary);
+}
+
+.assign-results-document {
+  margin-left: 1.5rem;
+}
+
 #sources-results .assign-results li {
   max-width: 100%;
+}
+
+/*------------------------------------------------
+Responsive
+------------------------------------------------*/
+
+@media (max-width: 1000px) {
+  /* Timeline toolbar: h2 and add button on first line, inputs wrap below */
+  .timeline-toolbar .toolbar-left {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .timeline-toolbar .toolbar-left h2 {
+    margin-bottom: 1rem;
+  }
+
+  .timeline-toolbar .toolbar-left .filter-tools > button {
+    margin-bottom: 1rem;
+  }
+
+  .timeline-toolbar .filter-form {
+    flex: 1 1 100%;
+  }
+
+  .timeline-toolbar .toolbar-right {
+    display: none;
+  }
+
+  .filter-form {
+    flex-wrap: wrap;
+  }
+
+  .filter-form input[type="date"].filter-input-date,
+  .filter-form input[type="text"].filter-input-date {
+    width: 7.5rem;
+  }
+
+  .filter-form .filter-input {
+    min-width: 7.5rem;
+  }
+
+  /* Keep description column width on smaller screens */
+  .timeline-list .description {
+    min-width: 18.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-form input[type="date"].filter-input-date,
+  .filter-form input[type="text"].filter-input-date,
+  .filter-form .filter-input {
+    width: 100%;
+    min-width: 12.5rem;
+  }
 }

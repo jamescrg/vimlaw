@@ -30,6 +30,10 @@ textarea {
   padding: 0.5rem;
 }
 
+.toolbar input {
+  padding: 0.25rem 0.5rem;
+}
+
 /* Dropzone styling to match form field styles */
 .dropzone {
   border: solid 1px var(--stone-300) !important;

@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.documents.models import Document, Highlight, Label
+from apps.documents.models import Document, Fact, Highlight, Label
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from config.settings import CustomFormRendererCompact
@@ -142,4 +142,38 @@ class LabelsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.renderer = CustomFormRendererCompact()
+
+
+class FactForm(forms.ModelForm):
+    class Meta:
+        model = Fact
+
+        fields = (
+            "date",
+            "time",
+            "description",
+            "color",
+            "importance",
+        )
+
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date"}),
+            "time": forms.TimeInput(
+                attrs={"type": "time", "tabindex": "5"}, format="%H:%M"
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "autofocus": "autofocus",
+                    "onfocus": "moveFocusToEnd(this)",
+                    "class": "span2",
+                    "rows": 3,
+                }
+            ),
+            "color": forms.Select(),
+            "importance": forms.Select(choices=IMPORTANCE),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()

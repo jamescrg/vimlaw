@@ -7,19 +7,24 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from apps.documents.filters import DocumentsFilter, HighlightsFilter, LabelsFilter
+from apps.documents.filters import (
+    DocumentsFilter,
+    HighlightsFilter,
+    LabelsFilter,
+    TimelineFilter,
+)
 from apps.documents.forms import (
     BulkDocumentsForm,
     DocumentsForm,
+    FactForm,
     HighlightForm,
     LabelsForm,
 )
+from apps.documents.generate_pdf import generate_timeline_pdf
 from apps.documents.get_document_data import get_document_data, get_selected_matter
 from apps.documents.get_label_data import get_label_data
-from apps.documents.models import Document, Highlight, Label
+from apps.documents.models import Document, Fact, Highlight, Label
 from apps.matters.models import Matter
-from apps.matters.timeline.forms import FactForm
-from apps.matters.timeline.models import Fact
 
 
 @login_required
@@ -62,7 +67,13 @@ def documents_filter(request):
     matter, matters = get_selected_matter(request)
 
     if request.method == "POST":
-        request.session["documents_filter"] = dict(request.POST)
+        # Convert QueryDict to regular dict, excluding CSRF token
+        filter_data = {
+            key: value
+            for key, value in request.POST.items()
+            if key != "csrfmiddlewaretoken"
+        }
+        request.session["documents_filter"] = filter_data
 
         return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
     else:
@@ -1109,8 +1120,6 @@ def timeline_index(request):
 @login_required
 def timeline_list(request):
     """HTMX partial for timeline list."""
-    from apps.matters.timeline.filter import TimelineFilter
-
     matter, matters = get_selected_matter(request)
 
     facts = []
@@ -1223,14 +1232,12 @@ def timeline_pdf(request):
     import os
     from datetime import datetime
 
-    from apps.matters.timeline.generate_pdf import generate_pdf
-
     matter, matters = get_selected_matter(request)
 
     if not matter:
         return HttpResponse("No matter selected", status=400)
 
-    file = generate_pdf(matter.id, request)
+    file = generate_timeline_pdf(matter.id, request)
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 

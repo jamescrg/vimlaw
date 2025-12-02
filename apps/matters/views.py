@@ -7,13 +7,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from apps.agenda.events.models import Event
 from apps.contacts.functions.load_contacts import load_contacts
 from apps.contacts.models import Contact
+from apps.documents.models import Fact
 from apps.matters.filter import MatterFilter
 from apps.matters.forms import MatterForm
 from apps.matters.get_matter_list import get_matter_list
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
-from apps.matters.timeline.models import Fact
 
 
 @login_required

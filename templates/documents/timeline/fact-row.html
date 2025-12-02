@@ -1,24 +1,21 @@
 <tr id="fact-{{ fact.id }}"
     class="{% if fact.color %}hl-{{ fact.color|lower }}{% endif %}">
   <td class="date-time{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
+    <span>{{ fact.date|date:'Y-m-d' }}
+      {% if fact.time %}{{ fact.time|time:'g:i A' }}{% endif %}
+    </span>
     <a href="#"
-       type="button"
-       class="btn-icon"
+       class="edit-fact-btn"
        hx-get="{% url 'documents:timeline-edit' fact.id %}"
        hx-target="#htmx-modal-container"
-       hx-trigger="click"
        data-bs-toggle="modal"
-       data-bs-target="#htmx-modal-container">{{ fact.date|date:'Y-m-d' }}
-      {% if fact.time %}{{ fact.time|time:'g:i A' }}{% endif %}
+       data-bs-target="#htmx-modal-container"
+       title="Edit fact">
+      <i class="bi bi-pencil"></i>
     </a>
   </td>
-  <td id="show-fact-description-{{ fact.id }}"
-      class="description{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
-    <a class="button-link show-description-form-button"
-       href="#"
-       hx-target="#show-fact-description-{{ fact.id }}"
-       hx-swap="innerHTML"
-       hx-get="{% url 'documents:timeline-edit-description' fact.id %}">{{ fact.description }}</a>
+  <td class="description{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
+    {{ fact.description }}
     {% for document in fact.documents.all %}
       <span class="source-badge dropdown">
         <a href="#" class="badge-link" data-bs-toggle="dropdown">
