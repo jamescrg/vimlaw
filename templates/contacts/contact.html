@@ -4,7 +4,7 @@
     <div class="toolbar-left">
       <h1>{{ selected_contact.name }}</h1>
       <div class="filter-tools">
-        <span class="client-status-badge status-{{ selected_contact.client_status|lower }}">
+        <span class="app-badge{% if selected_contact.client_status == 'Current' %} badge-purple{% endif %}">
           {% if selected_contact.client_status == 'Current' %}
             Current Client
           {% elif selected_contact.client_status == 'Pending' %}

@@ -79,16 +79,6 @@
 
 /* Active Tab - uses default subnav styling */
 
-/* Client Status Badge */
-.client-status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  background-color: var(--stone-150);
-  color: var(--stone-600);
-  border: 1px solid var(--stone-300);
-}
-
 /* Contact Cards (Address and Email) */
 .contact-card {
   position: relative;
