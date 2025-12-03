@@ -12,6 +12,7 @@ execution of core functionality.
   - [Installing Dependencies](#installing-dependencies)
   - [Environment Variables](#environment-variables)
   - [Running Migrations](#running-migrations)
+  - [Building the Search Index](#building-the-search-index)
   - [Running the Application](#running-the-application)
   - [Running Background Tasks](#running-background-tasks)
   - [Creating the first Superuser](#creating-the-first-superuser)
@@ -145,6 +146,22 @@ python manage.py migrate
 
 If any problems occur during the migration process, please refer to the
 [Troubleshooting - Running Migrations](#troubleshoot-running-migrations) section
+
+### Building the Search Index
+
+The application uses django-watson for full-text search across documents, highlights, and facts.
+After running migrations for the first time (or after restoring a database), build the search index:
+
+```bash
+python manage.py buildwatson
+```
+
+**Note:** You only need to run this once. Watson automatically keeps the index updated as you
+create, edit, or delete records. You'll need to rebuild if you:
+
+- Restore a database from backup
+- Add new models to the search configuration
+- Change which fields are indexed for existing models
 
 ### Running the Application
 
