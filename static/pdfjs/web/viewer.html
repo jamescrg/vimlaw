@@ -319,7 +319,9 @@
     // Text selection handling
     document.addEventListener('mouseup', () => {
       const selection = window.getSelection();
-      const text = selection.toString().trim();
+      // Get raw text and normalize whitespace (PDF.js can add odd spacing)
+      const rawText = selection.toString();
+      let text = rawText.replace(/\s+/g, ' ').trim();
 
       if (text) {
         // Find which page the selection is on
@@ -331,25 +333,77 @@
           return;
         }
 
-        const pageNumber = parseInt(pageDiv.dataset.pageNumber);
+        // Snap to word boundaries - expand selection if it starts/ends mid-word
         const range = selection.getRangeAt(0);
-        const rects = range.getClientRects();
+
+        // Check start of selection - if first char isn't a space and we're mid-word, expand left
+        const startContainer = range.startContainer;
+        if (startContainer.nodeType === Node.TEXT_NODE) {
+          const textContent = startContainer.textContent;
+          const startOffset = range.startOffset;
+          // If we're not at the start and previous char is a letter, expand to word start
+          if (startOffset > 0 && /\w/.test(textContent[startOffset - 1])) {
+            // Find the start of the word
+            let wordStart = startOffset - 1;
+            while (wordStart > 0 && /\w/.test(textContent[wordStart - 1])) {
+              wordStart--;
+            }
+            // Get the missing prefix
+            const prefix = textContent.substring(wordStart, startOffset);
+            text = prefix + text;
+            // Also expand the range for accurate rectangles
+            range.setStart(startContainer, wordStart);
+          }
+        }
+
+
+        const pageNumber = parseInt(pageDiv.dataset.pageNumber);
         // Use textLayer as reference for coordinates
         const textLayerRect = textLayer.getBoundingClientRect();
-
         const scale = pdfViewer.currentScale;
-        const selectionRects = [];
-        for (let i = 0; i < rects.length; i++) {
-          const rect = rects[i];
-          if (rect.width < 2 || rect.height < 5) continue;
 
-          // Normalize to scale 1.0 for storage, relative to textLayer
-          selectionRects.push({
-            left: (rect.left - textLayerRect.left) / scale,
-            top: (rect.top - textLayerRect.top) / scale,
-            width: rect.width / scale,
-            height: rect.height / scale,
-          });
+        // Use span-based bounding boxes for accurate coordinates
+        // Find all text spans that intersect with the selection
+        const textSpans = textLayer.querySelectorAll('span');
+        const selectedSpans = [];
+        for (const span of textSpans) {
+          if (selection.containsNode(span, true)) {
+            selectedSpans.push(span);
+          }
+        }
+
+        const selectionRects = [];
+        // Offset to shift highlight right (character width compensation)
+        const leftOffset = 6 / scale;
+        const rightOffset = 6 / scale;
+
+        if (selectedSpans.length > 0) {
+          // Use span bounding boxes - more accurate than getClientRects()
+          for (const span of selectedSpans) {
+            const rect = span.getBoundingClientRect();
+            if (rect.width < 2 || rect.height < 5) continue;
+
+            selectionRects.push({
+              left: (rect.left - textLayerRect.left) / scale + leftOffset,
+              top: (rect.top - textLayerRect.top) / scale,
+              width: rect.width / scale - leftOffset - rightOffset,
+              height: rect.height / scale,
+            });
+          }
+        } else {
+          // Fallback to getClientRects() if no spans found
+          const rects = range.getClientRects();
+          for (let i = 0; i < rects.length; i++) {
+            const rect = rects[i];
+            if (rect.width < 2 || rect.height < 5) continue;
+
+            selectionRects.push({
+              left: (rect.left - textLayerRect.left) / scale + leftOffset,
+              top: (rect.top - textLayerRect.top) / scale,
+              width: rect.width / scale - leftOffset - rightOffset,
+              height: rect.height / scale,
+            });
+          }
         }
 
         // Merge overlapping rects into one rect per line
