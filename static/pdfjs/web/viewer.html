@@ -362,48 +362,20 @@
         const textLayerRect = textLayer.getBoundingClientRect();
         const scale = pdfViewer.currentScale;
 
-        // Use span-based bounding boxes for accurate coordinates
-        // Find all text spans that intersect with the selection
-        const textSpans = textLayer.querySelectorAll('span');
-        const selectedSpans = [];
-        for (const span of textSpans) {
-          if (selection.containsNode(span, true)) {
-            selectedSpans.push(span);
-          }
-        }
-
         const selectionRects = [];
-        // Offset to shift highlight right (character width compensation)
-        const leftOffset = 6 / scale;
-        const rightOffset = 6 / scale;
 
-        if (selectedSpans.length > 0) {
-          // Use span bounding boxes - more accurate than getClientRects()
-          for (const span of selectedSpans) {
-            const rect = span.getBoundingClientRect();
-            if (rect.width < 2 || rect.height < 5) continue;
+        // Use getClientRects() from the range for accurate selection bounds
+        const rects = range.getClientRects();
+        for (let i = 0; i < rects.length; i++) {
+          const rect = rects[i];
+          if (rect.width < 2 || rect.height < 5) continue;
 
-            selectionRects.push({
-              left: (rect.left - textLayerRect.left) / scale + leftOffset,
-              top: (rect.top - textLayerRect.top) / scale,
-              width: rect.width / scale - leftOffset - rightOffset,
-              height: rect.height / scale,
-            });
-          }
-        } else {
-          // Fallback to getClientRects() if no spans found
-          const rects = range.getClientRects();
-          for (let i = 0; i < rects.length; i++) {
-            const rect = rects[i];
-            if (rect.width < 2 || rect.height < 5) continue;
-
-            selectionRects.push({
-              left: (rect.left - textLayerRect.left) / scale + leftOffset,
-              top: (rect.top - textLayerRect.top) / scale,
-              width: rect.width / scale - leftOffset - rightOffset,
-              height: rect.height / scale,
-            });
-          }
+          selectionRects.push({
+            left: (rect.left - textLayerRect.left) / scale,
+            top: (rect.top - textLayerRect.top) / scale,
+            width: rect.width / scale,
+            height: rect.height / scale,
+          });
         }
 
         // Merge overlapping rects into one rect per line
