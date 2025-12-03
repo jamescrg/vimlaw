@@ -114,7 +114,7 @@ def order_by(request, order):
 @login_required
 def detail(request, id):
     request.session["matters-view"] = "detail"
-    return redirect(f"/matters/{id}/timeline")
+    return redirect(f"/matters/{id}/contacts")
 
 
 @login_required

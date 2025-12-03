@@ -1,10 +1,8 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db.models import Q
 from django.shortcuts import render
 
 from apps.contacts.models import Contact
-from apps.documents.models import Document, Highlight
 from apps.intakes.models import Intake
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
@@ -54,40 +52,11 @@ def results(request):
             | Q(email__icontains=text)
         ).order_by("name")
 
-        # Document full-text search on OCR content
-        search_query = SearchQuery(text)
-
-        # Search documents with OCR text
-        documents = (
-            Document.objects.filter(
-                Q(search_vector=search_query)
-                | Q(name__icontains=text)
-                | Q(description__icontains=text)
-            )
-            .annotate(rank=SearchRank("search_vector", search_query))
-            .select_related("matter")
-            .order_by("-rank")[:20]
-        )
-
-        # Search highlights
-        highlights = (
-            Highlight.objects.filter(
-                Q(search_vector=search_query)
-                | Q(slug__icontains=text)
-                | Q(text__icontains=text)
-            )
-            .annotate(rank=SearchRank("search_vector", search_query))
-            .select_related("document", "document__matter")
-            .order_by("-rank")[:20]
-        )
-
     else:
         matters = None
         contacts = None
         proceedings = None
         intakes = None
-        documents = None
-        highlights = None
 
     context = {
         "app": "search",
@@ -97,8 +66,6 @@ def results(request):
         "contacts": contacts,
         "proceedings": proceedings,
         "intakes": intakes,
-        "documents": documents,
-        "highlights": highlights,
     }
 
     return render(request, "search/results.html", context)
