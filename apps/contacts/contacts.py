@@ -61,27 +61,24 @@ def get_list_data(request):
                 relationships.append(relationship)
 
             # Group and sort relationships by status
-            # Order: Pending, Open, Complete/Closed
-            # Within each group, sort by matter name descending
-            pending_relationships = sorted(
-                [r for r in relationships if r.matter.status == "Pending"],
-                key=lambda r: r.matter.name,
-                reverse=True,
-            )
+            # Order: Open, Pending, Complete/Closed
+            # Within each group, sort by matter name ascending
             open_relationships = sorted(
                 [r for r in relationships if r.matter.status == "Open"],
                 key=lambda r: r.matter.name,
-                reverse=True,
+            )
+            pending_relationships = sorted(
+                [r for r in relationships if r.matter.status == "Pending"],
+                key=lambda r: r.matter.name,
             )
             complete_relationships = sorted(
                 [r for r in relationships if r.matter.status in ["Complete", "Closed"]],
                 key=lambda r: r.matter.name,
-                reverse=True,
             )
 
             # Combine in the desired order
             relationships = (
-                pending_relationships + open_relationships + complete_relationships
+                open_relationships + pending_relationships + complete_relationships
             )
 
     if google.check_credentials():
