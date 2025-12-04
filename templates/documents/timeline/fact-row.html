@@ -19,7 +19,7 @@
     {% for document in fact.documents.all %}
       <span class="source-badge dropdown">
         <a href="#" class="app-badge" data-bs-toggle="dropdown">
-          <i class="bi bi-file-earmark-text"></i>{{ document.name|truncatechars:20 }}
+          <i class="bi bi-filetype-pdf urgent"></i>{{ document.name|truncatechars:20 }}
         </a>
         <ul class="dropdown-menu">
           {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
