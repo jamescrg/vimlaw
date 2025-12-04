@@ -351,18 +351,25 @@
       let text = rawText.replace(/\s+/g, ' ').trim();
 
       if (text) {
-        // Find which page the selection is on
-        const anchorNode = selection.anchorNode;
-        const pageDiv = anchorNode?.parentElement?.closest('.page');
+        // Find all pages involved in the selection
+        const range = selection.getRangeAt(0);
+        const startPage = range.startContainer?.parentElement?.closest('.page');
+        const endPage = range.endContainer?.parentElement?.closest('.page');
+
+        if (!startPage) {
+          currentSelection = null;
+          return;
+        }
+
+        // Use the start page for the highlight
+        const pageDiv = startPage;
         const textLayer = pageDiv?.querySelector('.textLayer');
-        if (!pageDiv || !textLayer) {
+        if (!textLayer) {
           currentSelection = null;
           return;
         }
 
         // Snap to word boundaries - expand selection if it starts/ends mid-word
-        const range = selection.getRangeAt(0);
-
         // Check start of selection - if first char isn't a space and we're mid-word, expand left
         const startContainer = range.startContainer;
         if (startContainer.nodeType === Node.TEXT_NODE) {
@@ -383,7 +390,6 @@
           }
         }
 
-
         const pageNumber = parseInt(pageDiv.dataset.pageNumber);
         // Use textLayer as reference for coordinates
         const textLayerRect = textLayer.getBoundingClientRect();
@@ -392,27 +398,38 @@
         const selectionRects = [];
 
         // Use getClientRects() from the range for accurate selection bounds
+        // Only include rects that are within the start page's text layer
         const rects = range.getClientRects();
         for (let i = 0; i < rects.length; i++) {
           const rect = rects[i];
           if (rect.width < 2 || rect.height < 5) continue;
 
-          selectionRects.push({
-            left: (rect.left - textLayerRect.left) / scale,
-            top: (rect.top - textLayerRect.top) / scale,
-            width: rect.width / scale,
-            height: rect.height / scale,
-          });
+          // Check if this rect is within the start page's text layer bounds
+          // (allow some tolerance for rects that slightly overlap page boundary)
+          const relTop = rect.top - textLayerRect.top;
+          const relBottom = relTop + rect.height;
+          if (relTop < textLayerRect.height + 50 && relBottom > -50) {
+            selectionRects.push({
+              left: (rect.left - textLayerRect.left) / scale,
+              top: Math.max(0, relTop / scale),
+              width: rect.width / scale,
+              height: rect.height / scale,
+            });
+          }
         }
 
         // Merge overlapping rects into one rect per line
         const mergedRects = mergeRects(selectionRects);
 
         if (mergedRects.length > 0) {
+          // Check if selection spans multiple pages
+          const spansPages = startPage !== endPage;
+
           currentSelection = {
             text,
             page: pageNumber,
             rects: mergedRects,
+            spansPages,
           };
           // Notify parent of selection change
           window.parent.postMessage({ type: 'selectionChanged', selection: currentSelection }, '*');

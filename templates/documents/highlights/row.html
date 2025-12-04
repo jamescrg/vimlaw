@@ -20,13 +20,13 @@
         <i class="bi bi-arrow-up-right-circle"></i>
       </a>
       <button type="button"
-              class="btn-ghost"
+              class="btn-ghost highlight-copy-btn"
               title="Copy highlight and source"
               data-copy="{{ highlight.text }} ({{ highlight.document.name }}, p. {{ highlight.page_number }})">
         <i class="bi bi-clipboard"></i>
       </button>
       <button type="button"
-              class="btn-ghost"
+              class="btn-ghost highlight-link-btn"
               title="Copy link to highlight"
               data-url="{% url 'documents:highlight-link' highlight.id %}">
         <i class="bi bi-link-45deg"></i>

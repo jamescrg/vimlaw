@@ -1021,11 +1021,22 @@ def delete_highlight(request, highlight_id):
 def edit_highlight(request, highlight_id):
     """Edit a highlight's slug, color, and importance."""
     highlight = get_object_or_404(Highlight, id=highlight_id)
+    is_viewer_context = request.GET.get("context") == "viewer"
 
     if request.method == "POST":
         form = HighlightForm(request.POST, instance=highlight)
         if form.is_valid():
             form.save()
+            # Return JSON for viewer context, HX-Trigger for highlights list
+            if is_viewer_context:
+                return JsonResponse(
+                    {
+                        "id": highlight.id,
+                        "slug": highlight.slug,
+                        "color": highlight.color,
+                        "importance": highlight.importance,
+                    }
+                )
             return HttpResponse(
                 status=204,
                 headers={"HX-Trigger": "highlightsChanged"},

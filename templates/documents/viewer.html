@@ -16,9 +16,20 @@
     <!-- Custom stylesheets -->
     <link rel="stylesheet" href="{% static_v 'css/colors.css' %}">
     <link rel="stylesheet" href="{% static_v 'css/buttons.css' %}">
+    <link rel="stylesheet" href="{% static_v 'css/forms.css' %}">
+    <link rel="stylesheet" href="{% static_v 'css/layout.css' %}">
     <style>
       * {
         box-sizing: border-box;
+      }
+
+      *:focus,
+      *:focus-visible,
+      button:focus,
+      .btn:focus,
+      .btn:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
       }
 
       body {
@@ -86,14 +97,8 @@
       }
 
       .highlight-slug {
-        font-weight: 600;
-        margin-bottom: 4px;
-        padding-right: 24px;
-      }
-
-      .highlight-meta {
-        font-size: 0.75rem;
-        color: var(--stone-500);
+        font-weight: 500;
+        color: var(--stone-800);
         margin-bottom: 4px;
       }
 
@@ -103,19 +108,48 @@
         line-height: 1.4;
       }
 
+      .highlight-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+      }
+
       .highlight-actions {
-        position: absolute;
-        top: 8px;
-        right: 8px;
+        display: flex;
+        gap: 1rem;
       }
 
       .highlight-actions .btn {
         padding: 0;
         color: var(--stone-400);
+        font-size: 1rem;
       }
 
       .highlight-actions .btn:hover {
         color: var(--stone-700);
+      }
+
+      .highlight-importance {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+        border: 1px solid var(--stone-300);
+        border-radius: 0.25rem;
+        background: var(--stone-200);
+        color: var(--stone-600);
+      }
+
+      .highlight-importance.imp-high {
+        background: var(--red-100);
+        color: var(--red-700);
+      }
+
+      .highlight-importance.imp-med {
+        background: var(--orange-100);
+        color: var(--orange-700);
       }
 
       .no-highlights {
@@ -268,6 +302,13 @@
       .modal-footer .submit:hover {
         background: var(--lime-900);
       }
+
+      /* Edit modal grid - matches highlights.css */
+      .highlight-edit-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
     </style>
   </head>
   <body>
@@ -288,14 +329,23 @@
                  data-page="{{ highlight.page_number }}"
                  data-color="{{ highlight.color }}">
               <div class="highlight-slug">{{ highlight.slug }}</div>
-              <div class="highlight-meta">Page {{ highlight.page_number }}</div>
-              <div class="highlight-text">{{ highlight.text|truncatewords:20 }}</div>
-              <div class="highlight-actions">
-                <button class="btn btn-sm btn-link delete-highlight"
-                        data-highlight-id="{{ highlight.id }}"
-                        title="Delete">
-                  <i class="bi bi-trash3"></i>
-                </button>
+              <div class="highlight-text">{{ highlight.text|truncatewords:10 }}</div>
+              <div class="highlight-footer">
+                <div class="highlight-actions">
+                  <button class="btn btn-link edit-highlight"
+                          data-highlight-id="{{ highlight.id }}"
+                          title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-link delete-highlight"
+                          data-highlight-id="{{ highlight.id }}"
+                          title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+                <div class="highlight-importance {% if highlight.importance == 1 %}imp-high{% elif highlight.importance <= 3 %}imp-med{% endif %}">
+                  <i class="bi bi-flag"></i>{{ highlight.importance }}
+                </div>
               </div>
             </div>
           {% empty %}
@@ -379,7 +429,12 @@
         </div>
       </div>
     </div>
+    <!-- Edit Highlight Modal (loaded dynamically) -->
+    <div id="edit-highlight-modal" class="modal fade" tabindex="-1">
+      <div id="edit-highlight-modal-content"></div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script>
     // Color name to hex mapping (-400 variants)
     const colorMap = {
@@ -614,14 +669,20 @@
       item.dataset.highlightId = highlight.id;
       item.dataset.page = highlight.page_number;
       item.dataset.color = highlight.color;
+      const impClass = highlight.importance === 1 ? 'imp-high' : highlight.importance <= 3 ? 'imp-med' : '';
       item.innerHTML = `
         <div class="highlight-slug">${escapeHtml(highlight.slug)}</div>
-        <div class="highlight-meta">Page ${highlight.page_number}</div>
-        <div class="highlight-text">${escapeHtml(highlight.text.substring(0, 100))}${highlight.text.length > 100 ? '...' : ''}</div>
-        <div class="highlight-actions">
-          <button class="btn btn-sm btn-link delete-highlight" data-highlight-id="${highlight.id}" title="Delete">
-            <i class="bi bi-trash3"></i>
-          </button>
+        <div class="highlight-text">${escapeHtml(highlight.text.substring(0, 50))}${highlight.text.length > 50 ? '...' : ''}</div>
+        <div class="highlight-footer">
+          <div class="highlight-actions">
+            <button class="btn btn-link edit-highlight" data-highlight-id="${highlight.id}" title="Edit">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-link delete-highlight" data-highlight-id="${highlight.id}" title="Delete">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </div>
+          <div class="highlight-importance ${impClass}"><i class="bi bi-flag"></i>${highlight.importance}</div>
         </div>
       `;
       list.appendChild(item);
@@ -650,7 +711,7 @@
     // Sidebar click handlers
     document.getElementById('highlights-list').addEventListener('click', function(e) {
       const item = e.target.closest('.highlight-item');
-      if (item && !e.target.closest('.delete-highlight')) {
+      if (item && !e.target.closest('.delete-highlight') && !e.target.closest('.edit-highlight')) {
         const highlightId = parseInt(item.dataset.highlightId);
         const page = parseInt(item.dataset.page);
 
@@ -668,6 +729,13 @@
             page: page
           }, '*');
         }
+      }
+
+      // Edit button
+      const editBtn = e.target.closest('.edit-highlight');
+      if (editBtn) {
+        const highlightId = parseInt(editBtn.dataset.highlightId);
+        openEditModal(highlightId);
       }
 
       // Delete button
@@ -724,6 +792,119 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // Edit highlight modal
+    let editingHighlightId = null;
+
+    async function openEditModal(highlightId) {
+      editingHighlightId = highlightId;
+      try {
+        const response = await fetch(`/documents/highlights/${highlightId}/edit/?context=viewer`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        if (response.ok) {
+          const html = await response.text();
+          document.getElementById('edit-highlight-modal-content').innerHTML = html;
+          const modal = new bootstrap.Modal(document.getElementById('edit-highlight-modal'));
+          modal.show();
+
+          // Attach form submit handler
+          const form = document.querySelector('#edit-highlight-modal form');
+          if (form) {
+            form.addEventListener('submit', handleEditFormSubmit);
+          }
+
+          // Attach delete handler
+          const deleteLink = document.querySelector('#edit-highlight-modal .delete-link');
+          if (deleteLink) {
+            deleteLink.addEventListener('click', function(e) {
+              e.preventDefault();
+              if (confirm('Are you sure you want to delete this highlight?')) {
+                bootstrap.Modal.getInstance(document.getElementById('edit-highlight-modal')).hide();
+                deleteHighlight(editingHighlightId);
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading edit form:', error);
+        alert('Error loading edit form');
+      }
+    }
+
+    async function handleEditFormSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      // Get URL from hx-post attribute (since form uses HTMX attributes)
+      const postUrl = form.getAttribute('hx-post') || form.action;
+
+      try {
+        const response = await fetch(postUrl + '?context=viewer', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': config.csrfToken
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Update sidebar card
+          updateSidebarCard(editingHighlightId, data);
+
+          // Update config array
+          const idx = config.existingHighlights.findIndex(h => h.id === editingHighlightId);
+          if (idx !== -1) {
+            config.existingHighlights[idx] = { ...config.existingHighlights[idx], ...data };
+          }
+
+          // Close modal
+          bootstrap.Modal.getInstance(document.getElementById('edit-highlight-modal')).hide();
+
+          // Update viewer if this highlight is selected
+          if (selectedHighlightId === editingHighlightId) {
+            sendHighlightsToViewer();
+          }
+        } else {
+          const error = await response.json();
+          alert('Error saving highlight: ' + (error.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error saving highlight:', error);
+        alert('Error saving highlight');
+      }
+    }
+
+    function updateSidebarCard(highlightId, data) {
+      const item = document.querySelector(`.highlight-item[data-highlight-id="${highlightId}"]`);
+      if (!item) return;
+
+      // Update color class
+      item.className = item.className.replace(/hl-\w+/, `hl-${data.color}`);
+      item.dataset.color = data.color;
+
+      // Update slug
+      const slugEl = item.querySelector('.highlight-slug');
+      if (slugEl) {
+        slugEl.textContent = data.slug;
+      }
+
+      // Update importance badge
+      const impEl = item.querySelector('.highlight-importance');
+      if (impEl) {
+        impEl.innerHTML = `<i class="bi bi-flag"></i>${data.importance}`;
+        impEl.className = 'highlight-importance';
+        if (data.importance === 1) {
+          impEl.classList.add('imp-high');
+        } else if (data.importance <= 3) {
+          impEl.classList.add('imp-med');
+        }
+      }
     }
     </script>
   </body>
