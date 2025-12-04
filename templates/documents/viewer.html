@@ -98,20 +98,13 @@
       }
 
       .highlight-slug {
-        font-weight: 500;
-        color: var(--stone-800);
-      }
-
-      .highlight-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 8px;
+        font-size: 0.9rem;
       }
 
       .highlight-actions {
         display: flex;
-        gap: 1rem;
+        gap: 1.25rem;
+        margin-top: 0.75rem;
       }
 
       .highlight-actions .btn {
@@ -122,28 +115,6 @@
 
       .highlight-actions .btn:hover {
         color: var(--stone-700);
-      }
-
-      .highlight-importance {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 0.75rem;
-        padding: 0.125rem 0.375rem;
-        border: 1px solid var(--stone-300);
-        border-radius: 0.25rem;
-        background: var(--stone-200);
-        color: var(--stone-600);
-      }
-
-      .highlight-importance.imp-high {
-        background: var(--red-100);
-        color: var(--red-700);
-      }
-
-      .highlight-importance.imp-med {
-        background: var(--orange-100);
-        color: var(--orange-700);
       }
 
       .no-highlights {
@@ -273,22 +244,17 @@
                  data-page="{{ highlight.page_number }}"
                  data-color="{{ highlight.color }}">
               <div class="highlight-slug">{{ highlight.slug }}</div>
-              <div class="highlight-footer">
-                <div class="highlight-actions">
-                  <button class="btn btn-link edit-highlight"
-                          data-highlight-id="{{ highlight.id }}"
-                          title="Edit">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-link delete-highlight"
-                          data-highlight-id="{{ highlight.id }}"
-                          title="Delete">
-                    <i class="bi bi-trash3"></i>
-                  </button>
-                </div>
-                <div class="highlight-importance {% if highlight.importance == 1 %}imp-high{% elif highlight.importance <= 3 %}imp-med{% endif %}">
-                  <i class="bi bi-flag"></i>{{ highlight.importance }}
-                </div>
+              <div class="highlight-actions">
+                <button class="btn btn-link edit-highlight"
+                        data-highlight-id="{{ highlight.id }}"
+                        title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-link delete-highlight"
+                        data-highlight-id="{{ highlight.id }}"
+                        title="Delete">
+                  <i class="bi bi-trash3"></i>
+                </button>
               </div>
             </div>
           {% empty %}
@@ -330,7 +296,7 @@
               </div>
               <div class="mb-3">
                 <label for="highlight-text" class="form-label">Text</label>
-                <textarea class="form-control" id="highlight-text" name="text" rows="4"></textarea>
+                <textarea class="form-control" id="highlight-text" name="text" rows="6"></textarea>
               </div>
             </form>
           </div>
@@ -530,19 +496,15 @@
       item.dataset.highlightId = highlight.id;
       item.dataset.page = highlight.page_number;
       item.dataset.color = highlight.color;
-      const impClass = highlight.importance === 1 ? 'imp-high' : highlight.importance <= 3 ? 'imp-med' : '';
       item.innerHTML = `
         <div class="highlight-slug">${escapeHtml(highlight.slug)}</div>
-        <div class="highlight-footer">
-          <div class="highlight-actions">
-            <button class="btn btn-link edit-highlight" data-highlight-id="${highlight.id}" title="Edit">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-link delete-highlight" data-highlight-id="${highlight.id}" title="Delete">
-              <i class="bi bi-trash3"></i>
-            </button>
-          </div>
-          <div class="highlight-importance ${impClass}"><i class="bi bi-flag"></i>${highlight.importance}</div>
+        <div class="highlight-actions">
+          <button class="btn btn-link edit-highlight" data-highlight-id="${highlight.id}" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-link delete-highlight" data-highlight-id="${highlight.id}" title="Delete">
+            <i class="bi bi-trash3"></i>
+          </button>
         </div>
       `;
       list.appendChild(item);

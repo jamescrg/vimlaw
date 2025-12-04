@@ -22,10 +22,10 @@
                 hx-post="{% url 'activity:time-filter-quick' 'today' %}">Today</button>
         <button type="button"
                 id="time-user-filter"
-                class="select-btn extra-small-btn {% if selected_user %}toggle-active{% endif %}"
+                class="select-btn filter-dropdown-button {% if selected_user %}toggle-active{% endif %}"
                 data-bs-toggle="dropdown"
                 aria-expanded="false">
-          {{ selected_user|default:"All" }}
+          {{ selected_user|default:"All Users" }}
           <small>
             <i class="bi bi-chevron-down"></i>
           </small>
@@ -38,7 +38,7 @@
                href="#"
                hx-post="{% url 'activity:time-filter-user' 0 %}"
                hx-target="#time-table"
-               hx-swap="outerHTML">All</a>
+               hx-swap="outerHTML">All Users</a>
           </li>
           {% for user in users %}
             <li>
