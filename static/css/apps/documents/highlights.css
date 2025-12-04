@@ -39,8 +39,8 @@
 /* Left Panel - Date */
 .highlight-card-date {
   flex-shrink: 0;
-  width: 10rem;
-  padding-left: 0.5rem;
+  width: 15rem;
+  padding: 0 1rem;
   color: var(--color-primary);
   border-right: solid 1px var(--stone-200);
 }

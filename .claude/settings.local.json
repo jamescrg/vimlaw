@@ -40,7 +40,8 @@
       "Bash(source ~/.venvs/law/bin/activate)",
       "Bash(git checkout:*)",
       "Bash(pre-commit run:*)",
-      "Bash(isort:*)"
+      "Bash(isort:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": []
   }

@@ -17,6 +17,7 @@ from .events import get_table_data
 
 @login_required
 def events_index(request):
+    request.session["agenda_last_tab"] = "events"
     today = date.today()
     third_day = today + timedelta(days=3)
 

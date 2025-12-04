@@ -27,6 +27,11 @@ a:hover {
   color: var(--link-hover);
 }
 
+a.unstyled,
+a.unstyled:hover {
+  color: inherit;
+}
+
 strong,
 .strong {
   font-weight: 500;

@@ -16,6 +16,7 @@ from apps.matters.models import Matter
 
 @login_required
 def tasks_index(request):
+    request.session["agenda_last_tab"] = "tasks"
     context = get_list_data(request)
     context = context | {
         "app": "agenda",

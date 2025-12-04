@@ -9,7 +9,9 @@
           <table class="dashboard-table unbilled-table">
             <thead>
               <tr>
-                <th colspan="3">Unbilled Hours and Fees</th>
+                <th colspan="3">
+                  <a href="{% url 'invoicing:unbilled-index' %}" class="unstyled">Unbilled Hours and Fees</a>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -38,7 +40,9 @@
           <table class="dashboard-table">
             <thead>
               <tr>
-                <th colspan="2">Past Due</th>
+                <th colspan="2">
+                  <a href="{% url 'invoicing:collection-index' %}" class="unstyled">Past Due</a>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -64,7 +68,9 @@
           <table class="dashboard-table">
             <thead>
               <tr>
-                <th colspan="2">Low Clearance</th>
+                <th colspan="2">
+                  <a href="{% url 'invoicing:unbilled-index' %}" class="unstyled">Low Clearance</a>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -97,7 +103,7 @@
               <tr>
                 <th colspan="4">
                   <div class="d-flex justify-content-between align-items-center">
-                    <span>Upcoming Events</span>
+                    <a href="{% url 'agenda:events-index' %}" class="unstyled">Upcoming Events</a>
                   </div>
                 </th>
               </tr>
@@ -141,7 +147,9 @@
           <table class="dashboard-table tasks">
             <thead>
               <tr>
-                <th colspan="4">Upcoming Tasks</th>
+                <th colspan="4">
+                  <a href="{% url 'agenda:tasks-index' %}" class="unstyled">Upcoming Tasks</a>
+                </th>
               </tr>
             </thead>
             <tbody>

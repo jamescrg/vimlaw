@@ -3,7 +3,7 @@
     <div class="nav-scroll-container">
       <ul>
         <li {% if app == 'agenda' %}class="active"{% endif %}>
-          <a id="nav-agenda" href={% url 'agenda:tasks-index' %}>Agenda</a>
+          <a id="nav-agenda" href={% url 'agenda:agenda-redirect' %}>Agenda</a>
         </li>
         <li {% if app == 'matters' %}class="active"{% endif %}>
           <a id="nav-matters" href={% url 'matters:index' %}>Matters</a>
