@@ -1,7 +1,15 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import DecimalField, F, OuterRef, Q, Subquery, Sum
+from django.db.models import (
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+)
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 
@@ -10,6 +18,9 @@ from apps.activity.time.models import TimeEntry
 from apps.agenda.events.models import Event
 from apps.agenda.tasks.models import Task
 from apps.intakes.models import Intake
+from apps.invoicing.credits.models import Credit
+from apps.invoicing.invoices.models import Invoice
+from apps.invoicing.payments.models import Payment
 from apps.matters.models import Matter
 from apps.trust.trust import get_confirmed_client_balance
 
@@ -138,19 +149,105 @@ def dash_index(request):
     low_clearance_matters.sort(key=lambda m: m.clearance)
     low_clearance_matters = low_clearance_matters[:10]
 
-    # Matters with outstanding balance due
-    balance_due_matters = []
-    all_open_matters = Matter.objects.filter(status="Open")
+    # Matters with outstanding balance due (excluding deferred)
+    # Use subqueries to calculate at database level (avoid N+1)
 
-    for matter in all_open_matters:
-        invoice_due = matter.value["invoices"]["due"]
-        if invoice_due > 0:
-            matter.balance_due = invoice_due
-            balance_due_matters.append(matter)
+    # Subquery for invoice fees (excluding comp'd entries)
+    invoice_fees_subquery = (
+        TimeEntry.objects.filter(invoice=OuterRef("pk"))
+        .exclude(comp=True)
+        .values("invoice")
+        .annotate(total=Sum(F("hours") * F("rate"), output_field=DecimalField()))
+        .values("total")
+    )
 
-    # Sort by balance due descending (highest first)
-    balance_due_matters.sort(key=lambda m: m.balance_due, reverse=True)
-    balance_due_matters = balance_due_matters[:10]
+    # Subquery for invoice expenses (excluding comp'd entries)
+    invoice_expenses_subquery = (
+        ExpenseEntry.objects.filter(invoice=OuterRef("pk"))
+        .exclude(comp=True)
+        .values("invoice")
+        .annotate(total=Sum("amount"))
+        .values("total")
+    )
+
+    # Annotate invoices with their final_total
+    invoices_with_totals = Invoice.objects.annotate(
+        net_fees=Coalesce(
+            Subquery(invoice_fees_subquery, output_field=DecimalField()), 0
+        ),
+        net_expenses=Coalesce(
+            Subquery(invoice_expenses_subquery, output_field=DecimalField()), 0
+        ),
+        final_total=ExpressionWrapper(
+            F("net_fees") + F("net_expenses") - F("discount"),
+            output_field=DecimalField(),
+        ),
+    )
+
+    # Subquery for total billed (all invoices except DRAFT/APPROVED)
+    billed_subquery = (
+        invoices_with_totals.filter(matter=OuterRef("pk"))
+        .exclude(status__in=["DRAFT", "APPROVED"])
+        .values("matter")
+        .annotate(total=Sum("final_total"))
+        .values("total")
+    )
+
+    # Subquery for deferred invoice totals
+    deferred_subquery = (
+        invoices_with_totals.filter(matter=OuterRef("pk"), status="DEFERRED")
+        .values("matter")
+        .annotate(total=Sum("final_total"))
+        .values("total")
+    )
+
+    # Subquery for total payments
+    paid_subquery = (
+        Payment.objects.filter(matter=OuterRef("pk"))
+        .values("matter")
+        .annotate(total=Sum("amount"))
+        .values("total")
+    )
+
+    # Subquery for total credits
+    credits_subquery = (
+        Credit.objects.filter(matter=OuterRef("pk"))
+        .values("matter")
+        .annotate(total=Sum("amount"))
+        .values("total")
+    )
+
+    # Annotate matters and filter for positive balance due
+    balance_due_matters = list(
+        Matter.objects.annotate(
+            billed=Coalesce(
+                Subquery(billed_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            deferred=Coalesce(
+                Subquery(deferred_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            paid=Coalesce(
+                Subquery(paid_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            credits=Coalesce(
+                Subquery(credits_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            balance_due=ExpressionWrapper(
+                F("billed") - F("paid") - F("deferred") - F("credits"),
+                output_field=DecimalField(),
+            ),
+        )
+        .filter(balance_due__gt=0)
+        .order_by("-balance_due")[:10]
+    )
 
     # Open intakes
     open_intakes = Intake.objects.filter(status="Open").order_by("-date")[:10]

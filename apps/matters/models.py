@@ -220,19 +220,21 @@ class Matter(models.Model):
         # Billed = total - unbilled
         billed = {key: total[key] - unbilled[key] for key in total.keys()}
 
-        # Invoice totals - aggregate from time/expense entries on SENT/PAID invoices
+        # Invoice totals - aggregate from time/expense entries on all invoices except DRAFT/APPROVED
         invoice_fees, invoice_comp_fees = aggregate_fees(
-            TimeEntry.objects.filter(matter=self, invoice__status__in=["SENT", "PAID"])
+            TimeEntry.objects.filter(matter=self, invoice__isnull=False).exclude(
+                invoice__status__in=["DRAFT", "APPROVED"]
+            )
         )
         invoice_expenses, invoice_comp_expenses = aggregate_expenses(
-            ExpenseEntry.objects.filter(
-                matter=self, invoice__status__in=["SENT", "PAID"]
+            ExpenseEntry.objects.filter(matter=self, invoice__isnull=False).exclude(
+                invoice__status__in=["DRAFT", "APPROVED"]
             )
         )
         invoice_discount = (
-            Invoice.objects.filter(matter=self, status__in=["SENT", "PAID"]).aggregate(
-                total_discount=Sum("discount")
-            )["total_discount"]
+            Invoice.objects.filter(matter=self)
+            .exclude(status__in=["DRAFT", "APPROVED"])
+            .aggregate(total_discount=Sum("discount"))["total_discount"]
             or 0
         )
 

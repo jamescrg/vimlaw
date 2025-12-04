@@ -9,6 +9,7 @@
         <th class="matter">Matter</th>
         <th class="numeric">Billed</th>
         <th class="numeric">Paid</th>
+        <th class="numeric">Deferred</th>
         <th class="numeric">Due</th>
       </tr>
       {% for matter in matters %}
@@ -18,11 +19,12 @@
           </td>
           <td class="numeric">${{ matter.billed|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ matter.paid|floatformat:2|intcomma }}</td>
-          <td class="numeric strong">${{ matter.due|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ matter.deferred|floatformat:2|intcomma }}</td>
+          <td class="numeric strong">${{ matter.due_after_deferrals|floatformat:2|intcomma }}</td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="4" class="empty-message">No outstanding balances found.</td>
+          <td colspan="5" class="empty-message">No outstanding balances found.</td>
         </tr>
       {% endfor %}
     </table>
@@ -32,8 +34,8 @@
         <div class="totals-table">
           <table>
             <tr>
-              <th>Total Due</th>
-              <td class="numeric strong">${{ total_due|floatformat:2|intcomma }}</td>
+              <th>Total Due After Deferments</th>
+              <td class="numeric strong">${{ total_due_after_deferrals|floatformat:2|intcomma }}</td>
             </tr>
           </table>
         </div>

@@ -10,6 +10,7 @@ from django.db.models.functions import Coalesce
 
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
+from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
 from apps.management.pagination import CustomPaginator
@@ -51,11 +52,18 @@ def get_collection_data(request):
         ),
     )
 
-    # Subquery to get total billed for a matter (sum of SENT/DEFERRED/PAID invoice final_totals)
+    # Subquery to get total billed for a matter (all invoices except DRAFT/APPROVED)
     billed_subquery = (
-        invoices_with_totals.filter(
-            matter=OuterRef("pk"), status__in=["SENT", "DEFERRED", "PAID"]
-        )
+        invoices_with_totals.filter(matter=OuterRef("pk"))
+        .exclude(status__in=["DRAFT", "APPROVED"])
+        .values("matter")
+        .annotate(total=Sum("final_total"))
+        .values("total")
+    )
+
+    # Subquery to get total deferred for a matter (sum of DEFERRED invoice final_totals)
+    deferred_subquery = (
+        invoices_with_totals.filter(matter=OuterRef("pk"), status="DEFERRED")
         .values("matter")
         .annotate(total=Sum("final_total"))
         .values("total")
@@ -69,12 +77,24 @@ def get_collection_data(request):
         .values("total")
     )
 
-    # Annotate matters with billed, paid, and due amounts
+    # Subquery to get total credits for a matter
+    credits_subquery = (
+        Credit.objects.filter(matter=OuterRef("pk"))
+        .values("matter")
+        .annotate(total=Sum("amount"))
+        .values("total")
+    )
+
+    # Annotate matters with billed, paid, deferred, credits, and due amounts
     matters = (
-        Matter.objects.filter(status__in=["Pending", "Open", "Complete"])
-        .annotate(
+        Matter.objects.annotate(
             billed=Coalesce(
                 Subquery(billed_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            deferred=Coalesce(
+                Subquery(deferred_subquery, output_field=DecimalField()),
                 0,
                 output_field=DecimalField(),
             ),
@@ -83,17 +103,31 @@ def get_collection_data(request):
                 0,
                 output_field=DecimalField(),
             ),
-            due=ExpressionWrapper(F("billed") - F("paid"), output_field=DecimalField()),
+            credits=Coalesce(
+                Subquery(credits_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            balance_due=ExpressionWrapper(
+                F("billed") - F("paid") - F("credits"),
+                output_field=DecimalField(),
+            ),
+            due_after_deferrals=ExpressionWrapper(
+                F("billed") - F("paid") - F("deferred") - F("credits"),
+                output_field=DecimalField(),
+            ),
         )
-        .filter(due__gt=0)
-        .order_by("-due")
+        .filter(balance_due__gt=0)
+        .order_by("-due_after_deferrals")
     )
 
     # Convert to list for pagination
     matters_list = list(matters)
 
-    # Calculate total due
-    total_due = sum(matter.due for matter in matters_list)
+    # Calculate total due after deferrals
+    total_due_after_deferrals = sum(
+        matter.due_after_deferrals for matter in matters_list
+    )
 
     pagination = CustomPaginator(
         matters_list, per_page=10, request=request, session_key="collection_pagination"
@@ -104,7 +138,7 @@ def get_collection_data(request):
         "pagination": pagination,
         "session_key": "collection_pagination",
         "trigger_key": "collectionChanged",
-        "total_due": total_due,
+        "total_due_after_deferrals": total_due_after_deferrals,
     }
 
     return context

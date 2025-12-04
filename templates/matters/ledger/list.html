@@ -14,11 +14,19 @@
   </div>
   <table class="ledger-totals">
     <tr>
+      <th>Total Invoices</th>
+      <td class="numeric">${{ matter.value.invoices.billed|floatformat:2|intcomma }}</td>
+    </tr>
+    <tr>
       <th>Total Payments</th>
       <td class="numeric">${{ matter.value.invoices.payment_sum|floatformat:2|intcomma }}</td>
     </tr>
     <tr>
-      <th>Unpaid Invoices</th>
+      <th>Total Credits</th>
+      <td class="numeric">${{ total_credits|floatformat:2|intcomma }}</td>
+    </tr>
+    <tr>
+      <th>Balance Due</th>
       <td class="numeric">${{ balance_due|floatformat:2|intcomma }}</td>
     </tr>
     <tr>

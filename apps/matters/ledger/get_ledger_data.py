@@ -19,10 +19,10 @@ def get_ledger_data(matter):
     payments = Payment.objects.filter(matter=matter).order_by("date") or None
     credits = Credit.objects.filter(matter=matter).order_by("date") or None
 
-    # Add invoices to transactions (only SENT, PAID, WAIVED, etc. - not DRAFT or APPROVED)
+    # Add invoices to transactions (exclude DRAFT and APPROVED)
     if invoices:
         for invoice in invoices:
-            affects_balance = invoice.status in ["SENT", "DEFERRED", "PAID"]
+            affects_balance = invoice.status not in ["DRAFT", "APPROVED"]
             invoice_dict = {
                 "id": invoice.id,
                 "date": invoice.date_issued,
@@ -74,7 +74,11 @@ def get_ledger_data(matter):
                     balance -= transaction["amount"]
             transaction["balance"] = balance
 
+    # Calculate total credits
+    total_credits = sum(c.amount for c in credits) if credits else 0
+
     return {
         "transactions": transactions,
         "balance_due": balance,
+        "total_credits": total_credits,
     }
