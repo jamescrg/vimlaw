@@ -150,6 +150,18 @@ def files_filter_label(request, label_id):
 
 
 @login_required
+def files_filter_importance(request, importance_value):
+    """Filter files by importance level."""
+    filter_data = request.session.get("documents_filter", {})
+    # Set to empty string when 0 (All) is selected, otherwise use the value
+    filter_data["importance"] = "" if importance_value == 0 else importance_value
+
+    request.session["documents_filter"] = filter_data
+
+    return redirect("documents:files-list")
+
+
+@login_required
 def files_sort(request, order):
     filter_data = request.session.get("documents_filter", {})
 
@@ -1121,6 +1133,12 @@ def get_highlights_data(request, matter):
     # Determine current_order for template (strip leading '-' for base field)
     current_order = order_by if order_by else "document"
 
+    # Get importance filter value
+    importance_value = get_filter_value("importance")
+    importance_value = (
+        int(importance_value) if importance_value not in (None, "", 0) else None
+    )
+
     return {
         "highlights": highlights,
         "documents": documents,
@@ -1129,6 +1147,11 @@ def get_highlights_data(request, matter):
         "order_by": order_by,
         "current_order": current_order,
         "importance_choices": range(1, 11),
+        "importances": list(range(1, 11)),
+        "importance_value": importance_value,
+        "selected_importance": (
+            f"Importance {importance_value}" if importance_value else ""
+        ),
     }
 
 
@@ -1201,6 +1224,18 @@ def highlights_filter_keyword(request):
     # Render just the cards partial (for search input updates)
     context = get_highlights_data(request, matter)
     return render(request, "documents/highlights/cards.html", context)
+
+
+@login_required
+def highlights_filter_importance(request, importance_value):
+    """Filter highlights by importance level."""
+    filter_data = request.session.get("highlights_filter", {})
+    # Set to empty string when 0 (All) is selected, otherwise use the value
+    filter_data["importance"] = "" if importance_value == 0 else importance_value
+
+    request.session["highlights_filter"] = filter_data
+
+    return redirect("documents:highlights-list")
 
 
 @login_required

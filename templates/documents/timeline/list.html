@@ -31,29 +31,25 @@
           </div>
           <div class="importance-text">{{ selected_importance }}</div>
         {% else %}
-          All Levels
+          Importance
         {% endif %}
         <small>
           <i class="bi bi-chevron-down"></i>
         </small>
       </button>
-      <ul class="dropdown-menu"
-          hx-target="#timeline-importance-filter"
-          hx-swap="outerHTML">
+      <ul class="dropdown-menu">
         <li>
           <a class="dropdown-item"
              href="#"
-             hx-post="{% url 'documents:timeline-filter-importance' 0 %}"
-             hx-target="#timeline"
-             hx-swap="#outerHTML">All Levels</a>
+             hx-get="{% url 'documents:timeline-filter-importance' 0 %}"
+             hx-target="#timeline">All Levels</a>
         </li>
         {% for importance in importances %}
           <li>
             <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
                href="#"
-               hx-post="{% url 'documents:timeline-filter-importance' importance %}"
-               hx-target="#timeline"
-               hx-swap="#outerHTML">Importance {{ importance }}</a>
+               hx-get="{% url 'documents:timeline-filter-importance' importance %}"
+               hx-target="#timeline">Importance {{ importance }}</a>
           </li>
         {% endfor %}
       </ul>

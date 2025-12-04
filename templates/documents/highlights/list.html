@@ -41,6 +41,39 @@
           </li>
         {% endfor %}
       </ul>
+      <button type="button"
+              id="highlights-importance-filter"
+              class="select-btn filter-dropdown-button {% if importance_value %}toggle-active{% endif %}"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        {% if selected_importance %}
+          <div class="importance-arrow">
+            <i class="bi bi-arrow-bar-up"></i>
+          </div>
+          <div class="importance-text">{{ selected_importance }}</div>
+        {% else %}
+          Importance
+        {% endif %}
+        <small>
+          <i class="bi bi-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'documents:highlights-filter-importance' 0 %}"
+             hx-target="#highlights">All Levels</a>
+        </li>
+        {% for importance in importances %}
+          <li>
+            <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'documents:highlights-filter-importance' importance %}"
+               hx-target="#highlights">Importance {{ importance }}</a>
+          </li>
+        {% endfor %}
+      </ul>
       <input type="text"
              id="highlights-keyword-input"
              name="keyword"

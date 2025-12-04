@@ -39,11 +39,13 @@
         </button>
       </th>
     </tr>
-    {% if objects %}
-      {% for document in objects %}
-        {% include "documents/files/row.html" %}
-      {% endfor %}
-    {% endif %}
+    {% for document in objects %}
+      {% include "documents/files/row.html" %}
+    {% empty %}
+      <tr>
+        <td colspan="6" class="empty-message">No documents found.</td>
+      </tr>
+    {% endfor %}
   </table>
 </div>
 <div class="flex-start-space">

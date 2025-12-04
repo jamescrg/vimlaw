@@ -27,7 +27,7 @@
               {% endfor %}
             </ul>
             {% if matter %}
-              <a href="{% url 'matters:contacts' id=matter.id %}" class="icon-green"><i class="bi bi-arrow-up-right-circle"></i> Matter Details</a>
+              <a href="{% url 'matters:contacts' id=matter.id %}" class="icon-green">Matter Details <i class="bi bi-arrow-up-right-circle ms-2"></i></a>
             {% endif %}
           </div>
         </div>
@@ -36,7 +36,7 @@
     <nav class="navbar navbar-sub detail-subnav">
       <ul>
         <li {% if subapp == "files" %}class="active"{% endif %}>
-          <a href="{% url 'documents:index' %}">Documents</a>
+          <a href="{% url 'documents:index' %}">Files</a>
         </li>
         <li {% if subapp == "highlights" %}class="active"{% endif %}>
           <a href="{% url 'documents:highlights-index' %}">Highlights</a>

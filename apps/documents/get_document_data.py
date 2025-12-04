@@ -91,6 +91,14 @@ def get_document_data(request):
     if isinstance(selected_keyword, list):
         selected_keyword = selected_keyword[0] if selected_keyword else None
 
+    # Get importance filter value
+    importance_value = filter_data.get("importance")
+    if isinstance(importance_value, list):
+        importance_value = importance_value[0] if importance_value else None
+    importance_value = (
+        int(importance_value) if importance_value not in (None, "", 0) else None
+    )
+
     context = {
         "matter": matter,
         "matters": matters,
@@ -104,6 +112,11 @@ def get_document_data(request):
         "selected_documents": selected_documents,
         "proceedings": proceedings,
         "current_order": current_order,
+        "importances": list(range(1, 11)),
+        "importance_value": importance_value,
+        "selected_importance": (
+            f"Importance {importance_value}" if importance_value else ""
+        ),
     }
 
     return context
