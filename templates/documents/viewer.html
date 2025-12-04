@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="{% static_v 'css/buttons.css' %}">
     <link rel="stylesheet" href="{% static_v 'css/forms.css' %}">
     <link rel="stylesheet" href="{% static_v 'css/layout.css' %}">
+    <link rel="stylesheet" href="{% static_v 'css/modals.css' %}">
     <style>
       * {
         box-sizing: border-box;
@@ -99,13 +100,6 @@
       .highlight-slug {
         font-weight: 500;
         color: var(--stone-800);
-        margin-bottom: 4px;
-      }
-
-      .highlight-text {
-        font-size: 0.875rem;
-        color: var(--stone-600);
-        line-height: 1.4;
       }
 
       .highlight-footer {
@@ -193,6 +187,20 @@
         border-bottom: 1px solid var(--stone-300);
       }
 
+      .modal-header .modal-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+      }
+
+      .modal-header a {
+        color: var(--stone-500);
+        text-decoration: none;
+      }
+
+      .modal-header a:hover {
+        color: var(--stone-700);
+      }
+
       .modal-footer {
         border-top: 1px solid var(--stone-300);
       }
@@ -210,77 +218,13 @@
         border-color: var(--stone-400);
       }
 
-      .selected-text-preview {
-        background: var(--stone-200);
-        padding: 12px;
-        border-radius: 4px;
-        max-height: 200px;
-        overflow-y: auto;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        white-space: pre-wrap;
-      }
-
       .highlight-color-row {
         width: 33%;
       }
 
-      .selected-text-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-      }
-
-      .highlight-trim-controls-modal {
-        display: flex;
-        gap: 1.5rem;
-      }
-
-      .highlight-trim-controls-modal .trim-control {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-      }
-
-      .highlight-trim-controls-modal .trim-label {
+      #highlight-form textarea {
         font-size: 0.875rem;
-        color: var(--stone-500);
-        margin-right: 0.25rem;
-      }
-
-      .highlight-trim-controls-modal .trim-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.5rem;
-        height: 1.5rem;
-        padding: 0;
-        border: 1px solid var(--stone-300);
-        border-radius: 0.25rem;
-        background: var(--stone-50);
-        color: var(--stone-600);
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.15s, border-color 0.15s;
-      }
-
-      .highlight-trim-controls-modal .trim-btn:hover:not(:disabled) {
-        background: var(--stone-100);
-        border-color: var(--stone-400);
-      }
-
-      .highlight-trim-controls-modal .trim-btn:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-
-      .highlight-trim-controls-modal .trim-value {
-        min-width: 1.5rem;
-        text-align: center;
-        font-size: 0.875rem;
-        color: var(--stone-600);
+        line-height: 1.5;
       }
 
       .modal-footer {
@@ -329,7 +273,6 @@
                  data-page="{{ highlight.page_number }}"
                  data-color="{{ highlight.color }}">
               <div class="highlight-slug">{{ highlight.slug }}</div>
-              <div class="highlight-text">{{ highlight.text|truncatewords:10 }}</div>
               <div class="highlight-footer">
                 <div class="highlight-actions">
                   <button class="btn btn-link edit-highlight"
@@ -366,7 +309,6 @@
             <form id="highlight-form" onsubmit="return false">
               <input type="hidden" id="highlight-page" name="page_number">
               <input type="hidden" id="highlight-coords" name="coordinates">
-              <input type="hidden" id="highlight-text" name="text">
               <div class="mb-3 highlight-color-row">
                 <label for="highlight-color" class="form-label">Color</label>
                 <select class="form-select" id="highlight-color" name="color">
@@ -387,38 +329,8 @@
                        required>
               </div>
               <div class="mb-3">
-                <div class="selected-text-header">
-                  <label class="form-label mb-0">Selected Text</label>
-                  <div class="highlight-trim-controls-modal">
-                    <div class="trim-control">
-                      <span class="trim-label">Trim start</span>
-                      <button type="button"
-                              class="trim-btn trim-decrement"
-                              id="modal-trim-front-dec"
-                              onclick="adjustModalTrim('front', -1)"
-                              disabled>−</button>
-                      <span class="trim-value" id="modal-trim-front">0</span>
-                      <button type="button"
-                              class="trim-btn trim-increment"
-                              id="modal-trim-front-inc"
-                              onclick="adjustModalTrim('front', 1)">+</button>
-                    </div>
-                    <div class="trim-control">
-                      <span class="trim-label">Trim end</span>
-                      <button type="button"
-                              class="trim-btn trim-decrement"
-                              id="modal-trim-back-dec"
-                              onclick="adjustModalTrim('back', -1)"
-                              disabled>−</button>
-                      <span class="trim-value" id="modal-trim-back">0</span>
-                      <button type="button"
-                              class="trim-btn trim-increment"
-                              id="modal-trim-back-inc"
-                              onclick="adjustModalTrim('back', 1)">+</button>
-                    </div>
-                  </div>
-                </div>
-                <div id="selected-text-preview" class="selected-text-preview"></div>
+                <label for="highlight-text" class="form-label">Text</label>
+                <textarea class="form-control" id="highlight-text" name="text" rows="4"></textarea>
               </div>
             </form>
           </div>
@@ -556,67 +468,16 @@
       }, '*');
     }
 
-    // Modal trim state
-    let modalOriginalText = '';
-    let modalTrimFront = 0;
-    let modalTrimBack = 0;
-
     function showHighlightModal() {
       if (!currentSelection) return;
 
       document.getElementById('highlight-page').value = currentSelection.page;
       document.getElementById('highlight-coords').value = JSON.stringify({ rects: currentSelection.rects });
       document.getElementById('highlight-slug').value = '';
-
-      // Initialize trim state
-      initModalTrim(currentSelection.text);
+      document.getElementById('highlight-text').value = currentSelection.text;
 
       const modal = new bootstrap.Modal(document.getElementById('highlight-modal'));
       modal.show();
-    }
-
-    function initModalTrim(text) {
-      modalOriginalText = text;
-      modalTrimFront = 0;
-      modalTrimBack = 0;
-      updateModalTrimDisplay();
-    }
-
-    function adjustModalTrim(field, delta) {
-      const maxTrim = modalOriginalText.length - 1 -
-        (field === 'front' ? modalTrimBack : modalTrimFront);
-
-      if (field === 'front') {
-        modalTrimFront = Math.max(0, Math.min(modalTrimFront + delta, maxTrim));
-      } else {
-        modalTrimBack = Math.max(0, Math.min(modalTrimBack + delta, maxTrim));
-      }
-
-      updateModalTrimDisplay();
-    }
-
-    function updateModalTrimDisplay() {
-      // Update counters
-      document.getElementById('modal-trim-front').textContent = modalTrimFront;
-      document.getElementById('modal-trim-back').textContent = modalTrimBack;
-
-      // Calculate trimmed text
-      const trimmedText = modalTrimBack > 0
-        ? modalOriginalText.slice(modalTrimFront, -modalTrimBack)
-        : modalOriginalText.slice(modalTrimFront);
-
-      // Update preview and hidden field
-      document.getElementById('selected-text-preview').textContent = trimmedText;
-      document.getElementById('highlight-text').value = trimmedText;
-
-      // Update button states
-      const maxTrimFront = modalOriginalText.length - 1 - modalTrimBack;
-      const maxTrimBack = modalOriginalText.length - 1 - modalTrimFront;
-
-      document.getElementById('modal-trim-front-dec').disabled = modalTrimFront === 0;
-      document.getElementById('modal-trim-front-inc').disabled = modalTrimFront >= maxTrimFront;
-      document.getElementById('modal-trim-back-dec').disabled = modalTrimBack === 0;
-      document.getElementById('modal-trim-back-inc').disabled = modalTrimBack >= maxTrimBack;
     }
 
     // Save highlight
@@ -672,7 +533,6 @@
       const impClass = highlight.importance === 1 ? 'imp-high' : highlight.importance <= 3 ? 'imp-med' : '';
       item.innerHTML = `
         <div class="highlight-slug">${escapeHtml(highlight.slug)}</div>
-        <div class="highlight-text">${escapeHtml(highlight.text.substring(0, 50))}${highlight.text.length > 50 ? '...' : ''}</div>
         <div class="highlight-footer">
           <div class="highlight-actions">
             <button class="btn btn-link edit-highlight" data-highlight-id="${highlight.id}" title="Edit">

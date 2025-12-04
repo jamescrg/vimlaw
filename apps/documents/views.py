@@ -975,16 +975,21 @@ def add_highlight(request, document_id):
     """Create a new highlight."""
     document = get_object_or_404(Document, id=document_id)
 
+    slug = request.POST.get("slug", "").strip()
+    if not slug:
+        return JsonResponse({"error": "Slug is required"}, status=400)
+
     try:
         coordinates = json.loads(request.POST.get("coordinates", "{}"))
 
         highlight = Highlight.objects.create(
             document=document,
-            slug=request.POST.get("slug"),
+            slug=slug,
             text=request.POST.get("text"),
             page_number=int(request.POST.get("page_number")),
             coordinates=coordinates,
             color=request.POST.get("color", "yellow"),
+            importance=5,
             created_by=request.user,
         )
 
@@ -996,6 +1001,7 @@ def add_highlight(request, document_id):
                 "page_number": highlight.page_number,
                 "coordinates": highlight.coordinates,
                 "color": highlight.color,
+                "importance": highlight.importance,
             }
         )
     except Exception as e:
@@ -1019,7 +1025,7 @@ def delete_highlight(request, highlight_id):
 
 @login_required
 def edit_highlight(request, highlight_id):
-    """Edit a highlight's slug, color, and importance."""
+    """Edit a highlight's slug, color, importance, and text."""
     highlight = get_object_or_404(Highlight, id=highlight_id)
     is_viewer_context = request.GET.get("context") == "viewer"
 
@@ -1035,6 +1041,7 @@ def edit_highlight(request, highlight_id):
                         "slug": highlight.slug,
                         "color": highlight.color,
                         "importance": highlight.importance,
+                        "text": highlight.text,
                     }
                 )
             return HttpResponse(

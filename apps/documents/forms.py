@@ -116,17 +116,19 @@ class BulkFilesForm(forms.ModelForm):
 class HighlightForm(forms.ModelForm):
     class Meta:
         model = Highlight
-        fields = ["color", "importance", "slug"]
+        fields = ["color", "importance", "slug", "text"]
         widgets = {
             "color": forms.Select(),
             "importance": forms.Select(choices=IMPORTANCE),
-            "slug": forms.TextInput(attrs={"class": "span3"}),
+            "slug": forms.TextInput(attrs={"class": "span3", "required": True}),
+            "text": forms.Textarea(attrs={"class": "span3", "rows": 4}),
         }
 
     def __init__(self, *args, **kwargs):
         # Remove matter kwarg if passed (no longer needed)
         kwargs.pop("matter", None)
         super().__init__(*args, **kwargs)
+        self.fields["slug"].required = True
         self.renderer = CustomFormRendererCompact()
 
 
