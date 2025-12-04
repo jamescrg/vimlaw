@@ -119,7 +119,7 @@
       </thead>
       <tbody>
         {% for event in objects %}
-          <tr>
+          <tr class="{% if event.date < third_day and event.status == 'Pending' %}hl-yellow{% endif %}">
             <td>
               {{ event.date|date:"Y-m-d" }}
               {% if event.start_time %}{{ event.start_time|time:"g:i A" }}{% endif %}
@@ -127,7 +127,7 @@
             <td>
               <a href={% url 'matters:events-index' id=event.matter.id %}>{{ event.matter.name }}</a>
             </td>
-            <td class="{% if event.date < third_day and event.status == "Pending" %}urgent{% endif %}">
+            <td>
               <a href="#"
                  type="button"
                  class="btn-icon"

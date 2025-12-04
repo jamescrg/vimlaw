@@ -1,6 +1,92 @@
 {% load humanize %}
 <div class="dashboard">
   <div class="row g-3">
+    {# Right Column: Unbilled, Low Clearance, Past Due (1/3 width) #}
+    <div class="col-12 col-xl-4">
+      <div class="d-flex flex-column gap-custom">
+        {# Unbilled Work - Total Row Only #}
+        <div class="dashboard-card">
+          <table class="dashboard-table unbilled-table">
+            <thead>
+              <tr>
+                <th colspan="3">Unbilled Hours and Fees</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if unbilled_by_user %}
+                <tr class="total-row">
+                  <td>
+                    <strong>Total</strong>
+                  </td>
+                  <td class="numeric">
+                    <strong>{{ unbilled_total_hours|floatformat:1 }}</strong>
+                  </td>
+                  <td class="numeric">
+                    <strong>${{ unbilled_total_fees|floatformat:2|intcomma }}</strong>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="3" class="empty-message">No unbilled time</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        {# Past Due Matters #}
+        <div class="dashboard-card">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th colspan="2">Past Due</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if balance_due_matters %}
+                {% for matter in balance_due_matters %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'matters:ledger' id=matter.id %}">{{ matter.name }}</a>
+                    </td>
+                    <td class="numeric">${{ matter.balance_due|floatformat:2|intcomma }}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="2" class="empty-message">No outstanding balances</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        {# Low Clearance Matters #}
+        <div class="dashboard-card">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th colspan="2">Low Clearance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if low_clearance_matters %}
+                {% for matter in low_clearance_matters %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'matters:ledger' id=matter.id %}">{{ matter.name }}</a>
+                    </td>
+                    <td class="numeric {% if matter.clearance < 0 %}urgent{% endif %}">${{ matter.clearance|floatformat:2|intcomma }}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="2" class="empty-message">No low clearance matters</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
     {# Left Column: Events and Tasks (2/3 width) #}
     <div class="col-12 col-xl-8">
       <div class="d-flex flex-column gap-custom">
@@ -19,7 +105,7 @@
             <tbody>
               {% if upcoming_events %}
                 {% for event in upcoming_events %}
-                  <tr {% if event.date == today %}class="due-today"{% elif event.date == tomorrow %}class="due-tomorrow"{% endif %}>
+                  <tr class="{% if event.date <= tomorrow %}hl-yellow{% endif %}">
                     <td class="date">
                       {{ event.date|date:"Y-m-d" }}
                       {% if event.start_time %}{{ event.start_time|time:"g:i A" }}{% endif %}
@@ -89,92 +175,6 @@
                 </tr>
               </tfoot>
             {% endif %}
-          </table>
-        </div>
-      </div>
-    </div>
-    {# Right Column: Unbilled, Low Clearance, Past Due (1/3 width) #}
-    <div class="col-12 col-xl-4">
-      <div class="d-flex flex-column gap-custom">
-        {# Unbilled Work - Total Row Only #}
-        <div class="dashboard-card">
-          <table class="dashboard-table unbilled-table">
-            <thead>
-              <tr>
-                <th colspan="3">Unbilled Hours and Fees</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if unbilled_by_user %}
-                <tr class="total-row {% if unbilled_total_fees < 10000 %}hl-yellow{% elif unbilled_total_fees < 20000 %}hl-yellow{% elif unbilled_total_fees < 30000 %}hl-yellow{% elif unbilled_total_fees < 40000 %}hl-green{% else %}hl-blue{% endif %}">
-                  <td>
-                    <strong>Total</strong>
-                  </td>
-                  <td class="numeric">
-                    <strong>{{ unbilled_total_hours|floatformat:1 }}</strong>
-                  </td>
-                  <td class="numeric">
-                    <strong>${{ unbilled_total_fees|floatformat:2|intcomma }}</strong>
-                  </td>
-                </tr>
-              {% else %}
-                <tr>
-                  <td colspan="3" class="empty-message">No unbilled time</td>
-                </tr>
-              {% endif %}
-            </tbody>
-          </table>
-        </div>
-        {# Low Clearance Matters #}
-        <div class="dashboard-card">
-          <table class="dashboard-table">
-            <thead>
-              <tr>
-                <th colspan="2">Low Clearance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if low_clearance_matters %}
-                {% for matter in low_clearance_matters %}
-                  <tr>
-                    <td>
-                      <a href="{% url 'matters:ledger' id=matter.id %}">{{ matter.name }}</a>
-                    </td>
-                    <td class="numeric {% if matter.clearance < 0 %}urgent{% endif %}">${{ matter.clearance|floatformat:2|intcomma }}</td>
-                  </tr>
-                {% endfor %}
-              {% else %}
-                <tr>
-                  <td colspan="2" class="empty-message">No low clearance matters</td>
-                </tr>
-              {% endif %}
-            </tbody>
-          </table>
-        </div>
-        {# Past Due Matters #}
-        <div class="dashboard-card">
-          <table class="dashboard-table">
-            <thead>
-              <tr>
-                <th colspan="2">Past Due</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if balance_due_matters %}
-                {% for matter in balance_due_matters %}
-                  <tr>
-                    <td>
-                      <a href="{% url 'matters:ledger' id=matter.id %}">{{ matter.name }}</a>
-                    </td>
-                    <td class="numeric">${{ matter.balance_due|floatformat:2|intcomma }}</td>
-                  </tr>
-                {% endfor %}
-              {% else %}
-                <tr>
-                  <td colspan="2" class="empty-message">No outstanding balances</td>
-                </tr>
-              {% endif %}
-            </tbody>
           </table>
         </div>
       </div>

@@ -97,13 +97,13 @@
       </thead>
       <tbody>
         {% for event in events %}
-          <tr>
+          <tr class="{% if event.date < third_day and event.status == 'Pending' %}hl-yellow{% endif %}">
             <td class="date">
               {{ event.date|date:"Y-m-d" }}
               {% if event.start_time %}{{ event.start_time|time:"g:i A" }}{% endif %}
             </td>
             <td class="party">{{ event.party }}</td>
-            <td class="description {% if event.date < third_day and event.status == 'Pending' %}urgent{% endif %}">
+            <td class="description">
               <a href="#"
                  hx-get="/events/{{ event.id }}/edit/matters"
                  hx-target="#htmx-modal-container"

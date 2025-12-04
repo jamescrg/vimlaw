@@ -19,8 +19,8 @@ def dash_index(request):
     today = date.today()
     tomorrow = today + timedelta(days=1)
 
-    # Upcoming events (no date restriction, limit to 4)
-    upcoming_events = Event.objects.filter(date__gte=today).order_by("date", "party")[
+    # All pending events ordered by date (captures past due and upcoming)
+    upcoming_events = Event.objects.filter(status="Pending").order_by("date", "party")[
         :4
     ]
 
