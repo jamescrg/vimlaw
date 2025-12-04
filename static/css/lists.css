@@ -15,4 +15,7 @@ li {
   border-right: none;
   color: inherit;
   padding: 0.5rem 0 0.5rem 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

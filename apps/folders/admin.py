@@ -7,4 +7,4 @@ class FolderAdmin(admin.ModelAdmin):
     list_display = ("id", "app", "name", "selected", "active")
 
 
-admin.site.register(Folder)
+admin.site.register(Folder, FolderAdmin)
