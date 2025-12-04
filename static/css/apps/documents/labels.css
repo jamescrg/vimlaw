@@ -49,25 +49,6 @@ Label badges (used in files, highlights, timeline)
 }
 
 /*------------------------------------------------
-Add label ghost button
-------------------------------------------------*/
-
-.add-label-btn {
-  display: inline-block;
-  color: var(--stone-400);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-tr:hover .add-label-btn {
-  opacity: 1;
-}
-
-.add-label-btn:hover {
-  color: var(--stone-600);
-}
-
-/*------------------------------------------------
 Label assignment modal
 ------------------------------------------------*/
 

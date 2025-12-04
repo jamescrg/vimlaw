@@ -5,7 +5,7 @@
     <h3 class="highlight-card-slug">
       <span class="hl-{{ highlight.color }}">{{ highlight.slug|default:"Untitled" }}</span>
       <a href="#"
-         class="highlight-edit-btn"
+         class="btn-ghost"
          hx-get="{% url 'documents:edit-highlight' highlight.id %}"
          hx-target="#htmx-modal-container"
          data-bs-toggle="modal"
@@ -15,24 +15,24 @@
       </a>
       <a href="{% url 'documents:highlight-link' highlight.id %}"
          target="_blank"
-         class="highlight-view-btn"
+         class="btn-ghost"
          title="View in document">
-        <i class="bi bi-box-arrow-up-right"></i>
+        <i class="bi bi-arrow-up-right-circle"></i>
       </a>
       <button type="button"
-              class="highlight-copy-btn"
+              class="btn-ghost"
               title="Copy highlight and source"
               data-copy="{{ highlight.text }} ({{ highlight.document.name }}, p. {{ highlight.page_number }})">
         <i class="bi bi-clipboard"></i>
       </button>
       <button type="button"
-              class="highlight-link-btn"
+              class="btn-ghost"
               title="Copy link to highlight"
               data-url="{% url 'documents:highlight-link' highlight.id %}">
         <i class="bi bi-link-45deg"></i>
       </button>
       <a href="#"
-         class="highlight-link-btn"
+         class="btn-ghost"
          hx-get="{% url 'documents:labels-apply-modal' 'highlight' highlight.id %}"
          hx-target="#htmx-modal-container"
          data-bs-toggle="modal"

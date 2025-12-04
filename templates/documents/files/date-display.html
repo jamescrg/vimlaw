@@ -4,7 +4,7 @@
      hx-target="closest td">{{ document.date|date:'Y-m-d' }}</a>
 {% else %}
   <a href="#"
-     class="empty-value-icon"
+     class="btn-ghost"
      hx-get="{% url 'documents:file-date' document.id %}"
      hx-target="closest td">
     <i class="bi bi-calendar-plus"></i>

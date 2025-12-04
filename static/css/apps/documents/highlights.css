@@ -64,39 +64,6 @@
   padding: 0.25rem 0.5rem;
 }
 
-/* Ghost buttons */
-.highlight-card .highlight-edit-btn,
-.highlight-card .highlight-view-btn,
-.highlight-card .highlight-copy-btn,
-.highlight-card .highlight-link-btn {
-  margin-left: 1rem;
-  color: var(--stone-400);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-.highlight-card .highlight-copy-btn,
-.highlight-card .highlight-link-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.highlight-card:hover .highlight-edit-btn,
-.highlight-card:hover .highlight-view-btn,
-.highlight-card:hover .highlight-copy-btn,
-.highlight-card:hover .highlight-link-btn {
-  opacity: 1;
-}
-
-.highlight-card .highlight-edit-btn:hover,
-.highlight-card .highlight-view-btn:hover,
-.highlight-card .highlight-copy-btn:hover,
-.highlight-card .highlight-link-btn:hover {
-  color: var(--stone-600);
-}
-
 /* Highlight Text */
 .highlight-card-text {
   padding: 0.75rem 0.5rem;
@@ -157,22 +124,6 @@ Label badges
 
 .highlight-card .label-badge .badge-link:hover {
   opacity: 0.8;
-}
-
-/* Add label ghost button */
-.highlight-card .add-label-btn {
-  display: inline-block;
-  color: var(--stone-400);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-.highlight-card:hover .add-label-btn {
-  opacity: 1;
-}
-
-.highlight-card .add-label-btn:hover {
-  color: var(--stone-600);
 }
 
 /* Edit Modal */

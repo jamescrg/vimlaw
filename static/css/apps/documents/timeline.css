@@ -24,23 +24,12 @@ Display
   display: inline;
 }
 
-/* Edit fact ghost button */
+/* Edit fact button positioning */
 .timeline-list .edit-fact-btn {
   position: absolute;
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--stone-400);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-.timeline-list tr:hover .edit-fact-btn {
-  opacity: 1;
-}
-
-.timeline-list .edit-fact-btn:hover {
-  color: var(--stone-600);
 }
 
 .timeline-list .description {
@@ -156,46 +145,12 @@ Source badges
   margin-left: 0.5rem;
 }
 
-/* Add source ghost button */
-.timeline-list .add-source-btn {
-  display: inline-block;
-  margin-left: 0.5rem;
-  color: var(--stone-400);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-.timeline-list tr:hover .add-source-btn {
-  opacity: 1;
-}
-
-.timeline-list .add-source-btn:hover {
-  color: var(--stone-600);
-}
-
 /*------------------------------------------------
 Label badges
 ------------------------------------------------*/
 
 .timeline-list .fact-labels {
   margin-top: 0.25rem;
-}
-
-/* Add label ghost button */
-.timeline-list .add-label-btn {
-  display: inline-block;
-  margin-left: 0.5rem;
-  color: var(--stone-400);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-.timeline-list tr:hover .add-label-btn {
-  opacity: 1;
-}
-
-.timeline-list .add-label-btn:hover {
-  color: var(--stone-600);
 }
 
 /*------------------------------------------------

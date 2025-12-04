@@ -95,22 +95,6 @@
   margin-left: 0.75rem;
 }
 
-#documents-list .doc-actions .action-btn {
-  color: var(--stone-400);
-  /* padding: 0.25rem; */
-  text-decoration: none;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-#documents-list tr:hover .doc-actions .action-btn {
-  opacity: 1;
-}
-
-#documents-list .doc-actions .action-btn:hover {
-  color: var(--stone-600);
-}
-
 /* Inline date input */
 #documents-list .doc-date-input {
   background: none;
@@ -139,18 +123,10 @@
 }
 
 /* Ghost buttons for empty date/proceeding */
-#documents-list .col-date .empty-value-icon,
-#documents-list .col-proceeding .empty-value-icon {
-  color: var(--stone-400);
+#documents-list .col-date .btn-ghost,
+#documents-list .col-proceeding .btn-ghost {
   display: block;
-  opacity: 0;
   text-align: center;
-  transition: opacity 0.2s;
-}
-
-#documents-list .col-date:hover .empty-value-icon,
-#documents-list .col-proceeding:hover .empty-value-icon {
-  opacity: 1;
 }
 
 /* Spin animation for OCR processing */
@@ -192,22 +168,6 @@
 .highlights-list .col-page {
   width: 3rem;
   text-align: center;
-}
-
-/* Highlight view ghost button */
-.highlights-list .highlight-view-btn {
-  margin-left: 0.5rem;
-  color: var(--stone-400);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-
-.highlights-list tr:hover .highlight-view-btn {
-  opacity: 1;
-}
-
-.highlights-list .highlight-view-btn:hover {
-  color: var(--stone-600);
 }
 
 .ocr-badge {
