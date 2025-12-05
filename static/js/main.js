@@ -69,6 +69,7 @@ document.addEventListener('click', function(e) {
   const highlightCopyBtn = e.target.closest('.highlight-copy-btn');
   const highlightLinkBtn = e.target.closest('.highlight-link-btn');
   const documentLinkBtn = e.target.closest('.document-link-btn');
+  const sourceCopyBtn = e.target.closest('.source-copy-btn');
 
   if (highlightCopyBtn) {
     const data = highlightCopyBtn.getAttribute('data-copy');
@@ -81,6 +82,10 @@ document.addEventListener('click', function(e) {
     const url = documentLinkBtn.getAttribute('data-url');
     const fullUrl = window.location.origin + url;
     copyToClipboard(documentLinkBtn, fullUrl);
+  } else if (sourceCopyBtn) {
+    e.preventDefault();
+    const data = sourceCopyBtn.getAttribute('data-copy');
+    copyToClipboard(sourceCopyBtn, data);
   }
 });
 

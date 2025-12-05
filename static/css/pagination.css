@@ -12,7 +12,7 @@
 }
 
 .pagination-row a {
-  background: var(--background-hover);
+  background: var(--background-control);
   border: none;
   border-radius: var(--radius-sm);
   color: var(--link);
@@ -21,7 +21,7 @@
 }
 
 .pagination a:hover {
-  background: var(--background-hover);
+  background: var(--background-control);
   color: var(--link);
 }
 

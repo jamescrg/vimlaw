@@ -31,7 +31,7 @@
   --background-lighter: var(--stone-50);
   --background-subtle: var(--stone-25);
   --background-panel: var(--stone-100);
-  --background-hover: var(--stone-150);
+  --background-control: var(--stone-150);
   --background-muted: var(--stone-200);
 
   /* ==========================================================================
@@ -70,7 +70,7 @@
      Selection & Active States
      ========================================================================== */
   --selected-background: var(--violet-100);
-  --selected-color: var(--stone-600);
+  --selected-color: var(--stone-700);
   --selected-border: var(--stone-300);
 
   /* ==========================================================================
@@ -136,6 +136,14 @@
 .hl-purple { background: var(--hl-violet) !important; }
 .hl-red { background: var(--hl-red) !important; }
 .hl-yellow { background: var(--hl-yellow) !important; }
+
+/* ==========================================================================
+   Utility Classes - Text
+   ========================================================================== */
+
+.text-muted {
+  color: var(--color-muted) !important;
+}
 
 /* ==========================================================================
    Utility Classes - Status

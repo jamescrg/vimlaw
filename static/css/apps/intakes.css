@@ -73,7 +73,7 @@ List View
 }
 
 .intake-note-title button {
-  background: var(--background-hover);
+  background: var(--background-control);
   border: none;
   border-radius: var(--radius-md);
   color: var(--link);

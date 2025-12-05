@@ -179,7 +179,7 @@ Credits
 }
 
 .unbilled-totals td {
-  background: var(--background-hover);
+  background: var(--background-control);
 }
 
 .create-invoice-icon {
