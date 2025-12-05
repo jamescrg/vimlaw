@@ -131,6 +131,13 @@ class Matter(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def primary_proceeding(self):
+        """Return the primary proceeding for this matter, if any."""
+        from apps.matters.proceedings.models import Proceeding
+
+        return Proceeding.objects.filter(matter=self, primary=True).first()
+
+    @property
     def value(self):
         from django.db.models import Case, DecimalField, F, Sum, Value, When
 

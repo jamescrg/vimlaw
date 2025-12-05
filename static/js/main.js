@@ -66,12 +66,17 @@ htmx.on("hidden.bs.modal", () => {
 
 // Copy link buttons (delegated for HTMX compatibility)
 document.addEventListener('click', function(e) {
+  const copyBtn = e.target.closest('.copy-btn');
   const highlightCopyBtn = e.target.closest('.highlight-copy-btn');
   const highlightLinkBtn = e.target.closest('.highlight-link-btn');
   const documentLinkBtn = e.target.closest('.document-link-btn');
   const sourceCopyBtn = e.target.closest('.source-copy-btn');
 
-  if (highlightCopyBtn) {
+  if (copyBtn) {
+    e.preventDefault();
+    const data = copyBtn.getAttribute('data-copy');
+    copyToClipboard(copyBtn, data);
+  } else if (highlightCopyBtn) {
     const data = highlightCopyBtn.getAttribute('data-copy');
     copyToClipboard(highlightCopyBtn, data);
   } else if (highlightLinkBtn) {

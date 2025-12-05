@@ -265,13 +265,13 @@
                 <div class="highlight-citation">{{ highlight.citation }}</div>
               </div>
               <div class="highlight-menu dropdown">
-                <button class="btn-icon"
+                <button class="btn-icon menu-icon"
                         type="button"
                         data-bs-toggle="dropdown"
                         aria-expanded="false">
                   <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu dropdown-menu-end">
                   <li>
                     <a class="dropdown-item edit-highlight"
                        href="#"
@@ -538,10 +538,10 @@
           <div class="highlight-citation">${escapeHtml(highlight.citation || '')}</div>
         </div>
         <div class="highlight-menu dropdown">
-          <button class="btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <button class="btn-icon menu-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-three-dots-vertical"></i>
           </button>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu dropdown-menu-end">
             <li>
               <a class="dropdown-item edit-highlight" href="#" data-highlight-id="${highlight.id}">Edit</a>
             </li>

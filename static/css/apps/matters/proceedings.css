@@ -9,12 +9,12 @@ Display
   width: 100%;
 }
 
-.proceedings-list .date-filed {
-  width: 7.5rem;
+.proceedings-list .nickname {
+  width: 17rem;
 }
 
 .proceedings-list .case-no {
-  width: 12.5rem;
+  width: 17rem;
 }
 
 .proceedings-list .forum {
@@ -22,11 +22,17 @@ Display
 }
 
 .proceedings-list .status {
-  width: 7.5rem;
+  width: 8rem;
 }
 
 .proceedings-list .primary {
-  width: 6.5rem;
+  width: 8rem;
+}
+
+.proceedings-list .copy-btn {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 

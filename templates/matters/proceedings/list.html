@@ -15,17 +15,15 @@
   <div class="table-container">
     <table class="table proceedings-list">
       <tr>
-        <th class="date-filed">Date Filed</th>
+        <th class="nickname">Nickname</th>
+        <th class="forum">County and Court</th>
         <th class="case-no">Case No</th>
-        <th class="forum">Forum and Description</th>
         <th class="status">Status</th>
         <th class="primary">Primary</th>
       </tr>
       {% for proceeding in proceedings %}
         <tr>
-          <td class="date-filed">{{ proceeding.date_filed|date:'Y-m-d' }}</td>
-          <td class="case-no">{{ proceeding.case_number }}</td>
-          <td class="forum">
+          <td class="nickname">
             <a href="#"
                type="button"
                class="btn-icon"
@@ -33,7 +31,19 @@
                hx-target="#htmx-modal-container"
                hx-trigger="click"
                data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container">{{ proceeding.forum }}</a>
+               data-bs-target="#htmx-modal-container">{{ proceeding.nickname|default:proceeding.forum }}</a>
+          </td>
+          <td class="forum">{{ proceeding.forum }}</td>
+          <td class="case-no">
+            {% if proceeding.case_number %}
+              <button type="button"
+                      class="btn btn-sm copy-btn"
+                      data-copy="{{ proceeding.case_number }}"
+                      title="Copy case number">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            {% endif %}
+            {{ proceeding.case_number }}
           </td>
           <td class="status">{{ proceeding.status }}</td>
           <td class="center-data">

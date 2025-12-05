@@ -10,5 +10,30 @@
        hx-swap="innerHTML"
        hx-get="{% url 'matters:edit-work-status' matter_id=matter.id %}">{{ matter.work_status }}</a>
   </td>
-  <td class="id">{{ matter.id }}</td>
+  <td class="case-no">
+    {% if matter.primary_proceeding.case_number %}
+      <div class="case-no-content">
+        <span>{{ matter.primary_proceeding.case_number }}</span>
+        <div class="dropdown">
+          <button class="btn-icon menu-icon"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 data-copy="{{ matter.primary_proceeding.case_number }}">Copy to Clipboard</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="{% url 'matters:proceedings-index' id=matter.id %}">View Proceedings</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+  </td>
 </tr>

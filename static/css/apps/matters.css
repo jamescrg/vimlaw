@@ -22,17 +22,29 @@ Matter Form
 Matter List
 ========================================================================== */
 
+/* Fix dropdown overflow issues */
+.table-container:has(.matter-list) {
+  overflow: visible;
+}
+
 .matter-list {
   min-width: 43rem;
+  overflow: visible;
 }
 
 .matter-list td {
+  overflow: visible;
   vertical-align: top;
 }
 
-.matter-list .id {
-  width: 5rem;
-  text-align: right;
+.matter-list .case-no {
+  width: 15rem;
+}
+
+.matter-list .case-no-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .matter-list .name {

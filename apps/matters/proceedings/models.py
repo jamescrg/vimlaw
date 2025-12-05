@@ -11,6 +11,7 @@ class Proceeding(models.Model):
     date_filed = models.DateField(null=True)
     forum = models.CharField(max_length=150, null=True)
     case_number = models.CharField(max_length=50, null=True)
+    nickname = models.CharField(max_length=50, blank=True, null=True)
     status = models.CharField(max_length=50, null=True)
     primary = models.BooleanField(default=False)
 

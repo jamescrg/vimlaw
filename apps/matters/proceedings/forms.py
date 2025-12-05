@@ -11,6 +11,7 @@ class ProceedingForm(forms.ModelForm):
             "date_filed",
             "forum",
             "case_number",
+            "nickname",
             "status",
             "primary",
         )
@@ -25,6 +26,9 @@ class ProceedingForm(forms.ModelForm):
         widgets = {
             "forum": forms.TextInput(
                 attrs={"autofocus": "autofocus", "onfocus": "moveFocusToEnd(this)"}
+            ),
+            "nickname": forms.TextInput(
+                attrs={"placeholder": "Main, Appeal, Garnishment, etc. . . ."}
             ),
             "status": forms.Select(choices=STATUSES),
             "date_filed": forms.DateInput(attrs={"type": "date"}),
