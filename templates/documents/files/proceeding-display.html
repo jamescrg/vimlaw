@@ -4,7 +4,7 @@
       <button class="button-link"
               type="button"
               data-bs-toggle="dropdown"
-              aria-expanded="false">{{ document.proceeding.forum }} - {{ document.proceeding.case_number }}</button>
+              aria-expanded="false">{{ document.proceeding.display_name }}</button>
     {% else %}
       <a href="#"
          class="btn-ghost"
@@ -25,11 +25,11 @@
           <a class="dropdown-item {% if document.proceeding.id == proc.id %}active{% endif %}"
              href="#"
              hx-get="{% url 'documents:file-proceeding' document.id proc.id %}"
-             hx-target="#files">{{ proc.forum }} - {{ proc.case_number }}</a>
+             hx-target="#files">{{ proc.display_name }}</a>
         </li>
       {% endfor %}
     </ul>
   </div>
 {% else %}
-  {% if document.proceeding %}{{ document.proceeding.forum }} - {{ document.proceeding.case_number }}{% endif %}
+  {% if document.proceeding %}{{ document.proceeding.display_name }}{% endif %}
 {% endif %}

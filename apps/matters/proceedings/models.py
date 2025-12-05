@@ -18,6 +18,11 @@ class Proceeding(models.Model):
     def __str__(self):
         return f"{self.case_number}"
 
+    @property
+    def display_name(self):
+        """Return nickname if set, otherwise forum."""
+        return self.nickname if self.nickname else self.forum
+
     class Meta:
         db_table = "app_proceeding"
 

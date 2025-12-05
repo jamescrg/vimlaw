@@ -115,7 +115,7 @@
     </thead>
     <tbody>
       {% for item in contacts %}
-        <tr class="{% if item.is_client %}hl-gray{% elif item.band %}band-alt{% endif %}">
+        <tr class="{% if item.is_client %}hl-gray{% endif %}">
           <td>{{ item.group }}</td>
           <td>
             {% if item.is_client %}
@@ -132,31 +132,37 @@
           <td>
             <a href="{% url 'contacts:select' contact_id=item.contact.id %}">{{ item.contact.name }}</a>
           </td>
-          <td>
+          <td class="col-email">
             {% if item.contact.email %}
-              <button type="button"
-                      class="btn btn-sm copy-btn"
-                      data-copy="{{ item.contact.email }}"
-                      title="Copy email">
-                <i class="bi bi-clipboard"></i>
-              </button>
-              <a href="mailto:{{ item.contact.email }}">{{ item.contact.email }}</a>
+              <div class="cell-flex">
+                <a href="mailto:{{ item.contact.email }}">{{ item.contact.email }}</a>
+                <button type="button"
+                        class="btn btn-sm copy-btn"
+                        data-copy="{{ item.contact.email }}"
+                        title="Copy email">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
             {% endif %}
           </td>
-          <td>
+          <td class="col-phone">
             {% if item.contact.phone1 %}
-              <button type="button"
-                      class="btn btn-sm copy-btn"
-                      data-copy="{{ item.contact.phone1|phone_number }}"
-                      title="Copy phone number">
-                <i class="bi bi-clipboard"></i>
-              </button>
-              {{ item.contact.phone1|phone_number }}
-              <a href="tel:{{ item.contact.phone1|phone_tel }}"
-                 class="btn btn-sm copy-btn contact-call-btn"
-                 title="Call">
-                <i class="bi bi-telephone-outbound"></i>
-              </a>
+              <div class="cell-flex">
+                <span>
+                  {{ item.contact.phone1|phone_number }}
+                  <a href="tel:{{ item.contact.phone1|phone_tel }}"
+                     class="btn btn-sm copy-btn contact-call-btn"
+                     title="Call">
+                    <i class="bi bi-telephone-outbound"></i>
+                  </a>
+                </span>
+                <button type="button"
+                        class="btn btn-sm copy-btn"
+                        data-copy="{{ item.contact.phone1|phone_number }}"
+                        title="Copy phone number">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
             {% endif %}
           </td>
         </tr>

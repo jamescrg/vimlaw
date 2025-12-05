@@ -43,10 +43,14 @@ table.matter-contacts {
   position: relative;
 }
 
+.matter-contacts .cell-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
 .matter-contacts .copy-btn {
-  display: inline-block;
-  margin-right: 0.5rem;
-  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .matter-contacts .bi-envelope {
