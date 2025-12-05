@@ -108,3 +108,7 @@
   margin-top: 0.25rem;
   text-align: left;
 }
+
+.priority-dropdown i.with-text {
+  margin-right: 0.5rem;
+}

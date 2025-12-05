@@ -43,7 +43,7 @@
       </ul>
       <button type="button"
               id="highlights-importance-filter"
-              class="select-btn filter-dropdown-button {% if importance_value %}toggle-active{% endif %}"
+              class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"
               data-bs-toggle="dropdown"
               aria-expanded="false">
       <span><i class="bi bi-flag with-text"></i>
@@ -51,7 +51,7 @@
         {% if importance_value == 1 %}
           1 only
         {% else %}
-          {{ importance_value }} and up
+          {{ importance_value }} and above
         {% endif %}
       {% else %}
         Importance
@@ -72,7 +72,7 @@
         {% if importance == 1 %}
           1 only
         {% else %}
-          {{ importance }} and up
+          {{ importance }} and above
         {% endif %}
       </a>
     </li>

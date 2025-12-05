@@ -10,7 +10,7 @@
            href="#"
            hx-post="{% url 'matters:tasks-user' matter.id task.id user.id %}"
            hx-target="#matterTasks"
-           hx-swap="outerHTML">{{ user.username|title }}</a>
+           hx-swap="outerHTML"><i class="bi bi-person"></i> {{ user.username|title }}</a>
       </li>
     {% endfor %}
   </ul>

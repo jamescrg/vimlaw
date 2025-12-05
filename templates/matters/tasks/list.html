@@ -19,67 +19,83 @@
       </button>
       <button type="button"
               id="tasks-priority-filter"
-              class="select-btn filter-dropdown-button {% if priority_value %}toggle-active{% endif %}"
+              class="select-btn filter-dropdown-button priority-dropdown {% if priority_value %}toggle-active{% endif %}"
               data-bs-toggle="dropdown"
               aria-expanded="false">
-        {{ selected_priority|default:"All Priorities" }}
-        <small>
-          <i class="bi bi-chevron-down"></i>
-        </small>
-      </button>
-      <ul class="dropdown-menu"
-          hx-target="#tasks-priority-filter"
-          hx-swap="outerHTML">
-        <li>
-          <a class="dropdown-item"
-             href="#"
-             hx-post="{% url 'matters:tasks-filter-priority' matter.id 0 %}"
-             hx-target="#matterTasks"
-             hx-swap="#outerHTML">All Priorities</a>
-        </li>
-        {% for priority in priorities %}
-          <li>
-            <a class="dropdown-item {% if priority == priority_value %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'matters:tasks-filter-priority' matter.id priority %}"
-               hx-target="#matterTasks"
-               hx-swap="#outerHTML">Priority {{ priority }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-      <button type="button"
-              id="tasks-user-filter"
-              class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
-        {{ selected_user|default:"All Users" }}
-        <small>
-          <i class="bi bi-chevron-down"></i>
-        </small>
-      </button>
-      <ul class="dropdown-menu" hx-target="#matterTasks" hx-swap="outerHTML">
-        <li>
-          <a class="dropdown-item"
-             href="#"
-             hx-post="{% url 'matters:tasks-filter-user' matter.id 0 %}"
-             hx-target="#matterTasks"
-             hx-swap="#outerHTML">All Users</a>
-        </li>
-        {% for user in users %}
-          <li>
-            <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'matters:tasks-filter-user' matter.id user.id %}"
-               hx-target="#matterTasks"
-               hx-swap="#outerHTML">{{ user.username|title }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-      <a href="{% url 'agenda:tasks-index' %}" class="return-to-agenda">
-        Back to Agenda <i class="bi bi-arrow-up-right-circle ms-2"></i>
-      </a>
-    </div>
-  </div>
+      <span><i class="bi bi-flag with-text"></i>
+      {% if priority_value %}
+        {% if priority_value == 1 %}
+          1 only
+        {% else %}
+          {{ priority_value }} and above
+        {% endif %}
+      {% else %}
+        Priority
+      {% endif %}
+    </span>
+    <small>
+      <i class="bi bi-chevron-down"></i>
+    </small>
+  </button>
+  <ul class="dropdown-menu"
+      hx-target="#tasks-priority-filter"
+      hx-swap="outerHTML">
+    {% for priority in priorities %}
+      <li>
+      <a class="dropdown-item {% if priority == priority_value %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'matters:tasks-filter-priority' matter.id priority %}"
+         hx-target="#matterTasks"
+         hx-swap="#outerHTML"><i class="bi bi-flag"></i>
+      {% if priority == 1 %}
+        1 only
+      {% else %}
+        {{ priority }} and above
+      {% endif %}
+    </a>
+  </li>
+{% endfor %}
+<li>
+  <a class="dropdown-item {% if not priority_value %}active{% endif %}"
+     href="#"
+     hx-post="{% url 'matters:tasks-filter-priority' matter.id 0 %}"
+     hx-target="#matterTasks"
+     hx-swap="#outerHTML"><i class="bi bi-flag"></i> All Levels</a>
+</li>
+</ul>
+<button type="button"
+        id="tasks-user-filter"
+        class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
+        data-bs-toggle="dropdown"
+        aria-expanded="false">
+  <span><i class="bi bi-{% if user_id %}person{% else %}people{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
+  <small>
+    <i class="bi bi-chevron-down"></i>
+  </small>
+</button>
+<ul class="dropdown-menu" hx-target="#matterTasks" hx-swap="outerHTML">
+  <li>
+    <a class="dropdown-item"
+       href="#"
+       hx-post="{% url 'matters:tasks-filter-user' matter.id 0 %}"
+       hx-target="#matterTasks"
+       hx-swap="#outerHTML"><i class="bi bi-people"></i> All Users</a>
+  </li>
+  {% for user in users %}
+    <li>
+      <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'matters:tasks-filter-user' matter.id user.id %}"
+         hx-target="#matterTasks"
+         hx-swap="#outerHTML"><i class="bi bi-person"></i> {{ user.username|title }}</a>
+    </li>
+  {% endfor %}
+</ul>
+<a href="{% url 'agenda:tasks-index' %}" class="return-to-agenda">
+  Back to Agenda <i class="bi bi-arrow-up-right-circle ms-2"></i>
+</a>
+</div>
+</div>
 </div>
 {% include "matters/tasks/form-quick.html" %}
 <div class="table-container">

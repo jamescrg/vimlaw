@@ -9,7 +9,7 @@
         <a class="dropdown-item"
            href="#"
            hx-get="{% url 'agenda:tasks-task-user' task_id=task.id user=user.id %}"
-           hx-target="#tasks">{{ user.username|title }}</a>
+           hx-target="#tasks"><i class="bi bi-person"></i> {{ user.username|title }}</a>
       </li>
     {% endfor %}
   </ul>

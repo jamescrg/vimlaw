@@ -10,7 +10,7 @@
            href="#"
            hx-post="{% url 'matters:tasks-priority' matter.id task.id forloop.counter %}"
            hx-target="#matterTasks"
-           hx-swap="outerHTML">Priority {{ forloop.counter }}</a>
+           hx-swap="outerHTML"><i class="bi bi-flag"></i> Priority {{ forloop.counter }}</a>
       </li>
     {% endfor %}
   </ul>
