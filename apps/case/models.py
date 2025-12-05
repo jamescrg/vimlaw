@@ -188,10 +188,10 @@ class Highlight(models.Model):
     def citation(self):
         """Return citation with document abbreviation and page/paragraph number."""
         doc_citation = self.document.citation
-        # Remove closing .) to insert location
+        # Remove closing ".)' to insert location
         # Format with paragraph: (Abbrev. ¶ 5.)
         # Format with page: (Abbrev. at 5.)
-        base = doc_citation.rstrip(")").rstrip(".")
+        base = doc_citation[:-2]  # Remove closing ".)"
         if self.paragraph_number:
             return f"{base} ¶ {self.paragraph_number}.)"
         return f"{base} at {self.page_number}.)"

@@ -1,8 +1,54 @@
-
-
 .ledger-totals {
-  margin-bottom: 2rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: solid 1px var(--border-medium);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
   width: 100%;
+}
+
+.ledger-totals th,
+.ledger-totals td {
+  border-bottom: solid 1px var(--border-medium);
+  padding: 0.625rem 1rem;
+}
+
+.ledger-totals th {
+  border-right: solid 1px var(--border-medium);
+  font-weight: normal;
+  text-align: left;
+}
+
+.ledger-totals tr.total th,
+.ledger-totals tr.total td {
+  font-weight: 500;
+}
+
+.ledger-totals td {
+  border-right: none;
+  width: 25rem;
+}
+
+.ledger-totals tr:last-child th,
+.ledger-totals tr:last-child td {
+  border-bottom: none;
+}
+
+/* Corner rounding */
+.ledger-totals tr:first-child th {
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.ledger-totals tr:first-child td {
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
+.ledger-totals tr:last-child th {
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.ledger-totals tr:last-child td {
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
 }
 
 .ledger {

@@ -70,10 +70,6 @@
   text-align: center;
 }
 
-.dashboard-table th {
-  background: var(--background-control);
-}
-
 /* Dashboard Events Table - match events-table column widths */
 .dashboard-table.events {
   margin-bottom: 0;
@@ -140,6 +136,7 @@
 }
 
 .dashboard-table .summary-row {
+  border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
   font-size: 0.875rem;
   text-align: center;
