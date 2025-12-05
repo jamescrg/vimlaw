@@ -4,6 +4,7 @@ from django.contrib.postgres.search import SearchVectorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from apps.documents.abbreviate import bluebook_abbreviate
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 
@@ -108,6 +109,18 @@ class Document(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def citation(self):
+        """Return abbreviated name for citation, using manual override or auto-generated."""
+        if self.abbreviated_name:
+            abbrev = self.abbreviated_name
+        else:
+            abbrev = bluebook_abbreviate(self.name)
+        # Ensure it ends with a period (but don't double up)
+        if not abbrev.endswith("."):
+            abbrev = abbrev + "."
+        return f"({abbrev})"
+
     class Meta:
         db_table = "app_document"
         ordering = ["-uploaded_at"]
@@ -169,6 +182,16 @@ class Highlight(models.Model):
 
     def __str__(self):
         return f"{self.slug} - Page {self.page_number}"
+
+    @property
+    def citation(self):
+        """Return citation with document abbreviation and page number."""
+        doc_citation = self.document.citation
+        # Remove closing .) to insert page number
+        # Current format: (Abbrev.)
+        # Target format: (Abbrev. at 5.)
+        base = doc_citation.rstrip(")").rstrip(".")
+        return f"{base} at {self.page_number}.)"
 
 
 class Fact(models.Model):

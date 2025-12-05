@@ -4,34 +4,65 @@
 
 .dropdown-menu {
   padding: 0 !important;
+  border: solid 1px var(--border-light) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden;
 }
 
 .dropdown-menu li {
   background: var(--background-lighter);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   border-top: solid 1px var(--border-light);
 }
 
 .dropdown-menu li:hover {
-  background: var(--background-panel);
+  background: var(--background-control);
   color: var(--link-hover);
 }
 
-.dropdown-item {
+.dropdown-item,
+.dropdown-menu li > a {
+  display: block;
   padding: 0.5rem 1rem;
+  color: var(--color-primary) !important;
+  text-decoration: none;
 }
 
-.dropdown-item.active {
-  background: var(--selected-background);
-  color: var(--selected-color);
+.dropdown-item.active,
+.dropdown-menu li.active > a {
+  background: var(--selected-background) !important;
+  color: var(--selected-color) !important;
 }
 
-.dropdown-item:hover {
-  background: var(--background-panel);
+.dropdown-menu li:has(.active),
+.dropdown-menu li.active {
+  border-top: solid 1px var(--selected-border) !important;
+}
+
+.dropdown-menu li:first-child:has(.active),
+.dropdown-menu li:first-child.active {
+  border-top: none !important;
+}
+
+.dropdown-menu li:has(.active) + li,
+.dropdown-menu li.active + li {
+  border-top: solid 1px var(--selected-border) !important;
+}
+
+.dropdown-item:hover,
+.dropdown-menu li > a:hover {
+  background: var(--background-control) !important;
+  color: var(--color-primary) !important;
+  text-decoration: none !important;
 }
 
 .dropdown-menu li:first-child {
-  border: none;
+  border-top: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.dropdown-menu li:last-child {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .dropdown-menu li > a {

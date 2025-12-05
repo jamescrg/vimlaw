@@ -22,7 +22,7 @@
       <button type="button"
               class="btn-ghost highlight-copy-btn"
               title="Copy highlight and source"
-              data-copy="{{ highlight.text }} ({{ highlight.document.name }}, p. {{ highlight.page_number }})">
+              data-copy="{{ highlight.text }} {{ highlight.citation }}">
         <i class="bi bi-clipboard"></i>
       </button>
       <button type="button"
@@ -42,9 +42,7 @@
       </a>
     </h3>
     <div class="highlight-card-text">{{ highlight.text }}</div>
-    <cite class="highlight-card-citation">
-      {{ highlight.document.name }}, p. {{ highlight.page_number }}.
-    </cite>
+    <cite class="highlight-card-citation">{{ highlight.citation }}</cite>
     <div class="highlight-labels">
       {% for label in highlight.labels.all %}
         {% include "documents/labels/badge.html" with object_type="highlight" object=highlight %}

@@ -38,6 +38,7 @@ Display
   word-wrap: break-word;
 }
 
+
 .timeline-list .importance {
   width: 3rem;
   text-align: center;
@@ -137,12 +138,48 @@ Overflow fixes
 }
 
 /*------------------------------------------------
-Source badges
+Fact row layout
 ------------------------------------------------*/
 
-.timeline-list .source-badge {
-  display: inline-block;
-  margin-right: 0.5rem;
+.timeline-list .fact-actions {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+}
+
+.timeline-list .fact-actions button {
+  color: var(--icon-muted);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.timeline-list .fact-actions button:hover {
+  color: var(--color-primary);
+}
+
+.timeline-list tr:hover .fact-actions button {
+  opacity: 1;
+}
+
+/*------------------------------------------------
+Source citations
+------------------------------------------------*/
+
+.timeline-list .fact-sources {
+  margin-left: 0.25rem;
+  font-size: 1rem;
+}
+
+.timeline-list .source-citation {
+  display: inline;
+}
+
+.timeline-list .source-citation a {
+  text-decoration: none;
+}
+
+.timeline-list .source-citation a:hover {
+  text-decoration: underline;
 }
 
 /*------------------------------------------------

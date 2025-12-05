@@ -100,7 +100,7 @@
 
 .copy-btn {
   padding: 0.25rem 0.5rem;
-  background: var(--background-hover);
+  background: var(--background-control);
   border: solid 1px var(--border-medium);
 
   &:focus {

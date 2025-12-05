@@ -166,7 +166,7 @@
 }
 
 .task-detail .btn-icon {
-  background: var(--background-hover);
+  background: var(--background-control);
   border: solid 1px var(--border-light);
   border-radius: var(--radius-md);
   color: var(--color-muted);

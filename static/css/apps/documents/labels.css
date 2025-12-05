@@ -75,7 +75,7 @@ Labels cards layout (Labels tab)
 }
 
 .labels-cards .card-header button {
-  background: var(--background-hover);
+  background: var(--background-control);
   border: solid 1px var(--border-light);
   border-radius: var(--radius-md);
   padding: 0.375rem 0.625rem;
