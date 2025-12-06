@@ -170,8 +170,17 @@ Table Layout
   min-width: 2rem;
 }
 
-/* Fix dropdown overflow issues */
+/* Fix dropdown overflow issues while allowing horizontal scroll */
 .table-container:has(.highlights-list) {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.highlights-list {
+  overflow: visible;
+}
+
+.highlights-list tbody {
   overflow: visible;
 }
 

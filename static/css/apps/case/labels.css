@@ -89,6 +89,20 @@ Labels cards layout (Labels tab)
 }
 
 /*------------------------------------------------
+Responsive
+------------------------------------------------*/
+
+@media (max-width: 768px) {
+  .labels-cards {
+    flex-direction: column;
+  }
+
+  .labels-cards .card {
+    min-width: 0;
+  }
+}
+
+/*------------------------------------------------
 Color swatch dropdown widget
 ------------------------------------------------*/
 

@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
+from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Document, Fact, Highlight, Label
 from apps.matters.models import Matter
 
@@ -37,6 +38,8 @@ def labels_list(request):
 
 @login_required
 def add_label(request):
+    matter, _ = get_selected_matter(request)
+
     if request.method == "POST":
         form = LabelsForm(request.POST, use_required_attribute=False)
         form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
@@ -50,7 +53,7 @@ def add_label(request):
 
         return render(request, "case/labels/form.html", {"form": form, "edit": False})
     else:
-        form = LabelsForm(use_required_attribute=False)
+        form = LabelsForm(initial={"matter": matter}, use_required_attribute=False)
         form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
             "name"
         )

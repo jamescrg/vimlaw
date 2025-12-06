@@ -1,18 +1,16 @@
-.filter select {
-  min-width: 95%;
-}
-
-.filter input[type="text"] {
-  min-width: 95%;
+.filter select,
+.filter input[type="text"],
+.filter input[type="number"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .filter input[type="date"] {
   margin-left: 0.25rem;
   width: 8.5rem;
-}
-
-.filter input[type="number"] {
-  min-width: 95%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 form .errorlist {

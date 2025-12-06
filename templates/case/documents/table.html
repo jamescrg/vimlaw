@@ -17,7 +17,7 @@
         Date
         <button class="btn-sort {% if 'date' in current_order %}active{% endif %}"
                 hx-get="{% url 'case:documents-sort' 'date' %}"
-                hx-target="#files">
+                hx-target="#documents">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
@@ -25,7 +25,7 @@
         Name
         <button class="btn-sort {% if 'name' in current_order %}active{% endif %}"
                 hx-get="{% url 'case:documents-sort' 'name' %}"
-                hx-target="#files">
+                hx-target="#documents">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
@@ -33,7 +33,7 @@
       <th class="col-importance">
         <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
                 hx-get="{% url 'case:documents-sort' 'importance' %}"
-                hx-target="#files"
+                hx-target="#documents"
                 title="Sort by importance">
           <i class="bi bi-flag"></i>
         </button>

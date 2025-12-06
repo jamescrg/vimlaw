@@ -128,8 +128,17 @@ Filter form
 Overflow fixes
 ------------------------------------------------*/
 
-/* Fix dropdown overflow issues */
+/* Fix dropdown overflow issues while allowing horizontal scroll */
 .table-container:has(.facts-list) {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.facts-list {
+  overflow: visible;
+}
+
+.facts-list tbody {
   overflow: visible;
 }
 

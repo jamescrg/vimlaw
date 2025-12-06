@@ -97,6 +97,20 @@
   align-items: center;
   display: flex;
   justify-content: space-between;
+  overflow: hidden;
+}
+
+.select-btn > span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  text-align: left;
+}
+
+.select-btn > small {
+  flex-shrink: 0;
 }
 
 .extra-filter-dropdown-button {

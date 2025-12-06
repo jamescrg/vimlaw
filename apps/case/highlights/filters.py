@@ -30,12 +30,16 @@ class HighlightsFilter(django_filters.FilterSet):
     )
     order_by = django_filters.OrderingFilter(
         fields=[
+            ("document__date", "date"),
             ("document__name", "document"),
             ("slug", "slug"),
+            ("importance", "importance"),
         ],
         field_labels={
+            "document__date": "Date",
             "document__name": "Document",
             "slug": "Slug",
+            "importance": "Importance",
         },
         label="Order By",
     )
