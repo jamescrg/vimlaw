@@ -5,9 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from apps.case.filters import FactsFilter
-from apps.case.forms import FactForm
-from apps.case.generate_pdf import generate_facts_pdf
+from apps.case.facts.filters import FactsFilter
+from apps.case.facts.forms import FactForm
+from apps.case.facts.generate_pdf import generate_facts_pdf
 from apps.case.models import Fact
 from apps.matters.models import Matter
 

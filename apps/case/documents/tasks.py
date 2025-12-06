@@ -13,7 +13,7 @@ from django.utils import timezone
 from ocrmypdf import hookimpl
 from pypdf import PdfReader
 
-from apps.case.ocr_progress import DatabaseProgressBar
+from .ocr_progress import DatabaseProgressBar
 
 logger = logging.getLogger(__name__)
 

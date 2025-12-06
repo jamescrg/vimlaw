@@ -1,10 +1,11 @@
 from django.db.models import Count
 
-from apps.case.filters import FilesFilter
 from apps.case.models import Document, Label
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
+
+from .filters import FilesFilter
 
 
 def get_selected_matter(request):

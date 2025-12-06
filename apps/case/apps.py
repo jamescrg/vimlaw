@@ -6,5 +6,5 @@ class CaseConfig(AppConfig):
     name = "apps.case"
 
     def ready(self):
+        import apps.case.documents.signals  # noqa: F401
         import apps.case.search_config  # noqa: F401
-        import apps.case.signals  # noqa: F401

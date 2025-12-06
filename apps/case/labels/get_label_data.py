@@ -1,4 +1,4 @@
-from apps.case.get_document_data import get_selected_matter
+from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Label
 
 

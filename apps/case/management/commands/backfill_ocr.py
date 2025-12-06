@@ -28,7 +28,7 @@ class Command(BaseCommand):
         count = 0
         for doc in pdfs:
             async_task(
-                "apps.case.tasks.process_document_ocr",
+                "apps.case.documents.tasks.process_document_ocr",
                 doc.id,
                 task_name=f"OCR-Backfill-{doc.id}",
                 group="ocr_processing",

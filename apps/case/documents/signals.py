@@ -15,7 +15,7 @@ def trigger_ocr_on_upload(sender, instance, created, **kwargs):
             from django_q.tasks import async_task
 
             async_task(
-                "apps.case.tasks.process_document_ocr",
+                "apps.case.documents.tasks.process_document_ocr",
                 instance.id,
                 task_name=f"OCR-{instance.id}",
                 group="ocr_processing",

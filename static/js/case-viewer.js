@@ -533,7 +533,7 @@ class DocumentViewer {
     if (!confirm("Are you sure you want to delete this highlight?")) return;
 
     try {
-      const response = await fetch(`/documents/highlights/${highlightId}/delete/`, {
+      const response = await fetch(`/case/highlights/${highlightId}/delete/`, {
         method: "POST",
         headers: {
           "X-CSRFToken": this.csrfToken,
