@@ -2,7 +2,7 @@
   {% if matter %}
     <div class="card">
       <div class="card-header">
-        <span>Matter</span>
+        <span>This Matter</span>
         <button type="button"
                 class="btn-icon-sm"
                 hx-get="{% url 'case:add-label' %}?matter={{ matter.id }}"
@@ -28,7 +28,7 @@
   {% endif %}
   <div class="card">
     <div class="card-header">
-      <span>Global</span>
+      <span>All Matters</span>
       <button type="button"
               class="btn-icon-sm"
               hx-get="{% url 'case:add-label' %}?global=1"
