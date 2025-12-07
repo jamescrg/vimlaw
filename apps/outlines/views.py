@@ -300,12 +300,14 @@ def item_edit(request, item_id):
         if not content:
             prev_sibling = item.get_previous_sibling()
             prev_id = prev_sibling.id if prev_sibling else None
+            item_id = item.id
             item.delete()
             response = HttpResponse(status=200)
-            response["HX-Reswap"] = "delete"
-            response["HX-Retarget"] = "closest .outline-item"
+            # Trigger JS to remove the item from DOM
+            trigger_data = {"itemId": item_id}
             if prev_id:
-                response["HX-Trigger"] = f'{{"itemDeleted": {{"focusId": {prev_id}}}}}'
+                trigger_data["focusId"] = prev_id
+            response["HX-Trigger"] = json.dumps({"itemDeleted": trigger_data})
             return response
 
         item.content = content
