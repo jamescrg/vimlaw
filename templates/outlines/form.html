@@ -1,0 +1,48 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if outline %}
+          Edit Outline
+        {% else %}
+          New Outline
+        {% endif %}
+      </h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form method="post"
+            class="form-compact"
+            hx-post="{% if outline %}{% url 'outlines:edit' outline.id %}{% else %}{% url 'outlines:add' %}{% endif %}"
+            hx-target="#htmx-modal-container">
+        {% csrf_token %}
+        <div class="form-group">
+          {{ form.title.label_tag }}
+          {{ form.title }}
+          {% if form.title.errors %}<div class="text-danger">{{ form.title.errors }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          {{ form.matter.label_tag }}
+          {{ form.matter }}
+        </div>
+        <div class="flex-center-space">
+          <div>
+            <button type="submit" class="submit">Submit</button>
+          </div>
+          <div>
+            {% if outline %}
+              <a href="#"
+                 class="delete-link"
+                 hx-post="{% url 'outlines:delete' outline.id %}"
+                 hx-confirm="Delete this outline and all its items?">Delete Outline</a>
+            {% endif %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

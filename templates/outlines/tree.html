@@ -1,0 +1,8 @@
+<div class="outline-items">
+  {% for item in root_items %}
+    {% include "outlines/item.html" with item=item %}
+  {% endfor %}
+</div>
+<button type="button" class="add-item-btn" onclick="createNewItem()">
+  <i class="bi bi-plus"></i>
+</button>

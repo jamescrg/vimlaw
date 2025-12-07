@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "apps.invoicing",
     "apps.reports",
     "apps.management",
+    "apps.outlines",
     "django_filters",
     "django_cleanup.apps.CleanupConfig",
     "django_q",

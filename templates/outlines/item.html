@@ -1,0 +1,33 @@
+<div class="outline-item{% if item.collapsed %} collapsed{% endif %}"
+     data-item-id="{{ item.id }}"
+     data-parent-id="{{ item.parent_id|default:'' }}"
+     data-order="{{ item.order }}">
+  <div class="item-row">
+    <!-- Bullet / Collapse toggle -->
+    {% if item.children.exists %}
+      <button class="item-bullet collapse-btn"
+              hx-post="{% url 'outlines:item-toggle-collapse' item.id %}"
+              hx-target="closest .outline-item"
+              hx-swap="outerHTML"
+              title="{% if item.collapsed %}Expand{% else %}Collapse{% endif %}">
+        <i class="bi bi-chevron-{% if item.collapsed %}right{% else %}down{% endif %}"></i>
+      </button>
+    {% else %}
+      <span class="item-bullet">•</span>
+    {% endif %}
+    <!-- Content -->
+    <div class="item-content-wrapper"
+         hx-get="{% url 'outlines:item-edit' item.id %}"
+         hx-target="this"
+         hx-trigger="click[!event.target.classList.contains('item-input')]"
+         hx-swap="innerHTML">{% include "outlines/item-content.html" %}</div>
+  </div>
+  <!-- Children (if not collapsed) -->
+  {% if not item.collapsed %}
+    <div class="item-children">
+      {% for child in item.children.all %}
+        {% include "outlines/item.html" with item=child %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

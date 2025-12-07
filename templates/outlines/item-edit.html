@@ -1,0 +1,12 @@
+<input type="text"
+       class="item-input"
+       name="content"
+       value="{{ item.content }}"
+       placeholder="Enter text..."
+       autofocus
+       hx-post="{% url 'outlines:item-edit' item.id %}"
+       hx-target="closest .item-content-wrapper"
+       hx-trigger="blur, keyup[key=='Enter']"
+       hx-swap="innerHTML"
+       data-item-id="{{ item.id }}"
+       onkeydown="handleItemKeydown(event, this)">

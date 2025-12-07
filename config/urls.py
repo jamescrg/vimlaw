@@ -44,6 +44,8 @@ urlpatterns = [
     path("", include("apps.lab.urls")),
     # Management App
     path("", include("apps.management.urls")),
+    # Outlines App
+    path("outlines/", include("apps.outlines.urls")),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

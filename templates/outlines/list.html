@@ -1,0 +1,51 @@
+{% if outlines %}
+  <div class="outlines-grid">
+    {% for outline in outlines %}
+      <div class="outline-card">
+        <div class="outline-card-header">
+          <a href="{% url 'outlines:standalone' outline.id %}"
+             class="outline-card-link"
+             target="_blank">
+            <h3>{{ outline.title }}</h3>
+          </a>
+          <div class="dropdown">
+            <button class="btn-icon menu-icon"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item"
+                   href="#"
+                   hx-get="{% url 'outlines:edit' outline.id %}"
+                   hx-target="#htmx-modal-container"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Edit</a>
+              </li>
+              <li>
+                <a class="dropdown-item text-danger"
+                   href="#"
+                   hx-post="{% url 'outlines:delete' outline.id %}"
+                   hx-confirm="Delete this outline and all its items?"><i class="bi bi-trash"></i> Delete</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        {% if outline.matter %}<span class="app-badge app-badge-lg">{{ outline.matter.name }}</span>{% endif %}
+        <span class="outline-date">{{ outline.updated_at|date:"M j, Y" }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <p>No outlines yet.</p>
+    <a href="#"
+       class="btn btn-primary"
+       hx-get="{% url 'outlines:add' %}"
+       hx-target="#htmx-modal-container"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">Create your first outline</a>
+  </div>
+{% endif %}
