@@ -26,8 +26,7 @@ urlpatterns = [
         name="importance",
     ),
     # Outline view
-    path("<int:outline_id>/", views.outline_view, name="view"),
-    path("<int:outline_id>/standalone/", views.outline_standalone, name="standalone"),
+    path("<int:outline_id>/", views.outline_standalone, name="standalone"),
     path("<int:outline_id>/tree/", views.outline_tree, name="tree"),
     path("shortcuts/", views.shortcuts_modal, name="shortcuts"),
     # Item operations
@@ -42,10 +41,18 @@ urlpatterns = [
         views.item_toggle_collapse,
         name="item-toggle-collapse",
     ),
+    path(
+        "item/<int:item_id>/toggle-heading/",
+        views.item_toggle_heading,
+        name="item-toggle-heading",
+    ),
     path("item/<int:item_id>/move/", views.item_move, name="item-move"),
     path("item/<int:item_id>/move-up/", views.item_move_up, name="item-move-up"),
     path("item/<int:item_id>/move-down/", views.item_move_down, name="item-move-down"),
     # Batch operations
     path("<int:outline_id>/batch-indent/", views.batch_indent, name="batch-indent"),
     path("<int:outline_id>/batch-outdent/", views.batch_outdent, name="batch-outdent"),
+    # Import
+    path("<int:outline_id>/import/", views.import_markdown, name="import"),
+    path("<int:outline_id>/import-modal/", views.import_modal, name="import-modal"),
 ]

@@ -10,18 +10,18 @@
         </button>
       </th>
       <th class="user">User</th>
-      <th class="created">
-        Created
-        <button class="btn-sort {% if 'created_at' in current_order %}active{% endif %}"
-                hx-get="{% url 'outlines:sort' 'created_at' %}"
+      <th class="date">
+        Date
+        <button class="btn-sort {% if 'date' in current_order %}active{% endif %}"
+                hx-get="{% url 'outlines:sort' 'date' %}"
                 hx-target="#outlines">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
-      <th class="modified">
-        Modified
-        <button class="btn-sort {% if 'updated_at' in current_order %}active{% endif %}"
-                hx-get="{% url 'outlines:sort' 'updated_at' %}"
+      <th class="viewed">
+        Viewed
+        <button class="btn-sort {% if 'viewed_at' in current_order %}active{% endif %}"
+                hx-get="{% url 'outlines:sort' 'viewed_at' %}"
                 hx-target="#outlines">
           <i class="bi bi-chevron-expand"></i>
         </button>
@@ -60,14 +60,14 @@
                    hx-get="{% url 'outlines:edit' outline.id %}"
                    hx-target="#htmx-modal-container"
                    data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Rename</a>
+                   data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Edit Details</a>
               </li>
             </ul>
           </div>
         </td>
         <td class="user">{{ outline.user.get_short_name|default:outline.user.username }}</td>
-        <td class="created">{{ outline.created_at|date:"Y-m-d" }}</td>
-        <td class="modified">{{ outline.updated_at|date:"Y-m-d" }}</td>
+        <td class="date">{{ outline.date|date:"Y-m-d" }}</td>
+        <td class="viewed">{{ outline.viewed_at|date:"Y-m-d"|default:"—" }}</td>
         <td class="importance dropdown-cell">
           <div class="dropdown">
             <button class="button-link"

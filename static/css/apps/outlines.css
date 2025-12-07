@@ -20,11 +20,11 @@
   width: 7rem;
 }
 
-.outlines-list .created {
+.outlines-list .date {
   width: 8rem;
 }
 
-.outlines-list .modified {
+.outlines-list .viewed {
   width: 8rem;
 }
 
@@ -120,6 +120,22 @@
 .outline-canvas .toolbar {
   border-bottom: 1px solid var(--border-light);
   margin-bottom: 0.5rem;
+}
+
+.outline-canvas .toolbar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.outline-canvas .toolbar-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.outline-canvas .toolbar-left .app-badge {
+  margin-left: 2rem;
+  align-self: flex-start;
 }
 
 .back-link {
@@ -229,10 +245,12 @@
 }
 
 .item-row {
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   gap: 0.5rem;
+  padding-bottom: 0.25rem;
   padding-top: 0.25rem;
   min-height: 2rem;
 }
@@ -246,6 +264,45 @@
   flex-grow: 1;
 }
 
+/* Item menu (three-dot dropdown) - positioned absolutely to not affect layout */
+.item-menu {
+  position: absolute;
+  left: -1.5rem;
+  top: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.item-row:hover .item-menu {
+  opacity: 1;
+}
+
+.item-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.item-menu-btn:hover {
+  background: var(--background-muted);
+  color: var(--color-primary);
+}
+
+.item-menu .dropdown-menu {
+  min-width: 10rem;
+}
+
 /* Bullet - consistent sizing for all items */
 .item-bullet {
   width: 1.5rem;
@@ -257,6 +314,7 @@
   flex-shrink: 0;
   font-size: 1.5rem;
   line-height: 1;
+  margin-top: 0.25rem;
   background: none;
   border: none;
   padding: 0;
@@ -288,12 +346,15 @@
   color: var(--color-primary);
   line-height: 1.5;
   word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 /* Item Edit Input (textarea) */
 .item-input {
+  display: block;
   width: 100%;
   padding: 0;
+  margin: 0;
   border: none;
   font-size: inherit;
   font-family: inherit;
@@ -303,6 +364,7 @@
   resize: none;
   overflow: hidden;
   min-height: 1.5em;
+  color: var(--color-primary);
 }
 
 .item-input:focus {
@@ -324,6 +386,14 @@
 /* Selected state */
 .outline-item.selected > .item-row {
   background: var(--hl-gray);
+}
+
+/* Heading state */
+.outline-item.heading > .item-row .item-content,
+.outline-item.heading > .item-row .item-input {
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: 1.2;
 }
 
 /* =============================================================================

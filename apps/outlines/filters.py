@@ -16,13 +16,13 @@ class OutlinesFilter(django_filters.FilterSet):
         label="User",
     )
     date_start = django_filters.DateFilter(
-        field_name="created_at",
+        field_name="date",
         lookup_expr="gte",
         label="Start Date",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     date_end = django_filters.DateFilter(
-        field_name="created_at",
+        field_name="date",
         lookup_expr="lte",
         label="End Date",
         widget=forms.DateInput(attrs={"type": "date"}),

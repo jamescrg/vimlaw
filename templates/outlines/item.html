@@ -1,8 +1,33 @@
-<div class="outline-item{% if item.collapsed %} collapsed{% endif %}"
+<div class="outline-item{% if item.collapsed %} collapsed{% endif %}{% if item.heading %} heading{% endif %}"
      data-item-id="{{ item.id }}"
      data-parent-id="{{ item.parent_id|default:'' }}"
      data-order="{{ item.order }}">
   <div class="item-row">
+    <!-- Item menu -->
+    <div class="item-menu dropdown">
+      <button class="item-menu-btn"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        <i class="bi bi-three-dots-vertical"></i>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'outlines:item-toggle-heading' item.id %}"
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML">
+            <i class="bi bi-type-bold"></i>
+            {% if item.heading %}
+              Remove Heading
+            {% else %}
+              Make Heading
+            {% endif %}
+          </a>
+        </li>
+      </ul>
+    </div>
     <!-- Bullet / Collapse toggle -->
     {% if item.children.exists %}
       <button class="item-bullet collapse-btn"

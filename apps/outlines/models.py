@@ -1,5 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
@@ -15,14 +16,16 @@ class Outline(models.Model):
         related_name="outlines",
     )
     title = models.CharField(max_length=200)
+    date = models.DateField(default=timezone.localdate)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    viewed_at = models.DateTimeField(null=True, blank=True)
     importance = models.PositiveIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
 
     class Meta:
-        ordering = ["-updated_at"]
+        ordering = ["-date"]
 
     def __str__(self):
         return self.title
@@ -46,6 +49,7 @@ class OutlineItem(models.Model):
     content = models.TextField(blank=True, default="")
     order = models.PositiveIntegerField(default=0)
     collapsed = models.BooleanField(default=False)
+    heading = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

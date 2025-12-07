@@ -14,10 +14,21 @@
     <div class="outline-canvas">
       <div class="toolbar">
         <div class="toolbar-left">
-          <h1>{{ outline.title }}</h1>
-          {% if outline.matter %}<span class="app-badge app-badge-lg">{{ outline.matter.name }}</span>{% endif %}
+          <div class="toolbar-title">
+            <h1>{{ outline.title }}</h1>
+            <span class="toolbar-subtitle">{{ outline.date|date:"Y-m-d" }}</span>
+          </div>
+          {% if outline.matter %}<span class="app-badge">{{ outline.matter.name }}</span>{% endif %}
         </div>
         <div class="toolbar-right">
+          <a href="#"
+             hx-get="{% url 'outlines:import-modal' outline.id %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container"
+             title="Import from markdown">
+            <i class="bi bi-box-arrow-in-up"></i>
+          </a>
           <a href="#"
              hx-get="{% url 'outlines:shortcuts' %}"
              hx-target="#htmx-modal-container"

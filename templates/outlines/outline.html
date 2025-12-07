@@ -14,6 +14,14 @@
         </div>
         <div class="toolbar-right">
           <a href="#"
+             hx-get="{% url 'outlines:import-modal' outline.id %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container"
+             title="Import from markdown">
+            <i class="bi bi-box-arrow-in-up"></i>
+          </a>
+          <a href="#"
              hx-get="{% url 'outlines:shortcuts' %}"
              hx-target="#htmx-modal-container"
              data-bs-toggle="modal"

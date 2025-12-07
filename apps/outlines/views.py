@@ -4,12 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import F, Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.case.documents.get_document_data import get_selected_matter
 
 from .filters import OutlinesFilter
 from .forms import OutlineForm
+from .markdown_parser import import_markdown_to_outline
 from .models import Outline, OutlineItem
 
 
@@ -31,14 +33,14 @@ def get_outlines_data(request, matter):
             outlines = queryset
 
         # Apply sorting
-        current_order = filter_data.get("order_by", "-updated_at")
+        current_order = filter_data.get("order_by", "-date")
         if current_order:
             outlines = outlines.order_by(current_order)
         else:
-            outlines = outlines.order_by("-updated_at")
+            outlines = outlines.order_by("-date")
 
     # Get current sort order for template
-    current_order = filter_data.get("order_by", "-updated_at")
+    current_order = filter_data.get("order_by", "-date")
 
     # Get keyword value
     keyword = filter_data.get("keyword", "")
@@ -231,23 +233,14 @@ def outline_importance(request, outline_id, value):
 
 
 @login_required
-def outline_view(request, outline_id):
-    """View a single outline with its tree."""
-    outline = get_object_or_404(Outline, id=outline_id, user=request.user)
-    root_items = outline.get_root_items()
-
-    context = {
-        "app": "outlines",
-        "outline": outline,
-        "root_items": root_items,
-    }
-    return render(request, "outlines/outline.html", context)
-
-
-@login_required
 def outline_standalone(request, outline_id):
     """View a single outline in standalone mode (no nav)."""
     outline = get_object_or_404(Outline, id=outline_id, user=request.user)
+
+    # Update viewed_at timestamp
+    outline.viewed_at = timezone.now()
+    outline.save(update_fields=["viewed_at"])
+
     root_items = outline.get_root_items()
 
     context = {
@@ -417,6 +410,16 @@ def item_toggle_collapse(request, item_id):
     """Toggle collapsed state."""
     item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)
     item.collapsed = not item.collapsed
+    item.save()
+
+    return render(request, "outlines/item.html", {"item": item})
+
+
+@login_required
+def item_toggle_heading(request, item_id):
+    """Toggle heading state."""
+    item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)
+    item.heading = not item.heading
     item.save()
 
     return render(request, "outlines/item.html", {"item": item})
@@ -614,3 +617,29 @@ def batch_outdent(request, outline_id):
         next_order += 1
 
     return HttpResponse(status=204)
+
+
+# =============================================================================
+# Import from Markdown
+# =============================================================================
+
+
+@login_required
+def import_modal(request, outline_id):
+    """Show the import from markdown modal."""
+    outline = get_object_or_404(Outline, id=outline_id, user=request.user)
+    return render(request, "outlines/import-modal.html", {"outline": outline})
+
+
+@login_required
+@require_POST
+def import_markdown(request, outline_id):
+    """Import markdown list into outline items."""
+    outline = get_object_or_404(Outline, id=outline_id, user=request.user)
+    markdown_text = request.POST.get("markdown", "")
+
+    # Parse markdown and create items
+    import_markdown_to_outline(outline, markdown_text)
+
+    # Return 204 to close modal, trigger tree refresh
+    return HttpResponse(status=204, headers={"HX-Trigger": "outlineChanged"})
