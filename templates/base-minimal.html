@@ -8,15 +8,17 @@
       LawAdmin
     {% endblock title %}
   </title>
-  {% if env == 'dev' %}
-    <link rel="icon"
-          type="image/x-icon"
-          href="{% static 'images/briefcase-fill-dev.svg' %}" />
-  {% else %}
-    <link rel="icon"
-          type="image/x-icon"
-          href="{% static 'images/briefcase-fill.svg' %}" />
-  {% endif %}
+  {% block favicon %}
+    {% if env == 'dev' %}
+      <link rel="icon"
+            type="image/svg+xml"
+            href="{% static 'images/briefcase-fill-dev.svg' %}" />
+    {% else %}
+      <link rel="icon"
+            type="image/svg+xml"
+            href="{% static 'images/briefcase-fill.svg' %}" />
+    {% endif %}
+  {% endblock favicon %}
   <!-- set viewport for mobile devices -->
   <meta name="viewport" content="width = device-width, initial-scale = 1" />
   <!-- Icons -->

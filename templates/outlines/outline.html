@@ -2,32 +2,36 @@
 {% load static %}
 {% block content %}
   {% csrf_token %}
-  <div id="content" class="container content">
-    <div class="section canvas outline-section">
-      <div class="outline-container">
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <a href="{% url 'outlines:index' %}" class="back-link">
-              <i class="bi bi-arrow-left"></i>
-            </a>
-            <h1>{{ outline.title }}</h1>
-            {% if outline.matter %}<span class="app-badge app-badge-lg">{{ outline.matter.name }}</span>{% endif %}
-          </div>
+  <div class="outline-page">
+    <div class="outline-canvas">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <a href="{% url 'outlines:index' %}" class="back-link">
+            <i class="bi bi-arrow-left"></i>
+          </a>
+          <h1>{{ outline.title }}</h1>
+          {% if outline.matter %}<span class="app-badge app-badge-lg">{{ outline.matter.name }}</span>{% endif %}
+        </div>
+        <div class="toolbar-right">
           <a href="#"
              hx-get="{% url 'outlines:shortcuts' %}"
              hx-target="#htmx-modal-container"
              data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container">
-            <i class="bi bi-keyboard"></i> Shortcuts
+             data-bs-target="#htmx-modal-container"
+             title="Keyboard shortcuts">
+            <i class="bi bi-keyboard"></i>
+          </a>
+          <a href="#" onclick="window.close(); return false;" title="Close">
+            <i class="bi bi-x-lg"></i>
           </a>
         </div>
-        <div id="outline-tree"
-             class="outline-tree"
-             data-outline-id="{{ outline.id }}"
-             hx-trigger="outlineChanged from:body"
-             hx-get="{% url 'outlines:tree' outline.id %}"
-             hx-target="this">{% include "outlines/tree.html" %}</div>
       </div>
+      <div id="outline-tree"
+           class="outline-tree"
+           data-outline-id="{{ outline.id }}"
+           hx-trigger="outlineChanged from:body"
+           hx-get="{% url 'outlines:tree' outline.id %}"
+           hx-target="this">{% include "outlines/tree.html" %}</div>
     </div>
   </div>
   <script src="{% static 'js/outlines.js' %}"></script>

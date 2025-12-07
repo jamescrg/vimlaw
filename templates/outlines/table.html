@@ -60,13 +60,7 @@
                    hx-get="{% url 'outlines:edit' outline.id %}"
                    hx-target="#htmx-modal-container"
                    data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Edit</a>
-              </li>
-              <li>
-                <a class="dropdown-item text-danger"
-                   href="#"
-                   hx-post="{% url 'outlines:delete' outline.id %}"
-                   hx-confirm="Delete this outline and all its items?"><i class="bi bi-trash"></i> Delete</a>
+                   data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Rename</a>
               </li>
             </ul>
           </div>

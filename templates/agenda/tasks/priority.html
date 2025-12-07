@@ -9,7 +9,7 @@
         <a class="dropdown-item"
            href="#"
            hx-get="{% url 'agenda:tasks-task-priority' task_id=task.id priority=forloop.counter %}"
-           hx-target="#tasks"><i class="bi bi-flag"></i> Priority {{ forloop.counter }}</a>
+           hx-target="#tasks"><i class="bi bi-flag"></i> {{ forloop.counter }}</a>
       </li>
     {% endfor %}
   </ul>

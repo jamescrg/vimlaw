@@ -13,7 +13,7 @@
            href="#"
            hx-post="{% url 'case:highlight-importance' highlight.id i %}"
            hx-target="#highlight-importance-{{ highlight.id }}"
-           hx-swap="outerHTML"><i class="bi bi-flag"></i>Importance {{ i }}</a>
+           hx-swap="outerHTML"><i class="bi bi-flag"></i> {{ i }}</a>
       </li>
     {% endfor %}
   </ul>

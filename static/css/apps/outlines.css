@@ -100,22 +100,24 @@
    Outline View (Single Outline)
    ============================================================================= */
 
-.outline-container {
-  max-width: 60rem;
+.outline-page {
+  max-width: 62rem;
   margin: 0 auto;
+  padding: 1rem;
 }
 
-/* Standalone mode - full viewport height */
-.standalone-content {
+.outline-page.standalone {
   min-height: 100vh;
-  padding-top: 1rem;
 }
 
-.standalone-content .outline-section {
-  margin: 0;
+.outline-canvas {
+  background: var(--background-panel);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  min-height: 32rem;
 }
 
-.outline-section .toolbar {
+.outline-canvas .toolbar {
   border-bottom: 1px solid var(--border-light);
   margin-bottom: 0.5rem;
 }
