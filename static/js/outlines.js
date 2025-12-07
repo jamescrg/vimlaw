@@ -607,11 +607,22 @@
 
   // Handle item deletion events
   document.body.addEventListener('itemDeleted', function(event) {
+    const itemId = event.detail?.itemId;
     const focusId = event.detail?.focusId;
+
+    // Remove the deleted item from DOM
+    if (itemId) {
+      const deletedItem = getItemElement(itemId);
+      if (deletedItem) {
+        deletedItem.remove();
+      }
+    }
+
+    // Focus the previous item
     if (focusId) {
       const itemEl = getItemElement(focusId);
       if (itemEl) {
-        setTimeout(() => focusItem(itemEl), 50);
+        setTimeout(() => setFocusedItem(itemEl), 50);
       }
     }
   });
