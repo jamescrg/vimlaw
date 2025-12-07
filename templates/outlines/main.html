@@ -1,21 +1,19 @@
-{% extends "base.html" %}
-{% block content %}
-  <div id="content" class="container content">
-    <div class="section canvas">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <h1>Outlines</h1>
-          <a href="#"
-             hx-get="{% url 'outlines:add' %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"><i class="bi bi-plus-lg"></i></a>
-        </div>
+{% extends "case/index.html" %}
+{% block subcontent %}
+  <div class="section canvas">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <h1>Outlines</h1>
+        <a href="#"
+           hx-get="{% url 'outlines:add' %}"
+           hx-target="#htmx-modal-container"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container"><i class="bi bi-plus-lg"></i></a>
       </div>
-      <div id="outlines-list"
-           hx-get="{% url 'outlines:list' %}"
-           hx-trigger="outlinesChanged from:body"
-           hx-target="this">{% include "outlines/list.html" %}</div>
     </div>
+    <div id="outlines-list"
+         hx-get="{% url 'outlines:list' %}"
+         hx-trigger="outlinesChanged from:body"
+         hx-target="this">{% include "outlines/list.html" %}</div>
   </div>
-{% endblock content %}
+{% endblock subcontent %}

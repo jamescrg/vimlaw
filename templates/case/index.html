@@ -44,6 +44,9 @@
         <li {% if subapp == "facts" %}class="active"{% endif %}>
           <a href="{% url 'case:facts-index' %}">Facts</a>
         </li>
+        <li {% if subapp == "outlines" %}class="active"{% endif %}>
+          <a href="{% url 'outlines:index' %}">Outlines</a>
+        </li>
         <li {% if subapp == "labels" %}class="active"{% endif %}>
           <a href="{% url 'case:labels-index' %}">Labels</a>
         </li>

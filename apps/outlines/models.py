@@ -10,9 +10,7 @@ class Outline(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     matter = models.ForeignKey(
         Matter,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        on_delete=models.CASCADE,
         related_name="outlines",
     )
     title = models.CharField(max_length=200)

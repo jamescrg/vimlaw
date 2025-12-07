@@ -6,6 +6,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
+from apps.case.documents.get_document_data import get_selected_matter
+
 from .forms import OutlineForm
 from .models import Outline, OutlineItem
 
@@ -17,10 +19,14 @@ from .models import Outline, OutlineItem
 @login_required
 def index(request):
     """Main outlines page."""
+    matter, matters = get_selected_matter(request)
     outlines = Outline.objects.filter(user=request.user)
 
     context = {
-        "app": "outlines",
+        "app": "documents",
+        "subapp": "outlines",
+        "matter": matter,
+        "matters": matters,
         "outlines": outlines,
     }
     return render(request, "outlines/main.html", context)
@@ -42,17 +48,20 @@ def outlines_list(request):
 @login_required
 def outline_add(request):
     """Create a new outline."""
+    matter, _ = get_selected_matter(request)
+
     if request.method == "POST":
-        form = OutlineForm(request.POST, user=request.user)
+        form = OutlineForm(request.POST)
         if form.is_valid():
             outline = form.save(commit=False)
             outline.user = request.user
+            outline.matter = matter
             outline.save()
             # Create initial empty item
             OutlineItem.objects.create(outline=outline, content="", order=0)
             return HttpResponse(status=204, headers={"HX-Trigger": "outlinesChanged"})
     else:
-        form = OutlineForm(user=request.user)
+        form = OutlineForm()
 
     return render(request, "outlines/form.html", {"form": form})
 
@@ -63,12 +72,12 @@ def outline_edit(request, outline_id):
     outline = get_object_or_404(Outline, id=outline_id, user=request.user)
 
     if request.method == "POST":
-        form = OutlineForm(request.POST, instance=outline, user=request.user)
+        form = OutlineForm(request.POST, instance=outline)
         if form.is_valid():
             form.save()
             return HttpResponse(status=204, headers={"HX-Trigger": "outlinesChanged"})
     else:
-        form = OutlineForm(instance=outline, user=request.user)
+        form = OutlineForm(instance=outline)
 
     return render(request, "outlines/form.html", {"form": form, "outline": outline})
 

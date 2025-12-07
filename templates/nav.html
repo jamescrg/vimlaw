@@ -31,9 +31,6 @@
         <li {% if app == 'documents' %}class="active"{% endif %}>
           <a id="nav-documents" href={% url 'case:index' %}>Case</a>
         </li>
-        <li {% if app == 'outlines' %}class="active"{% endif %}>
-          <a id="nav-outlines" href={% url 'outlines:index' %}>Outlines</a>
-        </li>
       </ul>
       <ul class="navbar-right">
         <li {% if app == 'search' %}class="active"{% endif %}>
