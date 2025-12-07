@@ -1,6 +1,6 @@
 
 .navbar {
-	background: var(--background-nav);
+  background: var(--background-nav);
   margin-bottom: 0;
   padding: 0.25rem 0 0 0;
 }
@@ -24,6 +24,7 @@
 }
 
 .navbar .active {
+  /* background: linear-gradient(to bottom, var(--violet-muted), var(--background-nav-tab-active) 70%); */
   background: var(--background-nav-tab-active);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   position: relative;
@@ -80,7 +81,7 @@
 }
 
 .navbar-sub .active {
-  background-color: var(--background-subnav-tab-active);
+  background: var(--background-subnav-tab-active);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   position: relative;
 }

@@ -4,7 +4,8 @@ html {
 }
 
 body {
-  background: var(--background-body);
+  background: linear-gradient(to bottom, var(--stone-300) 10%, var(--violet-muted) 40%, var(--violet-muted) 60%, var(--stone-300));
+  background-attachment: fixed;
   color: var(--color-primary);
   font-family: 'Open Sans', sans-serif;
   font-size: 1em;
