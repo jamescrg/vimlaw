@@ -250,7 +250,7 @@ def documents_add(request, matter_id=None):
                 from django_q.tasks import async_task
 
                 async_task(
-                    "apps.case.tasks.process_document_ocr",
+                    "apps.case.documents.tasks.process_document_ocr",
                     document.id,
                     task_name=f"OCR-{document.id}",
                     group="ocr_processing",
@@ -342,7 +342,7 @@ def documents_edit(request, document_id):
                     from django_q.tasks import async_task
 
                     async_task(
-                        "apps.case.tasks.process_document_ocr",
+                        "apps.case.documents.tasks.process_document_ocr",
                         document.id,
                         task_name=f"OCR-{document.id}",
                         group="ocr_processing",
@@ -687,7 +687,7 @@ def retry_ocr(request, document_id):
     from django_q.tasks import async_task
 
     async_task(
-        "apps.case.tasks.process_document_ocr",
+        "apps.case.documents.tasks.process_document_ocr",
         document.id,
         task_name=f"OCR-Retry-{document.id}",
         group="ocr_processing",
