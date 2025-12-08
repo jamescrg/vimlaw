@@ -108,6 +108,14 @@ class TestHighlight:
         citation = highlight.citation
         assert "at 1" in citation
 
+    def test_citation_preserves_abbreviation_period(self, highlight):
+        """Citation should preserve the period after abbreviated words."""
+        highlight.paragraph_number = None
+        highlight.save()
+        citation = highlight.citation
+        # Should be "(Abbrev. at 1.)" not "(Abbrev at 1.)"
+        assert ". at " in citation
+
     def test_importance_default(self, highlight):
         assert highlight.importance == 5
 
