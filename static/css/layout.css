@@ -4,7 +4,10 @@ html {
 }
 
 body {
-  background: var(--background-body);
+  background:
+    linear-gradient(to bottom, var(--stone-300) 20%, transparent 40%, transparent 100%, var(--stone-300)),
+    linear-gradient(to right, var(--violet-muted), var(--lime-muted));
+  background-attachment: fixed;
   color: var(--color-primary);
   font-family: 'Open Sans', sans-serif;
   font-size: 1em;
