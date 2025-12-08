@@ -3,7 +3,10 @@ Views for AI chat within case analysis.
 """
 
 import logging
+from datetime import date
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -359,3 +362,51 @@ def rename_form(request, conv_id):
             "matter": matter,
         },
     )
+
+
+@login_required
+def create_prompt(request):
+    """Generate a prompt stuffing document for external AI chat clients."""
+    matter, _ = get_selected_matter(request)
+
+    if not matter:
+        return redirect("case:ai-index")
+
+    # Load ai-prompt.md content
+    legal_md_path = Path(settings.BASE_DIR) / "docs" / "ai-prompt.md"
+    try:
+        legal_guidelines = legal_md_path.read_text()
+    except FileNotFoundError:
+        legal_guidelines = "(Guidelines file not found)"
+
+    # Determine user role description
+    user = request.user
+    if user.is_attorney:
+        role_description = f"{user.get_full_name()} is an attorney"
+    else:
+        role_description = (
+            f"{user.get_full_name()} is a paralegal supporting an attorney"
+        )
+
+    # Build the prompt text with proper markdown formatting
+    prompt_text = f"""## Request Date
+
+{date.today().strftime("%B %d, %Y")}
+
+## Requesting Party
+
+- Name: {user.get_full_name()}
+- Email: {user.email}
+- Role: {role_description}
+- Law Firm: Craig Legal, LLC
+
+## General Guidelines for Responding
+
+{legal_guidelines}"""
+
+    context = {
+        "matter": matter,
+        "prompt_text": prompt_text,
+    }
+
+    return render(request, "case/ai/prompt.html", context)

@@ -346,4 +346,9 @@ urlpatterns = [
         ai.rename_form,
         name="ai-rename-form",
     ),
+    path(
+        "case/ai/create-prompt/",
+        ai.create_prompt,
+        name="ai-create-prompt",
+    ),
 ]

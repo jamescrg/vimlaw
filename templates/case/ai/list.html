@@ -9,6 +9,12 @@
               title="New conversation">
         <i class="bi bi-plus-lg"></i>
       </button>
+      <a href="{% url 'case:ai-create-prompt' %}"
+         target="_blank"
+         class="btn-icon"
+         title="Create prompt for external AI">
+        <i class="bi bi-file-text"></i>
+      </a>
       <script>
         document.getElementById('newConversationBtn').addEventListener('click', function() {
           fetch('{% url "case:ai-new-conversation" %}', {
