@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 MAX_CONTEXT_CHARS = 80000  # ~20k tokens for context, leaving room for conversation
 
 # Path to the legal AI instructions file
-LEGAL_PROMPT_FILE = Path(settings.BASE_DIR) / "CLAUDE-LEGAL.md"
+LEGAL_PROMPT_FILE = Path(settings.BASE_DIR) / "docs" / "ai-prompt.md"
 
 MATTER_CONTEXT_TEMPLATE = """
 ## Current Matter: {matter_name}
@@ -69,7 +69,7 @@ MATTER_CONTEXT_TEMPLATE = """
 
 def load_legal_prompt() -> str:
     """
-    Load the legal AI instructions from CLAUDE-LEGAL.md.
+    Load the legal AI instructions from docs/ai-prompt.md.
 
     This file is read fresh on each call so edits take effect immediately.
     """
@@ -159,7 +159,7 @@ def assemble_matter_context(matter) -> str:
     sections["settlement"] = settlement
 
     # Build the full system prompt:
-    # 1. Load legal instructions from CLAUDE-LEGAL.md (read fresh each time)
+    # 1. Load legal instructions from docs/ai-prompt.md (read fresh each time)
     # 2. Append matter-specific context
     legal_prompt = load_legal_prompt()
     matter_context = MATTER_CONTEXT_TEMPLATE.format(matter_name=matter.name, **sections)
