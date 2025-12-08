@@ -1,15 +1,26 @@
 {% load humanize %}
 <div class="toolbar ai-toolbar">
   <div class="toolbar-left">
+    <h2>Conversations</h2>
     <div class="filter-tools">
-      <h1>Conversations</h1>
-      <button type="button"
-              class="btn-icon"
-              hx-post="{% url 'case:ai-new-conversation' %}"
-              hx-on::after-request="if(event.detail.successful) window.open(event.detail.xhr.responseText, '_blank')"
-              title="New conversation">
-        <i class="bi bi-plus-lg"></i>
-      </button>
+      <a href="{% url 'case:ai-new-conversation-view' %}?llm=claude"
+         target="_blank"
+         class="btn-sm ai-new-btn ai-new-claude"
+         title="New Claude conversation">
+        <i class="bi bi-plus-lg"></i> Claude
+      </a>
+      <a href="{% url 'case:ai-new-conversation-view' %}?llm=gemini-flash"
+         target="_blank"
+         class="btn-sm ai-new-btn ai-new-gemini-flash"
+         title="New Gemini Flash conversation">
+        <i class="bi bi-plus-lg"></i> Gemini Flash
+      </a>
+      <a href="{% url 'case:ai-new-conversation-view' %}?llm=gemini-pro"
+         target="_blank"
+         class="btn-sm ai-new-btn ai-new-gemini-pro"
+         title="New Gemini Pro conversation">
+        <i class="bi bi-plus-lg"></i> Gemini Pro
+      </a>
     </div>
   </div>
 </div>

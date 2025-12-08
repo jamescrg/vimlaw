@@ -34,7 +34,7 @@
   <table class="table ai-conversations-table">
     <tr>
       <th class="created">Date</th>
-      <th class="title">Title</th>
+      <th class="title">Conversation</th>
       <th class="llm">Model</th>
       <th class="messages">Messages</th>
       <th class="updated">Last Updated</th>
@@ -58,8 +58,9 @@
                 <a class="dropdown-item"
                    href="#"
                    hx-get="{% url 'case:ai-rename-form' conv.id %}"
-                   hx-target="#ai-conversations"
-                   hx-swap="innerHTML"><i class="bi bi-pencil"></i> Edit Title</a>
+                   hx-target="#htmx-modal-container"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Rename</a>
               </li>
               <li>
                 <a class="dropdown-item text-danger"

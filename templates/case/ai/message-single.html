@@ -1,0 +1,28 @@
+{% load humanize markdown_extras %}
+<div class="ai-message ai-message-{{ message.role }}"
+     id="message-{{ message.id }}">
+  <div class="ai-message-header">
+    {% if message.role == "user" %}
+      <i class="bi bi-person-circle"></i>
+      <span>You</span>
+    {% else %}
+      <i class="bi bi-robot"></i>
+      <span>Assistant</span>
+    {% endif %}
+    <span class="ai-message-time">{{ message.created_at|naturaltime }}</span>
+  </div>
+  <div class="ai-message-content">
+    {% if message.role == "assistant" %}
+      <div class="ai-message-text ai-markdown">{{ message.content|render_markdown }}</div>
+    {% else %}
+      <div class="ai-message-text">{{ message.content|linebreaks }}</div>
+    {% endif %}
+    {% if message.role == "assistant" %}
+      <button class="ai-copy-btn btn-icon"
+              onclick="navigator.clipboard.writeText(this.closest('.ai-message-content').querySelector('.ai-message-text').innerText).then(() => { this.innerHTML = '<i class=\'bi bi-check\'></i>'; setTimeout(() => { this.innerHTML = '<i class=\'bi bi-clipboard\'></i>'; }, 2000); })"
+              title="Copy to clipboard">
+        <i class="bi bi-clipboard"></i>
+      </button>
+    {% endif %}
+  </div>
+</div>

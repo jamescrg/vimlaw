@@ -1,0 +1,35 @@
+{% if error %}<div class="ai-attachments-error">{{ error }}</div>{% endif %}
+{% if attachments %}
+  <div class="ai-attachments-list"
+       {% if attachments|length %} {% for a in attachments %} {% if a.ocr_status == "pending" or a.ocr_status == "processing" %} hx-get="{% url 'case:ai-attachment-status' conversation.id %}" hx-trigger="every 2s" hx-swap="outerHTML" {% endif %}
+       {% endfor %}
+       {% endif %}>
+    {% for attachment in attachments %}
+      <div class="ai-attachment-chip ai-attachment-{{ attachment.ocr_status }}">
+        <i class="bi bi-file-pdf"></i>
+        <span class="ai-attachment-name" title="{{ attachment.filename }}">{{ attachment.filename|truncatechars:20 }}</span>
+        {% if attachment.ocr_status == "pending" or attachment.ocr_status == "processing" %}
+          <span class="ai-attachment-status">
+            <i class="bi bi-hourglass-split spin"></i>
+          </span>
+        {% elif attachment.ocr_status == "completed" %}
+          <span class="ai-attachment-status">
+            <i class="bi bi-check-lg"></i>
+          </span>
+        {% elif attachment.ocr_status == "failed" %}
+          <span class="ai-attachment-status" title="OCR failed">
+            <i class="bi bi-exclamation-triangle"></i>
+          </span>
+        {% endif %}
+        <button type="button"
+                class="ai-attachment-remove"
+                hx-post="{% url 'case:ai-delete-attachment' attachment.id %}"
+                hx-target=".ai-attachments-list"
+                hx-swap="outerHTML"
+                title="Remove attachment">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

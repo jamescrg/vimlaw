@@ -1,0 +1,18 @@
+<div id="ai-status-indicator"
+     hx-get="{% url 'case:ai-status' conversation.id %}"
+     hx-trigger="load delay:1s"
+     hx-swap="outerHTML">
+  <div class="ai-status-content">
+    {% if status == "connecting" %}
+      <i class="bi bi-cloud-arrow-up spin"></i>
+    {% elif status == "thinking" %}
+      <i class="bi bi-lightbulb pulse"></i>
+    {% elif status == "generating" %}
+      <i class="bi bi-pencil-square pulse"></i>
+    {% else %}
+      <i class="bi bi-hourglass-split spin"></i>
+    {% endif %}
+    <span class="ai-status-message">{{ message }}</span>
+    {% if elapsed_seconds %}<span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>{% endif %}
+  </div>
+</div>

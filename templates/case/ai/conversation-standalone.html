@@ -26,16 +26,16 @@
   <link rel="stylesheet" href="{% static_v 'css/apps/case/ai.css' %}" />
 </head>
 <body class="ai-chat-body" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  <header class="ai-chat-header">
-    <h1 id="conversationTitle">{{ conversation.title }}</h1>
-    <span class="app-badge badge-purple">{{ matter.name }}</span>
-    <span class="ai-llm-badge-spacer"></span>
-    <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
-  </header>
   <div class="ai-chat-layout">
-    <aside class="ai-chat-sidebar">
+    <aside class="ai-chat-sidebar" id="historySidebar">
       <div class="ai-sidebar-header">
         <h2>History</h2>
+        <button type="button"
+                class="btn-icon ai-sidebar-toggle"
+                onclick="toggleSidebar()"
+                title="Collapse sidebar">
+          <i class="bi bi-chevron-left"></i>
+        </button>
       </div>
       <div class="ai-sidebar-list" id="promptList">
         {% for message in messages %}
@@ -53,31 +53,47 @@
       </div>
     </aside>
     <main class="ai-chat-main">
+      <header class="ai-chat-header">
+        <span class="app-badge badge-purple">{{ matter.name }}</span>
+        <h1 id="conversationTitle">{{ conversation.title }}</h1>
+        <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
+      </header>
       <div id="messageContainer" class="ai-messages">{% include "case/ai/messages.html" %}</div>
       <div class="ai-input-container">
-        <form id="chatForm"
-              hx-post="{% url 'case:ai-send' %}"
-              hx-target="#messageContainer"
-              hx-swap="innerHTML scroll:#messageContainer:bottom"
-              hx-indicator="#ai-loading"
-              hx-disabled-elt="button[type='submit']"
-              hx-on::after-request="document.getElementById('aiMessageInput').value = ''; updatePromptList(); handleConversationCreated(event);">
-          <input type="hidden"
-                 name="conversation_id"
-                 id="conversationId"
-                 value="{% if not is_new %}{{ conversation.id }}{% endif %}">
-          <input type="hidden" name="llm" value="{{ conversation.llm }}">
-          <textarea name="message"
-                    id="aiMessageInput"
-                    placeholder="Ask about this matter..."
-                    rows="2"
-                    required
-                    autofocus
-                    onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
-        </form>
-        <div id="ai-loading" class="htmx-indicator ai-loading">
-          <i class="bi bi-hourglass-split spin"></i>
-          <span>Thinking...</span>
+        <div id="attachmentsList">
+          {% if not is_new %}
+            {% include "case/ai/attachments.html" with attachments=conversation.attachments.all %}
+          {% endif %}
+        </div>
+        <div class="ai-input-row">
+          <input type="file"
+                 id="fileInput"
+                 accept=".pdf"
+                 class="hidden-file-input"
+                 onchange="uploadFile(this)">
+          <button type="button"
+                  class="btn-icon ai-upload-btn"
+                  onclick="document.getElementById('fileInput').click()"
+                  title="Attach PDF">
+            <i class="bi bi-paperclip"></i>
+          </button>
+          <form id="chatForm"
+                hx-post="{% url 'case:ai-send' %}"
+                hx-target="#messageContainer"
+                hx-swap="innerHTML">
+            <input type="hidden"
+                   name="conversation_id"
+                   id="conversationId"
+                   value="{% if not is_new %}{{ conversation.id }}{% endif %}">
+            <input type="hidden" name="llm" value="{{ conversation.llm }}">
+            <textarea name="message"
+                      id="aiMessageInput"
+                      placeholder="Ask about this matter..."
+                      rows="2"
+                      required
+                      autofocus
+                      onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
+          </form>
         </div>
       </div>
     </main>
@@ -92,6 +108,27 @@
         setTimeout(() => element.classList.remove('ai-message-highlight'), 2000);
       }
     }
+
+    function scrollMessagesToBottom() {
+      setTimeout(() => {
+        const container = document.getElementById('messageContainer');
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 50);
+    }
+
+    function clearChatInput() {
+      document.getElementById('aiMessageInput').value = '';
+    }
+
+    // Handle form submission completion
+    document.getElementById('chatForm').addEventListener('htmx:afterRequest', function(event) {
+      clearChatInput();
+      updatePromptList();
+      handleConversationCreated(event);
+      scrollMessagesToBottom();
+    });
 
     function updatePromptList() {
       const messages = document.querySelectorAll('.ai-message-user');
@@ -136,5 +173,59 @@
         htmx.trigger(document.getElementById('chatForm'), 'htmx:abort');
       }
     });
+
+    // Scroll to bottom when status indicator swaps content
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+      if (e.target.id === 'messageContainer' || e.target.closest('#messageContainer')) {
+        scrollMessagesToBottom();
+      }
+    });
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('historySidebar');
+      const icon = sidebar.querySelector('.ai-sidebar-toggle i');
+      sidebar.classList.toggle('collapsed');
+      if (sidebar.classList.contains('collapsed')) {
+        icon.className = 'bi bi-chevron-right';
+      } else {
+        icon.className = 'bi bi-chevron-left';
+      }
+    }
+
+    function uploadFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      // Check if conversation exists
+      const convId = document.getElementById('conversationId').value;
+      if (!convId) {
+        alert('Please send a message first to start the conversation before uploading files.');
+        input.value = '';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      fetch('/case/ai/conversations/' + convId + '/upload/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+      })
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('attachmentsList').innerHTML = html;
+        htmx.process(document.getElementById('attachmentsList'));
+      })
+      .catch(error => {
+        console.error('Upload failed:', error);
+        alert('Failed to upload file. Please try again.');
+      });
+
+      // Clear the input so the same file can be selected again
+      input.value = '';
+    }
   </script>
 </body>

@@ -34,3 +34,6 @@
     <p class="text-muted">I have access to all documents, contacts, timeline, and case information.</p>
   </div>
 {% endfor %}
+{% if is_processing %}
+  {% include "case/ai/status.html" with status="starting" message="Starting..." %}
+{% endif %}

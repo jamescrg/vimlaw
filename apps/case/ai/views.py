@@ -3,11 +3,14 @@ Views for AI chat within case analysis.
 """
 
 import logging
+import threading
+import time
 from datetime import date
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -15,20 +18,9 @@ from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Fact, Highlight
 from apps.outlines.models import Outline
 
-from .anthropic_client import send_to_claude
 from .context import assemble_matter_context
-from .gemini_client import send_to_gemini
-from .models import Conversation, Message
-
-
-def send_to_llm(llm: str, system_context: str, messages: list[dict]):
-    """Route to the appropriate LLM based on conversation setting."""
-    if llm == "gemini-flash":
-        return send_to_gemini(system_context, messages, model="gemini-2.5-flash")
-    elif llm == "gemini-pro":
-        return send_to_gemini(system_context, messages, model="gemini-2.5-pro")
-    return send_to_claude(system_context, messages)
-
+from .models import ChatAttachment, Conversation, Message
+from .tasks import process_ai_request, process_chat_attachment_ocr
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +164,7 @@ def message_list(request):
 
 @login_required
 def send_message(request):
-    """Handle user message submission and get AI response."""
+    """Handle user message submission and start background AI processing."""
     matter, _ = get_selected_matter(request)
 
     if not matter:
@@ -215,40 +207,32 @@ def send_message(request):
             conversation.title += "..."
         conversation.save()
 
-    # Save user message
+    # Save user message immediately
     Message.objects.create(conversation=conversation, role="user", content=user_message)
 
-    # Assemble context and get AI response
-    context_text = assemble_matter_context(matter, user=request.user)
+    # Assemble context and get chat history for AI
+    context_text = assemble_matter_context(
+        matter, user=request.user, conversation=conversation
+    )
     chat_history = list(conversation.messages.values("role", "content"))
 
-    try:
-        response_text, input_tokens, output_tokens = send_to_llm(
-            conversation.llm, context_text, chat_history
-        )
+    # Initialize status in cache
+    cache_key = f"ai_status_{conversation.id}"
+    cache.set(
+        cache_key,
+        {"status": "starting", "message": "Starting..."},
+        timeout=600,
+    )
 
-        # Save assistant message
-        Message.objects.create(
-            conversation=conversation,
-            role="assistant",
-            content=response_text,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-        )
+    # Start background thread for AI processing
+    thread = threading.Thread(
+        target=process_ai_request,
+        args=(conversation.id, context_text, chat_history, conversation.llm),
+        daemon=True,
+    )
+    thread.start()
 
-        # Update conversation timestamp
-        conversation.save()
-
-    except Exception as e:
-        logger.exception("Error calling %s API", conversation.llm)
-        # Save error as assistant message
-        Message.objects.create(
-            conversation=conversation,
-            role="assistant",
-            content=f"Error: Unable to get response. {str(e)}",
-        )
-
-    # Return updated message list
+    # Return messages with status indicator that will poll for updates
     response = render(
         request,
         "case/ai/messages.html",
@@ -256,6 +240,7 @@ def send_message(request):
             "messages": conversation.messages.all(),
             "conversation": conversation,
             "matter": matter,
+            "is_processing": True,
         },
     )
 
@@ -265,6 +250,84 @@ def send_message(request):
         response["X-Conversation-Id"] = str(conversation.id)
 
     return response
+
+
+@login_required
+def ai_status(request, conv_id):
+    """Return current AI processing status for polling."""
+    matter, _ = get_selected_matter(request)
+
+    if not matter:
+        return HttpResponse(status=400)
+
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter=matter, user=request.user
+    )
+
+    cache_key = f"ai_status_{conv_id}"
+    status_data = cache.get(cache_key, {"status": "unknown", "message": "Checking..."})
+
+    if status_data["status"] == "complete":
+        # Save assistant message
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content=status_data["response"],
+            input_tokens=status_data.get("input_tokens"),
+            output_tokens=status_data.get("output_tokens"),
+        )
+
+        # Update conversation timestamp
+        conversation.save()
+
+        # Clear the cache
+        cache.delete(cache_key)
+
+        # Return just the new assistant message (replaces status indicator)
+        return render(
+            request,
+            "case/ai/message-single.html",
+            {
+                "message": assistant_message,
+            },
+        )
+
+    if status_data["status"] == "error":
+        # Save error as assistant message
+        error_message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content=f"Error: Unable to get response. {status_data['message']}",
+        )
+
+        # Clear the cache
+        cache.delete(cache_key)
+
+        # Return just the error message (replaces status indicator)
+        return render(
+            request,
+            "case/ai/message-single.html",
+            {
+                "message": error_message,
+            },
+        )
+
+    # Calculate elapsed time if available
+    elapsed_seconds = None
+    if "started_at" in status_data:
+        elapsed_seconds = int(time.time() - status_data["started_at"])
+
+    # Still processing - return status indicator with continued polling
+    return render(
+        request,
+        "case/ai/status.html",
+        {
+            "status": status_data["status"],
+            "message": status_data["message"],
+            "conversation": conversation,
+            "elapsed_seconds": elapsed_seconds,
+        },
+    )
 
 
 @login_required
@@ -334,7 +397,7 @@ def delete_conversation(request, conv_id):
 
 @login_required
 def rename_conversation(request, conv_id):
-    """Rename a conversation - POST saves and returns list or title."""
+    """Rename a conversation - POST saves and closes modal."""
     matter, _ = get_selected_matter(request)
 
     if not matter:
@@ -350,7 +413,7 @@ def rename_conversation(request, conv_id):
             conversation.title = new_title[:255]
             conversation.save()
 
-        # Check if request came from list view or standalone view
+        # Check if request came from standalone view
         if request.headers.get("HX-Target") == "conversationTitle":
             # From standalone view - return title partial
             return render(
@@ -360,19 +423,9 @@ def rename_conversation(request, conv_id):
                     "conversation": conversation,
                 },
             )
-        else:
-            # From list view - return updated list
-            conversations = Conversation.objects.filter(
-                matter=matter, user=request.user
-            )
-            return render(
-                request,
-                "case/ai/list.html",
-                {
-                    "conversations": conversations,
-                    "matter": matter,
-                },
-            )
+
+        # From modal - return 204 to close modal and trigger list refresh
+        return HttpResponse(status=204, headers={"HX-Trigger": "conversationsChanged"})
 
     # GET - return edit form for standalone view
     return render(
@@ -386,7 +439,7 @@ def rename_conversation(request, conv_id):
 
 @login_required
 def rename_form(request, conv_id):
-    """Return rename form for list view."""
+    """Return rename modal for conversation."""
     matter, _ = get_selected_matter(request)
 
     if not matter:
@@ -396,14 +449,11 @@ def rename_form(request, conv_id):
         Conversation, pk=conv_id, matter=matter, user=request.user
     )
 
-    conversations = Conversation.objects.filter(matter=matter, user=request.user)
-
     return render(
         request,
-        "case/ai/list-rename.html",
+        "case/ai/rename-modal.html",
         {
-            "conversations": conversations,
-            "editing_conversation": conversation,
+            "conversation": conversation,
             "matter": matter,
         },
     )
@@ -536,3 +586,113 @@ def create_prompt(request):
     }
 
     return render(request, "case/ai/prompt.html", context)
+
+
+@login_required
+def chat_upload(request, conv_id):
+    """Handle file upload to chat conversation."""
+    matter, _ = get_selected_matter(request)
+
+    if not matter:
+        return HttpResponse(status=400)
+
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter=matter, user=request.user
+    )
+
+    uploaded_file = request.FILES.get("file")
+    if not uploaded_file:
+        return HttpResponse(status=400)
+
+    # Validate file extension (PDFs only)
+    filename = uploaded_file.name
+    if not filename.lower().endswith(".pdf"):
+        return render(
+            request,
+            "case/ai/attachments.html",
+            {
+                "conversation": conversation,
+                "error": "Only PDF files are allowed",
+            },
+        )
+
+    # Create the attachment
+    attachment = ChatAttachment.objects.create(
+        conversation=conversation,
+        file=uploaded_file,
+        filename=filename,
+        ocr_status="pending",
+    )
+
+    # Start background OCR processing
+    thread = threading.Thread(
+        target=process_chat_attachment_ocr,
+        args=(attachment.id,),
+        daemon=True,
+    )
+    thread.start()
+
+    # Return updated attachments list
+    return render(
+        request,
+        "case/ai/attachments.html",
+        {
+            "conversation": conversation,
+            "attachments": conversation.attachments.all(),
+        },
+    )
+
+
+@login_required
+def chat_attachment_status(request, conv_id):
+    """Return current attachment status for polling."""
+    matter, _ = get_selected_matter(request)
+
+    if not matter:
+        return HttpResponse(status=400)
+
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter=matter, user=request.user
+    )
+
+    return render(
+        request,
+        "case/ai/attachments.html",
+        {
+            "conversation": conversation,
+            "attachments": conversation.attachments.all(),
+        },
+    )
+
+
+@login_required
+def delete_attachment(request, attachment_id):
+    """Delete a chat attachment."""
+    matter, _ = get_selected_matter(request)
+
+    if not matter:
+        return HttpResponse(status=400)
+
+    attachment = get_object_or_404(
+        ChatAttachment,
+        pk=attachment_id,
+        conversation__matter=matter,
+        conversation__user=request.user,
+    )
+
+    conversation = attachment.conversation
+    attachment.file.delete()  # Delete the file from storage
+    attachment.delete()
+
+    # Return updated attachments list
+    return render(
+        request,
+        "case/ai/attachments.html",
+        {
+            "conversation": conversation,
+            "attachments": conversation.attachments.all(),
+        },
+    )

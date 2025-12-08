@@ -319,6 +319,7 @@ urlpatterns = [
     path("case/ai/list/", ai.ai_list, name="ai-list"),
     path("case/ai/messages/", ai.message_list, name="ai-messages"),
     path("case/ai/send/", ai.send_message, name="ai-send"),
+    path("case/ai/status/<int:conv_id>/", ai.ai_status, name="ai-status"),
     path("case/ai/conversations/", ai.conversation_list, name="ai-conversations"),
     path(
         "case/ai/conversations/new/",
@@ -354,5 +355,20 @@ urlpatterns = [
         "case/ai/create-prompt/",
         ai.create_prompt,
         name="ai-create-prompt",
+    ),
+    path(
+        "case/ai/conversations/<int:conv_id>/upload/",
+        ai.chat_upload,
+        name="ai-chat-upload",
+    ),
+    path(
+        "case/ai/conversations/<int:conv_id>/attachments/",
+        ai.chat_attachment_status,
+        name="ai-attachment-status",
+    ),
+    path(
+        "case/ai/attachments/<int:attachment_id>/delete/",
+        ai.delete_attachment,
+        name="ai-delete-attachment",
     ),
 ]

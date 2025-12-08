@@ -56,7 +56,7 @@ MATTER_CONTEXT_TEMPLATE = """
 
 ## Court Proceedings
 {proceedings}
-
+{chat_attachments}
 ## Outlines & Notes
 {outlines}
 
@@ -97,25 +97,27 @@ def load_legal_prompt() -> str:
         return "You are a legal assistant. Be accurate and cite sources."
 
 
-def assemble_matter_context(matter, user=None) -> str:
+def assemble_matter_context(matter, user=None, conversation=None) -> str:
     """
     Assemble context from all matter data, respecting token limits.
 
     Args:
         matter: The Matter object to assemble context for
         user: The requesting user (for request info section)
+        conversation: Optional Conversation object to include chat attachments
 
     Priority for context inclusion:
     1. Matter overview (always included)
     2. Contacts (always included)
     3. Proceedings (always included)
-    4. Outlines (highest priority user content)
-    5. Highlights (second priority)
-    6. Documents (third priority, by importance)
-    7. Timeline facts (by importance)
-    8. Tasks (pending first)
-    9. Events (upcoming first)
-    10. Settlement info
+    4. Chat attachments (if provided, highest priority for temporary context)
+    5. Outlines (highest priority user content)
+    6. Highlights (second priority)
+    7. Documents (third priority, by importance)
+    8. Timeline facts (by importance)
+    9. Tasks (pending first)
+    10. Events (upcoming first)
+    11. Settlement info
     """
     sections = {}
     remaining_budget = MAX_CONTEXT_CHARS
@@ -135,7 +137,16 @@ def assemble_matter_context(matter, user=None) -> str:
     sections["proceedings"] = proceedings
     remaining_budget -= len(proceedings)
 
-    # 4. Outlines (highest priority - user notes and research)
+    # 4. Chat attachments (if conversation provided)
+    if conversation:
+        budget_attachments = min(remaining_budget // 4, 10000)
+        chat_attachments = format_chat_attachments(conversation, budget_attachments)
+        sections["chat_attachments"] = chat_attachments
+        remaining_budget -= len(chat_attachments)
+    else:
+        sections["chat_attachments"] = ""
+
+    # 5. Outlines (highest priority - user notes and research)
     budget_outlines = min(remaining_budget // 3, 25000)
     outlines = format_outlines(matter, budget_outlines)
     sections["outlines"] = outlines
@@ -512,5 +523,43 @@ def format_settlement(matter) -> str:
         if entry.notes:
             line += f" - {entry.notes}"
         lines.append(line)
+
+    return "\n".join(lines)
+
+
+def format_chat_attachments(conversation, budget: int) -> str:
+    """Format chat attachment content for AI context."""
+    attachments = conversation.attachments.filter(ocr_status="completed")
+
+    if not attachments:
+        return ""
+
+    lines = [
+        "\n## Chat Attachments",
+        "\nThe following files were uploaded to this conversation:\n",
+    ]
+    char_count = 0
+
+    for attachment in attachments:
+        header = f"\n### {attachment.filename}\n"
+
+        if char_count + len(header) > budget:
+            lines.append("\n... (additional attachments omitted for brevity)")
+            break
+
+        lines.append(header)
+        char_count += len(header)
+
+        # Include OCR text content
+        if attachment.ocr_text:
+            text_budget = min(budget - char_count, 3000)  # Max 3k per attachment
+            content = attachment.ocr_text[:text_budget]
+            if len(attachment.ocr_text) > text_budget:
+                content += "\n... (content truncated)"
+            lines.append(content)
+            char_count += len(content)
+
+        if char_count > budget:
+            break
 
     return "\n".join(lines)

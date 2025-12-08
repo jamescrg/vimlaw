@@ -42,7 +42,9 @@
       "Bash(pre-commit run:*)",
       "Bash(isort:*)",
       "Bash(xargs basename:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(DJANGO_SETTINGS_MODULE=config.settings python:*)",
+      "WebFetch(domain:ai.google.dev)"
     ],
     "deny": []
   }

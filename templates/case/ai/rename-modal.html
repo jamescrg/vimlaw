@@ -1,0 +1,30 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Rename Conversation</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form hx-post="{% url 'case:ai-rename-conversation' conversation.id %}"
+            hx-target="#htmx-modal-container"
+            class="form-compact">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text"
+                 name="title"
+                 id="title"
+                 value="{{ conversation.title }}"
+                 class="form-control"
+                 autofocus
+                 required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
