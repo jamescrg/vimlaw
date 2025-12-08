@@ -5,11 +5,25 @@
       <h1>Conversations</h1>
       <button type="button"
               class="btn-icon"
-              hx-post="{% url 'case:ai-new-conversation' %}"
-              hx-on::after-request="if(event.detail.successful) window.open(event.detail.xhr.responseText, '_blank')"
+              id="newConversationBtn"
               title="New conversation">
         <i class="bi bi-plus-lg"></i>
       </button>
+      <script>
+        document.getElementById('newConversationBtn').addEventListener('click', function() {
+          fetch('{% url "case:ai-new-conversation" %}', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+            }
+          })
+          .then(response => response.text())
+          .then(url => {
+            window.open(url, '_blank');
+            htmx.trigger(document.body, 'conversationsChanged');
+          });
+        });
+      </script>
     </div>
   </div>
 </div>
