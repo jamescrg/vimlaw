@@ -20,6 +20,13 @@
              data-bs-toggle="dropdown"
              aria-expanded="false">{{ document.name }}</a>
           <ul class="dropdown-menu">
+            {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
+              <li>
+                <a class="dropdown-item"
+                   href="{% url 'case:viewer' document.id %}"
+                   target="_blank"><i class="bi bi-eye"></i> View Document</a>
+              </li>
+            {% endif %}
             <li>
               <a class="dropdown-item"
                  href="#"
@@ -28,13 +35,6 @@
                  data-bs-toggle="modal"
                  data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Edit Details</a>
             </li>
-            {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
-              <li>
-                <a class="dropdown-item"
-                   href="{% url 'case:viewer' document.id %}"
-                   target="_blank"><i class="bi bi-eye"></i> View Document</a>
-              </li>
-            {% endif %}
             <li>
               <a class="dropdown-item"
                  href="{% url 'case:documents-download' document.id %}"><i class="bi bi-download"></i> Download</a>
