@@ -142,20 +142,66 @@
   margin-bottom: 0.5rem;
 }
 
-.outline-canvas .toolbar-title {
+/* Outline toolbar - centered title layout like AI chat */
+.outline-toolbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+}
+
+.outline-toolbar .toolbar-left {
+  min-width: 8rem;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.25rem;
 }
 
-.outline-canvas .toolbar-subtitle {
-  font-size: 0.875rem;
-  color: var(--color-muted);
+.outline-toolbar .toolbar-center {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.outline-canvas .toolbar-left .app-badge {
-  margin-left: 2rem;
-  align-self: flex-start;
+.outline-toolbar .toolbar-right {
+  min-width: 8rem;
+  justify-content: flex-end;
+}
+
+.outline-toolbar .toolbar-subtitle {
+  font-size: 1rem;
+  color: var(--color-muted);
+  margin-top: 0.5rem;
+}
+
+.outline-title,
+.outline-title input {
+  font-size: 1.2rem;
+  font-weight: normal;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--color-primary);
+  text-align: center;
+  cursor: text;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  box-shadow: none;
+}
+
+.outline-title input {
+  display: block;
+  min-width: 10rem;
+  width: auto;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .back-link {

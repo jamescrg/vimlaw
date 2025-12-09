@@ -30,6 +30,7 @@ urlpatterns = [
     # Outline CRUD
     path("add/", views.outline_add, name="add"),
     path("<int:outline_id>/edit/", views.outline_edit, name="edit"),
+    path("<int:outline_id>/title/", views.outline_title, name="title"),
     path("<int:outline_id>/delete/", views.outline_delete, name="delete"),
     path(
         "<int:outline_id>/importance/<int:value>/",

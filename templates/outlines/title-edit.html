@@ -1,0 +1,10 @@
+<input type="text"
+       name="title"
+       value="{{ outline.title }}"
+       hx-post="{% url 'outlines:title' outline.id %}"
+       hx-trigger="blur"
+       hx-target="#outline-title"
+       hx-swap="innerHTML"
+       autofocus
+       onfocus="this.setSelectionRange(this.value.length, this.value.length)"
+       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}if(event.key==='Escape'){event.preventDefault();this.blur();}">

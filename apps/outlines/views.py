@@ -243,6 +243,20 @@ def outline_delete(request, outline_id):
 
 
 @login_required
+def outline_title(request, outline_id):
+    """Update outline title inline."""
+    outline = get_object_or_404(Outline, id=outline_id, user=request.user)
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        if title:
+            outline.title = title
+            outline.save()
+        return HttpResponse(outline.title)
+    # GET - return edit form
+    return render(request, "outlines/title-edit.html", {"outline": outline})
+
+
+@login_required
 def outline_importance(request, outline_id, value):
     """Update outline importance."""
     outline = get_object_or_404(Outline, id=outline_id, user=request.user)
