@@ -738,9 +738,15 @@
 
       // Then scroll to highlight after page renders
       setTimeout(() => {
-        const highlight = document.querySelector(`.highlight-overlay[data-highlight-id="${highlightId}"]`);
-        if (highlight) {
-          highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const container = document.querySelector(`.highlight-container[data-highlight-id="${highlightId}"]`);
+        if (container) {
+          // Get the first overlay (first line of the highlight) to center on
+          const firstOverlay = container.querySelector('.highlight-overlay');
+          if (firstOverlay) {
+            firstOverlay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
         }
       }, 500);
     }
