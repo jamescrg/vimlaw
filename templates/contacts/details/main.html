@@ -188,9 +188,5 @@
     </div>
   {% endif %}
   {# Notes #}
-  {% if selected_contact.notes %}
-    <div class="contact-notes-section">
-      <div class="contact-notes">{{ selected_contact.notes|linebreaks }}</div>
-    </div>
-  {% endif %}
+  {% if selected_contact.notes %}<div class="contact-notes">{{ selected_contact.notes|linebreaks }}</div>{% endif %}
 </div>
