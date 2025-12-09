@@ -10,8 +10,12 @@
   grid-column: span 1;
 }
 
+.outline-form .form-group:has(label[for="id_category"]) {
+  grid-column: span 1;
+}
+
 .outline-form .form-group:has(label[for="id_title"]) {
-  grid-column: span 2;
+  grid-column: span 3;
 }
 
 /* =============================================================================
@@ -20,6 +24,10 @@
 
 .outlines-list {
   min-width: 30rem;
+}
+
+.outlines-list .category {
+  width: 10rem;
 }
 
 .outlines-list .title {
@@ -33,7 +41,7 @@
 }
 
 .outlines-list .date {
-  width: 8rem;
+  width: 11rem;
 }
 
 .outlines-list .viewed {
@@ -360,6 +368,7 @@
 .item-content {
   display: inline;
   color: var(--color-primary);
+  font-size: 1.05rem;
   line-height: 1.5;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -372,7 +381,7 @@
   padding: 0;
   margin: 0;
   border: none;
-  font-size: inherit;
+  font-size: 1.05rem;
   font-family: inherit;
   line-height: 1.5;
   outline: none;
@@ -408,7 +417,7 @@
 .outline-item.heading > .item-row .item-content,
 .outline-item.heading > .item-row .item-input {
   font-weight: 600;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1.2;
 }
 

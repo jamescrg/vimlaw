@@ -1,0 +1,38 @@
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ outline.get_category_display }}</button>
+  <ul class="dropdown-menu">
+    <li>
+      <a class="dropdown-item {% if outline.category == 'note' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:category' outline.id 'note' %}"
+         hx-target="#outlines">Note</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if outline.category == 'issue' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:category' outline.id 'issue' %}"
+         hx-target="#outlines">Issue</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if outline.category == 'interview' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:category' outline.id 'interview' %}"
+         hx-target="#outlines">Interview</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if outline.category == 'analysis' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:category' outline.id 'analysis' %}"
+         hx-target="#outlines">Analysis</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if outline.category == 'drafting' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:category' outline.id 'drafting' %}"
+         hx-target="#outlines">Drafting</a>
+    </li>
+  </ul>
+</div>

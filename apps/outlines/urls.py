@@ -15,6 +15,17 @@ urlpatterns = [
         views.outlines_filter_importance,
         name="filter-importance",
     ),
+    path(
+        "filter/category/<str:category>/",
+        views.outlines_filter_category,
+        name="filter-category",
+    ),
+    path(
+        "filter/category/",
+        views.outlines_filter_category,
+        {"category": ""},
+        name="filter-category-clear",
+    ),
     path("filter/keyword/", views.outlines_filter_keyword, name="filter-keyword"),
     # Outline CRUD
     path("add/", views.outline_add, name="add"),
@@ -24,6 +35,17 @@ urlpatterns = [
         "<int:outline_id>/importance/<int:value>/",
         views.outline_importance,
         name="importance",
+    ),
+    path(
+        "<int:outline_id>/category/<str:value>/",
+        views.outline_category,
+        name="category",
+    ),
+    path(
+        "<int:outline_id>/category/",
+        views.outline_category,
+        {"value": ""},
+        name="category-clear",
     ),
     # Outline view
     path("<int:outline_id>/", views.outline_standalone, name="standalone"),

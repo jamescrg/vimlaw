@@ -20,6 +20,54 @@
         <i class="bi bi-filter"></i>Filter
       </button>
       <button type="button"
+              id="outlines-category-filter"
+              class="select-btn filter-dropdown-button {% if selected_category %}toggle-active{% endif %}"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        {{ selected_category|default:"All Categories" }}
+        <small>
+          <i class="bi bi-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item {% if not selected_category_key %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'outlines:filter-category-clear' %}"
+             hx-target="#outlines">All Categories</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if selected_category_key == 'note' %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'outlines:filter-category' 'note' %}"
+             hx-target="#outlines">Note</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if selected_category_key == 'issue' %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'outlines:filter-category' 'issue' %}"
+             hx-target="#outlines">Issue</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if selected_category_key == 'interview' %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'outlines:filter-category' 'interview' %}"
+             hx-target="#outlines">Interview</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if selected_category_key == 'analysis' %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'outlines:filter-category' 'analysis' %}"
+             hx-target="#outlines">Analysis</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if selected_category_key == 'drafting' %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'outlines:filter-category' 'drafting' %}"
+             hx-target="#outlines">Drafting</a>
+        </li>
+      </ul>
+      <button type="button"
               id="outlines-importance-filter"
               class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"
               data-bs-toggle="dropdown"

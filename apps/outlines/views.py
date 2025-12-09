@@ -52,12 +52,21 @@ def get_outlines_data(request, matter):
         int(importance_value) if importance_value not in (None, "", 0) else None
     )
 
+    # Get category filter value
+    category_key = filter_data.get("category", "")
+    selected_category = ""
+    if category_key:
+        category_dict = dict(Outline.CATEGORY_CHOICES)
+        selected_category = category_dict.get(category_key, "")
+
     return {
         "outlines": outlines,
         "current_order": current_order,
         "keyword": keyword,
         "importances": list(range(1, 11)),
         "importance_value": importance_value,
+        "selected_category": selected_category,
+        "selected_category_key": category_key,
     }
 
 
@@ -151,6 +160,20 @@ def outlines_filter_importance(request, importance_value):
 
 
 @login_required
+def outlines_filter_category(request, category):
+    """Filter outlines by category."""
+    filter_data = request.session.get("outlines_filter", {})
+    if category:
+        filter_data["category"] = category
+    else:
+        filter_data.pop("category", None)
+
+    request.session["outlines_filter"] = filter_data
+
+    return redirect("outlines:list")
+
+
+@login_required
 def outlines_filter_keyword(request):
     """Filter outlines by keyword (inline search)."""
     matter, _ = get_selected_matter(request)
@@ -224,6 +247,15 @@ def outline_importance(request, outline_id, value):
     """Update outline importance."""
     outline = get_object_or_404(Outline, id=outline_id, user=request.user)
     outline.importance = value
+    outline.save()
+    return HttpResponse(status=204, headers={"HX-Trigger": "outlinesChanged"})
+
+
+@login_required
+def outline_category(request, outline_id, value):
+    """Update outline category."""
+    outline = get_object_or_404(Outline, id=outline_id, user=request.user)
+    outline.category = value
     outline.save()
     return HttpResponse(status=204, headers={"HX-Trigger": "outlinesChanged"})
 

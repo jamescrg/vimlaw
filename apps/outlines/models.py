@@ -10,6 +10,14 @@ from apps.matters.models import Matter
 class Outline(models.Model):
     """A single outline/document containing a tree of items."""
 
+    CATEGORY_CHOICES = [
+        ("note", "Note"),
+        ("issue", "Issue"),
+        ("interview", "Interview"),
+        ("analysis", "Analysis"),
+        ("drafting", "Drafting"),
+    ]
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     matter = models.ForeignKey(
         Matter,
@@ -17,6 +25,7 @@ class Outline(models.Model):
         related_name="outlines",
     )
     title = models.CharField(max_length=200)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="note")
     date = models.DateField(default=timezone.localdate)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

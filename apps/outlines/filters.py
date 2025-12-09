@@ -34,11 +34,17 @@ class OutlinesFilter(django_filters.FilterSet):
         label="Importance (≤)",
         empty_label="All",
     )
+    category = django_filters.ChoiceFilter(
+        field_name="category",
+        choices=Outline.CATEGORY_CHOICES,
+        label="Category",
+        empty_label="All",
+    )
     keyword = django_filters.CharFilter(method="filter_keyword", label="Keyword")
 
     class Meta:
         model = Outline
-        fields = ["user", "date_start", "date_end", "importance", "keyword"]
+        fields = ["user", "date_start", "date_end", "importance", "category", "keyword"]
 
     def __init__(self, *args, matter=None, **kwargs):
         super().__init__(*args, **kwargs)

@@ -12,8 +12,9 @@ class OutlineForm(forms.ModelForm):
 
     class Meta:
         model = Outline
-        fields = ["date", "title"]
+        fields = ["date", "category", "title"]
         widgets = {
             "title": forms.TextInput(attrs={"autofocus": True}),
             "date": forms.DateInput(attrs={"type": "date"}),
+            "category": forms.Select(),
         }
