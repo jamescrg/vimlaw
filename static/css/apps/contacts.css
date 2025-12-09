@@ -209,15 +209,6 @@
 }
 
 /* Notes Section */
-.contact-notes-section {
-  padding-top: 1rem;
-}
-
-.contact-notes-section > p {
-  margin-bottom: 0.5rem;
-  margin-left: 0.25rem;
-}
-
 .contact-notes {
   background-color: var(--background-lighter);
   border: 1px solid var(--border-medium);
