@@ -17,6 +17,178 @@
   let dragStartItemId = null;  // Item where drag started
   let isDragSelecting = false;  // Whether we've switched to item selection mode
 
+  // Undo stack
+  const undoStack = [];
+  const MAX_UNDO_SIZE = 50;
+  let editStartContent = null;  // Content when edit mode started (for undo)
+
+  // Push operation to undo stack
+  function pushUndo(operation) {
+    undoStack.push(operation);
+    if (undoStack.length > MAX_UNDO_SIZE) {
+      undoStack.shift();
+    }
+  }
+
+  // Serialize an item and its children for undo (used for delete)
+  function serializeItem(itemEl) {
+    if (!itemEl) return null;
+    const itemId = itemEl.dataset.itemId;
+    const contentEl = itemEl.querySelector(':scope > .item-row .item-content');
+    const inputEl = itemEl.querySelector(':scope > .item-row .item-input');
+    const content = contentEl?.textContent || inputEl?.value || '';
+    const children = Array.from(itemEl.querySelectorAll(':scope > .item-children > .outline-item'))
+      .map(child => serializeItem(child));
+    return {
+      id: itemId,
+      parentId: itemEl.dataset.parentId || null,
+      order: parseInt(itemEl.dataset.order) || 0,
+      content: content,
+      collapsed: itemEl.classList.contains('collapsed'),
+      heading: itemEl.classList.contains('heading'),
+      highlight: itemEl.querySelector(':scope > .item-row')?.classList.contains('hl-yellow') || false,
+      children: children
+    };
+  }
+
+  // Undo the last operation
+  function undo() {
+    if (undoStack.length === 0) return;
+
+    const op = undoStack.pop();
+
+    switch (op.type) {
+      case 'edit_content':
+        undoEditContent(op);
+        break;
+      case 'delete_item':
+        undoDeleteItem(op);
+        break;
+      case 'create_item':
+        undoCreateItem(op);
+        break;
+      case 'indent':
+      case 'outdent':
+      case 'move_up':
+      case 'move_down':
+        undoStructuralChange(op);
+        break;
+      case 'toggle_collapse':
+      case 'toggle_heading':
+      case 'toggle_highlight':
+        undoToggle(op);
+        break;
+    }
+  }
+
+  // Undo handlers
+  function undoEditContent(op) {
+    fetch(`/outlines/item/${op.itemId}/update/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: `content=${encodeURIComponent(op.oldContent)}`
+    }).then(response => {
+      if (response.ok) {
+        const itemEl = getItemElement(op.itemId);
+        if (itemEl) {
+          const contentEl = itemEl.querySelector('.item-content');
+          if (contentEl) contentEl.textContent = op.oldContent;
+          const inputEl = itemEl.querySelector('.item-input');
+          if (inputEl) {
+            inputEl.value = op.oldContent;
+            autoResizeTextarea(inputEl);
+          }
+        }
+      }
+    });
+  }
+
+  function undoDeleteItem(op) {
+    fetch(`/outlines/${getOutlineId()}/restore-items/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify({ items: op.deletedItems })
+    }).then(response => {
+      if (response.ok) {
+        refreshTree();
+      }
+    });
+  }
+
+  function undoCreateItem(op) {
+    fetch(`/outlines/item/${op.itemId}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      }
+    }).then(response => {
+      if (response.ok) {
+        const itemEl = getItemElement(op.itemId);
+        if (itemEl) itemEl.remove();
+      }
+    });
+  }
+
+  function undoStructuralChange(op) {
+    fetch(`/outlines/item/${op.itemId}/restore-position/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify({
+        parent_id: op.oldParentId,
+        order: op.oldOrder
+      })
+    }).then(response => {
+      if (response.ok) {
+        refreshTree();
+      }
+    });
+  }
+
+  function undoToggle(op) {
+    // Just call the toggle endpoint again to flip it back
+    let endpoint;
+    switch (op.type) {
+      case 'toggle_collapse':
+        endpoint = `/outlines/item/${op.itemId}/toggle-collapse/`;
+        break;
+      case 'toggle_heading':
+        endpoint = `/outlines/item/${op.itemId}/toggle-heading/`;
+        break;
+      case 'toggle_highlight':
+        endpoint = `/outlines/item/${op.itemId}/toggle-highlight/`;
+        break;
+    }
+    fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      }
+    }).then(response => {
+      if (response.ok) {
+        refreshTreeAndFocus(op.itemId);
+      }
+    });
+  }
+
+  // Refresh the entire tree (used after undo operations)
+  function refreshTree() {
+    const outlineId = getOutlineId();
+    if (!outlineId) return;
+    htmx.ajax('GET', `/outlines/${outlineId}/tree/`, {
+      target: '#outline-tree',
+      swap: 'innerHTML'
+    });
+  }
+
   // Get CSRF token for HTMX requests
   function getCSRFToken() {
     return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
@@ -191,6 +363,13 @@
       return;
     }
 
+    // Capture items for undo before deletion
+    const deletedItems = selected.map(item => serializeItem(item));
+    pushUndo({
+      type: 'delete_item',
+      deletedItems: deletedItems
+    });
+
     // Find item to focus after deletion
     const lastSelected = selected[selected.length - 1];
     let nextFocus = getNextItem(lastSelected);
@@ -276,6 +455,11 @@
         const newItem = currentEl.nextElementSibling;
         if (newItem) {
           htmx.process(newItem);
+          // Push undo for the new item
+          pushUndo({
+            type: 'create_item',
+            itemId: newItem.dataset.itemId
+          });
           setTimeout(() => focusItem(newItem), 50);
         }
       }
@@ -308,6 +492,11 @@
         const newItem = itemsContainer.lastElementChild;
         if (newItem) {
           htmx.process(newItem);
+          // Push undo for the new item
+          pushUndo({
+            type: 'create_item',
+            itemId: newItem.dataset.itemId
+          });
           setTimeout(() => focusItem(newItem), 50);
         }
       }
@@ -316,6 +505,18 @@
 
   // Delete item
   function deleteItem(itemId) {
+    const itemEl = getItemElement(itemId);
+    if (!itemEl) return;
+
+    // Capture item for undo before deletion
+    const deletedItem = serializeItem(itemEl);
+    pushUndo({
+      type: 'delete_item',
+      deletedItems: [deletedItem]
+    });
+
+    const prevItem = getPreviousItem(itemEl);
+
     fetch(`/outlines/item/${itemId}/delete/`, {
       method: 'POST',
       headers: {
@@ -324,9 +525,7 @@
     })
     .then(response => {
       if (response.ok) {
-        const itemEl = getItemElement(itemId);
-        const prevItem = getPreviousItem(itemEl);
-        itemEl?.remove();
+        itemEl.remove();
         if (prevItem) {
           setTimeout(() => focusItem(prevItem), 50);
         }
@@ -393,6 +592,14 @@
       return;
     }
 
+    // Capture state for undo before making changes
+    pushUndo({
+      type: 'indent',
+      itemId: itemId,
+      oldParentId: itemEl.dataset.parentId || null,
+      oldOrder: parseInt(itemEl.dataset.order) || 0
+    });
+
     // Optimistic DOM update
     let childrenContainer = prevSibling.querySelector(':scope > .item-children');
     if (!childrenContainer) {
@@ -456,6 +663,14 @@
     }
     const parentItem = parentChildren.closest('.outline-item');
     if (!parentItem) return;
+
+    // Capture state for undo before making changes
+    pushUndo({
+      type: 'outdent',
+      itemId: itemId,
+      oldParentId: itemEl.dataset.parentId || null,
+      oldOrder: parseInt(itemEl.dataset.order) || 0
+    });
 
     // Find grandparent container (where we'll insert)
     const grandparentChildren = parentItem.parentElement;
@@ -554,6 +769,14 @@
     const prevSibling = itemEl.previousElementSibling;
     if (!prevSibling || !prevSibling.classList.contains('outline-item')) return;
 
+    // Capture state for undo
+    pushUndo({
+      type: 'move_up',
+      itemId: itemId,
+      oldParentId: itemEl.dataset.parentId || null,
+      oldOrder: parseInt(itemEl.dataset.order) || 0
+    });
+
     // Optimistic DOM update: swap positions
     const parent = itemEl.parentNode;
     parent.insertBefore(itemEl, prevSibling);
@@ -596,6 +819,14 @@
     // Find next sibling (must be an outline-item)
     const nextSibling = itemEl.nextElementSibling;
     if (!nextSibling || !nextSibling.classList.contains('outline-item')) return;
+
+    // Capture state for undo
+    pushUndo({
+      type: 'move_down',
+      itemId: itemId,
+      oldParentId: itemEl.dataset.parentId || null,
+      oldOrder: parseInt(itemEl.dataset.order) || 0
+    });
 
     // Optimistic DOM update: swap positions (insert after next sibling)
     const parent = itemEl.parentNode;
@@ -1131,6 +1362,9 @@
   document.body.addEventListener('htmx:afterSwap', function(event) {
     const input = event.target.querySelector('.item-input');
     if (input) {
+      // Capture initial content for undo
+      editStartContent = input.value;
+
       // Wait for browser to lay out the element before measuring
       requestAnimationFrame(() => {
         input.focus();
@@ -1166,6 +1400,42 @@
         if (itemEl) {
           setFocusedItem(itemEl);
         }
+      });
+    }
+  });
+
+  // Capture operations for undo before HTMX sends them
+  document.body.addEventListener('htmx:beforeRequest', function(event) {
+    const target = event.target;
+    const url = event.detail.path || '';
+
+    // Content edit undo
+    if (target.classList.contains('item-input') && editStartContent !== null) {
+      const newContent = target.value;
+      if (newContent !== editStartContent) {
+        pushUndo({
+          type: 'edit_content',
+          itemId: target.dataset.itemId,
+          oldContent: editStartContent,
+          newContent: newContent
+        });
+      }
+      editStartContent = null;
+    }
+
+    // Toggle operations undo
+    const toggleMatch = url.match(/\/outlines\/item\/(\d+)\/(toggle-collapse|toggle-heading|toggle-highlight)\//);
+    if (toggleMatch) {
+      const itemId = toggleMatch[1];
+      const toggleType = toggleMatch[2];
+      const typeMap = {
+        'toggle-collapse': 'toggle_collapse',
+        'toggle-heading': 'toggle_heading',
+        'toggle-highlight': 'toggle_highlight'
+      };
+      pushUndo({
+        type: typeMap[toggleType],
+        itemId: itemId
       });
     }
   });
@@ -1345,6 +1615,13 @@
           } else if (focusedItem) {
             deleteItem(focusedItem.dataset.itemId);
           }
+        }
+        break;
+
+      case 'z':
+        if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
+          event.preventDefault();
+          undo();
         }
         break;
     }

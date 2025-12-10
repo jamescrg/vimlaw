@@ -703,6 +703,90 @@ def import_markdown(request, outline_id):
 
 
 # =============================================================================
+# Undo Operations
+# =============================================================================
+
+
+@login_required
+@require_POST
+def restore_items(request, outline_id):
+    """Restore deleted items for undo functionality."""
+    outline = get_object_or_404(Outline, id=outline_id, user=request.user)
+
+    try:
+        data = json.loads(request.body)
+        items_data = data.get("items", [])
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    def create_item_recursive(item_data, parent=None):
+        """Recursively create an item and its children."""
+        # Get parent if parent_id specified
+        if parent is None and item_data.get("parentId"):
+            try:
+                parent = OutlineItem.objects.get(
+                    id=item_data["parentId"], outline=outline
+                )
+            except OutlineItem.DoesNotExist:
+                parent = None
+
+        item = OutlineItem.objects.create(
+            outline=outline,
+            parent=parent,
+            content=item_data.get("content", ""),
+            order=item_data.get("order", 0),
+            collapsed=item_data.get("collapsed", False),
+            heading=item_data.get("heading", False),
+            highlight=item_data.get("highlight", False),
+        )
+
+        # Create children
+        for child_data in item_data.get("children", []):
+            create_item_recursive(child_data, parent=item)
+
+        return item
+
+    # Create all items
+    for item_data in items_data:
+        create_item_recursive(item_data)
+
+    return HttpResponse(status=204)
+
+
+@login_required
+@require_POST
+def item_restore_position(request, item_id):
+    """Restore an item to a previous position for undo functionality."""
+    item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)
+
+    try:
+        data = json.loads(request.body)
+        parent_id = data.get("parent_id")
+        order = data.get("order", 0)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    # Get new parent
+    new_parent = None
+    if parent_id:
+        try:
+            new_parent = OutlineItem.objects.get(id=parent_id, outline=item.outline)
+        except OutlineItem.DoesNotExist:
+            pass
+
+    # Make room at the target position
+    OutlineItem.objects.filter(
+        outline=item.outline, parent=new_parent, order__gte=order
+    ).exclude(id=item.id).update(order=F("order") + 1)
+
+    item.parent = new_parent
+    item.order = order
+    item.save()
+
+    return HttpResponse(status=204)
+
+
+# =============================================================================
 # Item Sources
 # =============================================================================
 

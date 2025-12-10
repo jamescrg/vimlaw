@@ -94,6 +94,17 @@ urlpatterns = [
     path("item/<int:item_id>/move/", views.item_move, name="item-move"),
     path("item/<int:item_id>/move-up/", views.item_move_up, name="item-move-up"),
     path("item/<int:item_id>/move-down/", views.item_move_down, name="item-move-down"),
+    # Undo operations
+    path(
+        "<int:outline_id>/restore-items/",
+        views.restore_items,
+        name="restore-items",
+    ),
+    path(
+        "item/<int:item_id>/restore-position/",
+        views.item_restore_position,
+        name="item-restore-position",
+    ),
     # Batch operations
     path("<int:outline_id>/batch-indent/", views.batch_indent, name="batch-indent"),
     path("<int:outline_id>/batch-outdent/", views.batch_outdent, name="batch-outdent"),
