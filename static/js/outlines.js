@@ -1197,8 +1197,12 @@
         break;
 
       case 'Backspace':
-        // Delete if empty
-        if (input.value === '' && input.selectionStart === 0) {
+        if (event.metaKey || event.ctrlKey) {
+          // Ctrl+Backspace: delete item regardless of content
+          event.preventDefault();
+          deleteItem(itemId);
+        } else if (input.value === '') {
+          // Delete if empty
           event.preventDefault();
           deleteItem(itemId);
         }
@@ -1349,6 +1353,14 @@
             const modal = new bootstrap.Modal(document.getElementById('htmx-modal-container'));
             modal.show();
           });
+        }
+        break;
+
+      case 'z':
+        // Ctrl+Z for undo
+        if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
+          event.preventDefault();
+          undo();
         }
         break;
     }
