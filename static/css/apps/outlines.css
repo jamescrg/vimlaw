@@ -150,7 +150,8 @@ body:has(.outline-page.standalone) {
   top: 0;
   z-index: 50;
   background: var(--background-muted);
-  border-bottom: 1px solid var(--border-dark);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Outline toolbar - constrained width */
@@ -665,7 +666,8 @@ body:has(.outline-page.standalone) {
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   background: var(--background-muted);
-  border-bottom: 1px solid var(--border-dark);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .search-replace-bar.visible {
