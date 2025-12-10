@@ -75,13 +75,13 @@
   <div class="outline-page standalone">
     <div class="outline-canvas">
       <div class="outline-header">
-        {% if outline.matter %}<span class="app-badge badge-purple">{{ outline.matter.name }}</span>{% endif %}
         <span id="outline-title"
               class="outline-title"
               hx-get="{% url 'outlines:title' outline.id %}"
               hx-trigger="click"
               hx-target="this"
               hx-swap="innerHTML">{{ outline.title }}</span>
+        {% if outline.matter %}<span class="app-badge badge-purple">{{ outline.matter.name }}</span>{% endif %}
       </div>
       <div class="outline-tree-container">
         <div id="outline-tree"
