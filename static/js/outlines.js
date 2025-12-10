@@ -585,6 +585,11 @@
     const itemEl = getItemElement(itemId);
     if (!itemEl) return;
 
+    // Can't indent headings - they must stay at top level
+    if (itemEl.classList.contains('heading')) {
+      return;
+    }
+
     // Find previous sibling
     const prevSibling = itemEl.previousElementSibling;
     if (!prevSibling || !prevSibling.classList.contains('outline-item')) {
@@ -824,8 +829,116 @@
 
     // Find previous sibling (must be an outline-item)
     const prevSibling = itemEl.previousElementSibling;
-    if (!prevSibling || !prevSibling.classList.contains('outline-item')) return;
 
+    // If no previous sibling, try cross-parent move
+    if (!prevSibling || !prevSibling.classList.contains('outline-item')) {
+      // Check if we're inside item-children (has a parent)
+      const parentChildren = itemEl.parentElement;
+      if (!parentChildren?.classList.contains('item-children')) return;
+
+      const parentItem = parentChildren.closest('.outline-item');
+      if (!parentItem) return;
+
+      // Find parent's previous sibling (the "above parent")
+      const aboveParent = parentItem.previousElementSibling;
+      if (!aboveParent?.classList.contains('outline-item')) return;
+
+      // Block if heading (can't gain a different parent)
+      if (itemEl.classList.contains('heading')) return;
+
+      // Capture state for undo
+      pushUndo({
+        type: 'move_up',
+        itemId: itemId,
+        oldParentId: itemEl.dataset.parentId || null,
+        oldOrder: parseInt(itemEl.dataset.order) || 0
+      });
+
+      // Handle collapsed above parent - expand it first
+      if (aboveParent.classList.contains('collapsed')) {
+        // Expand and fetch children from server, then append item
+        fetch(`/outlines/item/${aboveParent.dataset.itemId}/toggle-collapse/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCSRFToken() }
+        }).then(response => {
+          if (response.ok) return response.text();
+        }).then(html => {
+          if (html) {
+            const template = document.createElement('template');
+            template.innerHTML = html.trim();
+            const newAboveParent = template.content.firstChild;
+            aboveParent.replaceWith(newAboveParent);
+            htmx.process(newAboveParent);
+
+            // Move item to above parent's children (last position)
+            let childrenContainer = newAboveParent.querySelector(':scope > .item-children');
+            if (!childrenContainer) {
+              childrenContainer = document.createElement('div');
+              childrenContainer.className = 'item-children';
+              newAboveParent.appendChild(childrenContainer);
+            }
+            childrenContainer.appendChild(itemEl);
+            itemEl.dataset.parentId = newAboveParent.dataset.itemId;
+
+            // Clean up old parent if now empty
+            if (parentChildren.children.length === 0) {
+              parentChildren.remove();
+              const collapseToggle = parentItem.querySelector(':scope > .item-row > .collapse-toggle');
+              if (collapseToggle) collapseToggle.remove();
+            }
+
+            if (enterEditMode) focusItem(itemEl, cursorPos);
+          }
+        });
+
+        // POST move to server
+        fetch(`/outlines/item/${itemId}/move-up/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCSRFToken() }
+        });
+        return;
+      }
+
+      // Above parent is not collapsed - do optimistic DOM update
+      let childrenContainer = aboveParent.querySelector(':scope > .item-children');
+      if (!childrenContainer) {
+        childrenContainer = document.createElement('div');
+        childrenContainer.className = 'item-children';
+        aboveParent.appendChild(childrenContainer);
+
+        // Add collapse toggle
+        const itemRow = aboveParent.querySelector(':scope > .item-row');
+        const existingToggle = itemRow?.querySelector('.collapse-toggle');
+        if (itemRow && !existingToggle) {
+          const bullet = itemRow.querySelector('.item-bullet');
+          if (bullet) {
+            bullet.insertAdjacentHTML('beforebegin', `<button class="collapse-toggle" title="Collapse">
+              <i class="bi bi-chevron-down"></i>
+            </button>`);
+          }
+        }
+      }
+      childrenContainer.appendChild(itemEl);
+      itemEl.dataset.parentId = aboveParent.dataset.itemId;
+
+      // Clean up old parent if now empty
+      if (parentChildren.children.length === 0) {
+        parentChildren.remove();
+        const collapseToggle = parentItem.querySelector(':scope > .item-row > .collapse-toggle');
+        if (collapseToggle) collapseToggle.remove();
+      }
+
+      if (enterEditMode) focusItem(itemEl, cursorPos);
+
+      // POST to server
+      fetch(`/outlines/item/${itemId}/move-up/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRFToken() }
+      });
+      return;
+    }
+
+    // Normal case: swap with previous sibling
     // Capture state for undo
     pushUndo({
       type: 'move_up',

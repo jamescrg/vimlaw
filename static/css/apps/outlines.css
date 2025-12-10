@@ -539,11 +539,15 @@
   background: var(--hl-gray);
 }
 
-/* Heading state */
+/* Heading state (only valid for top-level items - enforced by model) */
 .outline-item.heading > .item-row .item-content,
 .outline-item.heading > .item-row .item-input {
   font-weight: 500;
   font-size: 1.1rem;
+}
+
+.outline-item.heading > .item-row .item-bullet {
+  display: none;
 }
 
 /* Item sources (citations) */

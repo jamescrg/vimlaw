@@ -74,6 +74,12 @@ class OutlineItem(models.Model):
     class Meta:
         ordering = ["order"]
 
+    def save(self, *args, **kwargs):
+        # Headings are only valid at top level (no parent)
+        if self.parent is not None:
+            self.heading = False
+        super().save(*args, **kwargs)
+
     def __str__(self):
         preview = self.content[:50] if self.content else "(empty)"
         return f"{preview}"

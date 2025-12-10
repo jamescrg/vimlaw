@@ -506,15 +506,26 @@ def item_toggle_highlight(request, item_id):
 
 @login_required
 def item_move_up(request, item_id):
-    """Move item up among its siblings."""
+    """Move item up among its siblings, or to parent's previous sibling if first child."""
     item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)
     prev_sibling = item.get_previous_sibling()
 
     if prev_sibling:
-        # Swap order values
+        # Swap order values with previous sibling
         item.order, prev_sibling.order = prev_sibling.order, item.order
         item.save()
         prev_sibling.save()
+    elif item.parent:
+        # First child - try to move to parent's previous sibling
+        parent_prev_sibling = item.parent.get_previous_sibling()
+        if parent_prev_sibling:
+            # Get max order in new parent's children
+            new_siblings = parent_prev_sibling.get_children()
+            max_order = new_siblings.last().order + 1 if new_siblings.exists() else 0
+
+            item.parent = parent_prev_sibling
+            item.order = max_order
+            item.save()
 
     return HttpResponse(status=204)
 
