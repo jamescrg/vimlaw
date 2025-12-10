@@ -923,9 +923,9 @@ def item_restore_position(request, item_id):
 
 @login_required
 def item_sources_modal(request, item_id):
-    """Render modal for managing item sources (documents and highlights)."""
+    """Render inline picker for managing item sources (documents and highlights)."""
     item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)
-    return render(request, "outlines/sources-modal.html", {"item": item})
+    return render(request, "outlines/sources-inline.html", {"item": item})
 
 
 @login_required

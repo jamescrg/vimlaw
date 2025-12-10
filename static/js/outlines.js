@@ -1346,13 +1346,13 @@
         // Ctrl+; for add source
         if (event.metaKey || event.ctrlKey) {
           event.preventDefault();
-          htmx.trigger(input, 'blur');
-          htmx.ajax('GET', `/outlines/item/${itemId}/sources/`, {
-            target: '#htmx-modal-container'
-          }).then(() => {
-            const modal = new bootstrap.Modal(document.getElementById('htmx-modal-container'));
-            modal.show();
-          });
+          const itemRow = input.closest('.item-row');
+          if (itemRow) {
+            htmx.ajax('GET', `/outlines/item/${itemId}/sources/`, {
+              target: itemRow,
+              swap: 'afterend'
+            });
+          }
         }
         break;
 
@@ -2396,6 +2396,24 @@
           showSearchBar();
         }
       }
+    }
+  });
+
+  // Sources picker: close on Escape
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const picker = document.querySelector('.sources-picker');
+      if (picker) {
+        picker.remove();
+      }
+    }
+  });
+
+  // Sources picker: close on click outside
+  document.addEventListener('click', function(event) {
+    const picker = document.querySelector('.sources-picker');
+    if (picker && !picker.contains(event.target) && !event.target.closest('[hx-get*="/sources/"]')) {
+      picker.remove();
     }
   });
 

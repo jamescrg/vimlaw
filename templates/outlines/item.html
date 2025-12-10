@@ -19,9 +19,8 @@
           <a class="dropdown-item"
              href="#"
              hx-get="{% url 'outlines:item-sources' item.id %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container">
+             hx-target="closest .item-row"
+             hx-swap="afterend">
             <i class="bi bi-journal-plus"></i>
             Add Source
           </a>

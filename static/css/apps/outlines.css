@@ -176,7 +176,7 @@ body:has(.outline-page.standalone) {
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
   text-decoration: none;
-  background: var(--background-control);
+  background: var(--background-lighter);
   border: solid 1px var(--border-dark);
   border-radius: 0.375rem;
   color: var(--button-toolbar);
@@ -185,7 +185,7 @@ body:has(.outline-page.standalone) {
 }
 
 .outline-toolbar .toolbar-left a:hover {
-  background: var(--background-control);
+  background: var(--background-lighter);
   color: var(--color-primary);
 }
 
@@ -219,7 +219,7 @@ body:has(.outline-page.standalone) {
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
   text-decoration: none;
-  background: var(--background-control);
+  background: var(--background-lighter);
   border: solid 1px var(--border-dark);
   border-radius: 0.375rem;
   color: var(--button-toolbar);
@@ -229,7 +229,7 @@ body:has(.outline-page.standalone) {
 }
 
 .outline-toolbar .toolbar-right a:hover {
-  background: var(--background-control);
+  background: var(--background-lighter);
   color: var(--color-primary);
 }
 
@@ -327,7 +327,7 @@ body:has(.outline-page.standalone) {
   height: 2rem;
   margin-top: 0.5rem;
   padding: 0;
-  background: var(--background-control);
+  background: var(--background-lighter);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-md);
   color: var(--color-muted);
@@ -370,7 +370,7 @@ body:has(.outline-page.standalone) {
 .shortcuts-table kbd {
   display: inline-block;
   padding: 0.125rem 0.375rem;
-  background: var(--background-control);
+  background: var(--background-lighter);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-sm);
   font-family: inherit;
@@ -427,7 +427,7 @@ body:has(.outline-page.standalone) {
   width: 1.5rem;
   height: 1.5rem;
   padding: 0;
-  background: var(--background-control);
+  background: var(--background-lighter);
   border: none;
   border-radius: var(--radius-sm);
   color: var(--color-muted);
@@ -476,7 +476,7 @@ body:has(.outline-page.standalone) {
 
 /* Expanded items show chevron with background on hover */
 .outline-item:not(.collapsed) > .item-row .collapse-toggle {
-  background: var(--background-control);
+  background: var(--background-lighter);
 }
 
 /* Expanded items show chevron on hover */
@@ -700,7 +700,7 @@ body:has(.outline-page.standalone) {
   justify-content: center;
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
-  background: var(--background-control);
+  background: var(--background-lighter);
   border: solid 1px var(--border-dark);
   border-radius: 0.375rem;
   color: var(--button-toolbar);
@@ -710,7 +710,7 @@ body:has(.outline-page.standalone) {
 }
 
 .search-replace-bar button:hover {
-  background: var(--background-control);
+  background: var(--background-lighter);
   color: var(--color-primary);
 }
 
@@ -729,4 +729,48 @@ body:has(.outline-page.standalone) {
 
 .search-match-current {
   background: var(--amber-300);
+}
+
+/* =============================================================================
+   Inline Sources Picker
+   ============================================================================= */
+
+.sources-picker {
+  position: absolute;
+  top: 100%;
+  left: 2rem;
+  width: 20rem;
+  z-index: 100;
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.25));
+}
+
+.sources-picker > input[type="search"] {
+  width: 100%;
+  padding: 1rem 0.625rem;
+  font-size: 0.9375rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.375rem;
+  background: var(--background-lighter);
+  color: var(--color-primary);
+}
+
+.sources-picker > input[type="search"]:focus {
+  outline: none;
+}
+
+.sources-picker .assign-results {
+  background: var(--background-lighter);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.sources-picker .assign-results li {
+  background: var(--background-lighter);
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sources-picker:has(.assign-results) > input[type="search"] {
+  border-radius: 0.375rem 0.375rem 0 0;
 }

@@ -1,0 +1,11 @@
+<div class="sources-picker" id="sources-picker-{{ item.id }}">
+  <input type="search"
+         name="q"
+         hx-get="{% url 'outlines:item-sources-search' item.id %}"
+         hx-target="#sources-results-{{ item.id }}"
+         hx-trigger="keyup changed delay:300ms, search"
+         autocomplete="off"
+         placeholder="Search sources..."
+         autofocus>
+  <div id="sources-results-{{ item.id }}"></div>
+</div>
