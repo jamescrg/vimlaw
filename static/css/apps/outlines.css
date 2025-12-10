@@ -148,7 +148,7 @@ body:has(.outline-page.standalone) {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--stone-350);
+  background: var(--background-muted);
   border-bottom: 1px solid var(--border-dark);
 }
 
@@ -172,14 +172,14 @@ body:has(.outline-page.standalone) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  padding: 0.35rem 0.625rem;
   font-size: 0.875rem;
-  color: var(--stone-700);
   text-decoration: none;
-  background: var(--stone-100);
-  border: 1px solid var(--border-dark);
-  border-radius: var(--radius-sm);
+  background: var(--background-control);
+  border: solid 1px var(--border-dark);
+  border-radius: var(--radius-md);
+  color: var(--button-toolbar);
+  outline: none;
   transition: all 0.15s ease;
 }
 
@@ -200,6 +200,10 @@ body:has(.outline-page.standalone) {
   padding: 1rem 0 0.5rem 1rem;
 }
 
+.outline-header .app-badge {
+  margin-left: auto;
+}
+
 .outline-toolbar .toolbar-right {
   min-width: 8rem;
   display: flex;
@@ -211,14 +215,14 @@ body:has(.outline-page.standalone) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  padding: 0.35rem 0.625rem;
   font-size: 0.875rem;
-  color: var(--stone-700);
   text-decoration: none;
-  background: var(--stone-100);
-  border: 1px solid var(--border-dark);
-  border-radius: var(--radius-sm);
+  background: var(--background-control);
+  border: solid 1px var(--border-dark);
+  border-radius: var(--radius-md);
+  color: var(--button-toolbar);
+  outline: none;
   transition: all 0.15s ease;
   margin: 0;
 }
@@ -672,8 +676,8 @@ body:has(.outline-page.standalone) {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--stone-350);
+  padding: 0.75rem 1rem;
+  background: var(--background-muted);
   border-bottom: 1px solid var(--border-dark);
 }
 
@@ -683,9 +687,9 @@ body:has(.outline-page.standalone) {
 
 .search-replace-bar input[type="text"] {
   padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
   border: 1px solid var(--border-dark);
-  border-radius: var(--radius-sm);
+  border-radius: 0.5rem;
   background: var(--background-panel);
   color: var(--color-primary);
   min-width: 10rem;
@@ -707,13 +711,12 @@ body:has(.outline-page.standalone) {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0.5rem;
-  height: 1.75rem;
-  font-size: 0.75rem;
-  background: var(--stone-100);
-  border: 1px solid var(--border-dark);
-  border-radius: var(--radius-sm);
-  color: var(--stone-700);
+  padding: 0.35rem 0.625rem;
+  background: var(--background-control);
+  border: solid 1px var(--border-dark);
+  border-radius: var(--radius-md);
+  color: var(--button-toolbar);
+  outline: none;
   cursor: pointer;
   transition: all 0.15s ease;
 }
