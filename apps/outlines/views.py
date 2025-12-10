@@ -384,6 +384,28 @@ def item_create(request, outline_id):
         max_order = siblings.aggregate(Max("order"))["order__max"] or -1
         order = max_order + 1
 
+    # Enforce rule: bullets after a heading must be children of that heading
+    if parent is None:
+        # Check for preceding heading at root level
+        preceding_heading = (
+            OutlineItem.objects.filter(
+                outline=outline,
+                parent__isnull=True,
+                heading__isnull=False,
+                order__lt=order,
+            )
+            .order_by("-order")
+            .first()
+        )
+
+        if preceding_heading:
+            # Make this item a child of the heading instead
+            parent = preceding_heading
+            # Recalculate order within heading's children
+            siblings = OutlineItem.objects.filter(outline=outline, parent=parent)
+            max_order = siblings.aggregate(Max("order"))["order__max"] or -1
+            order = max_order + 1
+
     item = OutlineItem.objects.create(
         outline=outline, parent=parent, content="", order=order
     )
@@ -440,6 +462,19 @@ def item_outdent(request, item_id):
     if item.parent:
         grandparent = item.parent.parent
         parent_order = item.parent.order
+
+        # Block outdent if it would create a top-level bullet after a heading
+        if grandparent is None:
+            preceding_heading = OutlineItem.objects.filter(
+                outline=item.outline,
+                parent__isnull=True,
+                heading__isnull=False,
+                order__lte=parent_order,
+            ).exists()
+
+            if preceding_heading:
+                # Can't outdent - would violate the rule
+                return HttpResponse(status=204)
 
         # Place after parent
         OutlineItem.objects.filter(
@@ -503,8 +538,14 @@ def item_toggle_heading(request, item_id):
 
 @login_required
 def item_set_heading(request, item_id, level):
-    """Set heading level (0 for normal, 2-5 for headings)."""
+    """Set heading level (0 for normal, 2-5 for headings).
+
+    When promoting to heading: auto-adopt following root-level siblings.
+    When demoting from heading: re-parent under preceding heading if one exists.
+    """
     item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)
+
+    old_heading = item.heading
 
     if level == 0:
         item.heading = None
@@ -512,6 +553,61 @@ def item_set_heading(request, item_id, level):
         item.heading = level
 
     item.save()
+
+    # CASE A: Promoted to heading - adopt following root-level siblings
+    if old_heading is None and item.heading is not None and item.parent is None:
+        # Get root siblings that come after this item (until next heading)
+        following_siblings = OutlineItem.objects.filter(
+            outline=item.outline,
+            parent__isnull=True,
+            order__gt=item.order,
+        ).order_by("order")
+
+        # Find items until next heading
+        items_to_adopt = []
+        for sibling in following_siblings:
+            if sibling.heading:
+                break  # Stop at next heading
+            items_to_adopt.append(sibling)
+
+        if items_to_adopt:
+            # Get starting order for children
+            existing_children = item.get_children()
+            next_order = (
+                existing_children.last().order + 1 if existing_children.exists() else 0
+            )
+
+            # Adopt the siblings
+            for sibling in items_to_adopt:
+                sibling.parent = item
+                sibling.order = next_order
+                sibling.save()
+                next_order += 1
+
+    # CASE B: Demoted from heading - re-parent under preceding heading if exists
+    elif old_heading is not None and item.heading is None and item.parent is None:
+        # Find preceding heading
+        preceding_heading = (
+            OutlineItem.objects.filter(
+                outline=item.outline,
+                parent__isnull=True,
+                heading__isnull=False,
+                order__lt=item.order,
+            )
+            .order_by("-order")
+            .first()
+        )
+
+        if preceding_heading:
+            # Move this item under preceding heading (children stay attached)
+            existing_children = preceding_heading.get_children()
+            next_order = (
+                existing_children.last().order + 1 if existing_children.exists() else 0
+            )
+
+            item.parent = preceding_heading
+            item.order = next_order
+            item.save()
 
     return render(request, "outlines/item.html", {"item": item})
 
@@ -724,6 +820,19 @@ def batch_outdent(request, outline_id):
 
     grandparent = first_item.parent.parent
     parent_order = first_item.parent.order
+
+    # Block outdent if it would create top-level bullets after a heading
+    if grandparent is None:
+        preceding_heading = OutlineItem.objects.filter(
+            outline=outline,
+            parent__isnull=True,
+            heading__isnull=False,
+            order__lte=parent_order,
+        ).exists()
+
+        if preceding_heading:
+            # Can't outdent - would violate the rule
+            return HttpResponse(status=204)
 
     # Make room after the parent
     OutlineItem.objects.filter(

@@ -726,6 +726,34 @@
     const parentItem = parentChildren.closest('.outline-item');
     if (!parentItem) return;
 
+    // Find grandparent container (where we'll insert)
+    const grandparentChildren = parentItem.parentElement;
+
+    // Block outdent if it would create a top-level bullet after a heading
+    const wouldBeRootLevel = !grandparentChildren?.classList.contains('item-children');
+    if (wouldBeRootLevel) {
+      // Check if there's a heading before or at the parent's position
+      // grandparentChildren is either .outline-items (root) or .item-children
+      const outlineItems = grandparentChildren?.classList.contains('outline-items')
+        ? grandparentChildren
+        : grandparentChildren?.closest('.outline-items');
+      if (outlineItems) {
+        const rootItems = Array.from(outlineItems.querySelectorAll(':scope > .outline-item'));
+        const parentIndex = rootItems.indexOf(parentItem);
+        const hasPrecedingHeading = rootItems.slice(0, parentIndex + 1).some(el => el.dataset.heading);
+        if (hasPrecedingHeading) {
+          // Can't outdent - would violate the rule
+          // Restore focus
+          if (enterEditMode) {
+            editItem(itemEl);
+          } else {
+            selectItem(itemEl, false);
+          }
+          return;
+        }
+      }
+    }
+
     // Capture state for undo before making changes
     pushUndo({
       type: 'outdent',
@@ -733,9 +761,6 @@
       oldParentId: itemEl.dataset.parentId || null,
       oldOrder: parseInt(itemEl.dataset.order) || 0
     });
-
-    // Find grandparent container (where we'll insert)
-    const grandparentChildren = parentItem.parentElement;
 
     // Optimistic DOM update - insert after parent
     if (grandparentChildren) {
