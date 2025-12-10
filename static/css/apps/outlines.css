@@ -196,7 +196,7 @@ body:has(.outline-page.standalone) {
 /* Outline header - title and badge below toolbar */
 .outline-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 0 0.5rem 1rem;
 }
@@ -241,12 +241,11 @@ body:has(.outline-page.standalone) {
 
 .outline-title,
 .outline-title input {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: normal;
   font-family: inherit;
   line-height: 1.5;
   color: var(--color-primary);
-  text-align: center;
   cursor: text;
   margin: 0;
   padding: 0;
@@ -257,12 +256,15 @@ body:has(.outline-page.standalone) {
 }
 
 .outline-title input {
-  display: block;
-  min-width: 20rem;
-  width: auto;
+  width: 100%;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+}
+
+.outline-title {
+  flex: 1;
+  min-width: 0;
 }
 
 .back-link {
@@ -589,20 +591,17 @@ body:has(.outline-page.standalone) {
 
 .outline-item[data-heading="2"] > .item-row .item-content,
 .outline-item[data-heading="2"] > .item-row .item-input {
-  font-weight: 600;
   font-size: 1.25rem;
 }
 
 .outline-item[data-heading="3"] > .item-row .item-content,
 .outline-item[data-heading="3"] > .item-row .item-input {
-  font-weight: 600;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
 }
 
 .outline-item[data-heading="4"] > .item-row .item-content,
 .outline-item[data-heading="4"] > .item-row .item-input {
-  font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 .outline-item[data-heading="5"] > .item-row .item-content,
