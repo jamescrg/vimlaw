@@ -544,6 +544,10 @@
   display: none;
 }
 
+.outline-item[data-heading] > .item-row .item-content-wrapper {
+  margin-left: 0.25rem;
+}
+
 .outline-item[data-heading="2"] > .item-row .item-content,
 .outline-item[data-heading="2"] > .item-row .item-input {
   font-weight: 600;

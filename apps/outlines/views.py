@@ -502,6 +502,21 @@ def item_toggle_heading(request, item_id):
 
 
 @login_required
+def item_set_heading(request, item_id, level):
+    """Set heading level (0 for normal, 2-5 for headings)."""
+    item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)
+
+    if level == 0:
+        item.heading = None
+    elif 2 <= level <= 5:
+        item.heading = level
+
+    item.save()
+
+    return render(request, "outlines/item.html", {"item": item})
+
+
+@login_required
 def item_toggle_highlight(request, item_id):
     """Toggle highlight state."""
     item = get_object_or_404(OutlineItem, id=item_id, outline__user=request.user)

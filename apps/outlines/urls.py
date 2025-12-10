@@ -72,6 +72,11 @@ urlpatterns = [
         name="item-toggle-heading",
     ),
     path(
+        "item/<int:item_id>/set-heading/<int:level>/",
+        views.item_set_heading,
+        name="item-set-heading",
+    ),
+    path(
         "item/<int:item_id>/toggle-highlight/",
         views.item_toggle_highlight,
         name="item-toggle-highlight",

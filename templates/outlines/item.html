@@ -17,21 +17,48 @@
         <li>
           <a class="dropdown-item"
              href="#"
-             hx-post="{% url 'outlines:item-toggle-heading' item.id %}"
-             hx-target="closest .outline-item"
-             hx-swap="outerHTML">
-            <i class="bi bi-type-bold"></i>
-            {% if item.heading %}
-              H{{ item.heading }} →
-              {% if item.heading >= 5 %}
-                Normal
-              {% else %}
-                H{{ item.heading|add:1 }}
-              {% endif %}
-            {% else %}
-              Set as H2
-            {% endif %}
+             hx-get="{% url 'outlines:item-sources' item.id %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container">
+            <i class="bi bi-journal-plus"></i>
+            Add Source
           </a>
+        </li>
+        <li>
+          <a class="dropdown-item{% if item.heading == 2 %} active{% endif %}"
+             href="#"
+             hx-post="{% url 'outlines:item-set-heading' item.id 2 %}"
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML">Heading 2</a>
+        </li>
+        <li>
+          <a class="dropdown-item{% if item.heading == 3 %} active{% endif %}"
+             href="#"
+             hx-post="{% url 'outlines:item-set-heading' item.id 3 %}"
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML">Heading 3</a>
+        </li>
+        <li>
+          <a class="dropdown-item{% if item.heading == 4 %} active{% endif %}"
+             href="#"
+             hx-post="{% url 'outlines:item-set-heading' item.id 4 %}"
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML">Heading 4</a>
+        </li>
+        <li>
+          <a class="dropdown-item{% if item.heading == 5 %} active{% endif %}"
+             href="#"
+             hx-post="{% url 'outlines:item-set-heading' item.id 5 %}"
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML">Heading 5</a>
+        </li>
+        <li>
+          <a class="dropdown-item{% if not item.heading %} active{% endif %}"
+             href="#"
+             hx-post="{% url 'outlines:item-set-heading' item.id 0 %}"
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML">Normal</a>
         </li>
         <li>
           <a class="dropdown-item"
@@ -45,17 +72,6 @@
             {% else %}
               Highlight
             {% endif %}
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item"
-             href="#"
-             hx-get="{% url 'outlines:item-sources' item.id %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container">
-            <i class="bi bi-journal-plus"></i>
-            Add Source
           </a>
         </li>
       </ul>
