@@ -376,6 +376,7 @@ def item_create(request, outline_id):
 
     parent_id = request.POST.get("parent_id")
     after_id = request.POST.get("after_id")
+    before_id = request.POST.get("before_id")
     content = request.POST.get("content", "")
 
     parent = None
@@ -383,7 +384,16 @@ def item_create(request, outline_id):
         parent = get_object_or_404(OutlineItem, id=parent_id, outline=outline)
 
     # Determine order
-    if after_id:
+    if before_id:
+        # Insert before specified item
+        before_item = get_object_or_404(OutlineItem, id=before_id, outline=outline)
+        parent = before_item.parent  # Same parent as the item we're inserting before
+        order = before_item.order
+        # Shift this item and subsequent siblings
+        OutlineItem.objects.filter(
+            outline=outline, parent=parent, order__gte=order
+        ).update(order=F("order") + 1)
+    elif after_id:
         after_item = get_object_or_404(OutlineItem, id=after_id, outline=outline)
         order = after_item.order + 1
         # Shift subsequent siblings

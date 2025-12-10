@@ -466,6 +466,40 @@
     });
   }
 
+  // Create new item before current (for Enter at position 0)
+  function createItemBefore(currentItemId) {
+    const outlineId = getOutlineId();
+    if (!outlineId) return;
+
+    fetch(`/outlines/${outlineId}/item/create/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: `before_id=${currentItemId}`
+    })
+    .then(response => response.text())
+    .then(html => {
+      // Insert new item before current
+      const currentEl = getItemElement(currentItemId);
+      if (currentEl) {
+        currentEl.insertAdjacentHTML('beforebegin', html);
+        // Focus the new item's input
+        const newItem = currentEl.previousElementSibling;
+        if (newItem) {
+          htmx.process(newItem);
+          // Push undo for the new item
+          pushUndo({
+            type: 'create_item',
+            itemId: newItem.dataset.itemId
+          });
+          setTimeout(() => focusItem(newItem), 50);
+        }
+      }
+    });
+  }
+
   // Create new item at end of outline (for + button)
   window.createNewItem = function() {
     const outlineId = getOutlineId();
@@ -1181,6 +1215,10 @@
         if (input.value === '') {
           // Delete empty item and exit
           deleteItem(itemId);
+        } else if (input.selectionStart === 0) {
+          // Cursor at position 0 - create new item ABOVE (Workflowy behavior)
+          htmx.trigger(input, 'blur');
+          setTimeout(() => createItemBefore(itemId), 100);
         } else {
           // Split at cursor: text before stays, text after goes to new item
           const cursorPos = input.selectionStart;
