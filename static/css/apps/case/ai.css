@@ -203,6 +203,88 @@
   color: var(--color-muted);
 }
 
+/* Conversation List Items (sidebar) */
+.ai-conversation-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.ai-conversation-item:hover {
+  background: var(--background-muted);
+}
+
+.ai-conversation-item.active {
+  background: var(--selected-background);
+}
+
+.ai-conversation-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-conversation-participants {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+.ai-conversation-participants .participant-badge {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0.625rem;
+  margin-right: 0;
+}
+
+.ai-conversation-date {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.ai-conversation-rename,
+.ai-conversation-delete {
+  opacity: 0;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+}
+
+.ai-conversation-item:hover .ai-conversation-rename,
+.ai-conversation-item:hover .ai-conversation-delete {
+  opacity: 1;
+}
+
+.ai-conversation-rename:hover {
+  color: var(--link);
+  background: var(--stone-200);
+}
+
+.ai-conversation-delete:hover {
+  color: var(--red-600);
+  background: var(--red-100);
+}
+
+.ai-no-conversations {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
 /* LLM Badges */
 .ai-llm-badge {
   display: inline-block;

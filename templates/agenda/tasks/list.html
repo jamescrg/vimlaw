@@ -166,14 +166,17 @@
           <td class="description {% if task.date_due < today %}urgent{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"
               data-label="Description">
             <a href="#"
+               hx-get="{% url 'agenda:tasks-edit' id=task.id %}"
+               hx-target="#htmx-modal-container"
+               data-bs-toggle="modal"
+               data-bs-target="#htmx-modal-container">{{ task.description }}</a>
+            <a href="#"
+               class="task-notes-btn {% if task.has_notes %}has-notes{% endif %}"
                hx-get="{% url 'agenda:tasks-detail' id=task.id %}"
                hx-target="#htmx-modal-container"
                data-bs-toggle="modal"
                data-bs-target="#htmx-modal-container">
-              {{ task.description }}
-              {% if task.has_notes %}
-                <i class="bi bi-sticky note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
-              {% endif %}
+              <i class="bi bi-sticky note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
             </a>
           </td>
           <td class="status dropdown-cell {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due < today %}urgent{% endif %}"

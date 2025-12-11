@@ -183,3 +183,17 @@
   font-size: 1rem;
   margin-right: 0.5rem;
 }
+
+/* Task notes ghost button */
+.task-notes-btn {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.task-notes-btn.has-notes {
+  opacity: 1;
+}
+
+.tasks-table td.description:hover .task-notes-btn {
+  opacity: 1;
+}

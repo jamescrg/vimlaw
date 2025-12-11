@@ -4,6 +4,14 @@
        hx-target="#chatArea"
        hx-swap="innerHTML">
     <span class="ai-conversation-title">{{ conv.title|truncatechars:30 }}</span>
+    <span class="ai-conversation-participants">
+      {% with participants=conv.get_participants %}
+        {% for user in participants|slice:":2" %}
+          <span class="participant-badge" title="{{ user.get_full_name }}">{{ user.first_name|slice:":1"|default:user.username|slice:":1" }}</span>
+        {% endfor %}
+        {% if participants.count > 2 %}<span class="participant-more">+{{ participants.count|add:"-2" }}</span>{% endif %}
+      {% endwith %}
+    </span>
     <span class="ai-conversation-date">{{ conv.updated_at|date:"M j" }}</span>
     <button class="ai-conversation-rename"
             hx-get="{% url 'case:ai-rename-conversation' conv.id %}"
