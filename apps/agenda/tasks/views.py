@@ -153,7 +153,7 @@ def tasks_edit(request, id):
         if form.is_valid():
             task = form.save(commit=False)
             task.save()
-            return redirect("agenda:tasks-detail", id=task.id)
+            return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
     else:
         form = TaskForm(instance=task)
