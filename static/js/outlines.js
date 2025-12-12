@@ -408,9 +408,11 @@
   }
 
   // Focus an item's input or make it editable (legacy function name)
-  // cursorPos: 'start', 'end', or null (default browser behavior)
-  function focusItem(itemElement, cursorPos = null) {
+  // cursorPos: 'start', 'end', 'first', 'last', or null (default browser behavior)
+  // cursorX: optional X coordinate to match when using 'first' or 'last'
+  function focusItem(itemElement, cursorPos = null, cursorX = null) {
     pendingCursorPosition = cursorPos;
+    pendingCursorX = cursorX;
     setFocusedItem(itemElement);
     editItem(itemElement);
   }
@@ -456,6 +458,43 @@
         if (newItem) {
           htmx.process(newItem);
           // Push undo for the new item
+          pushUndo({
+            type: 'create_item',
+            itemId: newItem.dataset.itemId
+          });
+          setTimeout(() => focusItem(newItem), 50);
+        }
+      }
+    });
+  }
+
+  // Split item: create new sibling and move children to it
+  function splitItem(currentItemId, content = '') {
+    const currentItem = getItemElement(currentItemId);
+    if (!currentItem) return;
+
+    fetch(`/outlines/item/${currentItemId}/split/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: `content=${encodeURIComponent(content)}`
+    })
+    .then(response => response.text())
+    .then(html => {
+      const currentEl = getItemElement(currentItemId);
+      if (currentEl) {
+        // Remove children from current item (they've been moved server-side)
+        const childrenContainer = currentEl.querySelector(':scope > .item-children');
+        if (childrenContainer) {
+          childrenContainer.remove();
+        }
+        // Insert new item after current
+        currentEl.insertAdjacentHTML('afterend', html);
+        const newItem = currentEl.nextElementSibling;
+        if (newItem) {
+          htmx.process(newItem);
           pushUndo({
             type: 'create_item',
             itemId: newItem.dataset.itemId
@@ -536,6 +575,42 @@
       }
     });
   };
+
+  // Join item with previous item (when pressing backspace at position 0)
+  function joinWithPreviousItem(itemId) {
+    const itemEl = getItemElement(itemId);
+    if (!itemEl) return;
+
+    const prevItem = getPreviousItem(itemEl);
+    if (!prevItem) return;
+
+    const prevItemId = prevItem.dataset.itemId;
+    const prevInput = prevItem.querySelector('.item-input');
+    const prevContent = prevInput ? prevInput.value : prevItem.querySelector('.item-content')?.textContent || '';
+    const cursorPos = prevContent.length;  // Cursor goes where the join happens
+
+    fetch(`/outlines/item/${itemId}/join-with-previous/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      if (html) {
+        // Replace previous item with updated HTML
+        prevItem.outerHTML = html;
+        // Remove current item
+        itemEl.remove();
+        // Focus the joined item at the join point
+        const newPrevItem = getItemElement(prevItemId);
+        if (newPrevItem) {
+          htmx.process(newPrevItem);
+          focusItem(newPrevItem, cursorPos);
+        }
+      }
+    });
+  }
 
   // Delete item
   function deleteItem(itemId) {
@@ -1192,9 +1267,17 @@
           // Update current item with text before cursor
           input.value = textBefore;
 
+          // Check if item has children
+          const hasChildren = itemEl?.querySelector(':scope > .item-children > .outline-item');
+
           // Trigger save of current item, then create new item
           htmx.trigger(input, 'blur');
-          setTimeout(() => createItemAfter(itemId, textAfter), 100);
+          if (hasChildren) {
+            // Use split to move children to new item
+            setTimeout(() => splitItem(itemId, textAfter), 100);
+          } else {
+            setTimeout(() => createItemAfter(itemId, textAfter), 100);
+          }
         }
         break;
 
@@ -1207,6 +1290,11 @@
           // Delete if empty
           event.preventDefault();
           deleteItem(itemId);
+        } else if (input.selectionStart === 0 && input.selectionEnd === 0) {
+          // At position 0 with content: join with previous item
+          event.preventDefault();
+          htmx.trigger(input, 'blur');
+          setTimeout(() => joinWithPreviousItem(itemId), 50);
         }
         break;
 
@@ -1704,6 +1792,9 @@
 
   // Capture click position before htmx swap
   document.body.addEventListener('click', function(event) {
+    // Don't overwrite if cursor position was already set programmatically
+    if (pendingCursorPosition !== null) return;
+
     const contentWrapper = event.target.closest('.item-content-wrapper');
     if (contentWrapper && !event.target.classList.contains('item-input')) {
       // Store click position relative to the content wrapper
@@ -1745,6 +1836,10 @@
         } else if (pendingCursorPosition === 'click' && pendingCursorX !== null && pendingClickY !== null) {
           // Position cursor at click location
           const pos = findCursorPositionFromClick(input, pendingCursorX, pendingClickY);
+          input.setSelectionRange(pos, pos);
+        } else if (typeof pendingCursorPosition === 'number') {
+          // Numeric position
+          const pos = Math.min(pendingCursorPosition, input.value.length);
           input.setSelectionRange(pos, pos);
         }
         pendingCursorPosition = null;

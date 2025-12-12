@@ -170,7 +170,7 @@ body:has(.outline-page.standalone) {
   gap: 0.5rem;
 }
 
-.outline-toolbar .toolbar-left a {
+.outline-toolbar .toolbar-left a:not(.dropdown-menu a) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -185,9 +185,29 @@ body:has(.outline-page.standalone) {
   transition: all 0.15s ease;
 }
 
-.outline-toolbar .toolbar-left a:hover {
+.outline-toolbar .toolbar-left a:not(.dropdown-menu a):hover {
   background: var(--background-lighter);
   color: var(--color-primary);
+}
+
+.outline-toolbar .toolbar-left .select-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  background: var(--background-lighter);
+  border: solid 1px var(--border-dark);
+  border-radius: 0.375rem;
+  color: var(--button-toolbar);
+  gap: 0.375rem;
+  width: auto;
+}
+
+.outline-toolbar .toolbar-left .select-btn:hover {
+  color: var(--color-primary);
+}
+
+.outline-toolbar .toolbar-left .dropdown-menu .dropdown-item {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .outline-toolbar .toolbar-center {
@@ -525,8 +545,15 @@ body:has(.outline-page.standalone) {
 }
 
 .outline-item[data-quote] .item-content-wrapper {
-  border-left: 3px solid var(--stone-300);
-  padding-left: 0.5rem;
+  font-style: italic;
+}
+
+.outline-item[data-quote] .item-content::before {
+  content: "\201C";
+}
+
+.outline-item[data-quote] .item-content::after {
+  content: "\201D";
 }
 
 /* Item Edit Input (textarea) */
@@ -600,13 +627,16 @@ body:has(.outline-page.standalone) {
 
 /* Item sources (citations) */
 .item-sources {
-  margin-left: 0.5rem;
+  margin-left: 0.25rem;
   font-size: 0.875rem;
 }
 
 .item-sources .source-citation {
-  background: var(--lime-100);
+  display: inline-block;
+  background: var(--stone-150);
+  margin-right: 0.5rem;
 }
+
 
 /* =============================================================================
    Empty State
@@ -779,7 +809,20 @@ body:has(.outline-page.standalone) {
 
 /* Inline markdown highlights */
 .item-content mark {
-  background: var(--hl-yellow);
+  background: var(--yellow-100);
+  color: inherit;
   padding: 0 0.125rem;
   border-radius: 0.125rem;
+}
+
+.item-content mark.mark-green {
+  background: var(--lime-100);
+}
+
+.item-content mark.mark-red {
+  background: var(--red-100);
+}
+
+.item-content mark.mark-citation {
+  background: var(--stone-150);
 }

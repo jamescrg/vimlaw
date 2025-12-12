@@ -9,6 +9,26 @@ from django.db import models
 from .models import OutlineItem
 
 
+def export_highlight_colors(text):
+    """Convert colored highlights to standard markdown with HTML comment metadata.
+
+    g==text== → ==text==<!-- hl:g -->
+    r==text== → ==text==<!-- hl:r -->
+    c==text== → ==text==<!-- hl:c -->
+    """
+    return re.sub(r"([grc])==(.+?)==", r"==\2==<!-- hl:\1 -->", text)
+
+
+def restore_highlight_colors(text):
+    """Restore colored highlights from HTML comment metadata on import.
+
+    ==text==<!-- hl:g --> → g==text==
+    ==text==<!-- hl:r --> → r==text==
+    ==text==<!-- hl:c --> → c==text==
+    """
+    return re.sub(r"==(.+?)==<!-- hl:([grc]) -->", r"\2==\1==", text)
+
+
 def parse_markdown_list(text):
     """
     Parse markdown unordered list into hierarchical structure.
@@ -17,6 +37,7 @@ def parse_markdown_list(text):
     - Bullet markers: - and *
     - Markdown headings: # ## ### etc. (converted to heading=True)
     - Indentation: spaces or tabs (2 spaces = 1 level)
+    - Colored highlight restoration: ==text==<!-- hl:g --> → g==text==
 
     Returns list of dicts with 'content', 'children', and 'heading' keys.
     Headings can appear at any nesting level.
@@ -48,6 +69,7 @@ def parse_markdown_list(text):
             content = heading_match.group(2).strip()
             if not content:
                 continue
+            content = restore_highlight_colors(content)
             item = {"content": content, "children": [], "heading": True}
 
             # Pop stack until we find appropriate parent depth
@@ -71,6 +93,7 @@ def parse_markdown_list(text):
         content = match.group(1).strip()
         if not content:
             continue
+        content = restore_highlight_colors(content)
 
         item = {"content": content, "children": [], "heading": False}
 
@@ -181,7 +204,8 @@ def export_outline_to_markdown(outline):
         """Recursively export an item and its children."""
         lines = []
         sources = get_sources_text(item)
-        content_with_sources = f"{item.content} {sources}" if sources else item.content
+        content = export_highlight_colors(item.content)
+        content_with_sources = f"{content} {sources}" if sources else content
 
         if item.heading:
             # Add blank line before heading (unless it's the first item)

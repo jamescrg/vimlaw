@@ -1,0 +1,44 @@
+<div id="sources-display-dropdown" class="dropdown">
+  <button type="button"
+          class="select-btn filter-dropdown-button {% if sources_display != 'show' %}toggle-active{% endif %}"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">
+    {% if sources_display == 'hide' %}
+      Hide Sources
+    {% elif sources_display == 'icon' %}
+      Icon Only
+    {% else %}
+      Show Sources
+    {% endif %}
+    <small>
+      <i class="bi bi-chevron-down"></i>
+    </small>
+  </button>
+  <ul class="dropdown-menu">
+    <li>
+      <a class="dropdown-item {% if sources_display == 'show' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:set-sources-display' outline.id %}"
+         hx-vals='{"display": "show"}'
+         hx-target="#sources-display-dropdown"
+         hx-swap="outerHTML">Show Sources</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if sources_display == 'hide' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:set-sources-display' outline.id %}"
+         hx-vals='{"display": "hide"}'
+         hx-target="#sources-display-dropdown"
+         hx-swap="outerHTML">Hide Sources</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if sources_display == 'icon' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'outlines:set-sources-display' outline.id %}"
+         hx-vals='{"display": "icon"}'
+         hx-target="#sources-display-dropdown"
+         hx-swap="outerHTML">Icon Only</a>
+    </li>
+  </ul>
+</div>
+{% if trigger_refresh %}<script>htmx.trigger(document.body, 'outlineChanged');</script>{% endif %}

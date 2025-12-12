@@ -22,6 +22,11 @@ def get_accessible_matters():
     return Matter.objects.filter(status="Open")
 
 
+def get_sources_display(request):
+    """Get the sources display preference from session."""
+    return request.session.get("outline_sources_display", "show")
+
+
 def get_outlines_data(request, matter):
     """Get outlines data with filters applied from session."""
     filter_data = request.session.get("outlines_filter", {})
@@ -320,6 +325,7 @@ def outline_standalone(request, outline_id):
     context = {
         "outline": outline,
         "root_items": root_items,
+        "sources_display": get_sources_display(request),
     }
     return render(request, "outlines/outline-standalone.html", context)
 
@@ -335,7 +341,11 @@ def outline_tree(request, outline_id):
     return render(
         request,
         "outlines/tree.html",
-        {"outline": outline, "root_items": root_items},
+        {
+            "outline": outline,
+            "root_items": root_items,
+            "sources_display": get_sources_display(request),
+        },
     )
 
 
@@ -356,7 +366,11 @@ def item_content(request, item_id):
     item = get_object_or_404(
         OutlineItem, id=item_id, outline__matter__in=get_accessible_matters()
     )
-    return render(request, "outlines/item-content.html", {"item": item})
+    return render(
+        request,
+        "outlines/item-content.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required
@@ -370,7 +384,11 @@ def item_edit(request, item_id):
         content = request.POST.get("content", "").strip()
         item.content = content
         item.save()
-        return render(request, "outlines/item-content.html", {"item": item})
+        return render(
+            request,
+            "outlines/item-content.html",
+            {"item": item, "sources_display": get_sources_display(request)},
+        )
 
     # GET - return edit input
     return render(request, "outlines/item-edit.html", {"item": item})
@@ -419,7 +437,55 @@ def item_create(request, outline_id):
         outline=outline, parent=parent, content=content, order=order
     )
 
-    return render(request, "outlines/item.html", {"item": item, "editing": True})
+    return render(
+        request,
+        "outlines/item.html",
+        {
+            "item": item,
+            "editing": True,
+            "sources_display": get_sources_display(request),
+        },
+    )
+
+
+@login_required
+@require_POST
+def item_split(request, item_id):
+    """Split item: create new sibling with content, move children to new item."""
+    item = get_object_or_404(
+        OutlineItem, id=item_id, outline__matter__in=get_accessible_matters()
+    )
+
+    content = request.POST.get("content", "")
+
+    # Create new sibling after current item
+    new_order = item.order + 1
+    OutlineItem.objects.filter(
+        outline=item.outline, parent=item.parent, order__gte=new_order
+    ).update(order=F("order") + 1)
+
+    new_item = OutlineItem.objects.create(
+        outline=item.outline,
+        parent=item.parent,
+        content=content,
+        order=new_order,
+    )
+
+    # Move all children from original item to new item
+    children = list(item.children.all().order_by("order"))
+    for child in children:
+        child.parent = new_item
+        child.save()
+
+    return render(
+        request,
+        "outlines/item.html",
+        {
+            "item": new_item,
+            "editing": True,
+            "sources_display": get_sources_display(request),
+        },
+    )
 
 
 @login_required
@@ -442,6 +508,55 @@ def item_delete(request, item_id):
     else:
         response["HX-Trigger"] = '{"itemDeleted": {}}'
     return response
+
+
+@login_required
+def item_join_with_previous(request, item_id):
+    """Join item with previous visible item, merging content and sources."""
+    item = get_object_or_404(
+        OutlineItem, id=item_id, outline__matter__in=get_accessible_matters()
+    )
+
+    # Find the previous visible item by traversing the tree
+    prev_item = item.get_previous_sibling()
+    if prev_item:
+        # If previous sibling has children (and is not collapsed), get its last descendant
+        while prev_item.children.exists():
+            prev_item = prev_item.children.order_by("order").last()
+    elif item.parent:
+        # No previous sibling, go to parent
+        prev_item = item.parent
+
+    if not prev_item:
+        return HttpResponse(status=204)
+
+    # Merge content: append current item's content to previous item
+    if item.content:
+        if prev_item.content:
+            prev_item.content = prev_item.content + " " + item.content
+        else:
+            prev_item.content = item.content
+        prev_item.save()
+
+    # Move sources from current item to previous item
+    for doc in item.documents.all():
+        prev_item.documents.add(doc)
+    for hl in item.highlights.all():
+        prev_item.highlights.add(hl)
+
+    # Move children to previous item
+    for child in item.children.all().order_by("order"):
+        child.parent = prev_item
+        child.save()
+
+    # Delete current item
+    item.delete()
+
+    return render(
+        request,
+        "outlines/item.html",
+        {"item": prev_item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required
@@ -500,7 +615,11 @@ def item_toggle_collapse(request, item_id):
     item.collapsed = not item.collapsed
     item.save()
 
-    return render(request, "outlines/item.html", {"item": item})
+    return render(
+        request,
+        "outlines/item.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required
@@ -528,6 +647,23 @@ def collapse_all(request, outline_id):
 
 
 @login_required
+@require_POST
+def set_sources_display(request, outline_id):
+    """Set the sources display preference in session."""
+    outline = get_object_or_404(
+        Outline, id=outline_id, matter__in=get_accessible_matters()
+    )
+    display = request.POST.get("display", "show")
+    if display in ["show", "icon", "hide"]:
+        request.session["outline_sources_display"] = display
+    return render(
+        request,
+        "outlines/partials/sources-display-dropdown.html",
+        {"outline": outline, "sources_display": display, "trigger_refresh": True},
+    )
+
+
+@login_required
 def item_toggle_heading(request, item_id):
     """Toggle heading state (boolean)."""
     item = get_object_or_404(
@@ -541,7 +677,11 @@ def item_toggle_heading(request, item_id):
     item.heading = not item.heading
     item.save()
 
-    return render(request, "outlines/item.html", {"item": item})
+    return render(
+        request,
+        "outlines/item.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required
@@ -553,7 +693,11 @@ def item_toggle_highlight(request, item_id):
     item.highlight = not item.highlight
     item.save()
 
-    return render(request, "outlines/item.html", {"item": item})
+    return render(
+        request,
+        "outlines/item.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required
@@ -565,7 +709,11 @@ def item_toggle_quote(request, item_id):
     item.quote = not item.quote
     item.save()
 
-    return render(request, "outlines/item.html", {"item": item})
+    return render(
+        request,
+        "outlines/item.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required
@@ -1048,7 +1196,11 @@ def item_add_source(request, item_id):
         highlight = get_object_or_404(Highlight, pk=source_id)
         item.highlights.add(highlight)
 
-    return render(request, "outlines/item.html", {"item": item})
+    return render(
+        request,
+        "outlines/item.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required
@@ -1069,4 +1221,8 @@ def item_remove_source(request, item_id):
         highlight = get_object_or_404(Highlight, pk=source_id)
         item.highlights.remove(highlight)
 
-    return render(request, "outlines/item.html", {"item": item})
+    return render(
+        request,
+        "outlines/item.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )

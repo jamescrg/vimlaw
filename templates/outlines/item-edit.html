@@ -8,10 +8,3 @@
           data-item-id="{{ item.id }}"
           onkeydown="handleItemKeydown(event, this)"
           oninput="if(typeof autoResizeTextarea==='function')autoResizeTextarea(this)">{{ item.content }}</textarea>
-{% with source_count=item.highlights.count|add:item.documents.count %}
-  {% if source_count %}
-    <span class="sources-indicator">
-      <i class="bi bi-link-45deg"></i> {{ source_count }}
-    </span>
-  {% endif %}
-{% endwith %}

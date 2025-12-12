@@ -17,7 +17,10 @@ def inline_markdown(text):
     Supports:
     - **bold** or __bold__ → <strong>
     - *italic* or _italic_ → <em>
-    - ==highlight== → <mark>
+    - ==highlight== → <mark> (yellow)
+    - g==highlight== → <mark class="mark-green"> (green)
+    - r==highlight== → <mark class="mark-red"> (red)
+    - c==citation== → <mark class="mark-citation"> (stone)
 
     HTML is escaped first to prevent XSS.
     """
@@ -35,7 +38,11 @@ def inline_markdown(text):
     text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
     text = re.sub(r"(?<!\w)_(.+?)_(?!\w)", r"<em>\1</em>", text)
 
-    # Highlight: ==text==
+    # Colored highlights: g==text==, r==text==, c==text== → <mark class="mark-{color}">
+    text = re.sub(r"g==(.+?)==", r'<mark class="mark-green">\1</mark>', text)
+    text = re.sub(r"r==(.+?)==", r'<mark class="mark-red">\1</mark>', text)
+    text = re.sub(r"c==(.+?)==", r'<mark class="mark-citation">\1</mark>', text)
+    # Default highlight: ==text== → <mark> (yellow)
     text = re.sub(r"==(.+?)==", r"<mark>\1</mark>", text)
 
     return mark_safe(text)

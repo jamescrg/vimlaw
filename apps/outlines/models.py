@@ -18,6 +18,12 @@ class Outline(models.Model):
         ("note", "Note"),
     ]
 
+    SOURCES_DISPLAY_CHOICES = [
+        ("show", "Show Sources"),
+        ("hide", "Hide"),
+        ("icon", "Icon Only"),
+    ]
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     matter = models.ForeignKey(
         Matter,
@@ -32,6 +38,9 @@ class Outline(models.Model):
     viewed_at = models.DateTimeField(null=True, blank=True)
     importance = models.PositiveIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    sources_display = models.CharField(
+        max_length=10, choices=SOURCES_DISPLAY_CHOICES, default="show"
     )
 
     class Meta:
@@ -78,6 +87,11 @@ class OutlineItem(models.Model):
     def __str__(self):
         preview = self.content[:50] if self.content else "(empty)"
         return f"{preview}"
+
+    def save(self, *args, **kwargs):
+        if self.content:
+            self.content = self.content.strip()
+        super().save(*args, **kwargs)
 
     def get_children(self):
         """Get ordered children."""

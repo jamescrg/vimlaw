@@ -56,7 +56,13 @@ urlpatterns = [
     path("item/<int:item_id>/", views.item_content, name="item-content"),
     path("item/<int:item_id>/edit/", views.item_edit, name="item-edit"),
     path("<int:outline_id>/item/create/", views.item_create, name="item-create"),
+    path("item/<int:item_id>/split/", views.item_split, name="item-split"),
     path("item/<int:item_id>/delete/", views.item_delete, name="item-delete"),
+    path(
+        "item/<int:item_id>/join-with-previous/",
+        views.item_join_with_previous,
+        name="item-join-with-previous",
+    ),
     path("item/<int:item_id>/indent/", views.item_indent, name="item-indent"),
     path("item/<int:item_id>/outdent/", views.item_outdent, name="item-outdent"),
     path(
@@ -66,6 +72,11 @@ urlpatterns = [
     ),
     path("<int:outline_id>/expand-all/", views.expand_all, name="expand-all"),
     path("<int:outline_id>/collapse-all/", views.collapse_all, name="collapse-all"),
+    path(
+        "<int:outline_id>/set-sources-display/",
+        views.set_sources_display,
+        name="set-sources-display",
+    ),
     path(
         "item/<int:item_id>/toggle-heading/",
         views.item_toggle_heading,
