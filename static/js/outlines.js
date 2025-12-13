@@ -12,6 +12,8 @@
   let pendingCursorPosition = null;  // 'start', 'end', 'first', 'last', or 'click'
   let pendingCursorX = null;  // X coordinate to match when positioning cursor
   let pendingClickY = null;  // Y coordinate for click positioning
+  let pendingSelectionStart = null;  // Start of selection range to apply
+  let pendingSelectionEnd = null;  // End of selection range to apply
 
   // Drag selection state
   let dragStartItemId = null;  // Item where drag started
@@ -21,6 +23,130 @@
   const undoStack = [];
   const MAX_UNDO_SIZE = 50;
   let editStartContent = null;  // Content when edit mode started (for undo)
+
+  // ============================================================================
+  // Input abstraction helpers (work with both textarea and contenteditable)
+  // ============================================================================
+
+  // Get text value from input (textarea or contenteditable)
+  function getInputValue(input) {
+    if (!input) return '';
+    if (input.tagName === 'TEXTAREA') {
+      return input.value;
+    }
+    // Contenteditable - get text without sources
+    const clone = input.cloneNode(true);
+    const sources = clone.querySelector('.item-sources');
+    if (sources) sources.remove();
+    return clone.textContent || '';
+  }
+
+  // Set text value on input
+  function setInputValue(input, value) {
+    if (!input) return;
+    if (input.tagName === 'TEXTAREA') {
+      input.value = value;
+    } else {
+      // Contenteditable - preserve sources
+      const sources = input.querySelector('.item-sources');
+      if (sources) {
+        // Remove sources temporarily
+        sources.remove();
+        input.textContent = value;
+        input.appendChild(sources);
+      } else {
+        input.textContent = value;
+      }
+    }
+  }
+
+  // Get cursor/selection start position
+  function getSelectionStart(input) {
+    if (!input) return 0;
+    if (input.tagName === 'TEXTAREA') {
+      return input.selectionStart;
+    }
+    // Contenteditable
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return 0;
+    const range = sel.getRangeAt(0);
+    // Only count position within text nodes (not sources)
+    const preRange = document.createRange();
+    preRange.selectNodeContents(input);
+    preRange.setEnd(range.startContainer, range.startOffset);
+    // Get text length, excluding sources
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(preRange.cloneContents());
+    const sources = tempDiv.querySelector('.item-sources');
+    if (sources) sources.remove();
+    return tempDiv.textContent.length;
+  }
+
+  // Get cursor/selection end position
+  function getSelectionEnd(input) {
+    if (!input) return 0;
+    if (input.tagName === 'TEXTAREA') {
+      return input.selectionEnd;
+    }
+    // Contenteditable
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return 0;
+    const range = sel.getRangeAt(0);
+    const preRange = document.createRange();
+    preRange.selectNodeContents(input);
+    preRange.setEnd(range.endContainer, range.endOffset);
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(preRange.cloneContents());
+    const sources = tempDiv.querySelector('.item-sources');
+    if (sources) sources.remove();
+    return tempDiv.textContent.length;
+  }
+
+  // Set selection range on input
+  function setInputSelectionRange(input, start, end) {
+    if (!input) return;
+    if (input.tagName === 'TEXTAREA') {
+      input.setSelectionRange(start, end);
+      return;
+    }
+    // Contenteditable - find the text node and set range
+    const sel = window.getSelection();
+    const range = document.createRange();
+
+    // Walk through text nodes to find position
+    let currentPos = 0;
+    let startNode = null, startOffset = 0;
+    let endNode = null, endOffset = 0;
+
+    function walkNodes(node) {
+      if (startNode && endNode) return;
+      if (node.nodeType === Node.TEXT_NODE) {
+        const len = node.textContent.length;
+        if (!startNode && currentPos + len >= start) {
+          startNode = node;
+          startOffset = start - currentPos;
+        }
+        if (!endNode && currentPos + len >= end) {
+          endNode = node;
+          endOffset = end - currentPos;
+        }
+        currentPos += len;
+      } else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('item-sources')) {
+        for (const child of node.childNodes) {
+          walkNodes(child);
+        }
+      }
+    }
+
+    walkNodes(input);
+
+    if (startNode && endNode) {
+      range.setStart(startNode, startOffset);
+      range.setEnd(endNode, endOffset);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
 
   // Push operation to undo stack
   function pushUndo(operation) {
@@ -36,7 +162,7 @@
     const itemId = itemEl.dataset.itemId;
     const contentEl = itemEl.querySelector(':scope > .item-row .item-content');
     const inputEl = itemEl.querySelector(':scope > .item-row .item-input');
-    const content = contentEl?.textContent || inputEl?.value || '';
+    const content = contentEl?.textContent || (inputEl ? getInputValue(inputEl) : '') || '';
     const children = Array.from(itemEl.querySelectorAll(':scope > .item-children > .outline-item'))
       .map(child => serializeItem(child));
     return {
@@ -78,6 +204,12 @@
       case 'toggle_highlight':
         undoToggle(op);
         break;
+      case 'split':
+        undoSplit(op);
+        break;
+      case 'join':
+        undoJoin(op);
+        break;
     }
   }
 
@@ -98,8 +230,10 @@
           if (contentEl) contentEl.textContent = op.oldContent;
           const inputEl = itemEl.querySelector('.item-input');
           if (inputEl) {
-            inputEl.value = op.oldContent;
-            autoResizeTextarea(inputEl);
+            setInputValue(inputEl, op.oldContent);
+            if (inputEl.tagName === 'TEXTAREA') {
+              autoResizeTextarea(inputEl);
+            }
           }
         }
       }
@@ -175,6 +309,72 @@
     }).then(response => {
       if (response.ok) {
         refreshTreeAndFocus(op.itemId);
+      }
+    });
+  }
+
+  function undoSplit(op) {
+    // Undo split: restore original item content and delete the new item
+    const fullContent = op.originalContent + op.newItemContent;
+    fetch(`/outlines/item/${op.originalItemId}/edit/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: `content=${encodeURIComponent(fullContent)}`
+    }).then(response => {
+      if (response.ok) {
+        // Delete the new item
+        return fetch(`/outlines/item/${op.newItemId}/delete/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCSRFToken()
+          }
+        });
+      }
+    }).then(response => {
+      if (response && response.ok) {
+        refreshTreeAndFocus(op.originalItemId, false, true, op.originalContent.length);
+      }
+    });
+  }
+
+  function undoJoin(op) {
+    // Undo join: restore previous item's content and recreate the deleted item
+    // First, restore the previous item's original content
+    fetch(`/outlines/item/${op.prevItemId}/edit/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: `content=${encodeURIComponent(op.prevOriginalContent)}`
+    }).then(response => {
+      if (response.ok) {
+        // Recreate the deleted item
+        return fetch(`/outlines/${getOutlineId()}/restore-items/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: JSON.stringify({
+            items: [{
+              parentId: op.deletedItem.parentId,
+              content: op.deletedItem.content,
+              order: op.deletedItem.order,
+              collapsed: op.deletedItem.collapsed,
+              heading: op.deletedItem.heading,
+              highlight: op.deletedItem.highlight,
+              children: op.deletedItem.children
+            }]
+          })
+        });
+      }
+    }).then(response => {
+      if (response && response.ok) {
+        refreshTreeAndFocus(op.prevItemId);
       }
     });
   }
@@ -401,9 +601,64 @@
     if (!itemElement) return;
 
     const contentWrapper = itemElement.querySelector('.item-content-wrapper');
-    if (contentWrapper) {
-      // Trigger click to enter edit mode
-      htmx.trigger(contentWrapper, 'click');
+    if (!contentWrapper) return;
+
+    const input = contentWrapper.querySelector('.item-input');
+    const viewContent = contentWrapper.querySelector('.item-content');
+
+    // Sync edit input from view content before entering edit mode
+    // This ensures they're always in sync (view content is the source of truth)
+    if (input && viewContent) {
+      const currentViewText = viewContent.textContent || '';
+      setInputValue(input, currentViewText);
+    }
+
+    // Add editing class to show the input
+    contentWrapper.classList.add('editing');
+
+    if (input) {
+      // Capture initial content for undo
+      editStartContent = getInputValue(input);
+
+      // Focus and position cursor
+      requestAnimationFrame(() => {
+        input.focus();
+
+        const inputLen = getInputValue(input).length;
+        // Apply pending selection range if set
+        if (pendingSelectionStart !== null && pendingSelectionEnd !== null) {
+          const start = Math.min(pendingSelectionStart, inputLen);
+          const end = Math.min(pendingSelectionEnd, inputLen);
+          setInputSelectionRange(input, start, end);
+          pendingSelectionStart = null;
+          pendingSelectionEnd = null;
+          pendingCursorPosition = null;
+          pendingCursorX = null;
+          pendingClickY = null;
+        } else if (pendingCursorPosition === 'end') {
+          // Position cursor based on pending position
+          setInputSelectionRange(input, inputLen, inputLen);
+        } else if (pendingCursorPosition === 'start') {
+          setInputSelectionRange(input, 0, 0);
+        } else if (pendingCursorPosition === 'first' || pendingCursorPosition === 'last') {
+          if (pendingCursorX !== null) {
+            const pos = findCursorPositionForX(input, pendingCursorX, pendingCursorPosition);
+            setInputSelectionRange(input, pos, pos);
+          } else {
+            const pos = pendingCursorPosition === 'first' ? 0 : inputLen;
+            setInputSelectionRange(input, pos, pos);
+          }
+        } else if (pendingCursorPosition === 'click' && pendingCursorX !== null && pendingClickY !== null) {
+          const pos = findCursorPositionFromClick(input, pendingCursorX, pendingClickY);
+          setInputSelectionRange(input, pos, pos);
+        } else if (typeof pendingCursorPosition === 'number') {
+          const pos = Math.min(pendingCursorPosition, inputLen);
+          setInputSelectionRange(input, pos, pos);
+        }
+        pendingCursorPosition = null;
+        pendingCursorX = null;
+        pendingClickY = null;
+      });
     }
   }
 
@@ -437,8 +692,31 @@
     if (!outlineId) return;
 
     const currentItem = getItemElement(currentItemId);
-    const parentId = currentItem?.dataset.parentId || '';
+    if (!currentItem) return;
+    const parentId = currentItem.dataset.parentId || '';
 
+    // Optimistic: create temporary item immediately
+    const tempId = 'temp-' + Date.now();
+    const escapedContent = escapeHtml(content);
+    const tempHtml = `
+      <div class="outline-item" id="outline-item-${tempId}" data-item-id="${tempId}" data-parent-id="${parentId}">
+        <div class="item-row">
+          <span class="item-bullet">•</span>
+          <div class="item-content-wrapper">
+            <span class="item-content">${escapedContent}</span>
+            <div class="item-input" contenteditable="true" data-item-id="${tempId}" onkeydown="handleItemKeydown(event, this)">${escapedContent}</div>
+          </div>
+        </div>
+      </div>`;
+    currentItem.insertAdjacentHTML('afterend', tempHtml);
+    const tempItem = currentItem.nextElementSibling;
+
+    // Focus the temp item immediately
+    if (tempItem) {
+      focusItem(tempItem, 'start');
+    }
+
+    // Send to server
     fetch(`/outlines/${outlineId}/item/create/`, {
       method: 'POST',
       headers: {
@@ -449,30 +727,75 @@
     })
     .then(response => response.text())
     .then(html => {
-      // Insert new item after current
-      const currentEl = getItemElement(currentItemId);
-      if (currentEl) {
-        currentEl.insertAdjacentHTML('afterend', html);
-        // Focus the new item's input
-        const newItem = currentEl.nextElementSibling;
+      // Replace temp item with real item from server
+      if (tempItem && tempItem.parentElement) {
+        tempItem.insertAdjacentHTML('afterend', html);
+        const newItem = tempItem.nextElementSibling;
+        tempItem.remove();
         if (newItem) {
           htmx.process(newItem);
-          // Push undo for the new item
           pushUndo({
             type: 'create_item',
             itemId: newItem.dataset.itemId
           });
-          setTimeout(() => focusItem(newItem), 50);
+          // Re-focus the real item
+          focusItem(newItem, 'start');
         }
       }
     });
+  }
+
+  // Helper to escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   // Split item: create new sibling and move children to it
   function splitItem(currentItemId, content = '') {
     const currentItem = getItemElement(currentItemId);
     if (!currentItem) return;
+    const parentId = currentItem.dataset.parentId || '';
 
+    // Capture original item's current content for undo
+    const originalContent = currentItem.querySelector('.item-content')?.textContent || '';
+
+    // Get children from current item (will be moved to new item)
+    const childrenContainer = currentItem.querySelector(':scope > .item-children');
+    const hadChildren = childrenContainer && childrenContainer.children.length > 0;
+
+    // Optimistic: create temporary item immediately
+    const tempId = 'temp-' + Date.now();
+    let tempHtml = `
+      <div class="outline-item" id="outline-item-${tempId}" data-item-id="${tempId}" data-parent-id="${parentId}">
+        <div class="item-row">
+          <span class="item-bullet">•</span>
+          <div class="item-content-wrapper">
+            <span class="item-content">${escapeHtml(content)}</span>
+          </div>
+        </div>
+      </div>`;
+    currentItem.insertAdjacentHTML('afterend', tempHtml);
+    const tempItem = currentItem.nextElementSibling;
+
+    // Move children from current item to new item
+    if (childrenContainer) {
+      tempItem.appendChild(childrenContainer);
+    }
+
+    // Remove collapse toggle from current item if it had one
+    const collapseToggle = currentItem.querySelector(':scope > .item-row > .collapse-toggle');
+    if (collapseToggle) {
+      collapseToggle.remove();
+    }
+
+    // Focus the temp item immediately
+    if (tempItem) {
+      focusItem(tempItem, 'start');
+    }
+
+    // Send to server
     fetch(`/outlines/item/${currentItemId}/split/`, {
       method: 'POST',
       headers: {
@@ -483,23 +806,22 @@
     })
     .then(response => response.text())
     .then(html => {
-      const currentEl = getItemElement(currentItemId);
-      if (currentEl) {
-        // Remove children from current item (they've been moved server-side)
-        const childrenContainer = currentEl.querySelector(':scope > .item-children');
-        if (childrenContainer) {
-          childrenContainer.remove();
-        }
-        // Insert new item after current
-        currentEl.insertAdjacentHTML('afterend', html);
-        const newItem = currentEl.nextElementSibling;
+      // Replace temp item with real item from server
+      if (tempItem && tempItem.parentElement) {
+        tempItem.insertAdjacentHTML('afterend', html);
+        const newItem = tempItem.nextElementSibling;
+        tempItem.remove();
         if (newItem) {
           htmx.process(newItem);
           pushUndo({
-            type: 'create_item',
-            itemId: newItem.dataset.itemId
+            type: 'split',
+            originalItemId: currentItemId,
+            originalContent: originalContent,
+            newItemId: newItem.dataset.itemId,
+            newItemContent: content,
+            hadChildren: hadChildren
           });
-          setTimeout(() => focusItem(newItem), 50);
+          focusItem(newItem, 'start');
         }
       }
     });
@@ -510,6 +832,31 @@
     const outlineId = getOutlineId();
     if (!outlineId) return;
 
+    const currentItem = getItemElement(currentItemId);
+    if (!currentItem) return;
+    const parentId = currentItem.dataset.parentId || '';
+
+    // Optimistic: create temporary item immediately
+    const tempId = 'temp-' + Date.now();
+    const tempHtml = `
+      <div class="outline-item" id="outline-item-${tempId}" data-item-id="${tempId}" data-parent-id="${parentId}">
+        <div class="item-row">
+          <span class="item-bullet">•</span>
+          <div class="item-content-wrapper">
+            <span class="item-content"></span>
+            <div class="item-input" contenteditable="true" data-item-id="${tempId}" onkeydown="handleItemKeydown(event, this)"></div>
+          </div>
+        </div>
+      </div>`;
+    currentItem.insertAdjacentHTML('beforebegin', tempHtml);
+    const tempItem = currentItem.previousElementSibling;
+
+    // Focus the temp item immediately
+    if (tempItem) {
+      focusItem(tempItem, 'start');
+    }
+
+    // Send to server
     fetch(`/outlines/${outlineId}/item/create/`, {
       method: 'POST',
       headers: {
@@ -520,20 +867,19 @@
     })
     .then(response => response.text())
     .then(html => {
-      // Insert new item before current
-      const currentEl = getItemElement(currentItemId);
-      if (currentEl) {
-        currentEl.insertAdjacentHTML('beforebegin', html);
-        // Focus the new item's input
-        const newItem = currentEl.previousElementSibling;
+      // Replace temp item with real item from server
+      if (tempItem && tempItem.parentElement) {
+        tempItem.insertAdjacentHTML('afterend', html);
+        const newItem = tempItem.nextElementSibling;
+        tempItem.remove();
         if (newItem) {
           htmx.process(newItem);
-          // Push undo for the new item
           pushUndo({
             type: 'create_item',
             itemId: newItem.dataset.itemId
           });
-          setTimeout(() => focusItem(newItem), 50);
+          // Re-focus the real item
+          focusItem(newItem, 'start');
         }
       }
     });
@@ -581,33 +927,75 @@
     const itemEl = getItemElement(itemId);
     if (!itemEl) return;
 
-    const prevItem = getPreviousItem(itemEl);
-    if (!prevItem) return;
+    // Only join with previous sibling, not parent
+    const prevSibling = itemEl.previousElementSibling;
+    if (!prevSibling || !prevSibling.classList.contains('outline-item')) return;
 
-    const prevItemId = prevItem.dataset.itemId;
-    const prevInput = prevItem.querySelector('.item-input');
-    const prevContent = prevInput ? prevInput.value : prevItem.querySelector('.item-content')?.textContent || '';
-    const cursorPos = prevContent.length;  // Cursor goes where the join happens
+    const prevItemId = prevSibling.dataset.itemId;
 
+    // Get current content from the edit input (we're currently editing this item)
+    const curInput = itemEl.querySelector('.item-input');
+    const curContent = curInput ? getInputValue(curInput) : '';
+
+    // Get previous sibling's content from view (source of truth)
+    const prevContentEl = prevSibling.querySelector('.item-content');
+    const prevContent = prevContentEl?.textContent || '';
+
+    // Capture state for undo before making changes
+    const deletedItemData = serializeItem(itemEl);
+    // Override content with what's in the input (may differ from view)
+    deletedItemData.content = curContent;
+
+    const cursorPos = prevContent.length;
+    const joinedContent = prevContent + curContent;
+
+    // Move sources from current item to previous sibling
+    const curSources = itemEl.querySelector('.item-input .item-sources');
+    const prevSources = prevSibling.querySelector('.item-input .item-sources');
+    if (curSources && prevSources) {
+      while (curSources.firstChild) {
+        prevSources.appendChild(curSources.firstChild);
+      }
+    }
+
+    // Move any children from current item to previous sibling
+    const curChildren = itemEl.querySelector(':scope > .item-children');
+    if (curChildren && curChildren.children.length > 0) {
+      let prevChildren = prevSibling.querySelector(':scope > .item-children');
+      if (!prevChildren) {
+        prevChildren = document.createElement('div');
+        prevChildren.className = 'item-children';
+        prevSibling.appendChild(prevChildren);
+      }
+      while (curChildren.firstChild) {
+        prevChildren.appendChild(curChildren.firstChild);
+      }
+    }
+
+    // Remove current item from DOM
+    itemEl.remove();
+
+    // Update previous sibling's view content (source of truth)
+    if (prevContentEl) {
+      prevContentEl.textContent = joinedContent;
+    }
+
+    // Enter edit mode on previous sibling (will sync from view content)
+    focusItem(prevSibling, cursorPos);
+
+    // Push undo before sending to server
+    pushUndo({
+      type: 'join',
+      deletedItem: deletedItemData,
+      prevItemId: prevItemId,
+      prevOriginalContent: prevContent
+    });
+
+    // Send to server
     fetch(`/outlines/item/${itemId}/join-with-previous/`, {
       method: 'POST',
       headers: {
         'X-CSRFToken': getCSRFToken()
-      }
-    })
-    .then(response => response.text())
-    .then(html => {
-      if (html) {
-        // Replace previous item with updated HTML
-        prevItem.outerHTML = html;
-        // Remove current item
-        itemEl.remove();
-        // Focus the joined item at the join point
-        const newPrevItem = getItemElement(prevItemId);
-        if (newPrevItem) {
-          htmx.process(newPrevItem);
-          focusItem(newPrevItem, cursorPos);
-        }
       }
     });
   }
@@ -677,7 +1065,7 @@
                 setTimeout(() => {
                   const input = item.querySelector('.item-input');
                   if (input) {
-                    input.setSelectionRange(cursorPos, cursorPos);
+                    setInputSelectionRange(input, cursorPos, cursorPos);
                   }
                 }, 60);
               }
@@ -746,7 +1134,7 @@
               setTimeout(() => {
                 const input = itemEl.querySelector('.item-input');
                 if (input) {
-                  input.setSelectionRange(cursorPos, cursorPos);
+                  setInputSelectionRange(input, cursorPos, cursorPos);
                 }
               }, 60);
             }
@@ -796,7 +1184,7 @@
         setTimeout(() => {
           const input = itemEl.querySelector('.item-input');
           if (input) {
-            input.setSelectionRange(cursorPos, cursorPos);
+            setInputSelectionRange(input, cursorPos, cursorPos);
           }
         }, 60);
       }
@@ -866,7 +1254,7 @@
         setTimeout(() => {
           const input = itemEl.querySelector('.item-input');
           if (input) {
-            input.setSelectionRange(cursorPos, cursorPos);
+            setInputSelectionRange(input, cursorPos, cursorPos);
           }
         }, 60);
       }
@@ -886,11 +1274,44 @@
     });
   }
 
-  // Batch indent multiple items
+  // Batch indent multiple items (optimistic)
   function batchIndent(itemIds, focusItemId) {
     const outlineId = getOutlineId();
     if (!outlineId) return;
 
+    // Get elements in DOM order
+    const items = itemIds.map(id => getItemElement(id)).filter(el => el);
+    if (items.length === 0) return;
+
+    // Find previous sibling of first item - this will be the new parent
+    const firstItem = items[0];
+    const prevSibling = firstItem.previousElementSibling;
+    if (!prevSibling || !prevSibling.classList.contains('outline-item')) {
+      return; // Can't indent - no previous sibling
+    }
+
+    // Optimistic DOM update
+    let childrenContainer = prevSibling.querySelector(':scope > .item-children');
+    if (!childrenContainer) {
+      childrenContainer = document.createElement('div');
+      childrenContainer.className = 'item-children';
+      prevSibling.appendChild(childrenContainer);
+    }
+
+    // Move all selected items into the new parent
+    items.forEach(item => {
+      childrenContainer.appendChild(item);
+      item.dataset.parentId = prevSibling.dataset.itemId;
+    });
+
+    // Maintain selection state
+    clearSelection();
+    items.forEach(item => selectItem(item, true));
+    if (focusItemId) {
+      setFocusedItem(getItemElement(focusItemId), true);
+    }
+
+    // Send to server
     fetch(`/outlines/${outlineId}/batch-indent/`, {
       method: 'POST',
       headers: {
@@ -898,19 +1319,54 @@
         'X-CSRFToken': getCSRFToken()
       },
       body: JSON.stringify({ item_ids: itemIds })
-    })
-    .then(response => {
-      if (response.ok) {
-        refreshTreeAndFocus(focusItemId, true);
-      }
     });
   }
 
-  // Batch outdent multiple items
+  // Batch outdent multiple items (optimistic)
   function batchOutdent(itemIds, focusItemId) {
     const outlineId = getOutlineId();
     if (!outlineId) return;
 
+    // Get elements in DOM order
+    const items = itemIds.map(id => getItemElement(id)).filter(el => el);
+    if (items.length === 0) return;
+
+    // Check if first item can be outdented
+    const firstItem = items[0];
+    const parentChildren = firstItem.parentElement;
+    if (!parentChildren || !parentChildren.classList.contains('item-children')) {
+      return; // Already at root level
+    }
+    const parentItem = parentChildren.closest('.outline-item');
+    if (!parentItem) return;
+
+    const grandparentContainer = parentItem.parentElement;
+
+    // Optimistic DOM update - insert all items after the parent
+    let insertAfter = parentItem;
+    items.forEach(item => {
+      grandparentContainer.insertBefore(item, insertAfter.nextElementSibling);
+      item.dataset.parentId = parentItem.dataset.parentId || '';
+      insertAfter = item;
+    });
+
+    // Clean up empty children container
+    if (parentChildren.children.length === 0) {
+      parentChildren.remove();
+      const collapseToggle = parentItem.querySelector(':scope > .item-row > .collapse-toggle');
+      if (collapseToggle) {
+        collapseToggle.remove();
+      }
+    }
+
+    // Maintain selection state
+    clearSelection();
+    items.forEach(item => selectItem(item, true));
+    if (focusItemId) {
+      setFocusedItem(getItemElement(focusItemId), true);
+    }
+
+    // Send to server
     fetch(`/outlines/${outlineId}/batch-outdent/`, {
       method: 'POST',
       headers: {
@@ -918,11 +1374,6 @@
         'X-CSRFToken': getCSRFToken()
       },
       body: JSON.stringify({ item_ids: itemIds })
-    })
-    .then(response => {
-      if (response.ok) {
-        refreshTreeAndFocus(focusItemId, true);
-      }
     });
   }
 
@@ -1251,33 +1702,27 @@
           return;
         }
         event.preventDefault();
-        if (input.value === '') {
+        const inputValue = getInputValue(input);
+        const selStart = getSelectionStart(input);
+        if (inputValue === '') {
           // Delete empty item and exit
           deleteItem(itemId);
-        } else if (input.selectionStart === 0) {
+        } else if (selStart === 0) {
           // Cursor at position 0 - create new item ABOVE (Workflowy behavior)
-          htmx.trigger(input, 'blur');
+          input.blur();
           setTimeout(() => createItemBefore(itemId), 100);
         } else {
           // Split at cursor: text before stays, text after goes to new item
-          const cursorPos = input.selectionStart;
-          const textBefore = input.value.substring(0, cursorPos);
-          const textAfter = input.value.substring(cursorPos);
+          const textBefore = inputValue.substring(0, selStart);
+          const textAfter = inputValue.substring(selStart);
 
           // Update current item with text before cursor
-          input.value = textBefore;
+          setInputValue(input, textBefore);
 
-          // Check if item has children
-          const hasChildren = itemEl?.querySelector(':scope > .item-children > .outline-item');
-
-          // Trigger save of current item, then create new item
-          htmx.trigger(input, 'blur');
-          if (hasChildren) {
-            // Use split to move children to new item
-            setTimeout(() => splitItem(itemId, textAfter), 100);
-          } else {
-            setTimeout(() => createItemAfter(itemId, textAfter), 100);
-          }
+          // Trigger save of current item, then split
+          input.blur();
+          // Always use splitItem for proper undo support (handles children too)
+          setTimeout(() => splitItem(itemId, textAfter), 100);
         }
         break;
 
@@ -1286,27 +1731,35 @@
           // Ctrl+Backspace: delete item regardless of content
           event.preventDefault();
           deleteItem(itemId);
-        } else if (input.value === '') {
+        } else if (getInputValue(input) === '') {
           // Delete if empty
           event.preventDefault();
           deleteItem(itemId);
-        } else if (input.selectionStart === 0 && input.selectionEnd === 0) {
+        } else if (getSelectionStart(input) === 0 && getSelectionEnd(input) === 0) {
           // At position 0 with content: join with previous item
           event.preventDefault();
-          htmx.trigger(input, 'blur');
-          setTimeout(() => joinWithPreviousItem(itemId), 50);
+          joinWithPreviousItem(itemId);
         }
         break;
 
       case 'Tab':
         event.preventDefault();
-        const cursorPos = input.selectionStart;
+        const cursorPos = getSelectionStart(input);
+        const selectedForTab = getSelectedItems();
         // Save first (if not empty), then indent/outdent
-        if (input.value !== '') {
-          htmx.trigger(input, 'blur');
+        if (getInputValue(input) !== '') {
+          input.blur();
         }
         setTimeout(() => {
-          if (event.shiftKey) {
+          if (selectedForTab.length >= 2) {
+            // Batch indent/outdent all selected items
+            const itemIds = selectedForTab.map(item => parseInt(item.dataset.itemId));
+            if (event.shiftKey) {
+              batchOutdent(itemIds, itemId);
+            } else {
+              batchIndent(itemIds, itemId);
+            }
+          } else if (event.shiftKey) {
             outdentItem(itemId, false, true, cursorPos);
           } else {
             indentItem(itemId, false, true, cursorPos);
@@ -1318,91 +1771,65 @@
         if (event.metaKey || event.ctrlKey) {
           // Move item up (optimistic - instant)
           event.preventDefault();
-          const cursorPosUp = input.selectionStart;
-          htmx.trigger(input, 'blur');
+          const cursorPosUp = getSelectionStart(input);
+          input.blur();
           moveItemUp(itemId, false, true, cursorPosUp);
-        } else if (event.shiftKey) {
-          // Three-stage shift selection (going up)
-          const allTextSelected = input.selectionStart === 0 && input.selectionEnd === input.value.length;
-          const itemIsSelected = selectedItemIds.size >= 1 && selectedItemIds.has(itemId);
-          const selectionAtStart = input.selectionStart === 0;
-
-          if (allTextSelected && itemIsSelected) {
-            // Stage 3: Extend item selection upward
-            event.preventDefault();
-            htmx.trigger(input, 'blur');
-            setTimeout(() => handleShiftArrow('up'), 50);
-          } else if (allTextSelected) {
-            // Stage 2: Select the item itself
-            event.preventDefault();
-            htmx.trigger(input, 'blur');
-            selectItem(itemEl);
-          } else if (selectionAtStart) {
-            // Selection is at start of text - select all
-            event.preventDefault();
-            input.setSelectionRange(0, input.value.length);
-          }
-          // Otherwise let browser handle normal shift+up text selection
-        } else if (input.selectionStart === input.selectionEnd) {
+        } else if (event.shiftKey && getSelectionStart(input) === 0) {
+          // Shift+Up at start - transition to multiselect
+          event.preventDefault();
+          input.blur();
+          selectItem(itemEl);
+          setTimeout(() => handleShiftArrow('up'), 50);
+        } else if (getSelectionStart(input) === getSelectionEnd(input)) {
           // No text selection - check if on first visual line
-          const { isFirstLine } = getCursorLine(input);
+          const { isFirstLine, cursorX } = getCursorLine(input);
           if (isFirstLine) {
             const prevItem = getPreviousItem(itemEl);
             if (prevItem) {
               event.preventDefault();
-              htmx.trigger(input, 'blur');
-              setTimeout(() => focusItem(prevItem, 'start'), 50);
+              input.blur();
+              setTimeout(() => focusItem(prevItem, 'last', cursorX), 50);
             }
           }
         }
+        // Otherwise let browser handle arrow navigation in wrapped lines
         break;
 
       case 'ArrowDown':
         if (event.metaKey || event.ctrlKey) {
           // Move item down (optimistic - instant)
           event.preventDefault();
-          const cursorPosDown = input.selectionStart;
-          htmx.trigger(input, 'blur');
+          const cursorPosDown = getSelectionStart(input);
+          input.blur();
           moveItemDown(itemId, false, true, cursorPosDown);
         } else if (event.shiftKey) {
-          // Three-stage shift selection (going down)
-          const allTextSelected = input.selectionStart === 0 && input.selectionEnd === input.value.length;
-          const itemIsSelected = selectedItemIds.size >= 1 && selectedItemIds.has(itemId);
-          const selectionAtEnd = input.selectionEnd === input.value.length;
-
-          if (allTextSelected && itemIsSelected) {
-            // Stage 3: Extend item selection downward
+          const textLen = getInputValue(input).length;
+          if (getSelectionEnd(input) === textLen) {
+            // Shift+Down at end - transition to multiselect
             event.preventDefault();
-            htmx.trigger(input, 'blur');
-            setTimeout(() => handleShiftArrow('down'), 50);
-          } else if (allTextSelected) {
-            // Stage 2: Select the item itself
-            event.preventDefault();
-            htmx.trigger(input, 'blur');
+            input.blur();
             selectItem(itemEl);
-          } else if (selectionAtEnd) {
-            // Selection is at end of text - select all
-            event.preventDefault();
-            input.setSelectionRange(0, input.value.length);
+            setTimeout(() => handleShiftArrow('down'), 50);
           }
-          // Otherwise let browser handle normal shift+down text selection
-        } else if (input.selectionStart === input.selectionEnd) {
+          // Otherwise let browser handle shift+arrow text selection
+        } else if (getSelectionStart(input) === getSelectionEnd(input)) {
           // No text selection - check if on last visual line
-          const { isLastLine } = getCursorLine(input);
+          const { isLastLine, cursorX } = getCursorLine(input);
           if (isLastLine) {
             const nextItem = getNextItem(itemEl);
             if (nextItem) {
               event.preventDefault();
-              htmx.trigger(input, 'blur');
-              setTimeout(() => focusItem(nextItem, 'start'), 50);
+              input.blur();
+              setTimeout(() => focusItem(nextItem, 'first', cursorX), 50);
             }
           }
         }
+        // Otherwise let browser handle arrow navigation in wrapped lines
         break;
 
       case 'Escape':
         event.preventDefault();
-        if (input.value === '') {
+        if (getInputValue(input) === '') {
           // Delete empty item
           deleteItem(itemId);
         } else {
@@ -1415,12 +1842,19 @@
         }
         break;
 
+      case 'End':
+        // Go to end of editable text (not into sources)
+        event.preventDefault();
+        const textLen = getInputValue(input).length;
+        setInputSelectionRange(input, textLen, textLen);
+        break;
+
       case 'h':
       case 'H':
         // Ctrl+Shift+H to toggle heading
         if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
           event.preventDefault();
-          const content = input.value;
+          const content = getInputValue(input);
           // Send content along with heading request (avoids blur which auto-deletes empty items)
           htmx.ajax('POST', `/outlines/item/${itemId}/toggle-heading/`, {
             target: `#outline-item-${itemId}`,
@@ -1445,7 +1879,7 @@
         break;
 
       case 'z':
-        // Ctrl+Z for undo
+        // Ctrl+Z - application undo
         if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
           event.preventDefault();
           undo();
@@ -1454,18 +1888,26 @@
     }
   };
 
-  // Detect if cursor is on first/last visual line of textarea
-  function getCursorLine(textarea) {
-    const pos = textarea.selectionStart;
-    const text = textarea.value;
+  // Detect if cursor is on first/last visual line of input (textarea or contenteditable)
+  function getCursorLine(input) {
+    const pos = getSelectionStart(input);
+    const text = getInputValue(input);
 
     // Create measurer
     const measurer = document.createElement('div');
     document.body.appendChild(measurer);
 
     // Copy styles
-    const style = window.getComputedStyle(textarea);
-    const width = textarea.getBoundingClientRect().width;
+    const style = window.getComputedStyle(input);
+    // For inline elements, use parent container width for wrapping calculation
+    const wrapper = input.closest('.item-content-wrapper');
+    let width;
+    if (wrapper) {
+      const wrapperStyle = window.getComputedStyle(wrapper);
+      width = wrapper.getBoundingClientRect().width - parseFloat(wrapperStyle.paddingLeft) - parseFloat(wrapperStyle.paddingRight);
+    } else {
+      width = input.getBoundingClientRect().width;
+    }
     measurer.style.cssText = `
       position: absolute;
       visibility: hidden;
@@ -1485,22 +1927,37 @@
     const after = text.substring(pos);
     measurer.textContent = '';
 
-    const beforeNode = document.createTextNode(before);
-    // Wrap the first character after cursor in a span to measure its line position
-    const firstCharAfter = after.charAt(0) || '\u200B';
-    const restAfter = after.substring(1);
-    const cursorMarker = document.createElement('span');
-    cursorMarker.textContent = firstCharAfter;
-    const afterNode = document.createTextNode(restAfter);
+    // To find the cursor's line, wrap the last character before cursor in a span
+    // This avoids issues with zero-width chars at line-wrap boundaries
+    let cursorMarker;
+    if (before.length > 0) {
+      const beforeMain = document.createTextNode(before.slice(0, -1));
+      cursorMarker = document.createElement('span');
+      cursorMarker.textContent = before.slice(-1);
+      measurer.appendChild(beforeMain);
+      measurer.appendChild(cursorMarker);
+    } else {
+      // Cursor at position 0 - use zero-width space
+      cursorMarker = document.createElement('span');
+      cursorMarker.textContent = '\u200B';
+      measurer.appendChild(cursorMarker);
+    }
+
+    const afterNode = document.createTextNode(after);
     const endMarker = document.createElement('span');
     endMarker.textContent = '\u200B';
 
-    measurer.appendChild(beforeNode);
-    measurer.appendChild(cursorMarker);
     measurer.appendChild(afterNode);
     measurer.appendChild(endMarker);
 
-    const lineHeight = parseFloat(style.lineHeight);
+    // lineHeight might be 'normal' or a multiplier - compute actual pixel value
+    let lineHeight = parseFloat(style.lineHeight);
+    if (isNaN(lineHeight) || lineHeight < 10) {
+      // If it's a multiplier or 'normal', calculate from font-size
+      const fontSize = parseFloat(style.fontSize);
+      lineHeight = fontSize * (parseFloat(style.lineHeight) || 1.4);
+    }
+
     const measurerRect = measurer.getBoundingClientRect();
     const cursorRect = cursorMarker.getBoundingClientRect();
     const endRect = endMarker.getBoundingClientRect();
@@ -1508,13 +1965,13 @@
     const markerTop = cursorRect.top - measurerRect.top;
     const endMarkerTop = endRect.top - measurerRect.top;
 
-    // First line: marker is within first lineHeight from top
+    // First line: cursor is within first lineHeight from top
     // Last line: cursor and end of text are on the same visual line
     const isFirstLine = markerTop < lineHeight;
     const isLastLine = Math.abs(endMarkerTop - markerTop) < lineHeight * 0.5;
 
-    // Get cursor X position relative to measurer
-    const cursorX = cursorRect.left - measurerRect.left;
+    // Get cursor X position relative to measurer (right edge of last char before cursor)
+    const cursorX = cursorRect.right - measurerRect.left;
 
     // Clean up
     measurer.remove();
@@ -1523,16 +1980,24 @@
   }
 
   // Find the best cursor position on a specific line (first or last) to match a target X
-  function findCursorPositionForX(textarea, targetX, targetLine) {
-    const text = textarea.value;
+  function findCursorPositionForX(input, targetX, targetLine) {
+    const text = getInputValue(input);
     if (!text) return 0;
 
     // Create measurer
     const measurer = document.createElement('div');
     document.body.appendChild(measurer);
 
-    const style = window.getComputedStyle(textarea);
-    const width = textarea.getBoundingClientRect().width;
+    const style = window.getComputedStyle(input);
+    // For inline elements, use parent container width for wrapping calculation
+    const wrapper = input.closest('.item-content-wrapper');
+    let width;
+    if (wrapper) {
+      const wrapperStyle = window.getComputedStyle(wrapper);
+      width = wrapper.getBoundingClientRect().width - parseFloat(wrapperStyle.paddingLeft) - parseFloat(wrapperStyle.paddingRight);
+    } else {
+      width = input.getBoundingClientRect().width;
+    }
     // lineHeight might be 'normal' or a number - compute actual pixel value
     let lineHeight = parseFloat(style.lineHeight);
     if (isNaN(lineHeight) || lineHeight < 10) {
@@ -1664,17 +2129,25 @@
     return bestPos;
   }
 
-  // Find cursor position from click coordinates relative to textarea
-  function findCursorPositionFromClick(textarea, clickX, clickY) {
-    const text = textarea.value;
+  // Find cursor position from click coordinates relative to input
+  function findCursorPositionFromClick(input, clickX, clickY) {
+    const text = getInputValue(input);
     if (!text) return 0;
 
     // Create measurer
     const measurer = document.createElement('div');
     document.body.appendChild(measurer);
 
-    const style = window.getComputedStyle(textarea);
-    const width = textarea.getBoundingClientRect().width;
+    const style = window.getComputedStyle(input);
+    // For inline elements, use parent container width for wrapping calculation
+    const wrapper = input.closest('.item-content-wrapper');
+    let width;
+    if (wrapper) {
+      const wrapperStyle = window.getComputedStyle(wrapper);
+      width = wrapper.getBoundingClientRect().width - parseFloat(wrapperStyle.paddingLeft) - parseFloat(wrapperStyle.paddingRight);
+    } else {
+      width = input.getBoundingClientRect().width;
+    }
     let lineHeight = parseFloat(style.lineHeight);
     if (isNaN(lineHeight) || lineHeight < 10) {
       const fontSize = parseFloat(style.fontSize);
@@ -1770,24 +2243,56 @@
     if (!measurer) {
       measurer = document.createElement('div');
       measurer.id = 'textarea-measurer';
-      measurer.style.cssText = 'position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;';
       document.body.appendChild(measurer);
     }
 
     // Copy styles that affect text measurement
     const style = window.getComputedStyle(textarea);
-    measurer.style.width = style.width;
+    const wrapper = textarea.closest('.item-content-wrapper');
+    const maxWidth = wrapper ? wrapper.clientWidth : parseFloat(style.maxWidth) || 500;
+
+    measurer.style.cssText = 'position:absolute;visibility:hidden;';
     measurer.style.fontSize = style.fontSize;
     measurer.style.fontFamily = style.fontFamily;
     measurer.style.lineHeight = style.lineHeight;
     measurer.style.padding = style.padding;
     measurer.style.boxSizing = style.boxSizing;
 
-    // Set content (add extra character for cursor line)
+    // First measure natural width (no wrapping)
+    measurer.style.whiteSpace = 'pre';
+    measurer.style.width = 'auto';
+    measurer.textContent = textarea.value || ' ';
+    let naturalWidth = measurer.offsetWidth + 2; // +2 for cursor
+
+    // Cap width at container width (accounting for sources that may follow)
+    const targetWidth = Math.min(naturalWidth, maxWidth);
+    textarea.style.width = targetWidth + 'px';
+
+    // Now measure height with wrapping enabled at that width
+    measurer.style.whiteSpace = 'pre-wrap';
+    measurer.style.wordWrap = 'break-word';
+    measurer.style.width = targetWidth + 'px';
     measurer.textContent = textarea.value + '\n';
 
     // Set textarea height to match measured height
     textarea.style.height = measurer.offsetHeight + 'px';
+  }
+
+  // Get text content from contenteditable, excluding sources
+  window.getEditableContent = function(el) {
+    if (!el) return '';
+    // Clone the element to avoid modifying the original
+    const clone = el.cloneNode(true);
+    // Remove sources from clone
+    const sources = clone.querySelector('.item-sources');
+    if (sources) sources.remove();
+    // Get text content, preserving line breaks
+    return clone.textContent || '';
+  }
+
+  // Auto-resize contenteditable (no-op since it auto-sizes, but keep for compatibility)
+  window.autoResizeInput = function(el) {
+    // Contenteditable divs auto-size, nothing needed
   }
 
   // Capture click position before htmx swap
@@ -1796,7 +2301,7 @@
     if (pendingCursorPosition !== null) return;
 
     const contentWrapper = event.target.closest('.item-content-wrapper');
-    if (contentWrapper && !event.target.classList.contains('item-input')) {
+    if (contentWrapper && !event.target.closest('.item-input')) {
       // Store click position relative to the content wrapper
       const rect = contentWrapper.getBoundingClientRect();
       pendingCursorPosition = 'click';
@@ -1805,53 +2310,75 @@
     }
   }, true);  // Use capture phase to run before htmx
 
-  // Auto-focus input when edit mode is triggered
+  // Auto-focus input when a new item is created via HTMX swap
   document.body.addEventListener('htmx:afterSwap', function(event) {
+    // Only handle swaps that create new items, not our preloaded edit mode toggle
+    const contentWrapper = event.target.closest('.item-content-wrapper');
+    if (contentWrapper && contentWrapper.classList.contains('editing')) {
+      // Already in edit mode via our toggle - don't interfere
+      return;
+    }
+
     const input = event.target.querySelector('.item-input');
-    if (input) {
-      // Capture initial content for undo
-      editStartContent = input.value;
+    if (input && pendingCursorPosition !== null) {
+      // This is likely a new item swap - enter edit mode
+      const itemEl = input.closest('.outline-item');
+      if (itemEl) {
+        editItem(itemEl);
+      }
+    }
+  });
 
-      // Wait for browser to lay out the element before measuring
-      requestAnimationFrame(() => {
-        input.focus();
-        // Auto-resize textarea first so measurements are accurate
-        autoResizeTextarea(input);
+  // Handle focus on contenteditable to update focused item
+  document.body.addEventListener('focusin', function(event) {
+    if (event.target.classList.contains('item-input')) {
+      const itemEl = event.target.closest('.outline-item');
+      if (itemEl) {
+        setFocusedItem(itemEl);
+      }
+    }
+  });
 
-        // Position cursor based on pending position
-        if (pendingCursorPosition === 'end') {
-          input.setSelectionRange(input.value.length, input.value.length);
-        } else if (pendingCursorPosition === 'start') {
-          input.setSelectionRange(0, 0);
-        } else if (pendingCursorPosition === 'first' || pendingCursorPosition === 'last') {
-          // Find best cursor position on target line matching X coordinate
-          if (pendingCursorX !== null) {
-            const pos = findCursorPositionForX(input, pendingCursorX, pendingCursorPosition);
-            input.setSelectionRange(pos, pos);
-          } else {
-            // Fallback to start/end of line
-            const pos = pendingCursorPosition === 'first' ? 0 : input.value.length;
-            input.setSelectionRange(pos, pos);
-          }
-        } else if (pendingCursorPosition === 'click' && pendingCursorX !== null && pendingClickY !== null) {
-          // Position cursor at click location
-          const pos = findCursorPositionFromClick(input, pendingCursorX, pendingClickY);
-          input.setSelectionRange(pos, pos);
-        } else if (typeof pendingCursorPosition === 'number') {
-          // Numeric position
-          const pos = Math.min(pendingCursorPosition, input.value.length);
-          input.setSelectionRange(pos, pos);
-        }
-        pendingCursorPosition = null;
-        pendingCursorX = null;
-        pendingClickY = null;
+  // Exit edit mode on blur and save
+  document.body.addEventListener('focusout', function(event) {
+    const input = event.target;
+    if (!input.classList.contains('item-input')) return;
 
-        // Ensure the item is marked as focused
-        const itemEl = input.closest('.outline-item');
-        if (itemEl) {
-          setFocusedItem(itemEl);
-        }
-      });
+    const itemId = input.dataset.itemId;
+    const content = getInputValue(input);
+    const contentWrapper = input.closest('.item-content-wrapper');
+
+    // Update view mode content and exit edit mode
+    if (contentWrapper) {
+      const viewContent = contentWrapper.querySelector('.item-content');
+      if (viewContent) {
+        viewContent.textContent = content;
+      }
+      contentWrapper.classList.remove('editing');
+    }
+
+    // Save to server (skip temp items)
+    if (itemId && !itemId.startsWith('temp-')) {
+      // Push undo if content changed
+      if (editStartContent !== null && content !== editStartContent) {
+        pushUndo({
+          type: 'edit_content',
+          itemId: itemId,
+          oldContent: editStartContent,
+          newContent: content
+        });
+      }
+      editStartContent = null;
+
+      // Save via fetch
+      fetch(`/outlines/item/${itemId}/edit/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': getCSRFToken()
+        },
+        body: `content=${encodeURIComponent(content)}`
+      }).catch(err => console.error('Save failed:', err));
     }
   });
 
@@ -1862,7 +2389,7 @@
 
     // Content edit undo
     if (target.classList.contains('item-input') && editStartContent !== null) {
-      const newContent = target.value;
+      const newContent = getInputValue(target);
       if (newContent !== editStartContent) {
         pushUndo({
           type: 'edit_content',
@@ -1916,7 +2443,12 @@
   // Click on item row to focus/select it
   document.body.addEventListener('click', function(event) {
     // If clicking on an input that's already active, let the browser handle cursor positioning
-    if (event.target.classList.contains('item-input')) {
+    if (event.target.closest('.item-input')) {
+      return;
+    }
+
+    // Skip clicks on sources (dropdowns)
+    if (event.target.closest('.item-sources')) {
       return;
     }
 
@@ -1932,6 +2464,42 @@
           setFocusedItem(itemEl, true);
           updateSelectionHighlight();
         } else {
+          // Check if clicking on content area to enter edit mode
+          const contentWrapper = event.target.closest('.item-content-wrapper');
+          if (contentWrapper && !contentWrapper.classList.contains('editing')) {
+            // Check if user selected text (click and drag)
+            const selection = window.getSelection();
+            if (selection && selection.toString().length > 0) {
+              // User selected text - enter edit mode but preserve selection
+              const viewContent = contentWrapper.querySelector('.item-content');
+              if (viewContent && viewContent.contains(selection.anchorNode)) {
+                // Calculate selection offsets relative to text content
+                const range = selection.getRangeAt(0);
+                const preSelectionRange = range.cloneRange();
+                preSelectionRange.selectNodeContents(viewContent);
+                preSelectionRange.setEnd(range.startContainer, range.startOffset);
+                const selStart = preSelectionRange.toString().length;
+                const selEnd = selStart + selection.toString().length;
+
+                // Set pending selection range for editItem to apply
+                pendingSelectionStart = selStart;
+                pendingSelectionEnd = selEnd;
+                setFocusedItem(itemEl, false);
+                editItem(itemEl);
+                updateSelectionHighlight();
+                return;
+              }
+            }
+            // Capture click position relative to content wrapper for cursor placement
+            const rect = contentWrapper.getBoundingClientRect();
+            pendingCursorPosition = 'click';
+            pendingCursorX = event.clientX - rect.left;
+            pendingClickY = event.clientY - rect.top;
+            setFocusedItem(itemEl, false);
+            editItem(itemEl);
+            updateSelectionHighlight();
+            return;
+          }
           setFocusedItem(itemEl, false);
           updateSelectionHighlight();
         }
@@ -1941,8 +2509,8 @@
 
   // Global keyboard navigation
   document.body.addEventListener('keydown', function(event) {
-    // Skip if we're in an input field
-    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+    // Skip if we're in an input field or contenteditable
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable) {
       return;
     }
 

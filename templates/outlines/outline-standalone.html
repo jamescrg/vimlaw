@@ -1,5 +1,6 @@
 {% extends "base-minimal.html" %}
 {% load static %}
+{% load cache_buster %}
 {% block title %}
   {{ outline.title }} - LawAdmin
 {% endblock title %}
@@ -97,5 +98,5 @@
       </div>
     </div>
   </div>
-  <script src="{% static 'js/outlines.js' %}"></script>
+  <script src="{% static_v 'js/outlines.js' %}"></script>
 {% endblock content %}

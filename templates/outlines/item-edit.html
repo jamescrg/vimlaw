@@ -1,10 +1,2 @@
-<textarea class="item-input"
-          name="content"
-          autofocus
-          hx-post="{% url 'outlines:item-edit' item.id %}"
-          hx-target="closest .item-content-wrapper"
-          hx-trigger="blur"
-          hx-swap="innerHTML"
-          data-item-id="{{ item.id }}"
-          onkeydown="handleItemKeydown(event, this)"
-          oninput="if(typeof autoResizeTextarea==='function')autoResizeTextarea(this)">{{ item.content }}</textarea>
+{# djlint:off #}
+<div class="item-input" contenteditable="true" hx-post="{% url 'outlines:item-edit' item.id %}" hx-target="closest .item-content-wrapper" hx-trigger="blur" hx-swap="innerHTML" hx-vals='js:{content: getEditableContent(this)}' data-item-id="{{ item.id }}" onkeydown="handleItemKeydown(event, this)" oninput="if(typeof autoResizeInput==='function')autoResizeInput(this)">{{ item.content }}{% if sources_display != 'hide' %}{% if item.highlights.all or item.documents.all %}<span class="item-sources" contenteditable="false">{% include "outlines/item-sources-inner.html" %}</span>{% endif %}{% endif %}</div>

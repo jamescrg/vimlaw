@@ -533,6 +533,7 @@ body:has(.outline-page.standalone) {
   cursor: text;
   padding: 0.25rem 0.5rem 0.25rem 0;
   border-radius: var(--radius-sm);
+  line-height: 1.65rem;
 }
 
 .item-content {
@@ -540,11 +541,28 @@ body:has(.outline-page.standalone) {
   border: none;
   color: var(--color-primary);
   font-size: 1.1rem;
-  line-height: 1.5;
   padding: 0;
   margin: 0;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+/* View mode wrapper */
+.item-view {
+  display: inline;
+}
+
+/* Hide edit mode by default, show when editing */
+.item-content-wrapper .item-input {
+  display: none;
+}
+
+.item-content-wrapper.editing .item-view {
+  display: none;
+}
+
+.item-content-wrapper.editing .item-input {
+  display: inline;
 }
 
 .outline-item[data-quote] .item-content-wrapper {
@@ -559,26 +577,32 @@ body:has(.outline-page.standalone) {
   content: "\201D";
 }
 
-/* Item Edit Input (textarea) */
+/* Item Edit Input (contenteditable div) */
 .item-input {
   display: inline;
-  width: 100%;
   padding: 0;
   margin: 0;
   border: none;
   font-size: 1.1rem;
   font-family: inherit;
-  line-height: 1.5;
   outline: none;
   background: transparent;
-  resize: none;
-  overflow: hidden;
-  min-height: 1.5em;
   color: var(--color-primary);
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .item-input:focus {
   box-shadow: none;
+}
+
+/* Sources inside contenteditable are not editable */
+.item-input .item-sources {
+  display: inline;
+  cursor: default;
+  white-space: normal;
+  margin-left: 0.25rem;
+  font-size: 0.875rem;
 }
 
 /* Sources indicator shown during editing */
@@ -635,12 +659,13 @@ body:has(.outline-page.standalone) {
 
 /* Item sources (citations) */
 .item-sources {
+  display: inline;
   margin-left: 0.25rem;
   font-size: 0.875rem;
 }
 
 .item-sources .source-citation {
-  display: inline-block;
+  display: inline;
   /* background: var(--stone-150); */
   margin-right: 0.5rem;
 }

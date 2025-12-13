@@ -81,12 +81,11 @@
     {% endif %}
     <!-- Bullet -->
     <span class="item-bullet">•</span>
-    <!-- Content -->
-    <div class="item-content-wrapper"
-         hx-get="{% url 'outlines:item-edit' item.id %}"
-         hx-target="this"
-         hx-trigger="click[!event.target.classList.contains('item-input') && !event.target.closest('.item-sources')]"
-         hx-swap="innerHTML">{% include "outlines/item-content.html" %}</div>
+    <!-- Content (preloaded view and edit modes) -->
+    <div class="item-content-wrapper">
+      {% include "outlines/item-content.html" %}
+      {# djlint:off #}<div class="item-input" contenteditable="true" data-item-id="{{ item.id }}" onkeydown="handleItemKeydown(event, this)">{{ item.content }}{% if sources_display != 'hide' %}{% if item.highlights.all or item.documents.all %}<span class="item-sources" contenteditable="false">{% include "outlines/item-sources-inner.html" %}</span>{% endif %}{% endif %}</div>{# djlint:on #}
+    </div>
   </div>
   <!-- Children (if not collapsed) -->
   {% if not item.collapsed %}

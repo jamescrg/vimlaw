@@ -391,7 +391,11 @@ def item_edit(request, item_id):
         )
 
     # GET - return edit input
-    return render(request, "outlines/item-edit.html", {"item": item})
+    return render(
+        request,
+        "outlines/item-edit.html",
+        {"item": item, "sources_display": get_sources_display(request)},
+    )
 
 
 @login_required

@@ -1,0 +1,121 @@
+{% if sources_display == 'icon' %}
+  {# Icon mode: single consolidated dropdown #}
+  {% with highlights=item.highlights.all documents=item.documents.all %}
+    {% with h_count=highlights|length d_count=documents|length %}
+      {% with total_count=h_count|add:d_count %}
+        <span class="source-citation dropdown">
+          <a href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-link-45deg"></i>
+            {% if total_count > 1 %}{{ total_count }}{% endif %}
+          </a>
+          <ul class="dropdown-menu">
+            {% for highlight in highlights %}
+              <li>
+                <a class="dropdown-item"
+                   href="{% url 'case:highlight-link' highlight.id %}"
+                   target="_blank"><i class="bi bi-eye"></i> {{ highlight.citation }}</a>
+              </li>
+            {% endfor %}
+            {% for document in documents %}
+              <li>
+                {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
+                  <a class="dropdown-item"
+                     href="{% url 'case:viewer' document.id %}"
+                     target="_blank"><i class="bi bi-eye"></i> {{ document.citation }}</a>
+                {% else %}
+                  <a class="dropdown-item"
+                     href="{% url 'case:documents-download' document.id %}"><i class="bi bi-download"></i> {{ document.citation }}</a>
+                {% endif %}
+              </li>
+            {% endfor %}
+            <li>
+              <a class="dropdown-item source-copy-btn"
+                 href="#"
+                 data-copy="{% for h in highlights %}{{ h.citation }}{% if not forloop.last %}; {% endif %}{% endfor %}{% if highlights and documents %}; {% endif %}{% for d in documents %}{{ d.citation }}{% if not forloop.last %}; {% endif %}{% endfor %}"><i class="bi bi-clipboard"></i> Copy Citation
+                {% if total_count > 1 %}s{% endif %}
+              </a>
+            </li>
+            {% for highlight in highlights %}
+              <li>
+                <a class="dropdown-item urgent"
+                   href="#"
+                   hx-post="{% url 'outlines:item-remove-source' item.id %}"
+                   hx-vals='{"type": "highlight", "id": "{{ highlight.id }}"}'
+                   hx-target="closest .outline-item"
+                   hx-swap="outerHTML"><i class="bi bi-x-lg"></i> Remove {{ highlight.citation|truncatechars:30 }}</a>
+              </li>
+            {% endfor %}
+            {% for document in documents %}
+              <li>
+                <a class="dropdown-item urgent"
+                   href="#"
+                   hx-post="{% url 'outlines:item-remove-source' item.id %}"
+                   hx-vals='{"type": "document", "id": "{{ document.id }}"}'
+                   hx-target="closest .outline-item"
+                   hx-swap="outerHTML"><i class="bi bi-x-lg"></i> Remove {{ document.citation|truncatechars:30 }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </span>
+      {% endwith %}
+    {% endwith %}
+  {% endwith %}
+{% else %}
+  {# Show mode: individual dropdowns per source #}
+  {% for highlight in item.highlights.all %}
+    <span class="source-citation dropdown">
+      <a href="#" data-bs-toggle="dropdown">{{ highlight.citation }}</a>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item"
+             href="{% url 'case:highlight-link' highlight.id %}"
+             target="_blank"><i class="bi bi-eye"></i> View Source</a>
+        </li>
+        <li>
+          <a class="dropdown-item source-copy-btn"
+             href="#"
+             data-copy="{{ highlight.citation }}"><i class="bi bi-clipboard"></i> Copy Citation</a>
+        </li>
+        <li>
+          <a class="dropdown-item urgent"
+             href="#"
+             hx-post="{% url 'outlines:item-remove-source' item.id %}"
+             hx-vals='{"type": "highlight", "id": "{{ highlight.id }}"}'
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML"><i class="bi bi-x-lg"></i> Remove</a>
+        </li>
+      </ul>
+    </span>
+  {% endfor %}
+  {% for document in item.documents.all %}
+    <span class="source-citation dropdown">
+      <a href="#" data-bs-toggle="dropdown">{{ document.citation }}</a>
+      <ul class="dropdown-menu">
+        {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
+          <li>
+            <a class="dropdown-item"
+               href="{% url 'case:viewer' document.id %}"
+               target="_blank"><i class="bi bi-eye"></i> View</a>
+          </li>
+        {% endif %}
+        <li>
+          <a class="dropdown-item"
+             href="{% url 'case:documents-download' document.id %}"><i class="bi bi-download"></i> Download</a>
+        </li>
+        <li>
+          <a class="dropdown-item source-copy-btn"
+             href="#"
+             data-copy="{{ document.citation }}"><i class="bi bi-clipboard"></i> Copy Citation</a>
+        </li>
+        <li>
+          <a class="dropdown-item urgent"
+             href="#"
+             hx-post="{% url 'outlines:item-remove-source' item.id %}"
+             hx-vals='{"type": "document", "id": "{{ document.id }}"}'
+             hx-target="closest .outline-item"
+             hx-swap="outerHTML"><i class="bi bi-x-lg"></i> Remove</a>
+        </li>
+      </ul>
+    </span>
+  {% endfor %}
+{% endif %}
