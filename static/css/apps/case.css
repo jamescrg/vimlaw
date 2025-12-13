@@ -240,15 +240,15 @@
 .source-citation {
   display: inline;
   font-size: 0.875rem;
-  color: var(--color-primary);
-  background: var(--hl-gray);
+  color: var(--color-muted);
+  /* background: var(--hl-gray); */
   padding: 0.125rem 0.25rem;
   border-radius: var(--radius-sm);
 }
 
 .source-citation a {
   text-decoration: none;
-  color: var(--color-primary);
+  color: var(--color-muted);
 }
 
 .source-citation a:hover {

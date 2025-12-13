@@ -413,7 +413,7 @@ body:has(.outline-page.standalone) {
   flex-direction: row;
   align-items: flex-start;
   gap: 0.25rem;
-  padding-bottom: 0.25rem;
+  /* padding-bottom: 0.25rem; */
   min-height: 2rem;
 }
 
@@ -519,7 +519,7 @@ body:has(.outline-page.standalone) {
   justify-content: center;
   color: var(--color-muted);
   flex-shrink: 0;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   line-height: 1;
   margin-top: 0.25rem;
 }
@@ -537,9 +537,12 @@ body:has(.outline-page.standalone) {
 
 .item-content {
   display: inline;
+  border: none;
   color: var(--color-primary);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   line-height: 1.5;
+  padding: 0;
+  margin: 0;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
@@ -558,12 +561,12 @@ body:has(.outline-page.standalone) {
 
 /* Item Edit Input (textarea) */
 .item-input {
-  display: block;
+  display: inline;
   width: 100%;
   padding: 0;
   margin: 0;
   border: none;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-family: inherit;
   line-height: 1.5;
   outline: none;
@@ -602,7 +605,12 @@ body:has(.outline-page.standalone) {
   display: none;
 }
 
-/* Selected state - only show highlight for multi-select */
+/* Focused state - single item focus */
+.outline-item.focused > .item-row {
+  background: var(--hl-gray);
+}
+
+/* Selected state - multi-select */
 .outline-tree.has-multiselect .outline-item.selected > .item-row {
   background: var(--hl-gray);
 }
@@ -621,8 +629,8 @@ body:has(.outline-page.standalone) {
 
 .outline-item[data-heading] > .item-row .item-content,
 .outline-item[data-heading] > .item-row .item-input {
-  font-size: 1.15rem;
-  font-weight: 500;
+  /* font-size: 1.15rem; */
+  font-weight: 600;
 }
 
 /* Item sources (citations) */
@@ -633,7 +641,7 @@ body:has(.outline-page.standalone) {
 
 .item-sources .source-citation {
   display: inline-block;
-  background: var(--stone-150);
+  /* background: var(--stone-150); */
   margin-right: 0.5rem;
 }
 
