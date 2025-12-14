@@ -2026,8 +2026,19 @@
         break;
 
       case 'z':
-        // Ctrl+Z - let browser handle native undo for text edits in contenteditable
-        // Application-level undo is handled by global keydown when not editing
+        // Ctrl+Z - check if there's a structural undo operation pending
+        if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
+          // Check if the last undo operation is structural (delete, create, etc.)
+          // If so, handle it here instead of letting browser do text undo
+          if (undoStack.length > 0) {
+            const lastOp = undoStack[undoStack.length - 1];
+            if (lastOp.type === 'delete_item' || lastOp.type === 'create_item' ||
+                lastOp.type === 'split' || lastOp.type === 'join') {
+              event.preventDefault();
+              undo();
+            }
+          }
+        }
         break;
 
       case 'y':
