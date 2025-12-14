@@ -174,6 +174,46 @@
     return html;
   }
 
+  // Convert HTML back to markdown (reverse of inlineMarkdown)
+  function htmlToMarkdown(html) {
+    if (!html) return '';
+    // Create a temporary element to parse HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    function processNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return '';
+      }
+
+      const tag = node.tagName.toLowerCase();
+      let content = Array.from(node.childNodes).map(processNode).join('');
+
+      switch (tag) {
+        case 'strong':
+        case 'b':
+          return '**' + content + '**';
+        case 'em':
+        case 'i':
+          return '*' + content + '*';
+        case 'mark':
+          if (node.classList.contains('mark-green')) return 'g==' + content + '==';
+          if (node.classList.contains('mark-red')) return 'r==' + content + '==';
+          if (node.classList.contains('mark-purple')) return 'p==' + content + '==';
+          if (node.classList.contains('mark-orange')) return 'o==' + content + '==';
+          if (node.classList.contains('mark-citation')) return 'c==' + content + '==';
+          return '==' + content + '==';
+        default:
+          return content;
+      }
+    }
+
+    return Array.from(temp.childNodes).map(processNode).join('');
+  }
+
   // Push operation to undo stack
   function pushUndo(operation) {
     undoStack.push(operation);
@@ -642,9 +682,25 @@
 
     // Get text content and sources from each item
     const paragraphs = items.map(item => {
-      const textEl = item.querySelector('.item-text');
-      let text = textEl?.textContent?.trim() || '';
-      // Strip highlight markers from text
+      const contentWrapper = item.querySelector('.item-content-wrapper');
+      let text = '';
+
+      // Check if item is in edit mode - read from input, otherwise from view
+      if (contentWrapper?.classList.contains('editing')) {
+        const inputEl = item.querySelector('.item-input');
+        if (inputEl) {
+          // Clone and remove sources before getting text
+          const clone = inputEl.cloneNode(true);
+          const sources = clone.querySelector('.item-sources');
+          if (sources) sources.remove();
+          text = clone.textContent?.trim() || '';
+        }
+      } else {
+        const textEl = item.querySelector('.item-text');
+        text = textEl?.textContent?.trim() || '';
+      }
+
+      // Strip any remaining highlight markers (safety net)
       text = text.replace(/[grcpo]?==/g, '');
 
       // Get source citations
@@ -693,8 +749,19 @@
     contentWrapper.classList.add('editing');
 
     if (input) {
-      // Capture initial content for undo
-      editStartContent = getInputValue(input);
+      // Render markdown to HTML in input for WYSIWYG editing
+      const rawContent = getInputValue(input);
+      const sources = input.querySelector('.item-sources');
+      // Set HTML content (preserve sources)
+      if (sources) {
+        input.innerHTML = inlineMarkdown(rawContent);
+        input.appendChild(sources);
+      } else {
+        input.innerHTML = inlineMarkdown(rawContent);
+      }
+
+      // Capture initial content for undo (raw markdown)
+      editStartContent = rawContent;
 
       // Focus and position cursor
       requestAnimationFrame(() => {
@@ -1964,19 +2031,32 @@
       case 'r':
       case 'p':
       case 'o':
-        // Alt+Y/G/R/P/O - wrap selected text with highlight markers
+        // Alt+Y/G/R/P/O - wrap selected text with <mark> element
         if (event.altKey && !event.ctrlKey && !event.metaKey) {
           const selection = window.getSelection();
           if (selection && selection.toString().length > 0) {
             event.preventDefault();
-            let selectedText = selection.toString();
-            // Remove any existing highlight markers to prevent nesting
-            selectedText = selectedText.replace(/[grcpo]?==/g, '');
-            // Determine prefix based on key (y = default/yellow, others use letter)
-            const prefix = event.key === 'y' ? '' : event.key;
+            const selectedText = selection.toString();
             const range = selection.getRangeAt(0);
+            // Create mark element with appropriate class
+            const mark = document.createElement('mark');
+            if (event.key === 'g') mark.className = 'mark-green';
+            else if (event.key === 'r') mark.className = 'mark-red';
+            else if (event.key === 'p') mark.className = 'mark-purple';
+            else if (event.key === 'o') mark.className = 'mark-orange';
+            mark.textContent = selectedText;
             range.deleteContents();
-            range.insertNode(document.createTextNode(prefix + '==' + selectedText + '=='));
+            range.insertNode(mark);
+            // Clean up: prevent nested/overlapping marks
+            input.normalize(); // Merge adjacent text nodes
+            input.querySelectorAll('mark:empty').forEach(m => m.remove());
+            input.querySelectorAll('mark mark').forEach(inner => {
+              const parent = inner.parentNode;
+              while (inner.firstChild) {
+                parent.insertBefore(inner.firstChild, inner);
+              }
+              inner.remove();
+            });
             // Collapse selection to end
             selection.collapseToEnd();
           }
@@ -1984,19 +2064,36 @@
         break;
 
       case 'c':
-        // Alt+C - clear all highlight markers from selected text
+        // Alt+C - remove highlight (unwrap <mark> elements)
         if (event.altKey && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault();
           const selection = window.getSelection();
-          if (selection && selection.toString().length > 0) {
-            event.preventDefault();
-            let selectedText = selection.toString();
-            // Remove all highlight markers
-            selectedText = selectedText.replace(/[grcpo]?==/g, '');
-            const range = selection.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(document.createTextNode(selectedText));
-            // Collapse selection to end
-            selection.collapseToEnd();
+          if (selection && selection.rangeCount > 0) {
+            // If text is selected, replace with plain text (removes any formatting)
+            if (selection.toString().length > 0) {
+              const text = selection.toString();
+              const range = selection.getRangeAt(0);
+              range.deleteContents();
+              range.insertNode(document.createTextNode(text));
+              selection.collapseToEnd();
+            } else {
+              // No selection - find and unwrap parent mark element
+              let node = selection.anchorNode;
+              // If we're in a text node, start from its parent
+              if (node && node.nodeType === Node.TEXT_NODE) {
+                node = node.parentNode;
+              }
+              while (node && node !== input) {
+                if (node.nodeName === 'MARK') {
+                  // Unwrap the mark element
+                  const parent = node.parentNode;
+                  const textNode = document.createTextNode(node.textContent);
+                  parent.replaceChild(textNode, node);
+                  break;
+                }
+                node = node.parentNode;
+              }
+            }
           }
         }
         break;
@@ -2469,7 +2566,11 @@
     if (!input.classList.contains('item-input')) return;
 
     const itemId = input.dataset.itemId;
-    const content = getInputValue(input);
+    // Get HTML content (excluding sources) and convert to markdown
+    const clone = input.cloneNode(true);
+    const sourcesInClone = clone.querySelector('.item-sources');
+    if (sourcesInClone) sourcesInClone.remove();
+    const content = htmlToMarkdown(clone.innerHTML);
     const contentWrapper = input.closest('.item-content-wrapper');
 
     // Update view mode content and exit edit mode
@@ -2479,6 +2580,15 @@
         viewContent.innerHTML = inlineMarkdown(content);
       }
       contentWrapper.classList.remove('editing');
+
+      // Restore raw markdown in input for next edit
+      const sources = input.querySelector('.item-sources');
+      if (sources) {
+        input.textContent = content;
+        input.appendChild(sources);
+      } else {
+        input.textContent = content;
+      }
     }
 
     // Save to server (skip temp items)
