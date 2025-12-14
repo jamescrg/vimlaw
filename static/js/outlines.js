@@ -3288,6 +3288,12 @@
     // Only track left mouse button
     if (event.button !== 0) return;
 
+    // Don't interfere with text selection in edit mode
+    if (event.target.closest('.item-input')) {
+      dragStartItemId = null;
+      return;
+    }
+
     const itemEl = event.target.closest('.outline-item');
     if (itemEl && document.getElementById('outline-tree')) {
       dragStartItemId = itemEl.dataset.itemId;
@@ -3688,6 +3694,52 @@
     if (picker && !picker.contains(event.target) && !event.target.closest('[hx-get*="/sources/"]')) {
       picker.remove();
     }
+  });
+
+  // Handle copy in item inputs - copy clean text without extra formatting
+  document.addEventListener('copy', function(event) {
+    const input = event.target.closest('.item-input');
+    if (!input) return;
+
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    // Get the selected text content
+    let text = selection.toString();
+    if (!text) return;
+
+    event.preventDefault();
+
+    // Normalize line breaks - collapse multiple newlines to single
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    text = text.replace(/\n{2,}/g, '\n');
+
+    // Set clean text to clipboard
+    event.clipboardData.setData('text/plain', text);
+  });
+
+  // Handle cut in item inputs - same cleanup as copy
+  document.addEventListener('cut', function(event) {
+    const input = event.target.closest('.item-input');
+    if (!input) return;
+
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    let text = selection.toString();
+    if (!text) return;
+
+    event.preventDefault();
+
+    // Normalize line breaks
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    text = text.replace(/\n{2,}/g, '\n');
+
+    // Set clean text to clipboard
+    event.clipboardData.setData('text/plain', text);
+
+    // Delete the selected content
+    selection.deleteFromDocument();
   });
 
 })();
