@@ -93,6 +93,13 @@
     </li>
   {% endfor %}
 </ul>
+<button type="button"
+        class="btn-icon {% if filter_label == 'due' %}toggle-active{% elif has_tasks_due_today %}toggle-alert{% endif %}"
+        hx-get="{% if filter_label == 'due' %}{% url 'agenda:tasks-filter-default' %}{% else %}{% url 'agenda:tasks-filter-quick' 'due' %}{% endif %}"
+        hx-target="#tasks"
+        hx-swap="innerHTML">
+  <i class="bi bi-calendar-check with-text"></i>Due
+</button>
 </div>
 </div>
 </div>

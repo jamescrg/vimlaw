@@ -88,6 +88,11 @@ class TasksFilter(django_filters.FilterSet):
         label="Priority (≤)",
         empty_label="All",
     )
+    has_due_date = django_filters.BooleanFilter(
+        field_name="date_due",
+        lookup_expr="isnull",
+        exclude=True,
+    )
 
     order_by = TasksOrderingFilter(
         fields=(

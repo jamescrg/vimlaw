@@ -2,7 +2,7 @@ from datetime import date
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
-from apps.agenda.tasks.models import TaskNote, UserTaskNoteView
+from apps.agenda.tasks.models import Task, TaskNote, UserTaskNoteView
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
@@ -97,6 +97,11 @@ def get_list_data(request):
     )
     current_order = current_order.lstrip("-")
 
+    # Check if there are any pending tasks due today
+    has_tasks_due_today = Task.objects.filter(
+        status="Pending", date_due__lte=today
+    ).exists()
+
     list_data = {
         "pagination": pagination,
         "session_key": "tasks_pagination",
@@ -116,6 +121,7 @@ def get_list_data(request):
         "selected_priority": f"Priority {priority_value}" if priority_value else "",
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,
         "current_order": current_order,
+        "has_tasks_due_today": has_tasks_due_today,
     }
 
     return list_data

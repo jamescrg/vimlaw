@@ -276,6 +276,13 @@ def tasks_filter_quick(request, quick_filter):
             "user": filter_data.get("user"),
             "order_by": filter_data.get("order_by"),
         },
+        "due": {
+            "filter_label": "due",
+            "status": "Pending",
+            "matter": filter_data.get("matter"),
+            "order_by": "date_due",
+            "has_due_date": True,
+        },
     }
     filter_data = {}
     for key, val in quick_filters[quick_filter].items():
@@ -329,6 +336,8 @@ def tasks_filter_default(request):
     }
     request.session["tasks_filter"] = filter_data
     request.session.modified = True
+    if request.headers.get("HX-Request"):
+        return redirect("agenda:tasks-list")
     return redirect("agenda:tasks-index")
 
 

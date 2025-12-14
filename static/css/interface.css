@@ -88,6 +88,10 @@
   color: var(--selected-color) !important;
 }
 
+.toolbar .btn-icon.toggle-alert {
+  background: var(--yellow-100);
+}
+
 .item-selected-highlight {
   background: var(--hl-gray) !important;
 }
