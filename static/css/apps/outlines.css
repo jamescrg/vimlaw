@@ -570,14 +570,6 @@ body:has(.outline-page.standalone) {
   font-style: italic;
 }
 
-.outline-item[data-quote] .item-view::before {
-  content: "\201C";
-}
-
-.outline-item[data-quote] .item-view::after {
-  content: "\201D";
-}
-
 /* Item Edit Input (contenteditable div) */
 .item-input {
   display: inline;
