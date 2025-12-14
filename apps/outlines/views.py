@@ -1,7 +1,8 @@
 import json
+from difflib import SequenceMatcher
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Max, Q
+from django.db.models import F, Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -20,6 +21,57 @@ from .models import Outline, OutlineItem
 def get_accessible_matters():
     """Get all matters accessible to logged-in users (currently all open matters)."""
     return Matter.objects.filter(status="Open")
+
+
+# Synonym mappings for fuzzy search
+SEARCH_SYNONYMS = {
+    "contract": ["agreement"],
+    "agreement": ["contract"],
+}
+
+
+def expand_search_terms(query):
+    """Expand a search query with synonyms."""
+    terms = [query.lower()]
+    query_lower = query.lower()
+    for word, synonyms in SEARCH_SYNONYMS.items():
+        if word in query_lower:
+            for synonym in synonyms:
+                terms.append(query_lower.replace(word, synonym))
+    return terms
+
+
+def fuzzy_match_score(query, text, threshold=0.4):
+    """
+    Calculate fuzzy match score between query and text.
+    Returns score if above threshold, else 0.
+    Also checks for synonym matches.
+    """
+    if not query or not text:
+        return 0
+
+    query_lower = query.lower()
+    text_lower = text.lower()
+
+    # Exact substring match gets highest score
+    if query_lower in text_lower:
+        return 1.0
+
+    # Check synonym matches
+    for term in expand_search_terms(query):
+        if term in text_lower:
+            return 0.95
+
+    # Fuzzy match using SequenceMatcher
+    score = SequenceMatcher(None, query_lower, text_lower).ratio()
+
+    # Also try matching against words in the text
+    words = text_lower.split()
+    for word in words:
+        word_score = SequenceMatcher(None, query_lower, word).ratio()
+        score = max(score, word_score)
+
+    return score if score >= threshold else 0
 
 
 def get_sources_display(request):
@@ -1152,31 +1204,46 @@ def item_sources_modal(request, item_id):
 
 @login_required
 def item_sources_search(request, item_id):
-    """Search documents and highlights for item sources."""
+    """Search documents and highlights for item sources with fuzzy matching."""
     item = get_object_or_404(
         OutlineItem, id=item_id, outline__matter__in=get_accessible_matters()
     )
     matter = item.outline.matter
     query = request.GET.get("q", "").strip()
 
-    documents = []
     highlights = []
+    documents = []
 
     if query and matter:
-        # Search documents by name
-        documents = Document.objects.filter(matter=matter, name__icontains=query)[:10]
+        # Fuzzy search documents by name
+        all_docs = Document.objects.filter(matter=matter)
+        scored_docs = []
+        for doc in all_docs:
+            score = fuzzy_match_score(query, doc.name)
+            if score > 0:
+                scored_docs.append((score, doc))
+        scored_docs.sort(key=lambda x: x[0], reverse=True)
+        documents = [doc for _, doc in scored_docs[:15]]
 
-        # Search highlights by slug or text
-        highlights = (
-            Highlight.objects.filter(document__matter=matter)
-            .filter(Q(slug__icontains=query) | Q(text__icontains=query))
-            .select_related("document")[:10]
-        )
+        # Fuzzy search highlights by slug or text
+        all_highlights = Highlight.objects.filter(
+            document__matter=matter
+        ).select_related("document")
+        scored_highlights = []
+        for hl in all_highlights:
+            # Check both slug and text, use best score
+            slug_score = fuzzy_match_score(query, hl.slug or "")
+            text_score = fuzzy_match_score(query, hl.text or "")
+            score = max(slug_score, text_score)
+            if score > 0:
+                scored_highlights.append((score, hl))
+        scored_highlights.sort(key=lambda x: x[0], reverse=True)
+        highlights = [hl for _, hl in scored_highlights[:15]]
 
     context = {
         "item": item,
-        "documents": documents,
         "highlights": highlights,
+        "documents": documents,
         "query": query,
     }
     return render(request, "outlines/sources-results.html", context)

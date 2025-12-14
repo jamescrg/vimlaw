@@ -833,6 +833,9 @@ body:has(.outline-page.standalone) {
   left: 2rem;
   width: 20rem;
   z-index: 100;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
+  overflow: hidden;
   filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.25));
 }
 
@@ -840,9 +843,10 @@ body:has(.outline-page.standalone) {
   width: 100%;
   padding: 1rem 0.625rem;
   font-size: 0.9375rem;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.375rem;
-  background: var(--background-lighter);
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0;
+  background: var(--background-subtle);
   color: var(--color-primary);
 }
 
@@ -850,22 +854,72 @@ body:has(.outline-page.standalone) {
   outline: none;
 }
 
-.sources-picker .assign-results {
+.sources-tabs {
+  display: flex;
+  background: var(--background-subtle);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sources-tab {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.sources-tab:hover {
+  color: var(--color-primary);
+}
+
+.sources-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--link);
+}
+
+.sources-tab-count {
   background: var(--background-lighter);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-top: none;
-  border-radius: 0 0 0.375rem 0.375rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.sources-picker .assign-results {
+  background: var(--background-subtle);
+}
+
+.sources-picker .assign-results.hidden {
+  display: none;
+}
+
+.sources-empty-state {
+  background: var(--background-subtle);
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-secondary);
+}
+
+.sources-empty-state i {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.sources-empty-state p {
+  margin: 0;
+  font-size: 0.875rem;
 }
 
 .sources-picker .assign-results li {
-  background: var(--background-lighter);
+  background: var(--background-subtle);
   border: none;
   border-bottom: 1px solid var(--border-light);
 }
 
-.sources-picker:has(.assign-results) > input[type="search"] {
-  border-radius: 0.375rem 0.375rem 0 0;
-}
 
 /* Inline markdown highlights */
 .item-view mark,

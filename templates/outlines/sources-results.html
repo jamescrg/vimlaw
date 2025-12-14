@@ -1,17 +1,15 @@
 {% if query %}
-  <ul class="assign-results">
-    {% for document in documents %}
-      <li>
-        <a href="#"
-           hx-post="{% url 'outlines:item-add-source' item.id %}"
-           hx-vals='{"type": "document", "id": "{{ document.id }}"}'
-           hx-target="#outline-item-{{ item.id }}"
-           hx-swap="outerHTML">
-          <i class="bi bi-filetype-pdf urgent"></i>
-          {{ document.name|truncatechars:80 }}
-        </a>
-      </li>
-    {% endfor %}
+  <div class="sources-tabs">
+    <button type="button" class="sources-tab active" data-tab="highlights">
+      <i class="bi bi-highlighter"></i> Highlights
+      {% if highlights %}<span class="sources-tab-count">{{ highlights|length }}</span>{% endif %}
+    </button>
+    <button type="button" class="sources-tab" data-tab="documents">
+      <i class="bi bi-filetype-pdf"></i> Documents
+      {% if documents %}<span class="sources-tab-count">{{ documents|length }}</span>{% endif %}
+    </button>
+  </div>
+  <ul class="assign-results sources-tab-content" data-tab="highlights">
     {% for highlight in highlights %}
       <li>
         <a href="#"
@@ -26,7 +24,42 @@
           </div>
         </a>
       </li>
+    {% empty %}
+      <li class="empty-message">No matching highlights found.</li>
     {% endfor %}
-    {% if not documents and not highlights %}<li class="empty-message">No matching sources found.</li>{% endif %}
   </ul>
+  <ul class="assign-results sources-tab-content hidden"
+      data-tab="documents">
+    {% for document in documents %}
+      <li>
+        <a href="#"
+           hx-post="{% url 'outlines:item-add-source' item.id %}"
+           hx-vals='{"type": "document", "id": "{{ document.id }}"}'
+           hx-target="#outline-item-{{ item.id }}"
+           hx-swap="outerHTML">
+          <i class="bi bi-filetype-pdf urgent"></i>
+          {{ document.name|truncatechars:80 }}
+        </a>
+      </li>
+    {% empty %}
+      <li class="empty-message">No matching documents found.</li>
+    {% endfor %}
+  </ul>
+  <script>
+    document.querySelectorAll('.sources-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.sources-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabName = tab.dataset.tab;
+        document.querySelectorAll('.sources-tab-content').forEach(content => {
+          content.classList.toggle('hidden', content.dataset.tab !== tabName);
+        });
+      });
+    });
+  </script>
+{% else %}
+  <div class="sources-empty-state">
+    <i class="bi bi-search"></i>
+    <p>Search for highlights and documents to add as sources</p>
+  </div>
 {% endif %}
