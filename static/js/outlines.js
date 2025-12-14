@@ -1869,12 +1869,16 @@
         }
         break;
 
-      case 'Backspace':
+      case 'Delete':
         if (event.metaKey || event.ctrlKey) {
-          // Ctrl+Backspace: delete item regardless of content
+          // Ctrl+Delete: delete item regardless of content
           event.preventDefault();
           deleteItem(itemId);
-        } else if (getInputValue(input) === '') {
+        }
+        break;
+
+      case 'Backspace':
+        if (getInputValue(input) === '') {
           // Delete if empty
           event.preventDefault();
           deleteItem(itemId);
@@ -2859,7 +2863,6 @@
         break;
 
       case 'Delete':
-      case 'Backspace':
         if ((event.metaKey || event.ctrlKey)) {
           event.preventDefault();
           const selected = getSelectedItems();
