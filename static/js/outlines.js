@@ -708,7 +708,7 @@
     });
   }
 
-  // Copy focused or selected items to clipboard as paragraphs
+  // Copy focused or selected items to clipboard as paragraphs (with formatting for Word)
   function copyItems() {
     const selected = getSelectedItems();
     let items = [];
@@ -726,27 +726,41 @@
 
     if (items.length === 0) return;
 
-    // Get text content and sources from each item
-    const paragraphs = items.map(item => {
+    // Get text and HTML content from each item
+    const results = items.map(item => {
       const contentWrapper = item.querySelector('.item-content-wrapper');
       let text = '';
+      let html = '';
 
       // Check if item is in edit mode - read from input, otherwise from view
       if (contentWrapper?.classList.contains('editing')) {
         const inputEl = item.querySelector('.item-input');
         if (inputEl) {
-          // Clone and remove sources before getting text
+          // Clone and process for both text and HTML
           const clone = inputEl.cloneNode(true);
           const sources = clone.querySelector('.item-sources');
           if (sources) sources.remove();
+          // Unwrap mark elements for HTML (keep bold/italic)
+          clone.querySelectorAll('mark').forEach(mark => {
+            mark.replaceWith(document.createTextNode(mark.textContent));
+          });
           text = clone.textContent?.trim() || '';
+          html = clone.innerHTML?.trim() || '';
         }
       } else {
         const textEl = item.querySelector('.item-text');
-        text = textEl?.textContent?.trim() || '';
+        if (textEl) {
+          const clone = textEl.cloneNode(true);
+          // Unwrap mark elements for HTML
+          clone.querySelectorAll('mark').forEach(mark => {
+            mark.replaceWith(document.createTextNode(mark.textContent));
+          });
+          text = clone.textContent?.trim() || '';
+          html = clone.innerHTML?.trim() || '';
+        }
       }
 
-      // Strip any remaining highlight markers (safety net)
+      // Strip any remaining highlight markers from text (safety net)
       text = text.replace(/[grcpo]?==/g, '');
 
       // Get source citations
@@ -755,19 +769,29 @@
         .filter(s => s && s.length > 0);
 
       if (sources.length > 0) {
-        return text + ' ' + sources.join('; ');
+        const sourcesStr = ' ' + sources.join('; ');
+        return { text: text + sourcesStr, html: html + sourcesStr };
       }
-      return text;
-    }).filter(text => text.length > 0);
+      return { text, html };
+    }).filter(r => r.text.length > 0);
 
-    // Join as paragraphs (double newline between each)
-    let text = paragraphs.join('\n\n');
+    // Join as paragraphs
+    let text = results.map(r => r.text).join('\n\n');
+    let html = results.map(r => '<p>' + r.html + '</p>').join('');
     // Clean up citation formatting
     text = text.replace(/\); \(/g, '; ');
+    html = html.replace(/\); \(/g, '; ');
 
-    // Copy to clipboard with visual feedback
+    // Copy to clipboard with visual feedback (both text and HTML for Word compatibility)
     const button = document.getElementById('copy-btn');
-    navigator.clipboard.writeText(text).then(() => {
+    const textBlob = new Blob([text], { type: 'text/plain' });
+    const htmlBlob = new Blob([html], { type: 'text/html' });
+    navigator.clipboard.write([
+      new ClipboardItem({
+        'text/plain': textBlob,
+        'text/html': htmlBlob
+      })
+    ]).then(() => {
       if (button) {
         const originalHtml = button.innerHTML;
         button.innerHTML = '<i class="bi bi-check-lg"></i>';
@@ -3812,7 +3836,7 @@
     }
   });
 
-  // Handle copy in item inputs - copy clean text without extra formatting
+  // Handle copy in item inputs - preserve bold/italic for Word compatibility
   document.addEventListener('copy', function(event) {
     const input = event.target.closest('.item-input');
     if (!input) return;
@@ -3830,8 +3854,22 @@
     text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     text = text.replace(/\n{2,}/g, '\n');
 
-    // Set clean text to clipboard
+    // Get HTML content from selection for rich text paste (Word compatibility)
+    const range = selection.getRangeAt(0);
+    const fragment = range.cloneContents();
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(fragment);
+    // Remove sources from copied content
+    tempDiv.querySelectorAll('.item-sources').forEach(s => s.remove());
+    // Unwrap mark elements (remove highlighting, keep text)
+    tempDiv.querySelectorAll('mark').forEach(mark => {
+      mark.replaceWith(document.createTextNode(mark.textContent));
+    });
+    const html = tempDiv.innerHTML;
+
+    // Set both plain text and HTML to clipboard
     event.clipboardData.setData('text/plain', text);
+    event.clipboardData.setData('text/html', html);
   });
 
   // Handle cut in item inputs - same cleanup as copy
@@ -3851,8 +3889,22 @@
     text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     text = text.replace(/\n{2,}/g, '\n');
 
-    // Set clean text to clipboard
+    // Get HTML content from selection for rich text paste (Word compatibility)
+    const range = selection.getRangeAt(0);
+    const fragment = range.cloneContents();
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(fragment);
+    // Remove sources from copied content
+    tempDiv.querySelectorAll('.item-sources').forEach(s => s.remove());
+    // Unwrap mark elements (remove highlighting, keep text)
+    tempDiv.querySelectorAll('mark').forEach(mark => {
+      mark.replaceWith(document.createTextNode(mark.textContent));
+    });
+    const html = tempDiv.innerHTML;
+
+    // Set both plain text and HTML to clipboard
     event.clipboardData.setData('text/plain', text);
+    event.clipboardData.setData('text/html', html);
 
     // Delete the selected content
     selection.deleteFromDocument();
