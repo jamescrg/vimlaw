@@ -2524,7 +2524,7 @@
 
       case 'b':
       case 'B':
-        // Ctrl+B - toggle bold on selected text
+        // Ctrl+B - toggle bold on selected text or typing mode
         if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
           event.preventDefault();
           const selection = window.getSelection();
@@ -2557,13 +2557,16 @@
               selection.addRange(newRange);
             }
             input.normalize();
+          } else {
+            // No selection - toggle bold mode for subsequent typing
+            document.execCommand('bold', false, null);
           }
         }
         break;
 
       case 'i':
       case 'I':
-        // Ctrl+I - toggle italic on selected text
+        // Ctrl+I - toggle italic on selected text or typing mode
         if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
           event.preventDefault();
           const selection = window.getSelection();
@@ -2596,6 +2599,9 @@
               selection.addRange(newRange);
             }
             input.normalize();
+          } else {
+            // No selection - toggle italic mode for subsequent typing
+            document.execCommand('italic', false, null);
           }
         }
         break;
