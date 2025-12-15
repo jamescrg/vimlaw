@@ -2498,6 +2498,84 @@
         }
         break;
 
+      case 'b':
+      case 'B':
+        // Ctrl+B - toggle bold on selected text
+        if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
+          event.preventDefault();
+          const selection = window.getSelection();
+          if (selection && selection.toString().length > 0) {
+            const selectedText = selection.toString();
+            const range = selection.getRangeAt(0);
+            // Check if selection is inside a strong element
+            let parent = range.commonAncestorContainer;
+            if (parent.nodeType === Node.TEXT_NODE) parent = parent.parentNode;
+            const strongParent = parent.closest('strong');
+            if (strongParent && strongParent.textContent === selectedText) {
+              // Unwrap: replace strong with its text content
+              const textNode = document.createTextNode(selectedText);
+              strongParent.replaceWith(textNode);
+              // Reselect the text
+              const newRange = document.createRange();
+              newRange.selectNodeContents(textNode);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            } else {
+              // Wrap in strong
+              const strong = document.createElement('strong');
+              strong.textContent = selectedText;
+              range.deleteContents();
+              range.insertNode(strong);
+              // Reselect the text inside strong
+              const newRange = document.createRange();
+              newRange.selectNodeContents(strong);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
+            input.normalize();
+          }
+        }
+        break;
+
+      case 'i':
+      case 'I':
+        // Ctrl+I - toggle italic on selected text
+        if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
+          event.preventDefault();
+          const selection = window.getSelection();
+          if (selection && selection.toString().length > 0) {
+            const selectedText = selection.toString();
+            const range = selection.getRangeAt(0);
+            // Check if selection is inside an em element
+            let parent = range.commonAncestorContainer;
+            if (parent.nodeType === Node.TEXT_NODE) parent = parent.parentNode;
+            const emParent = parent.closest('em');
+            if (emParent && emParent.textContent === selectedText) {
+              // Unwrap: replace em with its text content
+              const textNode = document.createTextNode(selectedText);
+              emParent.replaceWith(textNode);
+              // Reselect the text
+              const newRange = document.createRange();
+              newRange.selectNodeContents(textNode);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            } else {
+              // Wrap in em
+              const em = document.createElement('em');
+              em.textContent = selectedText;
+              range.deleteContents();
+              range.insertNode(em);
+              // Reselect the text inside em
+              const newRange = document.createRange();
+              newRange.selectNodeContents(em);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
+            input.normalize();
+          }
+        }
+        break;
+
       case 'y':
       case 'g':
       case 'r':

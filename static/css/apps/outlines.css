@@ -953,3 +953,8 @@ body:has(.outline-page.standalone) {
 .item-input mark.mark-citation {
   background: var(--stone-150);
 }
+
+.item-view strong,
+.item-input strong {
+  font-weight: 600;
+}
