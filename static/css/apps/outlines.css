@@ -150,8 +150,7 @@ body:has(.outline-page.standalone) {
   top: 0;
   z-index: 50;
   background: var(--background-muted);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border-medium2);
 }
 
 /* Outline toolbar - constrained width */

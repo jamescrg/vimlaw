@@ -2404,15 +2404,53 @@
         }
         break;
 
-      case 'End':
-        // Go to end of current visual line (not end of entire text)
-        // Shift+End extends selection, End without shift just moves cursor
+      case 'Home':
+        // Go to start of current visual line (or start of entire text with Ctrl)
+        // Shift extends selection, without shift just moves cursor
         event.preventDefault();
-        window.getSelection().modify(
-          event.shiftKey ? 'extend' : 'move',
-          'forward',
-          'lineboundary'
-        );
+        if (event.ctrlKey || event.metaKey) {
+          // Ctrl+Home/Ctrl+Shift+Home: go to/select to start of entire item
+          if (event.shiftKey) {
+            // Extend selection from current position to start
+            const cursorPos = getSelectionStart(input);
+            setInputSelectionRange(input, 0, cursorPos);
+          } else {
+            // Just move cursor to start
+            setInputSelectionRange(input, 0, 0);
+          }
+        } else {
+          // Home/Shift+Home: go to/select to start of visual line
+          window.getSelection().modify(
+            event.shiftKey ? 'extend' : 'move',
+            'backward',
+            'lineboundary'
+          );
+        }
+        break;
+
+      case 'End':
+        // Go to end of current visual line (or end of entire text with Ctrl)
+        // Shift extends selection, without shift just moves cursor
+        event.preventDefault();
+        if (event.ctrlKey || event.metaKey) {
+          // Ctrl+End/Ctrl+Shift+End: go to/select to end of entire item
+          const len = getInputValue(input).length;
+          if (event.shiftKey) {
+            // Extend selection from current position to end
+            const cursorPos = getSelectionEnd(input);
+            setInputSelectionRange(input, cursorPos, len);
+          } else {
+            // Just move cursor to end
+            setInputSelectionRange(input, len, len);
+          }
+        } else {
+          // End/Shift+End: go to/select to end of visual line
+          window.getSelection().modify(
+            event.shiftKey ? 'extend' : 'move',
+            'forward',
+            'lineboundary'
+          );
+        }
         break;
 
       case 'h':
