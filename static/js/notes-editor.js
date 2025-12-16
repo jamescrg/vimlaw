@@ -1165,8 +1165,8 @@ function setupKeyboardShortcuts() {
       return;
     }
 
-    // Show shortcuts: Ctrl+/ or ?
-    if ((mod && e.key === "/") || e.key === "?") {
+    // Show shortcuts: Ctrl+?
+    if (mod && e.key === "?") {
       e.preventDefault();
       showShortcutsModal();
       return;
