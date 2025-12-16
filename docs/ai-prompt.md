@@ -43,6 +43,7 @@ At the start of this chat, please review all higlights, outlines, and facts entr
     - Any substantive motion (Motion to Dismiss, Motion for Summary Judgment, Motion for Sanctions, etc.)
     - Any responses to discovery
     - All others
+- When reviewing documents, if you are unable to find reviewable text, check the document object's ocr_text property.
 
 
 ### Response Guidelines
