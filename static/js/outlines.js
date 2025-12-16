@@ -24,6 +24,22 @@
   const MAX_UNDO_SIZE = 50;
   let editStartContent = null;  // Content when edit mode started (for undo)
 
+  // Temp ID to real ID resolution
+  // Maps temp IDs to {promise, resolve} so operations can wait for real IDs
+  const pendingItemIds = new Map();
+
+  // Get the real item ID, waiting if it's a temp ID that hasn't resolved yet
+  async function resolveItemId(itemId) {
+    if (!itemId || !itemId.startsWith('temp-')) {
+      return itemId;
+    }
+    const pending = pendingItemIds.get(itemId);
+    if (pending) {
+      return await pending.promise;
+    }
+    return itemId;
+  }
+
   // ============================================================================
   // Input abstraction helpers (work with both textarea and contenteditable)
   // ============================================================================
@@ -930,6 +946,12 @@
     currentItem.insertAdjacentHTML('afterend', tempHtml);
     const tempItem = currentItem.nextElementSibling;
 
+    // Register pending ID resolution
+    let resolvePendingId;
+    pendingItemIds.set(tempId, {
+      promise: new Promise(resolve => { resolvePendingId = resolve; })
+    });
+
     // Focus the temp item immediately
     if (tempItem) {
       focusItem(tempItem, 'start');
@@ -946,19 +968,63 @@
     })
     .then(response => response.text())
     .then(html => {
-      // Replace temp item with real item from server
+      // Replace temp item with real item, preserving any user changes
       if (tempItem && tempItem.parentElement) {
+        // Capture current state before replacing
+        const tempInput = tempItem.querySelector('.item-input');
+        const currentContent = tempInput ? getInputValue(tempInput) : '';
+        const currentParent = tempItem.parentElement;
+        const wasFocused = document.activeElement === tempInput;
+        const cursorPos = wasFocused ? getSelectionStart(tempInput) : null;
+
+        // Insert server HTML and get new item
         tempItem.insertAdjacentHTML('afterend', html);
         const newItem = tempItem.nextElementSibling;
         tempItem.remove();
+
         if (newItem) {
+          const realId = newItem.dataset.itemId;
           htmx.process(newItem);
+
+          // Restore content if user typed something
+          if (currentContent) {
+            const newInput = newItem.querySelector('.item-input');
+            const newText = newItem.querySelector('.item-text');
+            if (newInput) setInputValue(newInput, currentContent);
+            if (newText) newText.textContent = currentContent;
+          }
+
+          // Move to correct parent if it was indented
+          const newItemParent = newItem.parentElement;
+          if (currentParent !== newItemParent && currentParent.classList.contains('item-children')) {
+            currentParent.appendChild(newItem);
+            // Update parent ID
+            const parentItem = currentParent.closest('.outline-item');
+            if (parentItem) {
+              newItem.dataset.parentId = parentItem.dataset.itemId;
+              // Sync indent to server
+              fetch(`/outlines/item/${realId}/indent/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCSRFToken() }
+              });
+            }
+          }
+
           pushUndo({
             type: 'create_item',
-            itemId: newItem.dataset.itemId
+            itemId: realId
           });
-          // Re-focus the real item
-          focusItem(newItem, 'start');
+
+          // Restore focus and cursor position
+          if (wasFocused) {
+            focusItem(newItem, cursorPos !== null ? cursorPos : 'start');
+          }
+
+          // Resolve pending ID after focus is restored (with delay for RAF)
+          setTimeout(() => {
+            resolvePendingId(realId);
+            pendingItemIds.delete(tempId);
+          }, 50);
         }
       }
     });
@@ -1005,6 +1071,12 @@
     currentItem.insertAdjacentHTML('afterend', tempHtml);
     const tempItem = currentItem.nextElementSibling;
 
+    // Register pending ID resolution
+    let resolvePendingId;
+    pendingItemIds.set(tempId, {
+      promise: new Promise(resolve => { resolvePendingId = resolve; })
+    });
+
     // Move children from current item to new item
     if (childrenContainer) {
       tempItem.appendChild(childrenContainer);
@@ -1032,22 +1104,67 @@
     })
     .then(response => response.text())
     .then(html => {
-      // Replace temp item with real item from server
+      // Replace temp item with real item, preserving any user changes
       if (tempItem && tempItem.parentElement) {
+        // Capture current state before replacing
+        const tempInput = tempItem.querySelector('.item-input');
+        const currentContent = tempInput ? getInputValue(tempInput) : '';
+        const currentParent = tempItem.parentElement;
+        const wasFocused = document.activeElement === tempInput;
+        const cursorPos = wasFocused ? getSelectionStart(tempInput) : null;
+
+        // Insert server HTML and get new item
         tempItem.insertAdjacentHTML('afterend', html);
         const newItem = tempItem.nextElementSibling;
         tempItem.remove();
+
         if (newItem) {
+          const realId = newItem.dataset.itemId;
           htmx.process(newItem);
+
+          // Restore content if user typed something different
+          if (currentContent && currentContent !== content) {
+            const newInput = newItem.querySelector('.item-input');
+            const newText = newItem.querySelector('.item-text');
+            if (newInput) setInputValue(newInput, currentContent);
+            if (newText) newText.textContent = currentContent;
+          }
+
+          // Move to correct parent if it was indented
+          const newItemParent = newItem.parentElement;
+          if (currentParent !== newItemParent && currentParent.classList.contains('item-children')) {
+            currentParent.appendChild(newItem);
+            // Update parent ID
+            const parentItem = currentParent.closest('.outline-item');
+            if (parentItem) {
+              newItem.dataset.parentId = parentItem.dataset.itemId;
+              // Sync indent to server
+              fetch(`/outlines/item/${realId}/indent/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCSRFToken() }
+              });
+            }
+          }
+
           pushUndo({
             type: 'split',
             originalItemId: currentItemId,
             originalContent: originalContent,
-            newItemId: newItem.dataset.itemId,
+            newItemId: realId,
             newItemContent: content,
             hadChildren: hadChildren
           });
-          focusItem(newItem, 'start');
+
+          // Restore focus and cursor position
+          if (wasFocused) {
+            focusItem(newItem, cursorPos !== null ? cursorPos : 'start');
+          }
+
+          // Resolve pending ID after focus is restored (with delay for RAF)
+          setTimeout(() => {
+            resolvePendingId(realId);
+            pendingItemIds.delete(tempId);
+          }, 50);
         }
       }
     });
@@ -1083,6 +1200,12 @@
     currentItem.insertAdjacentHTML('beforebegin', tempHtml);
     const tempItem = currentItem.previousElementSibling;
 
+    // Register pending ID resolution
+    let resolvePendingId;
+    pendingItemIds.set(tempId, {
+      promise: new Promise(resolve => { resolvePendingId = resolve; })
+    });
+
     // Focus the temp item immediately
     if (tempItem) {
       focusItem(tempItem, 'start');
@@ -1099,19 +1222,63 @@
     })
     .then(response => response.text())
     .then(html => {
-      // Replace temp item with real item from server
+      // Replace temp item with real item, preserving any user changes
       if (tempItem && tempItem.parentElement) {
+        // Capture current state before replacing
+        const tempInput = tempItem.querySelector('.item-input');
+        const currentContent = tempInput ? getInputValue(tempInput) : '';
+        const currentParent = tempItem.parentElement;
+        const wasFocused = document.activeElement === tempInput;
+        const cursorPos = wasFocused ? getSelectionStart(tempInput) : null;
+
+        // Insert server HTML and get new item
         tempItem.insertAdjacentHTML('afterend', html);
         const newItem = tempItem.nextElementSibling;
         tempItem.remove();
+
         if (newItem) {
+          const realId = newItem.dataset.itemId;
           htmx.process(newItem);
+
+          // Restore content if user typed something
+          if (currentContent) {
+            const newInput = newItem.querySelector('.item-input');
+            const newText = newItem.querySelector('.item-text');
+            if (newInput) setInputValue(newInput, currentContent);
+            if (newText) newText.textContent = currentContent;
+          }
+
+          // Move to correct parent if it was indented
+          const newItemParent = newItem.parentElement;
+          if (currentParent !== newItemParent && currentParent.classList.contains('item-children')) {
+            currentParent.appendChild(newItem);
+            // Update parent ID
+            const parentItem = currentParent.closest('.outline-item');
+            if (parentItem) {
+              newItem.dataset.parentId = parentItem.dataset.itemId;
+              // Sync indent to server
+              fetch(`/outlines/item/${realId}/indent/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCSRFToken() }
+              });
+            }
+          }
+
           pushUndo({
             type: 'create_item',
-            itemId: newItem.dataset.itemId
+            itemId: realId
           });
-          // Re-focus the real item
-          focusItem(newItem, 'start');
+
+          // Restore focus and cursor position
+          if (wasFocused) {
+            focusItem(newItem, cursorPos !== null ? cursorPos : 'start');
+          }
+
+          // Resolve pending ID after focus is restored (with delay for RAF)
+          setTimeout(() => {
+            resolvePendingId(realId);
+            pendingItemIds.delete(tempId);
+          }, 50);
         }
       }
     });
@@ -1229,12 +1396,14 @@
       prevOriginalContent: prevContent
     });
 
-    // Send to server
-    fetch(`/outlines/item/${itemId}/join-with-previous/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCSRFToken()
-      }
+    // Send to server (wait for real ID if temp)
+    resolveItemId(itemId).then(realId => {
+      fetch(`/outlines/item/${realId}/join-with-previous/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken()
+        }
+      });
     });
   }
 
@@ -1251,14 +1420,16 @@
       const textEl = itemEl.querySelector('.item-text');
       if (inputEl) setInputValue(inputEl, '');
       if (textEl) textEl.textContent = '';
-      // Save empty content to server
-      fetch(`/outlines/item/${itemId}/update/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-CSRFToken': getCSRFToken()
-        },
-        body: 'content='
+      // Save empty content to server (wait for real ID if temp)
+      resolveItemId(itemId).then(realId => {
+        fetch(`/outlines/item/${realId}/update/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: 'content='
+        });
       });
       focusItem(itemEl, 'start');
       return;
@@ -1276,19 +1447,22 @@
     const prevItem = getPreviousItem(itemEl);
     const focusTarget = nextItem || prevItem;
 
-    fetch(`/outlines/item/${itemId}/delete/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCSRFToken()
-      }
-    })
-    .then(response => {
-      if (response.ok) {
-        itemEl.remove();
-        if (focusTarget) {
-          setTimeout(() => focusItem(focusTarget), 50);
+    // Wait for real ID if temp, then delete
+    resolveItemId(itemId).then(realId => {
+      fetch(`/outlines/item/${realId}/delete/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken()
         }
-      }
+      })
+      .then(response => {
+        if (response.ok) {
+          itemEl.remove();
+          if (focusTarget) {
+            setTimeout(() => focusItem(focusTarget), 50);
+          }
+        }
+      });
     });
   }
 
@@ -1404,10 +1578,12 @@
         }
       });
 
-      // POST indent to server
-      fetch(`/outlines/item/${itemId}/indent/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCSRFToken() }
+      // POST indent to server (wait for real ID if temp)
+      resolveItemId(itemId).then(realId => {
+        fetch(`/outlines/item/${realId}/indent/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCSRFToken() }
+        });
       });
       return;
     }
@@ -1452,17 +1628,19 @@
       }
     }
 
-    // POST to server in background
-    fetch(`/outlines/item/${itemId}/indent/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCSRFToken()
-      }
-    }).then(response => {
-      if (!response.ok) {
-        // Revert on error - refresh tree
-        refreshTreeAndFocus(itemId, keepSelection, enterEditMode, cursorPos);
-      }
+    // POST to server in background (wait for real ID if temp)
+    resolveItemId(itemId).then(realId => {
+      fetch(`/outlines/item/${realId}/indent/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken()
+        }
+      }).then(response => {
+        if (!response.ok) {
+          // Revert on error - refresh tree
+          refreshTreeAndFocus(realId, keepSelection, enterEditMode, cursorPos);
+        }
+      });
     });
   }
 
@@ -1522,17 +1700,19 @@
       }
     }
 
-    // POST to server in background
-    fetch(`/outlines/item/${itemId}/outdent/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCSRFToken()
-      }
-    }).then(response => {
-      if (!response.ok) {
-        // Revert on error - refresh tree
-        refreshTreeAndFocus(itemId, keepSelection, enterEditMode, cursorPos);
-      }
+    // POST to server in background (wait for real ID if temp)
+    resolveItemId(itemId).then(realId => {
+      fetch(`/outlines/item/${realId}/outdent/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken()
+        }
+      }).then(response => {
+        if (!response.ok) {
+          // Revert on error - refresh tree
+          refreshTreeAndFocus(realId, keepSelection, enterEditMode, cursorPos);
+        }
+      });
     });
   }
 
@@ -2012,25 +2192,26 @@
         event.preventDefault();
         const cursorPos = getSelectionStart(input);
         const selectedForTab = getSelectedItems();
-        // Save first (if not empty), then indent/outdent
-        if (getInputValue(input) !== '') {
+        // Save first (if not empty and not a temp item), then indent/outdent
+        if (getInputValue(input) !== '' && !itemId.startsWith('temp-')) {
           input.blur();
         }
-        setTimeout(() => {
+        // Use resolveItemId to handle temp items that may be replaced
+        resolveItemId(itemId).then(realId => {
           if (selectedForTab.length >= 2) {
             // Batch indent/outdent all selected items
             const itemIds = selectedForTab.map(item => parseInt(item.dataset.itemId));
             if (event.shiftKey) {
-              batchOutdent(itemIds, itemId);
+              batchOutdent(itemIds, realId);
             } else {
-              batchIndent(itemIds, itemId);
+              batchIndent(itemIds, realId);
             }
           } else if (event.shiftKey) {
-            outdentItem(itemId, false, true, cursorPos);
+            outdentItem(realId, false, true, cursorPos);
           } else {
-            indentItem(itemId, false, true, cursorPos);
+            indentItem(realId, false, true, cursorPos);
           }
-        }, 100);
+        });
         break;
 
       case 'ArrowUp':
