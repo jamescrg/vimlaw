@@ -92,7 +92,7 @@
   {% endfor %}
 </ul>
 <a href="{% url 'agenda:tasks-index' %}" class="return-to-agenda">
-  Back to Agenda <i class="bi bi-arrow-up-right-circle ms-2"></i>
+  Back to Agenda <i class="bi bi-arrow-up-left-circle ms-2"></i>
 </a>
 </div>
 </div>
@@ -174,7 +174,8 @@
                data-bs-target="#htmx-modal-container"
                hx-swap="innerHTML">{{ task.description }}</a>
           </td>
-          <td class="status dropdown-cell" data-label="Status">{% include "matters/tasks/status.html" %}</td>
+          <td class="status dropdown-cell {% if task.date_due and task.date_due <= today %}hl-yellow{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"
+              data-label="Status">{% include "matters/tasks/status.html" %}</td>
           <td class="user dropdown-cell {% if task.date_due and task.date_due <= today %}hl-yellow{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"
               data-label="User">{% include "matters/tasks/user.html" %}</td>
           <td class="date {% if task.date_due and task.date_due <= today %}hl-yellow{% endif %} {% if task.status == 'Complete' %}complete{% endif %}"

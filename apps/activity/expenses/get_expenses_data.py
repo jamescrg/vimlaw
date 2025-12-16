@@ -63,7 +63,9 @@ def get_expenses_data(request):
 
     selected_user = None
     if user_id:
-        selected_user = users.filter(id=user_id).first().username.capitalize()
+        user = users.filter(id=user_id).first()
+        if user:
+            selected_user = user.username.capitalize()
 
     # Get current order and strip leading '-' for comparison
     current_order = filter_data.get("order_by", "date") if filter_data else "date"

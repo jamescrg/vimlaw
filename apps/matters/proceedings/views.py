@@ -79,9 +79,12 @@ def add(request, id):
     # if no post data has been submitted, show the proceeding form
     else:
         today = date.today().strftime("%Y-%m-%d")
-        form = ProceedingForm(
-            initial={"date_filed": today}, use_required_attribute=False
-        )
+        # If no proceedings exist, default to "Main" nickname and primary=True
+        if proceeding is None:
+            initial = {"date_filed": today, "nickname": "Main", "primary": True}
+        else:
+            initial = {"date_filed": today}
+        form = ProceedingForm(initial=initial, use_required_attribute=False)
 
     context = {
         "app": "matters",

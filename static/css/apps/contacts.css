@@ -276,6 +276,11 @@
   border-color: var(--border-medium);
 }
 
+.action-buttons .btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 /* Trust Tab */
 .contact-trust-section {
 }

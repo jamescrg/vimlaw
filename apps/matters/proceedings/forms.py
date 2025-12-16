@@ -9,9 +9,9 @@ class ProceedingForm(forms.ModelForm):
         model = Proceeding
         fields = (
             "date_filed",
+            "nickname",
             "forum",
             "case_number",
-            "nickname",
             "status",
             "primary",
         )

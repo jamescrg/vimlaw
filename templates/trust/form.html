@@ -30,6 +30,7 @@
         <a hx-confirm='Are you sure you want to delete this record?'
            href="#"
            hx-delete="{% url 'trust:delete' id=transaction.id %}"
+           hx-target="#htmx-modal-container"
            class="delete-link">Delete Transaction</a>
       {% endif %}
     </div>

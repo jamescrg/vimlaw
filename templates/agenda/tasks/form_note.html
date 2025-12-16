@@ -39,7 +39,8 @@
         <a class="delete-link"
            hx-confirm='Are you sure you want to delete this note?'
            href="#"
-           hx-post="{% url 'agenda:tasks-delete-note' id=note.id %}">Delete</a>
+           hx-post="{% url 'agenda:tasks-delete-note' id=note.id %}"
+           hx-target="#htmx-modal-container">Delete</a>
       {% endif %}
     </div>
   </div>

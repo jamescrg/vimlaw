@@ -29,6 +29,7 @@
         <a href="#"
            class="delete-link"
            hx-post="{% url 'outlines:delete' outline.id %}"
+           hx-target="#htmx-modal-container"
            hx-confirm="Delete this outline and all its items?">Delete Outline</a>
       {% endif %}
     </div>

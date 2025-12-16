@@ -23,6 +23,7 @@
         <a hx-confirm='Are you sure you want to delete this fact?'
            href="#"
            hx-post="{% url 'case:facts-delete' fact.id %}"
+           hx-target="#htmx-modal-container"
            class="delete-link">Delete Fact</a>
       {% endif %}
     </div>

@@ -343,6 +343,14 @@ textarea {
   padding-top: 0.25rem;
 }
 
+/* Center checkbox fields in their grid slot */
+.form-compact .form-group:has(input[type="checkbox"]) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 /* File input browse button */
 input[type="file"]::file-selector-button {
   appearance: none;

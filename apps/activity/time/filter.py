@@ -54,6 +54,13 @@ class TimeEntryFilter(django_filters.FilterSet):
         empty_label=None,
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Capitalize user display names
+        self.form.fields["user"].label_from_instance = (
+            lambda obj: obj.username.capitalize()
+        )
+
     def filter_invoice(self, queryset, _, value):
         if value == "1":
             return queryset.filter(invoice__isnull=False)
