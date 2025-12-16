@@ -317,6 +317,20 @@ def delete_highlight(request, highlight_id):
 
 
 @login_required
+def highlight_detail(request, highlight_id):
+    """Display highlight details in a modal."""
+    highlight = get_object_or_404(
+        Highlight.objects.select_related("document").prefetch_related("labels"),
+        id=highlight_id,
+    )
+    return render(
+        request,
+        "case/highlights/detail.html",
+        {"highlight": highlight},
+    )
+
+
+@login_required
 def edit_highlight(request, highlight_id):
     """Edit a highlight's slug, color, importance, and text."""
     highlight = get_object_or_404(Highlight, id=highlight_id)

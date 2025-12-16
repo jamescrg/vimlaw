@@ -7,6 +7,7 @@
   </td>
   <td class="description{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
     <div class="fact-content">
+      <span class="fact-text">{{ fact.description }}</span>
       <div class="fact-actions dropdown">
         <button class="btn-icon menu-icon"
                 type="button"
@@ -41,7 +42,6 @@
           </li>
         </ul>
       </div>
-      <span class="fact-text">{{ fact.description }}</span>
     </div>
     <div class="fact-labels">
       {% if fact.highlights.all or fact.documents.all %}

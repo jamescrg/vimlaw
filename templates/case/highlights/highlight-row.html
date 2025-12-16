@@ -7,13 +7,21 @@
       <h3 class="highlight-slug">
         <span class="hl-{{ highlight.color }}">{{ highlight.slug|default:"Untitled" }}</span>
       </h3>
-      <button class="btn-icon menu-icon"
+      <button class="btn-icon menu-icon highlight-menu-btn"
               type="button"
               data-bs-toggle="dropdown"
               aria-expanded="false">
         <i class="bi bi-three-dots-vertical"></i>
       </button>
       <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'case:highlight-detail' highlight.id %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container"><i class="bi bi-eye"></i> View Detail</a>
+        </li>
         <li>
           <a class="dropdown-item"
              href="#"
@@ -48,8 +56,10 @@
       </ul>
     </div>
     <div class="highlight-text">{{ highlight.text }}</div>
-    <span class="highlight-citation source-citation">{{ highlight.citation }}</span>
     <div class="highlight-labels">
+      <span class="source-citation">
+        <a href="{% url 'case:highlight-link' highlight.id %}" target="_blank"><i class="bi bi-link-45deg"></i>{{ highlight.citation }}</a>
+      </span>
       {% for label in highlight.labels.all %}
         {% include "case/labels/badge.html" with object_type="highlight" object=highlight view="table" %}
       {% endfor %}

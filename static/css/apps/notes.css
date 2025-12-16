@@ -335,6 +335,15 @@ body:has(.note-page.standalone) {
   text-decoration: underline;
 }
 
+/* Highlight reference dropdown */
+#highlight-ref-dropdown {
+  z-index: 1050;
+}
+
+#highlight-ref-dropdown.show {
+  display: block;
+}
+
 /* Highlight colors */
 #note-editor mark {
   background: var(--yellow-100);
