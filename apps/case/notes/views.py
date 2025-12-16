@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.case.documents.get_document_data import get_selected_matter
@@ -125,6 +126,10 @@ def note_view(request, note_id):
     """Standalone editor view for a note."""
     note = get_object_or_404(Note, pk=note_id)
     matter = note.matter
+
+    # Update viewed_at timestamp
+    note.viewed_at = timezone.now()
+    note.save(update_fields=["viewed_at"])
 
     context = {
         "note": note,
