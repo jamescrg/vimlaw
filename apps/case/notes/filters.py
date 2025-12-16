@@ -32,14 +32,18 @@ class NotesFilter(django_filters.FilterSet):
         fields=[
             ("updated_at", "updated_at"),
             ("created_at", "created_at"),
+            ("date", "date"),
             ("title", "title"),
             ("importance", "importance"),
+            ("viewed_at", "viewed_at"),
         ],
         field_labels={
             "updated_at": "Last Updated",
             "created_at": "Created",
+            "date": "Date",
             "title": "Title",
             "importance": "Importance",
+            "viewed_at": "Viewed",
         },
         label="Order By",
     )
