@@ -49,26 +49,26 @@
         <li {% if subapp == "facts" %}class="active"{% endif %}>
           <a href="{% url 'case:facts-index' %}">Facts</a>
         </li>
-        <!-- <li {% if subapp == "notes" %}class="active"{% endif %}> -->
-        <!--   <a href="{% url 'case:notes-index' %}">Notes</a> -->
-      </li>
-      <li {% if subapp == "outlines" %}class="active"{% endif %}>
-        <a href="{% url 'outlines:index' %}">Outlines</a>
-      </li>
-      <li {% if subapp == "labels" %}class="active"{% endif %}>
-        <a href="{% url 'case:labels-index' %}">Labels</a>
-      </li>
-      <li {% if subapp == "search" %}class="active"{% endif %}>
-        <a href="{% url 'case:search-index' %}">Search</a>
-      </li>
-      <li {% if subapp == "ai" %}class="active"{% endif %}>
-        <a href="{% url 'case:ai-index' %}">AI</a>
-      </li>
-    </ul>
-  </nav>
-  <div class="section subsection">
-    {% block subcontent %}
-    {% endblock subcontent %}
+        <li {% if subapp == "notes" %}class="active"{% endif %}>
+          <a href="{% url 'case:notes-index' %}">Notes</a>
+        </li>
+        <li {% if subapp == "outlines" %}class="active"{% endif %}>
+          <a href="{% url 'outlines:index' %}">Outlines</a>
+        </li>
+        <li {% if subapp == "labels" %}class="active"{% endif %}>
+          <a href="{% url 'case:labels-index' %}">Labels</a>
+        </li>
+        <li {% if subapp == "search" %}class="active"{% endif %}>
+          <a href="{% url 'case:search-index' %}">Search</a>
+        </li>
+        <li {% if subapp == "ai" %}class="active"{% endif %}>
+          <a href="{% url 'case:ai-index' %}">AI</a>
+        </li>
+      </ul>
+    </nav>
+    <div class="section subsection">
+      {% block subcontent %}
+      {% endblock subcontent %}
+    </div>
   </div>
-</div>
 {% endblock content %}
