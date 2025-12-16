@@ -60,8 +60,9 @@
           <tr>
             <td class="intake-date">{{ intake.date|date:"Y-m-d" }}</td>
             <td class="intake-name">
-              <a href={% url 'intakes:detail-index' id=intake.id %}>{{ intake.name }}</a>
-              {% if intake.has_new_notes %}<i class="bi bi-sticky note-badge-icon note-badge-new"></i>{% endif %}
+              <a href={% url 'intakes:detail-index' id=intake.id %}>{{ intake.name }}
+                {% if intake.has_new_notes %}<i class="bi bi-sticky note-badge-icon note-badge-new"></i>{% endif %}
+              </a>
             </td>
             <td class="intake-phone">{{ intake.phone|phone_number|default:'' }}</td>
             <td class="intake-source">{{ intake.source|default:'' }}</td>

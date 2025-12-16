@@ -25,8 +25,8 @@ table.matter-contacts {
 }
 
 .matter-contacts .phone1 {
-  width: 19rem;
-  min-width: 19rem;
+  width: 15rem;
+  min-width: 15rem;
 }
 
 .matter-contacts .relationship	{
@@ -38,8 +38,8 @@ table.matter-contacts {
 }
 
 .matter-contacts .email	{
-  width: 22rem;
-  min-width: 22rem;
+  width: 24rem;
+  min-width: 24rem;
   position: relative;
 }
 
