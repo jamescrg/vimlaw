@@ -228,20 +228,102 @@ Highlight content (td)
   padding: 0.25rem 0.5rem;
 }
 
+.highlights-list .highlight-menu-btn {
+  margin-top: -0.125rem;
+}
+
 .highlights-list .highlight-text {
   margin: 0.5rem 0;
   padding: 0.5rem;
   background: var(--background-text);
   color: var(--color-primary);
   line-height: 1.6;
-  white-space: pre-wrap;
-}
-
-.highlights-list .highlight-citation {
-  margin-left: 0.5rem;
+  max-height: 8rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, black 5rem, transparent);
+  mask-image: linear-gradient(to bottom, black 5rem, transparent);
 }
 
 .highlights-list .highlight-labels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
   margin-top: 0.5rem;
   min-height: 1.5rem;
+}
+
+.highlights-list .source-citation {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background-color: var(--label-gray);
+  font-size: 0.8125rem;
+  margin-right: 0.375rem;
+}
+
+.highlights-list .source-citation a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.highlights-list .source-citation i {
+  margin-right: 0.25rem;
+}
+
+/*------------------------------------------------
+Highlight Detail Modal
+------------------------------------------------*/
+
+.highlight-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+}
+
+.highlight-detail-swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+}
+
+.highlight-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+}
+
+.highlight-detail-importance {
+  color: var(--text-muted);
+}
+
+.highlight-detail-text {
+  padding: 1rem;
+  background: var(--background-text);
+  color: var(--color-primary);
+  line-height: 1.6;
+  white-space: normal;
+  word-wrap: break-word;
+  margin-bottom: 1rem;
+}
+
+.highlight-detail-footer {
+  padding: 0 1rem;
+}
+
+.highlight-detail-citation {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.highlight-detail-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }

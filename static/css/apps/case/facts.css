@@ -38,11 +38,6 @@ Display
   word-wrap: break-word;
 }
 
-.facts-list th.description {
-  padding-left: 2.25rem !important;
-}
-
-
 .facts-list .importance {
   width: 3rem;
   text-align: center;
@@ -155,7 +150,7 @@ Fact row layout
 ------------------------------------------------*/
 
 .facts-list .fact-content {
-  display: flex;
+  display: inline-flex;
   align-items: flex-start;
   gap: 0.25rem;
 }
@@ -166,17 +161,11 @@ Fact row layout
 
 .facts-list .fact-actions button {
   color: var(--icon-muted);
-  opacity: 0;
-  margin-left: -0.25rem;
-  transition: opacity 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 
 .facts-list .fact-actions button:hover {
   color: var(--color-primary);
-}
-
-.facts-list tr:hover .fact-actions button {
-  opacity: 1;
 }
 
 /*------------------------------------------------
@@ -211,8 +200,8 @@ Label badges
 ------------------------------------------------*/
 
 .facts-list .fact-labels {
-  margin-top: 0.5rem;
-  margin-left: 1rem;
+  margin-top: 1rem;
+  /* margin-left: 1rem; */
   min-height: 1.5rem;
 }
 

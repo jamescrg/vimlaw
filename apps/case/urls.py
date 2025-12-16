@@ -187,6 +187,11 @@ urlpatterns = [
         name="add-highlight",
     ),
     path(
+        "case/highlights/<int:highlight_id>/detail/",
+        highlights.highlight_detail,
+        name="highlight-detail",
+    ),
+    path(
         "case/highlights/<int:highlight_id>/edit/",
         highlights.edit_highlight,
         name="edit-highlight",

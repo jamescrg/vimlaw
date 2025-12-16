@@ -401,25 +401,74 @@ function setupReferenceClicks() {
   const container = document.getElementById("note-editor");
   if (!container) return;
 
+  const dropdown = document.getElementById("highlight-ref-dropdown");
+  const detailLink = document.getElementById("highlight-ref-detail");
+  const sourceLink = document.getElementById("highlight-ref-source");
+  let currentHighlightId = null;
+
+  // Close dropdown when clicking elsewhere
+  document.addEventListener("click", function (e) {
+    if (dropdown && !dropdown.contains(e.target) && !e.target.closest(".note-ref")) {
+      dropdown.classList.remove("show");
+    }
+  });
+
+  // Handle detail link click
+  if (detailLink) {
+    detailLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      dropdown.classList.remove("show");
+      if (currentHighlightId) {
+        const modalContainer = document.getElementById("htmx-modal-container");
+        htmx.ajax("GET", "/case/highlights/" + currentHighlightId + "/detail/", {
+          target: modalContainer,
+          swap: "innerHTML"
+        }).then(function() {
+          const modal = new bootstrap.Modal(modalContainer);
+          modal.show();
+        });
+      }
+    });
+  }
+
+  // Handle source link click
+  if (sourceLink) {
+    sourceLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      dropdown.classList.remove("show");
+      if (currentHighlightId) {
+        window.open("/case/highlights/" + currentHighlightId + "/", "_blank");
+      }
+    });
+  }
+
   container.addEventListener("click", function (e) {
     const ref = e.target.closest(".note-ref");
     if (!ref) return;
 
     e.preventDefault();
+    e.stopPropagation();
+
     const refType = ref.getAttribute("data-type");
     const refId = ref.getAttribute("data-id");
 
     if (!refId) return;
 
-    let url;
     if (refType === "document") {
-      url = "/documents/view/" + refId + "/";
+      // Documents open directly
+      window.open("/documents/view/" + refId + "/", "_blank");
     } else if (refType === "highlight") {
-      url = "/case/highlights/" + refId + "/";
-    }
+      // Store current highlight ID
+      currentHighlightId = refId;
 
-    if (url) {
-      window.open(url, "_blank");
+      // Position and show dropdown
+      if (dropdown) {
+        const rect = ref.getBoundingClientRect();
+        dropdown.style.position = "fixed";
+        dropdown.style.left = rect.left + "px";
+        dropdown.style.top = (rect.bottom + 4) + "px";
+        dropdown.classList.add("show");
+      }
     }
   });
 }
