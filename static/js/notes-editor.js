@@ -349,7 +349,19 @@ function initEditor() {
       Paragraph,
       Text,
       Bold,
-      Italic,
+      Italic.extend({
+        addKeyboardShortcuts() {
+          return {
+            "Mod-i": ({ editor, event }) => {
+              // Don't handle if Shift is pressed (allow Ctrl+Shift+I for DevTools)
+              if (event && event.shiftKey) {
+                return false;
+              }
+              return editor.commands.toggleItalic();
+            },
+          };
+        },
+      }),
       Strike,
       Heading.configure({ levels: [1, 2, 3, 4, 5] }),
       BulletList,
