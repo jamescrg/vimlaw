@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from apps.case.documents.get_document_data import get_selected_matter
-from apps.case.models import Document, Fact, Highlight, Label
+from apps.case.models import Document, Fact, Highlight, Label, Note
 from apps.matters.models import Matter
 
 from .filters import LabelsFilter
@@ -179,6 +179,11 @@ def _get_object_for_labels(object_type, object_id, view=None):
         matter = obj.matter
         row_template = "case/facts/fact-row.html"
         context_key = "fact"
+    elif object_type == "note":
+        obj = get_object_or_404(Note, id=object_id)
+        matter = obj.matter
+        row_template = "case/notes/note-row.html"
+        context_key = "note"
     else:
         return None, None, None, None
     return obj, matter, row_template, context_key

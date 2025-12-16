@@ -1,0 +1,34 @@
+<div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Import from Markdown</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label for="import-file" class="form-label">Upload a markdown file</label>
+        <input type="file"
+               class="form-control"
+               id="import-file"
+               accept=".md,.markdown,.txt">
+      </div>
+      <div class="mb-3">
+        <label for="import-text" class="form-label">Or paste markdown text</label>
+        <textarea class="form-control"
+                  id="import-text"
+                  rows="10"
+                  placeholder="Paste markdown content here..."></textarea>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="import-replace">
+        <label class="form-check-label" for="import-replace">Replace existing content (unchecked = append)</label>
+      </div>
+    </div>
+    <div class="modal-footer justify-content-start">
+      <button type="button" class="btn btn-primary" id="import-confirm-btn">Import</button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    </div>
+  </div>
+</div>

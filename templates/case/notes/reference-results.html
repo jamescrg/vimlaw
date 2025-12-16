@@ -1,0 +1,33 @@
+{% if documents %}
+  {% for document in documents %}
+    <div class="reference-item"
+         data-type="document"
+         data-id="{{ document.id }}"
+         data-label="{{ document.citation }}">
+      <i class="bi bi-file-earmark"></i>
+      <span class="ref-name">{{ document.name }}</span>
+      {% if document.date %}<span class="ref-date">{{ document.date|date:'Y-m-d' }}</span>{% endif %}
+    </div>
+  {% endfor %}
+{% endif %}
+{% if highlights %}
+  {% for highlight in highlights %}
+    <div class="reference-item"
+         data-type="highlight"
+         data-id="{{ highlight.id }}"
+         data-label="{{ highlight.citation }}">
+      <i class="bi bi-highlighter"></i>
+      <span class="ref-name">{{ highlight.slug }}</span>
+      <span class="ref-doc">{{ highlight.document.name }}</span>
+    </div>
+  {% endfor %}
+{% endif %}
+{% if not documents and not highlights %}
+  <div class="reference-empty">
+    {% if query %}
+      No results found for "{{ query }}"
+    {% else %}
+      Type to search...
+    {% endif %}
+  </div>
+{% endif %}

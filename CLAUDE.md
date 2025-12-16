@@ -134,6 +134,11 @@ Please run pre-commit hooks and fix any linting errors on all significant change
 - Tests run slowly on this server, when testing, please run targeted unit tests to cover recent changes
 
 
+### Design Standards
+
+Please always at the start of each session, review the site-wide design conventions and try to make all template and css changes reflect the overall design of the project.
+
+
 ## Template: Django & HTMX Project (IMPORTANT)
 
 Technology Stack: This project uses HTMX (via CDN). We do not use a separate JavaScript framework (React, Vue, etc.) for UI logic.

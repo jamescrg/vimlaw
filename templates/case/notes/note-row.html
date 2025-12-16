@@ -1,0 +1,69 @@
+<tr id="note-{{ note.id }}">
+  <td class="category dropdown-cell">{% include "case/notes/category-display.html" %}</td>
+  <td class="date">{{ note.date|date:"Y-m-d" }}</td>
+  <td class="title dropdown-cell">
+    <div class="dropdown">
+      <a href="{% url 'case:note-view' note.id %}"
+         target="_blank"
+         class="note-title-link">{{ note.title }}</a>
+      <button class="btn-icon menu-icon"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        <i class="bi bi-three-dots-vertical"></i>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item"
+             href="{% url 'case:note-view' note.id %}"
+             target="_blank"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'case:notes-edit' note.id %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container"><i class="bi bi-pencil"></i> Edit Details</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'case:labels-apply-modal' 'note' note.id %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container"><i class="bi bi-tag"></i> Add Label</a>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li>
+          <a class="dropdown-item urgent"
+             href="#"
+             hx-confirm="Are you sure you want to delete this note?"
+             hx-post="{% url 'case:notes-delete' note.id %}"><i class="bi bi-trash"></i> Delete</a>
+        </li>
+      </ul>
+    </div>
+  </td>
+  <td class="user">{{ note.user.get_short_name|default:note.user.username }}</td>
+  <td class="viewed">{{ note.viewed_at|date:"Y-m-d"|default:"—" }}</td>
+  <td class="importance dropdown-cell">
+    <div class="dropdown">
+      <button class="button-link"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">{{ note.importance }}</button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        {% for i in "1234567890"|make_list %}
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:note-importance' note.id forloop.counter %}"
+               hx-target="#notes"><i class="bi bi-flag"></i> {{ forloop.counter }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </td>
+</tr>

@@ -1,0 +1,31 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Filter Notes</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form hx-post="{% url 'case:notes-filter' %}"
+            hx-target="#htmx-modal-container"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ filter.form }}
+        <div class="flex-center-space span2">
+          <div>
+            <button type="submit" class="submit">Apply</button>
+          </div>
+          <div>
+            <a href="#"
+               hx-post="{% url 'case:notes-filter' %}"
+               hx-vals='{"reset": "true"}'
+               class="delete-link">Clear Filters</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

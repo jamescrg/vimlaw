@@ -365,21 +365,39 @@ body:has(.outline-page.standalone) {
 /* Shortcuts modal table */
 .shortcuts-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: solid 1px var(--border-medium);
+  border-radius: var(--radius-md);
 }
 
 .shortcuts-table th {
   text-align: left;
-  padding: 0.75rem 0 0.5rem;
+  padding: 0.75rem 1rem 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-muted);
-  border-bottom: 1px solid var(--border-light);
+  border-top: 1px solid var(--border-light);
+}
+
+.shortcuts-table tr:first-child th {
+  padding-top: 0.5rem;
+  border-top: none;
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+  border-top-right-radius: calc(var(--radius-md) - 1px);
 }
 
 .shortcuts-table td {
-  padding: 0.5rem 0;
+  padding: 0.5rem 1rem;
   font-size: 0.875rem;
+}
+
+.shortcuts-table tr:last-child td:first-child {
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.shortcuts-table tr:last-child td:last-child {
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
 }
 
 .shortcuts-table td:first-child {

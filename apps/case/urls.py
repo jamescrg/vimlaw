@@ -6,6 +6,7 @@ from apps.case.documents import views as documents
 from apps.case.facts import views as facts
 from apps.case.highlights import views as highlights
 from apps.case.labels import views as labels
+from apps.case.notes import views as notes
 from apps.case.search import views as search
 
 app_name = "case"
@@ -306,6 +307,57 @@ urlpatterns = [
         "case/facts/<int:fact_id>/importance/<int:importance>/",
         facts.fact_importance,
         name="fact-importance",
+    ),
+    # Notes subapp
+    path("case/notes/", notes.notes_index, name="notes-index"),
+    path("case/notes/list/", notes.notes_list, name="notes-list"),
+    path("case/notes/filter/", notes.notes_filter, name="notes-filter"),
+    path(
+        "case/notes/filter/keyword/",
+        notes.notes_filter_keyword,
+        name="notes-filter-keyword",
+    ),
+    path(
+        "case/notes/filter/importance/<int:importance_value>/",
+        notes.notes_filter_importance,
+        name="notes-filter-importance",
+    ),
+    path("case/notes/sort/<str:order>/", notes.notes_sort, name="notes-sort"),
+    path("case/notes/shortcuts/", notes.notes_shortcuts, name="notes-shortcuts"),
+    path("case/notes/add/", notes.notes_add, name="notes-add"),
+    path("case/notes/<int:note_id>/", notes.note_view, name="note-view"),
+    path("case/notes/<int:note_id>/edit/", notes.note_edit, name="notes-edit"),
+    path("case/notes/<int:note_id>/delete/", notes.note_delete, name="notes-delete"),
+    path("case/notes/<int:note_id>/content/", notes.note_content, name="note-content"),
+    path(
+        "case/notes/<int:note_id>/category/<str:value>/",
+        notes.note_category,
+        name="note-category",
+    ),
+    path(
+        "case/notes/<int:note_id>/importance/<int:value>/",
+        notes.note_importance,
+        name="note-importance",
+    ),
+    path(
+        "case/notes/<int:note_id>/autosave/",
+        notes.note_autosave,
+        name="note-autosave",
+    ),
+    path(
+        "case/notes/<int:note_id>/title/",
+        notes.note_title,
+        name="note-title",
+    ),
+    path(
+        "case/notes/<int:note_id>/reference-search/",
+        notes.reference_search,
+        name="note-reference-search",
+    ),
+    path(
+        "case/notes/<int:note_id>/import/",
+        notes.note_import_modal,
+        name="note-import-modal",
     ),
     # Search subapp
     path("case/search/", search.search_index, name="search-index"),
