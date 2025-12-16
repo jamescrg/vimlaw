@@ -161,12 +161,12 @@ def add(request, client_id=None):
                 return HttpResponse(
                     status=204, headers={"HX-Trigger": "trustClientChanged"}
                 )
-            elif trust_view == "summary":
-                return HttpResponse(status=204, headers={"HX-Trigger": "trustChanged"})
             elif trust_view == "history":
                 return HttpResponse(
                     status=204, headers={"HX-Trigger": "trustHistoryChanged"}
                 )
+            else:
+                return HttpResponse(status=204, headers={"HX-Trigger": "trustChanged"})
 
     else:
         today = date.today().strftime("%Y-%m-%d")
@@ -186,6 +186,7 @@ def add(request, client_id=None):
         "app": "trust",
         "edit": False,
         "add": True,
+        "action": "/trust/add",
         "form": form,
     }
 
@@ -214,6 +215,8 @@ def edit(request, id):
                 return HttpResponse(
                     status=204, headers={"HX-Trigger": "trustClientChanged"}
                 )
+            else:
+                return HttpResponse(status=204, headers={"HX-Trigger": "trustChanged"})
 
     else:
         form = TransactionForm(instance=transaction, use_required_attribute=False)
@@ -222,6 +225,7 @@ def edit(request, id):
         "app": "trust",
         "edit": True,
         "add": False,
+        "action": f"/trust/{id}/edit",
         "transaction": transaction,
         "form": form,
     }

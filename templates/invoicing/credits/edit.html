@@ -9,16 +9,16 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-compact col2"
+      <form id="credit-edit-form"
             hx-post="{% url 'invoicing:credits-edit' credit.id %}"
             hx-target="#htmx-modal-container"
+            class="form-compact col2"
             role="form">
         {% csrf_token %} {{ form }}
-        <br />
-        <div class="flex-center-space">
-          <button type="submit" class="submit">Submit</button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="credit-edit-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

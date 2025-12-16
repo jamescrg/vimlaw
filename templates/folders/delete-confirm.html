@@ -12,24 +12,20 @@
       <p>Delete folder "{{ folder.name }}"?</p>
       {% if contact_count > 0 %}
         <p>This folder contains {{ contact_count }} contact{{ contact_count|pluralize }}.</p>
-        <div class="flex-center-left">
-          <div>
-            <button hx-delete="{% url 'folders:delete' folder.id %}?keep_contacts=true"
-                    hx-target="#folders"
-                    class="btn btn-primary btn-delete-contacts">Keep Contacts</button>
-          </div>
-          <div>
-            <button hx-delete="{% url 'folders:delete' folder.id %}?delete_contacts=true"
-                    hx-target="#folders"
-                    class="btn btn-secondary">Delete Contacts</button>
-          </div>
-        </div>
+      {% endif %}
+    </div>
+    <div class="modal-footer">
+      {% if contact_count > 0 %}
+        <button hx-delete="{% url 'folders:delete' folder.id %}?keep_contacts=true"
+                hx-target="#folders"
+                class="submit">Keep Contacts</button>
+        <button hx-delete="{% url 'folders:delete' folder.id %}?delete_contacts=true"
+                hx-target="#folders"
+                class="btn-icon">Delete Contacts</button>
       {% else %}
-        <div>
-          <button hx-delete="{% url 'folders:delete' folder.id %}"
-                  hx-target="#folders"
-                  class="submit">Delete Folder</button>
-        </div>
+        <button hx-delete="{% url 'folders:delete' folder.id %}"
+                hx-target="#folders"
+                class="submit">Delete Folder</button>
       {% endif %}
     </div>
   </div>

@@ -11,7 +11,8 @@
     <div class="modal-body">
       <h2>{{ contact.name }}</h2>
       <br />
-      <form hx-post="{% url 'matters:contacts-assign-update' id=relationship.id %}"
+      <form id="assign-role-form"
+            hx-post="{% url 'matters:contacts-assign-update' id=relationship.id %}"
             hx-target="#htmx-modal-container"
             class="form-compact">
         {% csrf_token %}
@@ -33,18 +34,14 @@
             {% endfor %}
           </select>
         </div>
-        <div class="flex-center-space">
-          <div>
-            <button type="submit" class="submit">Update</button>
-          </div>
-          <div>
-            <a href="#"
-               class="delete-link"
-               hx-post="{% url 'matters:contacts-assign-delete' id=relationship.id %}"
-               hx-confirm="Are you sure you want to remove this assignment?">Remove</a>
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="assign-role-form" class="submit">Update</button>
+      <a href="#"
+         class="delete-link"
+         hx-post="{% url 'matters:contacts-assign-delete' id=relationship.id %}"
+         hx-confirm="Are you sure you want to remove this assignment?">Remove</a>
     </div>
   </div>
 </div>

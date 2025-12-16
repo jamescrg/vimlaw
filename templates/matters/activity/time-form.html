@@ -64,21 +64,16 @@
           <label for="{{ form.entered.id_for_label }}">{{ form.entered.label }}</label>
           <div>{{ form.entered }}{{ form.entered.errors }}</div>
         </div>
-        <br />
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            <a class="button-link codes-reference-link"
-               href="#"
-               hx-get="{% url 'activity:codes-reference' %}"
-               hx-target="#codes-reference-container"
-               hx-swap="innerHTML">View Abbreviation Codes</a>
-          </div>
-        </div>
       </form>
       <div id="codes-reference-container"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="time-entry-form" class="submit">Submit</button>
+      <a class="button-link codes-reference-link"
+         href="#"
+         hx-get="{% url 'activity:codes-reference' %}"
+         hx-target="#codes-reference-container"
+         hx-swap="innerHTML">View Abbreviation Codes</a>
     </div>
   </div>
 </div>

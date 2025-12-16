@@ -15,18 +15,17 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{{ request.path }}"
+      <form id="role-form"
+            hx-post="{{ request.path }}"
             hx-target="#htmx-modal-container"
             role="form"
             class="form-compact">
         {% csrf_token %}
         {{ form }}
-        <div class="flex-center-space">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="role-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

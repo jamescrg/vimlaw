@@ -15,26 +15,23 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{{ action }}"
+      <form id="contact-form"
+            hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
             class="form-compact col2 contacts-form">
         {% csrf_token %}
         {% if intake_id %}<input type="hidden" name="intake_id" value="{{ intake_id }}" />{% endif %}
         {{ form }}
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if edit %}
-              <a href="#"
-                 class="delete-link"
-                 hx-confirm="Are you sure you want to delete this record?"
-                 hx-delete="{% url 'contacts:delete' id=contact.id %}">Delete Contact</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="contact-form" class="submit">Submit</button>
+      {% if edit %}
+        <a href="#"
+           class="delete-link"
+           hx-confirm="Are you sure you want to delete this record?"
+           hx-delete="{% url 'contacts:delete' id=contact.id %}">Delete Contact</a>
+      {% endif %}
     </div>
   </div>
 </div>

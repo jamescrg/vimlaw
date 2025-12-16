@@ -9,17 +9,16 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{% url 'invoicing:payments-add' %}"
+      <form id="payment-form"
+            hx-post="{% url 'invoicing:payments-add' %}"
             hx-target="#htmx-modal-container"
             role="form"
             class="form-compact col2">
         {% csrf_token %} {{ form }}
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="payment-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

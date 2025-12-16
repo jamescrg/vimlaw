@@ -9,18 +9,21 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="invoices-cancel-form"
+      <form id="cancel-invoice-form"
+            class="invoices-cancel-form"
             method="post"
             action="{% url 'invoicing:invoices-status-update' invoice.id %}">
         <input type="hidden" name="status" value="CANCELED">
         {% csrf_token %}
         <label for="userInput">Type 'CANCEL' to confirm:</label>
         <input type="text" id="userInput" oninput="updateText()">
-        <br />
-        <div class="flex-center-space">
-          <button type="submit" class="submit disabled-btn" disabled>Submit</button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit"
+              form="cancel-invoice-form"
+              class="submit disabled-btn"
+              disabled>Submit</button>
     </div>
   </div>
 </div>

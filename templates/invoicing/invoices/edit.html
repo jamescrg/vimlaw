@@ -11,21 +11,19 @@
     <div class="modal-body">
       <h2>{{ invoice.matter }}</h2>
       <br />
-      <form class="form-compact"
+      <form id="invoice-edit-form"
+            hx-post="{% url 'invoicing:invoices-edit' invoice.id %}"
             hx-target="#htmx-modal-container"
-            hx-post="{% url 'invoicing:invoices-edit' invoice.id %}">
+            class="form-compact">
         {% csrf_token %}
         {{ form }}
-        <br />
-        <div class="flex-center-space span2">
-          <button type="submit" class="submit">Submit</button>
-          <div>
-            <a class="delete-link"
-               onclick="return confirm('Are you sure you want to delete this invoice?')"
-               href="{% url 'invoicing:invoices-delete' invoice.id %}">Delete Invoice</a>
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="invoice-edit-form" class="submit">Submit</button>
+      <a class="delete-link"
+         onclick="return confirm('Are you sure you want to delete this invoice?')"
+         href="{% url 'invoicing:invoices-delete' invoice.id %}">Delete Invoice</a>
     </div>
   </div>
 </div>

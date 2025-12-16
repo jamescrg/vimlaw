@@ -9,18 +9,18 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive form-spacious filter"
+      <form id="credits-filter-form"
+            class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
             hx-post="{% url 'invoicing:credits-filter' %}">
         {% csrf_token %} {{ filter.form }}
-        <br />
-        <div class="flex-center-space limited-width">
-          <button type="submit" class="submit">Apply</button>
-          <a class="btn-icon"
-             href="#"
-             hx-post="{% url 'management:clear-filters' session_key='credits_filter' trigger='creditsChanged' %}">Restore Defaults</a>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="credits-filter-form" class="submit">Apply</button>
+      <a class="btn-icon"
+         href="#"
+         hx-post="{% url 'management:clear-filters' session_key='credits_filter' trigger='creditsChanged' %}">Restore Defaults</a>
     </div>
   </div>
 </div>

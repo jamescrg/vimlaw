@@ -50,7 +50,7 @@ textarea {
 }
 
 .dropzone:hover {
-  border-color: var(--border-dark) !important;
+  /* border-color: var(--border-dark) !important; */
   background: var(--background-lighter) !important;
 }
 

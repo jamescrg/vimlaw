@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive form-spacious filter"
+      <form id="activity-report-filter-form"
+            class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
             hx-post="{% url 'reports:activity-filter' %}">
         {% csrf_token %}
@@ -34,14 +35,13 @@
                  {% if filter_data.exclude_inactive == "on" or not filter_data.exclude_inactive %}checked{% endif %}>
           Exclude inactive users
         </label>
-        <br />
-        <div class="flex-center-space limited-width">
-          <button type="submit" class="submit">Apply</button>
-          <a class="btn-icon"
-             href="#"
-             hx-post="{% url 'management:clear-filters' session_key='activity_filter' trigger='activityChanged' %}">Restore Defaults</a>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="activity-report-filter-form" class="submit">Apply</button>
+      <a class="btn-icon"
+         href="#"
+         hx-post="{% url 'management:clear-filters' session_key='activity_filter' trigger='activityChanged' %}">Restore Defaults</a>
     </div>
   </div>
 </div>

@@ -9,19 +9,19 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive form-spacious filter"
+      <form id="facts-filter-form"
+            class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
             hx-post="{% url 'case:facts-filter' %}">
         {% csrf_token %}
         {{ filter.form }}
-        <br />
-        <div class="flex-center-space limited-width">
-          <button type="submit" class="submit">Apply</button>
-          <a class="btn-icon"
-             href="#"
-             hx-post="{% url 'management:clear-filters' session_key='facts_filter' trigger='factsChanged' %}">Restore Defaults</a>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="facts-filter-form" class="submit">Apply</button>
+      <a class="btn-icon"
+         href="#"
+         hx-post="{% url 'management:clear-filters' session_key='facts_filter' trigger='factsChanged' %}">Restore Defaults</a>
     </div>
   </div>
 </div>

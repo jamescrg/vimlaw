@@ -134,8 +134,10 @@ const initializeDocumentDropzone = () => {
           e.preventDefault();
           e.stopPropagation();
 
-          const submitButton = form.querySelector('button[type="submit"]');
-          const originalText = submitButton.innerHTML;
+          // Find submit button either inside form or linked via form attribute
+          const submitButton = form.querySelector('button[type="submit"]')
+            || document.querySelector('button[type="submit"][form="file-form"]');
+          const originalText = submitButton ? submitButton.innerHTML : '';
 
           const formData = new FormData(form);
 
@@ -149,10 +151,12 @@ const initializeDocumentDropzone = () => {
           }
 
           // Loading state - show "Uploading..." only if there's a new file
-          submitButton.disabled = true;
-          submitButton.innerHTML = hasNewFile
-            ? '<i class="bi bi-arrow-repeat spin"></i> Uploading...'
-            : '<i class="bi bi-arrow-repeat spin"></i> Saving...';
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = hasNewFile
+              ? '<i class="bi bi-arrow-repeat spin"></i> Uploading...'
+              : '<i class="bi bi-arrow-repeat spin"></i> Saving...';
+          }
 
           fetch(form.action, {
             method: "POST",

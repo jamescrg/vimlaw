@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form method="post"
+      <form id="intakes-filter-form"
+            method="post"
             class="form-responsive form-spacious"
             action="{% url 'intakes:filter-update' %}">
         {% csrf_token %}
@@ -69,11 +70,10 @@
             <option value="Other" {% if filter.source == 'Other' %}selected{% endif %}>Other</option>
           </select>
         </label>
-        <br />
-        <div>
-          <button type="submit" class="submit">Submit</button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="intakes-filter-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

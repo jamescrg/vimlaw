@@ -9,22 +9,22 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive form-spacious filter"
+      <form id="contacts-filter-form"
+            class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
             hx-post="{{ request.path }}">
         {% csrf_token %}
         {{ filter.form }}
-        <br />
-        <div class="flex-center-space limited-width">
-          <button type="submit" class="submit">Apply</button>
-          <button type="button"
-                  class="btn-icon button-link"
-                  hx-target="#htmx-modal-container"
-                  hx-get="{% url 'management:clear-filters' session_key=session_key trigger='contactsReload' %}">
-            Restore Defaults
-          </button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="contacts-filter-form" class="submit">Apply</button>
+      <button type="button"
+              class="btn-icon button-link"
+              hx-target="#htmx-modal-container"
+              hx-get="{% url 'management:clear-filters' session_key=session_key trigger='contactsReload' %}">
+        Restore Defaults
+      </button>
     </div>
   </div>
 </div>

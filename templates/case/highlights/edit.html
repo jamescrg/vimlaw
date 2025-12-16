@@ -9,29 +9,23 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-compact"
+      <form id="highlight-form"
             hx-post="{% url 'case:edit-highlight' highlight.id %}"
-            hx-target="#htmx-modal-container">
+            hx-target="#htmx-modal-container"
+            class="form-compact">
         {% csrf_token %}
-        <div class="highlight-edit-grid">
-          {{ form }}
-          <br>
-        </div>
-        <div class="flex-center-space">
-          <div>
-            <button type="submit" class="submit">Save</button>
-          </div>
-          <div>
-            <a class="delete-link"
-               href="#"
-               hx-confirm="Are you sure you want to delete this highlight?"
-               hx-post="{% url 'case:delete-highlight' highlight.id %}"
-               hx-target="#highlight-card-{{ highlight.id }}"
-               hx-swap="outerHTML"
-               data-bs-dismiss="modal">Delete</a>
-          </div>
-        </div>
+        <div class="highlight-edit-grid">{{ form }}</div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="highlight-form" class="submit">Save</button>
+      <a class="delete-link"
+         href="#"
+         hx-confirm="Are you sure you want to delete this highlight?"
+         hx-post="{% url 'case:delete-highlight' highlight.id %}"
+         hx-target="#highlight-card-{{ highlight.id }}"
+         hx-swap="outerHTML"
+         data-bs-dismiss="modal">Delete</a>
     </div>
   </div>
 </div>

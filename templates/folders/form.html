@@ -15,10 +15,11 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{{ action }}"
-            class="form-compact"
+      <form id="folder-form"
+            hx-post="{{ action }}"
             hx-target="#folders"
             hx-swap="innerHTML"
+            class="form-compact"
             role="form">
         {% csrf_token %}
         <div class="mb-3">
@@ -26,21 +27,17 @@
           {{ form.name }}
           {% if form.name.errors %}<div class="text-danger">{{ form.name.errors }}</div>{% endif %}
         </div>
-        <div class="flex-center-space">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if edit %}
-              <a href="#"
-                 class="delete-link"
-                 hx-get="{% url 'folders:delete-confirm' folder.id %}"
-                 hx-target="#htmx-modal-container"
-                 hx-swap="innerHTML">Delete Folder</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="folder-form" class="submit">Submit</button>
+      {% if edit %}
+        <a href="#"
+           class="delete-link"
+           hx-get="{% url 'folders:delete-confirm' folder.id %}"
+           hx-target="#htmx-modal-container"
+           hx-swap="innerHTML">Delete Folder</a>
+      {% endif %}
     </div>
   </div>
 </div>

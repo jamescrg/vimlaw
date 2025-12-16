@@ -9,25 +9,22 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{% if fact %}{% url 'case:facts-edit' fact.id %}{% else %}{% url 'case:facts-add' %}{% endif %}"
+      <form id="fact-form"
+            hx-post="{% if fact %}{% url 'case:facts-edit' fact.id %}{% else %}{% url 'case:facts-add' %}{% endif %}"
             hx-target="#htmx-modal-container"
             class="form-compact col2">
         {% csrf_token %}
         {{ form }}
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if fact %}
-              <a hx-confirm='Are you sure you want to delete this fact?'
-                 href="#"
-                 hx-post="{% url 'case:facts-delete' fact.id %}"
-                 class="delete-link">Delete Fact</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="fact-form" class="submit">Submit</button>
+      {% if fact %}
+        <a hx-confirm='Are you sure you want to delete this fact?'
+           href="#"
+           hx-post="{% url 'case:facts-delete' fact.id %}"
+           class="delete-link">Delete Fact</a>
+      {% endif %}
     </div>
   </div>
 </div>

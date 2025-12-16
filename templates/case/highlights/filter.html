@@ -9,17 +9,17 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive form-spacious filter"
+      <form id="highlights-filter-form"
+            class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
             hx-post="{% url 'case:highlights-filter' %}">
         {% csrf_token %}
         {{ filter.form }}
-        <br />
-        <div class="flex-center-space limited-width">
-          <button type="submit" class="submit">Apply</button>
-          <a href="{% url 'case:highlights-filter-default' %}">Restore Defaults</a>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="highlights-filter-form" class="submit">Apply</button>
+      <a href="{% url 'case:highlights-filter-default' %}">Restore Defaults</a>
     </div>
   </div>
 </div>

@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{{ action }}"
+      <form id="contact-assign-form"
+            action="{{ action }}"
             method="post"
             class="form-responsive form-spacious"
             role="form">
@@ -32,11 +33,10 @@
             {% for role in roles %}<option value="{{ role.id }}">{{ role.name }}</option>{% endfor %}
           </select>
         </label>
-        <br />
-        <div>
-          <button type="submit" class="submit">Submit</button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="contact-assign-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

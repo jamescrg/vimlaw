@@ -9,19 +9,17 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{% url 'activity:expenses-add' id=matter_id request_app='matters' %}"
+      <form id="expense-form"
+            action="{% url 'activity:expenses-add' id=matter_id request_app='matters' %}"
             class="form-compact"
             method="post"
             role="form">
         {% csrf_token %}
         {{ form }}
-        <br />
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="expense-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

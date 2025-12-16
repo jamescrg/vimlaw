@@ -62,21 +62,17 @@
             {% endfor %}
           {% endif %}
         </div>
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if edit %}
-              <a class="delete-link"
-                 href="#!"
-                 hx-confirm="Are you sure you want to delete this file?"
-                 hx-delete="{% url 'case:documents-delete' document.id %}"
-                 hx-target="#htmx-modal-container">Delete Document</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="file-form" class="submit">Submit</button>
+      {% if edit %}
+        <a class="delete-link"
+           href="#!"
+           hx-confirm="Are you sure you want to delete this file?"
+           hx-delete="{% url 'case:documents-delete' document.id %}"
+           hx-target="#htmx-modal-container">Delete Document</a>
+      {% endif %}
     </div>
   </div>
 </div>

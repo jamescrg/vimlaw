@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{% url 'matters:contacts-assign-store' %}"
+      <form id="assign-contact-form"
+            hx-post="{% url 'matters:contacts-assign-store' %}"
             hx-target="#htmx-modal-container"
             class="form-compact">
         {% csrf_token %}
@@ -47,12 +48,10 @@
             {% for role in roles %}<option value="{{ role.id }}">{{ role.name }}</option>{% endfor %}
           </select>
         </div>
-        <div class="flex-center-space">
-          <div>
-            <button type="submit" class="submit">Assign</button>
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="assign-contact-form" class="submit">Assign</button>
     </div>
   </div>
 </div>

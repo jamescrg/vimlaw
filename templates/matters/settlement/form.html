@@ -15,26 +15,22 @@
       </div>
     </div>
     <div class="modal-body">
-      <form id="settlement"
+      <form id="settlement-form"
             hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
             class="form-compact col2">
         {% csrf_token %}
         {{ form }}
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if edit %}
-              <a hx-confirm='Are you sure you want to delete this record?'
-                 href="#"
-                 hx-delete="{% url 'matters:settlement-delete' matter_id=entry.matter.id entry_id=entry.id %}"
-                 class="delete-link">Delete Entry</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="settlement-form" class="submit">Submit</button>
+      {% if edit %}
+        <a hx-confirm='Are you sure you want to delete this record?'
+           href="#"
+           hx-delete="{% url 'matters:settlement-delete' matter_id=entry.matter.id entry_id=entry.id %}"
+           class="delete-link">Delete Entry</a>
+      {% endif %}
     </div>
   </div>
 </div>

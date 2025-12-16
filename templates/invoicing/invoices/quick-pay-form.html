@@ -9,16 +9,16 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-compact col2 invoices-add"
+      <form id="quick-pay-form"
             hx-post="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type=payment_type %}"
             hx-target="#htmx-modal-container"
+            class="form-compact col2 invoices-add"
             role="form">
         {% csrf_token %} {{ form }}
-        <br />
-        <div class="flex-center-space">
-          <button type="submit" class="submit">Submit</button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="quick-pay-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

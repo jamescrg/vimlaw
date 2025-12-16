@@ -9,19 +9,17 @@
       </div>
     </div>
     <div class="modal-body">
-      <form id="transaction"
-            hx-target="#htmx-modal-container"
+      <form id="bulk-update-form"
             hx-post="{% url 'case:documents-bulk-update' %}"
+            hx-target="#htmx-modal-container"
             role="form"
             class="form-compact col2">
         {% csrf_token %}
         {{ form }}
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="bulk-update-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

@@ -23,26 +23,23 @@
           Google account. Contact an administrator to establish a connection.
         </div>
       {% endif %}
-      <form hx-post="{{ action }}"
-            class="form-compact events-form col2"
+      <form id="event-form"
+            hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
+            class="form-compact events-form col2"
             role="form">
         {% csrf_token %}
         {{ form }}
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if edit %}
-              <a href="#"
-                 class="delete-link"
-                 hx-confirm="Are you sure you want to delete this record?"
-                 hx-delete="{% url 'agenda:events-delete-origin' id=event.id origin='events' %}">Delete Event</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="event-form" class="submit">Submit</button>
+      {% if edit %}
+        <a href="#"
+           class="delete-link"
+           hx-confirm="Are you sure you want to delete this record?"
+           hx-delete="{% url 'agenda:events-delete-origin' id=event.id origin='events' %}">Delete Event</a>
+      {% endif %}
     </div>
   </div>
 </div>

@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{{ action }}"
+      <form id="contact-remove-form"
+            action="{{ action }}"
             method="post"
             class="form-responsive form-spacious"
             role="form">
@@ -22,11 +23,10 @@
             {% endfor %}
           </select>
         </label>
-        <br />
-        <div>
-          <button type="submit" class="submit">Submit</button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="contact-remove-form" class="submit">Submit</button>
     </div>
   </div>
 </div>

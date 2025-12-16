@@ -9,19 +9,19 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive form-spacious filter"
+      <form id="time-filter-form"
+            class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
             hx-post="{% url 'activity:time-filter' %}">
         {% csrf_token %}
         {{ filter.form }}
-        <br />
-        <div class="flex-center-space limited-width">
-          <button type="submit" class="submit">Apply</button>
-          <a class="btn-icon"
-             href="#"
-             hx-post="{% url 'management:clear-filters' session_key='time_filter' trigger='timeChanged' %}">Restore Defaults</a>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="time-filter-form" class="submit">Apply</button>
+      <a class="btn-icon"
+         href="#"
+         hx-post="{% url 'management:clear-filters' session_key='time_filter' trigger='timeChanged' %}">Restore Defaults</a>
     </div>
   </div>
 </div>

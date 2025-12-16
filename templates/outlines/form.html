@@ -15,26 +15,22 @@
       </div>
     </div>
     <div class="modal-body">
-      <form method="post"
-            class="form-compact col2 outline-form"
+      <form id="outline-form"
             hx-post="{% if outline %}{% url 'outlines:edit' outline.id %}{% else %}{% url 'outlines:add' %}{% endif %}"
-            hx-target="#htmx-modal-container">
+            hx-target="#htmx-modal-container"
+            class="form-compact col2 outline-form">
         {% csrf_token %}
         {{ form }}
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if outline %}
-              <a href="#"
-                 class="delete-link"
-                 hx-post="{% url 'outlines:delete' outline.id %}"
-                 hx-confirm="Delete this outline and all its items?">Delete Outline</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="outline-form" class="submit">Submit</button>
+      {% if outline %}
+        <a href="#"
+           class="delete-link"
+           hx-post="{% url 'outlines:delete' outline.id %}"
+           hx-confirm="Delete this outline and all its items?">Delete Outline</a>
+      {% endif %}
     </div>
   </div>
 </div>

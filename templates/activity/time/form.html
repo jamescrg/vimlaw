@@ -15,10 +15,10 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{{ action }}"
+      <form id="time-entry-form"
+            hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
-            class="form-compact col2 time-form"
-            id="time-entry-form">
+            class="form-compact col2 time-form">
         {% csrf_token %}
         <div class="form-group">
           <label for="{{ form.matter.id_for_label }}">{{ form.matter.label }}</label>
@@ -52,29 +52,24 @@
           <label for="{{ form.entered.id_for_label }}">{{ form.entered.label }}</label>
           <div>{{ form.entered }}{{ form.entered.errors }}</div>
         </div>
-        <br />
-        <div class="flex-center-space span2">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if edit %}
-              <a class="delete-link"
-                 href="#!"
-                 hx-confirm="Are you sure  you want to delete this record?"
-                 hx-delete="{% url 'activity:time-delete' id=entry.id %}"
-                 hx-target="#htmx-modal-container">Delete Entry</a>
-            {% else %}
-              <a class="button-link codes-reference-link"
-                 href="#"
-                 hx-get="{% url 'activity:codes-reference' %}"
-                 hx-target="#codes-reference-container"
-                 hx-swap="innerHTML">View Abbreviation Codes</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
       {% if not edit %}<div id="codes-reference-container"></div>{% endif %}
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="time-entry-form" class="submit">Submit</button>
+      {% if edit %}
+        <a class="delete-link"
+           href="#!"
+           hx-confirm="Are you sure you want to delete this record?"
+           hx-delete="{% url 'activity:time-delete' id=entry.id %}"
+           hx-target="#htmx-modal-container">Delete Entry</a>
+      {% else %}
+        <a class="button-link codes-reference-link"
+           href="#"
+           hx-get="{% url 'activity:codes-reference' %}"
+           hx-target="#codes-reference-container"
+           hx-swap="innerHTML">View Abbreviation Codes</a>
+      {% endif %}
     </div>
   </div>
 </div>

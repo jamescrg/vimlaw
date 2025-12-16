@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form class="form-responsive form-spacious filter"
+      <form id="revenue-report-filter-form"
+            class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
             hx-post="{% url 'reports:revenue-filter' %}">
         {% csrf_token %}
@@ -27,14 +28,13 @@
                  name="date_to"
                  value="{{ filter_data.date_to }}">
         </div>
-        <br />
-        <div class="flex-center-space limited-width">
-          <button type="submit" class="submit">Apply</button>
-          <a class="btn-icon"
-             href="#"
-             hx-post="{% url 'management:clear-filters' session_key='revenue_filter' trigger='revenueChanged' %}">Restore Defaults</a>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="revenue-report-filter-form" class="submit">Apply</button>
+      <a class="btn-icon"
+         href="#"
+         hx-post="{% url 'management:clear-filters' session_key='revenue_filter' trigger='revenueChanged' %}">Restore Defaults</a>
     </div>
   </div>
 </div>

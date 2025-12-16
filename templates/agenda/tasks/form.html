@@ -24,26 +24,23 @@
       </div>
     </div>
     <div class="modal-body">
-      <form hx-post="{{ request.path }}"
+      <form id="task-form"
+            hx-post="{{ request.path }}"
             hx-target="#htmx-modal-container"
             role="form"
             class="form-compact col3 tasks-form">
         {% csrf_token %}
         {{ form }}
-        <div class="flex-center-space span3">
-          <div>
-            <button type="submit" class="submit">Submit</button>
-          </div>
-          <div>
-            {% if edit %}
-              <a href="#"
-                 class="delete-link"
-                 hx-confirm="Are you sure you want to delete this record?"
-                 hx-delete="{% url 'agenda:tasks-delete' id=task.id %}">Delete Task</a>
-            {% endif %}
-          </div>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="task-form" class="submit">Submit</button>
+      {% if edit %}
+        <a href="#"
+           class="delete-link"
+           hx-confirm="Are you sure you want to delete this record?"
+           hx-delete="{% url 'agenda:tasks-delete' id=task.id %}">Delete Task</a>
+      {% endif %}
     </div>
   </div>
 </div>
