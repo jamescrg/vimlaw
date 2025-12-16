@@ -9,15 +9,6 @@
         {% endif %}
       </h1>
       <div>
-        {% if edit %}
-          <a class="btn-icon"
-             href="#"
-             hx-get="{% url 'agenda:tasks-detail' id=task.id %}"
-             hx-target="#htmx-modal-container"
-             hx-trigger="click">
-            <i class="bi bi-arrow-left"></i>
-          </a>
-        {% endif %}
         <a href="#" data-bs-dismiss="modal">
           <i class="bi bi-x-lg"></i>
         </a>
