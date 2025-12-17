@@ -57,16 +57,20 @@ def get_highlights_data(request, matter, matter_id):
             highlights = highlights.order_by("slug", "document__date", "page_number")
         elif order_by == "-slug":
             highlights = highlights.order_by("-slug", "document__date", "page_number")
+        elif order_by == "created":
+            highlights = highlights.order_by("created_at", "slug")
+        elif order_by == "-created":
+            highlights = highlights.order_by("-created_at", "slug")
         elif order_by == "importance":
             highlights = highlights.order_by("importance", "document__date", "slug")
         elif order_by == "-importance":
             highlights = highlights.order_by("-importance", "document__date", "slug")
         elif not order_by:
-            # Default: order by date, then slug
-            highlights = highlights.order_by("document__date", "slug", "page_number")
+            # Default: order by created date (oldest to newest)
+            highlights = highlights.order_by("created_at", "slug")
 
     # Determine current_order for template (strip leading '-' for base field)
-    current_order = order_by if order_by else "date"
+    current_order = order_by if order_by else "created"
 
     # Get importance filter value
     importance_value = get_filter_value("importance")
@@ -262,7 +266,7 @@ def highlights_filter_default(request, matter_id):
     request.session[filter_session_key] = {
         "document": "",
         "keyword": "",
-        "order_by": "document",
+        "order_by": "created",
     }
     return redirect("case:highlights-index", matter_id=matter_id)
 

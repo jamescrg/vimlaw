@@ -194,7 +194,8 @@ class Highlight(models.Model):
         # Format with page: (Abbrev. at 5.)
         base = doc_citation[:-1]  # Remove closing ")" only
         if self.paragraph_number:
-            return f"{base} ¶ {self.paragraph_number}.)"
+            para = self.paragraph_number.rstrip(".")
+            return f"{base} ¶ {para}.)"
         return f"{base} at {self.page_number}.)"
 
 

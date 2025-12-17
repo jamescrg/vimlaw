@@ -1,6 +1,6 @@
 <tr id="highlight-{{ highlight.id }}">
-  <td class="date">
-    <span>{{ highlight.document.date|date:'Y-m-d'|default:"No date" }}</span>
+  <td class="created">
+    <span>{{ highlight.created_at|date:'Y-m-d' }}</span>
   </td>
   <td class="highlight dropdown-cell">
     <div class="dropdown">
@@ -64,6 +64,9 @@
         {% include "case/labels/badge.html" with object_type="highlight" object=highlight view="table" %}
       {% endfor %}
     </div>
+  </td>
+  <td class="date">
+    <span>{{ highlight.document.date|date:'Y-m-d'|default:"No date" }}</span>
   </td>
   <td class="importance">
     <div class="dropdown">

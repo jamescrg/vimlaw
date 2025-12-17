@@ -139,7 +139,7 @@ Table Layout
 }
 
 .highlights-list .date {
-  width: 10rem;
+  width: 8rem;
   position: relative;
   padding-right: 2rem;
 }
@@ -152,6 +152,16 @@ Table Layout
   min-width: 18rem;
   white-space: normal;
   word-wrap: break-word;
+}
+
+.highlights-list .created {
+  width: 8rem;
+  position: relative;
+  padding-right: 2rem;
+}
+
+.highlights-list .created span {
+  display: inline;
 }
 
 .highlights-list .importance {
