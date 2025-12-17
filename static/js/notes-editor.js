@@ -1260,8 +1260,8 @@ function setupKeyboardShortcuts() {
       return;
     }
 
-    // Highlight shortcuts: Alt+Y (yellow), Alt+G (green), Alt+R (red), Alt+P (purple), Alt+O (orange), Alt+. (gray)
-    if (e.altKey && !mod && ["y", "g", "r", "p", "o", "1"].includes(e.key.toLowerCase())) {
+    // Highlight shortcuts: Alt+Y (yellow), Alt+G (green), Alt+R (red), Alt+P (purple), Alt+O (orange), Alt+A (gray)
+    if (e.altKey && !mod && ["y", "g", "r", "p", "o", "a"].includes(e.key.toLowerCase())) {
       e.preventDefault();
       const colorMap = {
         y: null, // default yellow
@@ -1269,7 +1269,7 @@ function setupKeyboardShortcuts() {
         r: "mark-red",
         p: "mark-purple",
         o: "mark-orange",
-        ".": "mark-gray",
+        a: "mark-gray",
       };
       const color = colorMap[e.key.toLowerCase()];
       if (color) {
