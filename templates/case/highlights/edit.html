@@ -9,23 +9,26 @@
       </div>
     </div>
     <div class="modal-body">
-      <form id="highlight-form"
-            hx-post="{% url 'case:edit-highlight' highlight.id %}"
-            hx-target="#htmx-modal-container"
+      <form id="edit-highlight-form"
+            {% if not is_viewer_context %}hx-post="{% url 'case:edit-highlight' highlight.id %}" hx-target="#htmx-modal-container"{% else %}novalidate{% endif %}
+            action="{% url 'case:edit-highlight' highlight.id %}"
+            method="post"
             class="form-compact">
         {% csrf_token %}
         <div class="highlight-edit-grid">{{ form }}</div>
       </form>
     </div>
     <div class="modal-footer">
-      <button type="submit" form="highlight-form" class="submit">Save</button>
-      <a class="delete-link"
-         href="#"
-         hx-confirm="Are you sure you want to delete this highlight?"
-         hx-post="{% url 'case:delete-highlight' highlight.id %}"
-         hx-target="#highlight-card-{{ highlight.id }}"
-         hx-swap="outerHTML"
-         data-bs-dismiss="modal">Delete</a>
+      <button type="submit" form="edit-highlight-form" class="submit">Submit</button>
+      {% if not is_viewer_context %}
+        <a hx-confirm="Are you sure you want to delete this highlight?"
+           href="#"
+           hx-post="{% url 'case:delete-highlight' highlight.id %}"
+           hx-target="#htmx-modal-container"
+           class="delete-link">Delete Highlight</a>
+      {% else %}
+        <a href="#" class="delete-link">Delete Highlight</a>
+      {% endif %}
     </div>
   </div>
 </div>

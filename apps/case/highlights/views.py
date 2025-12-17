@@ -329,9 +329,9 @@ def delete_highlight(request, highlight_id):
     # Check permission (creator or allow all authenticated users for now)
     highlight.delete()
 
-    # Return empty response for HTMX (removes the row), JSON for JS
+    # Return 204 with trigger for HTMX, JSON for JS (viewer context)
     if request.headers.get("HX-Request"):
-        return HttpResponse("")
+        return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
     return JsonResponse({"success": True})
 
 
@@ -381,7 +381,12 @@ def edit_highlight(request, highlight_id):
     return render(
         request,
         "case/highlights/edit.html",
-        {"highlight": highlight, "form": form, "matter": highlight.document.matter},
+        {
+            "highlight": highlight,
+            "form": form,
+            "matter": highlight.document.matter,
+            "is_viewer_context": is_viewer_context,
+        },
     )
 
 

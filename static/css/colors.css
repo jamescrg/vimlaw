@@ -161,6 +161,7 @@
 
 .delete-link {
   color: var(--warning);
+  text-decoration: none;
 }
 
 .delete-link:hover {
