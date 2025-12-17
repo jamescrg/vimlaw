@@ -2,6 +2,6 @@
 {% block subcontent %}
   <div id="labels"
        hx-trigger="labelsChanged from:body"
-       hx-get="{% url 'case:labels-list' %}"
+       hx-get="{% url 'case:labels-list' matter.id %}"
        hx-target="this">{% include "case/labels/list.html" %}</div>
 {% endblock subcontent %}

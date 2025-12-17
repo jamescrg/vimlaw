@@ -10,7 +10,7 @@
     </div>
     <div class="modal-body">
       <form id="note-form"
-            hx-post="{% if note %}{% url 'case:notes-edit' note.id %}{% else %}{% url 'case:notes-add' %}{% endif %}"
+            hx-post="{% if note %}{% url 'case:notes-edit' note.id %}{% else %}{% url 'case:notes-add' matter.id %}{% endif %}"
             hx-target="#htmx-modal-container"
             class="form-compact col2">
         {% csrf_token %}

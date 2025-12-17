@@ -4,7 +4,7 @@
       <th class="date-time">
         Date and Time
         <button class="btn-sort {% if 'date' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:facts-sort' 'date' %}"
+                hx-get="{% url 'case:facts-sort' matter.id 'date' %}"
                 hx-target="#facts">
           <i class="bi bi-chevron-expand"></i>
         </button>
@@ -12,7 +12,7 @@
       <th class="description">Description</th>
       <th class="importance">
         <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:facts-sort' 'importance' %}"
+                hx-get="{% url 'case:facts-sort' matter.id 'importance' %}"
                 hx-target="#facts"
                 title="Sort by importance">
           <i class="bi bi-flag"></i>

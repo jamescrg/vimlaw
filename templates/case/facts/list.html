@@ -4,7 +4,7 @@
     <div class="filter-tools">
       <button type="button"
               class="btn-icon"
-              hx-get="{% url 'case:facts-add' %}"
+              hx-get="{% url 'case:facts-add' matter.id %}"
               hx-target="#htmx-modal-container"
               hx-trigger="click"
               data-bs-toggle="modal"
@@ -13,7 +13,7 @@
       </button>
       <button type="button"
               class="btn-icon"
-              hx-get="{% url 'case:facts-filter' %}"
+              hx-get="{% url 'case:facts-filter' matter.id %}"
               hx-target="#htmx-modal-container"
               hx-trigger="click"
               data-bs-toggle="modal"
@@ -46,7 +46,7 @@
         <li>
         <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
            href="#"
-           hx-get="{% url 'case:facts-filter-importance' importance %}"
+           hx-get="{% url 'case:facts-filter-importance' matter.id importance %}"
            hx-target="#facts"><i class="bi bi-flag"></i>
         {% if importance == 1 %}
           1 only
@@ -60,7 +60,7 @@
 <li>
   <a class="dropdown-item {% if not importance_value %}active{% endif %}"
      href="#"
-     hx-get="{% url 'case:facts-filter-importance' 0 %}"
+     hx-get="{% url 'case:facts-filter-importance' matter.id 0 %}"
      hx-target="#facts"><i class="bi bi-flag"></i> All Levels</a>
 </li>
 </ul>
@@ -70,7 +70,7 @@
        placeholder="Keyword Search"
        value="{{ keyword }}"
        class="filter-input keyword-input"
-       hx-get="{% url 'case:facts-filter-keyword' %}"
+       hx-get="{% url 'case:facts-filter-keyword' matter.id %}"
        hx-target="#facts-table"
        hx-trigger="keyup changed delay:500ms"
        hx-include="this">
@@ -78,7 +78,7 @@
 </div>
 <div class="toolbar-right">
   {% if facts %}
-    <a href="{% url 'case:facts-pdf' %}"
+    <a href="{% url 'case:facts-pdf' matter.id %}"
        target="_blank"
        type="button"
        class="btn-icon">Download PDF</a>

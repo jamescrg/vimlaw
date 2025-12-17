@@ -12,7 +12,7 @@
       <form id="facts-filter-form"
             class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
-            hx-post="{% url 'case:facts-filter' %}">
+            hx-post="{% url 'case:facts-filter' matter.id %}">
         {% csrf_token %}
         {{ filter.form }}
       </form>

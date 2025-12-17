@@ -3,8 +3,8 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Document, Fact, Highlight, Label, Note
+from apps.case.views import get_matter_from_url, get_session_key
 from apps.matters.models import Matter
 
 from .filters import LabelsFilter
@@ -13,8 +13,8 @@ from .get_label_data import get_label_data
 
 
 @login_required
-def labels_index(request):
-    label_data = get_label_data(request)
+def labels_index(request, matter_id):
+    label_data = get_label_data(request, matter_id)
 
     context = {
         "app": "documents",
@@ -25,8 +25,8 @@ def labels_index(request):
 
 
 @login_required
-def labels_list(request):
-    label_data = get_label_data(request)
+def labels_list(request, matter_id):
+    label_data = get_label_data(request, matter_id)
 
     context = {
         "app": "documents",
@@ -37,8 +37,8 @@ def labels_list(request):
 
 
 @login_required
-def add_label(request):
-    matter, _ = get_selected_matter(request)
+def add_label(request, matter_id):
+    matter, _ = get_matter_from_url(request, matter_id)
 
     if request.method == "POST":
         form = LabelsForm(request.POST, use_required_attribute=False)
@@ -51,14 +51,22 @@ def add_label(request):
 
             return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
 
-        return render(request, "case/labels/form.html", {"form": form, "edit": False})
+        return render(
+            request,
+            "case/labels/form.html",
+            {"form": form, "edit": False, "matter": matter},
+        )
     else:
         form = LabelsForm(initial={"matter": matter}, use_required_attribute=False)
         form.fields["matter"].queryset = Matter.objects.filter(status="Open").order_by(
             "name"
         )
 
-        return render(request, "case/labels/form.html", {"form": form, "edit": False})
+        return render(
+            request,
+            "case/labels/form.html",
+            {"form": form, "edit": False, "matter": matter},
+        )
 
 
 @login_required
@@ -90,7 +98,7 @@ def edit_label(request, label_id):
         return render(
             request,
             "case/labels/form.html",
-            {"form": form, "label": label, "edit": True},
+            {"form": form, "label": label, "edit": True, "matter": label.matter},
         )
     else:
         form = LabelsForm(instance=label, use_required_attribute=False)
@@ -100,18 +108,21 @@ def edit_label(request, label_id):
         return render(
             request,
             "case/labels/form.html",
-            {"form": form, "label": label, "edit": True},
+            {"form": form, "label": label, "edit": True, "matter": label.matter},
         )
 
 
 @login_required
-def labels_filter(request):
+def labels_filter(request, matter_id):
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("labels_filter", matter_id)
+
     if request.method == "POST":
-        request.session["labels_filter"] = request.POST
+        request.session[filter_session_key] = dict(request.POST)
 
         return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
     else:
-        filter_data = request.session.get("labels_filter", {})
+        filter_data = request.session.get(filter_session_key, {})
 
         if filter_data:
             filter = LabelsFilter(
@@ -128,12 +139,15 @@ def labels_filter(request):
                 queryset=Label.objects.all().select_related("matter").order_by("name"),
             )
 
-        return render(request, "case/labels/filter.html", {"filter": filter})
+        return render(
+            request, "case/labels/filter.html", {"filter": filter, "matter": matter}
+        )
 
 
 @login_required
-def labels_sort(request, order):
-    filter_data = request.session.get("labels_filter", {})
+def labels_sort(request, matter_id, order):
+    filter_session_key = get_session_key("labels_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     current_order = filter_data.get("order_by", "")
 
@@ -143,7 +157,7 @@ def labels_sort(request, order):
         new_order = order
 
     filter_data["order_by"] = new_order
-    request.session["labels_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
     return HttpResponse(status=204, headers={"HX-Trigger": "labelsChanged"})
 
@@ -256,7 +270,7 @@ def add_label_to(request, object_type, object_id):
         except Label.DoesNotExist:
             pass
 
-    context = {context_key: obj, "importance_choices": range(1, 11)}
+    context = {context_key: obj, "importance_choices": range(1, 11), "matter": matter}
     return render(request, row_template, context)
 
 
@@ -278,7 +292,7 @@ def remove_label_from(request, object_type, object_id):
         except Label.DoesNotExist:
             pass
 
-    context = {context_key: obj, "importance_choices": range(1, 11)}
+    context = {context_key: obj, "importance_choices": range(1, 11), "matter": matter}
     return render(request, row_template, context)
 
 
@@ -299,5 +313,5 @@ def labels_create_and_apply(request, object_type, object_id):
         label = Label.objects.create(matter=matter, name=name, color=color)
         obj.labels.add(label)
 
-    context = {context_key: obj, "importance_choices": range(1, 11)}
+    context = {context_key: obj, "importance_choices": range(1, 11), "matter": matter}
     return render(request, row_template, context)

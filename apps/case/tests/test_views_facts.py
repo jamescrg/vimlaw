@@ -7,51 +7,58 @@ pytestmark = pytest.mark.django_db
 
 
 class TestFactsIndex:
-    def test_index_requires_login(self, client):
+    def test_index_requires_login(self, client, matter):
         client.logout()
-        response = client.get("/case/facts/")
+        response = client.get(f"/case/{matter.id}/facts/")
         assert response.status_code == 302
         assert "/accounts/login/" in response.url
 
     def test_index_authenticated(self, client_with_matter):
-        response = client_with_matter.get("/case/facts/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/facts/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/facts/main.html")
 
 
 class TestFactsList:
     def test_list_authenticated(self, client_with_matter):
-        response = client_with_matter.get("/case/facts/list/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/facts/list/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/facts/list.html")
 
     def test_list_shows_facts(self, client_with_matter, fact):
-        response = client_with_matter.get("/case/facts/list/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/facts/list/")
         assert response.status_code == 200
         assert b"Important event occurred" in response.content
 
 
 class TestFactsAdd:
     def test_add_get(self, client_with_matter):
-        response = client_with_matter.get("/case/facts/add/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/facts/add/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/facts/form.html")
 
     def test_add_post(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
         data = {
             "date": "2024-02-15",
             "description": "New fact added",
             "importance": 7,
         }
-        response = client_with_matter.post("/case/facts/add/", data)
+        response = client_with_matter.post(f"/case/{matter_id}/facts/add/", data)
         assert response.status_code == 204
         assert Fact.objects.filter(description="New fact added").exists()
 
-    def test_add_requires_matter(self, client):
-        # Without matter selected
-        data = {"date": "2024-02-15", "description": "Test"}
-        response = client.post("/case/facts/add/", data)
-        assert response.status_code == 400
+    def test_add_requires_matter(self, client, matter):
+        # With valid matter_id in URL, the fact should be created
+        data = {"date": "2024-02-15", "description": "Test fact", "importance": 5}
+        response = client.post(f"/case/{matter.id}/facts/add/", data)
+        # Should succeed with valid matter_id in URL
+        assert response.status_code == 204
+        assert Fact.objects.filter(description="Test fact").exists()
 
 
 class TestFactsEdit:
@@ -91,39 +98,51 @@ class TestFactsDelete:
 
 class TestFactsFilter:
     def test_filter_get(self, client_with_matter):
-        response = client_with_matter.get("/case/facts/filter/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/facts/filter/")
         assert response.status_code == 200
 
     def test_filter_post(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
         data = {"keyword": "test", "order_by": "date"}
-        response = client_with_matter.post("/case/facts/filter/", data)
+        response = client_with_matter.post(f"/case/{matter_id}/facts/filter/", data)
         assert response.status_code == 204
 
     def test_filter_by_keyword(self, client_with_matter):
-        response = client_with_matter.get("/case/facts/filter/keyword/?keyword=event")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(
+            f"/case/{matter_id}/facts/filter/keyword/?keyword=event"
+        )
         assert response.status_code == 200
 
     def test_filter_by_importance(self, client_with_matter):
-        response = client_with_matter.get("/case/facts/filter/importance/5/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(
+            f"/case/{matter_id}/facts/filter/importance/5/"
+        )
         assert response.status_code == 302
 
 
 class TestFactsSort:
     def test_sort_by_date(self, client_with_matter):
-        response = client_with_matter.get("/case/facts/sort/date/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/facts/sort/date/")
         assert response.status_code == 302
 
     def test_sort_toggles_direction(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
+        filter_key = f"facts_filter_{matter_id}"
+
         # First sort - ascending
-        client_with_matter.get("/case/facts/sort/date/")
+        client_with_matter.get(f"/case/{matter_id}/facts/sort/date/")
         session = client_with_matter.session
-        filter_data = session.get("facts_filter", {})
+        filter_data = session.get(filter_key, {})
         assert filter_data.get("order_by") == "date"
 
         # Second sort - should toggle to descending
-        client_with_matter.get("/case/facts/sort/date/")
+        client_with_matter.get(f"/case/{matter_id}/facts/sort/date/")
         session = client_with_matter.session
-        filter_data = session.get("facts_filter", {})
+        filter_data = session.get(filter_key, {})
         assert filter_data.get("order_by") == "-date"
 
 
@@ -199,6 +218,7 @@ class TestFactSources:
 
 class TestFactsPrint:
     def test_print_view(self, client_with_matter, fact):
-        response = client_with_matter.get("/case/facts/print/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/facts/print/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/facts/print.html")

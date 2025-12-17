@@ -4,7 +4,7 @@
     <div class="filter-tools">
       <button type="button"
               class="btn-icon"
-              hx-get="{% url 'case:highlights-filter' %}"
+              hx-get="{% url 'case:highlights-filter' matter.id %}"
               hx-target="#htmx-modal-container"
               hx-trigger="click"
               data-bs-toggle="modal"
@@ -27,7 +27,7 @@
         <li>
           <a class="dropdown-item {% if not selected_document %}active{% endif %}"
              href="#"
-             hx-post="{% url 'case:highlights-filter-document' %}"
+             hx-post="{% url 'case:highlights-filter-document-clear' matter.id %}"
              hx-target="#highlights"
              hx-swap="outerHTML"><i class="bi bi-files"></i> All Documents</a>
         </li>
@@ -35,7 +35,7 @@
           <li>
             <a class="dropdown-item {% if selected_document.id == doc.id %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:highlights-filter-document' doc.id %}"
+               hx-post="{% url 'case:highlights-filter-document' matter.id doc.id %}"
                hx-target="#highlights"
                hx-swap="outerHTML"><i class="bi bi-file-earmark"></i> {{ doc.name|truncatechars:30 }}</a>
           </li>
@@ -67,7 +67,7 @@
         <li>
         <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
            href="#"
-           hx-get="{% url 'case:highlights-filter-importance' importance %}"
+           hx-get="{% url 'case:highlights-filter-importance' matter.id importance %}"
            hx-target="#highlights"><i class="bi bi-flag"></i>
         {% if importance == 1 %}
           1 only
@@ -81,7 +81,7 @@
 <li>
   <a class="dropdown-item {% if not importance_value %}active{% endif %}"
      href="#"
-     hx-get="{% url 'case:highlights-filter-importance' 0 %}"
+     hx-get="{% url 'case:highlights-filter-importance' matter.id 0 %}"
      hx-target="#highlights"><i class="bi bi-flag"></i> All Levels</a>
 </li>
 </ul>
@@ -91,7 +91,7 @@
        placeholder="Keyword Search"
        value="{{ keyword }}"
        class="filter-input keyword-input"
-       hx-post="{% url 'case:highlights-filter-keyword' %}"
+       hx-post="{% url 'case:highlights-filter-keyword' matter.id %}"
        hx-target="#highlights-cards"
        hx-trigger="keyup changed delay:500ms"
        hx-include="this">

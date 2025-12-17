@@ -1,6 +1,7 @@
 from django.db.models import Count
 
 from apps.case.models import Document, Label
+from apps.case.views import get_matter_from_url, get_session_key
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
@@ -9,39 +10,33 @@ from .filters import FilesFilter
 
 
 def get_selected_matter(request):
-    """Get the currently selected matter from session, or default to first available."""
-    matter_id = request.session.get("documents_selected_matter")
+    """Get selected matter from session (for backwards compatibility with outlines app).
 
-    # Get all open matters for the dropdown
+    This uses the session-based approach for apps that haven't been refactored
+    to use URL-based matter context.
+    """
     matters = Matter.objects.filter(status="Open").order_by("name")
+    matter_id = request.session.get("last_viewed_matter")
 
     if matter_id:
         matter = matters.filter(id=matter_id).first()
         if matter:
             return matter, matters
 
-    # Default to first matter if none selected
+    # Default to first matter
     matter = matters.first()
     if matter:
-        request.session["documents_selected_matter"] = matter.id
-
+        request.session["last_viewed_matter"] = matter.id
     return matter, matters
 
 
-def get_document_data(request):
-    matter, matters = get_selected_matter(request)
+def get_document_data(request, matter_id):
+    """Get document data for a specific matter."""
+    matter, matters = get_matter_from_url(request, matter_id)
 
-    if not matter:
-        return {
-            "matter": None,
-            "matters": matters,
-            "objects": [],
-            "pagination": None,
-            "labels": [],
-            "selected_documents": [],
-        }
-
-    filter_data = request.session.get("documents_filter", {})
+    # Use matter-specific session key for filters
+    filter_session_key = get_session_key("documents_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     # Always filter by the selected matter
     documents = (
@@ -57,8 +52,10 @@ def get_document_data(request):
         filter_obj = FilesFilter(filter_data, queryset=documents, matter=matter)
         documents = filter_obj.qs
 
+    # Use matter-specific pagination key
+    pagination_session_key = get_session_key("documents_pagination", matter_id)
     pagination = CustomPaginator(
-        documents, per_page=20, request=request, session_key="documents_pagination"
+        documents, per_page=20, request=request, session_key=pagination_session_key
     )
 
     # Get labels for this matter's documents
@@ -70,7 +67,9 @@ def get_document_data(request):
     )
     label_list = Label.objects.filter(id__in=label_ids).order_by("name")
 
-    selected_documents = request.session.get("selected_documents", [])
+    # Use matter-specific key for selected documents
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
 
     # Get proceedings for the matter (for inline proceeding dropdown)
     proceedings = Proceeding.objects.filter(matter=matter).order_by(
@@ -114,7 +113,7 @@ def get_document_data(request):
         "matter": matter,
         "matters": matters,
         "pagination": pagination,
-        "session_key": "documents_pagination",
+        "session_key": pagination_session_key,
         "trigger_key": "documentsChanged",
         "objects": pagination.get_object_list(),
         "labels": label_list,

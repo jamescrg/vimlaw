@@ -5,17 +5,19 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Document, Highlight
+from apps.case.views import get_matter_from_url, get_session_key
 from apps.management.pagination import CustomPaginator
 
 from .filters import HighlightsFilter
 from .forms import HighlightForm
 
 
-def get_highlights_data(request, matter):
+def get_highlights_data(request, matter, matter_id):
     """Get highlights data with filters applied from session."""
-    filter_data = request.session.get("highlights_filter", {})
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    pagination_session_key = get_session_key("highlights_pagination", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     highlights = []
     documents = []
@@ -74,14 +76,14 @@ def get_highlights_data(request, matter):
 
     # Paginate highlights
     pagination = CustomPaginator(
-        highlights, per_page=10, request=request, session_key="highlights_pagination"
+        highlights, per_page=10, request=request, session_key=pagination_session_key
     )
     highlights = pagination.get_object_list()
 
     return {
         "highlights": highlights,
         "pagination": pagination,
-        "session_key": "highlights_pagination",
+        "session_key": pagination_session_key,
         "trigger_key": "highlightsChanged",
         "documents": documents,
         "selected_document": selected_document,
@@ -98,47 +100,49 @@ def get_highlights_data(request, matter):
 
 
 @login_required
-def highlights_index(request):
+def highlights_index(request, matter_id):
     """Main highlights list view."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "highlights",
         "matter": matter,
         "matters": matters,
-    } | get_highlights_data(request, matter)
+    } | get_highlights_data(request, matter, matter_id)
 
     return render(request, "case/highlights/main.html", context)
 
 
 @login_required
-def highlights_list(request):
+def highlights_list(request, matter_id):
     """HTMX partial for highlights list."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "highlights",
         "matter": matter,
         "matters": matters,
-    } | get_highlights_data(request, matter)
+    } | get_highlights_data(request, matter, matter_id)
 
     return render(request, "case/highlights/list.html", context)
 
 
 @login_required
-def highlights_filter_document(request, document_id=None):
+def highlights_filter_document(request, matter_id, document_id=None):
     """Filter highlights by document (inline dropdown)."""
-    filter_data = request.session.get("highlights_filter", {})
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    pagination_session_key = get_session_key("highlights_pagination", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     if document_id:
         filter_data["document"] = document_id  # Store as int
     else:
         filter_data["document"] = ""  # Empty string for "All"
 
-    request.session["highlights_filter"] = filter_data
-    request.session["highlights_pagination"] = 1  # Reset to page 1
+    request.session[filter_session_key] = filter_data
+    request.session[pagination_session_key] = 1  # Reset to page 1
 
     return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
 
@@ -146,47 +150,57 @@ def highlights_filter_document(request, document_id=None):
 @login_required
 def highlights_for_document(request, document_id):
     """Set document filter and redirect to highlights page."""
-    filter_data = request.session.get("highlights_filter", {})
-    filter_data["document"] = document_id
-    request.session["highlights_filter"] = filter_data
+    document = get_object_or_404(Document, id=document_id)
+    matter_id = document.matter_id
 
-    return redirect("case:highlights-index")
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+    filter_data["document"] = document_id
+    request.session[filter_session_key] = filter_data
+
+    return redirect("case:highlights-index", matter_id=matter_id)
 
 
 @login_required
-def highlights_filter_keyword(request):
+def highlights_filter_keyword(request, matter_id):
     """Filter highlights by keyword (inline search)."""
-    matter, _ = get_selected_matter(request)
-    filter_data = request.session.get("highlights_filter", {})
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    pagination_session_key = get_session_key("highlights_pagination", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     keyword = request.POST.get("keyword", "").strip()
 
     filter_data["keyword"] = keyword  # Store as simple string
 
-    request.session["highlights_filter"] = filter_data
-    request.session["highlights_pagination"] = 1  # Reset to page 1
+    request.session[filter_session_key] = filter_data
+    request.session[pagination_session_key] = 1  # Reset to page 1
 
     # Render just the cards partial (for search input updates)
-    context = get_highlights_data(request, matter)
+    context = {"matter": matter} | get_highlights_data(request, matter, matter_id)
     return render(request, "case/highlights/cards.html", context)
 
 
 @login_required
-def highlights_filter_importance(request, importance_value):
+def highlights_filter_importance(request, matter_id, importance_value):
     """Filter highlights by importance level."""
-    filter_data = request.session.get("highlights_filter", {})
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    pagination_session_key = get_session_key("highlights_pagination", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     # Set to empty string when 0 (All) is selected, otherwise use the value
     filter_data["importance"] = "" if importance_value == 0 else importance_value
 
-    request.session["highlights_filter"] = filter_data
-    request.session["highlights_pagination"] = 1  # Reset to page 1
+    request.session[filter_session_key] = filter_data
+    request.session[pagination_session_key] = 1  # Reset to page 1
 
-    return redirect("case:highlights-list")
+    return redirect("case:highlights-list", matter_id=matter_id)
 
 
 @login_required
-def highlights_filter(request):
+def highlights_filter(request, matter_id):
     """Filter modal for highlights - GET shows modal, POST saves to session."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    pagination_session_key = get_session_key("highlights_pagination", matter_id)
 
     if request.method == "POST":
         # Store POST values directly (matching tasks pattern)
@@ -195,12 +209,12 @@ def highlights_filter(request):
             for key, value in request.POST.items()
             if key != "csrfmiddlewaretoken"
         }
-        request.session["highlights_filter"] = filter_data
-        request.session["highlights_pagination"] = 1  # Reset to page 1
+        request.session[filter_session_key] = filter_data
+        request.session[pagination_session_key] = 1  # Reset to page 1
         return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
 
     # GET - show filter modal
-    filter_data = request.session.get("highlights_filter", {})
+    filter_data = request.session.get(filter_session_key, {})
 
     queryset = (
         Highlight.objects.filter(document__matter=matter)
@@ -212,15 +226,18 @@ def highlights_filter(request):
 
     context = {
         "filter": filter_obj,
+        "matter": matter,
     }
 
     return render(request, "case/highlights/filter.html", context)
 
 
 @login_required
-def highlights_filter_sort(request, order):
+def highlights_filter_sort(request, matter_id, order):
     """Sort highlights by field, toggling asc/desc."""
-    filter_data = request.session.get("highlights_filter", {})
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    pagination_session_key = get_session_key("highlights_pagination", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     current_order = filter_data.get("order_by", "")
 
     # Toggle direction if same field
@@ -231,21 +248,22 @@ def highlights_filter_sort(request, order):
     else:
         filter_data["order_by"] = order
 
-    request.session["highlights_filter"] = filter_data
-    request.session["highlights_pagination"] = 1  # Reset to page 1
+    request.session[filter_session_key] = filter_data
+    request.session[pagination_session_key] = 1  # Reset to page 1
 
     return HttpResponse(status=204, headers={"HX-Trigger": "highlightsChanged"})
 
 
 @login_required
-def highlights_filter_default(request):
+def highlights_filter_default(request, matter_id):
     """Reset highlights filter to defaults."""
-    request.session["highlights_filter"] = {
+    filter_session_key = get_session_key("highlights_filter", matter_id)
+    request.session[filter_session_key] = {
         "document": "",
         "keyword": "",
         "order_by": "document",
     }
-    return redirect("case:highlights-index")
+    return redirect("case:highlights-index", matter_id=matter_id)
 
 
 @login_required
@@ -254,7 +272,7 @@ def highlight_importance(request, highlight_id, importance):
     highlight = get_object_or_404(Highlight, id=highlight_id)
     highlight.importance = importance
     highlight.save()
-    return redirect("case:highlights-list")
+    return redirect("case:highlights-list", matter_id=highlight.document.matter_id)
 
 
 @login_required
@@ -326,7 +344,7 @@ def highlight_detail(request, highlight_id):
     return render(
         request,
         "case/highlights/detail.html",
-        {"highlight": highlight},
+        {"highlight": highlight, "matter": highlight.document.matter},
     )
 
 
@@ -362,7 +380,7 @@ def edit_highlight(request, highlight_id):
     return render(
         request,
         "case/highlights/edit.html",
-        {"highlight": highlight, "form": form},
+        {"highlight": highlight, "form": form, "matter": highlight.document.matter},
     )
 
 

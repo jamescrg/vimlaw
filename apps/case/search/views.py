@@ -4,17 +4,18 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from watson import search as watson
 
-from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Document, Fact, Highlight, Label
+from apps.case.views import get_matter_from_url, get_session_key
 
 from .filters import SearchFilter
 
 
-def get_search_data(request, matter):
+def get_search_data(request, matter, matter_id):
     """Get search results with filters applied from session."""
     from datetime import datetime
 
-    filter_data = request.session.get("search_filter", {})
+    filter_session_key = get_session_key("search_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     results = []
     query = filter_data.get("query", "").strip()
 
@@ -159,65 +160,67 @@ def get_search_data(request, matter):
 
 
 @login_required
-def search_index(request):
+def search_index(request, matter_id):
     """Main search view with persistent filter panel."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "search",
         "matter": matter,
         "matters": matters,
-    } | get_search_data(request, matter)
+    } | get_search_data(request, matter, matter_id)
 
     return render(request, "case/search/main.html", context)
 
 
 @login_required
-def search_list(request):
+def search_list(request, matter_id):
     """HTMX partial for full search content area."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "search",
         "matter": matter,
         "matters": matters,
-    } | get_search_data(request, matter)
+    } | get_search_data(request, matter, matter_id)
 
     return render(request, "case/search/list.html", context)
 
 
 @login_required
-def search_results(request):
+def search_results(request, matter_id):
     """HTMX partial for search results only."""
-    matter, _ = get_selected_matter(request)
-    context = get_search_data(request, matter)
+    matter, _ = get_matter_from_url(request, matter_id)
+    context = {"matter": matter} | get_search_data(request, matter, matter_id)
     return render(request, "case/search/results.html", context)
 
 
 @login_required
-def search_query(request):
+def search_query(request, matter_id):
     """Handle search query input via HTMX."""
-    matter, _ = get_selected_matter(request)
-    filter_data = request.session.get("search_filter", {})
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("search_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     query = request.POST.get("query", "").strip()
     filter_data["query"] = query
-    request.session["search_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    context = get_search_data(request, matter)
+    context = {"matter": matter} | get_search_data(request, matter, matter_id)
     context["is_htmx"] = True
     return render(request, "case/search/results.html", context)
 
 
 @login_required
-def search_filter(request):
+def search_filter(request, matter_id):
     """Filter panel update - POST saves, GET renders panel."""
-    matter, _ = get_selected_matter(request)
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("search_filter", matter_id)
 
     if request.method == "POST":
-        filter_data = request.session.get("search_filter", {})
+        filter_data = request.session.get(filter_session_key, {})
         # Update filter data with form values, preserving query
         for key, value in request.POST.items():
             if key != "csrfmiddlewaretoken":
@@ -225,11 +228,11 @@ def search_filter(request):
                     filter_data[key] = value
                 else:
                     filter_data.pop(key, None)
-        request.session["search_filter"] = filter_data
+        request.session[filter_session_key] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": "searchChanged"})
 
     # GET - render filter panel
-    filter_data = request.session.get("search_filter", {})
+    filter_data = request.session.get(filter_session_key, {})
     filter_obj = SearchFilter(filter_data, matter=matter)
 
     return render(
@@ -240,21 +243,23 @@ def search_filter(request):
 
 
 @login_required
-def search_filter_type(request, result_type=None):
+def search_filter_type(request, matter_id, result_type=None):
     """Quick filter by result type."""
-    filter_data = request.session.get("search_filter", {})
+    filter_session_key = get_session_key("search_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     if result_type:
         filter_data["result_type"] = result_type
     else:
         filter_data.pop("result_type", None)
 
-    request.session["search_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
     return HttpResponse(status=204, headers={"HX-Trigger": "searchChanged"})
 
 
 @login_required
-def search_clear(request):
+def search_clear(request, matter_id):
     """Clear search query and all filters."""
-    request.session["search_filter"] = {}
+    filter_session_key = get_session_key("search_filter", matter_id)
+    request.session[filter_session_key] = {}
     return HttpResponse(status=204, headers={"HX-Trigger": "searchChanged"})

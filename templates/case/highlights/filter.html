@@ -12,14 +12,14 @@
       <form id="highlights-filter-form"
             class="form-responsive form-spacious filter"
             hx-target="#htmx-modal-container"
-            hx-post="{% url 'case:highlights-filter' %}">
+            hx-post="{% url 'case:highlights-filter' matter.id %}">
         {% csrf_token %}
         {{ filter.form }}
       </form>
     </div>
     <div class="modal-footer">
       <button type="submit" form="highlights-filter-form" class="submit">Apply</button>
-      <a href="{% url 'case:highlights-filter-default' %}">Restore Defaults</a>
+      <a href="{% url 'case:highlights-filter-default' matter.id %}">Restore Defaults</a>
     </div>
   </div>
 </div>

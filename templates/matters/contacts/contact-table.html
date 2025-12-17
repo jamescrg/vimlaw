@@ -115,7 +115,7 @@
     </thead>
     <tbody>
       {% for item in contacts %}
-        <tr class="{% if item.is_client %}hl-gray{% endif %}">
+        <tr>
           <td>{{ item.group }}</td>
           <td>
             {% if item.is_client %}

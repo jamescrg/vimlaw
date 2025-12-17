@@ -9,26 +9,29 @@ pytestmark = pytest.mark.django_db
 
 
 class TestHighlightsIndex:
-    def test_index_requires_login(self, client):
+    def test_index_requires_login(self, client, matter):
         client.logout()
-        response = client.get("/case/highlights/")
+        response = client.get(f"/case/{matter.id}/highlights/")
         assert response.status_code == 302
         assert "/accounts/login/" in response.url
 
     def test_index_authenticated(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/highlights/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/highlights/main.html")
 
 
 class TestHighlightsList:
     def test_list_authenticated(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/list/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/highlights/list/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/highlights/list.html")
 
     def test_list_shows_highlights(self, client_with_matter, highlight):
-        response = client_with_matter.get("/case/highlights/list/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/highlights/list/")
         assert response.status_code == 200
         assert b"Test Highlight" in response.content
 
@@ -46,7 +49,7 @@ class TestAddHighlight:
             "color": "green",
         }
         response = client_with_matter.post(
-            f"/documents/{document.id}/highlights/add/", data
+            f"/case/documents/{document.id}/highlights/add/", data
         )
         assert response.status_code == 200
         result = response.json()
@@ -61,7 +64,7 @@ class TestAddHighlight:
             "coordinates": "{}",
         }
         response = client_with_matter.post(
-            f"/documents/{document.id}/highlights/add/", data
+            f"/case/documents/{document.id}/highlights/add/", data
         )
         assert response.status_code == 400
 
@@ -129,64 +132,90 @@ class TestHighlightImportance:
 
 class TestHighlightsFilter:
     def test_filter_get(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/filter/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/highlights/filter/")
         assert response.status_code == 200
 
     def test_filter_post(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
         data = {"keyword": "test", "order_by": "date"}
-        response = client_with_matter.post("/case/highlights/filter/", data)
+        response = client_with_matter.post(
+            f"/case/{matter_id}/highlights/filter/", data
+        )
         assert response.status_code == 204
 
     def test_filter_by_document(self, client_with_matter, document):
+        matter_id = client_with_matter.matter.id
         response = client_with_matter.post(
-            f"/case/highlights/filter/document/{document.id}/"
+            f"/case/{matter_id}/highlights/filter/document/{document.id}/"
         )
         assert response.status_code == 204
 
     def test_filter_by_document_clear(self, client_with_matter):
-        response = client_with_matter.post("/case/highlights/filter/document/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.post(
+            f"/case/{matter_id}/highlights/filter/document/"
+        )
         assert response.status_code == 204
 
     def test_filter_by_keyword(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
         response = client_with_matter.post(
-            "/case/highlights/filter/keyword/", {"keyword": "test"}
+            f"/case/{matter_id}/highlights/filter/keyword/", {"keyword": "test"}
         )
         assert response.status_code == 200
 
     def test_filter_by_importance(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/filter/importance/5/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(
+            f"/case/{matter_id}/highlights/filter/importance/5/"
+        )
         assert response.status_code == 302
 
     def test_filter_default(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/filter/default/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(
+            f"/case/{matter_id}/highlights/filter/default/"
+        )
         assert response.status_code == 302
 
 
 class TestHighlightsSort:
     def test_sort_by_date(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/filter/sort/date/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(
+            f"/case/{matter_id}/highlights/filter/sort/date/"
+        )
         assert response.status_code == 204
 
     def test_sort_by_slug(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/filter/sort/slug/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(
+            f"/case/{matter_id}/highlights/filter/sort/slug/"
+        )
         assert response.status_code == 204
 
     def test_sort_by_importance(self, client_with_matter):
-        response = client_with_matter.get("/case/highlights/filter/sort/importance/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(
+            f"/case/{matter_id}/highlights/filter/sort/importance/"
+        )
         assert response.status_code == 204
 
 
 class TestHighlightLink:
     def test_highlight_link_redirects(self, client_with_matter, highlight):
-        response = client_with_matter.get(f"/case/highlights/{highlight.id}/")
+        response = client_with_matter.get(f"/case/highlights/{highlight.id}/link/")
         assert response.status_code == 302
-        assert f"/documents/view/{highlight.document_id}" in response.url
+        assert f"/case/documents/{highlight.document_id}/view/" in response.url
 
 
 class TestHighlightsForDocument:
     def test_redirects_with_filter(self, client_with_matter, document):
-        response = client_with_matter.get(f"/case/highlights/for/{document.id}/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/documents/{document.id}/highlights/")
         assert response.status_code == 302
         session = client_with_matter.session
-        filter_data = session.get("highlights_filter", {})
+        filter_key = f"highlights_filter_{matter_id}"
+        filter_data = session.get(filter_key, {})
         assert filter_data.get("document") == document.id

@@ -2,6 +2,6 @@
 {% block subcontent %}
   <div id="search"
        hx-trigger="searchChanged from:body"
-       hx-get="{% url 'case:search-list' %}"
+       hx-get="{% url 'case:search-list' matter.id %}"
        hx-target="this">{% include "case/search/list.html" %}</div>
 {% endblock subcontent %}

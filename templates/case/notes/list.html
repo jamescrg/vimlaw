@@ -3,7 +3,7 @@
     <div class="filter-tools">
       <button type="button"
               class="btn-icon"
-              hx-get="{% url 'case:notes-add' %}"
+              hx-get="{% url 'case:notes-add' matter.id %}"
               hx-target="#htmx-modal-container"
               hx-trigger="click"
               data-bs-toggle="modal"
@@ -12,7 +12,7 @@
       </button>
       <button type="button"
               class="btn-icon"
-              hx-get="{% url 'case:notes-filter' %}"
+              hx-get="{% url 'case:notes-filter' matter.id %}"
               hx-target="#htmx-modal-container"
               hx-trigger="click"
               data-bs-toggle="modal"
@@ -33,14 +33,14 @@
         <li>
           <a class="dropdown-item {% if not selected_category_key %}active{% endif %}"
              href="#"
-             hx-get="{% url 'case:notes-filter-category-clear' %}"
+             hx-get="{% url 'case:notes-filter-category-clear' matter.id %}"
              hx-target="#notes">All Categories</a>
         </li>
         {% for key, label in category_choices %}
           <li>
             <a class="dropdown-item {% if selected_category_key == key %}active{% endif %}"
                href="#"
-               hx-get="{% url 'case:notes-filter-category' key %}"
+               hx-get="{% url 'case:notes-filter-category' matter.id key %}"
                hx-target="#notes">{{ label }}</a>
           </li>
         {% endfor %}
@@ -72,7 +72,7 @@
             <li>
               <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
                  href="#"
-                 hx-get="{% url 'case:notes-filter-importance' importance %}"
+                 hx-get="{% url 'case:notes-filter-importance' matter.id importance %}"
                  hx-target="#notes">
                 <i class="bi bi-flag"></i>
                 {% if importance == 1 %}
@@ -87,7 +87,7 @@
         <li>
           <a class="dropdown-item {% if not importance_value %}active{% endif %}"
              href="#"
-             hx-get="{% url 'case:notes-filter-importance' 0 %}"
+             hx-get="{% url 'case:notes-filter-importance' matter.id 0 %}"
              hx-target="#notes">
             <i class="bi bi-flag"></i> All Levels
           </a>
@@ -99,7 +99,7 @@
              placeholder="Keyword Search"
              value="{{ keyword }}"
              class="filter-input keyword-input"
-             hx-get="{% url 'case:notes-filter-keyword' %}"
+             hx-get="{% url 'case:notes-filter-keyword' matter.id %}"
              hx-target="#notes-table"
              hx-trigger="keyup changed delay:500ms"
              hx-include="this">

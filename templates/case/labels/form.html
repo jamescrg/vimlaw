@@ -16,7 +16,7 @@
     </div>
     <div class="modal-body">
       <form id="label-form"
-            hx-post="{% if edit %}{% url 'case:edit-label' label.id %}{% else %}{% url 'case:add-label' %}{% endif %}"
+            hx-post="{% if edit %}{% url 'case:edit-label' label.id %}{% else %}{% url 'case:add-label' matter.id %}{% endif %}"
             hx-target="#htmx-modal-container"
             role="form"
             class="form-compact col2">

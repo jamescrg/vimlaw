@@ -12,10 +12,10 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 
-from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Fact, Highlight
+from apps.case.views import get_matter_from_url
 from apps.matters.models import Matter
 from apps.outlines.models import Outline
 
@@ -32,22 +32,9 @@ def get_accessible_matters():
 
 
 @login_required
-def ai_index(request):
+def ai_index(request, matter_id):
     """Main AI view - list of conversations."""
-    matter, matters = get_selected_matter(request)
-
-    if not matter:
-        return render(
-            request,
-            "case/ai/main.html",
-            {
-                "app": "documents",
-                "subapp": "ai",
-                "matter": None,
-                "matters": matters,
-                "conversations": [],
-            },
-        )
+    matter, matters = get_matter_from_url(request, matter_id)
 
     conversations = Conversation.objects.filter(matter=matter)
 
@@ -63,12 +50,9 @@ def ai_index(request):
 
 
 @login_required
-def ai_list(request):
+def ai_list(request, matter_id):
     """Return conversation list partial (for HTMX refresh)."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return render(request, "case/ai/list.html", {"conversations": []})
+    matter, _ = get_matter_from_url(request, matter_id)
 
     conversations = Conversation.objects.filter(matter=matter)
 
@@ -85,14 +69,10 @@ def ai_list(request):
 @login_required
 def conversation_view(request, conv_id):
     """Standalone full-height view for a single conversation."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return redirect("case:ai-index")
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
+    matter = conversation.matter
 
     messages = conversation.messages.all()
 
@@ -106,12 +86,9 @@ def conversation_view(request, conv_id):
 
 
 @login_required
-def new_conversation_view(request):
+def new_conversation_view(request, matter_id):
     """Standalone view for a new (unsaved) conversation."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return redirect("case:ai-index")
+    matter, _ = get_matter_from_url(request, matter_id)
 
     # Get LLM from query parameter
     llm = request.GET.get("llm", "claude")
@@ -137,13 +114,10 @@ def new_conversation_view(request):
 
 
 @login_required
-def message_list(request):
+def message_list(request, matter_id):
     """Return message list partial (for HTMX refresh)."""
-    matter, _ = get_selected_matter(request)
+    matter, _ = get_matter_from_url(request, matter_id)
     conversation_id = request.GET.get("conversation_id")
-
-    if not matter:
-        return render(request, "case/ai/messages.html", {"messages": []})
 
     if conversation_id:
         conversation = get_object_or_404(
@@ -166,12 +140,9 @@ def message_list(request):
 
 
 @login_required
-def send_message(request):
+def send_message(request, matter_id):
     """Handle user message submission and start background AI processing."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse(status=400)
+    matter, _ = get_matter_from_url(request, matter_id)
 
     if request.method != "POST":
         return HttpResponse(status=405)
@@ -265,11 +236,6 @@ def send_message(request):
 @login_required
 def ai_status(request, conv_id):
     """Return current AI processing status for polling."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse(status=400)
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
@@ -341,12 +307,9 @@ def ai_status(request, conv_id):
 
 
 @login_required
-def conversation_list(request):
+def conversation_list(request, matter_id):
     """Return conversation list partial."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return render(request, "case/ai/conversation-list.html", {"conversations": []})
+    matter, _ = get_matter_from_url(request, matter_id)
 
     conversations = Conversation.objects.filter(matter=matter)
 
@@ -363,14 +326,10 @@ def conversation_list(request):
 @login_required
 def select_conversation(request, conv_id):
     """Switch to a different conversation."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return redirect("case:ai-index")
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
+    matter = conversation.matter
 
     messages = conversation.messages.all()
 
@@ -388,11 +347,6 @@ def select_conversation(request, conv_id):
 @login_required
 def delete_conversation(request, conv_id):
     """Delete a conversation."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return redirect("case:ai-index")
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
@@ -408,11 +362,6 @@ def delete_conversation(request, conv_id):
 @login_required
 def rename_conversation(request, conv_id):
     """Rename a conversation - POST saves and closes modal."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse(status=400)
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
@@ -450,11 +399,6 @@ def rename_conversation(request, conv_id):
 @login_required
 def rename_form(request, conv_id):
     """Return rename modal for conversation."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse(status=400)
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
@@ -464,18 +408,15 @@ def rename_form(request, conv_id):
         "case/ai/rename-modal.html",
         {
             "conversation": conversation,
-            "matter": matter,
+            "matter": conversation.matter,
         },
     )
 
 
 @login_required
-def create_prompt(request):
+def create_prompt(request, matter_id):
     """Generate a prompt stuffing document for external AI chat clients."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return redirect("case:ai-index")
+    matter, _ = get_matter_from_url(request, matter_id)
 
     # Load ai-prompt.md content
     legal_md_path = Path(settings.BASE_DIR) / "docs" / "ai-prompt.md"
@@ -601,17 +542,12 @@ def create_prompt(request):
 @login_required
 def chat_upload(request, conv_id):
     """Handle file upload to chat conversation."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse(status=400)
-
-    if request.method != "POST":
-        return HttpResponse(status=405)
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
+
+    if request.method != "POST":
+        return HttpResponse(status=405)
 
     uploaded_file = request.FILES.get("file")
     if not uploaded_file:
@@ -659,11 +595,6 @@ def chat_upload(request, conv_id):
 @login_required
 def chat_attachment_status(request, conv_id):
     """Return current attachment status for polling."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse(status=400)
-
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
@@ -681,11 +612,6 @@ def chat_attachment_status(request, conv_id):
 @login_required
 def delete_attachment(request, attachment_id):
     """Delete a chat attachment."""
-    matter, _ = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse(status=400)
-
     attachment = get_object_or_404(
         ChatAttachment,
         pk=attachment_id,

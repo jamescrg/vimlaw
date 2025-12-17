@@ -1,9 +1,11 @@
 <div class="filter-panel-header">
   <h2>Filters</h2>
-  <a href="#" hx-post="{% url 'case:search-clear' %}" class="filter-reset">Reset</a>
+  <a href="#"
+     hx-post="{% url 'case:search-clear' matter.id %}"
+     class="filter-reset">Reset</a>
 </div>
 <form class="filter-panel-form"
-      hx-post="{% url 'case:search-filter' %}"
+      hx-post="{% url 'case:search-filter' matter.id %}"
       hx-trigger="change delay:300ms">
   {% csrf_token %}
   <div class="filter-group {% if filter_data.result_type %}has-value{% endif %}">

@@ -23,7 +23,7 @@
        hx-swap-oob="true">
     {% if query or filter_data %}
       <button class="app-badge app-badge-lg badge-purple search-clear-btn"
-              hx-post="{% url 'case:search-clear' %}"
+              hx-post="{% url 'case:search-clear' matter.id %}"
               hx-swap="none"
               title="Clear search and filters">
         {{ results|length }} result{{ results|length|pluralize }}<strong><i class="bi bi-x"></i></strong>

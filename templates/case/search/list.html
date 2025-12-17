@@ -8,7 +8,7 @@
                placeholder="Search documents, highlights, facts..."
                value="{{ query }}"
                class="search-input"
-               hx-post="{% url 'case:search-query' %}"
+               hx-post="{% url 'case:search-query' matter.id %}"
                hx-target="#search-results"
                hx-trigger="keyup changed delay:500ms"
                hx-include="this"
@@ -18,7 +18,7 @@
       <div id="search-result-count" class="search-result-count">
         {% if query or filter_data %}
           <button class="app-badge app-badge-lg badge-purple search-clear-btn"
-                  hx-post="{% url 'case:search-clear' %}"
+                  hx-post="{% url 'case:search-clear' matter.id %}"
                   hx-swap="none"
                   title="Clear search and filters">
             {{ results|length }} result{{ results|length|pluralize }} <i class="bi bi-x"></i>

@@ -5,7 +5,7 @@
         <span>This Matter</span>
         <button type="button"
                 class="btn-icon-sm"
-                hx-get="{% url 'case:add-label' %}?matter={{ matter.id }}"
+                hx-get="{% url 'case:add-label' matter.id %}?matter={{ matter.id }}"
                 hx-target="#htmx-modal-container"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">
@@ -31,7 +31,7 @@
       <span>All Matters</span>
       <button type="button"
               class="btn-icon-sm"
-              hx-get="{% url 'case:add-label' %}?global=1"
+              hx-get="{% url 'case:add-label' matter.id %}?global=1"
               hx-target="#htmx-modal-container"
               data-bs-toggle="modal"
               data-bs-target="#htmx-modal-container">

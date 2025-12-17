@@ -41,25 +41,25 @@
     <nav class="navbar navbar-sub detail-subnav">
       <ul>
         <li {% if subapp == "documents" %}class="active"{% endif %}>
-          <a href="{% url 'case:index' %}">Documents</a>
+          <a href="{% url 'case:documents-index' matter.id %}">Documents</a>
         </li>
         <li {% if subapp == "highlights" %}class="active"{% endif %}>
-          <a href="{% url 'case:highlights-index' %}">Highlights</a>
+          <a href="{% url 'case:highlights-index' matter.id %}">Highlights</a>
         </li>
         <li {% if subapp == "facts" %}class="active"{% endif %}>
-          <a href="{% url 'case:facts-index' %}">Facts</a>
+          <a href="{% url 'case:facts-index' matter.id %}">Facts</a>
         </li>
         <li {% if subapp == "notes" %}class="active"{% endif %}>
-          <a href="{% url 'case:notes-index' %}">Notes</a>
+          <a href="{% url 'case:notes-index' matter.id %}">Notes</a>
         </li>
         <li {% if subapp == "labels" %}class="active"{% endif %}>
-          <a href="{% url 'case:labels-index' %}">Labels</a>
+          <a href="{% url 'case:labels-index' matter.id %}">Labels</a>
         </li>
         <li {% if subapp == "search" %}class="active"{% endif %}>
-          <a href="{% url 'case:search-index' %}">Search</a>
+          <a href="{% url 'case:search-index' matter.id %}">Search</a>
         </li>
         <li {% if subapp == "ai" %}class="active"{% endif %}>
-          <a href="{% url 'case:ai-index' %}">AI</a>
+          <a href="{% url 'case:ai-index' matter.id %}">AI</a>
         </li>
       </ul>
     </nav>

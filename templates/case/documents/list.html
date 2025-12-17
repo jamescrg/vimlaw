@@ -4,7 +4,7 @@
       <div class="filter-tools">
         <button type="button"
                 class="btn-icon"
-                hx-get="{% url 'case:documents-add' %}"
+                hx-get="{% url 'case:documents-add' matter.id %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 data-bs-toggle="modal"
@@ -13,7 +13,7 @@
         </button>
         <button type="button"
                 class="btn-icon"
-                hx-get="{% url 'case:documents-filter' %}"
+                hx-get="{% url 'case:documents-filter' matter.id %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 data-bs-toggle="modal"
@@ -34,31 +34,31 @@
           <li>
             <a class="dropdown-item {% if not selected_category %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:documents-filter-category-clear' %}"
+               hx-post="{% url 'case:documents-filter-category-clear' matter.id %}"
                hx-target="#documents">All Categories</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Correspondence' %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:documents-filter-category' 'Correspondence' %}"
+               hx-post="{% url 'case:documents-filter-category' matter.id 'Correspondence' %}"
                hx-target="#documents">Correspondence</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Discovery' %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:documents-filter-category' 'Discovery' %}"
+               hx-post="{% url 'case:documents-filter-category' matter.id 'Discovery' %}"
                hx-target="#documents">Discovery</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Evidence' %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:documents-filter-category' 'Evidence' %}"
+               hx-post="{% url 'case:documents-filter-category' matter.id 'Evidence' %}"
                hx-target="#documents">Evidence</a>
           </li>
           <li>
             <a class="dropdown-item {% if selected_category == 'Record' %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:documents-filter-category' 'Record' %}"
+               hx-post="{% url 'case:documents-filter-category' matter.id 'Record' %}"
                hx-target="#documents">Record</a>
           </li>
         </ul>
@@ -68,7 +68,7 @@
                placeholder="Keyword Search"
                value="{{ selected_keyword|default:'' }}"
                class="filter-input keyword-input"
-               hx-get="{% url 'case:documents-filter-keyword' %}"
+               hx-get="{% url 'case:documents-filter-keyword' matter.id %}"
                hx-target="#files-table"
                hx-trigger="keyup changed delay:500ms"
                hx-include="this">
@@ -90,14 +90,14 @@
           <li>
             <a class="dropdown-item {% if not selected_proceeding %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:documents-filter-proceeding-clear' %}"
+               hx-post="{% url 'case:documents-filter-proceeding-clear' matter.id %}"
                hx-target="#documents">All Proceedings</a>
           </li>
           {% for proceeding in proceedings %}
             <li>
               <a class="dropdown-item {% if selected_proceeding.id == proceeding.id %}active{% endif %}"
                  href="#"
-                 hx-post="{% url 'case:documents-filter-proceeding' proceeding.id %}"
+                 hx-post="{% url 'case:documents-filter-proceeding' matter.id proceeding.id %}"
                  hx-target="#documents">{{ proceeding.display_name }}</a>
             </li>
           {% endfor %}
@@ -128,7 +128,7 @@
           <li>
           <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
              href="#"
-             hx-get="{% url 'case:documents-filter-importance' importance %}"
+             hx-get="{% url 'case:documents-filter-importance' matter.id importance %}"
              hx-target="#documents"><i class="bi bi-flag"></i>
           {% if importance == 1 %}
             1 only
@@ -142,20 +142,20 @@
   <li>
     <a class="dropdown-item {% if not importance_value %}active{% endif %}"
        href="#"
-       hx-get="{% url 'case:documents-filter-importance' 0 %}"
+       hx-get="{% url 'case:documents-filter-importance' matter.id 0 %}"
        hx-target="#documents"><i class="bi bi-flag"></i> All Levels</a>
   </li>
 </ul>
 {% if selected_documents %}
   <button type="button"
-          hx-get="{% url 'case:documents-bulk-update' %}"
+          hx-get="{% url 'case:documents-bulk-update' matter.id %}"
           hx-target="#htmx-modal-container"
           hx-trigger="click"
           data-bs-toggle="modal"
           data-bs-target="#htmx-modal-container"
           class="btn-icon">Bulk Actions ({{ selected_documents|length }})</button>
   <button type="button"
-          hx-post="{% url 'case:documents-clear-selection' %}"
+          hx-post="{% url 'case:documents-clear-selection' matter.id %}"
           hx-target="#documents"
           hx-swap="outerHTML"
           class="btn-icon">

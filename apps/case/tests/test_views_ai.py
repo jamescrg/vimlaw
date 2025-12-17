@@ -5,30 +5,33 @@ pytestmark = pytest.mark.django_db
 
 
 class TestAICreatePrompt:
-    def test_create_prompt_requires_login(self, client):
+    def test_create_prompt_requires_login(self, client, matter):
         client.logout()
-        response = client.get("/case/ai/create-prompt/")
+        response = client.get(f"/case/{matter.id}/ai/create-prompt/")
         assert response.status_code == 302
         assert "/accounts/login/" in response.url
 
-    def test_create_prompt_requires_matter(self, client):
-        response = client.get("/case/ai/create-prompt/")
-        # Redirects to AI index when no matter selected
-        assert response.status_code == 302
+    def test_create_prompt_requires_matter(self, client, matter):
+        # With valid matter_id in URL
+        response = client.get(f"/case/{matter.id}/ai/create-prompt/")
+        assert response.status_code == 200
 
     def test_create_prompt_authenticated(self, client_with_matter, user):
-        response = client_with_matter.get("/case/ai/create-prompt/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/ai/create-prompt/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/ai/prompt.html")
 
     def test_create_prompt_contains_user_info(self, client_with_matter, user):
-        response = client_with_matter.get("/case/ai/create-prompt/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/ai/create-prompt/")
         content = response.content.decode()
         assert user.email in content
         assert "Craig Legal, LLC" in content
 
     def test_create_prompt_contains_date(self, client_with_matter):
-        response = client_with_matter.get("/case/ai/create-prompt/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/ai/create-prompt/")
         content = response.content.decode()
         assert "## Request Date" in content
 
@@ -42,8 +45,10 @@ class TestAICreatePrompt:
         client_with_matter.get("/dash/")
         session = client_with_matter.session
         session["documents_selected_matter"] = matter.id
+        session["last_viewed_matter"] = matter.id
         session.save()
-        response = client_with_matter.get("/case/ai/create-prompt/")
+        client_with_matter.matter = matter
+        response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
         assert response.status_code == 200
         content = response.content.decode()
         assert "is an attorney" in content
@@ -58,8 +63,10 @@ class TestAICreatePrompt:
         client_with_matter.get("/dash/")
         session = client_with_matter.session
         session["documents_selected_matter"] = matter.id
+        session["last_viewed_matter"] = matter.id
         session.save()
-        response = client_with_matter.get("/case/ai/create-prompt/")
+        client_with_matter.matter = matter
+        response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
         assert response.status_code == 200
         content = response.content.decode()
         assert "is a paralegal supporting an attorney" in content

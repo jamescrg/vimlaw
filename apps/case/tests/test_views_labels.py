@@ -7,53 +7,59 @@ pytestmark = pytest.mark.django_db
 
 
 class TestLabelsIndex:
-    def test_index_requires_login(self, client):
+    def test_index_requires_login(self, client, matter):
         client.logout()
-        response = client.get("/case/labels/")
+        response = client.get(f"/case/{matter.id}/labels/")
         assert response.status_code == 302
         assert "/accounts/login/" in response.url
 
     def test_index_authenticated(self, client_with_matter):
-        response = client_with_matter.get("/case/labels/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/labels/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/labels/main.html")
 
 
 class TestLabelsList:
     def test_list_authenticated(self, client_with_matter):
-        response = client_with_matter.get("/case/labels/list/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/labels/list/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/labels/list.html")
 
     def test_list_shows_labels(self, client_with_matter, label):
-        response = client_with_matter.get("/case/labels/list/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/labels/list/")
         assert response.status_code == 200
         assert b"Important" in response.content
 
 
 class TestAddLabel:
     def test_add_get(self, client_with_matter):
-        response = client_with_matter.get("/case/labels/add/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/labels/add/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/labels/form.html")
 
     def test_add_post(self, client_with_matter, matter):
+        matter_id = client_with_matter.matter.id
         data = {
             "name": "New Label",
             "color": "green",
             "matter": matter.id,
         }
-        response = client_with_matter.post("/case/labels/add/", data)
+        response = client_with_matter.post(f"/case/{matter_id}/labels/add/", data)
         assert response.status_code == 204
         assert Label.objects.filter(name="New Label").exists()
 
     def test_add_global_label(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
         data = {
             "name": "Global New",
             "color": "purple",
             "matter": "",  # Empty for global
         }
-        response = client_with_matter.post("/case/labels/add/", data)
+        response = client_with_matter.post(f"/case/{matter_id}/labels/add/", data)
         assert response.status_code == 204
         label = Label.objects.get(name="Global New")
         assert label.is_global
@@ -61,7 +67,7 @@ class TestAddLabel:
 
 class TestEditLabel:
     def test_edit_get(self, client_with_matter, label):
-        response = client_with_matter.get(f"/case/labels/edit/{label.id}/")
+        response = client_with_matter.get(f"/case/labels/{label.id}/edit/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/labels/form.html")
 
@@ -71,56 +77,62 @@ class TestEditLabel:
             "color": "blue",
             "matter": matter.id,
         }
-        response = client_with_matter.post(f"/case/labels/edit/{label.id}/", data)
+        response = client_with_matter.post(f"/case/labels/{label.id}/edit/", data)
         assert response.status_code == 204
         label.refresh_from_db()
         assert label.name == "Updated Label"
         assert label.color == "blue"
 
     def test_edit_nonexistent(self, client_with_matter):
-        response = client_with_matter.get("/case/labels/edit/99999/")
+        response = client_with_matter.get("/case/labels/99999/edit/")
         assert response.status_code == 404
 
 
 class TestDeleteLabel:
     def test_delete(self, client_with_matter, label):
         label_id = label.id
-        response = client_with_matter.post(f"/case/labels/delete/{label_id}/")
+        response = client_with_matter.post(f"/case/labels/{label_id}/delete/")
         assert response.status_code == 204
         assert not Label.objects.filter(id=label_id).exists()
 
     def test_delete_nonexistent(self, client_with_matter):
-        response = client_with_matter.post("/case/labels/delete/99999/")
+        response = client_with_matter.post("/case/labels/99999/delete/")
         assert response.status_code == 404
 
 
 class TestLabelsFilter:
     def test_filter_get(self, client_with_matter):
-        response = client_with_matter.get("/case/labels/filter/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/labels/filter/")
         assert response.status_code == 200
 
     def test_filter_post(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
         data = {"order_by": "name"}
-        response = client_with_matter.post("/case/labels/filter/", data)
+        response = client_with_matter.post(f"/case/{matter_id}/labels/filter/", data)
         assert response.status_code == 204
 
 
 class TestLabelsSort:
     def test_sort_by_name(self, client_with_matter):
-        response = client_with_matter.get("/case/labels/sort/name/")
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.get(f"/case/{matter_id}/labels/sort/name/")
         assert response.status_code == 204
 
     def test_sort_toggles_direction(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
+        filter_key = f"labels_filter_{matter_id}"
+
         # First sort
-        client_with_matter.get("/case/labels/sort/name/")
+        client_with_matter.get(f"/case/{matter_id}/labels/sort/name/")
         session = client_with_matter.session
-        filter_data = session.get("labels_filter", {})
+        filter_data = session.get(filter_key, {})
         assert filter_data.get("order_by") == "name"
 
         # Second sort - toggle
-        client_with_matter.get("/case/labels/sort/name/")
+        client_with_matter.get(f"/case/{matter_id}/labels/sort/name/")
         session = client_with_matter.session
-        filter_data = session.get("labels_filter", {})
+        filter_data = session.get(filter_key, {})
         assert filter_data.get("order_by") == "-name"
 
 

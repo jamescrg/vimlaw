@@ -3,17 +3,18 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Document, Fact, Highlight
+from apps.case.views import get_matter_from_url, get_session_key
 
 from .filters import FactsFilter
 from .forms import FactForm
 from .generate_pdf import generate_facts_pdf
 
 
-def get_facts_data(request, matter):
+def get_facts_data(request, matter, matter_id):
     """Get facts data with filters applied from session."""
-    filter_data = request.session.get("facts_filter", {})
+    filter_session_key = get_session_key("facts_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     facts = []
     if matter:
@@ -55,42 +56,39 @@ def get_facts_data(request, matter):
 
 
 @login_required
-def facts_index(request):
+def facts_index(request, matter_id):
     """Main facts view."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "facts",
         "matter": matter,
         "matters": matters,
-    } | get_facts_data(request, matter)
+    } | get_facts_data(request, matter, matter_id)
 
     return render(request, "case/facts/main.html", context)
 
 
 @login_required
-def facts_list(request):
+def facts_list(request, matter_id):
     """HTMX partial for facts list."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "facts",
         "matter": matter,
         "matters": matters,
-    } | get_facts_data(request, matter)
+    } | get_facts_data(request, matter, matter_id)
 
     return render(request, "case/facts/list.html", context)
 
 
 @login_required
-def facts_add(request):
+def facts_add(request, matter_id):
     """Add a new fact."""
-    matter, matters = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse("No matter selected", status=400)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     if request.method == "POST":
         form = FactForm(request.POST, use_required_attribute=False)
@@ -118,8 +116,8 @@ def facts_add(request):
 @login_required
 def facts_edit(request, fact_id):
     """Edit a fact."""
-    matter, matters = get_selected_matter(request)
     fact = get_object_or_404(Fact, pk=fact_id)
+    matter = fact.matter
 
     if request.method == "POST":
         form = FactForm(request.POST, instance=fact, use_required_attribute=False)
@@ -155,9 +153,9 @@ def facts_delete(request, fact_id):
 
 
 @login_required
-def facts_print(request):
+def facts_print(request, matter_id):
     """Print view for facts."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     facts = []
     if matter:
@@ -171,15 +169,12 @@ def facts_print(request):
 
 
 @login_required
-def facts_pdf(request):
+def facts_pdf(request, matter_id):
     """Generate PDF for facts."""
     import os
     from datetime import datetime
 
-    matter, matters = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse("No matter selected", status=400)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     file = generate_facts_pdf(matter.id, request)
 
@@ -198,8 +193,8 @@ def facts_pdf(request):
 @login_required
 def facts_edit_description(request, fact_id):
     """Inline edit fact description."""
-    matter, matters = get_selected_matter(request)
     fact = get_object_or_404(Fact, pk=fact_id)
+    matter = fact.matter
     context = {"fact": fact, "matter": matter}
     return render(request, "case/facts/edit-description.html", context)
 
@@ -207,13 +202,12 @@ def facts_edit_description(request, fact_id):
 @login_required
 def facts_update_description(request, fact_id):
     """Update fact description inline."""
-    matter, matters = get_selected_matter(request)
     fact = get_object_or_404(Fact, pk=fact_id)
     fact.description = request.POST.get("description")
     fact.save()
 
     context = {
-        "matter": matter,
+        "matter": fact.matter,
         "fact": fact,
     }
     return render(request, "case/facts/fact-row.html", context)
@@ -222,8 +216,8 @@ def facts_update_description(request, fact_id):
 @login_required
 def fact_sources_modal(request, fact_id):
     """Render modal for managing fact sources (documents and highlights)."""
-    matter, matters = get_selected_matter(request)
     fact = get_object_or_404(Fact, pk=fact_id)
+    matter = fact.matter
     context = {
         "fact": fact,
         "matter": matter,
@@ -236,8 +230,8 @@ def fact_sources_search(request, fact_id):
     """Search documents and highlights for fact sources."""
     from django.db.models import Q
 
-    matter, matters = get_selected_matter(request)
     fact = get_object_or_404(Fact, pk=fact_id)
+    matter = fact.matter
     query = request.GET.get("q", "").strip()
 
     documents = []
@@ -267,8 +261,8 @@ def fact_sources_search(request, fact_id):
 @require_POST
 def fact_add_source(request, fact_id):
     """Add a document or highlight as a source to a fact."""
-    matter, matters = get_selected_matter(request)
     fact = get_object_or_404(Fact, pk=fact_id)
+    matter = fact.matter
 
     source_type = request.POST.get("type")
     source_id = request.POST.get("id")
@@ -291,8 +285,8 @@ def fact_add_source(request, fact_id):
 @require_POST
 def fact_remove_source(request, fact_id):
     """Remove a document or highlight source from a fact."""
-    matter, matters = get_selected_matter(request)
     fact = get_object_or_404(Fact, pk=fact_id)
+    matter = fact.matter
 
     source_type = request.POST.get("type")
     source_id = request.POST.get("id")
@@ -317,13 +311,14 @@ def fact_importance(request, fact_id, importance):
     fact = get_object_or_404(Fact, pk=fact_id)
     fact.importance = importance
     fact.save()
-    return redirect("case:facts-list")
+    return redirect("case:facts-list", matter_id=fact.matter_id)
 
 
 @login_required
-def facts_filter(request):
+def facts_filter(request, matter_id):
     """Filter modal for facts - GET shows modal, POST saves to session."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("facts_filter", matter_id)
 
     if request.method == "POST":
         filter_data = {
@@ -331,24 +326,27 @@ def facts_filter(request):
             for key, value in request.POST.items()
             if key != "csrfmiddlewaretoken"
         }
-        request.session["facts_filter"] = filter_data
+        request.session[filter_session_key] = filter_data
         request.session.modified = True
         return HttpResponse(status=204, headers={"HX-Trigger": "factsChanged"})
 
     # GET - show filter modal
-    filter_data = request.session.get("facts_filter", {})
+    filter_data = request.session.get(filter_session_key, {})
 
     queryset = Fact.objects.filter(matter=matter) if matter else Fact.objects.none()
 
     filter_obj = FactsFilter(filter_data, queryset=queryset)
 
-    return render(request, "case/facts/filter.html", {"filter": filter_obj})
+    return render(
+        request, "case/facts/filter.html", {"filter": filter_obj, "matter": matter}
+    )
 
 
 @login_required
-def facts_sort(request, order):
+def facts_sort(request, matter_id, order):
     """Sort facts by field, toggling asc/desc."""
-    filter_data = request.session.get("facts_filter", {})
+    filter_session_key = get_session_key("facts_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     current_order = filter_data.get("order_by", "")
 
@@ -358,17 +356,18 @@ def facts_sort(request, order):
         new_order = order
 
     filter_data["order_by"] = new_order
-    request.session["facts_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
     request.session.modified = True
 
-    return redirect("case:facts-list")
+    return redirect("case:facts-list", matter_id=matter_id)
 
 
 @login_required
-def facts_filter_keyword(request):
+def facts_filter_keyword(request, matter_id):
     """Filter facts by keyword (inline search)."""
-    matter, _ = get_selected_matter(request)
-    filter_data = request.session.get("facts_filter", {})
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("facts_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     keyword = request.GET.get("keyword", "").strip()
 
     if keyword:
@@ -376,20 +375,21 @@ def facts_filter_keyword(request):
     else:
         filter_data.pop("keyword", None)
 
-    request.session["facts_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
     # Render just the table partial (for search input updates)
-    context = get_facts_data(request, matter)
+    context = {"matter": matter} | get_facts_data(request, matter, matter_id)
     return render(request, "case/facts/table.html", context)
 
 
 @login_required
-def facts_filter_importance(request, importance_value):
+def facts_filter_importance(request, matter_id, importance_value):
     """Filter facts by importance level."""
-    filter_data = request.session.get("facts_filter", {})
+    filter_session_key = get_session_key("facts_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     # Set to empty string when 0 (All) is selected, otherwise use the value
     filter_data["importance"] = "" if importance_value == 0 else importance_value
 
-    request.session["facts_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    return redirect("case:facts-list")
+    return redirect("case:facts-list", matter_id=matter_id)

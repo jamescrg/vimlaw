@@ -178,5 +178,8 @@ def client_with_matter(client, matter):
     """Client with matter selected in session."""
     session = client.session
     session["documents_selected_matter"] = matter.id
+    session["last_viewed_matter"] = matter.id
     session.save()
+    # Add matter attribute for easy access to matter_id in tests
+    client.matter = matter
     return client

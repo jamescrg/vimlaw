@@ -4,16 +4,17 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.case.documents.get_document_data import get_selected_matter
 from apps.case.models import Document, Highlight, Note
+from apps.case.views import get_matter_from_url, get_session_key
 
 from .filters import NotesFilter
 from .forms import NoteForm
 
 
-def get_notes_data(request, matter):
+def get_notes_data(request, matter, matter_id):
     """Get notes data with filters applied from session."""
-    filter_data = request.session.get("notes_filter", {})
+    filter_session_key = get_session_key("notes_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     notes = []
     if matter:
@@ -61,42 +62,39 @@ def get_notes_data(request, matter):
 
 
 @login_required
-def notes_index(request):
+def notes_index(request, matter_id):
     """Main notes view."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "notes",
         "matter": matter,
         "matters": matters,
-    } | get_notes_data(request, matter)
+    } | get_notes_data(request, matter, matter_id)
 
     return render(request, "case/notes/main.html", context)
 
 
 @login_required
-def notes_list(request):
+def notes_list(request, matter_id):
     """HTMX partial for notes list."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
         "app": "documents",
         "subapp": "notes",
         "matter": matter,
         "matters": matters,
-    } | get_notes_data(request, matter)
+    } | get_notes_data(request, matter, matter_id)
 
     return render(request, "case/notes/list.html", context)
 
 
 @login_required
-def notes_add(request):
+def notes_add(request, matter_id):
     """Add a new note."""
-    matter, matters = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse("No matter selected", status=400)
+    matter, matters = get_matter_from_url(request, matter_id)
 
     if request.method == "POST":
         form = NoteForm(request.POST, use_required_attribute=False)
@@ -141,8 +139,8 @@ def note_view(request, note_id):
 @login_required
 def note_edit(request, note_id):
     """Edit note metadata (title, importance)."""
-    matter, matters = get_selected_matter(request)
     note = get_object_or_404(Note, pk=note_id)
+    matter = note.matter
 
     if request.method == "POST":
         form = NoteForm(request.POST, instance=note, use_required_attribute=False)
@@ -217,9 +215,10 @@ def note_title(request, note_id):
 
 
 @login_required
-def notes_filter(request):
+def notes_filter(request, matter_id):
     """Filter modal for notes."""
-    matter, matters = get_selected_matter(request)
+    matter, matters = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("notes_filter", matter_id)
 
     if request.method == "POST":
         filter_data = {
@@ -227,21 +226,24 @@ def notes_filter(request):
             for key, value in request.POST.items()
             if key != "csrfmiddlewaretoken"
         }
-        request.session["notes_filter"] = filter_data
+        request.session[filter_session_key] = filter_data
         request.session.modified = True
         return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
 
-    filter_data = request.session.get("notes_filter", {})
+    filter_data = request.session.get(filter_session_key, {})
     queryset = Note.objects.filter(matter=matter) if matter else Note.objects.none()
     filter_obj = NotesFilter(filter_data, queryset=queryset, matter=matter)
 
-    return render(request, "case/notes/filter.html", {"filter": filter_obj})
+    return render(
+        request, "case/notes/filter.html", {"filter": filter_obj, "matter": matter}
+    )
 
 
 @login_required
-def notes_sort(request, order):
+def notes_sort(request, matter_id, order):
     """Sort notes by field."""
-    filter_data = request.session.get("notes_filter", {})
+    filter_session_key = get_session_key("notes_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     current_order = filter_data.get("order_by", "")
     if current_order == order:
@@ -250,17 +252,18 @@ def notes_sort(request, order):
         new_order = order
 
     filter_data["order_by"] = new_order
-    request.session["notes_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
     request.session.modified = True
 
-    return redirect("case:notes-list")
+    return redirect("case:notes-list", matter_id=matter_id)
 
 
 @login_required
-def notes_filter_keyword(request):
+def notes_filter_keyword(request, matter_id):
     """Filter notes by keyword."""
-    matter, _ = get_selected_matter(request)
-    filter_data = request.session.get("notes_filter", {})
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("notes_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     keyword = request.GET.get("keyword", "").strip()
 
     if keyword:
@@ -268,38 +271,40 @@ def notes_filter_keyword(request):
     else:
         filter_data.pop("keyword", None)
 
-    request.session["notes_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    context = get_notes_data(request, matter)
+    context = {"matter": matter} | get_notes_data(request, matter, matter_id)
     return render(request, "case/notes/table.html", context)
 
 
 @login_required
-def notes_filter_importance(request, importance_value):
+def notes_filter_importance(request, matter_id, importance_value):
     """Filter notes by importance."""
-    filter_data = request.session.get("notes_filter", {})
+    filter_session_key = get_session_key("notes_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     filter_data["importance"] = "" if importance_value == 0 else importance_value
-    request.session["notes_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    return redirect("case:notes-list")
+    return redirect("case:notes-list", matter_id=matter_id)
 
 
 @login_required
-def notes_filter_category(request, category):
+def notes_filter_category(request, matter_id, category):
     """Filter notes by category."""
-    filter_data = request.session.get("notes_filter", {})
+    filter_session_key = get_session_key("notes_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     if category:
         filter_data["category"] = category
     else:
         filter_data.pop("category", None)
 
-    request.session["notes_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    return redirect("case:notes-list")
+    return redirect("case:notes-list", matter_id=matter_id)
 
 
 @login_required
-def notes_shortcuts(request):
+def notes_shortcuts(request, matter_id):
     """Show keyboard shortcuts modal."""
     return render(request, "case/notes/shortcuts-modal.html")
 
@@ -317,7 +322,7 @@ def note_category(request, note_id, value):
     note = get_object_or_404(Note, pk=note_id)
     note.category = value
     note.save(update_fields=["category"])
-    return redirect("case:notes-list")
+    return redirect("case:notes-list", matter_id=note.matter_id)
 
 
 @login_required
@@ -327,7 +332,7 @@ def note_importance(request, note_id, value):
     note = get_object_or_404(Note, pk=note_id)
     note.importance = value
     note.save(update_fields=["importance"])
-    return redirect("case:notes-list")
+    return redirect("case:notes-list", matter_id=note.matter_id)
 
 
 @login_required
@@ -335,8 +340,8 @@ def reference_search(request, note_id):
     """Search documents and highlights for note references."""
     from django.db.models import Q
 
-    matter, _ = get_selected_matter(request)
     note = get_object_or_404(Note, pk=note_id)
+    matter = note.matter
     query = request.GET.get("q", "").strip()
 
     documents = []

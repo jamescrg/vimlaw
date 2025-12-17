@@ -3,6 +3,6 @@
   {% load humanize %}
   <div id="facts"
        hx-trigger="factsChanged from:body"
-       hx-get="{% url 'case:facts-list' %}"
+       hx-get="{% url 'case:facts-list' matter.id %}"
        hx-target="this">{% include "case/facts/list.html" %}</div>
 {% endblock subcontent %}

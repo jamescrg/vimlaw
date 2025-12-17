@@ -2,7 +2,7 @@
 {% block subcontent %}
   <div class="ai-conversation-view">
     <div class="ai-conversation-header">
-      <a href="{% url 'case:ai-index' %}" class="ai-back-link">
+      <a href="{% url 'case:ai-index' matter.id %}" class="ai-back-link">
         <i class="bi bi-arrow-left"></i>
         Back to conversations
       </a>

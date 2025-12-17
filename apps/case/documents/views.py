@@ -9,16 +9,16 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.case.models import Document, Label
-from apps.matters.models import Matter
+from apps.case.views import get_matter_from_url, get_session_key
 
 from .filters import FilesFilter
 from .forms import BulkFilesForm, FilesForm
-from .get_document_data import get_document_data, get_selected_matter
+from .get_document_data import get_document_data
 
 
 @login_required
-def index(request):
-    documents_data = get_document_data(request)
+def index(request, matter_id):
+    documents_data = get_document_data(request, matter_id)
 
     context = {
         "app": "documents",
@@ -29,8 +29,8 @@ def index(request):
 
 
 @login_required
-def documents_list(request):
-    documents_data = get_document_data(request)
+def documents_list(request, matter_id):
+    documents_data = get_document_data(request, matter_id)
 
     context = {
         "app": "documents",
@@ -41,8 +41,9 @@ def documents_list(request):
 
 
 @login_required
-def documents_filter(request):
-    matter, matters = get_selected_matter(request)
+def documents_filter(request, matter_id):
+    matter, matters = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("documents_filter", matter_id)
 
     if request.method == "POST":
         # Convert QueryDict to regular dict, excluding CSRF token
@@ -51,11 +52,11 @@ def documents_filter(request):
             for key, value in request.POST.items()
             if key != "csrfmiddlewaretoken"
         }
-        request.session["documents_filter"] = filter_data
+        request.session[filter_session_key] = filter_data
 
         return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
     else:
-        filter_data = request.session.get("documents_filter", {})
+        filter_data = request.session.get(filter_session_key, {})
 
         # Build queryset filtered by matter
         queryset = (
@@ -72,88 +73,88 @@ def documents_filter(request):
             matter=matter,
         )
 
-        return render(request, "case/documents/filter.html", {"filter": filter_obj})
+        return render(
+            request,
+            "case/documents/filter.html",
+            {"filter": filter_obj, "matter": matter},
+        )
 
 
 @login_required
-def documents_filter_matter(request, matter_id):
-    filter_data = request.session.get("documents_filter", {})
-    filter_data["matter"] = matter_id
-
-    request.session["documents_filter"] = filter_data
-
-    return redirect("case:documents-list")
-
-
-@login_required
-def documents_filter_category(request, category=None):
-    filter_data = request.session.get("documents_filter", {})
+def documents_filter_category(request, matter_id, category=None):
+    filter_session_key = get_session_key("documents_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     if category:
         filter_data["category"] = category
     else:
         filter_data.pop("category", None)
 
-    request.session["documents_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
     request.session.modified = True
 
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=matter_id)
 
 
 @login_required
-def documents_filter_proceeding(request, proceeding_id=None):
-    filter_data = request.session.get("documents_filter", {})
+def documents_filter_proceeding(request, matter_id, proceeding_id=None):
+    filter_session_key = get_session_key("documents_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     if proceeding_id:
         filter_data["proceeding"] = proceeding_id
     else:
         filter_data.pop("proceeding", None)
 
-    request.session["documents_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
     request.session.modified = True
 
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=matter_id)
 
 
 @login_required
-def documents_filter_keyword(request):
-    filter_data = request.session.get("documents_filter", {})
+def documents_filter_keyword(request, matter_id):
+    filter_session_key = get_session_key("documents_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     keyword = request.GET.get("keyword", "").strip()
     if keyword:
         filter_data["keyword"] = keyword
     else:
         filter_data.pop("keyword", None)
 
-    request.session["documents_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
     # Render just the table partial (for search input updates)
-    documents_data = get_document_data(request)
+    documents_data = get_document_data(request, matter_id)
     return render(request, "case/documents/table.html", documents_data)
 
 
 @login_required
-def documents_filter_label(request, label_id):
-    filter_data = request.session.get("documents_filter", {})
+def documents_filter_label(request, matter_id, label_id):
+    filter_session_key = get_session_key("documents_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     filter_data["label"] = label_id
 
-    request.session["documents_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=matter_id)
 
 
 @login_required
-def documents_filter_importance(request, importance_value):
+def documents_filter_importance(request, matter_id, importance_value):
     """Filter files by importance level."""
-    filter_data = request.session.get("documents_filter", {})
+    filter_session_key = get_session_key("documents_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
     # Set to empty string when 0 (All) is selected, otherwise use the value
     filter_data["importance"] = "" if importance_value == 0 else importance_value
 
-    request.session["documents_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=matter_id)
 
 
 @login_required
-def documents_sort(request, order):
-    filter_data = request.session.get("documents_filter", {})
+def documents_sort(request, matter_id, order):
+    filter_session_key = get_session_key("documents_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
 
     current_order = filter_data.get("order_by", "")
 
@@ -163,9 +164,9 @@ def documents_sort(request, order):
         new_order = order
 
     filter_data["order_by"] = new_order
-    request.session["documents_filter"] = filter_data
+    request.session[filter_session_key] = filter_data
 
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=matter_id)
 
 
 @login_required
@@ -202,7 +203,7 @@ def document_category(request, document_id, category):
     document = get_object_or_404(Document, id=document_id)
     document.category = category
     document.save()
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=document.matter_id)
 
 
 @login_required
@@ -219,7 +220,7 @@ def document_proceeding(request, document_id, proceeding_id):
         document.proceeding = proceeding
 
     document.save()
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=document.matter_id)
 
 
 @login_required
@@ -228,16 +229,12 @@ def document_importance(request, document_id, importance):
     document = get_object_or_404(Document, id=document_id)
     document.importance = importance
     document.save()
-    return redirect("case:documents-list")
+    return redirect("case:documents-list", matter_id=document.matter_id)
 
 
 @login_required
-def documents_add(request, matter_id=None):
-    # Get selected matter from session
-    matter, matters = get_selected_matter(request)
-
-    if not matter:
-        return HttpResponse("No matter selected", status=400)
+def documents_add(request, matter_id):
+    matter, matters = get_matter_from_url(request, matter_id)
 
     if request.method == "POST":
         form = FilesForm(request.POST, matter=matter, use_required_attribute=False)
@@ -286,7 +283,8 @@ def documents_add(request, matter_id=None):
 
     else:
         # Get selected category and proceeding from filter to pre-populate form
-        filter_data = request.session.get("documents_filter", {})
+        filter_session_key = get_session_key("documents_filter", matter_id)
+        filter_data = request.session.get(filter_session_key, {})
         selected_category = filter_data.get("category")
         selected_proceeding = filter_data.get("proceeding")
 
@@ -399,9 +397,10 @@ def documents_edit(request, document_id):
 
 
 @login_required
-def bulk_documents_update(request):
-    matter, matters = get_selected_matter(request)
-    selected_documents = request.session.get("selected_documents", [])
+def bulk_documents_update(request, matter_id):
+    matter, matters = get_matter_from_url(request, matter_id)
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
 
     if not selected_documents:
         return HttpResponse(status=400, content="No documents selected.")
@@ -423,7 +422,7 @@ def bulk_documents_update(request):
 
                 document.save()
 
-            request.session["selected_documents"] = []
+            request.session[selected_session_key] = []
 
             return HttpResponse(
                 status=204,
@@ -448,13 +447,16 @@ def bulk_documents_update(request):
 @login_required
 def documents_delete(request, document_id):
     try:
-        Document.objects.get(id=document_id).delete()
+        document = Document.objects.get(id=document_id)
+        matter_id = document.matter_id
+        document.delete()
 
-        selected_documents = request.session.get("selected_documents", [])
+        # Clean up from selected documents
+        selected_session_key = get_session_key("selected_documents", matter_id)
+        selected_documents = request.session.get(selected_session_key, [])
         if document_id in selected_documents:
             selected_documents.remove(document_id)
-
-            request.session["selected_documents"] = selected_documents
+            request.session[selected_session_key] = selected_documents
     except Document.DoesNotExist:
         return HttpResponse(status=404)
 
@@ -500,26 +502,14 @@ def serve_document(request, document_id):
 
 
 @login_required
-def get_proceedings_and_labels(request):
-    matter_id = request.GET.get("matter")
+def get_proceedings_and_labels(request, matter_id):
+    matter, matters = get_matter_from_url(request, matter_id)
 
-    proceedings = []
-    labels = []
-
-    if matter_id:
-        try:
-            matter = Matter.objects.get(id=matter_id)
-
-            proceedings = matter.proceeding_set.all().order_by("date_filed")
-            # Include global labels + matter-specific labels
-            labels = Label.objects.filter(Q(matter=None) | Q(matter=matter)).order_by(
-                "matter", "name"
-            )
-        except Matter.DoesNotExist:
-            pass
-    else:
-        # No matter selected - show only global labels
-        labels = Label.objects.filter(matter=None).order_by("name")
+    proceedings = matter.proceeding_set.all().order_by("date_filed")
+    # Include global labels + matter-specific labels
+    labels = Label.objects.filter(Q(matter=None) | Q(matter=matter)).order_by(
+        "matter", "name"
+    )
 
     proceedings_html = render(
         request,
@@ -547,21 +537,25 @@ def get_proceedings_and_labels(request):
 
 @login_required
 def toggle_document_select(request, document_id):
-    selected_documents = request.session.get("selected_documents", [])
+    document = get_object_or_404(Document, id=document_id)
+    matter_id = document.matter_id
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
 
     if document_id in selected_documents:
         selected_documents.remove(document_id)
     else:
         selected_documents.append(document_id)
 
-    request.session["selected_documents"] = selected_documents
+    request.session[selected_session_key] = selected_documents
 
     return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
 
 
 @login_required
-def clear_document_selection(request):
-    request.session["selected_documents"] = []
+def clear_document_selection(request, matter_id):
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    request.session[selected_session_key] = []
 
     return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
 
@@ -570,7 +564,9 @@ def clear_document_selection(request):
 def document_row(request, document_id):
     """Return a single file row (for HTMX polling of OCR status)."""
     document = get_object_or_404(Document, id=document_id)
-    selected_documents = request.session.get("selected_documents", [])
+    matter_id = document.matter_id
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
     matter = document.matter
     proceedings = matter.proceeding_set.all().order_by("forum", "case_number")
 
@@ -581,6 +577,7 @@ def document_row(request, document_id):
             "document": document,
             "selected_documents": selected_documents,
             "proceedings": proceedings,
+            "matter": matter,
         },
     )
 
@@ -589,12 +586,14 @@ def document_row(request, document_id):
 def documents_edit_name(request, document_id):
     """Edit file name inline."""
     document = get_object_or_404(Document, id=document_id)
+    matter_id = document.matter_id
+    selected_session_key = get_session_key("selected_documents", matter_id)
 
     if request.method == "POST":
         document.name = request.POST.get("name", document.name)
         document.save()
 
-        selected_documents = request.session.get("selected_documents", [])
+        selected_documents = request.session.get(selected_session_key, [])
         proceedings = document.matter.proceeding_set.all().order_by(
             "forum", "case_number"
         )
@@ -606,6 +605,7 @@ def documents_edit_name(request, document_id):
                 "document": document,
                 "selected_documents": selected_documents,
                 "proceedings": proceedings,
+                "matter": document.matter,
             },
         )
 
@@ -670,6 +670,7 @@ def document_viewer(request, document_id):
 
     context = {
         "document": document,
+        "matter": document.matter,
         "highlights": highlights,
         "highlights_json": highlights_json,
         "initial_page": initial_page,

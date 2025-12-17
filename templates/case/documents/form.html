@@ -15,12 +15,12 @@
       </div>
     </div>
     <div class="modal-body">
-      <form action="{% if edit %}{% url 'case:documents-edit' document.id %}{% else %}{% url 'case:documents-add' %}{% endif %}"
+      <form action="{% if edit %}{% url 'case:documents-edit' document.id %}{% else %}{% url 'case:documents-add' matter.id %}{% endif %}"
             method="post"
             role="form"
             class="form-compact col2"
             enctype="multipart/form-data"
-            hx-post="{% if edit %}{% url 'case:documents-edit' document.id %}{% else %}{% url 'case:documents-add' %}{% endif %}"
+            hx-post="{% if edit %}{% url 'case:documents-edit' document.id %}{% else %}{% url 'case:documents-add' matter.id %}{% endif %}"
             hx-target="#htmx-modal-container"
             id="file-form">
         {% csrf_token %}
