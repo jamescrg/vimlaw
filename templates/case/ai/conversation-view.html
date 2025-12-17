@@ -20,7 +20,7 @@
     <div class="ai-chat-wrapper">
       <div id="messageContainer" class="ai-messages">{% include "case/ai/messages.html" %}</div>
       <div class="ai-input-container">
-        <form hx-post="{% url 'case:ai-send' %}"
+        <form hx-post="{% url 'case:ai-send' matter.id %}"
               hx-target="#messageContainer"
               hx-swap="innerHTML scroll:#messageContainer:bottom"
               hx-indicator="#ai-loading"
