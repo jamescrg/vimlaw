@@ -1184,6 +1184,30 @@ function setupKeyboardShortcuts() {
       return;
     }
 
+    // F-key shortcuts for headings: F2, F3, F4
+    if (e.key === "F2") {
+      e.preventDefault();
+      editor.chain().focus().toggleHeading({ level: 2 }).run();
+      return;
+    }
+    if (e.key === "F3") {
+      e.preventDefault();
+      editor.chain().focus().toggleHeading({ level: 3 }).run();
+      return;
+    }
+    if (e.key === "F4") {
+      e.preventDefault();
+      editor.chain().focus().toggleHeading({ level: 4 }).run();
+      return;
+    }
+
+    // F7 for bullet list
+    if (e.key === "F7") {
+      e.preventDefault();
+      editor.chain().focus().toggleBulletList().run();
+      return;
+    }
+
     // Bullet list: Ctrl+7
     if (mod && !e.shiftKey && e.key === "7") {
       e.preventDefault();
