@@ -54,7 +54,8 @@
       "Bash(DJANGO_SETTINGS_MODULE=config.settings python3:*)",
       "Bash(timeout 5 python manage.py runserver:*)",
       "WebFetch(domain:tiptap.dev)",
-      "WebFetch(domain:icons.getbootstrap.com)"
+      "WebFetch(domain:icons.getbootstrap.com)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

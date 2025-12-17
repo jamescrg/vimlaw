@@ -251,12 +251,8 @@
       }
 
       .modal-header a {
-        color: var(--stone-500);
+        color: var(--green-800);
         text-decoration: none;
-      }
-
-      .modal-header a:hover {
-        color: var(--stone-700);
       }
 
       .modal-footer {
@@ -401,8 +397,12 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Create Highlight</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <h1 class="modal-title">Create Highlight</h1>
+            <div>
+              <a href="#" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg"></i>
+              </a>
+            </div>
           </div>
           <div class="modal-body">
             <form id="highlight-form" onsubmit="return false">
@@ -653,7 +653,7 @@
       const formData = new FormData(form);
 
       try {
-        const response = await fetch(`/documents/${config.documentId}/highlights/add/`, {
+        const response = await fetch(`/case/documents/${config.documentId}/highlights/add/`, {
           method: 'POST',
           body: formData,
           headers: {
