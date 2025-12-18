@@ -6,7 +6,7 @@ html {
 body {
   background-color: var(--stone-300);
   background-image:
-    linear-gradient(to bottom, var(--stone-300) 0%, var(--stone-300) 3rem, transparent 12rem),
+    linear-gradient(to bottom, var(--stone-300) 0%, var(--stone-300) 4rem, transparent 12rem),
     radial-gradient(ellipse at 0% 0%, oklch(0.85 0.16 131 / 0.35) 0%, transparent 50%),
     radial-gradient(ellipse at 100% 0%, oklch(0.85 0.14 293.5 / 0.3) 0%, transparent 50%),
     radial-gradient(ellipse at 100% 100%, oklch(0.85 0.16 131 / 0.25) 0%, transparent 50%),
