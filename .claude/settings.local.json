@@ -57,7 +57,8 @@
       "WebFetch(domain:icons.getbootstrap.com)",
       "Bash(git commit:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git show:*)"
     ],
     "deny": []
   }
