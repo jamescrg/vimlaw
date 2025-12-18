@@ -1827,8 +1827,10 @@ function setupHtmxHandlers() {
       searchMatches = [];
       currentMatchIndex = -1;
 
-      // Reinitialize editor with new NOTE_DATA
-      initEditor();
+      // Delay to ensure inline script has executed and NOTE_DATA is updated
+      setTimeout(function() {
+        initEditor();
+      }, 50);
     }
   });
 
