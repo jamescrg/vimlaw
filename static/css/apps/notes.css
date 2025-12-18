@@ -108,8 +108,9 @@ body:has(.note-page.standalone) {
 
 .note-sidebar .sidebar-notes-list {
   list-style: none;
-  margin: 0;
+  margin: 0 0.5rem;
   padding: 0;
+  padding-top: 0.5rem;
   overflow-y: auto;
   flex: 1;
 }
@@ -123,6 +124,7 @@ body:has(.note-page.standalone) {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: background 0.15s ease;
+  border-radius: var(--radius-sm);
 }
 
 .note-sidebar .sidebar-notes-list li:hover {
@@ -409,6 +411,7 @@ body:has(.note-page.standalone) {
   line-height: 1.3;
   color: var(--color-primary);
   margin: 0;
+  margin-left: -1rem;
   cursor: text;
 }
 
