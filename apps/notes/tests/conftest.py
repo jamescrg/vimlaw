@@ -62,7 +62,7 @@ def matter(user, contact, practice_area):
 @pytest.fixture
 def note(user, matter):
     return Note.objects.create(
-        user=user,
+        author=user,
         matter=matter,
         title="Test Note",
         category="note",

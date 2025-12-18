@@ -818,8 +818,15 @@ body:has(.note-page.standalone) {
   width: 7rem;
 }
 
-.notes-list .date {
-  width: 11rem;
+.notes-list .topic {
+  width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-list .created {
+  width: 8rem;
 }
 
 .notes-list .viewed {

@@ -45,6 +45,34 @@
           </li>
         {% endfor %}
       </ul>
+      {% if topics %}
+        <button type="button"
+                id="notes-topic-filter"
+                class="select-btn filter-dropdown-button {% if selected_topic %}toggle-active{% endif %}"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          {{ selected_topic|default:"All Topics" }}
+          <small>
+            <i class="bi bi-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item {% if not selected_topic %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'case:notes-filter-topic-clear' matter.id %}"
+               hx-target="#notes">All Topics</a>
+          </li>
+          {% for topic in topics %}
+            <li>
+              <a class="dropdown-item {% if selected_topic == topic %}active{% endif %}"
+                 href="#"
+                 hx-get="{% url 'case:notes-filter-topic' matter.id topic %}"
+                 hx-target="#notes">{{ topic }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
       <button type="button"
               id="notes-importance-filter"
               class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"

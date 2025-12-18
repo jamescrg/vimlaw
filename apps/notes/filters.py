@@ -1,21 +1,15 @@
 import django_filters
 from django.db.models import Q
 
-from apps.case.models import Label
-from apps.notes.models import Note
 from config.helpers import MultipleOrderingFilter
+
+from .models import Note
 
 IMPORTANCE_CHOICES = tuple((i, f"Importance {i}") for i in range(1, 11))
 
 
 class NotesFilter(django_filters.FilterSet):
     keyword = django_filters.CharFilter(method="filter_keyword", label="Keyword")
-    label = django_filters.ModelChoiceFilter(
-        method="filter_label",
-        queryset=Label.objects.none(),
-        empty_label="All Labels",
-        label="Label",
-    )
     category = django_filters.ChoiceFilter(
         field_name="category",
         choices=Note.CATEGORY_CHOICES,
@@ -52,23 +46,11 @@ class NotesFilter(django_filters.FilterSet):
 
     class Meta:
         model = Note
-        fields = ["keyword", "label", "category", "importance", "order_by"]
-
-    def __init__(self, *args, matter=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if matter:
-            self.filters["label"].queryset = Label.objects.filter(
-                Q(matter=matter) | Q(matter__isnull=True)
-            ).order_by("name")
+        fields = ["keyword", "category", "importance", "order_by"]
 
     def filter_keyword(self, queryset, name, value):
         if value:
             return queryset.filter(
                 Q(title__icontains=value) | Q(content__icontains=value)
             )
-        return queryset
-
-    def filter_label(self, queryset, name, value):
-        if value:
-            return queryset.filter(labels=value)
         return queryset

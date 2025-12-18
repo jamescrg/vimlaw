@@ -1,0 +1,115 @@
+{% extends "base-minimal.html" %}
+{% load static %}
+{% load cache_buster %}
+{% block title %}
+  {{ note.title }} - LawAdmin
+{% endblock title %}
+{% block favicon %}
+  {% if env == 'dev' %}
+    <link rel="icon"
+          type="image/svg+xml"
+          href="{% static 'images/notes-favicon-dev.svg' %}" />
+  {% else %}
+    <link rel="icon"
+          type="image/svg+xml"
+          href="{% static 'images/notes-favicon.svg' %}" />
+  {% endif %}
+{% endblock favicon %}
+{% block content %}
+  {% csrf_token %}
+  <link rel="stylesheet" href="{% static_v 'css/apps/notes.css' %}" />
+  <div class="note-editor-layout">
+    <!-- Sidebar -->
+    <aside class="note-sidebar">
+      <div id="sidebar-list-container">{% include "notes/sidebar-list.html" %}</div>
+    </aside>
+    <!-- Main Editor Area -->
+    <main class="note-main">
+      <div class="note-toolbar-wrapper">
+        <div class="note-toolbar">
+          <button class="panel-collapse-btn"
+                  type="button"
+                  onclick="togglePanel('note-sidebar')"
+                  title="Toggle notes panel">
+            <i class="bi bi-layout-sidebar"></i>
+          </button>
+          <div class="toolbar-left">
+            <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
+              <i class="bi bi-cloud-check"></i>
+            </a>
+          </div>
+          <div class="toolbar-center"></div>
+          <div class="toolbar-right">
+            <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
+              <i class="bi bi-search"></i>
+            </a>
+            <a href="#"
+               hx-get="{% if note.matter %}{% url 'case:note-import-modal' note.id %}{% else %}{% url 'notes:note-import-modal' note.id %}{% endif %}"
+               hx-target="#htmx-modal-container"
+               data-bs-toggle="modal"
+               data-bs-target="#htmx-modal-container"
+               title="Import from markdown">
+              <i class="bi bi-box-arrow-in-up"></i>
+            </a>
+            <a href="#" id="export-btn" title="Export to markdown">
+              <i class="bi bi-box-arrow-down"></i>
+            </a>
+            <a href="#"
+               hx-get="{% if note.matter %}{% url 'case:notes-shortcuts' note.matter.id %}{% else %}{% url 'notes:notes-shortcuts' %}{% endif %}"
+               hx-target="#htmx-modal-container"
+               data-bs-toggle="modal"
+               data-bs-target="#htmx-modal-container"
+               title="Keyboard shortcuts">
+              <i class="bi bi-keyboard"></i>
+            </a>
+          </div>
+          <button class="panel-collapse-btn"
+                  type="button"
+                  onclick="togglePanel('note-outline')"
+                  title="Toggle outline panel">
+            <i class="bi bi-layout-sidebar-reverse"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Search and Replace Bar -->
+      <div id="search-replace-bar" class="search-replace-bar">
+        <input type="text" id="search-input" placeholder="Find...">
+        <input type="text" id="replace-input" placeholder="Replace with...">
+        <span id="search-count"></span>
+        <button type="button" id="search-prev" title="Previous match">
+          <i class="bi bi-chevron-up"></i>
+        </button>
+        <button type="button" id="search-next" title="Next match">
+          <i class="bi bi-chevron-down"></i>
+        </button>
+        <button type="button" id="replace-one">Replace</button>
+        <button type="button" id="replace-all">Replace All</button>
+        <button type="button" id="search-close" title="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="note-page standalone">
+        <div id="note-editor-container">{% include "notes/editor-content.html" %}</div>
+      </div>
+      <!-- Highlight reference dropdown -->
+      <div id="highlight-ref-dropdown" class="dropdown-menu">
+        <li>
+          <a class="dropdown-item" href="#" id="highlight-ref-detail"><i class="bi bi-eye"></i> View Detail</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             id="highlight-ref-source"
+             target="_blank"><i class="bi bi-file-earmark"></i> View Source</a>
+        </li>
+      </div>
+    </main>
+    <!-- Right Panel - Outline -->
+    <aside class="note-outline">
+      <div class="outline-header">This Note</div>
+      <ul class="outline-list" id="outline-list">
+      </ul>
+    </aside>
+  </div>
+  <script type="module" src="{% static_v 'js/notes-editor.js' %}"></script>
+{% endblock content %}

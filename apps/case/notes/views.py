@@ -47,6 +47,21 @@ def get_notes_data(request, matter, matter_id):
         category_dict = dict(Note.CATEGORY_CHOICES)
         selected_category = category_dict.get(category_key, "")
 
+    # Get selected topic
+    selected_topic = filter_data.get("topic", "")
+
+    # Get unique topics for dropdown
+    topics = []
+    if matter:
+        topics = (
+            Note.objects.filter(matter=matter)
+            .exclude(topic__isnull=True)
+            .exclude(topic="")
+            .values_list("topic", flat=True)
+            .distinct()
+            .order_by("topic")
+        )
+
     return {
         "notes": notes,
         "current_order": current_order,
@@ -59,6 +74,8 @@ def get_notes_data(request, matter, matter_id):
         "category_choices": Note.CATEGORY_CHOICES,
         "selected_category": selected_category,
         "selected_category_key": category_key,
+        "topics": topics,
+        "selected_topic": selected_topic,
     }
 
 
@@ -102,7 +119,7 @@ def notes_add(request, matter_id):
         form = NoteForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             note = form.save(commit=False)
-            note.user = request.user
+            note.author = request.user
             note.matter = matter
             note.save()
 
@@ -160,7 +177,7 @@ def note_view(request, note_id):
         "sidebar_sort_options": SIDEBAR_SORT_OPTIONS,
         "current_sort": sort_order,
     }
-    return render(request, "case/notes/editor.html", context)
+    return render(request, "notes/editor.html", context)
 
 
 @login_required
@@ -176,7 +193,7 @@ def note_content_partial(request, note_id):
         "note": note,
         "matter": note.matter,
     }
-    return render(request, "case/notes/editor-content.html", context)
+    return render(request, "notes/editor-content.html", context)
 
 
 @login_required
@@ -199,11 +216,12 @@ def sidebar_sort(request, note_id, sort_key):
 
     context = {
         "note": note,
+        "matter": matter,
         "notes": notes,
         "sidebar_sort_options": SIDEBAR_SORT_OPTIONS,
         "current_sort": sort_key,
     }
-    return render(request, "case/notes/sidebar-list.html", context)
+    return render(request, "notes/sidebar-list.html", context)
 
 
 @login_required
@@ -374,15 +392,39 @@ def notes_filter_category(request, matter_id, category):
 
 
 @login_required
+def notes_filter_topic(request, matter_id, topic):
+    """Filter notes by topic."""
+    filter_session_key = get_session_key("notes_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+    filter_data["topic"] = topic
+    request.session[filter_session_key] = filter_data
+    request.session.modified = True
+
+    return redirect("case:notes-list", matter_id=matter_id)
+
+
+@login_required
+def notes_filter_topic_clear(request, matter_id):
+    """Clear topic filter for notes."""
+    filter_session_key = get_session_key("notes_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+    filter_data.pop("topic", None)
+    request.session[filter_session_key] = filter_data
+    request.session.modified = True
+
+    return redirect("case:notes-list", matter_id=matter_id)
+
+
+@login_required
 def notes_shortcuts(request, matter_id):
     """Show keyboard shortcuts modal."""
-    return render(request, "case/notes/shortcuts-modal.html")
+    return render(request, "notes/shortcuts-modal.html")
 
 
 @login_required
 def note_import_modal(request, note_id):
     """Show import markdown modal."""
-    return render(request, "case/notes/import-modal.html")
+    return render(request, "notes/import-modal.html")
 
 
 @login_required
@@ -432,7 +474,7 @@ def reference_search(request, note_id):
         "highlights": highlights,
         "query": query,
     }
-    return render(request, "case/notes/reference-results.html", context)
+    return render(request, "notes/reference-results.html", context)
 
 
 @login_required

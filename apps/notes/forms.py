@@ -1,7 +1,8 @@
 from django import forms
 
-from apps.notes.models import Note
 from config.settings import CustomFormRendererCompact
+
+from .models import Note
 
 
 class NoteForm(forms.ModelForm):
@@ -15,7 +16,3 @@ class NoteForm(forms.ModelForm):
             "category": forms.Select(),
             "topic": forms.TextInput(attrs={"class": "span2"}),
         }
-
-    def __init__(self, *args, **kwargs):
-        kwargs.pop("matter", None)
-        super().__init__(*args, **kwargs)

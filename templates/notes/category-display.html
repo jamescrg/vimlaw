@@ -1,0 +1,16 @@
+<div class="dropdown">
+  <button class="button-link"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">{{ note.get_category_display }}</button>
+  <ul class="dropdown-menu">
+    {% for key, label in category_choices %}
+      <li>
+        <a class="dropdown-item {% if note.category == key %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'notes:note-category' note.id key %}"
+           hx-target="#notes">{{ label }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

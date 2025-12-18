@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.utils import timezone
 
 from apps.matters.models import Matter
 
@@ -16,19 +15,22 @@ class Note(models.Model):
         ("interview", "Interview"),
         ("issue", "Issue"),
         ("note", "Note"),
+        ("research", "Research"),
     ]
 
-    user = models.ForeignKey(
+    author = models.ForeignKey(
         "accounts.CustomUser",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="notes",
+        related_name="authored_notes",
     )
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, related_name="notes")
+    matter = models.ForeignKey(
+        Matter, on_delete=models.CASCADE, related_name="notes", null=True, blank=True
+    )
     title = models.CharField(max_length=255)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="note")
-    date = models.DateField(default=timezone.localdate)
+    topic = models.CharField(max_length=255, blank=True, null=True)
     content = models.TextField(blank=True, default="")  # Markdown content
 
     # Source references (tracked separately from inline [[doc:id]] syntax)

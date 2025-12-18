@@ -1,0 +1,31 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">{{ action }} Note</h1>
+      <div>
+        <a href="#" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="note-form"
+            hx-post="{% if note %}{% url 'notes:edit' note.id %}{% else %}{% url 'notes:add' %}{% endif %}"
+            hx-target="#htmx-modal-container"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="note-form" class="submit">Submit</button>
+      {% if note %}
+        <a hx-confirm="Are you sure you want to delete this note?"
+           href="#"
+           hx-post="{% url 'notes:delete' note.id %}"
+           hx-target="#htmx-modal-container"
+           class="delete-link">Delete Note</a>
+      {% endif %}
+    </div>
+  </div>
+</div>

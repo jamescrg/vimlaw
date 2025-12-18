@@ -28,6 +28,8 @@ urlpatterns = [
     path("", include("apps.contacts.urls")),
     # Case App
     path("", include("apps.case.urls")),
+    # Notes App
+    path("", include("apps.notes.urls")),
     # Activity App
     path("", include("apps.activity.urls")),
     # Trust App

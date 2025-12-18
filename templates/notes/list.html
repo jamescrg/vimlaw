@@ -1,0 +1,145 @@
+<div class="section">
+  <div class="toolbar notes-toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'notes:add' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'notes:filter' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="bi bi-filter"></i>Filter
+        </button>
+        <button type="button"
+                id="notes-category-filter"
+                class="select-btn filter-dropdown-button {% if selected_category %}toggle-active{% endif %}"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          {{ selected_category|default:"All Categories" }}
+          <small>
+            <i class="bi bi-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item {% if not selected_category_key %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'notes:filter-category-clear' %}"
+               hx-target="#notes">All Categories</a>
+          </li>
+          {% for key, label in category_choices %}
+            <li>
+              <a class="dropdown-item {% if selected_category_key == key %}active{% endif %}"
+                 href="#"
+                 hx-get="{% url 'notes:filter-category' key %}"
+                 hx-target="#notes">{{ label }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if topics %}
+          <button type="button"
+                  id="notes-topic-filter"
+                  class="select-btn filter-dropdown-button {% if selected_topic %}toggle-active{% endif %}"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+            {{ selected_topic|default:"All Topics" }}
+            <small>
+              <i class="bi bi-chevron-down"></i>
+            </small>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item {% if not selected_topic %}active{% endif %}"
+                 href="#"
+                 hx-get="{% url 'notes:filter-topic-clear' %}"
+                 hx-target="#notes">All Topics</a>
+            </li>
+            {% for topic in topics %}
+              <li>
+                <a class="dropdown-item {% if selected_topic == topic %}active{% endif %}"
+                   href="#"
+                   hx-get="{% url 'notes:filter-topic' topic %}"
+                   hx-target="#notes">{{ topic }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <button type="button"
+                id="notes-importance-filter"
+                class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          <span>
+            <i class="bi bi-flag with-text"></i>
+            {% if importance_value %}
+              {% if importance_value == 1 %}
+                1 only
+              {% else %}
+                {{ importance_value }} and above
+              {% endif %}
+            {% else %}
+              Importance
+            {% endif %}
+          </span>
+          <small>
+            <i class="bi bi-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu">
+          {% for importance in importances %}
+            {% if importance != 10 %}
+              <li>
+                <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
+                   href="#"
+                   hx-get="{% url 'notes:filter-importance' importance %}"
+                   hx-target="#notes">
+                  <i class="bi bi-flag"></i>
+                  {% if importance == 1 %}
+                    1 only
+                  {% else %}
+                    {{ importance }} and above
+                  {% endif %}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+          <li>
+            <a class="dropdown-item {% if not importance_value %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'notes:filter-importance' 0 %}"
+               hx-target="#notes">
+              <i class="bi bi-flag"></i> All Levels
+            </a>
+          </li>
+        </ul>
+        <input type="text"
+               id="notes-keyword-input"
+               name="keyword"
+               placeholder="Keyword Search"
+               value="{{ keyword }}"
+               class="filter-input keyword-input"
+               hx-get="{% url 'notes:filter-keyword' %}"
+               hx-target="#notes-table"
+               hx-trigger="keyup changed delay:500ms"
+               hx-include="this">
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <span class="app-badge app-badge-lg">Count: {{ number_notes }}</span>
+    </div>
+  </div>
+  <div id="notes-table">{% include "notes/table.html" %}</div>
+  <div class="flex-start-space">
+    <div>{% include "pagination.html" %}</div>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<div class="note-canvas">
+  <div class="note-header">
+    <h1 id="note-title" class="note-title" data-note-id="{{ note.id }}">{{ note.title }}</h1>
+  </div>
+  <div id="note-editor"></div>
+</div>
+<!-- Floating Reference Picker -->
+<div class="sources-picker" id="reference-picker">
+  <input type="search"
+         id="reference-search"
+         name="q"
+         placeholder="Search sources..."
+         autocomplete="off">
+  <div id="reference-results">
+    <div class="sources-empty-state">
+      <i class="bi bi-search"></i>
+      <p>Search for highlights and documents to insert</p>
+    </div>
+  </div>
+</div>
+<script>
+  window.NOTE_DATA = {
+    id: {{ note.id }},
+    title: "{{ note.title|escapejs }}",
+    content: "{{ note.content|escapejs }}",
+    autosaveUrl: "{% if note.matter %}{% url 'case:note-autosave' note.id %}{% else %}{% url 'notes:note-autosave' note.id %}{% endif %}",
+    titleUrl: "{% if note.matter %}{% url 'case:note-title' note.id %}{% else %}{% url 'notes:note-title' note.id %}{% endif %}",
+    searchUrl: "{% if note.matter %}{% url 'case:note-reference-search' note.id %}{% else %}{% url 'notes:note-reference-search' note.id %}{% endif %}",
+    citationsUrl: "{% if note.matter %}{% url 'case:note-citations' note.id %}{% else %}{% url 'notes:note-citations' note.id %}{% endif %}",
+  };
+</script>

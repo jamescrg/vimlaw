@@ -2,10 +2,18 @@
   <table id="notes-list" class="table notes-list">
     <tr>
       <th class="category">Category</th>
+      <th class="topic">
+        Topic
+        <button class="btn-sort {% if 'topic' in current_order %}active{% endif %}"
+                hx-get="{% url 'notes:order-by' 'topic' %}"
+                hx-target="#notes">
+          <i class="bi bi-chevron-expand"></i>
+        </button>
+      </th>
       <th class="title">
         Title
         <button class="btn-sort {% if 'title' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:notes-sort' matter.id 'title' %}"
+                hx-get="{% url 'notes:order-by' 'title' %}"
                 hx-target="#notes">
           <i class="bi bi-chevron-expand"></i>
         </button>
@@ -14,7 +22,7 @@
       <th class="created">
         Created
         <button class="btn-sort {% if 'created_at' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:notes-sort' matter.id 'created_at' %}"
+                hx-get="{% url 'notes:order-by' 'created_at' %}"
                 hx-target="#notes">
           <i class="bi bi-chevron-expand"></i>
         </button>
@@ -22,14 +30,14 @@
       <th class="viewed">
         Viewed
         <button class="btn-sort {% if 'viewed_at' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:notes-sort' matter.id 'viewed_at' %}"
+                hx-get="{% url 'notes:order-by' 'viewed_at' %}"
                 hx-target="#notes">
           <i class="bi bi-chevron-expand"></i>
         </button>
       </th>
       <th class="importance">
         <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:notes-sort' matter.id 'importance' %}"
+                hx-get="{% url 'notes:order-by' 'importance' %}"
                 hx-target="#notes"
                 title="Sort by importance">
           <i class="bi bi-flag"></i>
@@ -37,10 +45,10 @@
       </th>
     </tr>
     {% for note in notes %}
-      {% include "case/notes/note-row.html" %}
+      {% include "notes/row.html" %}
     {% empty %}
       <tr>
-        <td colspan="6" class="empty-message">No notes found for this matter.</td>
+        <td colspan="7" class="empty-message">No notes found.</td>
       </tr>
     {% endfor %}
   </table>

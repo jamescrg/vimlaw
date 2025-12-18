@@ -1,0 +1,38 @@
+<div class="sidebar-header">
+  <span>
+    {% if note.matter %}
+      {{ note.matter.name }}
+    {% else %}
+      Notes
+    {% endif %}
+  </span>
+  <div class="dropdown">
+    <button class="sidebar-sort-btn"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            title="Sort notes">
+      <i class="bi bi-arrow-down-up"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      {% for key, label in sidebar_sort_options %}
+        <li>
+          <a class="dropdown-item {% if current_sort == key %}active{% endif %}"
+             href="#"
+             hx-get="{% if note.matter %}{% url 'case:note-sidebar-sort' note.id key %}{% else %}{% url 'notes:note-sidebar-sort' note.id key %}{% endif %}"
+             hx-target="#sidebar-list-container">{{ label }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<ul class="sidebar-notes-list">
+  {% for n in notes %}
+    <li class="{% if n.id == note.id %}active{% endif %}"
+        hx-get="{% if note.matter %}{% url 'case:note-content-partial' n.id %}{% else %}{% url 'notes:note-content-partial' n.id %}{% endif %}"
+        hx-target="#note-editor-container"
+        hx-swap="innerHTML"
+        hx-push-url="{% if note.matter %}{% url 'case:note-view' n.id %}{% else %}{% url 'notes:note-view' n.id %}{% endif %}"
+        data-note-id="{{ n.id }}">{{ n.title }}</li>
+  {% endfor %}
+</ul>

@@ -195,6 +195,17 @@ urlpatterns = [
         name="notes-filter-category-clear",
     ),
     path(
+        "case/<int:matter_id>/notes/filter/topic/<str:topic>/",
+        notes.notes_filter_topic,
+        name="notes-filter-topic",
+    ),
+    path(
+        "case/<int:matter_id>/notes/filter/topic/",
+        notes.notes_filter_topic,
+        {"topic": ""},
+        name="notes-filter-topic-clear",
+    ),
+    path(
         "case/<int:matter_id>/notes/sort/<str:order>/",
         notes.notes_sort,
         name="notes-sort",
