@@ -28,6 +28,7 @@
         bottom: 0;
         left: 0;
         right: 0;
+        background: #f5f5f4;
       }
 
       #viewer {
@@ -41,7 +42,7 @@
         right: 0;
         height: 44px;
         background: #e7e5e4;
-        border-bottom: 1px solid #a8a29e;
+        border-bottom: 1px solid #d6d3d1;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -51,20 +52,23 @@
       }
 
       #toolbar button {
-        background: #f0efed;
-        border: 1px solid #78716c;
+        background: #fafaf9;
+        border: 1px solid #a8a29e;
         color: #44403c;
         padding: 6px 12px;
         cursor: pointer;
-        border-radius: 8px;
-        font-weight: bold;
+        border-radius: 0.375rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
       }
 
+      #toolbar button i {
+        -webkit-text-stroke: 0.5px currentColor;
+      }
+
       #toolbar button:hover {
-        background: #d6d3d1;
+        background: #f5f5f4;
       }
 
       #toolbar #createHighlightBtn {
@@ -75,25 +79,27 @@
         background: #fef9c3;
       }
 
-      #toolbar #createHighlightBtn,
+      #toolbar #createHighlightBtn {
+        position: absolute;
+        right: 60px;
+        letter-spacing: 0.5px;
+        gap: 0.25rem;
+        padding: 6px 12px 6px 8px;
+      }
+
       #toolbar #downloadBtn {
         position: absolute;
         right: 10px;
       }
 
-      #toolbar #createHighlightBtn {
-        right: 110px;
-      }
-
       #pageNumber {
         width: 50px;
         text-align: center;
-        background: #e7e5e4;
-        border: 1px solid #78716c;
+        background: #fafaf9;
+        border: 1px solid #a8a29e;
         color: #57534e;
         padding: 6px;
-        border-radius: 8px;
-        font-weight: bold;
+        border-radius: 0.375rem;
       }
 
       #toolbar span {
@@ -101,12 +107,12 @@
       }
 
       #zoomSelect {
-        background: #e7e5e4;
-        border: 1px solid #78716c;
+        background: #fafaf9;
+        border: 1px solid #a8a29e;
         color: #57534e;
         padding: 6px;
-        border-radius: 8px;
-        font-weight: bold;
+        border-radius: 0.375rem;
+        letter-spacing: 0.5px;
       }
 
       .toolbarSeparator {
@@ -126,8 +132,8 @@
       #searchInput {
         width: 150px;
         padding: 6px 8px;
-        border: 1px solid #78716c;
-        border-radius: 8px;
+        border: 1px solid #a8a29e;
+        border-radius: 0.375rem;
         background: #fafaf9;
         color: #57534e;
         font-size: 14px;
@@ -188,7 +194,9 @@
         <i class="bi bi-chevron-right"></i>
       </button>
       <div class="toolbarSeparator"></div>
-      <button id="zoomOut" title="Zoom Out">−</button>
+      <button id="zoomOut" title="Zoom Out">
+        <i class="bi bi-zoom-out"></i>
+      </button>
       <select id="zoomSelect">
         <option value="page-width" selected>Fit Width</option>
         <option value="0.5">50%</option>
@@ -198,7 +206,9 @@
         <option value="1.5">150%</option>
         <option value="2">200%</option>
       </select>
-      <button id="zoomIn" title="Zoom In">+</button>
+      <button id="zoomIn" title="Zoom In">
+        <i class="bi bi-zoom-in"></i>
+      </button>
       <div class="toolbarSeparator"></div>
       <div class="searchBar">
         <input type="text"
@@ -213,8 +223,12 @@
         </button>
         <span id="searchResults"></span>
       </div>
-      <button id="createHighlightBtn" title="Create highlight from selected text">+ Highlight</button>
-      <button id="downloadBtn" title="Download document">Download</button>
+      <button id="createHighlightBtn" title="Create highlight from selected text">
+        <i class="bi bi-plus"></i> Highlight
+      </button>
+      <button id="downloadBtn" title="Download document">
+        <i class="bi bi-download"></i>
+      </button>
     </div>
     <div id="viewerContainer">
       <div id="viewer" class="pdfViewer"></div>
