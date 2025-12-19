@@ -16,7 +16,7 @@
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
   color: var(--link);
-  padding: 0.25rem 0.75rem;
+  padding: 0 0.75rem;
 }
 
 .pagination a:hover {
