@@ -15,25 +15,25 @@ def test_index(client):
 
 
 def test_history(client, transaction):
-    response = client.get("/trust/history/30days/")
+    response = client.get("/invoicing/trust/history/30days/")
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/history.html")
     assert "interval" in response.context
 
 
 def test_client(client, contact, transaction):
-    response = client.get(f"/trust/client/{contact.id}")
+    response = client.get(f"/invoicing/trust/client/{contact.id}")
     assert response.status_code == 301
 
 
 def test_add_get(client):
-    response = client.get("/trust/add")
+    response = client.get("/invoicing/trust/add")
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/form.html")
 
 
 def test_add_post(client, transaction_data):
-    response = client.post("/trust/add", transaction_data)
+    response = client.post("/invoicing/trust/add", transaction_data)
     assert response.status_code == 204
     found = Transaction.objects.filter(
         description=transaction_data["description"]
@@ -42,7 +42,7 @@ def test_add_post(client, transaction_data):
 
 
 def test_edit_get(client, transaction):
-    response = client.get(f"/trust/{transaction.id}/edit")
+    response = client.get(f"/invoicing/trust/{transaction.id}/edit")
     assert response.status_code == 200
     assertTemplateUsed(response, "trust/form.html")
 
@@ -57,14 +57,14 @@ def test_edit_post(client, transaction, contact):
         "entered": 0,
         "confirmed": 0,
     }
-    response = client.post(f"/trust/{transaction.id}/edit", data)
-    assert response.status_code == 200
+    response = client.post(f"/invoicing/trust/{transaction.id}/edit", data)
+    assert response.status_code == 204
     found = Transaction.objects.filter(description="Retainer").exists()
     assert found
 
 
 def test_delete(client, transaction):
-    response = client.get(f"/trust/{transaction.id}/delete")
+    response = client.get(f"/invoicing/trust/{transaction.id}/delete")
     assert response.status_code == 204
     found = Transaction.objects.filter(pk=transaction.id).exists()
     assert not found
@@ -74,5 +74,5 @@ def test_delete(client, transaction):
 # edge case tests - nonexistent records
 # -----------------------------------------------------
 def test_edit_nonexistent(client):
-    response = client.get("/trust/99999/edit")
+    response = client.get("/invoicing/trust/99999/edit")
     assert response.status_code == 404
