@@ -150,6 +150,7 @@
   flex-direction: row;
   flex-wrap: nowrap;
   flex-shrink: 0;
+  padding-left: var(--radius-md);
 }
 
 .nav-scroll-container li {

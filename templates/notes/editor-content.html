@@ -1,6 +1,10 @@
 <div class="note-canvas">
   <div class="note-header">
-    <h1 id="note-title" class="note-title" data-note-id="{{ note.id }}">{{ note.title }}</h1>
+    <input type="text"
+           id="note-title"
+           class="note-title-input"
+           data-note-id="{{ note.id }}"
+           value="{{ note.title }}">
   </div>
   <div id="note-editor"></div>
 </div>

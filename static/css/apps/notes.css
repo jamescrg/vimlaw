@@ -445,7 +445,9 @@ body:has(.note-page.standalone) {
   padding-bottom: 2rem;
 }
 
-.note-header .note-title {
+.note-header .note-title-input {
+  display: block;
+  width: 100%;
   font-size: 1.75rem;
   font-weight: 500;
   font-family: inherit;
@@ -453,22 +455,11 @@ body:has(.note-page.standalone) {
   color: var(--color-primary);
   margin: 0;
   margin-left: -1rem;
-  cursor: text;
-}
-
-.note-header .note-title-input {
-  font-size: 2rem;
-  font-weight: 600;
-  font-family: inherit;
-  line-height: 1.3;
-  color: var(--color-primary);
-  margin: 0;
-  flex: 1;
-  border: 1px solid var(--border-dark);
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
+  padding: 0;
+  border: none;
+  background: transparent;
   outline: none;
-  background: var(--background-lighter);
+  cursor: text;
 }
 
 .note-header .app-badge {

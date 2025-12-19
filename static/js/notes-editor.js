@@ -370,34 +370,42 @@ function refreshReferenceCitations() {
 }
 
 function setupTitleEdit() {
-  const titleEl = document.getElementById("note-title");
-  if (!titleEl) return;
+  const input = document.getElementById("note-title");
+  if (!input) return;
 
-  titleEl.addEventListener("click", function () {
-    startTitleEdit();
-  });
-}
-
-function startTitleEdit() {
-  const titleEl = document.getElementById("note-title");
-  if (!titleEl || titleEl.tagName === "INPUT") return;
-
-  const currentTitle = titleEl.textContent;
-  const noteId = titleEl.dataset.noteId;
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.value = currentTitle;
-  input.className = "note-title-input";
-  input.id = "note-title";
-  input.dataset.noteId = noteId;
-
-  titleEl.replaceWith(input);
-  input.focus();
-  input.select();
+  let originalTitle = input.value;
 
   input.addEventListener("blur", function () {
-    finishTitleEdit(input, currentTitle);
+    const newTitle = input.value.trim();
+    if (!newTitle) {
+      input.value = originalTitle;
+      return;
+    }
+    if (newTitle === originalTitle) return;
+
+    // Save the new title
+    const formData = new FormData();
+    formData.append("title", newTitle);
+
+    fetch(window.NOTE_DATA.titleUrl, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCSRFToken(),
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.saved) {
+          originalTitle = data.title;
+          input.value = data.title;
+        } else {
+          input.value = originalTitle;
+        }
+      })
+      .catch(() => {
+        input.value = originalTitle;
+      });
   });
 
   input.addEventListener("keydown", function (e) {
@@ -406,62 +414,9 @@ function startTitleEdit() {
       input.blur();
     } else if (e.key === "Escape") {
       e.preventDefault();
-      cancelTitleEdit(input, currentTitle);
+      input.value = originalTitle;
+      input.blur();
     }
-  });
-}
-
-function finishTitleEdit(input, originalTitle) {
-  const newTitle = input.value.trim();
-  const noteId = input.dataset.noteId;
-
-  if (!newTitle || newTitle === originalTitle) {
-    revertToHeading(input, originalTitle);
-    return;
-  }
-
-  // Save the new title
-  const formData = new FormData();
-  formData.append("title", newTitle);
-
-  fetch(window.NOTE_DATA.titleUrl, {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCSRFToken(),
-    },
-    body: formData,
-  })
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (data) {
-      if (data.saved) {
-        revertToHeading(input, data.title);
-      } else {
-        revertToHeading(input, originalTitle);
-      }
-    })
-    .catch(function () {
-      revertToHeading(input, originalTitle);
-    });
-}
-
-function cancelTitleEdit(input, originalTitle) {
-  revertToHeading(input, originalTitle);
-}
-
-function revertToHeading(input, title) {
-  const h1 = document.createElement("h1");
-  h1.id = "note-title";
-  h1.className = "note-title";
-  h1.dataset.noteId = input.dataset.noteId;
-  h1.textContent = title;
-
-  input.replaceWith(h1);
-
-  // Re-attach click listener
-  h1.addEventListener("click", function () {
-    startTitleEdit();
   });
 }
 
