@@ -36,6 +36,9 @@
 
   .section {
     margin-bottom: 0;
+  }
+
+  .section-body {
     padding-bottom: 0;
   }
 

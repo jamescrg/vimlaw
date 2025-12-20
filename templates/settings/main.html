@@ -1,36 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <nav class="navbar navbar-sub">
-      <ul>
-        <li {% if subapp == "profile" %}class="active"{% endif %}>
-          <a href="{% url 'settings:profile-index' %}">Profile</a>
-        </li>
-        <li {% if subapp == "session" %}class="active"{% endif %}>
-          <a href="{% url 'settings:settings' %}">Session</a>
-        </li>
-        {% if user.role == 'ADMIN' %}
-          <!--<li {% if subapp == "company" %}class="active"{% endif %}>-->
-          <!--  <a href="{% url 'settings:company-index' %}">Company</a>-->
-          <!--</li>-->
-          <li {% if subapp == "users" %}class="active"{% endif %}>
-            <a href="{% url 'settings:users-index' %}">Users</a>
+    <div class="section">
+      <nav class="section-nav">
+        <ul>
+          <li {% if subapp == "profile" %}class="active"{% endif %}>
+            <a href="{% url 'settings:profile-index' %}">Profile</a>
           </li>
-          <li {% if subapp == "contacts" %}class="active"{% endif %}>
-            <a href="{% url 'settings:contacts-index' %}">Contacts</a>
+          <li {% if subapp == "session" %}class="active"{% endif %}>
+            <a href="{% url 'settings:settings' %}">Session</a>
           </li>
-          <li {% if subapp == "matters" %}class="active"{% endif %}>
-            <a href="{% url 'settings:matters-index' %}">Practice Areas</a>
-          </li>
-          <li {% if subapp == "integrations" %}class="active"{% endif %}>
-            <a href="{% url 'settings:integrations-index' %}">Integrations</a>
-          </li>
-        {% endif %}
-      </ul>
-    </nav>
-    <div class="section subsection">
-      {% block subcontent %}
-      {% endblock subcontent %}
+          {% if user.role == 'ADMIN' %}
+            <!--<li {% if subapp == "company" %}class="active"{% endif %}>-->
+            <!--  <a href="{% url 'settings:company-index' %}">Company</a>-->
+            <!--</li>-->
+            <li {% if subapp == "users" %}class="active"{% endif %}>
+              <a href="{% url 'settings:users-index' %}">Users</a>
+            </li>
+            <li {% if subapp == "contacts" %}class="active"{% endif %}>
+              <a href="{% url 'settings:contacts-index' %}">Contacts</a>
+            </li>
+            <li {% if subapp == "matters" %}class="active"{% endif %}>
+              <a href="{% url 'settings:matters-index' %}">Practice Areas</a>
+            </li>
+            <li {% if subapp == "integrations" %}class="active"{% endif %}>
+              <a href="{% url 'settings:integrations-index' %}">Integrations</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+      <div class="section-body">
+        {% block subcontent %}
+        {% endblock subcontent %}
+      </div>
     </div>
   </div>
 {% endblock content %}

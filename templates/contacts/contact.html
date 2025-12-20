@@ -1,77 +1,79 @@
 {% load phone_numbers %}
-<div class="section detail-title">
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <h1>{{ selected_contact.name }}</h1>
-      <div class="filter-tools">
-        <span class="app-badge app-badge-lg{% if selected_contact.client_status == 'Current' %} badge-purple{% endif %}">
-          {% if selected_contact.client_status == 'Current' %}
-            Current Client
-          {% elif selected_contact.client_status == 'Pending' %}
-            Potential Client
-          {% elif selected_contact.client_status == 'Former' %}
-            Former Client
+<div class="section">
+  <div class="section-header">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <h1>{{ selected_contact.name }}</h1>
+        <div class="filter-tools">
+          <span class="app-badge app-badge-lg{% if selected_contact.client_status == 'Current' %} badge-purple{% endif %}">
+            {% if selected_contact.client_status == 'Current' %}
+              Current Client
+            {% elif selected_contact.client_status == 'Pending' %}
+              Potential Client
+            {% elif selected_contact.client_status == 'Former' %}
+              Former Client
+            {% else %}
+              Nonclient
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        {% if not contact_subapp or contact_subapp == 'details' %}
+          <button type="button"
+                  class="copy-btn"
+                  data-copy-target="#contact-full-details"
+                  title="Copy all details">
+            <i class="icon-copy"></i>
+          </button>
+        {% endif %}
+        <a href="{% url 'contacts:toggle-google-sync' id=selected_contact.id %}">
+          {% if selected_contact.google_id %}
+            <i class="icon-cloud-off"></i>
           {% else %}
-            Nonclient
+            <i class="icon-cloud-upload"></i>
           {% endif %}
-        </span>
+        </a>
+        <a href="#"
+           hx-get="{% url 'contacts:edit' id=selected_contact.id %}"
+           hx-target="#htmx-modal-container"
+           hx-trigger="click"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">
+          <i class="icon-pencil"></i>
+        </a>
       </div>
     </div>
-    <div class="toolbar-right">
-      {% if not contact_subapp or contact_subapp == 'details' %}
-        <button type="button"
-                class="copy-btn"
-                data-copy-target="#contact-full-details"
-                title="Copy all details">
-          <i class="icon-copy"></i>
-        </button>
-      {% endif %}
-      <a href="{% url 'contacts:toggle-google-sync' id=selected_contact.id %}">
-        {% if selected_contact.google_id %}
-          <i class="icon-cloud-off"></i>
-        {% else %}
-          <i class="icon-cloud-upload"></i>
-        {% endif %}
-      </a>
-      <a href="#"
-         hx-get="{% url 'contacts:edit' id=selected_contact.id %}"
-         hx-target="#htmx-modal-container"
-         hx-trigger="click"
-         data-bs-toggle="modal"
-         data-bs-target="#htmx-modal-container">
-        <i class="icon-pencil"></i>
-      </a>
-    </div>
   </div>
-</div>
-<nav class="navbar navbar-sub detail-subnav">
-  <ul>
-    <li {% if not contact_subapp or contact_subapp == 'details' %}class="active"{% endif %}>
-      <a href="{% url 'contacts:detail-details' selected_contact.id %}">Details</a>
-    </li>
-    <li {% if contact_subapp == 'matters' %}class="active"{% endif %}>
-      <a href="{% url 'contacts:detail-matters' selected_contact.id %}">Matters</a>
-    </li>
-    {% if selected_contact.client_status == 'Current' or selected_contact.client_status == 'Pending' or selected_contact.client_status == 'Former' %}
-      <li {% if contact_subapp == 'trust' %}class="active"{% endif %}>
-        <a href="{% url 'contacts:detail-trust' selected_contact.id %}">Trust</a>
+  <nav class="section-nav">
+    <ul>
+      <li {% if not contact_subapp or contact_subapp == 'details' %}class="active"{% endif %}>
+        <a href="{% url 'contacts:detail-details' selected_contact.id %}">Details</a>
       </li>
-      <li {% if contact_subapp == 'intake' %}class="active"{% endif %}>
-        <a href="{% url 'contacts:detail-intake' selected_contact.id %}">Intake</a>
+      <li {% if contact_subapp == 'matters' %}class="active"{% endif %}>
+        <a href="{% url 'contacts:detail-matters' selected_contact.id %}">Matters</a>
       </li>
+      {% if selected_contact.client_status == 'Current' or selected_contact.client_status == 'Pending' or selected_contact.client_status == 'Former' %}
+        <li {% if contact_subapp == 'trust' %}class="active"{% endif %}>
+          <a href="{% url 'contacts:detail-trust' selected_contact.id %}">Trust</a>
+        </li>
+        <li {% if contact_subapp == 'intake' %}class="active"{% endif %}>
+          <a href="{% url 'contacts:detail-intake' selected_contact.id %}">Intake</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+  <div class="section-body">
+    {% if contact_subapp == 'details' %}
+      {% include "contacts/details/main.html" %}
+    {% elif contact_subapp == 'matters' %}
+      {% include "contacts/matters/main.html" %}
+    {% elif contact_subapp == 'trust' %}
+      {% include "contacts/trust/main.html" %}
+    {% elif contact_subapp == 'intake' %}
+      {% include "contacts/intake/main.html" %}
+    {% else %}
+      {% include "contacts/details/main.html" %}
     {% endif %}
-  </ul>
-</nav>
-<div class="section subsection">
-  {% if contact_subapp == 'details' %}
-    {% include "contacts/details/main.html" %}
-  {% elif contact_subapp == 'matters' %}
-    {% include "contacts/matters/main.html" %}
-  {% elif contact_subapp == 'trust' %}
-    {% include "contacts/trust/main.html" %}
-  {% elif contact_subapp == 'intake' %}
-    {% include "contacts/intake/main.html" %}
-  {% else %}
-    {% include "contacts/details/main.html" %}
-  {% endif %}
+  </div>
 </div>

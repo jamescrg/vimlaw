@@ -1,31 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <nav class="navbar navbar-sub">
-      <ul>
-        <li {% if subapp == "unbilled" %}class="active"{% endif %}>
-          <a href="{% url 'invoicing:unbilled-index' %}">Unbilled</a>
-        </li>
-        <li {% if subapp == "invoices" %}class="active"{% endif %}>
-          <a href="{% url 'invoicing:invoices-index' %}">Invoices</a>
-        </li>
-        <li {% if subapp == "payments" %}class="active"{% endif %}>
-          <a href="{% url 'invoicing:payments-index' %}">Payments</a>
-        </li>
-        <li {% if subapp == "credits" %}class="active"{% endif %}>
-          <a href="{% url 'invoicing:credits-index' %}">Credits</a>
-        </li>
-        <li {% if subapp == "collection" %}class="active"{% endif %}>
-          <a href="{% url 'invoicing:collection-index' %}">Collection</a>
-        </li>
-        <li {% if subapp == "trust" %}class="active"{% endif %}>
-          <a href="{% url 'trust:index' %}">Trust</a>
-        </li>
-      </ul>
-    </nav>
-    <div class="section subsection">
-      {% block subcontent %}
-      {% endblock subcontent %}
+    <div class="section">
+      <nav class="section-nav">
+        <ul>
+          <li {% if subapp == "unbilled" %}class="active"{% endif %}>
+            <a href="{% url 'invoicing:unbilled-index' %}">Unbilled</a>
+          </li>
+          <li {% if subapp == "invoices" %}class="active"{% endif %}>
+            <a href="{% url 'invoicing:invoices-index' %}">Invoices</a>
+          </li>
+          <li {% if subapp == "payments" %}class="active"{% endif %}>
+            <a href="{% url 'invoicing:payments-index' %}">Payments</a>
+          </li>
+          <li {% if subapp == "credits" %}class="active"{% endif %}>
+            <a href="{% url 'invoicing:credits-index' %}">Credits</a>
+          </li>
+          <li {% if subapp == "collection" %}class="active"{% endif %}>
+            <a href="{% url 'invoicing:collection-index' %}">Collection</a>
+          </li>
+          <li {% if subapp == "trust" %}class="active"{% endif %}>
+            <a href="{% url 'trust:index' %}">Trust</a>
+          </li>
+        </ul>
+      </nav>
+      <div class="section-body">
+        {% block subcontent %}
+        {% endblock subcontent %}
+      </div>
     </div>
   </div>
 {% endblock content %}

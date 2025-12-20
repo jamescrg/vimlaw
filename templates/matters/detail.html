@@ -2,71 +2,73 @@
 {% block content %}
   {% load humanize %}
   <div id="content" class="container content">
-    <div class="section detail-title">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <h1>{{ matter.name }}</h1>
-          <div class="filter-tools">
-            <a href="{% url 'case:select-matter' matter.id %}" class="accent-link">Case<i class="icon-circle-arrow-right ms-2"></i></a>
-            <button class="accent-link"
-                    hx-get="/activity/time/add/{{ matter.id }}/matters"
-                    hx-target="#htmx-modal-container"
-                    data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container">+ Time</button>
-            <button class="accent-link"
-                    hx-get="/activity/expenses/add/{{ matter.id }}/matters"
-                    hx-target="#htmx-modal-container"
-                    data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container">+ Expense</button>
-            <a href={% url 'matters:print' id=matter.id %}>
-              <i class="icon-printer"></i>
-            </a>
-            <a href="#"
-               hx-get="{% url 'matters:edit' id=matter.id %}"
-               hx-target="#htmx-modal-container"
-               hx-trigger="click"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container">
-              <i class="icon-pencil"></i>
-            </a>
+    <div class="section">
+      <div class="section-header">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <h1>{{ matter.name }}</h1>
+            <div class="filter-tools">
+              <a href="{% url 'case:select-matter' matter.id %}" class="accent-link">Case<i class="icon-circle-arrow-right ms-2"></i></a>
+              <button class="accent-link"
+                      hx-get="/activity/time/add/{{ matter.id }}/matters"
+                      hx-target="#htmx-modal-container"
+                      data-bs-toggle="modal"
+                      data-bs-target="#htmx-modal-container">+ Time</button>
+              <button class="accent-link"
+                      hx-get="/activity/expenses/add/{{ matter.id }}/matters"
+                      hx-target="#htmx-modal-container"
+                      data-bs-toggle="modal"
+                      data-bs-target="#htmx-modal-container">+ Expense</button>
+              <a href={% url 'matters:print' id=matter.id %}>
+                <i class="icon-printer"></i>
+              </a>
+              <a href="#"
+                 hx-get="{% url 'matters:edit' id=matter.id %}"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click"
+                 data-bs-toggle="modal"
+                 data-bs-target="#htmx-modal-container">
+                <i class="icon-pencil"></i>
+              </a>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <h2>Matter No. {{ matter.id }}</h2>
           </div>
         </div>
-        <div class="toolbar-right">
-          <h2>Matter No. {{ matter.id }}</h2>
-        </div>
       </div>
-    </div>
-    <nav class="navbar navbar-sub detail-subnav">
-      <ul>
-        <li {% if subapp == 'rates' %}class="active"{% endif %}>
-          <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
-        </li>
-        <li {% if subapp == 'activity' %}class="active"{% endif %}>
-          <a href={% url 'matters:activity-index' id=matter.id %}>Activity</a>
-        </li>
-        <li {% if subapp == 'events' %}class="active"{% endif %}>
-          <a href={% url 'matters:events-index' id=matter.id %}>Events</a>
-        </li>
-        <li {% if subapp == 'tasks' %}class="active"{% endif %}>
-          <a href={% url 'matters:tasks-index' id=matter.id %}>Tasks</a>
-        </li>
-        <li {% if subapp == 'contacts' %}class="active"{% endif %}>
-          <a href={% url 'matters:contacts' id=matter.id %}>Contacts</a>
-        </li>
-        <li {% if subapp == 'proceedings' %}class="active"{% endif %}>
-          <a href={% url 'matters:proceedings-index' id=matter.id %}>Proceedings</a>
-        </li>
-        <li {% if subapp == 'settlement' %}class="active"{% endif %}>
-          <a href={% url 'matters:settlement-index' id=matter.id %}>Settlement</a>
-        </li>
-        <li {% if subapp == 'ledger' %}class="active"{% endif %}>
-          <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>
-        </li>
-      </ul>
-    </nav>
-    <div class="section subsection">
-      {% block subcontent %}
-      {% endblock subcontent %}
+      <nav class="section-nav">
+        <ul>
+          <li {% if subapp == 'rates' %}class="active"{% endif %}>
+            <a href={% url 'matters:rate-index' id=matter.id %}>Rates</a>
+          </li>
+          <li {% if subapp == 'activity' %}class="active"{% endif %}>
+            <a href={% url 'matters:activity-index' id=matter.id %}>Activity</a>
+          </li>
+          <li {% if subapp == 'events' %}class="active"{% endif %}>
+            <a href={% url 'matters:events-index' id=matter.id %}>Events</a>
+          </li>
+          <li {% if subapp == 'tasks' %}class="active"{% endif %}>
+            <a href={% url 'matters:tasks-index' id=matter.id %}>Tasks</a>
+          </li>
+          <li {% if subapp == 'contacts' %}class="active"{% endif %}>
+            <a href={% url 'matters:contacts' id=matter.id %}>Contacts</a>
+          </li>
+          <li {% if subapp == 'proceedings' %}class="active"{% endif %}>
+            <a href={% url 'matters:proceedings-index' id=matter.id %}>Proceedings</a>
+          </li>
+          <li {% if subapp == 'settlement' %}class="active"{% endif %}>
+            <a href={% url 'matters:settlement-index' id=matter.id %}>Settlement</a>
+          </li>
+          <li {% if subapp == 'ledger' %}class="active"{% endif %}>
+            <a href={% url 'matters:ledger' id=matter.id %}>Ledger</a>
+          </li>
+        </ul>
+      </nav>
+      <div class="section-body">
+        {% block subcontent %}
+        {% endblock subcontent %}
+      </div>
     </div>
   </div>
 {% endblock content %}

@@ -4,81 +4,83 @@
   <link rel="stylesheet" href="{% static 'css/apps/activity.css' %}" />
 {% endblock head %}
 {% block content %}
-  <div class="section detail-title">
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <h1>Invoice {{ invoice.id }} - {{ invoice.matter.name }}</h1>
-        <div class="filter-tools">
-          {% include "invoicing/invoices/status.html" %}
-          {% if invoice.status == 'SENT' %}
-            <button class="accent-link"
-                    hx-get="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type='direct' %}"
+  <div class="section">
+    <div class="section-header">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <h1>Invoice {{ invoice.id }} - {{ invoice.matter.name }}</h1>
+          <div class="filter-tools">
+            {% include "invoicing/invoices/status.html" %}
+            {% if invoice.status == 'SENT' %}
+              <button class="accent-link"
+                      hx-get="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type='direct' %}"
+                      hx-target="#htmx-modal-container"
+                      data-bs-toggle="modal"
+                      data-bs-target="#htmx-modal-container">+ Card</button>
+              <button class="accent-link"
+                      hx-get="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type='trust' %}"
+                      hx-target="#htmx-modal-container"
+                      data-bs-toggle="modal"
+                      data-bs-target="#htmx-modal-container">+ Trust</button>
+            {% endif %}
+          </div>
+        </div>
+        <div class="toolbar-right">
+          {% if invoice.status == 'DRAFT' or invoice.status == 'APPROVED' %}
+            <button type="button"
+                    class="btn-icon"
+                    hx-get="{% url 'invoicing:invoices-edit' invoice.id %}"
                     hx-target="#htmx-modal-container"
+                    hx-trigger="click"
                     data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container">+ Card</button>
-            <button class="accent-link"
-                    hx-get="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type='trust' %}"
-                    hx-target="#htmx-modal-container"
-                    data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container">+ Trust</button>
+                    data-bs-target="#htmx-modal-container">
+              <i class="icon-pencil"></i>
+            </button>
           {% endif %}
+          <button class="button-link"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+            <i class="icon-download"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item"
+                 target="_blank"
+                 href="{% url 'invoicing:invoices-pdf-download' invoice.id %}"><i class="icon-file-pdf"></i> Download PDF</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 target="_blank"
+                 href="{% url 'invoicing:invoice-ledes' invoice.id %}"><i class="icon-file-text"></i> Download Ledes</a>
+            </li>
+          </ul>
         </div>
       </div>
-      <div class="toolbar-right">
-        {% if invoice.status == 'DRAFT' or invoice.status == 'APPROVED' %}
-          <button type="button"
-                  class="btn-icon"
-                  hx-get="{% url 'invoicing:invoices-edit' invoice.id %}"
-                  hx-target="#htmx-modal-container"
-                  hx-trigger="click"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="icon-pencil"></i>
-          </button>
-        {% endif %}
-        <button class="button-link"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-          <i class="icon-download"></i>
-        </button>
-        <ul class="dropdown-menu">
-          <li>
-            <a class="dropdown-item"
-               target="_blank"
-               href="{% url 'invoicing:invoices-pdf-download' invoice.id %}"><i class="icon-file-pdf"></i> Download PDF</a>
-          </li>
-          <li>
-            <a class="dropdown-item"
-               target="_blank"
-               href="{% url 'invoicing:invoice-ledes' invoice.id %}"><i class="icon-file-text"></i> Download Ledes</a>
-          </li>
-        </ul>
-      </div>
     </div>
-  </div>
-  <nav class="navbar navbar-sub detail-subnav">
-    <ul>
-      <li {% if subapp == "details" %}class="active"{% endif %}>
-        <a href="#"
-           hx-post="{% url 'invoicing:invoice-details-index' invoice.id %}">Details</a>
-      </li>
-      <li {% if subapp == "time" %}class="active"{% endif %}>
-        <a href="#"
-           hx-post="{% url 'invoicing:invoice-time-entries-index' invoice.id %}">Time</a>
-      </li>
-      <li {% if subapp == "expenses" %}class="active"{% endif %}>
-        <a href="#"
-           hx-post="{% url 'invoicing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
-      </li>
-      <li {% if subapp == "preview" %}class="active"{% endif %}>
-        <a href="#"
-           hx-post="{% url 'invoicing:invoice-pdf-preview-index' invoice.id %}">Review</a>
-      </li>
-    </ul>
-  </nav>
-  <div class="section">
-    {% block subcontent %}
-    {% endblock subcontent %}
+    <nav class="section-nav">
+      <ul>
+        <li {% if subapp == "details" %}class="active"{% endif %}>
+          <a href="#"
+             hx-post="{% url 'invoicing:invoice-details-index' invoice.id %}">Details</a>
+        </li>
+        <li {% if subapp == "time" %}class="active"{% endif %}>
+          <a href="#"
+             hx-post="{% url 'invoicing:invoice-time-entries-index' invoice.id %}">Time</a>
+        </li>
+        <li {% if subapp == "expenses" %}class="active"{% endif %}>
+          <a href="#"
+             hx-post="{% url 'invoicing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
+        </li>
+        <li {% if subapp == "preview" %}class="active"{% endif %}>
+          <a href="#"
+             hx-post="{% url 'invoicing:invoice-pdf-preview-index' invoice.id %}">Review</a>
+        </li>
+      </ul>
+    </nav>
+    <div class="section-body">
+      {% block subcontent %}
+      {% endblock subcontent %}
+    </div>
   </div>
 {% endblock content %}
