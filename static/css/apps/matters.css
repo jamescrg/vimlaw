@@ -88,7 +88,7 @@ Matter Details
 ========================================================================== */
 
 .matter-title {
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   margin-bottom: 0;

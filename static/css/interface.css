@@ -10,7 +10,7 @@
 }
 
 .dropdown-menu li {
-  background: var(--background-lighter);
+  background: var(--background-light);
   border-radius: 0;
   border-top: solid 1px var(--border-medium);
 }
@@ -79,7 +79,7 @@
 }
 
 .table-option {
-  background: var(--background-lighter);
+  background: var(--background-light);
 }
 
 .toggle-active {

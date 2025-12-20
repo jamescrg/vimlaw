@@ -16,6 +16,7 @@
   --color-primary: var(--stone-600);
   --color-darker: var(--stone-800);
   --color-muted: var(--stone-500);
+  --color-lighter: var(--stone-300);
 
   /* ==========================================================================
      Links
@@ -26,19 +27,17 @@
   /* ==========================================================================
      Backgrounds
      ========================================================================== */
-  --background-nav: var(--stone-200);
+  --background-nav: var(--stone-350);
   --background-body: var(--stone-300);
-  --background-subnav: var(--stone-150);
-  --background-section: var(--stone-100);
-  --background-lighter: var(--stone-50);
-  --background-subtle: var(--stone-25);
+  --background-subnav: var(--stone-200);
   --background-control: var(--stone-150);
-  --background-muted: var(--stone-200);
+  --background-section: var(--stone-100);
+  --background-light: var(--stone-25);
 
   /* ==========================================================================
      Navigation
      ========================================================================== */
-  --color-nav: var(--stone-600);
+  --color-nav: var(--color-primary);
   --background-nav-tab-active: var(--background-body);
   --background-subnav-tab-active: var(--background-section);
 
@@ -46,10 +45,10 @@
      Buttons
      ========================================================================== */
   --button-primary-background: var(--link);
-  --button-primary-color: var(--stone-300);
-  --button-secondary-background: var(--stone-300);
-  --button-secondary-color: var(--stone-600);
-  --button-toolbar: var(--stone-600);
+  --button-primary-color: var(--color-lighter);
+  --button-secondary-background: var(--backgrounb-body);
+  --button-secondary-color: var(--color-primary);
+  --button-toolbar: var(--color-primary);
 
   /* ==========================================================================
      Forms & Inputs
@@ -63,7 +62,6 @@
      ========================================================================== */
   --border-light: var(--stone-200);
   --border-medium: var(--stone-300);
-  --border-medium2: var(--stone-350);
   --border-dark: var(--stone-400);
 
   /* ==========================================================================
@@ -77,18 +75,18 @@
      Status & Feedback
      ========================================================================== */
   --urgent: var(--orange-800);
-  --warning: var(--orange-700);
+  --warning: var(--orange-800);
   --success: var(--lime-700);
   --true: var(--lime-700);
   --false: var(--urgent);
-  --error: var(--red-700);
-  --error-background: var(--red-100);
-  --error-border: var(--red-300);
+  --error: var(--urgent);
+  --error-background: var(--orange-100);
+  --error-border: var(--urgent);
 
   /* ==========================================================================
      Labels & Badges
      ========================================================================== */
-  --label-gray: var(--stone-125);
+  --label-gray: var(--background-control);
   --label-green: var(--lime-100);
   --label-orange: var(--orange-100);
   --label-purple: var(--violet-100);
@@ -98,30 +96,25 @@
   /* ==========================================================================
      Icons
      ========================================================================== */
-  --icon-default: var(--stone-500);
-  --icon-muted: var(--stone-400);
-  --accent-link: var(--lime-800);
-  --icon-violet: var(--violet-600);
+  --icon-default: var(--color-primary);
+  --icon-muted: var(--color-muted);
+  --accent-link: var(--link);
+  --icon-violet: var(--violet-500);
   --icon-yellow: var(--yellow-700);
-  --icon-blue: var(--sky-800);
-  --add: var(--accent-link);
+  --add: var(--link);
 
   /* ==========================================================================
      Row Highlights
      ========================================================================== */
+  --hl-gray: var(--background-control);
   --hl-blue: var(--blue-50);
-  --hl-slate: var(--slate-100);
-  --hl-gray: var(--stone-125);
+  --hl-slate: var(--slate-50);
   --hl-green: var(--lime-50);
   --hl-orange: var(--orange-50);
   --hl-violet: var(--violet-50);
   --hl-red: var(--red-50);
   --hl-yellow: var(--yellow-50);
 
-  /* Custom muted colors */
-  --slate-muted: oklch(0.968 0.004 247.9);
-  --lime-muted: oklch(0.85 0.015 131);
-  --violet-muted: oklch(0.85 0.015 293.5);
 }
 
 /* ==========================================================================
@@ -129,7 +122,7 @@
    ========================================================================== */
 
 .hl-blue { background: var(--hl-blue) !important; }
-.hl-slate { background: var(--slate-muted) !important; }
+.hl-slate { background: var(--hl-slate) !important; }
 .hl-gray { background: var(--hl-gray) !important; }
 .hl-green { background: var(--hl-green) !important; }
 .hl-orange { background: var(--hl-orange) !important; }

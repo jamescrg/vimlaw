@@ -40,7 +40,7 @@
 }
 
 #toast-container .toast-body {
-    background: var(--background-lighter);
+    background: var(--background-light);
     padding: 0.75rem;
     font-size: 1rem;
     color: var(--color-primary);

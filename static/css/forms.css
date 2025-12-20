@@ -51,7 +51,7 @@ textarea {
 
 .dropzone:hover {
   /* border-color: var(--border-dark) !important; */
-  background: var(--background-lighter) !important;
+  background: var(--background-light) !important;
 }
 
 .dropzone.dz-drag-hover {
@@ -115,7 +115,7 @@ textarea {
 }
 
 .dropzone .dz-preview .dz-remove:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
   color: var(--warning);
 }
 
@@ -170,7 +170,7 @@ textarea {
   background: var(--button-primary-background);
   border: solid 1px var(--button-primary-background);
   border-radius: var(--radius-md);
-  color: var(--background-muted);
+  color: var(--background-subnav);
   padding: 0.25rem 0.75rem;
 }
 

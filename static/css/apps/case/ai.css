@@ -99,7 +99,7 @@
 }
 
 .ai-sidebar-item:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
   color: var(--link);
 }
 
@@ -218,7 +218,7 @@
 }
 
 .ai-conversation-item:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
 }
 
 .ai-conversation-item.active {
@@ -382,7 +382,7 @@
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  background: var(--background-lighter);
+  background: var(--background-light);
 }
 
 .ai-list-rename-input:focus {
@@ -566,7 +566,7 @@
   padding: 0.75rem;
   font-size: 1.15rem;
   font-family: inherit;
-  background: var(--background-lighter);
+  background: var(--background-light);
   box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.15);
 }
 
@@ -694,7 +694,7 @@
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  background: var(--background-lighter);
+  background: var(--background-light);
 }
 
 .ai-rename-inline-form input:focus {
@@ -951,7 +951,7 @@
 }
 
 .ai-prompt-canvas {
-  background: var(--background-subtle);
+  background: var(--background-light);
   border-radius: var(--radius-md);
   padding: 2rem;
   min-height: 32rem;
@@ -1001,7 +1001,7 @@
   color: var(--color-muted);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-md);
-  background: var(--background-lighter);
+  background: var(--background-light);
 }
 
 .ai-upload-btn:hover {

@@ -71,7 +71,7 @@
   cursor: pointer;
   margin: 0;
   vertical-align: middle;
-  background-color: var(--background-lighter);
+  background-color: var(--background-light);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-sm);
   transform: scale(0.85);

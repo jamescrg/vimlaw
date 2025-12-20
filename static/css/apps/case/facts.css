@@ -162,12 +162,12 @@ Filter form
 }
 
 .filter-form input[type="date"].filter-input-date {
-  background: var(--background-subtle);
+  background: var(--background-light);
   width: 9.5rem;
 }
 
 .filter-form input[type="text"].filter-input-date {
-  background: var(--background-subtle);
+  background: var(--background-light);
   width: 9.5rem;
 }
 

@@ -106,7 +106,7 @@ body {
   background: var(--link);
   border: solid 1px var(--link);
   border-radius: var(--radius-md);
-  color: var(--background-muted);
+  color: var(--background-subnav);
   font-size: 1em;
   margin-top: 2.5rem;
   padding: 0.5rem 0.75rem;

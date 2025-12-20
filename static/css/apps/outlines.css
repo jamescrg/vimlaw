@@ -128,7 +128,7 @@
 
 /* Body background for standalone outline page */
 body:has(.outline-page.standalone) {
-  background: var(--background-muted);
+  background: var(--background-subnav);
 }
 
 .outline-page.standalone {
@@ -136,7 +136,7 @@ body:has(.outline-page.standalone) {
 }
 
 .outline-canvas {
-  background: var(--background-subtle);
+  background: var(--background-light);
   border-radius: 0.5rem;
   padding: 1rem 2rem 2rem 3rem;
   margin-top: 1.5rem;
@@ -149,7 +149,7 @@ body:has(.outline-page.standalone) {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium2);
 }
 
@@ -176,7 +176,7 @@ body:has(.outline-page.standalone) {
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
   text-decoration: none;
-  background: var(--background-lighter);
+  background: var(--background-light);
   border: solid 1px var(--border-dark);
   border-radius: 0.375rem;
   color: var(--button-toolbar);
@@ -185,14 +185,14 @@ body:has(.outline-page.standalone) {
 }
 
 .outline-toolbar .toolbar-left a:not(.dropdown-menu a):hover {
-  background: var(--background-lighter);
+  background: var(--background-light);
   color: var(--color-primary);
 }
 
 .outline-toolbar .toolbar-left .select-btn {
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
-  background: var(--background-lighter);
+  background: var(--background-light);
   border: solid 1px var(--border-dark);
   border-radius: 0.375rem;
   color: var(--button-toolbar);
@@ -239,7 +239,7 @@ body:has(.outline-page.standalone) {
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
   text-decoration: none;
-  background: var(--background-lighter);
+  background: var(--background-light);
   border: solid 1px var(--border-dark);
   border-radius: 0.375rem;
   color: var(--button-toolbar);
@@ -249,7 +249,7 @@ body:has(.outline-page.standalone) {
 }
 
 .outline-toolbar .toolbar-right a:hover {
-  background: var(--background-lighter);
+  background: var(--background-light);
   color: var(--color-primary);
 }
 
@@ -310,7 +310,7 @@ body:has(.outline-page.standalone) {
 }
 
 .back-link:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
   color: var(--color-primary);
 }
 
@@ -347,7 +347,7 @@ body:has(.outline-page.standalone) {
   height: 2rem;
   margin-top: 0.5rem;
   padding: 0;
-  background: var(--background-lighter);
+  background: var(--background-light);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-md);
   color: var(--color-muted);
@@ -357,7 +357,7 @@ body:has(.outline-page.standalone) {
 }
 
 .add-item-btn:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-color: var(--border-dark);
   color: var(--color-primary);
 }
@@ -408,7 +408,7 @@ body:has(.outline-page.standalone) {
 .shortcuts-table kbd {
   display: inline-block;
   padding: 0.125rem 0.375rem;
-  background: var(--background-lighter);
+  background: var(--background-light);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-sm);
   font-family: inherit;
@@ -464,7 +464,7 @@ body:has(.outline-page.standalone) {
   width: 1.5rem;
   height: 1.5rem;
   padding: 0;
-  background: var(--background-lighter);
+  background: var(--background-light);
   border: none;
   border-radius: var(--radius-sm);
   color: var(--color-muted);
@@ -473,7 +473,7 @@ body:has(.outline-page.standalone) {
 }
 
 .item-menu-btn:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
   color: var(--color-primary);
 }
 
@@ -513,7 +513,7 @@ body:has(.outline-page.standalone) {
 
 /* Expanded items show chevron with background on hover */
 .outline-item:not(.collapsed) > .item-row .collapse-toggle {
-  background: var(--background-lighter);
+  background: var(--background-light);
 }
 
 /* Expanded items show chevron on hover */
@@ -522,7 +522,7 @@ body:has(.outline-page.standalone) {
 }
 
 .collapse-toggle:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
   color: var(--color-primary);
 }
 
@@ -772,7 +772,7 @@ body:has(.outline-page.standalone) {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
@@ -809,7 +809,7 @@ body:has(.outline-page.standalone) {
   justify-content: center;
   padding: 0.25rem 0.5rem;
   font-size: 0.8125rem;
-  background: var(--background-lighter);
+  background: var(--background-light);
   border: solid 1px var(--border-dark);
   border-radius: 0.375rem;
   color: var(--button-toolbar);
@@ -819,7 +819,7 @@ body:has(.outline-page.standalone) {
 }
 
 .search-replace-bar button:hover {
-  background: var(--background-lighter);
+  background: var(--background-light);
   color: var(--color-primary);
 }
 
@@ -863,7 +863,7 @@ body:has(.outline-page.standalone) {
   border: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 0;
-  background: var(--background-subtle);
+  background: var(--background-light);
   color: var(--color-primary);
 }
 
@@ -873,7 +873,7 @@ body:has(.outline-page.standalone) {
 
 .sources-tabs {
   display: flex;
-  background: var(--background-subtle);
+  background: var(--background-light);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -898,7 +898,7 @@ body:has(.outline-page.standalone) {
 }
 
 .sources-tab-count {
-  background: var(--background-lighter);
+  background: var(--background-light);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
@@ -906,7 +906,7 @@ body:has(.outline-page.standalone) {
 }
 
 .sources-picker .assign-results {
-  background: var(--background-subtle);
+  background: var(--background-light);
 }
 
 .sources-picker .assign-results.hidden {
@@ -914,7 +914,7 @@ body:has(.outline-page.standalone) {
 }
 
 .sources-empty-state {
-  background: var(--background-subtle);
+  background: var(--background-light);
   padding: 1.5rem;
   text-align: center;
   color: var(--color-secondary);
@@ -932,7 +932,7 @@ body:has(.outline-page.standalone) {
 }
 
 .sources-picker .assign-results li {
-  background: var(--background-subtle);
+  background: var(--background-light);
   border: none;
   border-bottom: 1px solid var(--border-light);
 }

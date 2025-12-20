@@ -4,7 +4,7 @@
 ========================================================================== */
 
 .tasks-add-quick-input {
-  background: var(--background-subtle);
+  background: var(--background-light);
   color: var(--color-primary);
   padding-left: 1rem;
   width: 34rem;

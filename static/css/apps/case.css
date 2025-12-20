@@ -43,7 +43,7 @@
   cursor: pointer;
   margin: 0;
   vertical-align: middle;
-  background-color: var(--background-lighter);
+  background-color: var(--background-light);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-sm);
 }
@@ -173,7 +173,7 @@
 .ocr-badge {
   margin-left: 0.5rem;
   vertical-align: middle;
-  background-color: var(--background-muted);
+  background-color: var(--background-subnav);
   color: var(--color-primary);
   font-size: 0.85rem;
   padding: 0.125rem 0.5rem;
@@ -200,7 +200,7 @@
 .timeline-list .source-badge .badge-link {
   display: inline-block;
   padding: 0.125rem 0.5rem;
-  background-color: var(--background-muted);
+  background-color: var(--background-control);
   color: var(--color-primary);
   border-radius: var(--radius-sm);
   text-decoration: none;

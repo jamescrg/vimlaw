@@ -86,7 +86,7 @@
 /* Contact Cards (Address and Email) */
 .contact-card {
   position: relative;
-  background-color: var(--background-lighter);
+  background-color: var(--background-light);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
   padding: 1.25rem;
@@ -210,7 +210,7 @@
 
 /* Notes Section */
 .contact-notes {
-  background-color: var(--background-lighter);
+  background-color: var(--background-light);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
   padding: 1rem;
@@ -306,7 +306,7 @@
   padding: 2.5rem 1.25rem;
   text-align: center;
   color: var(--color-muted);
-  background-color: var(--background-lighter);
+  background-color: var(--background-light);
   border: 1px dashed var(--border-medium);
   border-radius: var(--radius-lg);
 }

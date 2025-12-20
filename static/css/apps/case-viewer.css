@@ -85,7 +85,7 @@ body {
 #pdf-container {
   flex: 1;
   overflow: auto;
-  background: var(--background-muted);
+  background: var(--background-subnav);
   display: flex;
   justify-content: center;
   padding: 1.25rem;
@@ -183,7 +183,7 @@ body {
 }
 
 .highlight-item:hover {
-  background: var(--background-lighter);
+  background: var(--background-light);
 }
 
 .highlight-item.active {

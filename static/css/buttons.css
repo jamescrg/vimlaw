@@ -51,10 +51,6 @@
   color: var(--icon-yellow) !important;
 }
 
-.icon-blue {
-  color: var(--icon-blue) !important;
-}
-
 .icon-violet {
   color: var(--icon-violet) !important;
 }
@@ -119,7 +115,7 @@ i.with-text {
 
   &:hover {
     color: var(--color-darker);
-    background: var(--background-muted);
+    background: var(--background-control);
   }
 }
 

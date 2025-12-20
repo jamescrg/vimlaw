@@ -7,7 +7,7 @@
    ============================================================================= */
 
 body:has(.note-page.standalone) {
-  background: var(--background-muted);
+  background: var(--background-subnav);
 }
 
 /* =============================================================================
@@ -59,7 +59,7 @@ body:has(.note-page.standalone) {
   font-weight: 600;
   font-size: 1rem;
   color: var(--color-secondary);
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium);
   flex-shrink: 0;
 }
@@ -124,7 +124,7 @@ body:has(.note-page.standalone) {
 }
 
 .note-sidebar .sidebar-notes-list li:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
 }
 
 .note-sidebar .sidebar-notes-list li.active {
@@ -192,7 +192,7 @@ body:has(.note-page.standalone) {
   font-weight: 600;
   font-size: 1rem;
   color: var(--color-secondary);
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium);
   flex-shrink: 0;
 }
@@ -298,7 +298,7 @@ body:has(.note-page.standalone) {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium);
   flex-shrink: 0;
 }
@@ -420,7 +420,7 @@ body:has(.note-page.standalone) {
    ============================================================================= */
 
 .note-canvas {
-  background: var(--background-subtle);
+  background: var(--background-light);
   border-radius: 0.5rem;
   padding: 2rem 3rem 3rem;
   margin-top: 1.5rem;
@@ -711,7 +711,7 @@ body:has(.note-page.standalone) {
   border: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 0;
-  background: var(--background-subtle);
+  background: var(--background-light);
   color: var(--color-primary);
 }
 
@@ -721,7 +721,7 @@ body:has(.note-page.standalone) {
 
 .note-page .sources-tabs {
   display: flex;
-  background: var(--background-subtle);
+  background: var(--background-light);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -760,7 +760,7 @@ body:has(.note-page.standalone) {
 }
 
 .note-page .sources-picker .assign-results {
-  background: var(--background-subtle);
+  background: var(--background-light);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -773,7 +773,7 @@ body:has(.note-page.standalone) {
 }
 
 .note-page .sources-picker .assign-results li {
-  background: var(--background-subtle);
+  background: var(--background-light);
   border: none;
   border-bottom: 1px solid var(--border-light);
 }
@@ -787,7 +787,7 @@ body:has(.note-page.standalone) {
 }
 
 .note-page .sources-picker .assign-results li a:hover {
-  background: var(--background-muted);
+  background: var(--background-subnav);
 }
 
 .note-page .sources-picker .assign-results li a i {
@@ -806,7 +806,7 @@ body:has(.note-page.standalone) {
 }
 
 .note-page .sources-empty-state {
-  background: var(--background-subtle);
+  background: var(--background-light);
   padding: 1.5rem;
   text-align: center;
   color: var(--color-secondary);
@@ -958,7 +958,7 @@ body:has(.note-page.standalone) {
   justify-content: center;
   gap: 1rem;
   padding: 0.5rem 1.5rem;
-  background: var(--background-muted);
+  background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium);
   box-shadow: none;
 }
