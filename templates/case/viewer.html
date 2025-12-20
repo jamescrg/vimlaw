@@ -84,8 +84,8 @@
 
       #highlights-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         height: 49px;
         margin: -0.5rem -1rem 0.75rem -1rem;
         padding: 0 1rem;
@@ -94,39 +94,28 @@
         flex-shrink: 0;
       }
 
-      .highlights-title {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1rem;
-        font-weight: normal;
-        color: var(--stone-700);
-      }
-
-      .highlights-title .app-badge {
-        border-radius: 0.375rem;
-        border-color: var(--border-dark);
-      }
-
-
-      .highlights-controls {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .highlights-controls .btn-icon {
+      #highlights-header .btn-icon {
         padding: 0.125rem 0.25rem;
-        background: var(--stone-50);
-        border: 1px solid var(--border-dark);
+        background: none;
+        border: none;
         color: var(--stone-700);
+        font-size: 1.25rem;
         cursor: pointer;
+      }
+
+      #highlights-header #createHighlightBtn {
+        background: var(--yellow-100);
+        padding: 0 0.375rem;
         border-radius: 0.375rem;
-        font-size: 0.875rem;
+      }
+
+      .highlights-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
 
       .highlights-controls .btn-icon:hover {
-        background: var(--stone-100);
         color: var(--stone-900);
       }
 
@@ -347,15 +336,17 @@
       <!-- Highlights Sidebar -->
       <div id="highlights-sidebar">
         <div id="highlights-header">
-          <div class="highlights-title">
-            <span>Highlights</span>
-            <span class="app-badge">{{ highlights|length }}</span>
-          </div>
-          <div class="highlights-controls">
-            <button id="toggle-condensed" class="btn-icon" title="Toggle condensed view">
-              <i class="icon-chevrons-down-up"></i>
+          <div class="highlights-left">
+            <button id="createHighlightBtn"
+                    class="btn-icon"
+                    title="Create highlight from selected text">
+              <i class="icon-highlighter"></i>
             </button>
+            <span id="highlights-count">{{ highlights|length }}</span>
           </div>
+          <button id="toggle-condensed" class="btn-icon" title="Toggle condensed view">
+            <i class="icon-chevrons-down-up"></i>
+          </button>
         </div>
         <div id="highlights-list">
           {% for highlight in highlights %}
@@ -392,7 +383,9 @@
               </div>
             </div>
           {% empty %}
-            <div class="no-highlights">No highlights yet. Select text in the PDF and click "+ Highlight" to create one.</div>
+            <div class="no-highlights">
+              No highlights yet. Select text in the PDF and click the Highlight button to create one.
+            </div>
           {% endfor %}
         </div>
       </div>
@@ -531,6 +524,13 @@
         icon.className = 'icon-chevrons-up-down';
       } else {
         icon.className = 'icon-chevrons-down-up';
+      }
+    });
+
+    // Create highlight button
+    document.getElementById('createHighlightBtn').addEventListener('click', function() {
+      if (currentSelection) {
+        showHighlightModal();
       }
     });
 
@@ -694,7 +694,7 @@
 
     function updateHighlightCount() {
       const count = document.querySelectorAll('.highlight-item').length;
-      document.querySelector('.highlights-title .app-badge').textContent = count;
+      document.getElementById('highlights-count').textContent = count;
     }
 
     function addHighlightToSidebar(highlight) {
@@ -822,7 +822,7 @@
           // Show "no highlights" if empty
           if (config.existingHighlights.length === 0) {
             document.getElementById('highlights-list').innerHTML =
-              '<div class="no-highlights">No highlights yet. Select text in the PDF and click "+ Highlight" to create one.</div>';
+              '<div class="no-highlights">No highlights yet. Select text in the PDF and click the Highlight button to create one.</div>';
           }
 
           // Update viewer
