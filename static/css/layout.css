@@ -5,12 +5,6 @@ html {
 
 body {
   background-color: var(--stone-300);
-  background-image:
-    radial-gradient(ellipse at 0% 0%, oklch(0.85 0.16 131 / 0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 0%, oklch(0.85 0.14 293.5 / 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, oklch(0.85 0.16 131 / 0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 0% 100%, oklch(0.85 0.14 293.5 / 0.2) 0%, transparent 50%);
-  background-attachment: fixed;
   color: var(--color-primary);
   font-family: 'Open Sans', sans-serif;
   font-size: 1em;

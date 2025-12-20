@@ -1,6 +1,6 @@
 
 .navbar {
-  background: var(--background-nav);
+  background: var(--stone-350);
   margin-bottom: 0;
   padding: 0.25rem 0 0 0;
 }
@@ -24,13 +24,7 @@
 }
 
 .navbar .active {
-  background-color: var(--background-nav-tab-active);
-  background-image:
-    radial-gradient(ellipse at 0% 0%, oklch(0.85 0.16 131 / 0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 0%, oklch(0.85 0.14 293.5 / 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, oklch(0.85 0.16 131 / 0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 0% 100%, oklch(0.85 0.14 293.5 / 0.2) 0%, transparent 50%);
-  background-attachment: fixed;
+  background: var(--background-nav-tab-active);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   position: relative;
 }
@@ -42,13 +36,7 @@
   bottom: 0;
   width: var(--radius-md);
   height: var(--radius-md);
-  background-color: var(--background-nav-tab-active);
-  background-image:
-    radial-gradient(ellipse at 0% 0%, oklch(0.85 0.16 131 / 0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 0%, oklch(0.85 0.14 293.5 / 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, oklch(0.85 0.16 131 / 0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 0% 100%, oklch(0.85 0.14 293.5 / 0.2) 0%, transparent 50%);
-  background-attachment: fixed;
+  background: var(--background-nav-tab-active);
 }
 
 .navbar .active::before {
