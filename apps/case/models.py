@@ -3,15 +3,17 @@ from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.case.abbreviate import bluebook_abbreviate
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
+from utils.models import AuditMixin
 
 User = get_user_model()
 
 
-class Label(models.Model):
+class Label(AuditMixin, models.Model):
     COLOR_CHOICES = [
         ("blue", "Blue"),
         ("gray", "Gray"),
@@ -27,6 +29,7 @@ class Label(models.Model):
     )
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=20, choices=COLOR_CHOICES, default="gray")
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -51,7 +54,7 @@ def document_upload_path(instance, filename):
     return f"documents/{instance.matter_id}/{instance.pk}.{file_extension}"
 
 
-class Document(models.Model):
+class Document(AuditMixin, models.Model):
     CATEGORY_CHOICES = [
         ("Correspondence", "Correspondence"),
         ("Discovery", "Discovery"),
@@ -85,9 +88,6 @@ class Document(models.Model):
     )
     file = models.FileField(upload_to=document_upload_path, max_length=500)
     labels = models.ManyToManyField(Label, related_name="documents", blank=True)
-    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     # OCR fields
     ocr_status = models.CharField(
@@ -105,6 +105,7 @@ class Document(models.Model):
     importance = models.PositiveIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -123,7 +124,7 @@ class Document(models.Model):
 
     class Meta:
         db_table = "app_document"
-        ordering = ["-uploaded_at"]
+        ordering = ["-created_at"]
         indexes = [
             GinIndex(fields=["search_vector"]),
         ]
@@ -140,7 +141,7 @@ class Document(models.Model):
         super().save(*args, **kwargs)
 
 
-class Highlight(models.Model):
+class Highlight(AuditMixin, models.Model):
     """Text highlight/annotation on a document."""
 
     document = models.ForeignKey(
@@ -161,9 +162,6 @@ class Highlight(models.Model):
         ("purple", "Purple"),
     ]
     color = models.CharField(max_length=20, choices=COLOR_CHOICES, default="yellow")
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     # Full-text search
     search_vector = SearchVectorField(null=True, blank=True)
@@ -172,6 +170,7 @@ class Highlight(models.Model):
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     labels = models.ManyToManyField(Label, related_name="highlights", blank=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = "app_document_highlight"
@@ -198,7 +197,7 @@ class Highlight(models.Model):
         return f"{base} at {self.page_number}.)"
 
 
-class Fact(models.Model):
+class Fact(AuditMixin, models.Model):
     """Timeline fact/event for a matter."""
 
     COLOR_CHOICES = [
@@ -231,6 +230,7 @@ class Fact(models.Model):
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     labels = models.ManyToManyField(Label, related_name="facts", blank=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.description}"
@@ -239,7 +239,7 @@ class Fact(models.Model):
         db_table = "app_fact"
 
 
-class Witness(models.Model):
+class Witness(AuditMixin, models.Model):
     """Witness associated with a matter."""
 
     ALIGNMENT_CHOICES = [
@@ -266,8 +266,7 @@ class Witness(models.Model):
     importance = models.PositiveIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name

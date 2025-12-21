@@ -1,9 +1,12 @@
 from django.db import models
+from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
+from utils.models import AuditMixin
 
 
-class Intake(models.Model):
+class Intake(AuditMixin, models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     date = models.DateField(null=True)
@@ -21,6 +24,7 @@ class Intake(models.Model):
     )
     source = models.CharField(max_length=50, null=True)
     status = models.CharField(max_length=50, default="Open")
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.name} : {self.id}"
@@ -43,7 +47,7 @@ class Intake(models.Model):
         db_table = "app_intake"
 
 
-class Note(models.Model):
+class Note(AuditMixin, models.Model):
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     intake = models.ForeignKey(Intake, on_delete=models.SET_NULL, null=True)
@@ -51,7 +55,7 @@ class Note(models.Model):
     time = models.TimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
     type = models.CharField(max_length=50, blank=True, null=True)
     details = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.type} : {self.id}"
@@ -65,6 +69,7 @@ class UserIntakeView(models.Model):
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     intake = models.ForeignKey(Intake, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
     last_viewed_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

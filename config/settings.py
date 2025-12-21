@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "django_cleanup.apps.CleanupConfig",
     "django_q",
     "watson",
+    "simple_history",
 ]
 
 # Django-Q2 Configuration
@@ -101,6 +102,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.agenda.middleware.DailyDashCheckMiddleware",
+    "utils.middleware.CurrentUserMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

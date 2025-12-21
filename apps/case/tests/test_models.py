@@ -43,7 +43,7 @@ class TestDocument:
         assert document.description == "A test document"
         assert document.category == "Evidence"
         assert document.matter == matter
-        assert document.uploaded_by == user
+        assert document.created_by == user
 
     def test_citation_auto_generated(self, document):
         """Citation should use bluebook abbreviation when no manual override."""

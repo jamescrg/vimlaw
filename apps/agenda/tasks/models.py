@@ -1,12 +1,14 @@
 from django.db import models
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
 from apps.folders.models import Folder
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 
-class Task(models.Model):
+class Task(AuditMixin, models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     folder = models.ForeignKey(Folder, on_delete=models.SET_NULL, null=True)
     description = models.CharField(max_length=200, blank=True, null=True)
@@ -18,6 +20,7 @@ class Task(models.Model):
     custom_order = models.DecimalField(
         max_digits=18, decimal_places=8, null=True, blank=True, default=None
     )
+    history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
         # Auto-set date_completed when status changes to Complete
@@ -58,13 +61,13 @@ class Task(models.Model):
             return "Admin"
 
 
-class TaskNote(models.Model):
+class TaskNote(AuditMixin, models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="notes")
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     date = models.DateField(null=True)
     time = models.TimeField(null=True)
     details = models.TextField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = "app_task_note"
@@ -79,6 +82,7 @@ class UserTaskNoteView(models.Model):
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
     last_viewed_at = models.DateTimeField(auto_now=True)
 
     class Meta:

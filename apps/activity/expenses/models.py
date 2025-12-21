@@ -1,11 +1,13 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
 from apps.invoicing.invoices.models import Invoice
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 
-class ExpenseEntry(models.Model):
+class ExpenseEntry(AuditMixin, models.Model):
     date = models.DateField(null=True)
     matter = models.ForeignKey(Matter, on_delete=models.PROTECT, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
@@ -17,6 +19,7 @@ class ExpenseEntry(models.Model):
     invoice = models.ForeignKey(
         Invoice, on_delete=models.SET_NULL, null=True, blank=True
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.description}"
