@@ -1467,20 +1467,20 @@ function updateSearchDecorations() {
 function scrollToCurrentMatch() {
   if (currentMatchIndex < 0 || currentMatchIndex >= searchMatches.length) return;
 
-  const match = searchMatches[currentMatchIndex];
-  if (!match) return;
+  // Wait a tick for decorations to be applied, then find the current match element
+  requestAnimationFrame(function() {
+    const currentMatchEl = document.querySelector(".search-match-current");
+    if (!currentMatchEl) return;
 
-  // Get the DOM position of the match and scroll to it
-  const coords = editor.view.coordsAtPos(match.from);
-  if (coords) {
-    const container = document.getElementById("note-editor");
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      const relativeTop = coords.top - rect.top;
-      const centerOffset = container.clientHeight / 2;
-      container.scrollTop += relativeTop - centerOffset;
+    const notePage = document.querySelector(".note-page");
+    if (notePage) {
+      const matchRect = currentMatchEl.getBoundingClientRect();
+      const containerRect = notePage.getBoundingClientRect();
+      const centerOffset = notePage.clientHeight / 2;
+      const scrollTop = notePage.scrollTop + (matchRect.top - containerRect.top) - centerOffset;
+      notePage.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
     }
-  }
+  });
 }
 
 function updateSearchCount() {
