@@ -1,18 +1,19 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from apps.matters.models import Matter, Role
 from apps.matters.rates.models import Rate
 
 
-class MatterAdmin(admin.ModelAdmin):
+class MatterAdmin(SimpleHistoryAdmin):
     list_display = ("id", "name")
 
 
-class RateAdmin(admin.ModelAdmin):
+class RateAdmin(SimpleHistoryAdmin):
     list_display = ("id", "user", "matter", "matter_rate")
 
 
-class RoleAdmin(admin.ModelAdmin):
+class RoleAdmin(SimpleHistoryAdmin):
     list_display = ("id", "name")
 
 

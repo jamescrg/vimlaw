@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from apps.invoicing.applications.models import CreditApplication, PaymentApplication
 from apps.invoicing.credits.models import Credit
@@ -6,7 +7,7 @@ from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
 
 
-class InvoiceAdmin(admin.ModelAdmin):
+class InvoiceAdmin(SimpleHistoryAdmin):
     list_display = [
         "id",
         "matter",
@@ -22,7 +23,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     readonly_fields = ["status"]
 
 
-class PaymentAdmin(admin.ModelAdmin):
+class PaymentAdmin(SimpleHistoryAdmin):
     list_display = [
         "id",
         "matter",
@@ -35,13 +36,13 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ["matter__name", "detail"]
 
 
-class CreditsAdmin(admin.ModelAdmin):
+class CreditsAdmin(SimpleHistoryAdmin):
     list_display = ["id", "matter", "date", "detail", "amount"]
     list_filter = ["matter"]
     search_fields = ["matter__name", "detail"]
 
 
-class PaymentApplicationAdmin(admin.ModelAdmin):
+class PaymentApplicationAdmin(SimpleHistoryAdmin):
     list_display = [
         "id",
         "payment",
@@ -55,7 +56,7 @@ class PaymentApplicationAdmin(admin.ModelAdmin):
     autocomplete_fields = ["payment", "invoice"]
 
 
-class CreditApplicationAdmin(admin.ModelAdmin):
+class CreditApplicationAdmin(SimpleHistoryAdmin):
     list_display = [
         "id",
         "credit",

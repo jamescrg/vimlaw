@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from simple_history.admin import SimpleHistoryAdmin
 
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import CustomUser
 
 
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(SimpleHistoryAdmin, UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser

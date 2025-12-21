@@ -1,9 +1,10 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from apps.trust.models import Transaction
 
 
-class TransactionAdmin(admin.ModelAdmin):
+class TransactionAdmin(SimpleHistoryAdmin):
     list_display = (
         "id",
         "contact",

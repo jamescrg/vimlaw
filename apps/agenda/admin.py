@@ -1,10 +1,11 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from apps.agenda.events.models import Event
 from apps.agenda.tasks.models import Task
 
 
-class TaskAdmin(admin.ModelAdmin):
+class TaskAdmin(SimpleHistoryAdmin):
     list_display = (
         "id",
         "user",
@@ -14,7 +15,7 @@ class TaskAdmin(admin.ModelAdmin):
     )
 
 
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(SimpleHistoryAdmin):
     list_display = ("id", "date", "matter", "description")
 
 
