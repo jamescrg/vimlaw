@@ -87,6 +87,7 @@ body:has(.note-page.standalone) {
 
 .panel-btn:hover {
   color: var(--color-primary);
+  background: var(--background-section);
 }
 
 .note-sidebar .sidebar-panel-toolbar {
@@ -96,6 +97,10 @@ body:has(.note-page.standalone) {
   gap: 0.5rem;
   padding: 0.5rem 0 0 0;
   border-bottom: none;
+}
+
+.note-sidebar .sidebar-panel-toolbar .panel-btn:hover {
+  background: var(--background-subnav);
 }
 
 .note-sidebar .sidebar-panel-toolbar .panel-btn i {
@@ -341,6 +346,7 @@ body:has(.note-page.standalone) {
 
 .note-toolbar .toolbar-left a:not(.dropdown-menu a):hover {
   color: var(--color-primary);
+  background: var(--background-section);
 }
 
 .note-toolbar .toolbar-left .select-btn {
@@ -359,6 +365,7 @@ body:has(.note-page.standalone) {
 
 .note-toolbar .toolbar-left .select-btn:hover {
   color: var(--color-primary);
+  background: var(--background-section);
 }
 
 .note-toolbar .toolbar-left .dropdown-menu .dropdown-item {
@@ -395,6 +402,7 @@ body:has(.note-page.standalone) {
 
 .note-toolbar .toolbar-right a:hover {
   color: var(--color-primary);
+  background: var(--background-section);
 }
 
 .note-toolbar .toolbar-left #save-status-btn.active {
@@ -1010,6 +1018,7 @@ body:has(.note-page.standalone) {
 
 .search-replace-bar button:hover {
   color: var(--color-primary);
+  background: var(--background-section);
 }
 
 /* Search match highlight */

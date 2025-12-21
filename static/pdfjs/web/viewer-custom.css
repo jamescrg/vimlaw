@@ -51,10 +51,12 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
+  transition: all 0.15s ease;
 }
 
 #toolbar button:hover {
   color: #1c1917;
+  background: #d6d3d1;
 }
 
 #toolbar [class*="icon-chevron"] {
