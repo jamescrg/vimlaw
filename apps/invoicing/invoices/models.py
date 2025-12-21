@@ -1,7 +1,8 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
-from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 INVOICE_STATUS = (
     ("DRAFT", "Draft"),
@@ -13,11 +14,7 @@ INVOICE_STATUS = (
 )
 
 
-class Invoice(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True, blank=True
-    )
+class Invoice(AuditMixin, models.Model):
     matter = models.ForeignKey(Matter, on_delete=models.SET_NULL, null=True, blank=True)
     date_limit = models.DateField()
     date_issued = models.DateField()
@@ -27,6 +24,7 @@ class Invoice(models.Model):
     discount = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=INVOICE_STATUS, default="DRAFT")
     pdf_file = models.FileField(upload_to="invoices/", null=True, blank=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"Invoice #{self.id}"

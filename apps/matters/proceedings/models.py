@@ -1,9 +1,11 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 
-class Proceeding(models.Model):
+class Proceeding(AuditMixin, models.Model):
     user = models.ForeignKey(
         "accounts.CustomUser", on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -14,6 +16,7 @@ class Proceeding(models.Model):
     nickname = models.CharField(max_length=50, blank=True, null=True)
     status = models.CharField(max_length=50, null=True)
     primary = models.BooleanField(default=False)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.case_number}"

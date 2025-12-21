@@ -1,10 +1,12 @@
 from django.core.files.storage import default_storage as storage
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.contacts.models import Contact
+from utils.models import AuditMixin
 
 
-class Matter(models.Model):
+class Matter(AuditMixin, models.Model):
     user = models.ForeignKey(
         "accounts.CustomUser", on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -28,6 +30,7 @@ class Matter(models.Model):
     client = models.ForeignKey(
         Contact, related_name="client_matters", on_delete=models.SET_NULL, null=True
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.name}"
@@ -272,9 +275,10 @@ class Matter(models.Model):
         }
 
 
-class PracticeArea(models.Model):
+class PracticeArea(AuditMixin, models.Model):
     name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -284,10 +288,11 @@ class PracticeArea(models.Model):
         ordering = ["name"]
 
 
-class Group(models.Model):
+class Group(AuditMixin, models.Model):
     name = models.CharField(max_length=50)
     order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -297,9 +302,10 @@ class Group(models.Model):
         ordering = ["order"]
 
 
-class Role(models.Model):
+class Role(AuditMixin, models.Model):
     name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.name}"
@@ -308,7 +314,7 @@ class Role(models.Model):
         db_table = "app_matter_role"
 
 
-class Relationship(models.Model):
+class Relationship(AuditMixin, models.Model):
     matter = models.ForeignKey(
         Matter,
         on_delete=models.CASCADE,
@@ -316,6 +322,7 @@ class Relationship(models.Model):
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = "app_matter_relationship"

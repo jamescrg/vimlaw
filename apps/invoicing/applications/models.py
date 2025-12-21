@@ -1,12 +1,14 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
+from utils.models import AuditMixin
 
 
-class PaymentApplication(models.Model):
+class PaymentApplication(AuditMixin, models.Model):
     """
     Intermediate model tracking the allocation of payments to specific invoices.
     Represents the many-to-many relationship between payments and invoices
@@ -31,8 +33,7 @@ class PaymentApplication(models.Model):
         validators=[MinValueValidator(0.01)],
         help_text="The dollar amount from this payment applied to this invoice",
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"${self.amount_applied} from Payment #{self.payment_id} to Invoice #{self.invoice_id}"
@@ -71,7 +72,7 @@ class PaymentApplication(models.Model):
         ]
 
 
-class CreditApplication(models.Model):
+class CreditApplication(AuditMixin, models.Model):
     """
     Intermediate model tracking the allocation of credits to specific invoices.
     Represents the many-to-many relationship between credits and invoices
@@ -96,8 +97,7 @@ class CreditApplication(models.Model):
         validators=[MinValueValidator(0.01)],
         help_text="The dollar amount from this credit applied to this invoice",
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"${self.amount_applied} from Credit #{self.credit_id} to Invoice #{self.invoice_id}"

@@ -105,7 +105,7 @@ def document(matter, user, pdf_file):
         name="Test Document",
         description="A test document",
         category="Evidence",
-        uploaded_by=user,
+        created_by=user,
         date="2024-01-20",
         ocr_status="not_applicable",
     )

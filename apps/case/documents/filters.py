@@ -59,7 +59,7 @@ class FilesFilter(django_filters.FilterSet):
     order_by = django_filters.OrderingFilter(
         fields=[
             ("name", "name"),
-            ("uploaded_at", "uploaded_at"),
+            ("created_at", "created_at"),
             ("date", "date"),
             ("importance", "importance"),
         ],

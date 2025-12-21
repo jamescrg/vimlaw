@@ -41,10 +41,10 @@ def get_document_data(request, matter_id):
     # Always filter by the selected matter
     documents = (
         Document.objects.filter(matter=matter)
-        .select_related("matter", "uploaded_by", "proceeding")
+        .select_related("matter", "created_by", "proceeding")
         .prefetch_related("labels")
         .annotate(highlight_count=Count("highlights"))
-        .order_by("-uploaded_at")
+        .order_by("-created_at")
     )
 
     # Apply additional filters if present
@@ -77,9 +77,9 @@ def get_document_data(request, matter_id):
     )
 
     # Get current sort order
-    current_order = filter_data.get("order_by", "-uploaded_at")
+    current_order = filter_data.get("order_by", "-created_at")
     if isinstance(current_order, list):
-        current_order = current_order[0] if current_order else "-uploaded_at"
+        current_order = current_order[0] if current_order else "-created_at"
 
     # Get selected category
     selected_category = filter_data.get("category")

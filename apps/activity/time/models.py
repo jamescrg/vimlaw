@@ -1,11 +1,13 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
 from apps.invoicing.invoices.models import Invoice
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 
-class TimeEntry(models.Model):
+class TimeEntry(AuditMixin, models.Model):
     date = models.DateField(null=True)
     matter = models.ForeignKey(Matter, on_delete=models.PROTECT, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
@@ -17,6 +19,7 @@ class TimeEntry(models.Model):
     invoice = models.ForeignKey(
         Invoice, on_delete=models.SET_NULL, null=True, blank=True
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.actions}"
@@ -40,12 +43,11 @@ class TimeEntry(models.Model):
             return 0
 
 
-class AbbreviationCode(models.Model):
+class AbbreviationCode(AuditMixin, models.Model):
     code = models.CharField(max_length=50, unique=True)
     expansion = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.code} → {self.expansion}"

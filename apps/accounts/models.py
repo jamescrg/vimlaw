@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.accounts.managers import CustomUserManager
 
@@ -18,6 +19,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=5, choices=ROLE_OPTIONS, default="USER")
     is_attorney = models.BooleanField(default=True)
     last_dash_check = models.DateField(null=True, blank=True)
+    history = HistoricalRecords()
 
     objects = CustomUserManager()
 

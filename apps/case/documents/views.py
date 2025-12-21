@@ -62,14 +62,14 @@ def documents_filter(request, matter_id):
         # Build queryset filtered by matter
         queryset = (
             Document.objects.filter(matter=matter)
-            .select_related("matter", "uploaded_by")
-            .order_by("-uploaded_at")
+            .select_related("matter", "created_by")
+            .order_by("-created_at")
             if matter
             else Document.objects.none()
         )
 
         filter_obj = FilesFilter(
-            filter_data or {"order_by": "-uploaded_at"},
+            filter_data or {"order_by": "-created_at"},
             queryset=queryset,
             matter=matter,
         )
@@ -249,7 +249,7 @@ def documents_add(request, matter_id):
             # Two-phase save: first save without file to get PK
             document = form.save(commit=False)
             document.matter = matter
-            document.uploaded_by = request.user
+            document.created_by = request.user
             document.save()  # Gets PK
             form.save_m2m()
 
@@ -328,7 +328,7 @@ def documents_edit(request, document_id):
             old_file_path = document.file.name if document.file else None
 
             document = form.save(commit=False)
-            document.uploaded_by = request.user
+            document.updated_by = request.user
 
             # If new file uploaded, delete old and reset OCR fields
             if uploaded_file:

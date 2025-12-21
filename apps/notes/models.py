@@ -1,12 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 User = get_user_model()
 
 
-class Note(models.Model):
+class Note(AuditMixin, models.Model):
     """Rich markdown note for a matter with inline document/highlight references."""
 
     CATEGORY_CHOICES = [
@@ -45,8 +48,7 @@ class Note(models.Model):
     labels = models.ManyToManyField("case.Label", related_name="notes", blank=True)
 
     viewed_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.title
@@ -69,6 +71,7 @@ class NoteView(models.Model):
         on_delete=models.CASCADE,
         related_name="views",
     )
+    created_at = models.DateTimeField(default=timezone.now)
     viewed_at = models.DateTimeField(auto_now=True)
 
     class Meta:

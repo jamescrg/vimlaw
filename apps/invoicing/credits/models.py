@@ -1,13 +1,16 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 
-class Credit(models.Model):
+class Credit(AuditMixin, models.Model):
     matter = models.ForeignKey(Matter, on_delete=models.PROTECT)
     date = models.DateField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     detail = models.CharField(max_length=255, null=True, blank=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"Credit #{self.id} - {self.matter}"

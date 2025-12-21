@@ -1,10 +1,12 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 
-class Conversation(models.Model):
+class Conversation(AuditMixin, models.Model):
     """A chat conversation within a matter context."""
 
     LLM_CHOICES = [
@@ -25,8 +27,7 @@ class Conversation(models.Model):
     )
     title = models.CharField(max_length=255, blank=True, default="")
     llm = models.CharField(max_length=20, choices=LLM_CHOICES, default="claude")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ["-updated_at"]
@@ -45,7 +46,7 @@ class Conversation(models.Model):
         return CustomUser.objects.filter(ai_messages__conversation=self).distinct()
 
 
-class Message(models.Model):
+class Message(AuditMixin, models.Model):
     """Individual message in a conversation."""
 
     ROLE_CHOICES = [
@@ -58,7 +59,6 @@ class Message(models.Model):
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
 
     # Track which user sent this message (null for assistant messages)
     user = models.ForeignKey(
@@ -72,6 +72,7 @@ class Message(models.Model):
     # Track token usage for monitoring
     input_tokens = models.IntegerField(null=True, blank=True)
     output_tokens = models.IntegerField(null=True, blank=True)
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ["created_at"]
@@ -81,7 +82,7 @@ class Message(models.Model):
         return f"{self.role}: {self.content[:50]}..."
 
 
-class ChatAttachment(models.Model):
+class ChatAttachment(AuditMixin, models.Model):
     """File attachment for a chat conversation (temporary context, not saved to documents)."""
 
     OCR_STATUS_CHOICES = [
@@ -100,10 +101,10 @@ class ChatAttachment(models.Model):
     ocr_status = models.CharField(
         max_length=20, choices=OCR_STATUS_CHOICES, default="pending"
     )
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     class Meta:
-        ordering = ["uploaded_at"]
+        ordering = ["created_at"]
         db_table = "matters_chat_attachment"
 
     def __str__(self):

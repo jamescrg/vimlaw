@@ -1,9 +1,12 @@
 from django.db import models
+from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.matters.models import Matter
+from utils.models import AuditMixin
 
 
-class Event(models.Model):
+class Event(AuditMixin, models.Model):
     LOCATION_CHOICES = [
         ("Zoom", "Zoom"),
         ("Virtual", "Virtual"),
@@ -25,8 +28,7 @@ class Event(models.Model):
     )
     status = models.CharField(max_length=50, blank=True, null=True)
     google_id = models.CharField(max_length=255, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.description} : {self.id}"
@@ -43,6 +45,7 @@ class CalendarSyncState(models.Model):
 
     calendar_id = models.CharField(max_length=255, unique=True)
     sync_token = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
     last_sync_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
