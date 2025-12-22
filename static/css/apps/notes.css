@@ -160,13 +160,13 @@ body:has(.note-page.standalone) {
 .note-main .note-page #note-editor-container {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 1 0 auto;
 }
 
 .note-main .note-page .note-canvas {
   margin: 0;
   border-radius: 0;
-  flex: 1;
+  flex: 1 0 auto;
   box-shadow: none;
   padding: 2rem 3rem 8rem;
 }
