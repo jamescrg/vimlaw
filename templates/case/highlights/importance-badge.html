@@ -1,12 +1,14 @@
 <div class="highlight-importance-badge dropdown"
-     id="highlight-importance-{{ highlight.id }}">
+     id="highlight-importance-{{ highlight.id }}"
+     x-data="dropdown()">
   <button type="button"
           class="app-badge app-badge-lg importance-badge-btn {% if highlight.importance == 1 %}badge-red{% elif highlight.importance <= 3 %}badge-orange{% elif highlight.importance <= 6 %}badge-yellow{% endif %}"
-          data-bs-toggle="dropdown"
-          aria-expanded="false">
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
     <i class="icon-flag"></i>{{ highlight.importance }}
   </button>
-  <ul class="dropdown-menu">
+  <ul class="dropdown-menu" x-ref="menu" x-show="open">
     {% for i in importance_choices %}
       <li>
         <a class="dropdown-item {% if highlight.importance == i %}active{% endif %}"

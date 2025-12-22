@@ -1,9 +1,10 @@
-<div class="dropdown">
+<div class="dropdown" x-data="dropdown()">
   <button class="button-link"
           type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false">{{ task.focus|default:"None set" }}</button>
-  <ul class="dropdown-menu">
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ task.focus|default:"None set" }}</button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open">
     <li>
       <a class="dropdown-item"
          href="#"

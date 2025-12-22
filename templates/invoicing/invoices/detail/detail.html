@@ -14,14 +14,10 @@
             {% if invoice.status == 'SENT' %}
               <button class="accent-link"
                       hx-get="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type='direct' %}"
-                      hx-target="#htmx-modal-container"
-                      data-bs-toggle="modal"
-                      data-bs-target="#htmx-modal-container">+ Card</button>
+                      hx-target="#htmx-modal-container">+ Card</button>
               <button class="accent-link"
                       hx-get="{% url 'invoicing:quick-invoice-payment' pk=invoice.id payment_type='trust' %}"
-                      hx-target="#htmx-modal-container"
-                      data-bs-toggle="modal"
-                      data-bs-target="#htmx-modal-container">+ Trust</button>
+                      hx-target="#htmx-modal-container">+ Trust</button>
             {% endif %}
           </div>
         </div>
@@ -31,30 +27,31 @@
                     class="btn-icon"
                     hx-get="{% url 'invoicing:invoices-edit' invoice.id %}"
                     hx-target="#htmx-modal-container"
-                    hx-trigger="click"
-                    data-bs-toggle="modal"
-                    data-bs-target="#htmx-modal-container">
+                    hx-trigger="click">
               <i class="icon-pencil"></i>
             </button>
           {% endif %}
-          <button class="button-link"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false">
-            <i class="icon-download"></i>
-          </button>
-          <ul class="dropdown-menu">
-            <li>
-              <a class="dropdown-item"
-                 target="_blank"
-                 href="{% url 'invoicing:invoices-pdf-download' invoice.id %}"><i class="icon-file-pdf"></i> Download PDF</a>
-            </li>
-            <li>
-              <a class="dropdown-item"
-                 target="_blank"
-                 href="{% url 'invoicing:invoice-ledes' invoice.id %}"><i class="icon-file-text"></i> Download Ledes</a>
-            </li>
-          </ul>
+          <div class="dropdown" x-data="dropdown()">
+            <button class="button-link"
+                    type="button"
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">
+              <i class="icon-download"></i>
+            </button>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open">
+              <li>
+                <a class="dropdown-item"
+                   target="_blank"
+                   href="{% url 'invoicing:invoices-pdf-download' invoice.id %}"><i class="icon-file-pdf"></i> Download PDF</a>
+              </li>
+              <li>
+                <a class="dropdown-item"
+                   target="_blank"
+                   href="{% url 'invoicing:invoice-ledes' invoice.id %}"><i class="icon-file-text"></i> Download Ledes</a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

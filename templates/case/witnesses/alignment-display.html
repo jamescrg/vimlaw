@@ -1,8 +1,9 @@
-<div class="dropdown">
+<div class="dropdown" x-data="dropdown()">
   <button class="button-link"
           type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false">
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
     {% if witness.alignment == "friendly" %}
       Friendly
     {% elif witness.alignment == "hostile" %}
@@ -11,7 +12,7 @@
       Neutral
     {% endif %}
   </button>
-  <ul class="dropdown-menu">
+  <ul class="dropdown-menu" x-ref="menu" x-show="open">
     <li>
       <a class="dropdown-item"
          href="#"

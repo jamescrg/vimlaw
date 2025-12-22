@@ -5,9 +5,7 @@
       <button type="button"
               hx-get="{% url 'settings:add-practice-area' %}"
               hx-target="#htmx-modal-container"
-              hx-trigger="click"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
+              hx-trigger="click">
         <i class="icon-plus"></i>
       </button>
       <a class="{% if practice_area_filter == 'active' %}toggle-active{% endif %}"
@@ -34,19 +32,18 @@
       {% for practice_area in practice_areas %}
         <tr>
           <td class="dropdown-cell">
-            <div class="dropdown">
+            <div class="dropdown" x-data="dropdown()">
               <button class="button-link"
                       type="button"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false">{{ practice_area.name }}</button>
-              <ul class="dropdown-menu">
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open">{{ practice_area.name }}</button>
+              <ul class="dropdown-menu" x-ref="menu" x-show="open">
                 <li>
                   <a class="dropdown-item"
                      hx-get="{% url 'settings:edit-practice-area' practice_area.id %}"
                      hx-target="#htmx-modal-container"
-                     hx-trigger="click"
-                     data-bs-toggle="modal"
-                     data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
+                     hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
                 </li>
                 <li>
                   <a class="dropdown-item"

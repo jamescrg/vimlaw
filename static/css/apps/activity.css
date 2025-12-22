@@ -5,6 +5,10 @@ Time entry form
 
 /* styles set on forms.css to allow rendering from matter detail */
 
+.actions-preview {
+  display: none;
+}
+
 
 /* ==========================================================================
 Expenses form

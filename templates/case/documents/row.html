@@ -14,12 +14,13 @@
   <td class="col-document dropdown-cell">
     <div class="document-name-row">
       <div class="document-name-content">
-        <div class="dropdown">
+        <div class="dropdown" x-data="dropdown()">
           <a href="#"
              class="document-name-link"
-             data-bs-toggle="dropdown"
-             aria-expanded="false">{{ document.name }}</a>
-          <ul class="dropdown-menu">
+             x-ref="button"
+             @click.prevent="toggle()"
+             :aria-expanded="open">{{ document.name }}</a>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open">
             {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
               <li>
                 <a class="dropdown-item"
@@ -31,9 +32,7 @@
               <a class="dropdown-item"
                  href="#"
                  hx-get="{% url 'case:documents-edit' document.id %}"
-                 hx-target="#htmx-modal-container"
-                 data-bs-toggle="modal"
-                 data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Details</a>
+                 hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Details</a>
             </li>
             <li>
               <a class="dropdown-item"
@@ -48,9 +47,7 @@
               <a class="dropdown-item"
                  href="#"
                  hx-get="{% url 'case:labels-apply-modal' 'document' document.id %}"
-                 hx-target="#htmx-modal-container"
-                 data-bs-toggle="modal"
-                 data-bs-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
+                 hx-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
             </li>
             {% if document.highlight_count %}
               <li>

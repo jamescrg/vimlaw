@@ -780,7 +780,7 @@
       text = text.replace(/[grcpo]?==/g, '');
 
       // Get source citations
-      const sources = Array.from(item.querySelectorAll('.source-citation > a[data-bs-toggle="dropdown"]'))
+      const sources = Array.from(item.querySelectorAll('.source-citation > a'))
         .map(a => a.textContent?.trim())
         .filter(s => s && s.length > 0);
 
@@ -930,11 +930,11 @@
     const tempHtml = `
       <div class="outline-item" id="outline-item-${tempId}" data-item-id="${tempId}" data-parent-id="${parentId}">
         <div class="item-row">
-          <div class="item-menu dropdown">
-            <button class="item-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="item-menu dropdown" x-data="dropdown()">
+            <button class="item-menu-btn" type="button" x-ref="button" @click="toggle()" :aria-expanded="open">
               <i class="icon-ellipsis-vertical"></i>
             </button>
-            <ul class="dropdown-menu"></ul>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open"></ul>
           </div>
           <span class="item-bullet">•</span>
           <div class="item-content-wrapper">
@@ -1055,11 +1055,11 @@
     let tempHtml = `
       <div class="outline-item" id="outline-item-${tempId}" data-item-id="${tempId}" data-parent-id="${parentId}">
         <div class="item-row">
-          <div class="item-menu dropdown">
-            <button class="item-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="item-menu dropdown" x-data="dropdown()">
+            <button class="item-menu-btn" type="button" x-ref="button" @click="toggle()" :aria-expanded="open">
               <i class="icon-ellipsis-vertical"></i>
             </button>
-            <ul class="dropdown-menu"></ul>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open"></ul>
           </div>
           <span class="item-bullet">•</span>
           <div class="item-content-wrapper">
@@ -1184,11 +1184,11 @@
     const tempHtml = `
       <div class="outline-item" id="outline-item-${tempId}" data-item-id="${tempId}" data-parent-id="${parentId}">
         <div class="item-row">
-          <div class="item-menu dropdown">
-            <button class="item-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="item-menu dropdown" x-data="dropdown()">
+            <button class="item-menu-btn" type="button" x-ref="button" @click="toggle()" :aria-expanded="open">
               <i class="icon-ellipsis-vertical"></i>
             </button>
-            <ul class="dropdown-menu"></ul>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open"></ul>
           </div>
           <span class="item-bullet">•</span>
           <div class="item-content-wrapper">
@@ -3626,9 +3626,6 @@
           const itemId = focusedItem.dataset.itemId;
           htmx.ajax('GET', `/outlines/item/${itemId}/sources/`, {
             target: '#htmx-modal-container'
-          }).then(() => {
-            const modal = new bootstrap.Modal(document.getElementById('htmx-modal-container'));
-            modal.show();
           });
         }
         break;

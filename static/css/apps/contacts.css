@@ -1,12 +1,44 @@
+/* ==========================================================================
+   Contacts Layout (Bootstrap grid replacement)
+   ========================================================================== */
+
+.contacts-layout {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .contacts-layout {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+
+  .contacts-layout > .contacts-sidebar {
+    flex: 0 0 calc(25% - 0.75rem);
+    max-width: calc(25% - 0.75rem);
+  }
+
+  .contacts-layout > .contacts-list {
+    flex: 0 0 calc(25% - 0.75rem);
+    max-width: calc(25% - 0.75rem);
+  }
+
+  .contacts-layout > .contacts-detail {
+    flex: 0 0 calc(50% - 1.5rem);
+    max-width: calc(50% - 1.5rem);
+  }
+}
+
+/* ==========================================================================
+   Contacts Styles
+   ========================================================================== */
+
 .contacts {
   padding-bottom: 1.25rem;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
 }
 
 .contact {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
 }
 
 .contact .section-body {

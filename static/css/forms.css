@@ -25,8 +25,21 @@ textarea {
   background: var(--input-background);
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
   outline: none;
-  padding: 0.5rem;
+  padding: 0.375rem 0.75rem;
+}
+
+button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .toolbar input {
@@ -171,7 +184,10 @@ textarea {
   border: solid 1px var(--button-primary-background);
   border-radius: var(--radius-md);
   color: var(--background-subnav);
-  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.375rem 0.75rem;
 }
 
 .disabled-btn {

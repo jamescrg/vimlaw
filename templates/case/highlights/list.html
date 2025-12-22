@@ -6,85 +6,91 @@
               class="btn-icon"
               hx-get="{% url 'case:highlights-filter' matter.id %}"
               hx-target="#htmx-modal-container"
-              hx-trigger="click"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
+              hx-trigger="click">
         <i class="icon-list-filter"></i>Filter
       </button>
-      <button type="button"
-              id="highlights-document-filter"
-              class="select-btn filter-dropdown-button {% if selected_document %}toggle-active{% endif %}"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
-        <span><i class="icon-file with-text"></i>{{ selected_document.name|default:"All Documents"|truncatechars:30 }}</span>
-        <small>
-          <i class="icon-chevron-down"></i>
-        </small>
-      </button>
-      <ul class="dropdown-menu"
-          hx-target="#highlights-document-filter"
-          hx-swap="outerHTML">
-        <li>
-          <a class="dropdown-item {% if not selected_document %}active{% endif %}"
-             href="#"
-             hx-post="{% url 'case:highlights-filter-document-clear' matter.id %}"
-             hx-target="#highlights"
-             hx-swap="outerHTML"><i class="icon-files"></i> All Documents</a>
-        </li>
-        {% for doc in documents %}
+      <div class="dropdown" x-data="dropdown()">
+        <button type="button"
+                id="highlights-document-filter"
+                class="select-btn filter-dropdown-button {% if selected_document %}toggle-active{% endif %}"
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">
+          <span><i class="icon-file with-text"></i>{{ selected_document.name|default:"All Documents"|truncatechars:30 }}</span>
+          <small>
+            <i class="icon-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu"
+            x-ref="menu"
+            x-show="open"
+            hx-target="#highlights-document-filter"
+            hx-swap="outerHTML">
           <li>
-            <a class="dropdown-item {% if selected_document.id == doc.id %}active{% endif %}"
+            <a class="dropdown-item {% if not selected_document %}active{% endif %}"
                href="#"
-               hx-post="{% url 'case:highlights-filter-document' matter.id doc.id %}"
+               hx-post="{% url 'case:highlights-filter-document-clear' matter.id %}"
                hx-target="#highlights"
-               hx-swap="outerHTML"><i class="icon-file"></i> {{ doc.name|truncatechars:30 }}</a>
+               hx-swap="outerHTML"><i class="icon-files"></i> All Documents</a>
           </li>
-        {% endfor %}
-      </ul>
-      <button type="button"
-              id="highlights-importance-filter"
-              class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
-      <span><i class="icon-flag with-text"></i>
-      {% if importance_value %}
-        {% if importance_value == 1 %}
-          1 only
+          {% for doc in documents %}
+            <li>
+              <a class="dropdown-item {% if selected_document.id == doc.id %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'case:highlights-filter-document' matter.id doc.id %}"
+                 hx-target="#highlights"
+                 hx-swap="outerHTML"><i class="icon-file"></i> {{ doc.name|truncatechars:30 }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="dropdown" x-data="dropdown()">
+        <button type="button"
+                id="highlights-importance-filter"
+                class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">
+        <span><i class="icon-flag with-text"></i>
+        {% if importance_value %}
+          {% if importance_value == 1 %}
+            1 only
+          {% else %}
+            {{ importance_value }} and above
+          {% endif %}
         {% else %}
-          {{ importance_value }} and above
+          Importance
         {% endif %}
-      {% else %}
-        Importance
-      {% endif %}
-    </span>
-    <small>
-      <i class="icon-chevron-down"></i>
-    </small>
-  </button>
-  <ul class="dropdown-menu">
-    {% for importance in importances %}
-      {% if importance != 10 %}
-        <li>
-        <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:highlights-filter-importance' matter.id importance %}"
-           hx-target="#highlights"><i class="icon-flag"></i>
-        {% if importance == 1 %}
-          1 only
-        {% else %}
-          {{ importance }} and above
-        {% endif %}
-      </a>
-    </li>
-  {% endif %}
-{% endfor %}
-<li>
-  <a class="dropdown-item {% if not importance_value %}active{% endif %}"
-     href="#"
-     hx-get="{% url 'case:highlights-filter-importance' matter.id 0 %}"
-     hx-target="#highlights"><i class="icon-flag"></i> All Levels</a>
-</li>
+      </span>
+      <small>
+        <i class="icon-chevron-down"></i>
+      </small>
+    </button>
+    <ul class="dropdown-menu" x-ref="menu" x-show="open">
+      {% for importance in importances %}
+        {% if importance != 10 %}
+          <li>
+          <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:highlights-filter-importance' matter.id importance %}"
+             hx-target="#highlights"><i class="icon-flag"></i>
+          {% if importance == 1 %}
+            1 only
+          {% else %}
+            {{ importance }} and above
+          {% endif %}
+        </a>
+      </li>
+    {% endif %}
+  {% endfor %}
+  <li>
+    <a class="dropdown-item {% if not importance_value %}active{% endif %}"
+       href="#"
+       hx-get="{% url 'case:highlights-filter-importance' matter.id 0 %}"
+       hx-target="#highlights"><i class="icon-flag"></i> All Levels</a>
+  </li>
 </ul>
+</div>
 <input type="text"
        id="highlights-keyword-input"
        name="keyword"

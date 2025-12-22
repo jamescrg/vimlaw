@@ -62,7 +62,10 @@
       "Bash(wc:*)",
       "WebFetch(domain:lucide.dev)",
       "Bash(xargs sed:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "WebFetch(domain:alpinejs.dev)",
+      "Bash(netstat:*)",
+      "Bash(ss:*)"
     ],
     "deny": []
   }

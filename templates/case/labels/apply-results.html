@@ -6,7 +6,7 @@
          hx-vals='{"label_id": "{{ label.id }}"{% if view %}, "view": "{{ view }}"{% endif %}}'
          hx-target="#{{ object_type }}-{{ object.id }}"
          hx-swap="outerHTML"
-         data-bs-dismiss="modal">
+         @click="$dispatch('close-modal')">
         <span class="badge label-{{ label.color }}">{{ label.name }}</span>
         {% if label.is_global %}&nbsp; (Global){% endif %}
       </a>
@@ -38,6 +38,8 @@
       <option value="red">Red</option>
       <option value="yellow">Yellow</option>
     </select>
-    <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Create</button>
+    <button type="submit"
+            class="btn btn-primary"
+            @click="$dispatch('close-modal')">Create</button>
   </form>
 </div>

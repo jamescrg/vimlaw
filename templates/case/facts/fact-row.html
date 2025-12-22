@@ -8,37 +8,32 @@
   <td class="description{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
     <div class="fact-content">
       <span class="fact-text">{{ fact.description }}</span>
-      <div class="fact-actions dropdown">
+      <div class="fact-actions dropdown" x-data="dropdown()">
         <button class="btn-icon btn-ghost"
                 type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">
           <i class="icon-ellipsis-vertical"></i>
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
           <li>
             <a class="dropdown-item"
                href="#"
                hx-get="{% url 'case:facts-edit' fact.id %}"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Fact</a>
+               hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Fact</a>
           </li>
           <li>
             <a class="dropdown-item"
                href="#"
                hx-get="{% url 'case:fact-sources' fact.id %}"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"><i class="icon-book-plus"></i> Add Source</a>
+               hx-target="#htmx-modal-container"><i class="icon-book-plus"></i> Add Source</a>
           </li>
           <li>
             <a class="dropdown-item"
                href="#"
                hx-get="{% url 'case:labels-apply-modal' 'fact' fact.id %}"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
+               hx-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
           </li>
         </ul>
       </div>
@@ -46,9 +41,9 @@
   </td>
   <td class="sources{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
     {% for highlight in fact.highlights.all %}
-      <span class="source-citation dropdown">
-        <a href="#" data-bs-toggle="dropdown">{{ highlight.citation }}</a>
-        <ul class="dropdown-menu">
+      <span class="source-citation dropdown" x-data="dropdown()">
+        <a href="#" x-ref="button" @click.prevent="toggle()">{{ highlight.citation }}</a>
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
           <li>
             <a class="dropdown-item"
                href="{% url 'case:highlight-link' highlight.id %}"
@@ -71,9 +66,9 @@
       </span>
     {% endfor %}
     {% for document in fact.documents.all %}
-      <span class="source-citation dropdown">
-        <a href="#" data-bs-toggle="dropdown">{{ document.citation }}</a>
-        <ul class="dropdown-menu">
+      <span class="source-citation dropdown" x-data="dropdown()">
+        <a href="#" x-ref="button" @click.prevent="toggle()">{{ document.citation }}</a>
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
           {% if document.file.name|slice:"-4:"|lower == ".pdf" %}
             <li>
               <a class="dropdown-item"

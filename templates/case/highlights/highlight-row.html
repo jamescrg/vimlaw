@@ -3,32 +3,29 @@
     <span>{{ highlight.created_at|date:'Y-m-d' }}</span>
   </td>
   <td class="highlight dropdown-cell">
-    <div class="dropdown">
+    <div class="dropdown" x-data="dropdown()">
       <h3 class="highlight-slug">
         <span class="hl-{{ highlight.color }}">{{ highlight.slug|default:"Untitled" }}</span>
       </h3>
       <button class="btn-icon btn-ghost"
               type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">
         <i class="icon-ellipsis-vertical"></i>
       </button>
-      <ul class="dropdown-menu">
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
         <li>
           <a class="dropdown-item"
              href="#"
              hx-get="{% url 'case:highlight-detail' highlight.id %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"><i class="icon-eye"></i> View Detail</a>
+             hx-target="#htmx-modal-container"><i class="icon-eye"></i> View Detail</a>
         </li>
         <li>
           <a class="dropdown-item"
              href="#"
              hx-get="{% url 'case:edit-highlight' highlight.id %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Highlight</a>
+             hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Highlight</a>
         </li>
         <li>
           <a class="dropdown-item"
@@ -49,9 +46,7 @@
           <a class="dropdown-item"
              href="#"
              hx-get="{% url 'case:labels-apply-modal' 'highlight' highlight.id %}?view=table"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
+             hx-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
         </li>
       </ul>
     </div>
@@ -69,12 +64,13 @@
     <span>{{ highlight.document.date|date:'Y-m-d'|default:"No date" }}</span>
   </td>
   <td class="importance">
-    <div class="dropdown">
+    <div class="dropdown" x-data="dropdown()">
       <button class="button-link"
               type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">{{ highlight.importance }}</button>
-      <ul class="dropdown-menu">
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">{{ highlight.importance }}</button>
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
         {% for i in "1234567890"|make_list %}
           <li>
             <a class="dropdown-item"

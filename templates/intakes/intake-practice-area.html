@@ -1,11 +1,16 @@
-<div class="dropdown" id="intake-practice-area-dropdown-{{ intake.id }}">
+<div class="dropdown"
+     id="intake-practice-area-dropdown-{{ intake.id }}"
+     x-data="dropdown()">
   <button class="button-link"
           type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false">{{ intake.practice_area }}</button>
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ intake.practice_area }}</button>
   <ul hx-target="#intake-practice-area-dropdown-{{ intake.id }}"
       hx-swap="outerHTML"
-      class="dropdown-menu">
+      class="dropdown-menu"
+      x-ref="menu"
+      x-show="open">
     {% for pa in practice_areas %}
       <li>
         <a href="#"

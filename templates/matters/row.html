@@ -14,14 +14,15 @@
     {% if matter.primary_proceeding.case_number %}
       <div class="case-no-content">
         <span>{{ matter.primary_proceeding.case_number }}</span>
-        <div class="dropdown">
+        <div class="dropdown" x-data="dropdown()">
           <button class="btn-icon menu-icon"
                   type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false">
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
             <i class="icon-ellipsis-vertical"></i>
           </button>
-          <ul class="dropdown-menu dropdown-menu-end">
+          <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
             <li>
               <a class="dropdown-item action-btn copy-btn"
                  href="#"

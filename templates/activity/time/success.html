@@ -3,14 +3,14 @@
     <div class="modal-header">
       <h1 class="modal-title">Time Entry Added</h1>
       <div>
-        <a href="#" data-bs-dismiss="modal">
+        <a href="#" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
         </a>
       </div>
     </div>
     <div class="modal-body">
       <p>{{ hours }} hours recorded for {{ matter.name }}.</p>
-      <button type="button" class="submit" data-bs-dismiss="modal">Close</button>
+      <button type="button" class="submit" @click="$dispatch('close-modal')">Close</button>
     </div>
   </div>
 </div>

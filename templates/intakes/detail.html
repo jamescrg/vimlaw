@@ -1,6 +1,6 @@
 {% block content %}
-  <div class="row">
-    <div class="col-md-4">
+  <div class="intake-detail-layout">
+    <div class="intake-sidebar">
       <div class="section">
         <div class="toolbar">
           <div class="toolbar-left">
@@ -15,9 +15,7 @@
               <a href="#"
                  hx-get="{% url 'contacts:add-intake' id=intake.id %}"
                  hx-target="#htmx-modal-container"
-                 hx-trigger="click"
-                 data-bs-toggle="modal"
-                 data-bs-target="#htmx-modal-container">
+                 hx-trigger="click">
                 <i class="icon-user-plus"></i>
               </a>
             {% endif %}
@@ -26,9 +24,7 @@
                class="btn-icon"
                hx-get="/intakes/{{ intake.id }}/edit"
                hx-target="#htmx-modal-container"
-               hx-trigger="click"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container">
+               hx-trigger="click">
               <i class="icon-pencil"></i>
             </a>
           </div>
@@ -122,7 +118,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-8">
+    <div class="intake-main">
       <div class="section intake-notes">
         <div class="toolbar">
           <div class="toolbar-left">
@@ -133,9 +129,7 @@
                  class="btn-icon"
                  hx-get="/intakes/{{ intake.id }}/add-note"
                  hx-target="#htmx-modal-container"
-                 hx-trigger="click"
-                 data-bs-toggle="modal"
-                 data-bs-target="#htmx-modal-container">
+                 hx-trigger="click">
                 <i class="icon-plus"></i>
               </a>
             </div>
@@ -152,9 +146,7 @@
                      class="btn-icon"
                      hx-get="/intakes/{{ note.id }}/edit-note"
                      hx-target="#htmx-modal-container"
-                     hx-trigger="click"
-                     data-bs-toggle="modal"
-                     data-bs-target="#htmx-modal-container">
+                     hx-trigger="click">
                     <span class="intake-note-date-time">{{ note.date|date:'Y-m-d' }} {{ note.time|time:'g:i A' }}</span>
                   </a>
                   <span class="intake-note-username">{{ note.user.username|title }}</span>

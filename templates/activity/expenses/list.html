@@ -3,17 +3,12 @@
   <div class="toolbar">
     <div class="toolbar-left">
       <div class="filter-tools">
-        <button hx-get="/activity/expenses/add"
-                hx-target="#htmx-modal-container"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
+        <button hx-get="/activity/expenses/add" hx-target="#htmx-modal-container">
           <i class="icon-plus"></i>
         </button>
         <button hx-get="{% url 'activity:expenses-filter' %}"
                 hx-target="#htmx-modal-container"
-                class="{% if filter_label == "custom" %}toggle-active{% endif %}"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
+                class="{% if filter_label == "custom" %}toggle-active{% endif %}">
           <i class="icon-list-filter with-text"></i>Filter
         </button>
         <a href="#"
@@ -25,14 +20,15 @@
       </div>
     </div>
     <div class="toolbar-right">
-      <div class="dropdown">
+      <div class="dropdown" x-data="dropdown()">
         <button class="btn-icon"
                 type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">
           <i class="icon-cloud-download"></i>
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
           <li>
             <a class="dropdown-item"
                href="{% url 'activity:expenses-export' 'standard' %}"

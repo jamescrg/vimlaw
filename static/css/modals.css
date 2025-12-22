@@ -1,26 +1,89 @@
+/* ==========================================================================
+   Modal Base Styles (Bootstrap replacement)
+   ========================================================================== */
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1050;
+  overflow-x: hidden;
+  overflow-y: auto;
+  outline: 0;
+}
+
+.modal.show {
+  display: block;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal-dialog {
+  position: relative;
+  margin: 1.75rem auto;
+  max-width: 500px;
+  pointer-events: none;
+}
+
+.modal-dialog .modal-content {
+  pointer-events: auto;
+}
+
+.modal-lg { max-width: 800px; }
+.modal-md { max-width: 500px; }
+.modal-sm { max-width: 300px; }
+
+/* ==========================================================================
+   Modal Content Styles
+   ========================================================================== */
 
 .modal-content {
   background: var(--background-section);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
-  padding: 0.75rem 1rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border-medium);
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
 }
 
 .modal-header .icon-x {
   font-size: 1.25rem;
 }
 
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+}
+
 .modal-body {
-  padding-bottom: 1.5rem !important;
+  padding: 1rem;
 }
 
 .modal-footer {
   align-items: center;
-  border-top: 1px solid var(--stone-300);
+  border-top: 1px solid var(--border-medium);
   display: flex;
-  justify-content: space-between !important;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 1rem;
 }
 
 .modal-header a.btn-icon {

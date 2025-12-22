@@ -1,4 +1,4 @@
-<div class="contacts col-md-3">
+<div class="contacts contacts-list">
   <div class="section">
     <div class="toolbar">
       <div class="toolbar-left">
@@ -8,9 +8,7 @@
         <a href="#"
            hx-get="{% url 'contacts:add' %}"
            hx-target="#htmx-modal-container"
-           hx-trigger="click"
-           data-bs-toggle="modal"
-           data-bs-target="#htmx-modal-container">
+           hx-trigger="click">
           <i class="icon-plus"></i>
         </a>
       </div>
@@ -24,7 +22,7 @@
     {% endif %}
   </div>
 </div>
-<div class="contact col-md-6">
+<div class="contact contacts-detail">
   {% if selected_contact %}
     {% include "contacts/contact.html" %}
   {% elif selected_contact_not_found %}

@@ -1,19 +1,21 @@
 {% if proceedings %}
-  <div class="dropdown">
+  <div class="dropdown" x-data="dropdown()">
     {% if document.proceeding %}
       <button class="button-link"
               type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">{{ document.proceeding.display_name }}</button>
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">{{ document.proceeding.display_name }}</button>
     {% else %}
       <a href="#"
          class="btn-ghost"
-         data-bs-toggle="dropdown"
-         aria-expanded="false">
+         x-ref="button"
+         @click.prevent="toggle()"
+         :aria-expanded="open">
         <i class="icon-briefcase"></i>
       </a>
     {% endif %}
-    <ul class="dropdown-menu">
+    <ul class="dropdown-menu" x-ref="menu" x-show="open">
       <li>
         <a class="dropdown-item {% if not document.proceeding %}active{% endif %}"
            href="#"

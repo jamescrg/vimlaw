@@ -7,28 +7,25 @@
          class="accent-link"
          hx-get="{% url 'matters:contacts-assign' id=matter.id %}"
          hx-target="#htmx-modal-container"
-         hx-trigger="click"
-         data-bs-toggle="modal"
-         data-bs-target="#htmx-modal-container">+ Assign</a>
+         hx-trigger="click">+ Assign</a>
       <button type="button"
               class="btn-icon"
               hx-get="{% url 'matters:contacts-filter' id=matter.id %}"
               hx-target="#htmx-modal-container"
-              hx-trigger="click"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
+              hx-trigger="click">
         <i class="icon-list-filter"></i> Filter
       </button>
-      <div class="dropdown">
+      <div class="dropdown" x-data="dropdown()">
         <button type="button"
                 id="contacts-group-filter"
                 class="select-btn filter-dropdown-button {% if group_id %}toggle-active{% endif %}"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">
           {{ selected_group|default:"All Groups" }}
           <small><i class="icon-chevron-down"></i></small>
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
           <li>
             <a class="dropdown-item"
                href="#"
@@ -47,16 +44,17 @@
           {% endfor %}
         </ul>
       </div>
-      <div class="dropdown">
+      <div class="dropdown" x-data="dropdown()">
         <button type="button"
                 id="contacts-role-filter"
                 class="select-btn filter-dropdown-button {% if role_id %}toggle-active{% endif %}"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">
           {{ selected_role|default:"All Roles" }}
           <small><i class="icon-chevron-down"></i></small>
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
           <li>
             <a class="dropdown-item"
                href="#"
@@ -124,9 +122,7 @@
               <a href="#"
                  hx-get="{% url 'matters:contacts-assign-edit' id=item.relationship_id %}"
                  hx-target="#htmx-modal-container"
-                 hx-trigger="click"
-                 data-bs-toggle="modal"
-                 data-bs-target="#htmx-modal-container">{{ item.role_name }}</a>
+                 hx-trigger="click">{{ item.role_name }}</a>
             {% endif %}
           </td>
           <td>

@@ -1,17 +1,18 @@
 <tr id="note-{{ note.id }}">
   <td class="category dropdown-cell">{% include "case/notes/category-display.html" %}</td>
   <td class="title dropdown-cell">
-    <div class="dropdown">
+    <div class="dropdown" x-data="dropdown()">
       <a href="{% url 'case:note-view' note.id %}"
          target="_blank"
          class="note-title-link">{{ note.title }}</a>
       <button class="btn-icon menu-icon"
               type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">
         <i class="icon-ellipsis-vertical"></i>
       </button>
-      <ul class="dropdown-menu">
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
         <li>
           <a class="dropdown-item"
              href="{% url 'case:note-view' note.id %}"
@@ -21,17 +22,13 @@
           <a class="dropdown-item"
              href="#"
              hx-get="{% url 'case:notes-edit' note.id %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Details</a>
+             hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Details</a>
         </li>
         <li>
           <a class="dropdown-item"
              href="#"
              hx-get="{% url 'case:labels-apply-modal' 'note' note.id %}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
+             hx-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
         </li>
         <li>
           <a class="dropdown-item urgent"
@@ -46,12 +43,13 @@
   <td class="created">{{ note.created_at|date:"Y-m-d" }}</td>
   <td class="updated">{{ note.updated_at|date:"Y-m-d" }}</td>
   <td class="importance dropdown-cell">
-    <div class="dropdown">
+    <div class="dropdown" x-data="dropdown()">
       <button class="button-link"
               type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">{{ note.importance }}</button>
-      <ul class="dropdown-menu dropdown-menu-end">
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">{{ note.importance }}</button>
+      <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
         {% for i in "1234567890"|make_list %}
           <li>
             <a class="dropdown-item"

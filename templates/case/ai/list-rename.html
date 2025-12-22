@@ -58,12 +58,13 @@
               </button>
             </form>
           {% else %}
-            <div class="dropdown">
+            <div class="dropdown" x-data="dropdown()">
               <button class="ai-title-btn"
                       type="button"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false">{{ conv.title|truncatechars:60 }}</button>
-              <ul class="dropdown-menu">
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open">{{ conv.title|truncatechars:60 }}</button>
+              <ul class="dropdown-menu" x-ref="menu" x-show="open">
                 <li>
                   <a class="dropdown-item"
                      href="{% url 'case:ai-conversation-view' conv.id %}"

@@ -8,18 +8,14 @@
                   class="btn-icon"
                   hx-target="#htmx-modal-container"
                   hx-trigger="click"
-                  data-bs-toggle="modal"
-                  hx-get="{% url 'invoicing:credits-add' %}"
-                  data-bs-target="#htmx-modal-container">
+                  hx-get="{% url 'invoicing:credits-add' %}">
             <i class="icon-plus"></i>
           </button>
           <button type="button"
                   class="btn-icon"
                   hx-target="#htmx-modal-container"
                   hx-trigger="click"
-                  hx-get="{% url 'invoicing:credits-filter' %}"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
+                  hx-get="{% url 'invoicing:credits-filter' %}">
             <i class="icon-list-filter"></i>Filter
           </button>
         </div>
@@ -56,36 +52,35 @@
         {% for credit in objects %}
           <tr>
             <td class="id dropdown-cell">
-              <button class="button-link"
-                      type="button"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false">{{ credit.id }}</button>
-              <ul class="dropdown-menu" aria-labeledby="creditsDropdown">
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-get="{% url 'invoicing:credits-edit' credit.id %}"
-                     hx-target="#htmx-modal-container"
-                     hx-trigger="click"
-                     data-bs-toggle="modal"
-                     data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
-                </li>
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-get="{% url 'invoicing:credits-apply' credit.id %}"
-                     hx-target="#htmx-modal-container"
-                     hx-trigger="click"
-                     data-bs-toggle="modal"
-                     data-bs-target="#htmx-modal-container"><i class="icon-receipt"></i> Apply</a>
-                </li>
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-confirm="Are you sure you want to delete this credit?"
-                     hx-delete="{% url 'invoicing:credits-delete' credit.id %}"><i class="icon-trash-2"></i> Delete</a>
-                </li>
-              </ul>
+              <div class="dropdown" x-data="dropdown()">
+                <button class="button-link"
+                        type="button"
+                        x-ref="button"
+                        @click="toggle()"
+                        :aria-expanded="open">{{ credit.id }}</button>
+                <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                  <li>
+                    <a class="dropdown-item"
+                       href="#"
+                       hx-get="{% url 'invoicing:credits-edit' credit.id %}"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item"
+                       href="#"
+                       hx-get="{% url 'invoicing:credits-apply' credit.id %}"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"><i class="icon-receipt"></i> Apply</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item"
+                       href="#"
+                       hx-confirm="Are you sure you want to delete this credit?"
+                       hx-delete="{% url 'invoicing:credits-delete' credit.id %}"><i class="icon-trash-2"></i> Delete</a>
+                  </li>
+                </ul>
+              </div>
             </td>
             <td class="date">{{ credit.date|date:"Y-m-d" }}</td>
             <td class="matter">

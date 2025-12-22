@@ -6,62 +6,61 @@
                 class="btn-icon"
                 hx-get="{% url 'case:documents-add' matter.id %}"
                 hx-target="#htmx-modal-container"
-                hx-trigger="click"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
+                hx-trigger="click">
           <i class="icon-plus"></i>
         </button>
         <button type="button"
                 class="btn-icon"
                 hx-get="{% url 'case:documents-filter' matter.id %}"
                 hx-target="#htmx-modal-container"
-                hx-trigger="click"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
+                hx-trigger="click">
           <i class="icon-list-filter"></i>Filter
         </button>
-        <button type="button"
-                id="files-category-filter"
-                class="select-btn filter-dropdown-button {% if selected_category %}toggle-active{% endif %}"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-          {{ selected_category|default:"All Categories" }}
-          <small>
-            <i class="icon-chevron-down"></i>
-          </small>
-        </button>
-        <ul class="dropdown-menu">
-          <li>
-            <a class="dropdown-item {% if not selected_category %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'case:documents-filter-category-clear' matter.id %}"
-               hx-target="#documents">All Categories</a>
-          </li>
-          <li>
-            <a class="dropdown-item {% if selected_category == 'Correspondence' %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'case:documents-filter-category' matter.id 'Correspondence' %}"
-               hx-target="#documents">Correspondence</a>
-          </li>
-          <li>
-            <a class="dropdown-item {% if selected_category == 'Discovery' %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'case:documents-filter-category' matter.id 'Discovery' %}"
-               hx-target="#documents">Discovery</a>
-          </li>
-          <li>
-            <a class="dropdown-item {% if selected_category == 'Evidence' %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'case:documents-filter-category' matter.id 'Evidence' %}"
-               hx-target="#documents">Evidence</a>
-          </li>
-          <li>
-            <a class="dropdown-item {% if selected_category == 'Record' %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'case:documents-filter-category' matter.id 'Record' %}"
-               hx-target="#documents">Record</a>
-          </li>
-        </ul>
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  id="files-category-filter"
+                  class="select-btn filter-dropdown-button {% if selected_category %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            {{ selected_category|default:"All Categories" }}
+            <small>
+              <i class="icon-chevron-down"></i>
+            </small>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open">
+            <li>
+              <a class="dropdown-item {% if not selected_category %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'case:documents-filter-category-clear' matter.id %}"
+                 hx-target="#documents">All Categories</a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if selected_category == 'Correspondence' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'case:documents-filter-category' matter.id 'Correspondence' %}"
+                 hx-target="#documents">Correspondence</a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if selected_category == 'Discovery' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'case:documents-filter-category' matter.id 'Discovery' %}"
+                 hx-target="#documents">Discovery</a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if selected_category == 'Evidence' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'case:documents-filter-category' matter.id 'Evidence' %}"
+                 hx-target="#documents">Evidence</a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if selected_category == 'Record' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'case:documents-filter-category' matter.id 'Record' %}"
+                 hx-target="#documents">Record</a>
+            </li>
+          </ul>
+        </div>
         <input type="text"
                id="files-keyword-input"
                name="keyword"
@@ -72,87 +71,91 @@
                hx-target="#files-table"
                hx-trigger="keyup changed delay:500ms"
                hx-include="this">
-        <button type="button"
-                id="files-proceeding-filter"
-                class="select-btn filter-dropdown-button {% if selected_proceeding %}toggle-active{% endif %}"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-          {% if selected_proceeding %}
-            {{ selected_proceeding.display_name }}
-          {% else %}
-            All Proceedings
-          {% endif %}
-          <small>
-            <i class="icon-chevron-down"></i>
-          </small>
-        </button>
-        <ul class="dropdown-menu">
-          <li>
-            <a class="dropdown-item {% if not selected_proceeding %}active{% endif %}"
-               href="#"
-               hx-post="{% url 'case:documents-filter-proceeding-clear' matter.id %}"
-               hx-target="#documents">All Proceedings</a>
-          </li>
-          {% for proceeding in proceedings %}
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  id="files-proceeding-filter"
+                  class="select-btn filter-dropdown-button {% if selected_proceeding %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            {% if selected_proceeding %}
+              {{ selected_proceeding.display_name }}
+            {% else %}
+              All Proceedings
+            {% endif %}
+            <small>
+              <i class="icon-chevron-down"></i>
+            </small>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open">
             <li>
-              <a class="dropdown-item {% if selected_proceeding.id == proceeding.id %}active{% endif %}"
+              <a class="dropdown-item {% if not selected_proceeding %}active{% endif %}"
                  href="#"
-                 hx-post="{% url 'case:documents-filter-proceeding' matter.id proceeding.id %}"
-                 hx-target="#documents">{{ proceeding.display_name }}</a>
+                 hx-post="{% url 'case:documents-filter-proceeding-clear' matter.id %}"
+                 hx-target="#documents">All Proceedings</a>
             </li>
-          {% endfor %}
-        </ul>
-        <button type="button"
-                id="files-importance-filter"
-                class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-        <span><i class="icon-flag with-text"></i>
-        {% if importance_value %}
-          {% if importance_value == 1 %}
-            1 only
+            {% for proceeding in proceedings %}
+              <li>
+                <a class="dropdown-item {% if selected_proceeding.id == proceeding.id %}active{% endif %}"
+                   href="#"
+                   hx-post="{% url 'case:documents-filter-proceeding' matter.id proceeding.id %}"
+                   hx-target="#documents">{{ proceeding.display_name }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  id="files-importance-filter"
+                  class="select-btn filter-dropdown-button priority-dropdown {% if importance_value %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+          <span><i class="icon-flag with-text"></i>
+          {% if importance_value %}
+            {% if importance_value == 1 %}
+              1 only
+            {% else %}
+              {{ importance_value }} and above
+            {% endif %}
           {% else %}
-            {{ importance_value }} and above
+            Importance
           {% endif %}
-        {% else %}
-          Importance
-        {% endif %}
-      </span>
-      <small>
-        <i class="icon-chevron-down"></i>
-      </small>
-    </button>
-    <ul class="dropdown-menu">
-      {% for importance in importances %}
-        {% if importance != 10 %}
-          <li>
-          <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
-             href="#"
-             hx-get="{% url 'case:documents-filter-importance' matter.id importance %}"
-             hx-target="#documents"><i class="icon-flag"></i>
-          {% if importance == 1 %}
-            1 only
-          {% else %}
-            {{ importance }} and above
-          {% endif %}
-        </a>
-      </li>
-    {% endif %}
-  {% endfor %}
-  <li>
-    <a class="dropdown-item {% if not importance_value %}active{% endif %}"
-       href="#"
-       hx-get="{% url 'case:documents-filter-importance' matter.id 0 %}"
-       hx-target="#documents"><i class="icon-flag"></i> All Levels</a>
-  </li>
-</ul>
+        </span>
+        <small>
+          <i class="icon-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
+        {% for importance in importances %}
+          {% if importance != 10 %}
+            <li>
+            <a class="dropdown-item {% if importance == importance_value %}active{% endif %}"
+               href="#"
+               hx-get="{% url 'case:documents-filter-importance' matter.id importance %}"
+               hx-target="#documents"><i class="icon-flag"></i>
+            {% if importance == 1 %}
+              1 only
+            {% else %}
+              {{ importance }} and above
+            {% endif %}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    <li>
+      <a class="dropdown-item {% if not importance_value %}active{% endif %}"
+         href="#"
+         hx-get="{% url 'case:documents-filter-importance' matter.id 0 %}"
+         hx-target="#documents"><i class="icon-flag"></i> All Levels</a>
+    </li>
+  </ul>
+</div>
 {% if selected_documents %}
   <button type="button"
           hx-get="{% url 'case:documents-bulk-update' matter.id %}"
           hx-target="#htmx-modal-container"
           hx-trigger="click"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
           class="btn-icon">Bulk Actions ({{ selected_documents|length }})</button>
   <button type="button"
           hx-post="{% url 'case:documents-clear-selection' matter.id %}"

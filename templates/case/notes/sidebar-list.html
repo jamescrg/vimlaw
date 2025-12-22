@@ -11,20 +11,19 @@
   <button class="panel-btn"
           hx-get="{% url 'case:notes-add' note.matter.id %}"
           hx-target="#htmx-modal-container"
-          data-bs-toggle="modal"
-          data-bs-target="#htmx-modal-container"
           title="New Note">
     <i class="icon-plus"></i>
   </button>
-  <div class="dropdown">
+  <div class="dropdown" x-data="dropdown()">
     <button class="panel-btn"
             type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
+            x-ref="button"
+            @click="toggle()"
+            :aria-expanded="open"
             title="Sort notes">
       <i class="icon-arrow-down-up"></i>
     </button>
-    <ul class="dropdown-menu dropdown-menu-end">
+    <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
       {% for key, label in sidebar_sort_options %}
         <li>
           <a class="dropdown-item {% if current_sort == key %}active{% endif %}"

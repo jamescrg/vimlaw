@@ -68,49 +68,51 @@
               {% if 'Invoice' in transaction.description %}
                 <a href="{% url 'invoicing:invoices-detail-index' transaction.id %}">{{ transaction.description }}</a>
               {% elif 'Payment' in transaction.description %}
-                <button class="button-link"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">{{ transaction.description }}</button>
-                <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
-                  <li>
-                    <a class="dropdown-item"
-                       href="#"
-                       hx-get="{% url 'invoicing:payments-edit' transaction.id %}"
-                       hx-target="#htmx-modal-container"
-                       hx-trigger="click"
-                       data-bs-toggle="modal"
-                       data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item"
-                       hx-confirm="Are you sure you want to delete this payment?"
-                       href="#"
-                       hx-delete="{% url 'invoicing:payments-delete' transaction.id %}"><i class="icon-trash-2"></i> Delete</a>
-                  </li>
-                </ul>
+                <div class="dropdown" x-data="dropdown()">
+                  <button class="button-link"
+                          type="button"
+                          x-ref="button"
+                          @click="toggle()"
+                          :aria-expanded="open">{{ transaction.description }}</button>
+                  <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-get="{% url 'invoicing:payments-edit' transaction.id %}"
+                         hx-target="#htmx-modal-container"
+                         hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         hx-confirm="Are you sure you want to delete this payment?"
+                         href="#"
+                         hx-delete="{% url 'invoicing:payments-delete' transaction.id %}"><i class="icon-trash-2"></i> Delete</a>
+                    </li>
+                  </ul>
+                </div>
               {% elif 'Credit' in transaction.description %}
-                <button class="button-link"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">{{ transaction.description }}</button>
-                <ul class="dropdown-menu" aria-labeledby="creditsDropdown">
-                  <li>
-                    <a class="dropdown-item"
-                       href="#"
-                       hx-get="{% url 'invoicing:credits-edit' transaction.id %}"
-                       hx-target="#htmx-modal-container"
-                       hx-trigger="click"
-                       data-bs-toggle="modal"
-                       data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item"
-                       href="#"
-                       hx-confirm="Are you sure you want to delete this credit?"
-                       hx-delete="{% url 'invoicing:credits-delete' transaction.id %}"><i class="icon-trash-2"></i> Delete</a>
-                  </li>
-                </ul>
+                <div class="dropdown" x-data="dropdown()">
+                  <button class="button-link"
+                          type="button"
+                          x-ref="button"
+                          @click="toggle()"
+                          :aria-expanded="open">{{ transaction.description }}</button>
+                  <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-get="{% url 'invoicing:credits-edit' transaction.id %}"
+                         hx-target="#htmx-modal-container"
+                         hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-confirm="Are you sure you want to delete this credit?"
+                         hx-delete="{% url 'invoicing:credits-delete' transaction.id %}"><i class="icon-trash-2"></i> Delete</a>
+                    </li>
+                  </ul>
+                </div>
               {% else %}
                 {{ transaction.description }}
               {% endif %}

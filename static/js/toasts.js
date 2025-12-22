@@ -1,6 +1,7 @@
 /**
- * Toast Notification System using Bootstrap 5 Toasts
+ * Toast Notification System
  * Works with HTMX via response headers or direct JavaScript calls
+ * No external dependencies (vanilla JS)
  */
 
 const Toast = (function () {
@@ -62,7 +63,7 @@ const Toast = (function () {
       <div class="toast-header">
         <i class="bi ${icon} me-2" style="color: ${color};"></i>
         <strong class="me-auto">${escapeHtml(title || capitalize(type))}</strong>
-        <button type="button" class="toast-close" data-bs-dismiss="toast" aria-label="Close">
+        <button type="button" class="toast-close" aria-label="Close">
           <i class="icon-x"></i>
         </button>
       </div>
@@ -84,6 +85,15 @@ const Toast = (function () {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
+  function hideToast(element) {
+    element.classList.remove("show");
+    element.classList.add("hiding");
+    // Remove after transition
+    setTimeout(() => {
+      element.remove();
+    }, 150);
+  }
+
   /**
    * Show a toast notification
    * @param {Object} options - Toast options
@@ -97,17 +107,28 @@ const Toast = (function () {
     const { element, duration } = createToastElement(options);
     toastContainer.appendChild(element);
 
-    const bsToast = new bootstrap.Toast(element, {
-      autohide: duration > 0,
-      delay: duration,
+    // Close button handler
+    const closeBtn = element.querySelector(".toast-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => hideToast(element));
+    }
+
+    // Show with animation (use requestAnimationFrame for proper transition)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        element.classList.add("show");
+      });
     });
 
-    // Remove element from DOM after it's hidden
-    element.addEventListener("hidden.bs.toast", () => {
-      element.remove();
-    });
+    // Auto-hide after duration
+    if (duration > 0) {
+      setTimeout(() => {
+        if (element.parentElement) {
+          hideToast(element);
+        }
+      }, duration);
+    }
 
-    bsToast.show();
     return element;
   }
 
@@ -133,12 +154,7 @@ const Toast = (function () {
   function clearAll() {
     const toastContainer = getContainer();
     const toasts = toastContainer.querySelectorAll(".toast");
-    toasts.forEach((el) => {
-      const bsToast = bootstrap.Toast.getInstance(el);
-      if (bsToast) {
-        bsToast.hide();
-      }
-    });
+    toasts.forEach((el) => hideToast(el));
   }
 
   return {

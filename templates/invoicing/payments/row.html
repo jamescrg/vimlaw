@@ -1,38 +1,37 @@
 {% load humanize %}
 <tr id="payment-{{ payment.id }}">
   <td class="id dropdown-cell">
-    <button class="button-link"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false">{{ payment.id }}</button>
-    <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
-      <li>
-        <a class="dropdown-item"
-           href="#"
-           hx-get="{% url 'invoicing:payments-edit' payment.id %}"
-           hx-target="#htmx-modal-container"
-           hx-trigger="click"
-           data-bs-toggle="modal"
-           data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
-      </li>
-      <li>
-        <a class="dropdown-item"
-           href="#"
-           hx-get="{% url 'invoicing:payments-apply' payment.id %}"
-           hx-target="#htmx-modal-container"
-           hx-trigger="click"
-           data-bs-toggle="modal"
-           data-bs-target="#htmx-modal-container"><i class="icon-receipt"></i> Apply</a>
-      </li>
-      <li>
-        <a class="dropdown-item"
-           hx-confirm="Are you sure you want to delete this payment?"
-           href="#!"
-           hx-delete="{% url 'invoicing:payments-delete' payment.id %}"
-           hx-swap="outerHTML"
-           hx-target="#payment-{{ payment.id }}"><i class="icon-trash-2"></i> Delete</a>
-      </li>
-    </ul>
+    <div class="dropdown" x-data="dropdown()">
+      <button class="button-link"
+              type="button"
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">{{ payment.id }}</button>
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'invoicing:payments-edit' payment.id %}"
+             hx-target="#htmx-modal-container"
+             hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'invoicing:payments-apply' payment.id %}"
+             hx-target="#htmx-modal-container"
+             hx-trigger="click"><i class="icon-receipt"></i> Apply</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             hx-confirm="Are you sure you want to delete this payment?"
+             href="#!"
+             hx-delete="{% url 'invoicing:payments-delete' payment.id %}"
+             hx-swap="outerHTML"
+             hx-target="#payment-{{ payment.id }}"><i class="icon-trash-2"></i> Delete</a>
+        </li>
+      </ul>
+    </div>
   </td>
   <td class="date">{{ payment.date|date:"Y-m-d" }}</td>
   <td class="matter">

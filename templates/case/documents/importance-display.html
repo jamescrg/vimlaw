@@ -1,9 +1,10 @@
-<div class="dropdown">
+<div class="dropdown" x-data="dropdown()">
   <button class="button-link"
           type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false">{{ document.importance }}</button>
-  <ul class="dropdown-menu">
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ document.importance }}</button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open">
     {% for i in "1234567890"|make_list %}
       <li>
         <a class="dropdown-item"

@@ -5,29 +5,27 @@
     <i class="icon-folder"></i>
     <a href="{% url 'folders:select' folder_id=folder.id %}">{{ folder.name|truncatechars:28 }}</a>
   </div>
-  <button class="btn-icon menu-icon"
-          type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false">
-    <i class="icon-ellipsis-vertical"></i>
-  </button>
-  <ul class="dropdown-menu dropdown-menu-end"
-      aria-labelledby="folderDropdown">
-    <li>
-      <a class="dropdown-item"
-         href="#"
-         hx-get="{% url 'folders:edit' folder_id=folder.id %}"
-         hx-target="#htmx-modal-container"
-         data-bs-toggle="modal"
-         data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
-    </li>
-    <li>
-      <a class="dropdown-item"
-         href="#"
-         hx-get="{% url 'folders:delete-confirm' folder_id=folder.id %}"
-         hx-target="#htmx-modal-container"
-         data-bs-toggle="modal"
-         data-bs-target="#htmx-modal-container"><i class="icon-trash-2"></i> Delete</a>
-    </li>
-  </ul>
+  <div class="dropdown" x-data="dropdown()">
+    <button class="btn-icon menu-icon"
+            type="button"
+            x-ref="button"
+            @click="toggle()"
+            :aria-expanded="open">
+      <i class="icon-ellipsis-vertical"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'folders:edit' folder_id=folder.id %}"
+           hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
+      </li>
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'folders:delete-confirm' folder_id=folder.id %}"
+           hx-target="#htmx-modal-container"><i class="icon-trash-2"></i> Delete</a>
+      </li>
+    </ul>
+  </div>
 </li>

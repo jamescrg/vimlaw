@@ -7,7 +7,7 @@
            hx-vals='{"type": "document", "id": "{{ document.id }}"}'
            hx-target="#fact-{{ fact.id }}"
            hx-swap="outerHTML"
-           data-bs-dismiss="modal">
+           @click="$dispatch('close-modal')">
           <i class="icon-file-text urgent"></i>
           {{ document.name|truncatechars:80 }}
         </a>
@@ -20,7 +20,7 @@
            hx-vals='{"type": "highlight", "id": "{{ highlight.id }}"}'
            hx-target="#fact-{{ fact.id }}"
            hx-swap="outerHTML"
-           data-bs-dismiss="modal">
+           @click="$dispatch('close-modal')">
           <i class="icon-highlighter"></i>
           <span class="hl-{{ highlight.color }}">{{ highlight.slug|truncatechars:80 }}</span>
           <div class="assign-results-document">

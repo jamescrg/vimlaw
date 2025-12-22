@@ -1,11 +1,16 @@
-<div class="dropdown" id="intake-dropdown-{{ intake.id }}">
+<div class="dropdown"
+     id="intake-dropdown-{{ intake.id }}"
+     x-data="dropdown()">
   <button class="button-link"
           type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false">{{ intake.status }}</button>
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ intake.status }}</button>
   <ul hx-target="#intake-dropdown-{{ intake.id }}"
       hx-swap="outerHTML"
-      class="dropdown-menu">
+      class="dropdown-menu"
+      x-ref="menu"
+      x-show="open">
     <li>
       <a href="#"
          hx-post="{% url 'intakes:edit-status' pk=intake.id status='Open' %}"

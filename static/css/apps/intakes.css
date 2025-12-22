@@ -1,4 +1,31 @@
 /* ==========================================================================
+   Intakes Detail Layout (Bootstrap grid replacement)
+   ========================================================================== */
+
+.intake-detail-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .intake-detail-layout {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+
+  .intake-detail-layout > .intake-sidebar {
+    flex: 0 0 calc(33.333% - 0.5rem);
+    max-width: calc(33.333% - 0.5rem);
+  }
+
+  .intake-detail-layout > .intake-main {
+    flex: 0 0 calc(66.666% - 1rem);
+    max-width: calc(66.666% - 1rem);
+  }
+}
+
+/* ==========================================================================
 List View
 ========================================================================== */
 

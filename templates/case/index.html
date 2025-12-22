@@ -7,33 +7,34 @@
           <div class="toolbar-left">
             <h1>{{ matter.name|default:"Select a Matter" }}</h1>
             <div class="filter-tools">
-              <button type="button"
-                      class="select-btn"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false">
-                <small>
-                  <i class="icon-chevron-down"></i>
-                </small>
-              </button>
-              <ul class="dropdown-menu">
-                {% for m in matters %}
-                  <li>
-                    <a class="dropdown-item {% if m.id == matter.id %}active{% endif %}"
-                       href="{% url 'case:select-matter' m.id %}">{{ m.name }}</a>
-                  </li>
-                {% empty %}
-                  <li>
-                    <span class="dropdown-item text-muted">No matters available</span>
-                  </li>
-                {% endfor %}
-              </ul>
+              <div class="dropdown" x-data="dropdown()">
+                <button type="button"
+                        class="select-btn"
+                        x-ref="button"
+                        @click="toggle()"
+                        :aria-expanded="open">
+                  <small>
+                    <i class="icon-chevron-down"></i>
+                  </small>
+                </button>
+                <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                  {% for m in matters %}
+                    <li>
+                      <a class="dropdown-item {% if m.id == matter.id %}active{% endif %}"
+                         href="{% url 'case:select-matter' m.id %}">{{ m.name }}</a>
+                    </li>
+                  {% empty %}
+                    <li>
+                      <span class="dropdown-item text-muted">No matters available</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
               {% if matter %}
                 <a href="{% url 'matters:contacts' id=matter.id %}" class="accent-link">Matter Details<i class="icon-arrow-big-left ms-2"></i></a>
                 <button class="accent-link"
                         hx-get="/activity/time/add/{{ matter.id }}/case"
-                        hx-target="#htmx-modal-container"
-                        data-bs-toggle="modal"
-                        data-bs-target="#htmx-modal-container">+ Time</button>
+                        hx-target="#htmx-modal-container">+ Time</button>
               {% endif %}
             </div>
           </div>

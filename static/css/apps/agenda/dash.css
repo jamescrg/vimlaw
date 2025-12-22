@@ -1,3 +1,31 @@
+/* ==========================================================================
+ Dashboard Layout (Bootstrap grid replacement)
+========================================================================== */
+
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+
+  .dashboard-grid > .dashboard-sidebar {
+    flex: 0 0 calc(33.333% - 1rem);
+    max-width: calc(33.333% - 1rem);
+    order: 2;
+  }
+
+  .dashboard-grid > .dashboard-main {
+    flex: 0 0 calc(66.666% - 0.5rem);
+    max-width: calc(66.666% - 0.5rem);
+    order: 1;
+  }
+}
 
 /* ==========================================================================
  Dashboard
@@ -141,20 +169,6 @@
 ========================================================================== */
 
 @media (max-width: 1199px) {
-  /* Swap column order - financial column on top */
-  .dashboard .row {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .dashboard .col-12.col-xl-8 {
-    order: 2;
-  }
-
-  .dashboard .col-12.col-xl-4 {
-    order: 1;
-  }
-
   /* Make events and tasks tables scrollable */
   .dashboard-card {
     overflow-x: auto;

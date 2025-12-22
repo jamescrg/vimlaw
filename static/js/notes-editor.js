@@ -241,9 +241,6 @@ function setupReferenceClicks() {
         htmx.ajax("GET", "/case/highlights/" + currentHighlightId + "/detail/", {
           target: modalContainer,
           swap: "innerHTML"
-        }).then(function() {
-          const modal = new bootstrap.Modal(modalContainer);
-          modal.show();
         });
       }
     });
@@ -1645,10 +1642,7 @@ function setupImportModal() {
     importMarkdown(content, replaceContent);
 
     // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById("htmx-modal-container"));
-    if (modal) {
-      modal.hide();
-    }
+    window.dispatchEvent(new CustomEvent('close-modal'));
   });
 }
 

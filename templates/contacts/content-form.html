@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="row flex-column-reverse flex-md-row">
-      <div id="folders" class="col-md-3">{% include "folders/list.html" %}</div>
+    <div class="contacts-layout">
+      <div id="folders" class="contacts-sidebar">{% include "folders/list.html" %}</div>
       {% if edit or add %}
         {% include "contacts/form.html" %}
       {% else %}

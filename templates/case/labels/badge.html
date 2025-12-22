@@ -1,9 +1,10 @@
-<span class="label-badge dropdown">
+<span class="label-badge dropdown" x-data="dropdown()">
   <a href="#"
      class="app-badge label-{{ label.color }}"
-     data-bs-toggle="dropdown"
-     aria-expanded="false"><i class="icon-tag"></i>{{ label.name }}</a>
-  <ul class="dropdown-menu">
+     x-ref="button"
+     @click.prevent="toggle()"
+     :aria-expanded="open"><i class="icon-tag"></i>{{ label.name }}</a>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open">
     <li>
       <a class="dropdown-item urgent"
          href="#"

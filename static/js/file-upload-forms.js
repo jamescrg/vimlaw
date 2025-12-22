@@ -170,17 +170,7 @@ const initializeDocumentDropzone = () => {
               } else if (response.status === 204) {
                 // Close modal and refresh -- HTMX
                 preservedDropzoneFiles = []; // Clear preserved files on success
-                const modalElement = document.querySelector(
-                  "#htmx-modal-container",
-                );
-
-                if (modalElement) {
-                  const modal =
-                    bootstrap.Modal.getInstance(modalElement) ||
-                    new bootstrap.Modal(modalElement);
-
-                  modal.hide();
-                }
+                window.dispatchEvent(new CustomEvent('close-modal'));
 
                 document.body.dispatchEvent(
                   new CustomEvent("documentsChanged"),
@@ -291,15 +281,7 @@ const initializeMarkdownDropzone = () => {
           })
             .then((response) => {
               if (response.status === 204) {
-                const modalElement = document.querySelector(
-                  "#htmx-modal-container"
-                );
-                if (modalElement) {
-                  const modal =
-                    bootstrap.Modal.getInstance(modalElement) ||
-                    new bootstrap.Modal(modalElement);
-                  modal.hide();
-                }
+                window.dispatchEvent(new CustomEvent('close-modal'));
                 document.body.dispatchEvent(
                   new CustomEvent("outlineChanged")
                 );

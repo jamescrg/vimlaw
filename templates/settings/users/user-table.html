@@ -6,18 +6,14 @@
               class="btn-icon"
               hx-get="{% url 'settings:add-user' %}"
               hx-target="#htmx-modal-container"
-              hx-trigger="click"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
+              hx-trigger="click">
         <i class="icon-plus"></i>
       </button>
       <button type="button"
               class="btn-icon"
               hx-get="{% url 'settings:user-filter' %}"
               hx-target="#htmx-modal-container"
-              hx-trigger="click"
-              data-bs-toggle="modal"
-              data-bs-target="#htmx-modal-container">
+              hx-trigger="click">
         <i class="icon-list-filter"></i>Filter
       </button>
     </div>
@@ -94,19 +90,18 @@
     {% for user in users %}
       <tr>
         <td class="dropdown-cell">
-          <div class="dropdown">
+          <div class="dropdown" x-data="dropdown()">
             <button class="button-link"
                     type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">{{ user.username }}</button>
-            <ul class="dropdown-menu">
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">{{ user.username }}</button>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open">
               <li>
                 <a class="dropdown-item"
                    hx-get="{% url 'settings:edit-user' user.id %}"
                    hx-target="#htmx-modal-container"
-                   hx-trigger="click"
-                   data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
+                   hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
               </li>
               <li>
                 <a class="dropdown-item"
@@ -118,12 +113,13 @@
         <td>{{ user.full_name }}</td>
         <td>{{ user.email }}</td>
         <td class="dropdown-cell">
-          <div class="dropdown">
+          <div class="dropdown" x-data="dropdown()">
             <button class="button-link"
                     type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">{{ user.role_display }}</button>
-            <ul class="dropdown-menu">
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">{{ user.role_display }}</button>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open">
               <li>
                 <a class="dropdown-item"
                    hx-post="{% url 'settings:change-role' user_id=user.id role='USER' %}">User</a>

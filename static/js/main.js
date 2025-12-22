@@ -29,40 +29,7 @@ if (confirmLinks) {
   }
 }
 
-// clear htmx-modal-container after use
-// this prevents it from showing up for an instant on subsequent requests
-const modal = new bootstrap.Modal(
-  document.getElementById("htmx-modal-container"),
-);
-
-htmx.on("htmx:beforeSwap", (e) => {
-  // Empty response targeting #dialog => hide the modal
-  if (e.detail.target.id === "htmx-modal-container" && !e.detail.xhr.response) {
-    modal.hide();
-    e.detail.shouldSwap = false;
-  }
-});
-
-htmx.on("htmx:afterRequest", (e) => {
-  if (e.detail.xhr.status === 202) {
-    modal.hide();
-  }
-});
-
-// Auto focus on the first element that has the autofocus attribute inside a modal
-htmx.on("shown.bs.modal", () => {
-  const autofocusElement = document.querySelector(
-    "#htmx-modal-container [autofocus]",
-  );
-
-  if (autofocusElement) {
-    autofocusElement.focus();
-  }
-});
-
-htmx.on("hidden.bs.modal", () => {
-  document.getElementById("htmx-modal-container").innerHTML = "";
-});
+// Modal handling is now in alpine-components.js
 
 // Copy link buttons (delegated for HTMX compatibility)
 document.addEventListener('click', function(e) {

@@ -44,12 +44,13 @@
       <tr class="ai-conversation-row">
         <td class="created">{{ conv.created_at|date:"Y-m-d" }}</td>
         <td class="title">
-          <div class="dropdown">
+          <div class="dropdown" x-data="dropdown()">
             <button class="ai-title-btn"
                     type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">{{ conv.title|truncatechars:60 }}</button>
-            <ul class="dropdown-menu">
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">{{ conv.title|truncatechars:60 }}</button>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open">
               <li>
                 <a class="dropdown-item"
                    href="{% url 'case:ai-conversation-view' conv.id %}"
@@ -59,9 +60,7 @@
                 <a class="dropdown-item"
                    href="#"
                    hx-get="{% url 'case:ai-rename-form' conv.id %}"
-                   hx-target="#htmx-modal-container"
-                   data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container"><i class="icon-pencil"></i> Rename</a>
+                   hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Rename</a>
               </li>
               <li>
                 <a class="dropdown-item text-danger"
