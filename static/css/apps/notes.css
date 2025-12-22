@@ -153,12 +153,20 @@ body:has(.note-page.standalone) {
   margin: 0;
   padding: 0;
   overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-main .note-page #note-editor-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .note-main .note-page .note-canvas {
   margin: 0;
   border-radius: 0;
-  min-height: 100%;
+  flex: 1;
   box-shadow: none;
   padding: 2rem 3rem 8rem;
 }

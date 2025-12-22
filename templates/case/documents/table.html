@@ -1,7 +1,6 @@
 <div class="table-container">
   <table id="documents-list" class="table table-fixed">
     <colgroup>
-      <col class="col-select">
       <col class="col-category">
       <col class="col-date">
       <col class="col-document">
@@ -9,9 +8,6 @@
       <col class="col-importance">
     </colgroup>
     <tr>
-      <th class="col-select">
-        <i class="icon-square-check"></i>
-      </th>
       <th class="col-category">Category</th>
       <th class="col-date">
         Date
@@ -43,7 +39,7 @@
       {% include "case/documents/row.html" %}
     {% empty %}
       <tr>
-        <td colspan="6" class="empty-message">No documents found.</td>
+        <td colspan="5" class="empty-message">No documents found.</td>
       </tr>
     {% endfor %}
   </table>
