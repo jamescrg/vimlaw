@@ -1,17 +1,11 @@
 <tr id="note-{{ note.id }}">
   <td class="category dropdown-cell">{% include "case/notes/category-display.html" %}</td>
-  <td class="title dropdown-cell">
+  <td class="title">
     <div class="dropdown" x-data="dropdown()">
-      <a href="{% url 'case:note-view' note.id %}"
-         target="_blank"
-         class="note-title-link">{{ note.title }}</a>
-      <button class="btn-icon menu-icon"
-              type="button"
-              x-ref="button"
-              @click="toggle()"
-              :aria-expanded="open">
-        <i class="icon-ellipsis-vertical"></i>
-      </button>
+      <a href="#"
+         class="note-title-link"
+         x-ref="button"
+         @click.prevent="toggle()">{{ note.title }}</a>
       <ul class="dropdown-menu" x-ref="menu" x-show="open">
         <li>
           <a class="dropdown-item"

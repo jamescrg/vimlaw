@@ -6,38 +6,10 @@
     </span>
   </td>
   <td class="description{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
-    <div class="fact-content">
-      <span class="fact-text">{{ fact.description }}</span>
-      <div class="fact-actions dropdown" x-data="dropdown()">
-        <button class="btn-icon btn-ghost"
-                type="button"
-                x-ref="button"
-                @click="toggle()"
-                :aria-expanded="open">
-          <i class="icon-ellipsis-vertical"></i>
-        </button>
-        <ul class="dropdown-menu" x-ref="menu" x-show="open">
-          <li>
-            <a class="dropdown-item"
-               href="#"
-               hx-get="{% url 'case:facts-edit' fact.id %}"
-               hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Fact</a>
-          </li>
-          <li>
-            <a class="dropdown-item"
-               href="#"
-               hx-get="{% url 'case:fact-sources' fact.id %}"
-               hx-target="#htmx-modal-container"><i class="icon-book-plus"></i> Add Source</a>
-          </li>
-          <li>
-            <a class="dropdown-item"
-               href="#"
-               hx-get="{% url 'case:labels-apply-modal' 'fact' fact.id %}"
-               hx-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
-          </li>
-        </ul>
-      </div>
-    </div>
+    <a href="#"
+       class="fact-text"
+       hx-get="{% url 'case:facts-edit' fact.id %}"
+       hx-target="#htmx-modal-container">{{ fact.description }}</a>
   </td>
   <td class="sources{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
     {% for highlight in fact.highlights.all %}
@@ -96,11 +68,23 @@
         </ul>
       </span>
     {% endfor %}
+    <a href="#"
+       class="add-icon"
+       hx-get="{% url 'case:fact-sources' fact.id %}"
+       hx-target="#htmx-modal-container">
+      <i class="icon-link-2"></i>
+    </a>
   </td>
   <td class="labels{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
     {% for label in fact.labels.all %}
       {% include "case/labels/badge.html" with object_type="fact" object=fact %}
     {% endfor %}
+    <a href="#"
+       class="add-icon"
+       hx-get="{% url 'case:labels-apply-modal' 'fact' fact.id %}"
+       hx-target="#htmx-modal-container">
+      <i class="icon-tag"></i>
+    </a>
   </td>
   <td class="importance{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
     {% include "case/facts/importance-display.html" %}

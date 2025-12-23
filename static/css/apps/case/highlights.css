@@ -229,6 +229,15 @@ Highlight content (td)
   font-weight: 500;
 }
 
+.highlights-list .highlight-slug a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.highlights-list .highlight-slug a:hover {
+  text-decoration: underline;
+}
+
 .highlights-list .highlight-slug span {
   padding: 0.25rem 0.5rem;
 }
@@ -276,6 +285,16 @@ Highlight content (td)
 
 .highlights-list .source-citation i {
   margin-right: 0.25rem;
+}
+
+.highlights-list .add-icon {
+  color: var(--icon-muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.highlights-list tr:hover .add-icon {
+  opacity: 1;
 }
 
 /*------------------------------------------------

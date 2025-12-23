@@ -115,7 +115,7 @@ Search Scopes
 .search-scope input[type="checkbox"] {
   width: 1rem;
   height: 1rem;
-  accent-color: var(--icon-violet);
+  accent-color: var(--icon-violet-muted);
   cursor: pointer;
 }
 

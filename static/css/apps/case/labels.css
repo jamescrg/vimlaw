@@ -72,6 +72,11 @@ Labels cards layout (Labels tab)
   align-items: center;
   justify-content: space-between;
   font-size: 1.25rem;
+  padding: 1rem;
+}
+
+.labels-cards .card-body {
+  padding: 1rem;
 }
 
 .labels-cards .card-header button {

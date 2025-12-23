@@ -3,6 +3,17 @@
     <div class="modal-header">
       <h1 class="modal-title">{{ highlight.slug|default:"Untitled" }}</h1>
       <div>
+        <a href="#"
+           class="modal-edit-btn highlight-copy-btn"
+           data-copy="{{ highlight.text }} {{ highlight.citation }}">
+          <i class="icon-copy"></i>
+        </a>
+        <a href="#"
+           class="modal-edit-btn"
+           hx-get="{% url 'case:edit-highlight' highlight.id %}"
+           hx-target="#htmx-modal-container">
+          <i class="icon-pencil"></i>
+        </a>
         <a href="#" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
         </a>

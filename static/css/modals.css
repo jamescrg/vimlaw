@@ -90,6 +90,12 @@
   margin-right: 1.5rem;
 }
 
+.modal-header .modal-edit-btn {
+  margin-right: 1rem;
+  position: relative;
+  top: -0.125rem;
+}
+
 .hide {
   display: none;
 }

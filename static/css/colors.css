@@ -99,7 +99,8 @@
   --icon-default: var(--color-primary);
   --icon-muted: var(--color-muted);
   --accent-link: var(--link);
-  --icon-violet: var(--violet-500);
+  --icon-violet: var(--violet-700);
+  --icon-violet-muted: var(--violet-600);
   --icon-yellow: var(--yellow-700);
   --add: var(--link);
 

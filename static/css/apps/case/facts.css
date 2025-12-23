@@ -216,6 +216,16 @@ Fact row layout
   color: var(--color-primary);
 }
 
+.facts-list .add-icon {
+  color: var(--icon-muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.facts-list tr:hover .add-icon {
+  opacity: 1;
+}
+
 /*------------------------------------------------
 Assign results (sources modal)
 ------------------------------------------------*/

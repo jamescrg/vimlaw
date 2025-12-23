@@ -2,18 +2,13 @@
   <td class="created">
     <span>{{ highlight.created_at|date:'Y-m-d' }}</span>
   </td>
-  <td class="highlight dropdown-cell">
+  <td class="highlight">
     <div class="dropdown" x-data="dropdown()">
       <h3 class="highlight-slug">
-        <span class="hl-{{ highlight.color }}">{{ highlight.slug|default:"Untitled" }}</span>
+        <a href="#" x-ref="button" @click.prevent="toggle()">
+          <span class="hl-{{ highlight.color }}">{{ highlight.slug|default:"Untitled" }}</span>
+        </a>
       </h3>
-      <button class="btn-icon btn-ghost"
-              type="button"
-              x-ref="button"
-              @click="toggle()"
-              :aria-expanded="open">
-        <i class="icon-ellipsis-vertical"></i>
-      </button>
       <ul class="dropdown-menu" x-ref="menu" x-show="open">
         <li>
           <a class="dropdown-item"
@@ -30,7 +25,7 @@
         <li>
           <a class="dropdown-item"
              href="{% url 'case:highlight-link' highlight.id %}"
-             target="_blank"><i class="icon-eye"></i> View Source</a>
+             target="_blank"><i class="icon-file-text"></i> View Source</a>
         </li>
         <li>
           <a class="dropdown-item highlight-copy-btn"
@@ -42,12 +37,6 @@
              href="#"
              data-url="{% url 'case:highlight-link' highlight.id %}"><i class="icon-link"></i> Copy Link</a>
         </li>
-        <li>
-          <a class="dropdown-item"
-             href="#"
-             hx-get="{% url 'case:labels-apply-modal' 'highlight' highlight.id %}?view=table"
-             hx-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
-        </li>
       </ul>
     </div>
     <div class="highlight-text">{{ highlight.text }}</div>
@@ -58,6 +47,12 @@
       {% for label in highlight.labels.all %}
         {% include "case/labels/badge.html" with object_type="highlight" object=highlight view="table" %}
       {% endfor %}
+      <a href="#"
+         class="add-icon"
+         hx-get="{% url 'case:labels-apply-modal' 'highlight' highlight.id %}?view=table"
+         hx-target="#htmx-modal-container">
+        <i class="icon-tag"></i>
+      </a>
     </div>
   </td>
   <td class="date">
