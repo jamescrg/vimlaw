@@ -109,13 +109,13 @@
             </div>
           </div>
           <div class="modal-body">
-            <form id="highlight-form" onsubmit="return false">
+            <form id="highlight-form" class="form-compact col3" onsubmit="return false">
               <input type="hidden" id="highlight-page" name="page_number">
               <input type="hidden" id="highlight-coords" name="coordinates">
-              <div class="highlight-edit-grid">
-                <div class="mb-3">
-                  <label for="highlight-importance" class="form-label">Importance</label>
-                  <select class="form-select" id="highlight-importance" name="importance">
+              <div class="form-group">
+                <label for="highlight-importance">Importance</label>
+                <div>
+                  <select id="highlight-importance" name="importance">
                     <option value="1">Importance 1</option>
                     <option value="2">Importance 2</option>
                     <option value="3">Importance 3</option>
@@ -128,9 +128,11 @@
                     <option value="10">Importance 10</option>
                   </select>
                 </div>
-                <div class="mb-3">
-                  <label for="highlight-color" class="form-label">Color</label>
-                  <select class="form-select" id="highlight-color" name="color">
+              </div>
+              <div class="form-group">
+                <label for="highlight-color">Color</label>
+                <div>
+                  <select id="highlight-color" name="color">
                     <option value="yellow">Yellow</option>
                     <option value="green">Green</option>
                     <option value="blue">Blue</option>
@@ -139,25 +141,28 @@
                     <option value="purple">Purple</option>
                   </select>
                 </div>
-                <div class="mb-3">
-                  <label for="highlight-paragraph" class="form-label">Paragraph number</label>
-                  <input type="text"
-                         class="form-control"
-                         id="highlight-paragraph"
-                         name="paragraph_number">
+              </div>
+              <div class="form-group">
+                <label for="highlight-paragraph">Paragraph number</label>
+                <div>
+                  <input type="text" id="highlight-paragraph" name="paragraph_number">
                 </div>
-                <div class="mb-3 span3">
-                  <label for="highlight-slug" class="form-label">Slug</label>
+              </div>
+              <div class="form-group">
+                <label for="highlight-slug">Slug</label>
+                <div>
                   <input type="text"
-                         class="form-control"
+                         class="span3"
                          id="highlight-slug"
                          name="slug"
                          autofocus
                          required>
                 </div>
-                <div class="mb-3 span3">
-                  <label for="highlight-text" class="form-label">Text</label>
-                  <textarea class="form-control" id="highlight-text" name="text" rows="8"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="highlight-text">Text</label>
+                <div>
+                  <textarea class="span3" id="highlight-text" name="text" rows="8"></textarea>
                 </div>
               </div>
             </form>

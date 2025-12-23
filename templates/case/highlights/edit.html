@@ -13,9 +13,9 @@
             {% if not is_viewer_context %}hx-post="{% url 'case:edit-highlight' highlight.id %}" hx-target="#htmx-modal-container"{% else %}novalidate{% endif %}
             action="{% url 'case:edit-highlight' highlight.id %}"
             method="post"
-            class="form-compact">
+            class="form-compact col3">
         {% csrf_token %}
-        <div class="highlight-edit-grid">{{ form }}</div>
+        {{ form }}
       </form>
     </div>
     <div class="modal-footer">

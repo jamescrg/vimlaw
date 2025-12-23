@@ -123,13 +123,6 @@ Label badges
   opacity: 0.8;
 }
 
-/* Edit Modal */
-.highlight-edit-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
 /*------------------------------------------------
 Table Layout
 ------------------------------------------------*/
