@@ -213,6 +213,17 @@
       }
     }
 
+    // Capture Ctrl+wheel for zoom instead of browser zoom
+    container.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        const newScale = Math.min(4, Math.max(0.25, pdfViewer.currentScale + delta));
+        pdfViewer.currentScale = newScale;
+        updateZoomSelect();
+      }
+    }, { passive: false });
+
     // Search functionality
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
