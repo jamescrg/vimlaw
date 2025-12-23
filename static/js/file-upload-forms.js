@@ -382,7 +382,7 @@ document.body.addEventListener("htmx:afterSwap", () => {
 });
 
 // Clear preserved files when modal is closed/hidden
-document.body.addEventListener("hidden.bs.modal", () => {
+window.addEventListener("close-modal", () => {
   documentDropzone = null;
   markdownDropzone = null;
   preservedDropzoneFiles = [];
