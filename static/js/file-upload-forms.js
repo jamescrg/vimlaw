@@ -115,16 +115,35 @@ const initializeDocumentDropzone = () => {
             this.removeFile(this.files[0]);
           }
 
-          // Parse ISO date from filename, or default to today
+          // Parse ISO date and name from filename
           if (!file.isExistingFile) {
             const dateField = document.querySelector("#id_date");
+            const nameField = document.querySelector("#id_name");
+            const isoDateMatch = file.name.match(/^(\d{4}-\d{2}-\d{2})/);
+
+            // Set date field
             if (dateField && !dateField.value) {
-              const isoDateMatch = file.name.match(/^(\d{4}-\d{2}-\d{2})/);
               if (isoDateMatch) {
                 dateField.value = isoDateMatch[1];
               } else {
                 // Default to today's date
                 dateField.value = new Date().toISOString().split("T")[0];
+              }
+            }
+
+            // Set name field from remaining filename text
+            if (nameField && !nameField.value) {
+              let name = file.name;
+              // Remove date prefix if present
+              if (isoDateMatch) {
+                name = name.slice(isoDateMatch[1].length);
+              }
+              // Remove file extension
+              name = name.replace(/\.[^/.]+$/, "");
+              // Remove leading separators (space, dash, underscore)
+              name = name.replace(/^[\s\-_]+/, "");
+              if (name) {
+                nameField.value = name;
               }
             }
           }
