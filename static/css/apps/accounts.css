@@ -87,6 +87,7 @@ body {
   border: solid 1px var(--background-nav);
   border-radius: var(--radius-md);
   display: block;
+  font-size: inherit;
   margin-top: 0.25rem;
   padding: 0.5rem;
   width: 100%;
