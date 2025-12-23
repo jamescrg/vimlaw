@@ -43,7 +43,7 @@ const initializeDocumentDropzone = () => {
       addRemoveLinks: false,
       dictDefaultMessage: "Drop file here or click to upload",
       dictRemoveFile: '<i class="icon-trash-2"></i>',
-      acceptedFiles: ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png",
+      acceptedFiles: ".pdf",
       previewTemplate: `
         <div class="dz-preview dz-file-preview">
           <div class="dz-filename-wrapper">

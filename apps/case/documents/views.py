@@ -244,8 +244,14 @@ def documents_add(request, matter_id):
         # Validate file is uploaded
         if not uploaded_file:
             form.add_error(None, "FILE_REQUIRED: Please select a file to upload.")
+        elif not uploaded_file.name.lower().endswith(".pdf"):
+            form.add_error(None, "FILE_REQUIRED: Only PDF files are accepted.")
 
-        if form.is_valid() and uploaded_file:
+        if (
+            form.is_valid()
+            and uploaded_file
+            and uploaded_file.name.lower().endswith(".pdf")
+        ):
             # Two-phase save: first save without file to get PK
             document = form.save(commit=False)
             document.matter = matter
@@ -323,6 +329,9 @@ def documents_edit(request, document_id):
 
         if not uploaded_file and not document.file:
             form.add_error(None, "FILE_REQUIRED: Please select a file to upload.")
+        elif uploaded_file and not uploaded_file.name.lower().endswith(".pdf"):
+            form.add_error(None, "FILE_REQUIRED: Only PDF files are accepted.")
+            uploaded_file = None  # Prevent processing invalid file
 
         if form.is_valid():
             old_file_path = document.file.name if document.file else None
