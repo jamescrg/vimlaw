@@ -9,7 +9,7 @@ html {
 }
 
 body {
-  background-color: var(--stone-300);
+  background-color: var(--background-body);
   color: var(--color-primary);
   font-family: 'Open Sans', sans-serif;
   font-size: 1em;

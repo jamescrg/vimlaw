@@ -2,7 +2,7 @@
 .section {
   background: var(--background-section);
   border-radius: var(--radius-md);
-  box-shadow: 0 0.0625rem 0.2rem rgba(0, 0, 0, 0.14);
+  box-shadow: 0 0.0625rem 0.2rem rgba(0, 0, 0, 0.18);
   /* border: solid 1px var(--border-light); */
   margin-bottom: 1.5rem;
   padding: 1.25rem 1rem 1.5rem;
