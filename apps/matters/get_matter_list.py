@@ -39,7 +39,7 @@ def get_matter_list(request):
     matters_list = list(matters)
 
     pagination = CustomPaginator(
-        matters_list, per_page=20, request=request, session_key="matter_pagination"
+        matters_list, per_page=40, request=request, session_key="matter_pagination"
     )
 
     # Get current order and strip leading '-' for comparison

@@ -247,6 +247,10 @@ Address Buttons
   margin-bottom: 0;
 }
 
+.intake-address-container p:first-child {
+  margin-top: 0;
+}
+
 .intake-address-buttons {
   display: flex;
   flex-direction: column;
