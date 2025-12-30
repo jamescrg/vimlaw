@@ -6,8 +6,7 @@
   <div class="auth-container">
     <div class="auth-card">
       <div class="auth-title">{{ site_handle }}</div>
-      <div class="auth-subtitle">Enter your verification code</div>
-      <p class="auth-info">A 6-digit code has been sent to your email address.</p>
+      <p class="auth-info">Enter the verification code sent to your email.</p>
       {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
       <form id="verify-form" class="account-form" method="post">
         {% csrf_token %}

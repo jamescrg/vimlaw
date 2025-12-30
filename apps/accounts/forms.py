@@ -8,9 +8,8 @@ class VerificationCodeForm(forms.Form):
     code = forms.CharField(
         max_length=6,
         min_length=6,
-        widget=forms.TextInput(
-            attrs={"placeholder": "Enter 6-digit code", "autocomplete": "off"}
-        ),
+        label="",
+        widget=forms.TextInput(attrs={"autocomplete": "off", "autofocus": True}),
     )
 
 
