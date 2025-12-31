@@ -182,6 +182,36 @@
   text-align: left;
 }
 
+.ai-conversations-table th.reference,
+.ai-conversations-table td.reference {
+  width: 3rem;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.ai-conversations-table .btn-icon-toggle {
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--stone-400);
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+}
+
+.ai-conversations-table .btn-icon-toggle:hover {
+  color: var(--link);
+  background: var(--stone-100);
+}
+
+.ai-conversations-table .btn-icon-toggle.active {
+  color: var(--violet-600);
+}
+
+.ai-conversations-table .btn-icon-toggle.active:hover {
+  color: var(--violet-700);
+}
+
 /* Participant Badges */
 .participant-badge {
   display: inline-flex;
@@ -253,6 +283,7 @@
 }
 
 .ai-conversation-rename,
+.ai-conversation-reference,
 .ai-conversation-delete {
   opacity: 0;
   padding: 0.25rem;
@@ -264,11 +295,18 @@
 }
 
 .ai-conversation-item:hover .ai-conversation-rename,
+.ai-conversation-item:hover .ai-conversation-reference,
 .ai-conversation-item:hover .ai-conversation-delete {
   opacity: 1;
 }
 
-.ai-conversation-rename:hover {
+.ai-conversation-reference.active {
+  opacity: 1;
+  color: var(--violet-600);
+}
+
+.ai-conversation-rename:hover,
+.ai-conversation-reference:hover {
   color: var(--link);
   background: var(--stone-200);
 }
@@ -276,6 +314,19 @@
 .ai-conversation-delete:hover {
   color: var(--red-600);
   background: var(--red-100);
+}
+
+.ai-conversation-item.is-reference {
+  background: var(--violet-50);
+}
+
+.ai-conversation-item.is-reference:hover {
+  background: var(--violet-100);
+}
+
+.ai-conversation-title i {
+  font-size: 0.75rem;
+  color: var(--violet-500);
 }
 
 .ai-no-conversations {

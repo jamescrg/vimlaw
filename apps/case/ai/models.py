@@ -27,6 +27,10 @@ class Conversation(AuditMixin, models.Model):
     )
     title = models.CharField(max_length=255, blank=True, default="")
     llm = models.CharField(max_length=20, choices=LLM_CHOICES, default="claude")
+    is_reference = models.BooleanField(
+        default=False,
+        help_text="Flag this conversation to be included as reference material in other conversations",
+    )
     history = HistoricalRecords()
 
     class Meta:

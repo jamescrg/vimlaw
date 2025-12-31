@@ -25,6 +25,8 @@ from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
 from apps.notes.models import Note
 
+from .models import Conversation
+
 logger = logging.getLogger(__name__)
 
 # Token budget allocation (approximate, assuming ~4 chars per token)
@@ -77,6 +79,9 @@ MATTER_CONTEXT_TEMPLATE = """
 
 ## Settlement Information
 {settlement}
+
+## Previous Conversations
+{previous_conversations}
 """
 
 
@@ -185,6 +190,13 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     # 10. Settlement
     settlement = format_settlement(matter)
     sections["settlement"] = settlement
+
+    # 11. Previous Conversations (summaries + flagged reference conversations)
+    budget_conversations = min(remaining_budget, 15000)
+    previous_conversations = format_previous_conversations(
+        matter, conversation, budget_conversations
+    )
+    sections["previous_conversations"] = previous_conversations
 
     # Build the full system prompt:
     # 1. Request info (date and requesting party)
@@ -528,3 +540,101 @@ def format_chat_attachments(conversation, budget: int) -> str:
             break
 
     return "\n".join(lines)
+
+
+def format_previous_conversations(matter, current_conversation, budget: int) -> str:
+    """
+    Format previous conversations for AI context.
+
+    Includes:
+    1. Brief summaries of recent conversations (title, date, first message preview)
+    2. Full content of conversations marked as reference material
+    """
+    lines = []
+    char_count = 0
+
+    # Get all conversations for this matter, excluding the current one
+    conversations = Conversation.objects.filter(matter=matter).order_by("-updated_at")
+    if current_conversation:
+        conversations = conversations.exclude(id=current_conversation.id)
+
+    if not conversations.exists():
+        return "No previous conversations in this matter."
+
+    # Separate reference conversations from regular ones
+    reference_conversations = conversations.filter(is_reference=True)
+    recent_conversations = conversations.filter(is_reference=False)[:10]
+
+    # 1. Include full content of reference conversations (higher priority)
+    if reference_conversations.exists():
+        lines.append("### Reference Conversations")
+        lines.append(
+            "The following conversations have been flagged as important reference material:\n"
+        )
+
+        for conv in reference_conversations:
+            if char_count > budget * 0.7:  # Reserve 30% for summaries
+                lines.append("... (additional reference conversations omitted)")
+                break
+
+            conv_header = f"\n#### {conv.title or 'Untitled'}"
+            conv_header += f" ({conv.updated_at.strftime('%b %d, %Y')})\n"
+            lines.append(conv_header)
+            char_count += len(conv_header)
+
+            # Include all messages from reference conversation
+            messages = conv.messages.select_related("user").order_by("created_at")
+            for msg in messages:
+                if msg.role == "user":
+                    user_name = msg.user.get_full_name() if msg.user else "User"
+                    msg_line = f"**{user_name}:** {msg.content}\n"
+                else:
+                    msg_line = f"**Assistant:** {msg.content}\n"
+
+                # Truncate long messages
+                if len(msg_line) > 2000:
+                    msg_line = msg_line[:2000] + "... (truncated)\n"
+
+                if char_count + len(msg_line) > budget * 0.7:
+                    lines.append("... (remaining messages omitted)")
+                    break
+
+                lines.append(msg_line)
+                char_count += len(msg_line)
+
+        lines.append("")  # Blank line separator
+
+    # 2. Include summaries of recent non-reference conversations
+    if recent_conversations.exists():
+        lines.append("### Recent Conversation Summaries")
+        lines.append("Brief overview of recent conversations in this matter:\n")
+
+        for conv in recent_conversations:
+            if char_count > budget:
+                lines.append("... (additional conversations omitted)")
+                break
+
+            # Get first user message as preview
+            first_msg = conv.messages.filter(role="user").first()
+            preview = ""
+            if first_msg:
+                preview = first_msg.content[:150]
+                if len(first_msg.content) > 150:
+                    preview += "..."
+
+            msg_count = conv.messages.count()
+            summary_line = f"- **{conv.title or 'Untitled'}** "
+            summary_line += f"({conv.updated_at.strftime('%b %d, %Y')}, "
+            summary_line += f"{msg_count} messages)"
+            if preview:
+                summary_line += f'\n  First query: "{preview}"'
+            summary_line += "\n"
+
+            if char_count + len(summary_line) > budget:
+                lines.append("... (additional conversations omitted)")
+                break
+
+            lines.append(summary_line)
+            char_count += len(summary_line)
+
+    return "\n".join(lines) if lines else "No previous conversations."

@@ -33,12 +33,34 @@
 <div class="table-container">
   <table class="table ai-conversations-table">
     <tr>
-      <th class="created">Date</th>
-      <th class="title">Conversation</th>
+      <th class="created">
+        Date
+        <button class="btn-sort {% if 'created_at' in current_order %}active{% endif %}"
+                hx-get="{% url 'case:ai-sort' matter.id 'created_at' %}"
+                hx-target="#ai-conversations">
+          <i class="icon-chevrons-up-down"></i>
+        </button>
+      </th>
+      <th class="title">
+        Conversation
+        <button class="btn-sort {% if 'title' in current_order %}active{% endif %}"
+                hx-get="{% url 'case:ai-sort' matter.id 'title' %}"
+                hx-target="#ai-conversations">
+          <i class="icon-chevrons-up-down"></i>
+        </button>
+      </th>
       <th class="llm">Model</th>
       <th class="messages">Messages</th>
       <th class="participants">Participants</th>
-      <th class="updated">Last Updated</th>
+      <th class="updated">
+        Last Updated
+        <button class="btn-sort {% if 'updated_at' in current_order %}active{% endif %}"
+                hx-get="{% url 'case:ai-sort' matter.id 'updated_at' %}"
+                hx-target="#ai-conversations">
+          <i class="icon-chevrons-up-down"></i>
+        </button>
+      </th>
+      <th class="reference">Ref</th>
     </tr>
     {% for conv in conversations %}
       <tr class="ai-conversation-row">
@@ -63,31 +85,51 @@
                    hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Rename</a>
               </li>
               <li>
-                <a class="dropdown-item text-danger"
-                   href="#"
-                   hx-post="{% url 'case:ai-delete-conversation' conv.id %}"
-                   hx-confirm="Delete this conversation?"
-                   hx-swap="none"><i class="icon-trash-2"></i> Delete</a>
-              </li>
-            </ul>
-          </div>
-        </td>
-        <td class="llm">{{ conv.get_llm_display }}</td>
-        <td class="messages">{{ conv.messages.count }}</td>
-        <td class="participants">
-          {% with participants=conv.get_participants %}
-            {% for user in participants|slice:":3" %}
-              <span class="participant-badge" title="{{ user.get_full_name }}">{{ user.first_name|slice:":1"|default:user.username|slice:":1" }}</span>
-            {% endfor %}
-            {% if participants.count > 3 %}<span class="participant-more">+{{ participants.count|add:"-3" }}</span>{% endif %}
-          {% endwith %}
-        </td>
-        <td class="updated">{{ conv.updated_at|naturaltime }}</td>
-      </tr>
-    {% empty %}
-      <tr>
-        <td colspan="6" class="empty-message">No conversations yet. Click a button above to start a new conversation.</td>
-      </tr>
-    {% endfor %}
-  </table>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:ai-toggle-reference' conv.id %}"
+                 hx-swap="none"><i class="icon-bookmark{% if conv.is_reference %}-check{% endif %}"></i>
+              {% if conv.is_reference %}
+                Remove from
+              {% else %}
+                Add to
+              {% endif %}
+            Reference</a>
+          </li>
+          <li>
+            <a class="dropdown-item text-danger"
+               href="#"
+               hx-post="{% url 'case:ai-delete-conversation' conv.id %}"
+               hx-confirm="Delete this conversation?"
+               hx-swap="none"><i class="icon-trash-2"></i> Delete</a>
+          </li>
+        </ul>
+      </div>
+    </td>
+    <td class="llm">{{ conv.get_llm_display }}</td>
+    <td class="messages">{{ conv.messages.count }}</td>
+    <td class="participants">
+      {% with participants=conv.get_participants %}
+        {% for user in participants|slice:":3" %}
+          <span class="participant-badge" title="{{ user.get_full_name }}">{{ user.first_name|slice:":1"|default:user.username|slice:":1" }}</span>
+        {% endfor %}
+        {% if participants.count > 3 %}<span class="participant-more">+{{ participants.count|add:"-3" }}</span>{% endif %}
+      {% endwith %}
+    </td>
+    <td class="updated">{{ conv.updated_at|naturaltime }}</td>
+    <td class="reference">
+      <button class="btn-icon-toggle {% if conv.is_reference %}active{% endif %}"
+              hx-post="{% url 'case:ai-toggle-reference' conv.id %}"
+              hx-swap="none"
+              title="{% if conv.is_reference %}Remove from reference{% else %}Add as reference for other conversations{% endif %}">
+        <i class="icon-bookmark{% if conv.is_reference %}-check{% endif %}"></i>
+      </button>
+    </td>
+  </tr>
+{% empty %}
+  <tr>
+    <td colspan="7" class="empty-message">No conversations yet. Click a button above to start a new conversation.</td>
+  </tr>
+{% endfor %}
+</table>
 </div>

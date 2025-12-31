@@ -12,13 +12,14 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.case.models import Fact, Highlight
-from apps.case.views import get_matter_from_url, set_last_tab
+from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
 
 from .context import assemble_matter_context
+from .filters import ConversationFilter
 from .models import ChatAttachment, Conversation, Message
 from .tasks import process_ai_request, process_chat_attachment_ocr
 
@@ -36,7 +37,22 @@ def ai_index(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
     set_last_tab(request, matter_id, "ai")
 
+    # Get filter data from session
+    filter_session_key = get_session_key("ai_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    # Get conversations and apply filter
     conversations = Conversation.objects.filter(matter=matter)
+    if filter_data:
+        filter_obj = ConversationFilter(filter_data, queryset=conversations)
+        conversations = filter_obj.qs
+    else:
+        conversations = conversations.order_by("-updated_at")
+
+    # Get current sort order
+    current_order = filter_data.get("order_by", "-updated_at")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else "-updated_at"
 
     context = {
         "app": "documents",
@@ -44,6 +60,7 @@ def ai_index(request, matter_id):
         "matter": matter,
         "matters": matters,
         "conversations": conversations,
+        "current_order": current_order,
     }
 
     return render(request, "case/ai/main.html", context)
@@ -54,7 +71,22 @@ def ai_list(request, matter_id):
     """Return conversation list partial (for HTMX refresh)."""
     matter, _ = get_matter_from_url(request, matter_id)
 
+    # Get filter data from session
+    filter_session_key = get_session_key("ai_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    # Get conversations and apply filter
     conversations = Conversation.objects.filter(matter=matter)
+    if filter_data:
+        filter_obj = ConversationFilter(filter_data, queryset=conversations)
+        conversations = filter_obj.qs
+    else:
+        conversations = conversations.order_by("-updated_at")
+
+    # Get current sort order
+    current_order = filter_data.get("order_by", "-updated_at")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else "-updated_at"
 
     return render(
         request,
@@ -62,8 +94,31 @@ def ai_list(request, matter_id):
         {
             "conversations": conversations,
             "matter": matter,
+            "current_order": current_order,
         },
     )
+
+
+@login_required
+def ai_sort(request, matter_id, order):
+    """Sort conversations by a field."""
+    filter_session_key = get_session_key("ai_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    current_order = filter_data.get("order_by", "")
+
+    # Toggle sort direction if clicking the same column
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    elif current_order == f"-{order}":
+        new_order = order
+    else:
+        new_order = f"-{order}"  # Default to descending for new column
+
+    filter_data["order_by"] = new_order
+    request.session[filter_session_key] = filter_data
+
+    return redirect("case:ai-list", matter_id=matter_id)
 
 
 @login_required
@@ -352,6 +407,22 @@ def delete_conversation(request, conv_id):
     )
 
     conversation.delete()
+
+    # Trigger refresh of conversation list
+    response = HttpResponse(status=204)
+    response["HX-Trigger"] = "conversationsChanged"
+    return response
+
+
+@login_required
+def toggle_reference(request, conv_id):
+    """Toggle the is_reference flag on a conversation."""
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter__in=get_accessible_matters()
+    )
+
+    conversation.is_reference = not conversation.is_reference
+    conversation.save()
 
     # Trigger refresh of conversation list
     response = HttpResponse(status=204)
