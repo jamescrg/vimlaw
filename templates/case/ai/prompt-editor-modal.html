@@ -1,0 +1,118 @@
+<div class="modal-dialog modal-xl prompt-editor-modal" data-modal-static>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Compose Prompt</h1>
+      <div>
+        <a href="#" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="prompt-editor-toolbar">
+        <button type="button" id="btn-bold" class="btn-icon" title="Bold">
+          <i class="icon-bold"></i>
+        </button>
+        <button type="button" id="btn-italic" class="btn-icon" title="Italic">
+          <i class="icon-italic"></i>
+        </button>
+        <button type="button" id="btn-strike" class="btn-icon" title="Strikethrough">
+          <i class="icon-strikethrough"></i>
+        </button>
+        <span class="toolbar-divider"></span>
+        <button type="button" id="btn-h1" class="btn-icon" title="Heading 1">
+          <i class="icon-heading-1"></i>
+        </button>
+        <button type="button" id="btn-h2" class="btn-icon" title="Heading 2">
+          <i class="icon-heading-2"></i>
+        </button>
+        <button type="button" id="btn-h3" class="btn-icon" title="Heading 3">
+          <i class="icon-heading-3"></i>
+        </button>
+        <span class="toolbar-divider"></span>
+        <button type="button" id="btn-bullet" class="btn-icon" title="Bullet List">
+          <i class="icon-list"></i>
+        </button>
+        <button type="button" id="btn-ordered" class="btn-icon" title="Numbered List">
+          <i class="icon-list-ordered"></i>
+        </button>
+        <button type="button" id="btn-quote" class="btn-icon" title="Blockquote">
+          <i class="icon-quote"></i>
+        </button>
+      </div>
+      <div id="promptEditorContainer" class="prompt-editor-content"></div>
+      <form id="promptEditorForm"
+            hx-post="{% url 'case:ai-send' matter.id %}"
+            hx-target="#messageContainer"
+            hx-swap="innerHTML"
+            hx-on::after-request="window.dispatchEvent(new CustomEvent('close-modal')); updatePromptList(); scrollMessagesToBottom();">
+        <input type="hidden" name="conversation_id" value="{{ conversation_id }}">
+        <input type="hidden" name="llm" value="{{ llm }}">
+        <input type="hidden" name="message" id="promptEditorMessage">
+      </form>
+    </div>
+    <div class="modal-footer prompt-editor-footer">
+      <button type="button" class="submit" id="promptEditorSubmit">Send to AI</button>
+      <div class="prompt-editor-footer-right">
+        <a href="#" class="delete-link" id="promptEditorClear">Clear</a>
+        <button type="button" class="btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { initPromptEditor, getMarkdownContent, destroyPromptEditor, hasContent, getHtmlContent, setHtmlContent, clearContent } from '/static/js/prompt-editor.js';
+
+  // Use conversation_id if available, otherwise use 'new-{matter_id}' for new conversations
+  const convId = '{{ conversation_id }}' || 'new-{{ matter.id }}';
+  const DRAFT_KEY = 'ai-prompt-draft-' + convId;
+  const container = document.getElementById('promptEditorContainer');
+  const editor = initPromptEditor(container);
+
+  // Check for initial text passed from textarea
+  const initialText = '{{ initial_text|escapejs }}';
+
+  // Restore draft if available, or use initial text
+  const savedDraft = localStorage.getItem(DRAFT_KEY);
+  if (savedDraft) {
+    setHtmlContent(savedDraft);
+  } else if (initialText) {
+    // Convert plain text to paragraphs
+    const html = initialText.split('\n').map(line => '<p>' + (line || '<br>') + '</p>').join('');
+    setHtmlContent(html);
+  }
+
+  // Auto-save draft on content changes
+  editor.on('update', () => {
+    const html = getHtmlContent();
+    if (html && html !== '<p></p>') {
+      localStorage.setItem(DRAFT_KEY, html);
+    } else {
+      localStorage.removeItem(DRAFT_KEY);
+    }
+  });
+
+  document.getElementById('promptEditorSubmit').addEventListener('click', function() {
+    if (!hasContent()) {
+      return;
+    }
+    const markdown = getMarkdownContent();
+    document.getElementById('promptEditorMessage').value = markdown;
+    // Clear draft on successful submit
+    localStorage.removeItem(DRAFT_KEY);
+    document.getElementById('promptEditorForm').requestSubmit();
+  });
+
+  // Clear button handler
+  document.getElementById('promptEditorClear').addEventListener('click', function(e) {
+    e.preventDefault();
+    clearContent();
+    localStorage.removeItem(DRAFT_KEY);
+  });
+
+  // Clean up editor when modal closes (but keep draft)
+  window.addEventListener('close-modal', function handler() {
+    destroyPromptEditor();
+    window.removeEventListener('close-modal', handler);
+  }, { once: true });
+</script>

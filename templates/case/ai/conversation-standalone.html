@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="{% static_v 'css/buttons.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/icons.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/forms.css' %}" />
+  <link rel="stylesheet" href="{% static_v 'css/modals.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/apps/case/ai.css' %}" />
 </head>
 <body class="ai-chat-body" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
@@ -44,9 +45,16 @@
           {% if message.role == "user" %}
             <a href="#message-{{ message.id }}"
                class="ai-sidebar-item"
-               title="{{ message.content|truncatechars:300 }}"
+               data-tooltip="{{ message.content|truncatechars:300 }}"
                onclick="scrollToMessage('message-{{ message.id }}'); return false;">
-              {{ message.content|truncatechars:80 }}
+              <span class="ai-sidebar-item-initials">
+                {% if message.user %}
+                  {{ message.user.first_name|slice:":1" }}{{ message.user.last_name|slice:":1" }}
+                {% else %}
+                  ?
+                {% endif %}
+              </span>
+              <span class="ai-sidebar-item-text">{{ message.content|truncatechars:60 }}</span>
             </a>
           {% endif %}
         {% empty %}
@@ -96,6 +104,12 @@
                       autofocus
                       onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
           </form>
+          <button type="button"
+                  class="btn-icon ai-expand-btn"
+                  id="expandPromptBtn"
+                  title="Expand editor">
+            <i class="icon-maximize-2"></i>
+          </button>
         </div>
       </div>
     </main>
@@ -139,15 +153,23 @@
       messages.forEach((msg) => {
         const id = msg.id;
         const text = msg.querySelector('.ai-message-text').innerText;
+        const initials = msg.dataset.initials || '?';
         const link = document.createElement('a');
         link.href = '#' + id;
         link.className = 'ai-sidebar-item';
-        link.textContent = text.substring(0, 80) + (text.length > 80 ? '...' : '');
-        link.title = text.substring(0, 300) + (text.length > 300 ? '...' : '');
+        link.dataset.tooltip = text.substring(0, 300) + (text.length > 300 ? '...' : '');
         link.onclick = function(e) {
           e.preventDefault();
           scrollToMessage(id);
         };
+        const initialsSpan = document.createElement('span');
+        initialsSpan.className = 'ai-sidebar-item-initials';
+        initialsSpan.textContent = initials;
+        const textSpan = document.createElement('span');
+        textSpan.className = 'ai-sidebar-item-text';
+        textSpan.textContent = text.substring(0, 60) + (text.length > 60 ? '...' : '');
+        link.appendChild(initialsSpan);
+        link.appendChild(textSpan);
         promptList.appendChild(link);
       });
       if (promptList.children.length === 0) {
@@ -239,5 +261,32 @@
       // Clear the input so the same file can be selected again
       input.value = '';
     }
+
+    // Tooltip positioning for sidebar items
+    document.getElementById('promptList').addEventListener('mouseover', function(e) {
+      const item = e.target.closest('.ai-sidebar-item');
+      if (item && item.dataset.tooltip) {
+        const rect = item.getBoundingClientRect();
+        item.style.setProperty('--tooltip-top', rect.top + rect.height / 2 + 'px');
+      }
+    });
+
+    // Expand prompt editor button
+    document.getElementById('expandPromptBtn').addEventListener('click', function() {
+      const textarea = document.getElementById('aiMessageInput');
+      const text = textarea.value.trim();
+      const convId = document.getElementById('conversationId').value;
+      const llm = '{{ conversation.llm }}';
+      let url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm;
+      if (text) {
+        url += '&text=' + encodeURIComponent(text);
+        textarea.value = ''; // Clear input since we're transferring to modal
+      }
+      htmx.ajax('GET', url, {target: '#htmx-modal-container'});
+    });
   </script>
+  <script defer
+          src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <script src="{% static_v 'js/alpine-components.js' %}"></script>
+  {% include "modals.html" %}
 </body>
