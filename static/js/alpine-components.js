@@ -185,7 +185,12 @@ document.addEventListener('alpine:init', () => {
 
     handleBackdropClick(event) {
       // Close if clicking the backdrop (the modal container itself, not content)
+      // Unless the modal has data-modal-static attribute
       if (event.target === this.$el) {
+        const dialog = this.$el.querySelector('.modal-dialog');
+        if (dialog && dialog.hasAttribute('data-modal-static')) {
+          return; // Don't close static modals on backdrop click
+        }
         this.close();
       }
     },

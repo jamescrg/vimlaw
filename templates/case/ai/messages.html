@@ -1,7 +1,8 @@
 {% load humanize markdown_extras %}
 {% for message in messages %}
   <div class="ai-message ai-message-{{ message.role }}"
-       id="message-{{ message.id }}">
+       id="message-{{ message.id }}"
+       {% if message.role == "user" and message.user %}data-initials="{{ message.user.first_name|slice:':1' }}{{ message.user.last_name|slice:':1' }}"{% elif message.role == "user" %}data-initials="?"{% endif %}>
     <div class="ai-message-header">
       {% if message.role == "user" %}
         <i class="icon-user-circle"></i>

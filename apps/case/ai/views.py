@@ -129,7 +129,7 @@ def conversation_view(request, conv_id):
     )
     matter = conversation.matter
 
-    messages = conversation.messages.all()
+    messages = conversation.messages.select_related("user").all()
 
     context = {
         "matter": matter,
@@ -181,7 +181,9 @@ def message_list(request, matter_id):
     else:
         conversation = Conversation.objects.filter(matter=matter).first()
 
-    messages = conversation.messages.all() if conversation else []
+    messages = (
+        conversation.messages.select_related("user").all() if conversation else []
+    )
 
     return render(
         request,
@@ -386,7 +388,7 @@ def select_conversation(request, conv_id):
     )
     matter = conversation.matter
 
-    messages = conversation.messages.all()
+    messages = conversation.messages.select_related("user").all()
 
     return render(
         request,
@@ -480,6 +482,26 @@ def rename_form(request, conv_id):
         {
             "conversation": conversation,
             "matter": conversation.matter,
+        },
+    )
+
+
+@login_required
+def prompt_editor_modal(request, matter_id):
+    """Return the rich text prompt editor modal."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    conversation_id = request.GET.get("conversation_id", "")
+    llm = request.GET.get("llm", "claude")
+    initial_text = request.GET.get("text", "")
+
+    return render(
+        request,
+        "case/ai/prompt-editor-modal.html",
+        {
+            "matter": matter,
+            "conversation_id": conversation_id,
+            "llm": llm,
+            "initial_text": initial_text,
         },
     )
 

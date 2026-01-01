@@ -315,6 +315,11 @@ urlpatterns = [
         ai.create_prompt,
         name="ai-create-prompt",
     ),
+    path(
+        "case/<int:matter_id>/ai/prompt-editor/",
+        ai.prompt_editor_modal,
+        name="ai-prompt-editor",
+    ),
     # ==========================================================================
     # OBJECT-SPECIFIC ROUTES (operate on specific objects by ID)
     # ==========================================================================
