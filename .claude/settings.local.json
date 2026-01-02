@@ -68,7 +68,13 @@
       "Bash(ss:*)",
       "WebFetch(domain:www.courtlistener.com)",
       "WebFetch(domain:free.law)",
-      "WebFetch(domain:unpkg.com)"
+      "WebFetch(domain:unpkg.com)",
+      "Bash(sudo ss:*)",
+      "Bash(systemctl status:*)",
+      "Bash(systemctl list-units:*)",
+      "Bash(lsof:*)",
+      "Bash(fuser:*)",
+      "WebFetch(domain:googleapis.github.io)"
     ],
     "deny": []
   }

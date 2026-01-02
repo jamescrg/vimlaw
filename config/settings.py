@@ -42,6 +42,9 @@ ENV = env("ENV")
 # urls to which the application will respond
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
+# trusted origins for CSRF (needed when behind nginx proxy)
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+
 # Application definition
 
 INSTALLED_APPS = [
