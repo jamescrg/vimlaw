@@ -31,6 +31,17 @@ def get_accessible_matters():
     return Matter.objects.filter(status="Open")
 
 
+def get_selected_llm(request):
+    """Get the selected LLM from session, defaulting to gemini-pro."""
+    return request.session.get("ai_selected_llm", "gemini-pro")
+
+
+def get_llm_display(llm_key):
+    """Get the display name for an LLM key."""
+    llm_dict = dict(Conversation.LLM_CHOICES)
+    return llm_dict.get(llm_key, llm_key)
+
+
 @login_required
 def ai_index(request, matter_id):
     """Main AI view - list of conversations."""
@@ -54,6 +65,9 @@ def ai_index(request, matter_id):
     if isinstance(current_order, list):
         current_order = current_order[0] if current_order else "-updated_at"
 
+    # Get selected LLM from session
+    selected_llm = get_selected_llm(request)
+
     context = {
         "app": "documents",
         "subapp": "ai",
@@ -61,6 +75,9 @@ def ai_index(request, matter_id):
         "matters": matters,
         "conversations": conversations,
         "current_order": current_order,
+        "selected_llm": selected_llm,
+        "selected_llm_display": get_llm_display(selected_llm),
+        "llm_choices": Conversation.LLM_CHOICES,
     }
 
     return render(request, "case/ai/main.html", context)
@@ -88,6 +105,9 @@ def ai_list(request, matter_id):
     if isinstance(current_order, list):
         current_order = current_order[0] if current_order else "-updated_at"
 
+    # Get selected LLM from session
+    selected_llm = get_selected_llm(request)
+
     return render(
         request,
         "case/ai/list.html",
@@ -95,6 +115,9 @@ def ai_list(request, matter_id):
             "conversations": conversations,
             "matter": matter,
             "current_order": current_order,
+            "selected_llm": selected_llm,
+            "selected_llm_display": get_llm_display(selected_llm),
+            "llm_choices": Conversation.LLM_CHOICES,
         },
     )
 
@@ -118,6 +141,15 @@ def ai_sort(request, matter_id, order):
     filter_data["order_by"] = new_order
     request.session[filter_session_key] = filter_data
 
+    return redirect("case:ai-list", matter_id=matter_id)
+
+
+@login_required
+def ai_select_llm(request, matter_id, llm):
+    """Set the selected LLM in session."""
+    valid_llms = [choice[0] for choice in Conversation.LLM_CHOICES]
+    if llm in valid_llms:
+        request.session["ai_selected_llm"] = llm
     return redirect("case:ai-list", matter_id=matter_id)
 
 

@@ -1,3 +1,5 @@
+{% load static %}
+{% load cache_buster %}
 <div class="modal-dialog modal-xl prompt-editor-modal" data-modal-static>
   <div class="modal-content">
     <div class="modal-header">
@@ -66,13 +68,18 @@
   </div>
 </div>
 <script type="module">
-  import { initPromptEditor, getMarkdownContent, destroyPromptEditor, hasContent, getHtmlContent, setHtmlContent, clearContent } from '/static/js/prompt-editor.js';
+  import { initPromptEditor, getMarkdownContent, destroyPromptEditor, hasContent, getHtmlContent, setHtmlContent, clearContent } from '{% static_v "js/prompt-editor.js" %}';
 
   // Use conversation_id if available, otherwise use 'new-{matter_id}' for new conversations
   const convId = '{{ conversation_id }}' || 'new-{{ matter.id }}';
   const DRAFT_KEY = 'ai-prompt-draft-' + convId;
   const container = document.getElementById('promptEditorContainer');
   const editor = initPromptEditor(container);
+
+  // Focus editor after modal animation completes
+  setTimeout(() => {
+    editor.commands.focus();
+  }, 100);
 
   // Check for initial text passed from textarea
   const initialText = '{{ initial_text|escapejs }}';

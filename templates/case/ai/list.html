@@ -1,32 +1,36 @@
 {% load humanize %}
 <div class="toolbar ai-toolbar">
   <div class="toolbar-left">
-    <h2>Conversations</h2>
     <div class="filter-tools">
-      <a href="{% url 'case:ai-new-conversation-view' matter.id %}?llm=claude"
-         target="_blank"
-         class="btn-sm ai-new-btn ai-new-claude"
-         title="New Claude conversation">
-        <i class="icon-plus"></i> Claude
-      </a>
-      <a href="{% url 'case:ai-new-conversation-view' matter.id %}?llm=gemini-flash"
-         target="_blank"
-         class="btn-sm ai-new-btn ai-new-gemini-flash"
-         title="New Gemini Flash conversation">
-        <i class="icon-plus"></i> Gemini Flash
-      </a>
-      <a href="{% url 'case:ai-new-conversation-view' matter.id %}?llm=gemini-pro"
-         target="_blank"
-         class="btn-sm ai-new-btn ai-new-gemini-pro"
-         title="New Gemini Pro conversation">
-        <i class="icon-plus"></i> Gemini Pro
-      </a>
-      <a href="{% url 'case:ai-create-prompt' matter.id %}"
+      <a href="{% url 'case:ai-new-conversation-view' matter.id %}?llm={{ selected_llm }}"
          target="_blank"
          class="btn-icon"
-         title="Create prompt for external AI">
-        <i class="icon-file-text"></i>
+         title="New {{ selected_llm_display }} conversation">
+        <i class="icon-plus"></i>
       </a>
+      <div class="dropdown" x-data="dropdown()">
+        <button type="button"
+                id="ai-llm-select"
+                class="select-btn filter-dropdown-button toggle-active"
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">
+          <span>{{ selected_llm_display }}</span>
+          <small>
+            <i class="icon-chevron-down"></i>
+          </small>
+        </button>
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
+          {% for key, label in llm_choices %}
+            <li>
+              <a class="dropdown-item {% if key == selected_llm %}active{% endif %}"
+                 href="#"
+                 hx-get="{% url 'case:ai-select-llm' matter.id key %}"
+                 hx-target="#ai-conversations">{{ label }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
   </div>
 </div>

@@ -109,51 +109,61 @@ def enhance_citations(html_content, citations_list):
     """
     Post-process rendered HTML to add verification badges to citations.
 
-    Only adds badges to citations within the "Table of Authorities" section,
-    which could be formatted as:
-    - A <table> element
-    - A list (<ul>/<ol>) after a "Table of Authorities" heading
-    - Any content after a heading containing "authorities" or "citations"
+    Looks for the "Table of Authorities" section and adds badges to each
+    list item. Badges are wrapped in a span and positioned at the end
+    of each citation line.
 
     Args:
         html_content: The rendered HTML from markdown
         citations_list: List of citation dicts from verification
 
     Returns:
-        Enhanced HTML with citation badges and links in the authorities section only
+        Enhanced HTML with citation badges in the authorities section
     """
     if not html_content or not citations_list:
         return html_content
 
     result = str(html_content)
 
-    # Build a lookup of citations
+    # Build a lookup of citations - only use case citations for badges
     citation_lookup = {}
     for cit in citations_list:
+        # Only process case citations (skip statutes, etc.)
+        if cit.get("citation_type") != "case":
+            continue
         text = cit.get("original_text", "")
         if text:
-            citation_lookup[text] = cit
+            citation_lookup[text.lower()] = cit
 
-    def enhance_section(section_html):
-        """Add badges to citations within a section."""
-        for original_text, citation_data in citation_lookup.items():
-            if original_text not in section_html:
-                continue
+    def find_citation_in_text(text):
+        """Find which citation from our lookup matches this text."""
+        text_lower = text.lower()
+        for citation_text, citation_data in citation_lookup.items():
+            if citation_text in text_lower:
+                return citation_data
+        return None
 
+    def enhance_list_item(match):
+        """Add badge to a list item if it contains a citation."""
+        li_content = match.group(1)
+
+        # Find if this list item contains any of our citations
+        citation_data = find_citation_in_text(li_content)
+
+        if citation_data:
             badge = create_citation_badge(citation_data)
-            if not badge:
-                continue
+            if badge:
+                # Wrap the content with badge in front (replacing bullet)
+                return (
+                    f'<li class="citation-row">'
+                    f'<span class="citation-badge-wrapper">{badge}</span>'
+                    f'<span class="citation-text">{li_content}</span>'
+                    f"</li>"
+                )
 
-            escaped_text = re.escape(original_text)
-            pattern = f"({escaped_text})"
-            section_html = re.sub(
-                pattern, lambda m: f"{m.group(1)} {badge}", section_html, count=1
-            )
+        return f"<li>{li_content}</li>"
 
-        return section_html
-
-    # Strategy 1: Look for a heading containing "authorities" or "citations"
-    # and enhance everything after it
+    # Find the Table of Authorities section
     heading_pattern = (
         r"(<h[1-6][^>]*>.*?"
         r"(?:table\s+of\s+)?(?:authorities|citations)"
@@ -163,21 +173,16 @@ def enhance_citations(html_content, citations_list):
     heading_match = re.search(heading_pattern, result, flags=re.IGNORECASE | re.DOTALL)
 
     if heading_match:
-        # Found an authorities heading - enhance the content after it
+        # Found an authorities heading - enhance list items after it
         before = result[: heading_match.start(2)]
         section = heading_match.group(2)
         after = result[heading_match.end(2) :]
 
-        enhanced_section = enhance_section(section)
-        result = before + enhanced_section + after
-    else:
-        # Strategy 2: Fall back to enhancing within <table> elements only
-        result = re.sub(
-            r"(<table[^>]*>.*?</table>)",
-            lambda m: enhance_section(m.group(1)),
-            result,
-            flags=re.DOTALL,
+        # Replace each <li>...</li> with enhanced version
+        enhanced_section = re.sub(
+            r"<li>(.*?)</li>", enhance_list_item, section, flags=re.DOTALL
         )
+        result = before + enhanced_section + after
 
     return mark_safe(result)
 
