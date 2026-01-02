@@ -631,11 +631,12 @@ def documents_edit_name(request, document_id):
 def ocr_badge(request, document_id):
     """Return OCR status badge (for HTMX polling)."""
     document = get_object_or_404(Document, id=document_id)
+    hide_on_bypass = request.GET.get("hide_on_bypass") == "1"
 
     return render(
         request,
         "case/documents/ocr-badge.html",
-        {"document": document},
+        {"document": document, "hide_on_bypass": hide_on_bypass},
     )
 
 
@@ -747,8 +748,8 @@ def accept_ocr(request, document_id):
     document.ocr_status = "completed"
     document.save(update_fields=["ocr_status"])
 
-    # Return empty response - badge disappears
-    return HttpResponse("")
+    # Return hidden span instead of empty response to prevent modal auto-close
+    return HttpResponse('<span class="d-none"></span>')
 
 
 @login_required
