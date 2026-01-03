@@ -26,13 +26,7 @@ from django.conf import settings
 
 from apps.agenda.events.models import Event
 from apps.agenda.tasks.models import Task
-from apps.case.models import Document, Fact, Highlight
-
-# CaseLaw may not exist yet - import conditionally
-try:
-    from apps.case.models import CaseLaw
-except ImportError:
-    CaseLaw = None
+from apps.case.models import CaseLaw, Document, Fact, Highlight
 from apps.matters.models import Relationship
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
@@ -213,29 +207,25 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
         )
 
     # Collect Case Law (default to importance 3 = HIGH since intentionally researched)
-    if CaseLaw is not None:
-        for caselaw in CaseLaw.objects.filter(matter=matter):
-            content_parts = [f"**Case Law: {caselaw.case_name}**, {caselaw.citation}"]
-            if caselaw.court:
-                content_parts.append(f"Court: {caselaw.court}")
-            if caselaw.date_filed:
-                content_parts.append(f"Date: {caselaw.date_filed}")
-            if caselaw.notes:
-                content_parts.append(f"Notes: {caselaw.notes[:500]}")
-            if caselaw.text:
-                text_preview = caselaw.text[:2000]
-                if len(caselaw.text) > 2000:
-                    text_preview += "..."
-                content_parts.append(f"Opinion excerpt: {text_preview}")
+    for caselaw in CaseLaw.objects.filter(matter=matter):
+        content_parts = [f"**Case Law: {caselaw.case_name}**, {caselaw.citation}"]
+        if caselaw.court:
+            content_parts.append(f"Court: {caselaw.court}")
+        if caselaw.date_filed:
+            content_parts.append(f"Date: {caselaw.date_filed}")
+        if caselaw.notes:
+            content_parts.append(f"Notes: {caselaw.notes[:500]}")
+        if caselaw.text:
+            content_parts.append(f"Opinion:\n{caselaw.text}")
 
-            items.append(
-                ContextItem(
-                    importance=3,  # Default to HIGH for case law
-                    item_type="caselaw",
-                    content="\n".join(content_parts),
-                    source_id=caselaw.id,
-                )
+        items.append(
+            ContextItem(
+                importance=3,  # Default to HIGH for case law
+                item_type="caselaw",
+                content="\n".join(content_parts),
+                source_id=caselaw.id,
             )
+        )
 
     # Collect Reference Conversations (importance 3 = HIGH since explicitly flagged)
     reference_convos = Conversation.objects.filter(
