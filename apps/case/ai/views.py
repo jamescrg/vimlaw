@@ -32,8 +32,8 @@ def get_accessible_matters():
 
 
 def get_selected_llm(request):
-    """Get the selected LLM from session, defaulting to gemini-pro."""
-    return request.session.get("ai_selected_llm", "gemini-pro")
+    """Get the selected LLM from session, defaulting to gemini-3-pro."""
+    return request.session.get("ai_selected_llm", "gemini-3-pro")
 
 
 def get_llm_display(llm_key):
@@ -178,9 +178,9 @@ def new_conversation_view(request, matter_id):
     matter, _ = get_matter_from_url(request, matter_id)
 
     # Get LLM from query parameter
-    llm = request.GET.get("llm", "claude")
-    if llm not in ["claude", "gemini-flash", "gemini-pro"]:
-        llm = "claude"
+    llm = request.GET.get("llm", "gemini-3-pro")
+    if llm not in ["claude", "gemini-flash", "gemini-pro", "gemini-3-pro"]:
+        llm = "gemini-3-pro"
 
     # Create a dummy conversation object for template (not saved)
     conversation = Conversation(
@@ -238,14 +238,14 @@ def send_message(request, matter_id):
 
     user_message = request.POST.get("message", "").strip()
     conversation_id = request.POST.get("conversation_id")
-    llm = request.POST.get("llm", "claude")
+    llm = request.POST.get("llm", "gemini-3-pro")
 
     if not user_message:
         return HttpResponse(status=400)
 
     # Validate llm
-    if llm not in ["claude", "gemini-flash", "gemini-pro"]:
-        llm = "claude"
+    if llm not in ["claude", "gemini-flash", "gemini-pro", "gemini-3-pro"]:
+        llm = "gemini-3-pro"
 
     # Get or create conversation
     is_new = False
@@ -532,7 +532,7 @@ def prompt_editor_modal(request, matter_id):
     """Return the rich text prompt editor modal."""
     matter, _ = get_matter_from_url(request, matter_id)
     conversation_id = request.GET.get("conversation_id", "")
-    llm = request.GET.get("llm", "claude")
+    llm = request.GET.get("llm", "gemini-3-pro")
     initial_text = request.GET.get("text", "")
 
     return render(

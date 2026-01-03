@@ -13,6 +13,7 @@ class Conversation(AuditMixin, models.Model):
         ("claude", "Claude"),
         ("gemini-flash", "Gemini Flash"),
         ("gemini-pro", "Gemini Pro"),
+        ("gemini-3-pro", "Gemini 3 Pro"),
     ]
 
     matter = models.ForeignKey(
@@ -26,7 +27,7 @@ class Conversation(AuditMixin, models.Model):
         related_name="ai_conversations",
     )
     title = models.CharField(max_length=255, blank=True, default="")
-    llm = models.CharField(max_length=20, choices=LLM_CHOICES, default="claude")
+    llm = models.CharField(max_length=20, choices=LLM_CHOICES, default="gemini-3-pro")
     is_reference = models.BooleanField(
         default=False,
         help_text="Flag this conversation to be included as reference material in other conversations",

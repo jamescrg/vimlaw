@@ -64,9 +64,14 @@ def process_ai_request(
         # Brief pause to show connecting status
         time.sleep(0.3)
 
-        if llm in ("gemini-flash", "gemini-pro"):
+        if llm in ("gemini-flash", "gemini-pro", "gemini-3-pro"):
             # Use streaming with thought summaries for Gemini
-            model = "gemini-2.5-flash" if llm == "gemini-flash" else "gemini-2.5-pro"
+            model_map = {
+                "gemini-flash": "gemini-2.5-flash",
+                "gemini-pro": "gemini-2.5-pro",
+                "gemini-3-pro": "gemini-3-pro-preview",
+            }
+            model = model_map[llm]
 
             update_status("thinking", "Thinking...")
 
