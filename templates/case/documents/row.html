@@ -21,6 +21,7 @@
             <li>
               <a class="dropdown-item"
                  href="#"
+                 @click="open = false"
                  hx-get="{% url 'case:documents-edit' document.id %}"
                  hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Details</a>
             </li>
@@ -47,7 +48,7 @@
             {% endif %}
           </ul>
         </div>
-        {% include "case/documents/ocr-badge.html" %}
+        {% include "case/documents/ocr-badge.html" with hide_on_bypass=True %}
       </div>
     </div>
     {% if document.description %}<div class="document-description">{{ document.description }}</div>{% endif %}

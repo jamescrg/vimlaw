@@ -325,6 +325,11 @@ urlpatterns = [
     path("case/<int:matter_id>/ai/", ai.ai_index, name="ai-index"),
     path("case/<int:matter_id>/ai/list/", ai.ai_list, name="ai-list"),
     path("case/<int:matter_id>/ai/sort/<str:order>/", ai.ai_sort, name="ai-sort"),
+    path(
+        "case/<int:matter_id>/ai/select-llm/<str:llm>/",
+        ai.ai_select_llm,
+        name="ai-select-llm",
+    ),
     path("case/<int:matter_id>/ai/messages/", ai.message_list, name="ai-messages"),
     path("case/<int:matter_id>/ai/send/", ai.send_message, name="ai-send"),
     path(

@@ -4,6 +4,9 @@
       <h1 class="modal-title">
         {% if edit %}
           Edit Document
+          {% if document.ocr_status == 'extracted' %}
+            {% include "case/documents/ocr-badge.html" %}
+          {% endif %}
         {% else %}
           Add Document
         {% endif %}
