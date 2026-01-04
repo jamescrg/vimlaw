@@ -216,6 +216,46 @@ def fetch_opinion(opinion_id: int) -> OpinionResult:
         return OpinionResult(found=False, error=f"Request failed: {str(e)}")
 
 
+def format_citations_with_year(citations: list, date_filed: Optional[date]) -> str:
+    """
+    Format citations list into a string with parallel citations and year.
+
+    Args:
+        citations: List of citation dicts from CourtListener
+                   Each has 'volume', 'reporter', 'page' fields
+        date_filed: The date the case was filed (for the year)
+
+    Returns:
+        Formatted citation string like "279 Ga. 326, 613 S.E.2d 159 (2005)"
+    """
+    if not citations:
+        return ""
+
+    # Sort by type (lower type = state reporter, should come first)
+    sorted_citations = sorted(citations, key=lambda c: c.get("type", 99))
+
+    # Build citation strings from volume/reporter/page
+    cite_strings = []
+    for c in sorted_citations:
+        volume = c.get("volume", "")
+        reporter = c.get("reporter", "")
+        page = c.get("page", "")
+        if volume and reporter and page:
+            cite_strings.append(f"{volume} {reporter} {page}")
+
+    if not cite_strings:
+        return ""
+
+    # Join with ", " for parallel citations
+    combined = ", ".join(cite_strings)
+
+    # Add year if available
+    if date_filed:
+        combined = f"{combined} ({date_filed.year})"
+
+    return combined
+
+
 def fetch_case_by_citation(citation_text: str) -> dict:
     """
     Convenience function to look up a citation and fetch the full case.
@@ -246,7 +286,7 @@ def fetch_case_by_citation(citation_text: str) -> dict:
     if not lookup.found:
         return {"found": False, "error": lookup.error}
 
-    # Step 2: Fetch cluster to get opinion IDs
+    # Step 2: Fetch cluster to get opinion IDs and full citation info
     cluster = fetch_cluster(lookup.cluster_id)
     if not cluster:
         return {"found": False, "error": "Could not fetch case details"}
@@ -272,10 +312,20 @@ def fetch_case_by_citation(citation_text: str) -> dict:
     # Convert date to string for JSON serialization (session storage)
     date_filed_str = lookup.date_filed.isoformat() if lookup.date_filed else None
 
+    # Get all citations from cluster (includes parallel citations)
+    citations = cluster.get("citations", [])
+    full_citation = format_citations_with_year(citations, lookup.date_filed)
+
+    # Fall back to the lookup citation if cluster didn't have citations
+    if not full_citation:
+        full_citation = lookup.citation
+        if lookup.date_filed:
+            full_citation = f"{full_citation} ({lookup.date_filed.year})"
+
     return {
         "found": True,
         "case_name": lookup.case_name,
-        "citation": lookup.citation,
+        "citation": full_citation,
         "court": lookup.court,
         "court_id": lookup.court_id,
         "date_filed": date_filed_str,

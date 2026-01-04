@@ -184,11 +184,50 @@ body:has(#case-content-container) {
   color: var(--link);
   text-decoration: none;
   font-size: 0.75rem;
+  font-weight: 600;
   vertical-align: super;
+  background: var(--blue-100);
+  padding: 0 0.25rem;
+  border-radius: 0.125rem;
 }
 
 #case-content.caselaw-html .footnote:hover {
+  background: var(--blue-200);
+}
+
+/* Footnotes section at bottom of document */
+#case-content.caselaw-html div.footnote {
+  display: flex;
+  align-items: flex-start;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-primary);
+  margin: 1rem 0;
+}
+
+#case-content.caselaw-html div.footnote:first-of-type {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-medium);
+}
+
+#case-content.caselaw-html .footnotes .footnote {
+  background: none !important;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  vertical-align: baseline;
+  margin-right: 0.5rem;
+}
+
+#case-content.caselaw-html .footnotes .footnote:hover {
+  background: none !important;
   text-decoration: underline;
+}
+
+#case-content.caselaw-html div.footnote p {
+  margin: 0;
+  color: var(--color-primary);
 }
 
 #case-content.caselaw-html em {
@@ -263,5 +302,5 @@ body:has(#case-content-container) {
 
 /* Selection styling in case content */
 #case-content ::selection {
-  background: var(--yellow-200);
+  background: var(--gray-200);
 }
