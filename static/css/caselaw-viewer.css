@@ -62,6 +62,10 @@ body:has(#case-content-container) {
   color: var(--color-primary);
 }
 
+#case-header .btn-right {
+  margin-left: auto;
+}
+
 /* =============================================================================
    Case Canvas Header - Title and Citation inside content area
    ============================================================================= */
