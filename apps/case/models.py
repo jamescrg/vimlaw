@@ -242,8 +242,19 @@ class Highlight(AuditMixin, models.Model):
                 return f"{base} ¶ {para}.)"
             return f"{base} at {self.page_number}.)"
         elif self.caselaw:
-            # Case law citation format
-            return f"{self.caselaw.citation}"
+            # Case law citation format with pin cite after first page number
+            citation = self.caselaw.citation
+            if self.page_number:
+                import re
+
+                # Find first page number (digits followed by comma, space, or paren)
+                # Pattern: volume reporter page -> insert pin after page
+                match = re.search(r"(\d+\s+[A-Za-z.\s]+\d+)(,|\s+\()", citation)
+                if match:
+                    # Insert pin cite after first page number
+                    insert_pos = match.end(1)
+                    citation = f"{citation[:insert_pos]}, {self.page_number}{citation[insert_pos:]}"
+            return citation
         return ""
 
 

@@ -144,9 +144,9 @@
                 </div>
               </div>
               <div class="form-group">
-                <label for="highlight-paragraph">Paragraph number</label>
+                <label for="highlight-page-number">Page number</label>
                 <div>
-                  <input type="text" id="highlight-paragraph" name="paragraph_number">
+                  <input type="text" id="highlight-page-number" name="page_number">
                 </div>
               </div>
               <div class="form-group">
@@ -265,7 +265,40 @@
       preRange.setEnd(range.startContainer, range.startOffset);
       const charOffset = preRange.toString().length;
 
-      return { text, charOffset, range };
+      // Find the preceding star pagination page number
+      const pageNumber = findPrecedingPageNumber(range.startContainer);
+
+      return { text, charOffset, range, pageNumber };
+    }
+
+    // Find the star pagination that precedes the given node
+    function findPrecedingPageNumber(node) {
+      const container = document.getElementById('case-content');
+      const starPages = container.querySelectorAll('.star-pagination');
+
+      if (starPages.length === 0) return null;
+
+      // Find the last star-pagination that comes before the selection
+      let precedingPage = null;
+
+      for (const starPage of starPages) {
+        // Check if this star-pagination comes before our node
+        const position = node.compareDocumentPosition(starPage);
+        // DOCUMENT_POSITION_PRECEDING = 2
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+          precedingPage = starPage;
+        } else {
+          // We've passed the selection point, stop
+          break;
+        }
+      }
+
+      if (precedingPage) {
+        // Get the page number from the label attribute
+        return precedingPage.getAttribute('label');
+      }
+
+      return null;
     }
 
     // Listen for selection changes
@@ -297,8 +330,8 @@
       if (!currentSelection) return;
 
       document.getElementById('highlight-char-offset').value = currentSelection.charOffset;
+      document.getElementById('highlight-page-number').value = currentSelection.pageNumber || '';
       document.getElementById('highlight-slug').value = '';
-      document.getElementById('highlight-paragraph').value = '';
       document.getElementById('highlight-text').value = currentSelection.text;
 
       openModal('highlight-modal');

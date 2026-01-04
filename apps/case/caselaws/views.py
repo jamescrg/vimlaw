@@ -354,14 +354,15 @@ def caselaw_add_highlight(request, caselaw_id):
         char_offset = request.POST.get("char_offset")
         char_offset = int(char_offset) if char_offset else None
 
-        paragraph_number = request.POST.get("paragraph_number", "").strip() or None
+        page_number = request.POST.get("page_number")
+        page_number = int(page_number) if page_number else None
 
         highlight = Highlight.objects.create(
             caselaw=case_law,
             slug=slug,
             text=request.POST.get("text", ""),
             char_offset=char_offset,
-            paragraph_number=paragraph_number,
+            page_number=page_number,
             color=request.POST.get("color", "yellow"),
             importance=int(request.POST.get("importance", 5)),
             created_by=request.user,
@@ -374,7 +375,7 @@ def caselaw_add_highlight(request, caselaw_id):
                 "slug": highlight.slug,
                 "text": highlight.text,
                 "char_offset": highlight.char_offset,
-                "paragraph_number": highlight.paragraph_number,
+                "page_number": highlight.page_number,
                 "citation": highlight.citation,
                 "color": highlight.color,
                 "importance": highlight.importance,
