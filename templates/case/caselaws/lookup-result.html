@@ -24,17 +24,19 @@
           <div class="lookup-result-text">{{ text_preview|truncatechars:1500 }}</div>
         </div>
       {% endif %}
+      <form id="caselaw-save-form"
+            class="hidden"
+            hx-post="{% url 'case:caselaws-save' matter.id %}"
+            hx-target="#htmx-modal-container">
+        {% csrf_token %}
+      </form>
     {% endif %}
   </div>
   {% if not existing %}
-    <form id="caselaw-save-form"
-          hx-post="{% url 'case:caselaws-save' matter.id %}"
-          hx-target="#htmx-modal-container"
-          hx-swap-oob="beforeend:#caselaw-modal-footer">
-      {% csrf_token %}
-      <button type="submit" class="submit">
+    <span id="caselaw-add-btn" hx-swap-oob="true">
+      <button type="submit" form="caselaw-save-form" class="submit">
         <i class="icon-plus"></i> Add to Matter
       </button>
-    </form>
+    </span>
   {% endif %}
 {% endif %}

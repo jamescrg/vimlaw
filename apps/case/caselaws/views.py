@@ -236,9 +236,9 @@ def caselaws_save(request, matter_id):
 
     logger.info("Saved case law %s to matter %s", case_law, matter)
 
-    # Return redirect to view the case in the viewer
+    # Close modal and refresh the case law list
     response = HttpResponse(status=204)
-    response["HX-Redirect"] = f"/case/caselaws/{case_law.id}/view/"
+    response["HX-Trigger"] = "caselawsChanged, closeModal"
     return response
 
 
