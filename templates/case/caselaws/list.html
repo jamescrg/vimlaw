@@ -26,7 +26,16 @@
     <table class="table table-fixed">
       <thead>
         <tr>
-          <th class="col-case-name">Case Name</th>
+          <th class="col-case-name">
+            Case Name
+            <button class="btn-sort {% if 'case_name' in current_order %}active{% endif %}"
+                    hx-get="{% url 'case:caselaws-sort' matter.id 'case_name' %}"
+                    hx-target="#caselaws">
+              <i class="icon-chevrons-up-down"></i>
+            </button>
+          </th>
+          <th class="col-ai">AI</th>
+          <th class="col-pages">Pages</th>
           <th class="col-citation">Citation</th>
           <th class="col-date">
             Date
@@ -87,6 +96,15 @@
                 </ul>
               </div>
             </td>
+            <td class="col-ai">
+              <button class="btn-icon-toggle {% if case_law.include_in_ai %}active{% endif %}"
+                      hx-post="{% url 'case:caselaw-toggle-ai' case_law.id %}"
+                      hx-swap="none"
+                      title="{% if case_law.include_in_ai %}Remove from AI context{% else %}Include in AI context{% endif %}">
+                <i class="icon-bookmark{% if case_law.include_in_ai %}-check{% endif %}"></i>
+              </button>
+            </td>
+            <td class="col-pages">{{ case_law.page_count|default:"" }}</td>
             <td class="col-citation">{{ case_law.citation }}</td>
             <td class="col-date">
               {% if case_law.date_filed %}{{ case_law.date_filed|date:"Y-m-d" }}{% endif %}

@@ -10,8 +10,9 @@ Gathers matter data for the system prompt, organized by importance:
 6. Administrative info (tasks, events, settlement)
 
 Content types with importance ratings:
-- Documents, Highlights, Facts, Notes, Case Law
+- Documents, Highlights, Facts, Notes
 - Reference Conversations (automatically HIGH importance since explicitly flagged)
+- Case Law (user-selected via include_in_ai flag, shown as HIGH importance)
 
 Time entries are excluded per user request.
 """
@@ -206,8 +207,8 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
             )
         )
 
-    # Collect Case Law (default to importance 3 = HIGH since intentionally researched)
-    for caselaw in CaseLaw.objects.filter(matter=matter):
+    # Collect Case Law (only cases explicitly marked for AI context)
+    for caselaw in CaseLaw.objects.filter(matter=matter, include_in_ai=True):
         content_parts = [f"**Case Law: {caselaw.case_name}**, {caselaw.citation}"]
         if caselaw.court:
             content_parts.append(f"Court: {caselaw.court}")

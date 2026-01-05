@@ -340,6 +340,23 @@ def caselaw_viewer(request, caselaw_id):
 
 @login_required
 @require_POST
+def caselaw_toggle_ai(request, caselaw_id):
+    """Toggle the include_in_ai flag on a case law entry."""
+    case_law = get_object_or_404(
+        CaseLaw, pk=caselaw_id, matter__in=get_accessible_matters()
+    )
+
+    case_law.include_in_ai = not case_law.include_in_ai
+    case_law.save(update_fields=["include_in_ai", "updated_by", "updated_at"])
+
+    # Trigger refresh of case law list
+    response = HttpResponse(status=204)
+    response["HX-Trigger"] = "caselawsChanged"
+    return response
+
+
+@login_required
+@require_POST
 def caselaw_add_highlight(request, caselaw_id):
     """Add highlight to case law."""
     case_law = get_object_or_404(

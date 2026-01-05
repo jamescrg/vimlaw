@@ -374,6 +374,9 @@ class CaseLaw(AuditMixin, models.Model):
     notes = models.TextField(blank=True)
     importance = models.IntegerField(default=5)  # 1-10, like documents
 
+    # AI context - determines if case full text is submitted to AI conversations
+    include_in_ai = models.BooleanField(default=False)
+
     # Labels (like other case app models)
     labels = models.ManyToManyField(Label, blank=True, related_name="case_laws")
 
@@ -381,6 +384,17 @@ class CaseLaw(AuditMixin, models.Model):
 
     def __str__(self):
         return f"{self.case_name}, {self.citation}"
+
+    @property
+    def page_count(self):
+        """Compute page count from star-pagination markers in HTML."""
+        import re
+
+        if not self.html:
+            return None
+        # Count star-pagination spans: <span class="star-pagination">*123</span>
+        matches = re.findall(r'class="star-pagination"', self.html)
+        return len(matches) if matches else None
 
     class Meta:
         db_table = "app_case_law"
