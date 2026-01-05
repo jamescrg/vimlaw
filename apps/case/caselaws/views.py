@@ -236,10 +236,8 @@ def caselaws_save(request, matter_id):
 
     logger.info("Saved case law %s to matter %s", case_law, matter)
 
-    # Close modal and refresh the case law list
-    response = HttpResponse(status=204)
-    response["HX-Trigger"] = "caselawsChanged, closeModal"
-    return response
+    # Close modal (204 does this) and refresh the case law list
+    return HttpResponse(status=204, headers={"HX-Trigger": "caselawsChanged"})
 
 
 @login_required

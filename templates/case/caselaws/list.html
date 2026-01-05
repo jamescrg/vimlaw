@@ -73,7 +73,7 @@
                    x-ref="button"
                    @click.prevent="toggle()"
                    :aria-expanded="open">{{ case_law.case_name|truncatechars:60 }}</a>
-                <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
                   <li>
                     <a class="dropdown-item"
                        href="{% url 'case:caselaw-viewer' case_law.id %}"
