@@ -504,6 +504,11 @@ urlpatterns = [
         name="caselaw-importance",
     ),
     path(
+        "case/caselaws/<int:caselaw_id>/toggle-ai/",
+        caselaws.caselaw_toggle_ai,
+        name="caselaw-toggle-ai",
+    ),
+    path(
         "case/caselaws/<int:caselaw_id>/view/",
         caselaws.caselaw_viewer,
         name="caselaw-viewer",
