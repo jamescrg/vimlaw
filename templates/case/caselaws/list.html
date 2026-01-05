@@ -34,7 +34,6 @@
               <i class="icon-chevrons-up-down"></i>
             </button>
           </th>
-          <th class="col-ai">AI</th>
           <th class="col-pages">Pages</th>
           <th class="col-citation">Citation</th>
           <th class="col-date">
@@ -53,6 +52,7 @@
               <i class="icon-chevrons-up-down"></i>
             </button>
           </th>
+          <th class="col-ai">AI</th>
           <th class="col-importance">
             <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
                     hx-get="{% url 'case:caselaws-sort' matter.id 'importance' %}"
@@ -96,6 +96,12 @@
                 </ul>
               </div>
             </td>
+            <td class="col-pages">{{ case_law.page_count|default:"" }}</td>
+            <td class="col-citation">{{ case_law.citation }}</td>
+            <td class="col-date">
+              {% if case_law.date_filed %}{{ case_law.date_filed|date:"Y-m-d" }}{% endif %}
+            </td>
+            <td class="col-added">{{ case_law.created_at|date:"Y-m-d" }}</td>
             <td class="col-ai">
               <button class="btn-icon-toggle {% if case_law.include_in_ai %}active{% endif %}"
                       hx-post="{% url 'case:caselaw-toggle-ai' case_law.id %}"
@@ -104,12 +110,6 @@
                 <i class="icon-bookmark{% if case_law.include_in_ai %}-check{% endif %}"></i>
               </button>
             </td>
-            <td class="col-pages">{{ case_law.page_count|default:"" }}</td>
-            <td class="col-citation">{{ case_law.citation }}</td>
-            <td class="col-date">
-              {% if case_law.date_filed %}{{ case_law.date_filed|date:"Y-m-d" }}{% endif %}
-            </td>
-            <td class="col-added">{{ case_law.created_at|date:"Y-m-d" }}</td>
             <td class="col-importance dropdown-cell">{% include "case/caselaws/importance-display.html" %}</td>
           </tr>
         {% endfor %}

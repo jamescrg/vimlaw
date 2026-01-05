@@ -252,9 +252,18 @@
   width: 8rem;
 }
 
-#caselaws-table .col-importance {
-  width: 4rem;
+#caselaws-table th.col-importance,
+#caselaws-table td.col-importance {
+  width: 3rem;
   text-align: center;
+}
+
+#caselaws-table .col-importance .btn-sort {
+  margin: 0;
+}
+
+#caselaws-table .col-importance .dropdown-menu {
+  min-width: 2rem;
 }
 
 #caselaws-table .col-ai {
