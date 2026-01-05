@@ -17,10 +17,13 @@
 
 .toolbar a:not(.dropdown-menu *),
 .toolbar button:not(.dropdown-menu *) {
+  align-items: center;
   background: var(--background-control);
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
   color: var(--button-toolbar);
+  display: inline-flex;
+  line-height: 1.25;
   outline: none;
   padding: 0.5rem 0.75rem;
 }
@@ -41,12 +44,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
-}
-
-.filter-tools button:has(.icon-plus) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .select-property {
