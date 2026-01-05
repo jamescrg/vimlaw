@@ -5,6 +5,7 @@
   flex-direction: row;
   gap: 1rem;
   margin-top: 1rem;
+  padding-left: 0.5rem;
 }
 
 .pagination-row p {
@@ -12,16 +13,25 @@
 }
 
 .pagination-row a {
+  align-items: center;
   background: var(--background-control);
   border: solid 1px var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: 50%;
   color: var(--link);
-  padding: 0 0.75rem;
+  display: flex;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
 }
 
-.pagination a:hover {
-  background: var(--background-control);
-  color: var(--link);
+.pagination-row a i {
+  font-size: 1.25rem;
+  position: relative;
+  /* top: -1px; */
+}
+
+.pagination-row a:hover {
+  color: var(--link-hover);
 }
 
 .pagination-disabled {
