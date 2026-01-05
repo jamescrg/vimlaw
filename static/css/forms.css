@@ -191,6 +191,10 @@ button {
   padding: 0.375rem 0.75rem;
 }
 
+.submit i {
+  color: inherit;
+}
+
 .disabled-btn {
   background: var(--border-medium);
   border: solid 1px var(--border-medium);
