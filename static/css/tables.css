@@ -107,7 +107,8 @@ tbody {
   text-align: center;
 }
 
-.numeric {
+.numeric,
+th.numeric {
   text-align: right;
 }
 

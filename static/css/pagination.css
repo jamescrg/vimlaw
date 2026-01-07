@@ -5,7 +5,7 @@
   flex-direction: row;
   gap: 1rem;
   margin-top: 1rem;
-  padding-left: 0.5rem;
+  padding-left: 0.25rem;
 }
 
 .pagination-row p {
@@ -16,12 +16,14 @@
   align-items: center;
   background: var(--background-control);
   border: solid 1px var(--border-medium);
+  /* border-radius: var(--radius-sm); */
   border-radius: 50%;
   color: var(--link);
   display: flex;
-  height: 2rem;
+  height: 1.5rem;
   justify-content: center;
-  width: 2rem;
+  width: 1.5rem;
+  /* padding: 0  0.25rem; */
 }
 
 .pagination-row a i {
