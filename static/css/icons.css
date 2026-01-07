@@ -32,6 +32,12 @@
   margin-bottom: -2.5px;
 }
 
+.toolbar a:has(.icon-plus),
+.toolbar button:has(.icon-plus) {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
 .icon-x {
   font-size: 1rem;
 }

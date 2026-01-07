@@ -43,7 +43,7 @@
 .filter-tools {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .select-property {
@@ -63,7 +63,6 @@
 .toolbar-right > a,
 .toolbar-right button {
   margin-left: 1rem;
-  margin-right: 0.25rem;
 }
 
 .section-text {
