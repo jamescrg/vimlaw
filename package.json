@@ -1,0 +1,32 @@
+{
+  "name": "law-admin-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend assets for Law Admin",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:watch": "node build.mjs --watch"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.1.13",
+    "@tiptap/extension-blockquote": "^2.1.13",
+    "@tiptap/extension-bold": "^2.1.13",
+    "@tiptap/extension-bullet-list": "^2.1.13",
+    "@tiptap/extension-document": "^2.1.13",
+    "@tiptap/extension-dropcursor": "^2.1.13",
+    "@tiptap/extension-gapcursor": "^2.1.13",
+    "@tiptap/extension-hard-break": "^2.1.13",
+    "@tiptap/extension-heading": "^2.1.13",
+    "@tiptap/extension-highlight": "^2.1.13",
+    "@tiptap/extension-history": "^2.1.13",
+    "@tiptap/extension-italic": "^2.1.13",
+    "@tiptap/extension-list-item": "^2.1.13",
+    "@tiptap/extension-ordered-list": "^2.1.13",
+    "@tiptap/extension-paragraph": "^2.1.13",
+    "@tiptap/extension-placeholder": "^2.1.13",
+    "@tiptap/extension-strike": "^2.1.13",
+    "@tiptap/extension-text": "^2.1.13",
+    "@tiptap/pm": "^2.1.13",
+    "esbuild": "^0.19.0"
+  }
+}

@@ -79,7 +79,9 @@
       "Bash(git revert:*)",
       "Bash(paste - -)",
       "Bash(openssl s_client:*)",
-      "Bash(openssl x509:*)"
+      "Bash(openssl x509:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": []
   }
