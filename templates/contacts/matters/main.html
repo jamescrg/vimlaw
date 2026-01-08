@@ -13,8 +13,7 @@
           </thead>
           <tbody>
             {% for relationship in relationships %}
-              <tr id="matter-{{ relationship.matter.id }}"
-                  {% if relationship.matter.status == "Open" %}class="hl-gray"{% endif %}>
+              <tr id="matter-{{ relationship.matter.id }}">
                 <td class="status">{{ relationship.matter.status }}</td>
                 <td class="name">
                   <a href="{% url 'matters:contacts' id=relationship.matter.id %}">{{ relationship.matter.name }}</a>

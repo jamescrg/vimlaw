@@ -84,8 +84,15 @@ def add(request):
             # For HTMX requests, return 204 to close modal and trigger refresh
             if request.headers.get("HX-Request"):
                 # select newest contact for display
-                new = Contact.objects.all().latest("id")
-                request.session["selected_contact_id"] = new.id
+                request.session["selected_contact_id"] = contact.id
+                # update folder/client_status to show the new contact's folder
+                if contact.folder_id:
+                    request.session["contacts_selected_folder_id"] = contact.folder_id
+                    request.session["contacts_client_status"] = None
+                else:
+                    request.session["contacts_selected_folder_id"] = None
+                    request.session["contacts_client_status"] = contact.client_status
+                request.session.modified = True
                 return HttpResponse(
                     status=204,
                     headers={"HX-Trigger": "contactChanged", "HX-Refresh": "true"},
