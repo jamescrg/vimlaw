@@ -97,9 +97,8 @@
   {% endblock content %}
   <!-- javascript -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <script src="https://unpkg.com/htmx.org@1.7.0"></script>
-  <script defer
-          src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <script src="{% static_v 'js/vendor/htmx.bundle.js' %}"></script>
+  <script defer src="{% static_v 'js/vendor/alpine.bundle.js' %}"></script>
   <script src="{% static_v 'js/alpine-components.js' %}"></script>
   <script src="{% static_v 'js/toasts.js' %}"></script>
   <script src="{% static_v 'js/htmx-focus.js' %}"></script>

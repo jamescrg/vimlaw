@@ -114,7 +114,7 @@
       </div>
     </main>
   </div>
-  <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+  <script src="{% static_v 'js/vendor/htmx.bundle.js' %}"></script>
   <script>
     function scrollToMessage(messageId) {
       const element = document.getElementById(messageId);
@@ -285,8 +285,7 @@
       htmx.ajax('GET', url, {target: '#htmx-modal-container'});
     });
   </script>
-  <script defer
-          src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <script defer src="{% static_v 'js/vendor/alpine.bundle.js' %}"></script>
   <script src="{% static_v 'js/alpine-components.js' %}"></script>
   {% include "modals.html" %}
 </body>
