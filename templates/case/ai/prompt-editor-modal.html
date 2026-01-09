@@ -147,8 +147,14 @@
   });
 
   // Clear button handler
-  document.getElementById('promptEditorClear').addEventListener('click', function() {
-    if (confirm('Are you sure you want to clear the editor?')) {
+  document.getElementById('promptEditorClear').addEventListener('click', async function() {
+    const confirmed = await showConfirm({
+      title: 'Clear Editor',
+      message: 'Are you sure you want to clear the editor?',
+      confirmText: 'Clear',
+      isDangerous: true
+    });
+    if (confirmed) {
       clearContent();
       localStorage.removeItem(DRAFT_KEY);
       updateSaveStatus('saved');

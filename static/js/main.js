@@ -12,22 +12,35 @@ function hide(elementId) {
   item.style.display = "none";
 }
 
-function confirmProceed() {
-  const check = confirm("Are you sure you want to delete this record?");
-  if (check) {
-    return;
-  } else {
-    event.stopPropagation();
-    event.preventDefault();
-  }
-}
+// Attach confirm handler to .confirm links (delegated for dynamic content)
+document.addEventListener('click', async function(e) {
+  const confirmLink = e.target.closest('.confirm');
+  if (!confirmLink) return;
 
-const confirmLinks = document.querySelectorAll(".confirm");
-if (confirmLinks) {
-  for (const link of confirmLinks) {
-    link.addEventListener("click", confirmProceed);
+  e.stopPropagation();
+  e.preventDefault();
+
+  // Support custom options via data attributes
+  const title = confirmLink.dataset.confirmTitle || 'Confirm';
+  const message = confirmLink.dataset.confirmMessage || 'Are you sure you want to proceed?';
+  const confirmText = confirmLink.dataset.confirmText || 'Confirm';
+  const isDangerous = confirmLink.dataset.confirmDangerous !== 'false';
+
+  const confirmed = await showConfirm({
+    title: title,
+    message: message,
+    confirmText: confirmText,
+    isDangerous: isDangerous
+  });
+
+  if (confirmed) {
+    // Navigate to the link's href
+    const href = confirmLink.getAttribute('href');
+    if (href) {
+      window.location.href = href;
+    }
   }
-}
+});
 
 // Modal handling is now in alpine-components.js
 

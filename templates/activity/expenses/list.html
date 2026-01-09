@@ -30,14 +30,20 @@
         </button>
         <ul class="dropdown-menu" x-ref="menu" x-show="open">
           <li>
-            <a class="dropdown-item"
+            <a class="dropdown-item confirm"
                href="{% url 'activity:expenses-export' 'standard' %}"
-               onclick="javascript: return confirm('Are you sure you want to download records?')"><i class="icon-file-spreadsheet"></i> Standard</a>
+               data-confirm-title="Export Records"
+               data-confirm-message="Are you sure you want to download records?"
+               data-confirm-text="Download"
+               data-confirm-dangerous="false"><i class="icon-file-spreadsheet"></i> Standard</a>
           </li>
           <li>
-            <a class="dropdown-item"
+            <a class="dropdown-item confirm"
                href="{% url 'activity:expenses-export' 'clio' %}"
-               onclick="javascript: return confirm('Are you sure you want to download records?')"><i class="icon-cloud-upload"></i> Clio</a>
+               data-confirm-title="Export Records"
+               data-confirm-message="Are you sure you want to download records?"
+               data-confirm-text="Download"
+               data-confirm-dangerous="false"><i class="icon-cloud-upload"></i> Clio</a>
           </li>
         </ul>
       </div>

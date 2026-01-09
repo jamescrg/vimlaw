@@ -216,6 +216,69 @@ document.addEventListener('alpine:init', () => {
     }
   }));
 
+
+  /**
+   * Confirm Modal Component
+   * A styled replacement for browser's native confirm() dialog
+   * Usage: Applied to #confirm-modal-container
+   */
+  Alpine.data('confirmModal', () => ({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    isDangerous: false,
+    onConfirm: null,
+    onCancel: null,
+
+    show(options) {
+      this.title = options.title || 'Confirm';
+      this.message = options.message || 'Are you sure?';
+      this.confirmText = options.confirmText || 'Confirm';
+      this.cancelText = options.cancelText || 'Cancel';
+      this.isDangerous = options.isDangerous !== false;
+      this.onConfirm = options.onConfirm || null;
+      this.onCancel = options.onCancel || null;
+      this.isOpen = true;
+
+      // Focus the cancel button by default for safety
+      this.$nextTick(() => {
+        const cancelBtn = this.$el.querySelector('.confirm-modal-cancel');
+        if (cancelBtn) cancelBtn.focus();
+      });
+    },
+
+    confirm() {
+      this.isOpen = false;
+      if (this.onConfirm) this.onConfirm();
+      this.reset();
+    },
+
+    cancel() {
+      this.isOpen = false;
+      if (this.onCancel) this.onCancel();
+      this.reset();
+    },
+
+    reset() {
+      this.onConfirm = null;
+      this.onCancel = null;
+    },
+
+    handleKeydown(event) {
+      if (!this.isOpen) return;
+      if (event.key === 'Escape') {
+        this.cancel();
+      } else if (event.key === 'Enter') {
+        // Only confirm on Enter if the confirm button is focused
+        if (document.activeElement?.classList.contains('confirm-modal-confirm')) {
+          this.confirm();
+        }
+      }
+    }
+  }));
+
 });
 
 
@@ -258,4 +321,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Intercept hx-confirm to use custom modal instead of browser confirm
+  document.body.addEventListener('htmx:confirm', (e) => {
+    // Only intercept if there's an hx-confirm attribute (e.detail.question has a value)
+    if (!e.detail.question) {
+      return;
+    }
+
+    const confirmModal = document.getElementById('confirm-modal');
+    if (!confirmModal) {
+      // Fall back to browser confirm if modal not present
+      return;
+    }
+
+    e.preventDefault();
+
+    const message = e.detail.question;
+    const triggerEl = e.detail.elt;
+
+    // Check for custom confirm options in data attributes
+    const title = triggerEl.dataset.confirmTitle || 'Confirm';
+    const confirmText = triggerEl.dataset.confirmText || 'Delete';
+    const cancelText = triggerEl.dataset.cancelText || 'Cancel';
+
+    // Get Alpine component and show modal
+    const component = Alpine.$data(confirmModal);
+    component.show({
+      title: title,
+      message: message,
+      confirmText: confirmText,
+      cancelText: cancelText,
+      isDangerous: true,
+      onConfirm: () => {
+        e.detail.issueRequest(true);
+      }
+    });
+  });
+
 });
+
+
+/**
+ * Global showConfirm() function
+ * Promise-based replacement for browser's native confirm()
+ * Usage: if (await showConfirm({ message: 'Delete this?' })) { ... }
+ *
+ * Options:
+ *   - message: The confirmation message (required)
+ *   - title: Modal title (default: 'Confirm')
+ *   - confirmText: Confirm button text (default: 'Confirm')
+ *   - cancelText: Cancel button text (default: 'Cancel')
+ *   - isDangerous: Style as dangerous action (default: true)
+ */
+window.showConfirm = function(options) {
+  return new Promise((resolve) => {
+    const confirmModal = document.getElementById('confirm-modal');
+    if (!confirmModal) {
+      // Fall back to browser confirm if modal not present
+      resolve(confirm(options.message || 'Are you sure?'));
+      return;
+    }
+
+    const component = Alpine.$data(confirmModal);
+    component.show({
+      title: options.title || 'Confirm',
+      message: options.message || 'Are you sure?',
+      confirmText: options.confirmText || 'Confirm',
+      cancelText: options.cancelText || 'Cancel',
+      isDangerous: options.isDangerous !== false,
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false)
+    });
+  });
+};

@@ -160,6 +160,7 @@
     <div id="edit-highlight-modal" class="modal" tabindex="-1">
       <div id="edit-highlight-modal-content"></div>
     </div>
+    {% include "confirm-modal.html" %}
     <script src="{% static_v 'js/vendor/htmx.bundle.js' %}"></script>
     <script>
     // Simple modal functions (vanilla JS replacement for Bootstrap Modal)
@@ -522,7 +523,12 @@
     });
 
     async function deleteHighlight(highlightId) {
-      if (!confirm('Are you sure you want to delete this highlight?')) return;
+      const confirmed = await showConfirm({
+        title: 'Delete Highlight',
+        message: 'Are you sure you want to delete this highlight?',
+        confirmText: 'Delete'
+      });
+      if (!confirmed) return;
 
       try {
         const response = await fetch(`/case/highlights/${highlightId}/delete/`, {
@@ -597,9 +603,14 @@
           // Attach delete handler
           const deleteLink = document.querySelector('#edit-highlight-modal .delete-link');
           if (deleteLink) {
-            deleteLink.addEventListener('click', function(e) {
+            deleteLink.addEventListener('click', async function(e) {
               e.preventDefault();
-              if (confirm('Are you sure you want to delete this highlight?')) {
+              const confirmed = await showConfirm({
+                title: 'Delete Highlight',
+                message: 'Are you sure you want to delete this highlight?',
+                confirmText: 'Delete'
+              });
+              if (confirmed) {
                 closeModal('edit-highlight-modal');
                 deleteHighlight(editingHighlightId);
               }

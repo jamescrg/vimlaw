@@ -13,7 +13,10 @@
     {% if edit %}
       <div class="subsection-add">
         <a class="confirm"
-           href="{% url 'matters:contacts-assign-delete' relationship.id %}">Remove Assignment</a>
+           href="{% url 'matters:contacts-assign-delete' relationship.id %}"
+           data-confirm-title="Remove Assignment"
+           data-confirm-message="Are you sure you want to remove this contact assignment?"
+           data-confirm-text="Remove">Remove Assignment</a>
       </div>
     {% endif %}
   </div>

@@ -280,16 +280,7 @@ body {
 }
 
 .modal-footer .submit {
-  background: var(--lime-800);
-  border: none;
-  border-radius: var(--radius-md);
-  color: var(--stone-100);
   padding: 0.25rem 0.75rem;
-  cursor: pointer;
-}
-
-.modal-footer .submit:hover {
-  background: var(--lime-900);
 }
 
 /* Edit modal grid - matches highlights.css */

@@ -123,3 +123,87 @@
     padding: 1rem;
   }
 }
+
+/* ==========================================================================
+   Confirm Modal (replacement for browser confirm())
+   ========================================================================== */
+
+.confirm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1060;
+}
+
+/* Don't double-darken when launched from an existing modal */
+body.modal-open .confirm-modal-overlay {
+  background: transparent;
+}
+
+.confirm-modal-dialog {
+  background: var(--background-section);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  min-width: 20rem;
+  max-width: 28rem;
+  overflow: hidden;
+}
+
+.confirm-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.confirm-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.confirm-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--stone-500);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.confirm-modal-close:hover {
+  color: var(--stone-700);
+  background: var(--stone-100);
+}
+
+.confirm-modal-close i {
+  font-size: 1.25rem;
+}
+
+.confirm-modal-content {
+  padding: 1.5rem;
+}
+
+.confirm-modal-message {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-medium);
+}

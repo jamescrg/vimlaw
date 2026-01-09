@@ -584,8 +584,7 @@
 .ai-message-delete {
   position: absolute;
   right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0.5rem;
   padding: 0.25rem;
   background: transparent;
   border: none;

@@ -14,8 +14,11 @@
       </button>
       {% if client %}
         <a href="{% url 'reports:client-statement-pdf' %}"
-           class="btn-icon"
-           onclick="javascript: return confirm('Are you sure you want to download the activity report?')">
+           class="btn-icon confirm"
+           data-confirm-title="Export PDF"
+           data-confirm-message="Are you sure you want to download the activity report?"
+           data-confirm-text="Download"
+           data-confirm-dangerous="false">
           <i class="icon-cloud-download"></i> Export PDF
         </a>
       {% endif %}

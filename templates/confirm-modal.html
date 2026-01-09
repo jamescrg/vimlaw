@@ -1,0 +1,29 @@
+<div id="confirm-modal"
+     x-data="confirmModal()"
+     x-show="isOpen"
+     x-cloak
+     @keydown.window="handleKeydown($event)"
+     class="confirm-modal-overlay">
+  <div class="confirm-modal-dialog" @click.stop>
+    <div class="confirm-modal-header">
+      <h2 class="confirm-modal-title" x-text="title"></h2>
+      <button type="button" class="confirm-modal-close" @click="cancel()">
+        <i class="icon-x"></i>
+      </button>
+    </div>
+    <div class="confirm-modal-content">
+      <p class="confirm-modal-message" x-text="message"></p>
+    </div>
+    <div class="confirm-modal-actions">
+      <button type="button"
+              class="btn"
+              :class="isDangerous ? 'btn-danger' : 'btn-primary'"
+              @click="confirm()"
+              x-text="confirmText"></button>
+      <button type="button"
+              class="btn btn-secondary"
+              @click="cancel()"
+              x-text="cancelText"></button>
+    </div>
+  </div>
+</div>

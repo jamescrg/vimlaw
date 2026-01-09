@@ -1,6 +1,6 @@
 
 .btn {
-  border: none;
+  border: solid 1px transparent;
   border-radius: var(--radius-md);
   box-shadow: none;
   cursor: pointer;
@@ -19,13 +19,14 @@
 .btn-primary:hover,
 .btn-primary:focus {
   background: var(--button-primary-background);
-  border: none;
+  border-color: var(--button-primary-background);
   box-shadow: none;
   color: var(--button-primary-color);
 }
 
 .btn-primary:disabled {
   background: var(--button-secondary-background);
+  border-color: var(--button-secondary-background);
   color: var(--button-secondary-color);
 }
 
@@ -33,7 +34,7 @@
 .btn-secondary:hover,
 .btn-secondary:focus {
   background: var(--button-secondary-background);
-  border: none;
+  border-color: var(--border-medium);
   box-shadow: none;
   color: var(--button-secondary-color);
 }
@@ -42,9 +43,23 @@
 .btn-outline-primary:hover,
 .btn-outline-primary:focus {
   background: transparent;
-  border: solid 1px var(--background-nav);
+  border-color: var(--background-nav);
   box-shadow: none;
   color: var(--color-primary);
+}
+
+.btn-danger {
+  background: var(--button-secondary-background);
+  border-color: var(--urgent);
+  box-shadow: none;
+  color: var(--urgent);
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+  background: var(--red-50);
+  border-color: var(--red-700);
+  color: var(--red-700);
 }
 
 .accent-link {
