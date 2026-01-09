@@ -1,4 +1,28 @@
 /* ==========================================================================
+   Contacts Page - Restore padding and contrast
+   ========================================================================== */
+
+body.contacts-page {
+  background-color: var(--background-subnav);
+}
+
+body.contacts-page .content {
+  padding-top: 1.25rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Main nav tab blends with darker body background */
+body.contacts-page .navbar .active {
+  background: var(--background-subnav);
+}
+
+body.contacts-page .navbar .active::before,
+body.contacts-page .navbar .active::after {
+  background: var(--background-subnav);
+}
+
+/* ==========================================================================
    Contacts Layout (Bootstrap grid replacement)
    ========================================================================== */
 
