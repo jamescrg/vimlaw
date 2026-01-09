@@ -18,10 +18,10 @@
       </form>
     </div>
     <div class="modal-footer">
-      <a href="#"
-         hx-post="{% url 'notes:filter' %}"
-         hx-vals='{"reset": "true"}'
-         class="delete-link">Clear Filters</a>
+      <button type="button"
+              class="btn btn-danger"
+              hx-post="{% url 'notes:filter' %}"
+              hx-vals='{"reset": "true"}'>Clear Filters</button>
       <button type="submit" form="notes-filter-form" class="submit">Apply</button>
     </div>
   </div>

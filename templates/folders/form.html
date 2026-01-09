@@ -31,11 +31,11 @@
     </div>
     <div class="modal-footer">
       {% if edit %}
-        <a href="#"
-           class="delete-link"
-           hx-get="{% url 'folders:delete-confirm' folder.id %}"
-           hx-target="#htmx-modal-container"
-           hx-swap="innerHTML">Delete Folder</a>
+        <button type="button"
+                class="btn btn-danger"
+                hx-get="{% url 'folders:delete-confirm' folder.id %}"
+                hx-target="#htmx-modal-container"
+                hx-swap="innerHTML">Delete Folder</button>
       {% endif %}
       <button type="submit" form="folder-form" class="submit">Submit</button>
     </div>

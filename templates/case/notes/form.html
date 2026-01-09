@@ -19,11 +19,11 @@
     </div>
     <div class="modal-footer">
       {% if note %}
-        <a hx-confirm="Are you sure you want to delete this note?"
-           href="#"
-           hx-post="{% url 'case:notes-delete' note.id %}"
-           hx-target="#htmx-modal-container"
-           class="delete-link">Delete Note</a>
+        <button type="button"
+                class="btn btn-danger"
+                hx-confirm="Are you sure you want to delete this note?"
+                hx-post="{% url 'case:notes-delete' note.id %}"
+                hx-target="#htmx-modal-container">Delete Note</button>
       {% endif %}
       <button type="submit" form="note-form" class="submit">Submit</button>
     </div>

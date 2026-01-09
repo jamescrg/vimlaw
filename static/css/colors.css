@@ -152,15 +152,6 @@
   color: var(--false);
 }
 
-.delete-link {
-  color: var(--warning);
-  text-decoration: none;
-}
-
-.delete-link:hover {
-  color: var(--warning);
-}
-
 .money-positive {
   color: var(--success) !important;
 }

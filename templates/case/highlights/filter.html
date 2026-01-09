@@ -18,7 +18,8 @@
       </form>
     </div>
     <div class="modal-footer">
-      <a href="{% url 'case:highlights-filter-default' matter.id %}">Restore Defaults</a>
+      <button type="button"
+              data-href="{% url 'case:highlights-filter-default' matter.id %}">Restore Defaults</button>
       <button type="submit" form="highlights-filter-form" class="submit">Apply</button>
     </div>
   </div>

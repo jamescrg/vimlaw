@@ -69,11 +69,11 @@
     </div>
     <div class="modal-footer">
       {% if edit %}
-        <a class="delete-link"
-           href="#!"
-           hx-confirm="Are you sure you want to delete this file?"
-           hx-delete="{% url 'case:documents-delete' document.id %}"
-           hx-target="#htmx-modal-container">Delete Document</a>
+        <button type="button"
+                class="btn btn-danger"
+                hx-confirm="Are you sure you want to delete this file?"
+                hx-delete="{% url 'case:documents-delete' document.id %}"
+                hx-target="#htmx-modal-container">Delete Document</button>
       {% endif %}
       <button type="submit" form="file-form" class="submit">Submit</button>
     </div>

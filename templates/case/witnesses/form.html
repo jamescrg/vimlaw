@@ -19,11 +19,11 @@
     </div>
     <div class="modal-footer">
       {% if witness %}
-        <a hx-confirm='Are you sure you want to delete this witness?'
-           href="#"
-           hx-post="{% url 'case:witnesses-delete' witness.id %}"
-           hx-target="#htmx-modal-container"
-           class="delete-link">Delete Witness</a>
+        <button type="button"
+                class="btn btn-danger"
+                hx-confirm="Are you sure you want to delete this witness?"
+                hx-post="{% url 'case:witnesses-delete' witness.id %}"
+                hx-target="#htmx-modal-container">Delete Witness</button>
       {% endif %}
       <button type="submit" form="witness-form" class="submit">Submit</button>
     </div>

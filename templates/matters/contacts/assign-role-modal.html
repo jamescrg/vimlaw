@@ -37,11 +37,11 @@
       </form>
     </div>
     <div class="modal-footer">
-      <a href="#"
-         class="delete-link"
-         hx-post="{% url 'matters:contacts-assign-delete' id=relationship.id %}"
-         hx-target="#htmx-modal-container"
-         hx-confirm="Are you sure you want to remove this assignment?">Remove</a>
+      <button type="button"
+              class="btn btn-danger"
+              hx-post="{% url 'matters:contacts-assign-delete' id=relationship.id %}"
+              hx-target="#htmx-modal-container"
+              hx-confirm="Are you sure you want to remove this assignment?">Remove</button>
       <button type="submit" form="assign-role-form" class="submit">Update</button>
     </div>
   </div>

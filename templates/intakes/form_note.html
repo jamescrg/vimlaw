@@ -25,11 +25,11 @@
     </div>
     <div class="modal-footer">
       {% if edit %}
-        <a class="delete-link"
-           hx-confirm='Are you sure you want to delete this record?'
-           href="#"
-           hx-post="{% url 'intakes:delete_note' id=note.id %}"
-           hx-target="#htmx-modal-container">Delete Note</a>
+        <button type="button"
+                class="btn btn-danger"
+                hx-confirm="Are you sure you want to delete this record?"
+                hx-post="{% url 'intakes:delete_note' id=note.id %}"
+                hx-target="#htmx-modal-container">Delete Note</button>
       {% endif %}
       <button type="submit" form="intake-note-form" class="submit">Submit</button>
     </div>

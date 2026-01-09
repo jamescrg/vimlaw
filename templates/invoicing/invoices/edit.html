@@ -20,11 +20,12 @@
       </form>
     </div>
     <div class="modal-footer">
-      <a class="delete-link confirm"
-         data-confirm-title="Delete Invoice"
-         data-confirm-message="Are you sure you want to delete this invoice?"
-         data-confirm-text="Delete"
-         href="{% url 'invoicing:invoices-delete' invoice.id %}">Delete Invoice</a>
+      <button type="button"
+              class="btn btn-danger confirm"
+              data-href="{% url 'invoicing:invoices-delete' invoice.id %}"
+              data-confirm-title="Delete Invoice"
+              data-confirm-message="Are you sure you want to delete this invoice?"
+              data-confirm-text="Delete">Delete Invoice</button>
       <button type="submit" form="invoice-edit-form" class="submit">Submit</button>
     </div>
   </div>

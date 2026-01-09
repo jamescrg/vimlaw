@@ -26,11 +26,11 @@
     </div>
     <div class="modal-footer">
       {% if edit %}
-        <a href="#"
-           class="delete-link"
-           hx-get="{% url 'matters:delete' id=matter.id %}"
-           hx-target="#htmx-modal-container .modal-dialog"
-           hx-swap="outerHTML">Delete Matter</a>
+        <button type="button"
+                class="btn btn-danger"
+                hx-get="{% url 'matters:delete' id=matter.id %}"
+                hx-target="#htmx-modal-container .modal-dialog"
+                hx-swap="outerHTML">Delete Matter</button>
       {% endif %}
       <button type="submit" form="matter-form" class="submit">Submit</button>
     </div>

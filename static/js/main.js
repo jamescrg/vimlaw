@@ -34,12 +34,21 @@ document.addEventListener('click', async function(e) {
   });
 
   if (confirmed) {
-    // Navigate to the link's href
-    const href = confirmLink.getAttribute('href');
+    // Navigate to the link's href or data-href (for buttons)
+    const href = confirmLink.getAttribute('href') || confirmLink.dataset.href;
     if (href) {
       window.location.href = href;
     }
   }
+});
+
+// Handle buttons with data-href attribute (navigate without confirmation)
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button[data-href]');
+  if (!btn || btn.classList.contains('confirm')) return;
+
+  e.preventDefault();
+  window.location.href = btn.dataset.href;
 });
 
 // Modal handling is now in alpine-components.js
