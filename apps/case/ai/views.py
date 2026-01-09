@@ -398,6 +398,13 @@ def ai_status(request, conv_id):
             },
         )
 
+    if status_data["status"] == "cancelled":
+        # Clear the cache
+        cache.delete(cache_key)
+
+        # Return empty div to remove the status indicator
+        return HttpResponse('<div id="ai-status-indicator"></div>')
+
     # Calculate elapsed time if available
     elapsed_seconds = None
     if "started_at" in status_data:
@@ -414,6 +421,86 @@ def ai_status(request, conv_id):
             "elapsed_seconds": elapsed_seconds,
         },
     )
+
+
+@login_required
+def cancel_request(request, conv_id):
+    """Cancel an in-progress AI request."""
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter__in=get_accessible_matters()
+    )
+
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    cache_key = f"ai_status_{conv_id}"
+    status_data = cache.get(cache_key)
+
+    if status_data and status_data.get("status") not in (
+        "complete",
+        "error",
+        "cancelled",
+    ):
+        # Set cancelled status
+        cache.set(
+            cache_key,
+            {
+                "status": "cancelled",
+                "message": "Request cancelled",
+            },
+            timeout=60,
+        )
+
+        # Delete the pending user message (last message if it's from user with no response)
+        last_message = conversation.messages.order_by("-created_at").first()
+        if last_message and last_message.role == "user":
+            last_message.delete()
+
+    # Return empty response - the status polling will pick up the cancellation
+    return HttpResponse(status=204)
+
+
+@login_required
+def delete_message(request, message_id):
+    """Delete the most recent message pair (user question + assistant response)."""
+    message = get_object_or_404(
+        Message, pk=message_id, conversation__matter__in=get_accessible_matters()
+    )
+    conversation = message.conversation
+
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    # Only allow deletion of the most recent user message
+    last_user_message = (
+        conversation.messages.filter(role="user").order_by("-created_at").first()
+    )
+
+    if message.role != "user" or message.id != last_user_message.id:
+        return HttpResponse("Can only delete the most recent exchange", status=403)
+
+    # Delete the following assistant message if it exists
+    next_message = (
+        conversation.messages.filter(created_at__gt=message.created_at)
+        .order_by("created_at")
+        .first()
+    )
+    if next_message and next_message.role == "assistant":
+        next_message.delete()
+    message.delete()
+
+    # Return updated message list
+    response = render(
+        request,
+        "case/ai/messages.html",
+        {
+            "messages": conversation.messages.all(),
+            "conversation": conversation,
+            "matter": conversation.matter,
+        },
+    )
+    response["HX-Trigger"] = "messagesUpdated"
+    return response
 
 
 @login_required

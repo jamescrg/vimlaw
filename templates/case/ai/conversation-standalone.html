@@ -143,6 +143,11 @@
       scrollMessagesToBottom();
     });
 
+    // Handle messages updated (e.g., after delete)
+    document.body.addEventListener('messagesUpdated', function() {
+      updatePromptList();
+    });
+
     function updatePromptList() {
       const messages = document.querySelectorAll('.ai-message-user');
       const promptList = document.getElementById('promptList');

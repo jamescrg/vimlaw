@@ -581,6 +581,37 @@
   color: var(--color-muted);
 }
 
+.ai-message-delete {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--stone-400);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.ai-message:hover .ai-message-delete {
+  opacity: 1;
+}
+
+.ai-message-delete:hover {
+  color: var(--urgent);
+}
+
+.ai-message-delete i {
+  font-size: 1rem;
+}
+
+.ai-message-user .ai-message-content {
+  position: relative;
+}
+
 .ai-message-content {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
@@ -778,6 +809,29 @@
 .ai-status-elapsed {
   color: var(--stone-500);
   font-size: 0.8125rem;
+}
+
+.ai-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--stone-400);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.ai-cancel-btn:hover {
+  color: var(--urgent);
+  background: var(--stone-200);
+}
+
+.ai-cancel-btn i {
+  font-size: 1rem;
+  color: inherit;
 }
 
 /* Rename form inline */

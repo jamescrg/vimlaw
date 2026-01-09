@@ -57,12 +57,22 @@ def process_ai_request(
             timeout=600,
         )
 
+    def is_cancelled():
+        """Check if the request has been cancelled."""
+        status_data = cache.get(cache_key, {})
+        return status_data.get("status") == "cancelled"
+
     try:
         # Set connecting status
         update_status("connecting", "Connecting to AI...")
 
         # Brief pause to show connecting status
         time.sleep(0.3)
+
+        # Check for cancellation before making AI call
+        if is_cancelled():
+            logger.info("AI request cancelled for conversation %s", conversation_id)
+            return
 
         if llm in ("gemini-flash", "gemini-pro", "gemini-3-pro"):
             # Use streaming with thought summaries for Gemini
@@ -77,6 +87,9 @@ def process_ai_request(
 
             def on_thought(thought_text: str):
                 """Callback for thought summaries from Gemini."""
+                # Check for cancellation during thinking
+                if is_cancelled():
+                    raise InterruptedError("Request cancelled")
                 # Truncate long thoughts for display
                 display_text = thought_text[:100]
                 if len(thought_text) > 100:
@@ -100,6 +113,11 @@ def process_ai_request(
             response_text, input_tokens, output_tokens = send_to_claude(
                 context_text, chat_history, model=claude_model
             )
+
+        # Check for cancellation before citation verification
+        if is_cancelled():
+            logger.info("AI request cancelled for conversation %s", conversation_id)
+            return
 
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")
@@ -140,6 +158,10 @@ def process_ai_request(
             },
             timeout=600,
         )
+
+    except InterruptedError:
+        # Request was cancelled - just log and exit quietly
+        logger.info("AI request cancelled for conversation %s", conversation_id)
 
     except Exception as e:
         logger.exception(

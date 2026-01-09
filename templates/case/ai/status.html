@@ -17,5 +17,12 @@
     {% endif %}
     <span class="ai-status-message">{{ message|render_markdown }}</span>
     {% if elapsed_seconds %}<span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>{% endif %}
+    <button type="button"
+            class="ai-cancel-btn"
+            hx-post="{% url 'case:ai-cancel' conversation.id %}"
+            hx-swap="none"
+            title="Cancel request">
+      <i class="icon-x"></i>
+    </button>
   </div>
 </div>

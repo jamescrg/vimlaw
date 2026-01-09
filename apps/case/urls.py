@@ -706,6 +706,16 @@ urlpatterns = [
         name="ai-status",
     ),
     path(
+        "case/ai/cancel/<int:conv_id>/",
+        ai.cancel_request,
+        name="ai-cancel",
+    ),
+    path(
+        "case/ai/messages/<int:message_id>/delete/",
+        ai.delete_message,
+        name="ai-delete-message",
+    ),
+    path(
         "case/ai/conversations/<int:conv_id>/",
         ai.select_conversation,
         name="ai-select-conversation",
