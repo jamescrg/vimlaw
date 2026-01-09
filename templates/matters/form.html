@@ -31,8 +31,12 @@
                 hx-get="{% url 'matters:delete' id=matter.id %}"
                 hx-target="#htmx-modal-container .modal-dialog"
                 hx-swap="outerHTML">Delete Matter</button>
+      {% else %}
+        <button type="button"
+                class="btn btn-secondary"
+                @click="$dispatch('close-modal')">Cancel</button>
       {% endif %}
-      <button type="submit" form="matter-form" class="submit">Submit</button>
+      <button type="submit" form="matter-form" class="btn btn-success">Submit</button>
     </div>
   </div>
 </div>

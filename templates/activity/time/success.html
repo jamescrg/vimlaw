@@ -10,7 +10,9 @@
     </div>
     <div class="modal-body">
       <p>{{ hours }} hours recorded for {{ matter.name }}.</p>
-      <button type="button" class="submit" @click="$dispatch('close-modal')">Close</button>
+      <button type="button"
+              class="btn btn-success"
+              @click="$dispatch('close-modal')">Close</button>
     </div>
   </div>
 </div>

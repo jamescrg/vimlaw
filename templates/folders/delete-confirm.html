@@ -18,14 +18,14 @@
       {% if contact_count > 0 %}
         <button hx-delete="{% url 'folders:delete' folder.id %}?keep_contacts=true"
                 hx-target="#folders"
-                class="submit">Keep Contacts</button>
+                class="btn btn-success">Keep Contacts</button>
         <button hx-delete="{% url 'folders:delete' folder.id %}?delete_contacts=true"
                 hx-target="#folders"
                 class="btn-icon">Delete Contacts</button>
       {% else %}
         <button hx-delete="{% url 'folders:delete' folder.id %}"
                 hx-target="#folders"
-                class="submit">Delete Folder</button>
+                class="btn btn-success">Delete Folder</button>
       {% endif %}
     </div>
   </div>

@@ -32,8 +32,12 @@
                 data-confirm-title="Delete Intake"
                 data-confirm-message="Are you sure you want to delete this intake?"
                 data-confirm-text="Delete">Delete Intake</button>
+      {% else %}
+        <button type="button"
+                class="btn btn-secondary"
+                @click="$dispatch('close-modal')">Cancel</button>
       {% endif %}
-      <button type="submit" form="intake-form" class="submit">Submit</button>
+      <button type="submit" form="intake-form" class="btn btn-success">Submit</button>
     </div>
   </div>
 </div>

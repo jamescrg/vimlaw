@@ -64,7 +64,9 @@
               hx-post="{% url 'management:clear-filters' session_key='client_statement_filter' trigger='clientStatementChanged' %}">
         Restore Defaults
       </button>
-      <button type="submit" form="client-statement-filter-form" class="submit">Apply</button>
+      <button type="submit"
+              form="client-statement-filter-form"
+              class="btn btn-success">Apply</button>
     </div>
   </div>
 </div>

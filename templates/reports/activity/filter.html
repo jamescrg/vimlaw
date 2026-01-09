@@ -43,7 +43,9 @@
               hx-post="{% url 'management:clear-filters' session_key='activity_filter' trigger='activityChanged' %}">
         Restore Defaults
       </button>
-      <button type="submit" form="activity-report-filter-form" class="submit">Apply</button>
+      <button type="submit"
+              form="activity-report-filter-form"
+              class="btn btn-success">Apply</button>
     </div>
   </div>
 </div>

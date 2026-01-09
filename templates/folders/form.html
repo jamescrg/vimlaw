@@ -36,8 +36,12 @@
                 hx-get="{% url 'folders:delete-confirm' folder.id %}"
                 hx-target="#htmx-modal-container"
                 hx-swap="innerHTML">Delete Folder</button>
+      {% else %}
+        <button type="button"
+                class="btn btn-secondary"
+                @click="$dispatch('close-modal')">Cancel</button>
       {% endif %}
-      <button type="submit" form="folder-form" class="submit">Submit</button>
+      <button type="submit" form="folder-form" class="btn btn-success">Submit</button>
     </div>
   </div>
 </div>

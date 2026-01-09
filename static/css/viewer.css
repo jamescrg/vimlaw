@@ -266,7 +266,7 @@ body {
 .modal-footer .btn {
   border: none;
   border-radius: var(--radius-md);
-  padding: 0.25rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
 }
 
@@ -277,10 +277,6 @@ body {
 
 .modal-footer .btn-secondary:hover {
   background: var(--stone-400);
-}
-
-.modal-footer .submit {
-  padding: 0.25rem 0.75rem;
 }
 
 /* Edit modal grid - matches highlights.css */

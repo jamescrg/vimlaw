@@ -36,7 +36,9 @@
               hx-post="{% url 'management:clear-filters' session_key='revenue_filter' trigger='revenueChanged' %}">
         Restore Defaults
       </button>
-      <button type="submit" form="revenue-report-filter-form" class="submit">Apply</button>
+      <button type="submit"
+              form="revenue-report-filter-form"
+              class="btn btn-success">Apply</button>
     </div>
   </div>
 </div>
