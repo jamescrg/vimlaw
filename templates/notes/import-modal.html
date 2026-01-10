@@ -28,11 +28,11 @@
         <label class="form-check-label" for="import-replace">Replace existing content (unchecked = append)</label>
       </div>
     </div>
-    <div class="modal-footer justify-content-start">
-      <button type="button" class="btn btn-primary" id="import-confirm-btn">Import</button>
+    <div class="modal-footer">
       <button type="button"
               class="btn btn-secondary"
               @click="$dispatch('close-modal')">Cancel</button>
+      <button type="button" class="btn btn-success" id="import-confirm-btn">Import</button>
     </div>
   </div>
 </div>

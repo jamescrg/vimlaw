@@ -243,8 +243,7 @@ td:hover .btn-ghost,
 }
 
 .toggle-switch input:focus + .toggle-track {
-  outline: 2px solid var(--violet-300);
-  outline-offset: 1px;
+  outline: none;
 }
 
 /* Icon Checkbox Button */
