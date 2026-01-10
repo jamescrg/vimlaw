@@ -12,6 +12,12 @@
   text-align: center;
 }
 
+.btn:focus,
+.btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .btn-sm {
   font-size: 0.8rem;
 }
