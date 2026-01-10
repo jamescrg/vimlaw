@@ -263,21 +263,6 @@ body {
   line-height: 1.5;
 }
 
-.modal-footer .btn {
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-}
-
-.modal-footer .btn-secondary {
-  background: var(--stone-300);
-  color: var(--stone-700);
-}
-
-.modal-footer .btn-secondary:hover {
-  background: var(--stone-400);
-}
 
 /* Edit modal grid - matches highlights.css */
 .highlight-edit-grid {

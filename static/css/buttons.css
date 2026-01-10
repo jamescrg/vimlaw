@@ -37,11 +37,14 @@
   color: var(--button-secondary-color);
 }
 
-.btn-secondary {
+.btn-secondary,
+.btn-secondary:focus,
+.btn-secondary:active {
   background: var(--blue-50);
   border-color: var(--border-medium);
   box-shadow: none;
   color: var(--button-secondary-color);
+  outline: none;
 }
 
 .btn-secondary:hover {
