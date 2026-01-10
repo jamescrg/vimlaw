@@ -12,14 +12,9 @@
         {% csrf_token %}
         {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         {{ form.as_p }}
-        <div class="flex-container login-bottom">
-          <div class="login-bottom-right">
-            <button type="submit">Submit</button>
-          </div>
-          <div class="login-bottom-left">
-            <a href={% url 'accounts:password_reset' %}>Forgot Password?</a>
-            {#<a href={% url 'accounts:signup' %}>Don't have an account? Sign up</a>#}
-          </div>
+        <div class="auth-buttons justify-between">
+          <a href="{% url 'accounts:password_reset' %}">Forgot Password?</a>
+          <button type="submit" class="btn btn-success">Submit</button>
         </div>
       </form>
     </div>

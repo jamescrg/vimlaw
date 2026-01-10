@@ -11,13 +11,9 @@
       <form id="verify-form" class="account-form" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <div class="flex-container login-bottom">
-          <div class="login-bottom-right">
-            <button type="submit">Verify</button>
-          </div>
-          <div class="login-bottom-left">
-            <a href="{% url 'accounts:login' %}">Back to Login</a>
-          </div>
+        <div class="auth-buttons justify-between">
+          <a href="{% url 'accounts:login' %}">Back to Login</a>
+          <button type="submit" class="btn btn-success">Verify</button>
         </div>
       </form>
     </div>

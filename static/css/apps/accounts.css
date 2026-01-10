@@ -103,7 +103,7 @@ body {
   margin-top: 0.25rem;
 }
 
-.account-form button {
+.account-form button:not(.btn) {
   background: var(--link);
   border: solid 1px var(--link);
   border-radius: var(--radius-md);
@@ -149,9 +149,14 @@ input:focus {
 }
 
 .auth-buttons {
-  align-items: baseline;
+  align-items: center;
   display: flex;
   flex-direction: row;
   gap: 1rem;
   justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.auth-buttons.justify-between {
+  justify-content: space-between;
 }

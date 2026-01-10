@@ -10,9 +10,9 @@
       <form class="account-form" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <div class="auth-buttons">
-          <a href={% url 'accounts:login' %}>Cancel</a>
-          <button type="submit">Sign Up</button>
+        <div class="auth-buttons justify-between">
+          <a class="btn btn-secondary" href="{% url 'accounts:login' %}">Cancel</a>
+          <button type="submit" class="btn btn-success">Sign Up</button>
         </div>
       </form>
     </div>

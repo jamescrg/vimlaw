@@ -122,12 +122,14 @@
     </td>
     <td class="updated">{{ conv.updated_at|naturaltime }}</td>
     <td class="reference">
-      <button class="btn-icon-toggle {% if conv.is_reference %}active{% endif %}"
-              hx-post="{% url 'case:ai-toggle-reference' conv.id %}"
-              hx-swap="none"
-              title="{% if conv.is_reference %}Remove from reference{% else %}Add as reference for other conversations{% endif %}">
-        <i class="icon-bookmark{% if conv.is_reference %}-check{% endif %}"></i>
-      </button>
+      <label class="toggle-switch"
+             title="{% if conv.is_reference %}Remove from reference{% else %}Add as reference for other conversations{% endif %}">
+        <input type="checkbox"
+               {% if conv.is_reference %}checked{% endif %}
+               hx-post="{% url 'case:ai-toggle-reference' conv.id %}"
+               hx-swap="none">
+        <span class="toggle-track"></span>
+      </label>
     </td>
   </tr>
 {% empty %}

@@ -1,18 +1,15 @@
 {% extends "settings/main.html" %}
 {% block subcontent %}
-  <div class="section settings">
+  <div class="settings">
     <div class="toolbar">
-      <h1>Log Out</h1>
+      <h1>Session Status</h1>
     </div>
-    <p class="section-text">Log out of all sessions on all devices.</p>
     <p class="section-text">
       Logged in as: <span class="username">{{ user.username }}</span>
     </p>
-    <div class="integrations-list">
-      <div class="integrations-item">
-        <span>Session</span>
-        <a class="btn btn-success" href="{% url 'accounts:logout' %}">Logout</a>
-      </div>
-    </div>
+    <p class="section-text">Log out of all sessions on all devices:</p>
+    <p class="section-text">
+      <a class="btn btn-success" href="{% url 'accounts:logout' %}">Logout</a>
+    </p>
   </div>
 {% endblock subcontent %}
