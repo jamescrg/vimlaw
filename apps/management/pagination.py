@@ -16,6 +16,10 @@ class CustomPaginator(Paginator):
         orphans: int = 1,
         allow_empty_first_page: bool = True,
     ) -> None:
+        # Ensure consistent ordering for pagination
+        if hasattr(object_list, "query") and not object_list.query.order_by:
+            object_list = object_list.order_by("-pk")
+
         super().__init__(object_list, per_page, orphans, allow_empty_first_page)
 
         self.request: HttpRequest = request

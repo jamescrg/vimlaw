@@ -15,6 +15,10 @@ def get_user_list(request):
         # Apply default filter
         users = UserFilter(DEFAULT_USER_FILTER).qs
 
+    # Ensure consistent ordering for pagination
+    if not users.query.order_by:
+        users = users.order_by("username")
+
     page = request.GET.get("page")
     pagination = Paginator(users, 10).get_page(page)
 
