@@ -1,0 +1,62 @@
+/* ==========================================================================
+   Email PDF Styles
+   ========================================================================== */
+
+.email-header {
+  margin-bottom: 0.75rem;
+}
+
+.email-meta {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.email-meta td {
+  padding: 0.25rem 0;
+  vertical-align: top;
+  border: none;
+}
+
+.email-meta .meta-label {
+  font-weight: 600;
+  width: 4rem;
+  color: var(--slate-600);
+}
+
+.email-meta .meta-value {
+  color: var(--slate-800);
+}
+
+.email-meta .meta-value.subject {
+  font-weight: 600;
+}
+
+.email-divider {
+  border: none;
+  border-top: 1px solid var(--slate-300);
+  margin: 0.75rem 0;
+}
+
+.email-body {
+  line-height: 1.5;
+}
+
+.email-body.text-body {
+  white-space: pre-wrap;
+  font-family: inherit;
+}
+
+.email-body.html-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.email-body.html-body table {
+  max-width: 100%;
+}
+
+/* Override link colors for consistency */
+.email-body a {
+  color: var(--blue-600);
+  text-decoration: underline;
+}

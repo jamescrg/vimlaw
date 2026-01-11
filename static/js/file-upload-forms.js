@@ -41,9 +41,9 @@ const initializeDocumentDropzone = () => {
       uploadMultiple: false,
       maxFiles: 1,
       addRemoveLinks: false,
-      dictDefaultMessage: "Drop file here or click to upload",
+      dictDefaultMessage: "Drop PDF or mbox file here or click to upload",
       dictRemoveFile: '<i class="icon-trash-2"></i>',
-      acceptedFiles: ".pdf",
+      acceptedFiles: ".pdf,.mbox",
       previewTemplate: `
         <div class="dz-preview dz-file-preview">
           <div class="dz-filename-wrapper">
@@ -119,7 +119,15 @@ const initializeDocumentDropzone = () => {
           if (!file.isExistingFile) {
             const dateField = document.querySelector("#id_date");
             const nameField = document.querySelector("#id_name");
+            const categoryField = document.querySelector("#id_category");
             const isoDateMatch = file.name.match(/^(\d{4}-\d{2}-\d{2})/);
+            const isMbox = file.name.toLowerCase().endsWith(".mbox");
+
+            // Set category to Correspondence for mbox files
+            if (isMbox && categoryField) {
+              categoryField.value = "Correspondence";
+              categoryField.dispatchEvent(new Event("change"));
+            }
 
             // Set date field
             if (dateField && !dateField.value) {

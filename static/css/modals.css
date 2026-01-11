@@ -92,6 +92,12 @@
   padding: 1rem;
 }
 
+.modal-body .ocr-notice {
+  border-top: 1px solid var(--border-medium);
+  margin: 1rem -1rem -1rem;
+  padding: 0.75rem 1rem;
+}
+
 .modal-footer {
   align-items: center;
   border-top: 1px solid var(--border-medium);

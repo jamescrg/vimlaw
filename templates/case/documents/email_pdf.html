@@ -1,0 +1,58 @@
+{% load humanize %}
+{% load static %}
+{% load cache_buster %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" content="" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>Email - {{ subject }}</title>
+    <link rel="stylesheet" href={% static_v 'css/palette.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/colors.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/general.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/email.css' %} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet" />
+  </head>
+  <body>
+    <div class="template">
+      <div class="email-header">
+        <table class="email-meta">
+          <tr>
+            <td class="meta-label">From:</td>
+            <td class="meta-value">
+              {{ sender_full }}
+              {% if sender_email %}&lt;{{ sender_email }}&gt;{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="meta-label">To:</td>
+            <td class="meta-value">
+              {{ recipient_full }}
+              {% if recipient_email %}&lt;{{ recipient_email }}&gt;{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="meta-label">Date:</td>
+            <td class="meta-value">
+              {% if date %}
+                {{ date|date:"l, F j, Y g:i A" }}
+              {% else %}
+                (Unknown)
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="meta-label">Subject:</td>
+            <td class="meta-value subject">{{ subject }}</td>
+          </tr>
+        </table>
+      </div>
+      <hr class="email-divider" />
+      <div class="email-body {% if is_html_body %}html-body{% else %}text-body{% endif %}">{{ body_content|safe }}</div>
+    </div>
+  </body>
+</html>

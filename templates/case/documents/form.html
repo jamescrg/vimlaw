@@ -4,9 +4,6 @@
       <h1 class="modal-title">
         {% if edit %}
           Edit Document
-          {% if document.ocr_status == 'extracted' %}
-            {% include "case/documents/ocr-badge.html" %}
-          {% endif %}
         {% else %}
           Add Document
         {% endif %}
@@ -51,6 +48,10 @@
           <div>{{ form.name }}{{ form.name.errors }}</div>
         </div>
         <div class="span2">
+          <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+          <div>{{ form.description }}{{ form.description.errors }}</div>
+        </div>
+        <div class="span2">
           <label>File</label>
           <div id="document-dropzone"
                class="dropzone"
@@ -66,6 +67,9 @@
           {% endif %}
         </div>
       </form>
+      {% if edit and document.ocr_status == 'extracted' %}
+        <div class="ocr-notice">{% include "case/documents/ocr-badge.html" %}</div>
+      {% endif %}
     </div>
     <div class="modal-footer">
       {% if edit %}

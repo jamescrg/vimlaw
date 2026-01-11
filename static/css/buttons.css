@@ -47,6 +47,10 @@
   outline: none;
 }
 
+.btn-secondary:hover {
+  background: var(--blue-100);
+}
+
 .btn-outline-primary,
 .btn-outline-primary:hover,
 .btn-outline-primary:focus {
@@ -63,11 +67,19 @@
   color: var(--button-secondary-color);
 }
 
+.btn-danger:hover {
+  background: var(--red-200);
+}
+
 .btn-success {
   background: var(--lime-100);
   border-color: var(--border-medium);
   box-shadow: none;
   color: var(--button-secondary-color);
+}
+
+.btn-success:hover {
+  background: var(--lime-200);
 }
 
 .btn-success i {

@@ -241,31 +241,100 @@ def documents_add(request, matter_id):
         form = FilesForm(request.POST, matter=matter, use_required_attribute=False)
         uploaded_file = request.FILES.get("file")
 
-        # Validate file is uploaded
+        # Validate file is uploaded and has valid extension
         if not uploaded_file:
             form.add_error(None, "FILE_REQUIRED: Please select a file to upload.")
-        elif not uploaded_file.name.lower().endswith(".pdf"):
-            form.add_error(None, "FILE_REQUIRED: Only PDF files are accepted.")
+        else:
+            file_ext = uploaded_file.name.lower().split(".")[-1]
+            if file_ext not in ("pdf", "mbox"):
+                form.add_error(
+                    None, "FILE_REQUIRED: Only PDF and mbox files are accepted."
+                )
 
-        if (
-            form.is_valid()
-            and uploaded_file
-            and uploaded_file.name.lower().endswith(".pdf")
-        ):
-            # Two-phase save: first save without file to get PK
-            document = form.save(commit=False)
-            document.matter = matter
-            document.created_by = request.user
-            document.save()  # Gets PK
-            form.save_m2m()
+        if form.is_valid() and uploaded_file:
+            file_ext = uploaded_file.name.lower().split(".")[-1]
 
-            # Now save file with proper path using document.pk
-            document.file = uploaded_file
-            document.save()
+            # Handle mbox files - convert to PDF
+            if file_ext == "mbox":
+                import os
 
-            # Queue OCR for PDF files
-            file_extension = uploaded_file.name.split(".")[-1].lower()
-            if file_extension == "pdf":
+                from .mbox import (
+                    generate_email_description,
+                    generate_email_pdf,
+                    parse_mbox_file,
+                )
+
+                try:
+                    # Parse the mbox file
+                    file_content = uploaded_file.read()
+                    email_metadata = parse_mbox_file(file_content)
+
+                    # Generate PDF
+                    base_url = request.build_absolute_uri("/").rstrip("/")
+                    pdf_file = generate_email_pdf(email_metadata, base_url)
+
+                    # Create document with auto-populated fields
+                    document = form.save(commit=False)
+                    document.matter = matter
+                    document.created_by = request.user
+
+                    # Auto-set date from email
+                    if email_metadata.date:
+                        document.date = email_metadata.date.date()
+
+                    # Auto-set description
+                    document.description = generate_email_description(email_metadata)
+
+                    document.save()  # Gets PK
+                    form.save_m2m()
+
+                    # Read PDF content and save as file
+                    with open(pdf_file.name, "rb") as f:
+                        pdf_content = f.read()
+
+                    # Clean up temp file
+                    os.unlink(pdf_file.name)
+
+                    # Save with .pdf extension
+                    document.file.save(
+                        f"{document.pk}.pdf", ContentFile(pdf_content), save=True
+                    )
+
+                    # Queue OCR for the generated PDF
+                    from django_q.tasks import async_task
+
+                    async_task(
+                        "apps.case.documents.tasks.process_document_ocr",
+                        document.id,
+                        task_name=f"OCR-{document.id}",
+                        group="ocr_processing",
+                    )
+
+                    return HttpResponse(
+                        status=204, headers={"HX-Trigger": "documentsChanged"}
+                    )
+
+                except ValueError as e:
+                    form.add_error(None, f"FILE_REQUIRED: {str(e)}")
+                except Exception as e:
+                    form.add_error(
+                        None, f"FILE_REQUIRED: Failed to process email file: {str(e)}"
+                    )
+
+            # Handle regular PDF files
+            elif file_ext == "pdf":
+                # Two-phase save: first save without file to get PK
+                document = form.save(commit=False)
+                document.matter = matter
+                document.created_by = request.user
+                document.save()  # Gets PK
+                form.save_m2m()
+
+                # Now save file with proper path using document.pk
+                document.file = uploaded_file
+                document.save()
+
+                # Queue OCR for PDF files
                 from django_q.tasks import async_task
 
                 async_task(
@@ -274,12 +343,10 @@ def documents_add(request, matter_id):
                     task_name=f"OCR-{document.id}",
                     group="ocr_processing",
                 )
-            else:
-                Document.objects.filter(id=document.id).update(
-                    ocr_status="not_applicable"
-                )
 
-            return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+                return HttpResponse(
+                    status=204, headers={"HX-Trigger": "documentsChanged"}
+                )
 
         # Form has errors
         return render(
