@@ -1,0 +1,14 @@
+<div class="section-header">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <h1>{{ matter.name }}</h1>
+      <div class="mode-pills">
+        <a href="{% url 'matters:detail' id=matter.id %}"
+           class="mode-pill {% if mode == 'detail' %}active{% endif %}">Detail</a>
+        <a href="{% url 'case:select-matter' matter.id %}"
+           class="mode-pill {% if mode == 'case' %}active{% endif %}">Case</a>
+      </div>
+    </div>
+    <div class="toolbar-right">{% include "matters/includes/action_buttons.html" %}</div>
+  </div>
+</div>

@@ -2,44 +2,7 @@
 {% block content %}
   <div id="content" class="container content">
     <div class="section">
-      <div class="section-header">
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <h1>{{ matter.name|default:"Select a Matter" }}</h1>
-            <div class="filter-tools">
-              <div class="dropdown" x-data="dropdown()">
-                <button type="button"
-                        class="select-btn"
-                        x-ref="button"
-                        @click="toggle()"
-                        :aria-expanded="open">
-                  <small>
-                    <i class="icon-chevron-down"></i>
-                  </small>
-                </button>
-                <ul class="dropdown-menu" x-ref="menu" x-show="open">
-                  {% for m in matters %}
-                    <li>
-                      <a class="dropdown-item {% if m.id == matter.id %}active{% endif %}"
-                         href="{% url 'case:select-matter' m.id %}">{{ m.name }}</a>
-                    </li>
-                  {% empty %}
-                    <li>
-                      <span class="dropdown-item text-muted">No matters available</span>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-              {% if matter %}
-                <a href="{% url 'matters:contacts' id=matter.id %}" class="accent-link">Details</a>
-                <button class="accent-link"
-                        hx-get="/activity/time/add/{{ matter.id }}/case"
-                        hx-target="#htmx-modal-container">+ Time</button>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
+      {% include "matters/includes/header.html" with mode="case" %}
       <nav class="section-nav">
         <ul>
           <li {% if subapp == "documents" %}class="active"{% endif %}>

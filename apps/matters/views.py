@@ -15,6 +15,36 @@ from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
 
+# Valid detail tabs for the matter detail view
+VALID_DETAIL_TABS = [
+    "contacts",
+    "rates",
+    "activity",
+    "events",
+    "tasks",
+    "proceedings",
+    "settlement",
+    "ledger",
+]
+DEFAULT_DETAIL_TAB = "contacts"
+
+
+def get_detail_tab_session_key(matter_id):
+    """Get the session key for storing the active detail tab for a matter."""
+    return f"matter_detail_tab_{matter_id}"
+
+
+def get_last_detail_tab(request, matter_id):
+    """Get the last active detail tab for a matter, or default to contacts."""
+    tab = request.session.get(get_detail_tab_session_key(matter_id), DEFAULT_DETAIL_TAB)
+    return tab if tab in VALID_DETAIL_TABS else DEFAULT_DETAIL_TAB
+
+
+def set_last_detail_tab(request, matter_id, tab):
+    """Save the active detail tab for a matter."""
+    if tab in VALID_DETAIL_TABS:
+        request.session[get_detail_tab_session_key(matter_id)] = tab
+
 
 @login_required
 def matter_index(request):
@@ -114,7 +144,8 @@ def order_by(request, order):
 @login_required
 def detail(request, id):
     request.session["matters-view"] = "detail"
-    return redirect(f"/matters/{id}/contacts")
+    tab = get_last_detail_tab(request, id)
+    return redirect(f"/matters/{id}/{tab}")
 
 
 @login_required

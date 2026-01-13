@@ -14,9 +14,6 @@
         <li {% if app == 'activity' %}class="active"{% endif %}>
           <a id="nav-activity" href="{% url 'activity:time-index' %}">Activity</a>
         </li>
-        <li {% if app == 'documents' %}class="active"{% endif %}>
-          <a id="nav-documents" href={% url 'case:index' %}>Case</a>
-        </li>
         <li {% if app == 'notes' %}class="active"{% endif %}>
           <a id="nav-notes" href="{% url 'notes:index' %}">Notes</a>
         </li>
