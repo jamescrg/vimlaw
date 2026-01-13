@@ -71,6 +71,12 @@ def get_document_data(request, matter_id):
     selected_session_key = get_session_key("selected_documents", matter_id)
     selected_documents = request.session.get(selected_session_key, [])
 
+    # Check if all visible documents are selected
+    visible_ids = [doc.id for doc in pagination.get_object_list()]
+    all_selected = visible_ids and all(
+        doc_id in selected_documents for doc_id in visible_ids
+    )
+
     # Get proceedings for the matter (for inline proceeding dropdown)
     proceedings = Proceeding.objects.filter(matter=matter).order_by(
         "forum", "case_number"
@@ -120,6 +126,7 @@ def get_document_data(request, matter_id):
         "selected_category": selected_category,
         "selected_keyword": selected_keyword,
         "selected_documents": selected_documents,
+        "all_selected": all_selected,
         "proceedings": proceedings,
         "selected_proceeding": selected_proceeding,
         "current_order": current_order,

@@ -1,6 +1,7 @@
 <div class="table-container">
   <table id="documents-list" class="table table-fixed">
     <colgroup>
+      <col class="col-select">
       <col class="col-category">
       <col class="col-date">
       <col class="col-document">
@@ -10,6 +11,14 @@
       <col class="col-importance">
     </colgroup>
     <tr>
+      <th class="col-select">
+        <button class="btn-check"
+                hx-post="{% url 'case:documents-select-all' matter.id %}"
+                hx-swap="none"
+                title="Select all">
+          <i class="icon-square{% if all_selected %}-check{% endif %}"></i>
+        </button>
+      </th>
       <th class="col-category">Category</th>
       <th class="col-date">
         Date
@@ -43,7 +52,7 @@
       {% include "case/documents/row.html" %}
     {% empty %}
       <tr>
-        <td colspan="7" class="empty-message">No documents found.</td>
+        <td colspan="8" class="empty-message">No documents found.</td>
       </tr>
     {% endfor %}
   </table>

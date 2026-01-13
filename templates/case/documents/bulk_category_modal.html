@@ -1,0 +1,33 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Move to Category ({{ selected_count }} document{{ selected_count|pluralize }})</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="bulk-category-form"
+            hx-post="{% url 'case:documents-bulk-category' matter.id %}"
+            hx-swap="none">
+        {% csrf_token %}
+        <div class="bulk-category-list">
+          {% for value, label in categories %}
+            <label class="bulk-category-item">
+              <input type="radio" name="category" value="{{ value }}" required>
+              <span>{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit" form="bulk-category-form" class="btn btn-primary">Move</button>
+    </div>
+  </div>
+</div>

@@ -613,9 +613,11 @@ def get_proceedings_and_labels(request, matter_id):
 
 
 @login_required
-def toggle_document_select(request, document_id):
-    document = get_object_or_404(Document, id=document_id)
-    matter_id = document.matter_id
+@require_POST
+def toggle_document_select(request, matter_id, document_id):
+    """Toggle selection of a single document."""
+    # Validate document exists and belongs to matter
+    get_object_or_404(Document, id=document_id, matter_id=matter_id)
     selected_session_key = get_session_key("selected_documents", matter_id)
     selected_documents = request.session.get(selected_session_key, [])
 
@@ -859,3 +861,164 @@ def documents_toggle_ai(request, document_id):
     document.save(update_fields=["include_in_ai", "updated_by", "updated_at"])
 
     return HttpResponse(status=204)
+
+
+@login_required
+@require_POST
+def select_all_documents(request, matter_id):
+    """Toggle select-all for documents."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
+
+    # Get all visible document IDs (respecting current filters)
+    documents_data = get_document_data(request, matter_id)
+    visible_ids = [doc.id for doc in documents_data["objects"]]
+
+    # If all visible are selected, deselect all; otherwise select all visible
+    all_selected = visible_ids and all(
+        doc_id in selected_documents for doc_id in visible_ids
+    )
+
+    if all_selected:
+        # Deselect all
+        request.session[selected_session_key] = []
+    else:
+        # Select all visible (merge with existing selection)
+        new_selection = list(set(selected_documents + visible_ids))
+        request.session[selected_session_key] = new_selection
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+
+@login_required
+@require_POST
+def bulk_documents_ai(request, matter_id, action):
+    """Bulk add/remove documents from AI context."""
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
+
+    if not selected_documents:
+        return HttpResponse(status=400, content="No documents selected.")
+
+    include_in_ai = action == "add"
+    Document.objects.filter(id__in=selected_documents).update(
+        include_in_ai=include_in_ai
+    )
+
+    # Clear selection after action
+    request.session[selected_session_key] = []
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+
+@login_required
+@require_POST
+def bulk_documents_delete(request, matter_id):
+    """Bulk delete selected documents."""
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
+
+    if not selected_documents:
+        return HttpResponse(status=400, content="No documents selected.")
+
+    Document.objects.filter(id__in=selected_documents).delete()
+
+    # Clear selection
+    request.session[selected_session_key] = []
+
+    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+
+@login_required
+def bulk_documents_category(request, matter_id):
+    """Show modal to select category for bulk move."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
+
+    if request.method == "POST":
+        category = request.POST.get("category")
+        if category:
+            Document.objects.filter(id__in=selected_documents).update(category=category)
+            request.session[selected_session_key] = []
+            return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+        return HttpResponse(status=400, content="No category selected.")
+
+    # GET - render modal
+    categories = [
+        ("Correspondence", "Correspondence"),
+        ("Discovery", "Discovery"),
+        ("Evidence", "Evidence"),
+        ("Record", "Record"),
+    ]
+
+    return render(
+        request,
+        "case/documents/bulk_category_modal.html",
+        {
+            "matter": matter,
+            "categories": categories,
+            "selected_count": len(selected_documents),
+        },
+    )
+
+
+@login_required
+def bulk_documents_matter(request, matter_id):
+    """Show modal to select matter for bulk move."""
+    from apps.matters.models import Matter
+
+    matter, matters = get_matter_from_url(request, matter_id)
+    selected_session_key = get_session_key("selected_documents", matter_id)
+    selected_documents = request.session.get(selected_session_key, [])
+
+    if request.method == "POST":
+        target_matter_id = request.POST.get("matter")
+        if target_matter_id:
+            target_matter = get_object_or_404(Matter, id=target_matter_id)
+
+            # Move documents to new matter
+            for doc in Document.objects.filter(id__in=selected_documents):
+                old_file_path = doc.file.name if doc.file else None
+
+                doc.matter = target_matter
+                doc.save()
+
+                # Move file to new matter's folder if file exists
+                if old_file_path:
+                    from django.core.files.base import ContentFile
+                    from django.core.files.storage import default_storage
+
+                    file_extension = old_file_path.split(".")[-1].lower()
+                    new_file_path = f"case/{target_matter.id}/{doc.pk}.{file_extension}"
+
+                    try:
+                        with default_storage.open(old_file_path, "rb") as f:
+                            file_content = f.read()
+                        default_storage.save(new_file_path, ContentFile(file_content))
+                        default_storage.delete(old_file_path)
+                        doc.file.name = new_file_path
+                        doc.save(update_fields=["file"])
+                    except Exception:
+                        pass  # File move failed, but document is still moved
+
+            request.session[selected_session_key] = []
+            return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+
+        return HttpResponse(status=400, content="No matter selected.")
+
+    # GET - render modal
+    # Get all matters user has access to, excluding current
+    available_matters = matters.exclude(id=matter_id).order_by("name")
+
+    return render(
+        request,
+        "case/documents/bulk_matter_modal.html",
+        {
+            "matter": matter,
+            "available_matters": available_matters,
+            "selected_count": len(selected_documents),
+        },
+    )

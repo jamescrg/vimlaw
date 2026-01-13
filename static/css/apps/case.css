@@ -5,6 +5,14 @@
 }
 
 /* Column widths */
+#documents-list .col-select {
+  width: 2.5rem;
+  text-align: center;
+  vertical-align: middle;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 #documents-list .col-date {
   width: 11rem;
 }
@@ -393,6 +401,31 @@
 }
 
 .bulk-label-item input[type="checkbox"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Bulk Category Modal */
+.bulk-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bulk-category-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.bulk-category-item:hover {
+  background: var(--stone-100);
+}
+
+.bulk-category-item input[type="radio"] {
   cursor: pointer;
   margin: 0;
 }

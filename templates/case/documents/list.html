@@ -152,16 +152,65 @@
   </ul>
 </div>
 {% if selected_documents %}
+  <div class="dropdown" x-data="dropdown()">
+    <button type="button"
+            class="btn-icon"
+            x-ref="button"
+            @click="toggle()"
+            :aria-expanded="open">
+      Actions ({{ selected_documents|length }})
+      <small><i class="icon-chevron-down"></i></small>
+    </button>
+    <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'case:documents-bulk-ai' matter.id 'add' %}"
+           hx-swap="none">
+          <i class="icon-bookmark-plus"></i> Add to AI Context
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'case:documents-bulk-ai' matter.id 'remove' %}"
+           hx-swap="none">
+          <i class="icon-bookmark-minus"></i> Remove from AI Context
+        </a>
+      </li>
+      <li class="dropdown-divider"></li>
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'case:documents-bulk-category' matter.id %}"
+           hx-target="#htmx-modal-container">
+          <i class="icon-folder"></i> Move to Category...
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'case:documents-bulk-matter' matter.id %}"
+           hx-target="#htmx-modal-container">
+          <i class="icon-briefcase"></i> Move to Matter...
+        </a>
+      </li>
+      <li class="dropdown-divider"></li>
+      <li>
+        <a class="dropdown-item text-danger"
+           href="#"
+           hx-post="{% url 'case:documents-bulk-delete' matter.id %}"
+           hx-confirm="Delete {{ selected_documents|length }} selected document(s)?"
+           hx-swap="none">
+          <i class="icon-trash-2"></i> Delete Selected
+        </a>
+      </li>
+    </ul>
+  </div>
   <button type="button"
-          hx-get="{% url 'case:documents-bulk-update' matter.id %}"
-          hx-target="#htmx-modal-container"
-          hx-trigger="click"
-          class="btn-icon">Bulk Actions ({{ selected_documents|length }})</button>
-  <button type="button"
+          class="btn-icon"
           hx-post="{% url 'case:documents-clear-selection' matter.id %}"
-          hx-target="#documents"
-          hx-swap="outerHTML"
-          class="btn-icon">
+          hx-swap="none">
     <i class="icon-x"></i> Clear
   </button>
 {% endif %}

@@ -98,6 +98,36 @@ urlpatterns = [
         name="documents-clear-selection",
     ),
     path(
+        "case/<int:matter_id>/documents/select-all/",
+        documents.select_all_documents,
+        name="documents-select-all",
+    ),
+    path(
+        "case/<int:matter_id>/documents/toggle-select/<int:document_id>/",
+        documents.toggle_document_select,
+        name="documents-toggle-select",
+    ),
+    path(
+        "case/<int:matter_id>/documents/bulk-ai/<str:action>/",
+        documents.bulk_documents_ai,
+        name="documents-bulk-ai",
+    ),
+    path(
+        "case/<int:matter_id>/documents/bulk-delete/",
+        documents.bulk_documents_delete,
+        name="documents-bulk-delete",
+    ),
+    path(
+        "case/<int:matter_id>/documents/bulk-category/",
+        documents.bulk_documents_category,
+        name="documents-bulk-category",
+    ),
+    path(
+        "case/<int:matter_id>/documents/bulk-matter/",
+        documents.bulk_documents_matter,
+        name="documents-bulk-matter",
+    ),
+    path(
         "case/<int:matter_id>/documents/get-proceedings-and-labels/",
         documents.get_proceedings_and_labels,
         name="get-proceedings-and-labels",
@@ -451,11 +481,6 @@ urlpatterns = [
         "case/documents/<int:document_id>/toggle-ai/",
         documents.documents_toggle_ai,
         name="documents-toggle-ai",
-    ),
-    path(
-        "case/documents/<int:document_id>/toggle-select/",
-        documents.toggle_document_select,
-        name="documents-toggle-select",
     ),
     path(
         "case/documents/<int:document_id>/row/",

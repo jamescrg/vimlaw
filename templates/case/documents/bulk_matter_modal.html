@@ -1,0 +1,38 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Move to Matter ({{ selected_count }} document{{ selected_count|pluralize }})</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      {% if available_matters %}
+        <form id="bulk-matter-form"
+              hx-post="{% url 'case:documents-bulk-matter' matter.id %}"
+              hx-swap="none">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="matter-select">Select Target Matter</label>
+            <select id="matter-select" name="matter" class="form-control" required>
+              <option value="">-- Select a matter --</option>
+              {% for m in available_matters %}<option value="{{ m.id }}">{{ m.name }}</option>{% endfor %}
+            </select>
+          </div>
+        </form>
+      {% else %}
+        <p class="text-muted">No other matters available.</p>
+      {% endif %}
+    </div>
+    {% if available_matters %}
+      <div class="modal-footer">
+        <button type="button"
+                class="btn btn-secondary"
+                @click="$dispatch('close-modal')">Cancel</button>
+        <button type="submit" form="bulk-matter-form" class="btn btn-primary">Move</button>
+      </div>
+    {% endif %}
+  </div>
+</div>
