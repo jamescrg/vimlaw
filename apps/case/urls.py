@@ -23,6 +23,11 @@ urlpatterns = [
         views.select_matter,
         name="select-matter",
     ),
+    path(
+        "case/<int:matter_id>/mode-content/",
+        views.mode_content,
+        name="mode-content",
+    ),
     # ==========================================================================
     # MATTER-SCOPED ROUTES (list, filter, add operations)
     # ==========================================================================

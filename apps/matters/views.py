@@ -149,6 +149,38 @@ def detail(request, id):
 
 
 @login_required
+def mode_content(request, id):
+    """Return detail mode content partial for HTMX, or redirect for regular request."""
+    matter = get_object_or_404(Matter, pk=id)
+    tab = get_last_detail_tab(request, id)
+
+    if not request.headers.get("HX-Request"):
+        return redirect(f"/matters/{id}/{tab}")
+
+    # Map tab names to their list URLs
+    tab_list_urls = {
+        "contacts": f"/matters/{id}/contacts/list/",
+        "rates": f"/matters/{id}/rates/list/",
+        "activity": f"/matters/{id}/activity/list/",
+        "events": f"/matters/{id}/events/list/",
+        "tasks": f"/matters/{id}/tasks/list/",
+        "proceedings": f"/matters/{id}/proceedings/list/",
+        "settlement": f"/matters/{id}/settlement/list/",
+        "ledger": f"/matters/{id}/ledger/list/",
+    }
+
+    context = {
+        "matter": matter,
+        "matters": Matter.objects.filter(status="Open").order_by("name"),
+        "mode": "detail",
+        "subapp": tab,
+        "tab_list_url": tab_list_urls.get(tab, f"/matters/{id}/contacts/list/"),
+    }
+
+    return render(request, "matters/includes/detail-content.html", context)
+
+
+@login_required
 def add(request):
     # if applicable, process any post data submitted by user
     if request.method == "POST":

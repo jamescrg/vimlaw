@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+  {% load humanize %}
+  <div id="content" class="container content">
+    <div class="section">
+      {% block header_include %}
+      {% endblock header_include %}
+      <div id="mode-content">
+        {% block mode_content %}
+        {% endblock mode_content %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}

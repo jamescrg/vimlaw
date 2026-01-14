@@ -1,0 +1,44 @@
+<nav class="section-nav">
+  <ul>
+    <li {% if subapp == 'contacts' %}class="active"{% endif %}>
+      <a href="{% url 'matters:contacts' id=matter.id %}">Contacts</a>
+    </li>
+    <li {% if subapp == 'rates' %}class="active"{% endif %}>
+      <a href="{% url 'matters:rate-index' id=matter.id %}">Rates</a>
+    </li>
+    <li {% if subapp == 'activity' %}class="active"{% endif %}>
+      <a href="{% url 'matters:activity-index' id=matter.id %}">Activity</a>
+    </li>
+    <li {% if subapp == 'events' %}class="active"{% endif %}>
+      <a href="{% url 'matters:events-index' id=matter.id %}">Events</a>
+    </li>
+    <li {% if subapp == 'tasks' %}class="active"{% endif %}>
+      <a href="{% url 'matters:tasks-index' id=matter.id %}">Tasks</a>
+    </li>
+    <li {% if subapp == 'proceedings' %}class="active"{% endif %}>
+      <a href="{% url 'matters:proceedings-index' id=matter.id %}">Proceedings</a>
+    </li>
+    <li {% if subapp == 'settlement' %}class="active"{% endif %}>
+      <a href="{% url 'matters:settlement-index' id=matter.id %}">Settlement</a>
+    </li>
+    <li {% if subapp == 'ledger' %}class="active"{% endif %}>
+      <a href="{% url 'matters:ledger' id=matter.id %}">Ledger</a>
+    </li>
+  </ul>
+</nav>
+<div class="section-body"
+     hx-get="{{ tab_list_url }}"
+     hx-trigger="load"
+     hx-swap="innerHTML"></div>
+<div id="mode-pills" class="mode-pills" hx-swap-oob="true">
+  <a href="{% url 'matters:detail' id=matter.id %}"
+     hx-get="{% url 'matters:mode-content' id=matter.id %}"
+     hx-target="#mode-content"
+     hx-push-url="{% url 'matters:detail' id=matter.id %}"
+     class="mode-pill active">Detail</a>
+  <a href="{% url 'case:select-matter' matter.id %}"
+     hx-get="{% url 'case:mode-content' matter_id=matter.id %}"
+     hx-target="#mode-content"
+     hx-push-url="{% url 'case:select-matter' matter.id %}"
+     class="mode-pill">Case</a>
+</div>

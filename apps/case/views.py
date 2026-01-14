@@ -84,6 +84,44 @@ def select_matter(request, matter_id):
     return redirect_to_tab(matter.id, tab)
 
 
+@login_required
+def mode_content(request, matter_id):
+    """Return case mode content partial for HTMX, or redirect for regular request."""
+    from django.shortcuts import render
+
+    matter = get_object_or_404(Matter, pk=matter_id)
+    tab = get_last_tab(request, matter_id)
+
+    # Store as last viewed matter
+    request.session["last_viewed_matter"] = matter.id
+
+    if not request.headers.get("HX-Request"):
+        return redirect_to_tab(matter_id, tab)
+
+    # Map tab names to their list URLs
+    tab_list_urls = {
+        "documents": f"/case/{matter_id}/documents/list/",
+        "caselaws": f"/case/{matter_id}/caselaws/list/",
+        "highlights": f"/case/{matter_id}/highlights/list/",
+        "facts": f"/case/{matter_id}/facts/list/",
+        "witnesses": f"/case/{matter_id}/witnesses/list/",
+        "notes": f"/case/{matter_id}/notes/list/",
+        "labels": f"/case/{matter_id}/labels/list/",
+        "search": f"/case/{matter_id}/search/list/",
+        "ai": f"/case/{matter_id}/ai/list/",
+    }
+
+    context = {
+        "matter": matter,
+        "matters": Matter.objects.filter(status="Open").order_by("name"),
+        "mode": "case",
+        "subapp": tab,
+        "tab_list_url": tab_list_urls.get(tab, f"/case/{matter_id}/documents/list/"),
+    }
+
+    return render(request, "case/includes/case-content.html", context)
+
+
 def get_matter_from_url(request, matter_id):
     """
     Get matter from URL parameter and update last_viewed_matter in session.

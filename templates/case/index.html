@@ -1,43 +1,41 @@
-{% extends "base.html" %}
-{% block content %}
-  <div id="content" class="container content">
-    <div class="section">
-      {% include "matters/includes/header.html" with mode="case" %}
-      <nav class="section-nav">
-        <ul>
-          <li {% if subapp == "documents" %}class="active"{% endif %}>
-            <a href="{% url 'case:documents-index' matter.id %}">Documents</a>
-          </li>
-          <li {% if subapp == "caselaws" %}class="active"{% endif %}>
-            <a href="{% url 'case:caselaws-index' matter.id %}">Case Law</a>
-          </li>
-          <li {% if subapp == "highlights" %}class="active"{% endif %}>
-            <a href="{% url 'case:highlights-index' matter.id %}">Highlights</a>
-          </li>
-          <li {% if subapp == "facts" %}class="active"{% endif %}>
-            <a href="{% url 'case:facts-index' matter.id %}">Timeline</a>
-          </li>
-          <li {% if subapp == "witnesses" %}class="active"{% endif %}>
-            <a href="{% url 'case:witnesses-index' matter.id %}">Witnesses</a>
-          </li>
-          <li {% if subapp == "notes" %}class="active"{% endif %}>
-            <a href="{% url 'case:notes-index' matter.id %}">Notes</a>
-          </li>
-          <li {% if subapp == "labels" %}class="active"{% endif %}>
-            <a href="{% url 'case:labels-index' matter.id %}">Labels</a>
-          </li>
-          <li {% if subapp == "search" %}class="active"{% endif %}>
-            <a href="{% url 'case:search-index' matter.id %}">Search</a>
-          </li>
-          <li {% if subapp == "ai" %}class="active"{% endif %}>
-            <a href="{% url 'case:ai-index' matter.id %}">AI</a>
-          </li>
-        </ul>
-      </nav>
-      <div class="section-body">
-        {% block subcontent %}
-        {% endblock subcontent %}
-      </div>
-    </div>
+{% extends "matters/matter-base.html" %}
+{% block header_include %}
+  {% include "matters/includes/header.html" with mode="case" %}
+{% endblock header_include %}
+{% block mode_content %}
+  <nav class="section-nav">
+    <ul>
+      <li {% if subapp == "documents" %}class="active"{% endif %}>
+        <a href="{% url 'case:documents-index' matter.id %}">Documents</a>
+      </li>
+      <li {% if subapp == "caselaws" %}class="active"{% endif %}>
+        <a href="{% url 'case:caselaws-index' matter.id %}">Case Law</a>
+      </li>
+      <li {% if subapp == "highlights" %}class="active"{% endif %}>
+        <a href="{% url 'case:highlights-index' matter.id %}">Highlights</a>
+      </li>
+      <li {% if subapp == "facts" %}class="active"{% endif %}>
+        <a href="{% url 'case:facts-index' matter.id %}">Timeline</a>
+      </li>
+      <li {% if subapp == "witnesses" %}class="active"{% endif %}>
+        <a href="{% url 'case:witnesses-index' matter.id %}">Witnesses</a>
+      </li>
+      <li {% if subapp == "notes" %}class="active"{% endif %}>
+        <a href="{% url 'case:notes-index' matter.id %}">Notes</a>
+      </li>
+      <li {% if subapp == "labels" %}class="active"{% endif %}>
+        <a href="{% url 'case:labels-index' matter.id %}">Labels</a>
+      </li>
+      <li {% if subapp == "search" %}class="active"{% endif %}>
+        <a href="{% url 'case:search-index' matter.id %}">Search</a>
+      </li>
+      <li {% if subapp == "ai" %}class="active"{% endif %}>
+        <a href="{% url 'case:ai-index' matter.id %}">AI</a>
+      </li>
+    </ul>
+  </nav>
+  <div class="section-body">
+    {% block subcontent %}
+    {% endblock subcontent %}
   </div>
-{% endblock content %}
+{% endblock mode_content %}

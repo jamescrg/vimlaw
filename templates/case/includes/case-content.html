@@ -1,0 +1,47 @@
+<nav class="section-nav">
+  <ul>
+    <li {% if subapp == "documents" %}class="active"{% endif %}>
+      <a href="{% url 'case:documents-index' matter.id %}">Documents</a>
+    </li>
+    <li {% if subapp == "caselaws" %}class="active"{% endif %}>
+      <a href="{% url 'case:caselaws-index' matter.id %}">Case Law</a>
+    </li>
+    <li {% if subapp == "highlights" %}class="active"{% endif %}>
+      <a href="{% url 'case:highlights-index' matter.id %}">Highlights</a>
+    </li>
+    <li {% if subapp == "facts" %}class="active"{% endif %}>
+      <a href="{% url 'case:facts-index' matter.id %}">Timeline</a>
+    </li>
+    <li {% if subapp == "witnesses" %}class="active"{% endif %}>
+      <a href="{% url 'case:witnesses-index' matter.id %}">Witnesses</a>
+    </li>
+    <li {% if subapp == "notes" %}class="active"{% endif %}>
+      <a href="{% url 'case:notes-index' matter.id %}">Notes</a>
+    </li>
+    <li {% if subapp == "labels" %}class="active"{% endif %}>
+      <a href="{% url 'case:labels-index' matter.id %}">Labels</a>
+    </li>
+    <li {% if subapp == "search" %}class="active"{% endif %}>
+      <a href="{% url 'case:search-index' matter.id %}">Search</a>
+    </li>
+    <li {% if subapp == "ai" %}class="active"{% endif %}>
+      <a href="{% url 'case:ai-index' matter.id %}">AI</a>
+    </li>
+  </ul>
+</nav>
+<div class="section-body"
+     hx-get="{{ tab_list_url }}"
+     hx-trigger="load"
+     hx-swap="innerHTML"></div>
+<div id="mode-pills" class="mode-pills" hx-swap-oob="true">
+  <a href="{% url 'matters:detail' id=matter.id %}"
+     hx-get="{% url 'matters:mode-content' id=matter.id %}"
+     hx-target="#mode-content"
+     hx-push-url="{% url 'matters:detail' id=matter.id %}"
+     class="mode-pill">Detail</a>
+  <a href="{% url 'case:select-matter' matter.id %}"
+     hx-get="{% url 'case:mode-content' matter_id=matter.id %}"
+     hx-target="#mode-content"
+     hx-push-url="{% url 'case:select-matter' matter.id %}"
+     class="mode-pill active">Case</a>
+</div>
