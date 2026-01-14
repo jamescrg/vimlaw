@@ -90,9 +90,9 @@ def process_ai_request(
                 # Check for cancellation during thinking
                 if is_cancelled():
                     raise InterruptedError("Request cancelled")
-                # Truncate long thoughts for display
-                display_text = thought_text[:100]
-                if len(thought_text) > 100:
+                # Truncate very long thoughts for display
+                display_text = thought_text[:300]
+                if len(thought_text) > 300:
                     display_text += "..."
                 update_status("thinking", display_text)
 
