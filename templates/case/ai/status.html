@@ -12,17 +12,22 @@
       <i class="icon-pencil-square pulse"></i>
     {% elif status == "verifying" %}
       <i class="icon-scale pulse"></i>
+    {% elif status == "cancelled" %}
+      <i class="icon-x-circle"></i>
     {% else %}
       <i class="icon-hourglass spin"></i>
     {% endif %}
     <span class="ai-status-message">{{ message|render_markdown }}</span>
     {% if elapsed_seconds %}<span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>{% endif %}
-    <button type="button"
-            class="ai-cancel-btn"
-            hx-post="{% url 'case:ai-cancel' conversation.id %}"
-            hx-swap="none"
-            title="Cancel request">
-      <i class="icon-x"></i>
-    </button>
+    {% if status != "cancelled" %}
+      <button type="button"
+              class="ai-cancel-btn"
+              hx-post="{% url 'case:ai-cancel' conversation.id %}"
+              hx-target="#ai-status-indicator"
+              hx-swap="outerHTML"
+              title="Cancel request">
+        <i class="icon-x"></i>
+      </button>
+    {% endif %}
   </div>
 </div>
