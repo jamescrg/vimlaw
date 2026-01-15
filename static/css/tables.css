@@ -108,7 +108,8 @@ tbody {
 }
 
 .numeric,
-th.numeric {
+th.numeric,
+.table > :not(caption) > * > th.numeric {
   text-align: right;
 }
 
