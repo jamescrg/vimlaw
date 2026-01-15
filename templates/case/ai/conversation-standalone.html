@@ -65,7 +65,11 @@
         <h1 id="conversationTitle">{{ conversation.title }}</h1>
         <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
       </header>
-      <div id="messageContainer" class="ai-messages">{% include "case/ai/messages.html" %}</div>
+      <div id="messageContainer"
+           class="ai-messages"
+           hx-get="{% url 'case:ai-messages' matter.id %}?conversation_id={{ conversation.id }}"
+           hx-trigger="messagesUpdated from:body"
+           hx-swap="innerHTML">{% include "case/ai/messages.html" %}</div>
       <div class="ai-input-container">
         <div id="attachmentsList">
           {% if not is_new %}

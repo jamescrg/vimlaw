@@ -497,18 +497,8 @@ def delete_message(request, message_id):
         next_message.delete()
     message.delete()
 
-    # Return updated message list
-    response = render(
-        request,
-        "case/ai/messages.html",
-        {
-            "messages": conversation.messages.all(),
-            "conversation": conversation,
-            "matter": conversation.matter,
-        },
-    )
-    response["HX-Trigger"] = "messagesUpdated"
-    return response
+    # Trigger messagesUpdated event to refresh the message list
+    return HttpResponse(status=204, headers={"HX-Trigger": "messagesUpdated"})
 
 
 @login_required

@@ -33,8 +33,7 @@
         {% if forloop.last or forloop.revcounter == 2 %}
           <button class="ai-message-delete"
                   hx-post="{% url 'case:ai-delete-message' message.id %}"
-                  hx-target="#messageContainer"
-                  hx-swap="innerHTML"
+                  hx-swap="none"
                   hx-confirm="Are you sure you want to delete this exchange?"
                   title="Delete exchange">
             <i class="icon-delete"></i>
