@@ -456,8 +456,16 @@ def cancel_request(request, conv_id):
         if last_message and last_message.role == "user":
             last_message.delete()
 
-    # Return empty response - the status polling will pick up the cancellation
-    return HttpResponse(status=204)
+    # Return updated status immediately so UI reflects cancellation
+    return render(
+        request,
+        "case/ai/status.html",
+        {
+            "conversation": conversation,
+            "status": "cancelled",
+            "message": "Request cancelled",
+        },
+    )
 
 
 @login_required
