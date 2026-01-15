@@ -1,22 +1,22 @@
 .filter select,
 .filter input[type="text"],
 .filter input[type="number"] {
-  width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
 }
 
 .filter input[type="date"] {
-  margin-left: 0.25rem;
-  width: 8.5rem;
-  max-width: 100%;
   box-sizing: border-box;
+  margin-left: 0.25rem;
+  max-width: 100%;
+  width: 8.5rem;
 }
 
 form .errorlist {
-  padding: 0;
-  margin: 0;
   color: var(--urgent);
+  margin: 0;
+  padding: 0;
 }
 
 input,
@@ -49,18 +49,18 @@ button {
 
 /* Dropzone styling to match form field styles */
 .dropzone {
+  align-items: center;
+  background: var(--input-background) !important;
   border: solid 1px var(--border-medium) !important;
   border-radius: var(--radius-md) !important;
-  background: var(--input-background) !important;
-  padding: 1rem !important;
-  cursor: pointer;
-  text-align: center;
   color: var(--color-primary);
-  font-size: 0.9rem;
-  min-height: 2.5rem;
+  cursor: pointer;
   display: flex;
-  align-items: center;
+  font-size: 0.9rem;
   justify-content: center;
+  min-height: 2.5rem;
+  padding: 1rem !important;
+  text-align: center;
 }
 
 .dropzone:hover {
@@ -69,41 +69,41 @@ button {
 }
 
 .dropzone.dz-drag-hover {
-  border-color: var(--button-form) !important;
   background: var(--background-section) !important;
+  border-color: var(--button-form) !important;
 }
 
 .dropzone .dz-message {
-  margin: 0 !important;
   font-weight: normal !important;
+  margin: 0 !important;
 }
 
 /* Custom dropzone file preview styling */
 .dropzone .dz-preview {
-  display: flex !important;
   align-items: center;
-  justify-content: space-between;
   background: var(--background-section);
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 0.5rem;
+  display: flex !important;
+  justify-content: space-between;
   margin: 0.5rem 0 0 !important;
-  width: 100% !important;
   min-height: auto !important;
+  padding: 0.5rem;
+  width: 100% !important;
 }
 
 .dropzone .dz-preview .dz-filename-wrapper {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
   cursor: pointer;
+  display: flex;
+  flex: 1;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .dropzone .dz-preview .dz-filename {
-  font-size: 0.9rem;
   color: var(--color-darker);
+  font-size: 0.9rem;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -111,20 +111,20 @@ button {
 }
 
 .dropzone .dz-preview .dz-size {
-  font-size: 0.8rem;
   color: var(--color-muted);
   flex-shrink: 0;
+  font-size: 0.8rem;
 }
 
 .dropzone .dz-preview .dz-remove {
+  border-radius: var(--radius-sm);
   color: var(--urgent);
-  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
   font-size: 0.9rem;
   padding: 0.25rem;
-  border-radius: var(--radius-sm);
+  text-decoration: none;
   transition: background-color 0.2s;
-  flex-shrink: 0;
-  cursor: pointer;
 }
 
 .dropzone .dz-preview .dz-remove:hover {
@@ -147,12 +147,12 @@ button {
 }
 
 .dropzone .dz-preview.dz-success.clickable-preview {
-  transition: all 0.2s ease;
   border: 1px solid #ddd;
   border-radius: var(--radius-sm);
-  padding: 0.5rem;
-  margin: 0.25rem 0;
   cursor: pointer !important;
+  margin: 0.25rem 0;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
 }
 
 .dropzone .dz-preview.dz-success.clickable-preview:hover {
@@ -268,8 +268,8 @@ button {
   .form-compact input,
   .form-compact select,
   .form-compact textarea {
-    padding: 0.5rem;
     font-size: 1rem;
+    padding: 0.5rem;
   }
 }
 
@@ -286,8 +286,8 @@ button {
 }
 
 .form-compact input[type="color"] {
-  height: 2.25rem;
   border: solid 1px var(--border-medium);
+  height: 2.25rem;
 }
 
 /* Mobile: single column for all form-compact layouts */
@@ -357,24 +357,24 @@ button {
 
 /* Center checkbox fields in their grid slot */
 .form-compact .form-group:has(input[type="checkbox"]) {
+  align-items: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
 }
 
 /* File input browse button */
 input[type="file"]::file-selector-button {
-  appearance: none;
   -moz-appearance: none;
+  appearance: none;
   background: var(--background-control);
   border: none;
-  border-right: solid 1px var(--border-medium);
   border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border-right: solid 1px var(--border-medium);
   color: var(--color-primary);
-  padding: 0.375rem 0.75rem;
-  margin-right: 0.75rem;
   cursor: pointer;
+  margin-right: 0.75rem;
+  padding: 0.375rem 0.75rem;
 }
 
 input[type="file"]::file-selector-button:hover {

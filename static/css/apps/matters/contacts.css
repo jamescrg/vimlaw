@@ -4,9 +4,9 @@
 }
 
 .table-container:has(.matter-contacts) {
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: visible;
-  max-width: 100%;
 }
 
 table.matter-contacts {
@@ -31,8 +31,8 @@ table.matter-contacts {
 }
 
 .matter-contacts .phone1 {
-  width: 15rem;
   min-width: 15rem;
+  width: 15rem;
 }
 
 .matter-contacts .relationship	{
@@ -44,15 +44,15 @@ table.matter-contacts {
 }
 
 .matter-contacts .email	{
-  width: 24rem;
   min-width: 24rem;
   position: relative;
+  width: 24rem;
 }
 
 .matter-contacts .cell-flex {
+  align-items: flex-start;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
 }
 
 .matter-contacts .copy-btn {
@@ -60,9 +60,9 @@ table.matter-contacts {
 }
 
 .matter-contacts .icon-mail {
+  bottom: 0;
   margin-right: 0.5rem;
   position: relative;
-  bottom: 0;
 }
 
 /* Hide call buttons on desktop, show only on mobile */

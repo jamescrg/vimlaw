@@ -1,15 +1,15 @@
 
 .table-container {
   max-width: 100%;
-  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
 }
 
 .table {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   color: inherit;
   margin-bottom: 0;
   table-layout: fixed;
@@ -31,9 +31,9 @@
 
 th,
 .table > :not(caption) > * > th {
+  background: var(--background-control);
   border-bottom: solid 1px var(--border-medium);
   border-right: solid 1px var(--border-medium);
-  background: var(--background-control);
   font-weight: 500;
   padding: 0.625rem 1rem;
   text-align: left;
@@ -126,10 +126,10 @@ th.numeric {
 }
 
 .totals-table table {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   margin: 1.5rem 0 0 1.5rem;
   min-width: 25rem;
 }
@@ -227,9 +227,9 @@ th.numeric {
 
 td.empty-message,
 .empty-card {
-  padding: 1.5rem;
   color: var(--color-primary);
   font-style: italic;
+  padding: 1.5rem;
   text-align: center;
 }
 

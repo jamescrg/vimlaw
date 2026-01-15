@@ -20,14 +20,14 @@
 }
 
 .tasks-table .priority {
-  width: 3rem;
   text-align: center;
+  width: 3rem;
 }
 
 .priority-arrow .icon-arrow-up-to-line {
   font-size: 0.9rem;
-  position: relative;
   left: 0.25rem;
+  position: relative;
   top: 0;
 }
 
@@ -142,9 +142,9 @@
 }
 
 .task-detail-row {
+  align-items: flex-start;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
   margin-bottom: 0.5rem;
 }
 
@@ -154,14 +154,14 @@
 }
 
 .task-detail-meta {
+  color: var(--color-muted);
   display: flex;
   gap: 1rem;
-  color: var(--color-muted);
 }
 
 .task-detail-meta span {
-  display: inline-flex;
   align-items: center;
+  display: inline-flex;
 }
 
 .task-detail .btn-icon {

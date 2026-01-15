@@ -35,8 +35,8 @@
 }
 
 .task-note-title-left {
-  display: flex;
   align-items: center;
+  display: flex;
 }
 
 .task-note-date-time {

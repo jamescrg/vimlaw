@@ -35,9 +35,9 @@ Matter List
 }
 
 .matter-list .case-no-content {
+  align-items: center;
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
 .matter-list .case-no-content .dropdown {

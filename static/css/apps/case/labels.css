@@ -44,8 +44,8 @@ Label assignment modal
 ------------------------------------------------ */
 
 #labels-search-input {
-  padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+  padding-top: 0.75rem;
 }
 
 #labels-results .assign-results a:hover .badge {
@@ -62,16 +62,16 @@ Labels cards layout (Labels tab)
 }
 
 .labels-cards .card {
+  background: var(--background-light);
   flex: 1;
   min-width: 20rem;
-  background: var(--background-light);
 }
 
 .labels-cards .card-header {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
+  display: flex;
   font-size: 1.25rem;
+  justify-content: space-between;
   padding: 1rem;
 }
 
@@ -87,10 +87,10 @@ Labels cards layout (Labels tab)
 }
 
 .labels-flow {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  align-items: center;
 }
 
 /* ------------------------------------------------
@@ -116,10 +116,10 @@ Color swatch dropdown widget
 }
 
 .color-swatch-btn {
-  padding: 0.25rem 0.75rem;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  padding: 0.25rem 0.75rem;
 }
 
 .color-swatch-menu {
@@ -127,8 +127,8 @@ Color swatch dropdown widget
 }
 
 .color-swatch-item {
-  margin: 0.25rem;
   border-radius: var(--radius-sm);
+  margin: 0.25rem;
 }
 
 /* ------------------------------------------------
@@ -136,14 +136,14 @@ Create label inline form (in apply modal)
 ------------------------------------------------ */
 
 .create-label-section {
+  border-top: 1px solid var(--border-medium);
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-medium);
 }
 
 .create-label-header {
-  font-size: 0.875rem;
   color: var(--color-muted);
+  font-size: 0.875rem;
   margin-bottom: 0.75rem;
 }
 
@@ -152,9 +152,9 @@ Create label inline form (in apply modal)
 }
 
 .create-label-form {
+  align-items: center;
   display: flex;
   gap: 0.5rem;
-  align-items: center;
 }
 
 .create-label-form input {

@@ -66,10 +66,10 @@
 }
 
 .deadline-calculator-results {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   margin-bottom: 1.5rem;
   margin-top: 0.5rem;
   table-layout: fixed;

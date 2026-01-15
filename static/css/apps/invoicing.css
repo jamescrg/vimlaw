@@ -48,10 +48,10 @@ Detail View
 ========================================================================== */
 
 .invoices-detail-table {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   height: fit-content;
   width: 30%;
 }
@@ -214,8 +214,8 @@ Credits
 }
 
 .create-invoice-icon {
-  float: right;
   color: var(--icon-muted);
+  float: right;
   font-size: 1rem;
   margin-left: 0.5rem;
   opacity: 0;
@@ -227,8 +227,8 @@ Credits
 }
 
 .create-invoice-icon:hover {
-  opacity: 1 !important;
   color: var(--color-muted);
+  opacity: 1 !important;
 }
 
 /* ==========================================================================

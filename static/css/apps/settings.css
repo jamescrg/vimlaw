@@ -43,13 +43,13 @@ Miscellaneous
 ========================================================================== */
 
 .success-msg {
-  margin-top: 1rem;
   color: var(--success);
+  margin-top: 1rem;
 }
 
 .error-msg {
-  margin-top: 1rem;
   color: var(--urgent);
+  margin-top: 1rem;
 }
 
 /* ==========================================================================
@@ -57,9 +57,9 @@ Settings Contacts - Two Column Layout
 ========================================================================== */
 
 .settings-contacts-container {
+  align-items: flex-start;
   display: flex;
   gap: 3rem;
-  align-items: flex-start;
 }
 
 .settings-contacts-column {
@@ -149,14 +149,14 @@ Settings Contacts - Two Column Layout
 
 /* Groups table - name cell with drag handle */
 .groups-table .name-cell-content {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 0.75rem;
 }
 
 .groups-table .drag-handle {
-  cursor: grab;
   color: var(--icon-muted);
+  cursor: grab;
 }
 
 .groups-table .drag-handle:active {

@@ -15,10 +15,10 @@ li {
   background: none;
   border-bottom: 1px solid var(--border-medium);
   color: inherit;
-  padding: 0.5rem 0 0.5rem 0.5rem;
-  white-space: nowrap;
   overflow: hidden;
+  padding: 0.5rem 0 0.5rem 0.5rem;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .list-group-item:first-child {

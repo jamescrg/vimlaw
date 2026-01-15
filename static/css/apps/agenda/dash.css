@@ -44,10 +44,10 @@
 }
 
 .dashboard-table {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   width: 100%;
 }
 
@@ -101,8 +101,8 @@
 }
 
 .dashboard-table.events .matter {
-  width: 15.625rem;
   min-width: 15.625rem;
+  width: 15.625rem;
 }
 
 .dashboard-table.events .description {
@@ -119,8 +119,8 @@
 
 /* Dashboard Tasks Table - match tasks-table column widths */
 .dashboard-table.tasks .matter {
-  width: 11.875rem;
   min-width: 11.875rem;
+  width: 11.875rem;
 }
 
 .dashboard-table.tasks .description {
@@ -152,16 +152,16 @@
 }
 
 .show-more {
-  font-weight: normal;
   font-size: 1rem;
+  font-weight: normal;
 }
 
 .dashboard-table .summary-row {
   border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
   font-size: 0.875rem;
-  text-align: center;
   padding: 0.5rem;
+  text-align: center;
 }
 
 /* ==========================================================================

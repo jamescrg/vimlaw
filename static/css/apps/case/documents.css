@@ -1,7 +1,7 @@
 /* Files List Table */
 #documents-list.table-fixed {
-  table-layout: fixed;
   min-width: 60rem;
+  table-layout: fixed;
 }
 
 /* Fix dropdown overflow issues */
@@ -36,9 +36,9 @@
 }
 
 #documents-list .col-importance {
-  width: 3rem;
-  text-align: center;
   overflow: visible;
+  text-align: center;
+  width: 3rem;
 }
 
 #documents-list .col-importance .btn-sort {
@@ -59,20 +59,20 @@
 #documents-list td {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   vertical-align: top;
+  white-space: nowrap;
 }
 
 /* File cell with description */
 #documents-list .col-document {
-  white-space: normal;
   overflow-wrap: break-word;
+  white-space: normal;
 }
 
 /* File name row */
 #documents-list .document-name-row {
-  display: flex;
   align-items: flex-start;
+  display: flex;
 }
 
 #documents-list .document-name-content {
@@ -92,8 +92,8 @@
 }
 
 #documents-list .document-description {
-  font-size: 0.875rem;
   color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 /* Inline date input */
@@ -111,11 +111,11 @@
 }
 
 #documents-list .dropdown-cell .button-link {
-  padding: 0;
   background: none;
   border: none;
   color: var(--link);
   cursor: pointer;
+  padding: 0;
   text-align: left;
 }
 
@@ -148,8 +148,8 @@
 }
 
 .spin {
-  display: inline-block;
   animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
 .ocr-badge {
@@ -161,12 +161,12 @@
 }
 
 .ocr-action-btn {
-  padding: 0;
-  font-size: inherit;
-  border: none;
   background: none;
-  text-decoration: underline;
+  border: none;
   cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: underline;
 }
 
 .ocr-action-btn:hover {

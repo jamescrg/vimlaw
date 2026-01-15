@@ -2,8 +2,8 @@
 .btn {
   border: solid 1px transparent;
   border-radius: var(--radius-md);
-  box-sizing: border-box;
   box-shadow: none;
+  box-sizing: border-box;
   cursor: pointer;
   display: inline-block;
   font-size: 1rem;
@@ -14,8 +14,8 @@
 
 .btn:focus,
 .btn:focus-visible {
-  outline: none;
   box-shadow: none;
+  outline: none;
 }
 
 .btn-sm {
@@ -135,18 +135,18 @@ i.with-text {
 }
 
 .action-btn {
-  padding: 0.25rem 0.5rem;
   background: var(--background-control);
   border: solid 1px var(--border-medium);
+  padding: 0.25rem 0.5rem;
 
   &:focus {
-    outline: none;
     box-shadow: none;
+    outline: none;
   }
 
   &:hover {
-    color: var(--color-darker);
     background: var(--background-control);
+    color: var(--color-darker);
   }
 }
 
@@ -184,8 +184,8 @@ i.with-text {
 }
 
 .btn-ghost {
-  margin-left: 1rem;
   color: var(--icon-muted);
+  margin-left: 1rem;
   opacity: 0;
   transition: opacity 0.15s, color 0.15s;
 }
@@ -193,8 +193,8 @@ i.with-text {
 button.btn-ghost {
   background: none;
   border: none;
-  padding: 0;
   cursor: pointer;
+  padding: 0;
 }
 
 .btn-ghost:hover {
@@ -209,41 +209,41 @@ td:hover .btn-ghost,
 
 /* Toggle Switch */
 .toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 1.75rem;
-  height: 1rem;
   cursor: pointer;
+  display: inline-block;
+  height: 1rem;
+  position: relative;
+  width: 1.75rem;
 }
 
 .toggle-switch input {
+  height: 0;
   opacity: 0;
   width: 0;
-  height: 0;
 }
 
 .toggle-switch .toggle-track {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background: var(--stone-300);
   border-radius: 0.5rem;
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
   transition: background 0.2s;
 }
 
 .toggle-switch .toggle-track::before {
-  content: "";
-  position: absolute;
-  height: 0.75rem;
-  width: 0.75rem;
-  left: 0.125rem;
-  bottom: 0.125rem;
   background: white;
   border-radius: 50%;
-  transition: transform 0.2s;
+  bottom: 0.125rem;
   box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+  content: "";
+  height: 0.75rem;
+  left: 0.125rem;
+  position: absolute;
+  transition: transform 0.2s;
+  width: 0.75rem;
 }
 
 .toggle-switch input:checked + .toggle-track {
@@ -262,10 +262,10 @@ td:hover .btn-ghost,
 .btn-check {
   background: none;
   border: none;
-  padding: 0;
-  cursor: pointer;
   color: var(--stone-400);
+  cursor: pointer;
   line-height: 1;
+  padding: 0;
 }
 
 .btn-check:hover {

@@ -7,20 +7,20 @@
 }
 
 .email-meta {
-  width: 100%;
   border-collapse: collapse;
+  width: 100%;
 }
 
 .email-meta td {
+  border: none;
   padding: 0.25rem 0;
   vertical-align: top;
-  border: none;
 }
 
 .email-meta .meta-label {
+  color: var(--slate-600);
   font-weight: 600;
   width: 4rem;
-  color: var(--slate-600);
 }
 
 .email-meta .meta-value {
@@ -42,13 +42,13 @@
 }
 
 .email-body.text-body {
-  white-space: pre-wrap;
   font-family: inherit;
+  white-space: pre-wrap;
 }
 
 .email-body.html-body img {
-  max-width: 100%;
   height: auto;
+  max-width: 100%;
 }
 
 .email-body.html-body table {

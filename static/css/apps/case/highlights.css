@@ -1,7 +1,7 @@
 /* Document filter dropdown */
 #highlights-document-filter {
-  display: inline-flex;
   align-items: center;
+  display: inline-flex;
   width: 16rem;
 }
 
@@ -18,18 +18,18 @@
 
 /* Highlights Cards Container */
 .highlights-cards {
-  display: flex;
-  flex-direction: column;
   border-left: solid 1px var(--border-medium);
   border-right: solid 1px var(--border-medium);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Individual Card */
 .highlight-card {
+  border-bottom: 1px solid var(--border-medium);
   display: flex;
   gap: 1.5rem;
   padding: 1.25rem 0;
-  border-bottom: 1px solid var(--border-medium);
 }
 
 .highlight-card:first-child {
@@ -38,18 +38,18 @@
 
 /* Right Panel - Date */
 .highlight-card-date {
-  flex-shrink: 0;
-  width: 15rem;
-  padding: 0 1rem;
-  color: var(--color-primary);
   border-left: solid 1px var(--border-medium);
+  color: var(--color-primary);
+  flex-shrink: 0;
+  padding: 0 1rem;
+  width: 15rem;
 }
 
 /* Left Panel - Content */
 .highlight-card-content {
-  position: relative;
   flex: 1;
   min-width: 0;
+  position: relative;
 }
 
 /* Slug Heading */
@@ -66,10 +66,10 @@
 
 /* Highlight Text */
 .highlight-card-text {
-  padding: 0.75rem 0.5rem;
   background: var(--background-section);
   color: var(--color-primary);
   line-height: 1.6;
+  padding: 0.75rem 0.5rem;
   white-space: pre-wrap;
 }
 
@@ -81,8 +81,8 @@
 /* Importance Badge */
 .highlight-importance-badge {
   position: absolute;
-  top: 0.5rem;
   right: 0.5rem;
+  top: 0.5rem;
 }
 
 .importance-badge-btn {
@@ -107,14 +107,14 @@ Label badges
 
 .highlight-card .label-badge {
   display: inline-block;
-  margin-right: 0.25rem;
   font-size: 0.8125rem;
+  margin-right: 0.25rem;
 }
 
 .highlight-card .label-badge .badge-link {
+  border-radius: var(--radius-sm);
   display: inline-block;
   padding: 0.125rem 0.5rem;
-  border-radius: var(--radius-sm);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -132,9 +132,9 @@ Table Layout
 }
 
 .highlights-list .date {
-  width: 8rem;
-  position: relative;
   padding-right: 2rem;
+  position: relative;
+  width: 8rem;
 }
 
 .highlights-list .date span {
@@ -143,14 +143,14 @@ Table Layout
 
 .highlights-list .highlight {
   min-width: 18rem;
-  white-space: normal;
   overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .highlights-list .created {
-  width: 8rem;
-  position: relative;
   padding-right: 2rem;
+  position: relative;
+  width: 8rem;
 }
 
 .highlights-list .created span {
@@ -158,8 +158,8 @@ Table Layout
 }
 
 .highlights-list .importance {
-  width: 3rem;
   text-align: center;
+  width: 3rem;
 }
 
 .highlights-list th.importance .btn-sort {
@@ -195,8 +195,8 @@ Highlight row layout
 
 .highlights-list .highlight-actions {
   position: absolute;
-  top: 1rem;
   right: 0.5rem;
+  top: 1rem;
 }
 
 .highlights-list .highlight-actions button {
@@ -218,15 +218,15 @@ Highlight content (td)
 ------------------------------------------------ */
 
 .highlights-list .dropdown-cell .dropdown {
-  display: inline-flex;
   align-items: center;
+  display: inline-flex;
   gap: 0.5rem;
   width: fit-content;
 }
 
 .highlights-list .highlight-slug {
-  margin: 0;
   font-weight: 500;
+  margin: 0;
 }
 
 .highlights-list .highlight-slug a {
@@ -239,8 +239,8 @@ Highlight content (td)
 }
 
 .highlights-list .highlight-slug {
-  display: flex;
   align-items: center;
+  display: flex;
 }
 
 .highlights-list .highlight-slug .app-badge {
@@ -253,39 +253,39 @@ Highlight content (td)
 }
 
 .highlights-list .dropdown-cell .btn-ghost {
-  margin-left: 0;
   flex-shrink: 0;
+  margin-left: 0;
 }
 
 .highlights-list .highlight-text {
-  margin: 0.5rem 0;
-  padding: 0.5rem;
   background: var(--background-section);
   color: var(--color-primary);
   line-height: 1.6;
-  max-height: 8rem;
-  overflow: hidden;
+  margin: 0.5rem 0;
   -webkit-mask-image: linear-gradient(to bottom, black 5rem, transparent);
   mask-image: linear-gradient(to bottom, black 5rem, transparent);
+  max-height: 8rem;
+  overflow: hidden;
+  padding: 0.5rem;
 }
 
 .highlights-list .highlight-labels {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 0.375rem;
   margin-top: 0.5rem;
   min-height: 1.5rem;
 }
 
 .highlights-list .source-citation {
-  display: inline-block;
-  padding: 0.25rem 0.625rem;
+  background-color: var(--label-gray);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  background-color: var(--label-gray);
+  display: inline-block;
   font-size: 0.8125rem;
   margin-right: 0.375rem;
+  padding: 0.25rem 0.625rem;
 }
 
 .highlights-list .source-citation a {
@@ -312,25 +312,25 @@ Highlight Detail Modal
 ------------------------------------------------ */
 
 .highlight-detail-header {
+  align-items: center;
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: 1rem;
   padding: 0 1rem;
 }
 
 .highlight-detail-swatch {
-  width: 1.5rem;
-  height: 1.5rem;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
+  height: 1.5rem;
+  width: 1.5rem;
 }
 
 .highlight-detail-meta {
-  display: flex;
   align-items: center;
-  gap: 0.75rem;
   color: var(--text-muted);
+  display: flex;
+  gap: 0.75rem;
 }
 
 .highlight-detail-importance {
@@ -338,13 +338,13 @@ Highlight Detail Modal
 }
 
 .highlight-detail-text {
-  padding: 1rem;
   background: var(--background-section);
   color: var(--color-primary);
   line-height: 1.6;
-  white-space: normal;
-  overflow-wrap: break-word;
   margin-bottom: 1rem;
+  overflow-wrap: break-word;
+  padding: 1rem;
+  white-space: normal;
 }
 
 .highlight-detail-footer {

@@ -1,16 +1,16 @@
 /* Documents List Table */
 #documents-list.table-fixed {
-  table-layout: fixed;
   min-width: 60rem;
+  table-layout: fixed;
 }
 
 /* Column widths */
 #documents-list .col-select {
-  width: 2.5rem;
-  text-align: center;
-  vertical-align: middle;
   padding-left: 0;
   padding-right: 0;
+  text-align: center;
+  vertical-align: middle;
+  width: 2.5rem;
 }
 
 #documents-list .col-date {
@@ -31,15 +31,15 @@
 
 
 #documents-list .col-pages {
-  width: 4rem;
   text-align: left;
+  width: 4rem;
 }
 
 #documents-list .col-ai {
-  width: 3rem;
-  text-align: center;
   padding-left: 0;
   padding-right: 0;
+  text-align: center;
+  width: 3rem;
 }
 
 #documents-list .col-importance {
@@ -56,14 +56,14 @@
 #documents-list td {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   vertical-align: top;
+  white-space: nowrap;
 }
 
 /* Document cell with description */
 #documents-list .col-document {
-  white-space: normal;
   overflow-wrap: break-word;
+  white-space: normal;
 }
 
 #documents-list .doc-name {
@@ -71,8 +71,8 @@
 }
 
 #documents-list .doc-description {
-  font-size: 0.875rem;
   color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 /* Ghost action buttons - inline after name */
@@ -100,11 +100,11 @@
 }
 
 #documents-list .dropdown-cell .button-link {
-  padding: 0;
   background: none;
   border: none;
   color: var(--link);
   cursor: pointer;
+  padding: 0;
   text-align: left;
 }
 
@@ -130,22 +130,22 @@
 }
 
 .spin {
-  display: inline-block;
   animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
 /* Highlights List Table */
 .highlights-list.table-fixed {
-  table-layout: fixed;
   min-width: 40rem;
+  table-layout: fixed;
 }
 
 
 .highlights-list .col-document {
-  width: 25rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 25rem;
 }
 
 .highlights-list .col-slug {
@@ -156,18 +156,18 @@
 }
 
 .highlights-list .col-page {
-  width: 3rem;
   text-align: center;
+  width: 3rem;
 }
 
 .ocr-badge {
-  margin-left: 0.5rem;
-  vertical-align: middle;
   background-color: var(--background-subnav);
+  border-radius: var(--radius-sm);
   color: var(--color-primary);
   font-size: 0.85rem;
+  margin-left: 0.5rem;
   padding: 0.125rem 0.5rem;
-  border-radius: var(--radius-sm);
+  vertical-align: middle;
   white-space: nowrap;
 }
 
@@ -183,16 +183,16 @@
 
 .timeline-list .source-badge {
   display: inline-block;
-  margin-left: 0.5rem;
   font-size: 0.8125rem;
+  margin-left: 0.5rem;
 }
 
 .timeline-list .source-badge .badge-link {
+  background-color: var(--background-control);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
   display: inline-block;
   padding: 0.125rem 0.5rem;
-  background-color: var(--background-control);
-  color: var(--color-primary);
-  border-radius: var(--radius-sm);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -208,9 +208,9 @@
 
 /* Add source ghost button */
 .timeline-list .add-source-btn {
+  color: var(--icon-muted);
   display: inline-block;
   margin-left: 0.5rem;
-  color: var(--icon-muted);
   opacity: 0;
   transition: opacity 0.15s, color 0.15s;
 }
@@ -228,18 +228,18 @@
    ============================================================================= */
 
 .source-citation {
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
   display: inline;
   font-size: 0.875rem;
-  color: var(--color-muted);
 
   /* background: var(--hl-gray); */
   padding: 0.125rem 0.25rem;
-  border-radius: var(--radius-sm);
 }
 
 .source-citation a {
-  text-decoration: none;
   color: var(--color-muted);
+  text-decoration: none;
 }
 
 .source-citation a:hover {
@@ -252,17 +252,17 @@
 
 /* Case Law List Table */
 #caselaws-table .table-fixed {
-  table-layout: fixed;
   min-width: 50rem;
+  table-layout: fixed;
 }
 
 #caselaws-table th.col-select,
 #caselaws-table td.col-select {
-  width: 2.5rem;
-  text-align: center;
-  vertical-align: middle;
   padding-left: 0;
   padding-right: 0;
+  text-align: center;
+  vertical-align: middle;
+  width: 2.5rem;
 }
 
 #caselaws-table .col-select input[type="checkbox"] {
@@ -275,8 +275,8 @@
 }
 
 #caselaws-table .col-pages {
-  width: 4rem;
   text-align: left;
+  width: 4rem;
 }
 
 #caselaws-table .col-date {
@@ -289,8 +289,8 @@
 
 #caselaws-table th.col-importance,
 #caselaws-table td.col-importance {
-  width: 3rem;
   text-align: center;
+  width: 3rem;
 }
 
 #caselaws-table .col-importance .btn-sort {
@@ -302,15 +302,15 @@
 }
 
 #caselaws-table .col-labels {
-  width: 10rem;
-  text-align: left;
   overflow: visible;
+  text-align: left;
+  width: 10rem;
 }
 
 #caselaws-table .col-labels .label-badge {
-  margin-right: 0.25rem;
-  margin-bottom: 0.25rem;
   display: inline-block;
+  margin-bottom: 0.25rem;
+  margin-right: 0.25rem;
 }
 
 #caselaws-table .col-labels .add-icon {
@@ -324,24 +324,24 @@
 }
 
 #caselaws-table .col-ai {
-  width: 3rem;
-  text-align: center;
   padding-left: 0;
   padding-right: 0;
+  text-align: center;
+  width: 3rem;
 }
 
 #caselaws-table .btn-icon-toggle {
-  padding: 0.25rem;
   background: none;
   border: none;
+  border-radius: var(--radius-xs);
   color: var(--stone-400);
   cursor: pointer;
-  border-radius: var(--radius-xs);
+  padding: 0.25rem;
 }
 
 #caselaws-table .btn-icon-toggle:hover {
-  color: var(--link);
   background: var(--stone-100);
+  color: var(--link);
 }
 
 #caselaws-table .btn-icon-toggle.active {
@@ -355,8 +355,8 @@
 #caselaws-table td {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   vertical-align: top;
+  white-space: nowrap;
 }
 
 /* Dropdown cells */
@@ -365,11 +365,11 @@
 }
 
 #caselaws-table .dropdown-cell .button-link {
-  padding: 0;
   background: none;
   border: none;
   color: var(--link);
   cursor: pointer;
+  padding: 0;
   text-align: left;
 }
 
@@ -395,10 +395,10 @@
 }
 
 .bulk-label-item {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
   cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .bulk-label-item input[type="checkbox"] {
@@ -414,12 +414,12 @@
 }
 
 .bulk-category-item {
-  display: flex;
   align-items: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
 }
 
 .bulk-category-item:hover {
@@ -433,18 +433,18 @@
 
 /* Case Law View Page */
 .caselaw-view {
+  align-items: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .caselaw-view .toolbar {
-  width: 100%;
-  max-width: 50rem;
+  align-items: center;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  max-width: 50rem;
   padding-bottom: 1rem;
+  width: 100%;
 }
 
 .caselaw-view .toolbar .btn-ghost {
@@ -453,34 +453,34 @@
 
 .caselaw-canvas {
   background: var(--background-light);
-  padding: 1.5rem 2rem;
   border-radius: var(--radius);
   max-width: 50rem;
+  padding: 1.5rem 2rem;
   width: 100%;
 }
 
 .caselaw-header {
+  border-bottom: 1px solid var(--border-light);
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-light);
 }
 
 .caselaw-header h2 {
-  margin: 0 0 0.5rem;
   font-size: 1.5rem;
+  margin: 0 0 0.5rem;
 }
 
 .caselaw-meta {
+  color: var(--text-muted);
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  gap: 1rem;
 }
 
 .caselaw-citation {
-  font-weight: 600;
   color: var(--color-primary);
+  font-weight: 600;
 }
 
 .caselaw-notes {
@@ -488,11 +488,11 @@
 }
 
 .caselaw-notes label {
+  color: var(--text-muted);
   display: block;
+  font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
 }
 
 .caselaw-text {
@@ -500,17 +500,17 @@
 }
 
 .caselaw-text label {
+  color: var(--text-muted);
   display: block;
+  font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
 }
 
 .caselaw-text-content {
+  font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.6;
-  font-family: var(--font-body);
 }
 
 .caselaw-text-content p {
@@ -522,20 +522,20 @@
 }
 
 .caselaw-text-content p.page-number {
-  text-align: center;
-  font-weight: 600;
   color: var(--text-muted);
   font-size: 0.875rem;
+  font-weight: 600;
   margin: 1.5rem 0;
+  text-align: center;
 }
 
 .caselaw-text-raw {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   line-height: 1.4;
-  white-space: pre-wrap;
   margin: 0;
   overflow-x: auto;
+  white-space: pre-wrap;
 }
 
 /* CourtListener HTML Styles */
@@ -550,10 +550,10 @@
 }
 
 .caselaw-html blockquote {
-  margin: 1rem 0 1rem 1.5rem;
-  padding-left: 1rem;
   border-left: 3px solid var(--border-medium);
   color: var(--text-muted);
+  margin: 1rem 0 1rem 1.5rem;
+  padding-left: 1rem;
 }
 
 .caselaw-html .citation a {
@@ -566,18 +566,18 @@
 }
 
 .caselaw-html .star-pagination {
-  display: block;
-  text-align: center;
-  font-weight: 600;
   color: var(--text-muted);
+  display: block;
   font-size: 0.875rem;
+  font-weight: 600;
   margin: 1.5rem 0;
+  text-align: center;
 }
 
 .caselaw-html .footnote {
   color: var(--link);
-  text-decoration: none;
   font-size: 0.75rem;
+  text-decoration: none;
   vertical-align: super;
 }
 
@@ -591,27 +591,27 @@
 
 /* Lookup Result Styles */
 .lookup-result {
-  padding: 1rem;
   background: var(--background-control);
   border-radius: var(--radius);
+  padding: 1rem;
 }
 
 .lookup-result-header h3 {
-  margin: 0 0 0.5rem;
   font-size: 1.125rem;
+  margin: 0 0 0.5rem;
 }
 
 .lookup-result-meta {
+  color: var(--text-muted);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  gap: 0.75rem;
 }
 
 .lookup-result-citation {
-  font-weight: 600;
   color: var(--color-primary);
+  font-weight: 600;
 }
 
 .lookup-result-preview {
@@ -619,22 +619,22 @@
 }
 
 .lookup-result-preview label {
+  color: var(--text-muted);
   display: block;
+  font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
 }
 
 .lookup-result-text {
+  background: var(--background-card);
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   line-height: 1.5;
   max-height: 10rem;
   overflow-y: auto;
-  white-space: pre-wrap;
   padding: 0.75rem;
-  background: var(--background-card);
-  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
 }
 
 .lookup-result-actions {

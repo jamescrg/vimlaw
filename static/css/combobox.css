@@ -7,14 +7,14 @@ Combobox container and input wrapper
 }
 
 .combobox-input-wrapper {
-  position: relative;
-  display: flex;
   align-items: center;
+  display: flex;
+  position: relative;
 }
 
 .combobox-input-wrapper input[type="search"] {
-  width: 100%;
   padding-right: 2rem;
+  width: 100%;
 }
 
 /* Flatten bottom corners only when results are showing */
@@ -28,16 +28,16 @@ Combobox container and input wrapper
 }
 
 .combobox-clear {
-  position: absolute;
-  right: 0.5rem;
+  align-items: center;
   background: none;
   border: none;
-  cursor: pointer;
-  padding: 0.25rem;
   color: var(--color-muted);
+  cursor: pointer;
   display: flex;
-  align-items: center;
   justify-content: center;
+  padding: 0.25rem;
+  position: absolute;
+  right: 0.5rem;
 }
 
 .combobox-clear:hover {
@@ -54,8 +54,8 @@ Assign results list
 
 .assign-results {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 .assign-results li {
@@ -75,8 +75,8 @@ Assign results list
 }
 
 .assign-results a {
-  text-decoration: none;
   color: var(--color-primary);
+  text-decoration: none;
 }
 
 .assign-results .empty-message {

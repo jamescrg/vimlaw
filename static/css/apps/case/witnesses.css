@@ -8,42 +8,43 @@
 }
 
 .witnesses-list .name {
-  width: 12rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 12rem;
 }
 
 .witnesses-list .affiliation {
-  width: 12rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 12rem;
 }
 
 .witnesses-list .knowledge {
+  overflow-wrap: break-word;
+
   /* Variable width - takes remaining space */
   white-space: normal;
-  overflow-wrap: break-word;
 }
 
 .witnesses-list .phone {
-  width: 10rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 10rem;
 }
 
 .witnesses-list .email {
-  width: 12rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 12rem;
 }
 
 .witnesses-list .importance {
-  width: 3rem;
   text-align: center;
+  width: 3rem;
 }
 
 .witnesses-list th.importance .btn-sort {

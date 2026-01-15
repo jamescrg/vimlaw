@@ -110,10 +110,10 @@
 
 @media (width >= 768px) {
   .contacts-form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
     align-items: start;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr 1fr;
   }
 
   .contacts-form-right.col2 {
@@ -137,33 +137,33 @@
 
 /* Contact Cards (Address and Email) */
 .contact-card {
-  position: relative;
   background-color: var(--background-light);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 1.25rem;
-  margin-bottom: 1rem;
   line-height: 1.6;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  position: relative;
 }
 
 .contact-card-content-with-copy {
-  display: flex;
   align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: space-between;
-  flex-wrap: wrap;
 }
 
 .contact-card-text {
-  flex: 1;
-  display: flex;
   align-items: center;
+  display: flex;
+  flex: 1;
   gap: 0.5rem;
 }
 
 .contact-card-text-vertical {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0;
 }
@@ -175,23 +175,23 @@
 }
 
 .contact-phone-item {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
+  display: flex;
   gap: 0.75rem;
+  justify-content: space-between;
 }
 
 .contact-phone-text {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  display: flex;
   flex: 1;
+  gap: 0.5rem;
 }
 
 .contact-phone-buttons {
   display: flex;
-  gap: 0.5rem;
   flex-shrink: 0;
+  gap: 0.5rem;
 }
 
 .contact-call-btn {
@@ -215,15 +215,15 @@
 }
 
 .card-copy-btn-right {
-  flex-shrink: 0;
   align-self: flex-start;
+  flex-shrink: 0;
 }
 
 .contact-card-buttons {
   display: flex;
   flex-direction: row;
-  gap: 1rem;
   flex-shrink: 0;
+  gap: 1rem;
 }
 
 /* Mobile: buttons wrap on top */
@@ -233,13 +233,13 @@
   }
 
   .contact-card-buttons {
-    width: 100%;
     justify-content: flex-start;
+    width: 100%;
   }
 
   .contact-phone-item {
-    flex-direction: column-reverse;
     align-items: flex-start;
+    flex-direction: column-reverse;
   }
 
   .contact-phone-text {
@@ -247,17 +247,17 @@
   }
 
   .contact-phone-buttons {
-    width: 100%;
     justify-content: flex-start;
     margin-bottom: 0.5rem;
+    width: 100%;
   }
 }
 
 .contact-tab-content .contact-item {
-  display: flex;
   align-items: center;
-  padding: 0;
+  display: flex;
   gap: 0.5rem;
+  padding: 0;
 }
 
 /* Notes Section */
@@ -265,8 +265,8 @@
   background-color: var(--background-light);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 1rem;
   line-height: 1.6;
+  padding: 1rem;
 }
 
 .contact-notes :last-child {
@@ -293,50 +293,50 @@
 }
 
 .contact-matters-list td.id {
-  width: 5rem;
   text-align: right;
+  width: 5rem;
 }
 
 
 .action-buttons {
   display: flex;
-  gap: 0.75rem;
   flex-wrap: wrap;
+  gap: 0.75rem;
   margin-top: 1.5rem;
 }
 
 .action-buttons .btn {
-  display: inline-flex;
   align-items: center;
+  display: inline-flex;
   gap: 0.5rem;
 }
 
 .action-buttons .btn-outline-primary:hover {
-  color: var(--color-darker);
   background-color: transparent;
   border-color: var(--border-medium);
+  color: var(--color-darker);
 }
 
 .action-buttons .btn-outline-secondary {
-  color: var(--color-primary);
   background-color: transparent;
   border-color: var(--border-medium);
+  color: var(--color-primary);
 }
 
 .action-buttons .btn-outline-secondary:hover {
-  color: var(--color-primary);
   border-color: var(--border-medium);
+  color: var(--color-primary);
 }
 
 .action-buttons .btn:focus {
-  outline: none;
   box-shadow: none;
+  outline: none;
 }
 
 /* Trust Tab */
 .contact-trust-section .btn-outline-primary {
-  color: var(--color-darker);
   border-color: var(--border-medium);
+  color: var(--color-darker);
 }
 
 .contact-trust-section .btn-outline-primary:hover {
@@ -351,12 +351,12 @@
 
 /* Empty State */
 .contact-empty-state {
-  padding: 2.5rem 1.25rem;
-  text-align: center;
-  color: var(--color-muted);
   background-color: var(--background-light);
   border: 1px dashed var(--border-medium);
   border-radius: var(--radius-lg);
+  color: var(--color-muted);
+  padding: 2.5rem 1.25rem;
+  text-align: center;
 }
 
 .btn-delete-contacts {

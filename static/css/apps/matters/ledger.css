@@ -1,8 +1,8 @@
 .ledger-totals {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   margin-bottom: 1.5rem;
   width: 100%;
 }

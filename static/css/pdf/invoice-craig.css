@@ -56,12 +56,12 @@ Content
 }
 
 .trust-caption {
-  font-size: 10pt;
   color: var(--color-darker);
-  margin-top: 10pt;
-  margin-bottom: 0;
-  text-align: justify;
+  font-size: 10pt;
   line-height: 1.5;
+  margin-bottom: 0;
+  margin-top: 10pt;
+  text-align: justify;
 }
 
 h3 {

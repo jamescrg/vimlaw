@@ -3,10 +3,10 @@ Summary
 ========================================================================== */
 
 .trust-summary {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   clear: both;
   width: 100%;
 }
@@ -74,10 +74,10 @@ Summary and History
 }
 
 .trust-transactions {
-  border-collapse: separate;
-  border-spacing: 0;
   border: solid 1px var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   min-width: 79rem;
   width: 100%;
 }

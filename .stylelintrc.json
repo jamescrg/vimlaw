@@ -1,11 +1,13 @@
 {
   "extends": "stylelint-config-standard",
+  "plugins": ["stylelint-order"],
   "ignoreFiles": [
     "static/css/dropzone.css",
     "static/css/lucide.css",
     "**/vendor/**"
   ],
   "rules": {
+    "order/properties-alphabetical-order": true,
     "selector-class-pattern": null,
     "custom-property-pattern": null,
     "selector-id-pattern": null,

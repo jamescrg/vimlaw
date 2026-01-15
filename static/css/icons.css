@@ -27,9 +27,9 @@
 
 .toolbar .icon-plus {
   font-size: 1.25rem;
-  vertical-align: middle;
-  margin-top: -2.5px;
   margin-bottom: -2.5px;
+  margin-top: -2.5px;
+  vertical-align: middle;
 }
 
 .toolbar a:has(.icon-plus),

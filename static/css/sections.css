@@ -137,12 +137,12 @@ Section Layout (header / nav / body)
 
 .section-nav .active::before,
 .section-nav .active::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  width: var(--radius-md);
-  height: var(--radius-md);
   background: var(--background-subnav-tab-active);
+  bottom: 0;
+  content: "";
+  height: var(--radius-md);
+  position: absolute;
+  width: var(--radius-md);
 }
 
 .section-nav .active::before {
@@ -152,9 +152,9 @@ Section Layout (header / nav / body)
 }
 
 .section-nav .active::after {
-  right: calc(-1 * var(--radius-md));
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M0,0 L0,8 L8,8 A8,8 0 0,1 0,0 Z' fill='white'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M0,0 L0,8 L8,8 A8,8 0 0,1 0,0 Z' fill='white'/%3E%3C/svg%3E");
+  right: calc(-1 * var(--radius-md));
 }
 
 .section-nav li:first-child.active {
@@ -189,9 +189,9 @@ Section Layout (header / nav / body)
 
   .filter-tools .select-btn.large-btn,
   .filter-tools .select-btn.filter-dropdown-button {
-    width: auto;
-    min-width: 7.5rem;
     max-width: 100%;
+    min-width: 7.5rem;
+    width: auto;
   }
 
   /* Section header toolbar: allow wrapping, keep badge next to title */
@@ -201,15 +201,15 @@ Section Layout (header / nav / body)
   }
 
   .section-header .toolbar-left {
-    flex-direction: row;
     align-items: center;
+    flex-direction: row;
     flex-wrap: wrap;
   }
 
   .section-header .toolbar-left h1 {
-    margin-right: 1rem;
-    margin-bottom: 1rem;
     flex: 1 1 100%;
+    margin-bottom: 1rem;
+    margin-right: 1rem;
   }
 
   .section-header .toolbar-left .filter-tools {
@@ -223,8 +223,8 @@ Section Layout (header / nav / body)
 
   /* Section nav mobile: horizontal scroll */
   .section-nav {
-    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
   }
 
   .section-nav ul {

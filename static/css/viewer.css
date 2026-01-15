@@ -9,74 +9,74 @@
 button:focus,
 .btn:focus,
 .btn:focus-visible {
-  outline: none !important;
   box-shadow: none !important;
+  outline: none !important;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
   font-family: "Open Sans", sans-serif;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
 }
 
 /* Main container */
 #main-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   bottom: 0;
   display: flex;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
 }
 
 /* PDF iframe container */
 #pdf-iframe-container {
-  flex: 1;
   background: var(--background-panel);
+  flex: 1;
 }
 
 #pdf-iframe {
-  width: 100%;
-  height: 100%;
   border: none;
+  height: 100%;
+  width: 100%;
 }
 
 /* Highlights Sidebar */
 #highlights-sidebar {
-  width: 280px;
   background: var(--background-panel);
   border-left: 1px solid var(--border-medium);
-  overflow-y: auto;
-  padding: 0.5rem 1rem 1rem;
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 0.5rem 1rem 1rem;
+  width: 280px;
 }
 
 #highlights-header {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 49px;
-  margin: -0.5rem -1rem 0.75rem;
-  padding: 0 1rem;
   background: var(--background-muted);
   border-bottom: 1px solid var(--border-medium);
+  display: flex;
   flex-shrink: 0;
+  height: 49px;
+  justify-content: space-between;
+  margin: -0.5rem -1rem 0.75rem;
+  padding: 0 1rem;
 }
 
 #highlights-header .btn-icon {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.125rem 0.25rem;
   background: none;
   border: none;
   border-radius: 0.375rem;
   color: var(--stone-700);
-  font-size: 1.25rem;
   cursor: pointer;
+  display: flex;
+  font-size: 1.25rem;
+  justify-content: center;
+  padding: 0.125rem 0.25rem;
   transition: all 0.15s ease;
 }
 
@@ -85,9 +85,9 @@ body {
 }
 
 #highlights-header #createHighlightBtn {
-  padding: 0 0.375rem;
-  margin-right: 0.5rem;
   border-radius: 0.375rem;
+  margin-right: 0.5rem;
+  padding: 0 0.375rem;
   position: relative;
   top: 1px;
 }
@@ -97,8 +97,8 @@ body {
 }
 
 .highlights-left {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 0.5rem;
 }
 
@@ -112,16 +112,16 @@ body {
 }
 
 .highlight-item {
-  position: relative;
-  display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem;
   background: var(--stone-50);
   border: 1px solid var(--stone-300);
   border-radius: var(--radius-md);
-  margin-bottom: 0.5rem;
   cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  position: relative;
   transition: background-color 0.15s;
 }
 
@@ -144,22 +144,22 @@ body {
 }
 
 .highlight-citation {
-  font-size: 0.8rem;
   color: var(--color-muted);
+  font-size: 0.8rem;
   margin-top: 0.25rem;
 }
 
 .highlight-importance {
-  position: absolute;
   bottom: 0.5rem;
-  right: 0.5rem;
-  font-size: 0.75rem;
   color: var(--stone-400);
+  font-size: 0.75rem;
+  position: absolute;
+  right: 0.5rem;
 }
 
 .highlight-edit-btn {
-  flex-shrink: 0;
   color: var(--stone-400);
+  flex-shrink: 0;
   padding-left: 0.25rem;
   text-decoration: none;
 }
@@ -170,15 +170,15 @@ body {
 
 .no-highlights {
   color: var(--stone-400);
-  text-align: center;
-  padding: 20px;
   font-size: 0.875rem;
+  padding: 20px;
+  text-align: center;
 }
 
 /* Condensed view */
 #highlights-list.condensed .highlight-item {
-  padding: 0.5rem 0.75rem;
   margin-bottom: 0.25rem;
+  padding: 0.5rem 0.75rem;
 }
 
 #highlights-list.condensed .highlight-citation,
@@ -187,9 +187,9 @@ body {
 }
 
 #highlights-list.condensed .highlight-slug {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Highlight colors - selected state (border uses -300 values) */
@@ -249,9 +249,9 @@ body {
 
 #highlight-form .form-control:focus,
 #highlight-form .form-select:focus {
-  outline: none;
-  box-shadow: none;
   border-color: var(--stone-400);
+  box-shadow: none;
+  outline: none;
 }
 
 .highlight-color-row {
@@ -267,8 +267,8 @@ body {
 /* Edit modal grid - matches highlights.css */
 .highlight-edit-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .highlight-edit-grid .span3 {

@@ -34,10 +34,10 @@ Detail View - Left Panel
 ========================================================================== */
 
 .intake-section.details table {
-  border-collapse: separate;
-  border-spacing: 0;
   border: 1px solid var(--border-medium);
+  border-collapse: separate;
   border-radius: var(--radius-md);
+  border-spacing: 0;
   margin-bottom: 1.5rem;
   width: 100%;
 }
@@ -236,10 +236,10 @@ Address Buttons
 ========================================================================== */
 
 .intake-address-container {
+  align-items: flex-start;
   display: flex;
   flex-direction: row;
   gap: 1rem;
-  align-items: flex-start;
   justify-content: space-between;
 }
 
@@ -254,8 +254,8 @@ Address Buttons
 .intake-address-buttons {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
   flex-shrink: 0;
+  gap: 0.5rem;
 }
 
 /* ==========================================================================
@@ -263,10 +263,10 @@ Value Inline Edit
 ========================================================================== */
 
 .intake-value-container {
+  align-items: center;
   display: flex;
   flex-direction: row;
   gap: 1rem;
-  align-items: center;
   justify-content: space-between;
 }
 
@@ -282,6 +282,6 @@ Value Inline Edit
 .intake-value-input {
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 0.25rem 0.5rem;
   margin-right: 0.5rem;
+  padding: 0.25rem 0.5rem;
 }
