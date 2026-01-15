@@ -63,7 +63,6 @@
 /* Document cell with description */
 #documents-list .col-document {
   white-space: normal;
-  word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
@@ -124,6 +123,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -231,6 +231,7 @@
   display: inline;
   font-size: 0.875rem;
   color: var(--color-muted);
+
   /* background: var(--hl-gray); */
   padding: 0.125rem 0.25rem;
   border-radius: var(--radius-sm);
@@ -465,7 +466,7 @@
 }
 
 .caselaw-header h2 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
   font-size: 1.5rem;
 }
 
@@ -513,7 +514,7 @@
 }
 
 .caselaw-text-content p {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1rem;
 }
 
 .caselaw-text-content p:last-child {
@@ -596,7 +597,7 @@
 }
 
 .lookup-result-header h3 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
   font-size: 1.125rem;
 }
 

@@ -97,12 +97,12 @@
   min-width: auto;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Label badges
-------------------------------------------------*/
+------------------------------------------------ */
 
 .highlight-labels {
-  padding: 1rem 0.5rem 0 0.5rem;
+  padding: 1rem 0.5rem 0;
 }
 
 .highlight-card .label-badge {
@@ -123,9 +123,9 @@ Label badges
   opacity: 0.8;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Table Layout
-------------------------------------------------*/
+------------------------------------------------ */
 
 .highlights-list {
   min-width: 52.5rem;
@@ -144,7 +144,7 @@ Table Layout
 .highlights-list .highlight {
   min-width: 18rem;
   white-space: normal;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .highlights-list .created {
@@ -189,9 +189,9 @@ Table Layout
   padding-top: 1rem !important;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Highlight row layout
-------------------------------------------------*/
+------------------------------------------------ */
 
 .highlights-list .highlight-actions {
   position: absolute;
@@ -213,9 +213,9 @@ Highlight row layout
   opacity: 1;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Highlight content (td)
-------------------------------------------------*/
+------------------------------------------------ */
 
 .highlights-list .dropdown-cell .dropdown {
   display: inline-flex;
@@ -307,9 +307,9 @@ Highlight content (td)
   opacity: 1;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Highlight Detail Modal
-------------------------------------------------*/
+------------------------------------------------ */
 
 .highlight-detail-header {
   display: flex;
@@ -343,7 +343,7 @@ Highlight Detail Modal
   color: var(--color-primary);
   line-height: 1.6;
   white-space: normal;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   margin-bottom: 1rem;
 }
 

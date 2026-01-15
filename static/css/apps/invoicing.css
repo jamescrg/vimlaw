@@ -83,7 +83,7 @@ Detail View
   border-right: none;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .invoices-detail-table {
     width: 100%;
   }
@@ -94,7 +94,7 @@ Detail View
   gap: 2rem;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .invoices-table-container {
     flex-direction: column;
   }

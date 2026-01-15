@@ -84,7 +84,8 @@
       "Bash(npm run build:*)",
       "Bash(npm audit:*)",
       "Bash(du:*)",
-      "Bash(sudo grep:*)"
+      "Bash(sudo grep:*)",
+      "Bash(npx stylelint:*)"
     ],
     "deny": []
   }

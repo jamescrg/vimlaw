@@ -2,7 +2,7 @@
 .section {
   background: var(--background-section);
   border-radius: var(--radius-md);
-  box-shadow: 0 0.0625rem 0.2rem rgba(0, 0, 0, 0.14);
+  box-shadow: 0 0.0625rem 0.2rem rgb(0 0 0 / 14%);
   margin-bottom: 1.5rem;
   padding: 1.25rem 1rem 1.5rem;
 }
@@ -12,7 +12,7 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  padding: 0rem 0 1.25rem 0;
+  padding: 0 0 1.25rem;
 }
 
 .toolbar a:not(.dropdown-menu *),
@@ -108,11 +108,11 @@ Section Layout (header / nav / body)
 .section-nav {
   background: var(--background-subnav);
   margin: 0;
-  padding: 0.25rem 0 0 0;
+  padding: 0.25rem 0 0;
 }
 
 .section-nav ul {
-  margin: 0.25rem 0 0 0;
+  margin: 0.25rem 0 0;
   padding: 0;
 }
 
@@ -182,7 +182,7 @@ Section Layout (header / nav / body)
  Mobile Responsive
 ========================================================================== */
 
-@media (max-width: 1000px) {
+@media (width <= 1000px) {
   .filter-tools {
     gap: 0.75rem;
   }

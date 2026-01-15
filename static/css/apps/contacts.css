@@ -8,7 +8,7 @@
   gap: 1rem;
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .contacts-layout {
     flex-direction: row;
     gap: 1.5rem;
@@ -36,9 +36,6 @@
 
 .contacts {
   padding-bottom: 1.25rem;
-}
-
-.contact {
 }
 
 .contact .section-body {
@@ -80,7 +77,7 @@
 }
 
 #contact-matters {
-  margin: 1.25rem 0 0 0;
+  margin: 1.25rem 0 0;
 }
 
 #contact-matters ul {
@@ -111,7 +108,7 @@
   width: 100%;
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .contacts-form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -202,7 +199,7 @@
 }
 
 /* Hide call buttons on desktop, show only on mobile */
-@media (min-width: 769px) {
+@media (width >= 769px) {
   .contact-call-btn {
     display: none;
   }
@@ -230,7 +227,7 @@
 }
 
 /* Mobile: buttons wrap on top */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .contact-card-content-with-copy {
     flex-direction: column-reverse;
   }
@@ -337,10 +334,6 @@
 }
 
 /* Trust Tab */
-.contact-trust-section {
-}
-
-
 .contact-trust-section .btn-outline-primary {
   color: var(--color-darker);
   border-color: var(--border-medium);

@@ -4,7 +4,7 @@ Page Setup
 
 @page {
   margin: 0.75in;
-  size: Letter;
+  size: letter;
 
   @bottom-center {
     content: counter(page);
@@ -15,6 +15,7 @@ Page Setup
 
 .template {
   font-family: "Noto Serif", serif;
+
   /* font-family: "Times New Roman", serif; */
   font-size: 11pt;
   position: relative;
@@ -99,7 +100,7 @@ h3 {
 
 .table td {
   white-space: normal;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .table .comp {

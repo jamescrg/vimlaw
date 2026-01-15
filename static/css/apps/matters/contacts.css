@@ -66,7 +66,7 @@ table.matter-contacts {
 }
 
 /* Hide call buttons on desktop, show only on mobile */
-@media (min-width: 769px) {
+@media (width >= 769px) {
   .matter-contacts .contact-call-btn {
     display: none;
   }
@@ -76,7 +76,7 @@ table.matter-contacts {
  Mobile Responsive - Favor horizontal scroll over compression
 ========================================================================== */
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .matter-contacts {
     white-space: nowrap;
   }
@@ -88,7 +88,9 @@ table.matter-contacts {
 
 
 /* ------------------------------------------------------------------------- */
+
 /* assign a contact */
+
 /* ------------------------------------------------------------------------- */
 
 .assign-search {

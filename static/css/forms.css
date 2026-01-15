@@ -87,7 +87,7 @@ button {
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
   padding: 0.5rem;
-  margin: 0.5rem 0 0 0 !important;
+  margin: 0.5rem 0 0 !important;
   width: 100% !important;
   min-height: auto !important;
 }
@@ -120,7 +120,6 @@ button {
   color: var(--urgent);
   text-decoration: none;
   font-size: 0.9rem;
-  cursor: pointer;
   padding: 0.25rem;
   border-radius: var(--radius-sm);
   transition: background-color 0.2s;
@@ -159,7 +158,7 @@ button {
 .dropzone .dz-preview.dz-success.clickable-preview:hover {
   background-color: #f8f9fa;
   border-color: #007bff;
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+  box-shadow: 0 2px 4px rgb(0 123 255 / 10%);
 }
 
 .dropzone .dz-preview.dz-success.clickable-preview:hover .dz-filename span {
@@ -261,7 +260,7 @@ button {
 }
 
 /* Mobile: increase gap for better readability and touch targets */
-@media (max-width: 767px) {
+@media (width <= 767px) {
   .form-compact {
     gap: 1.25rem;
   }
@@ -300,7 +299,7 @@ button {
 }
 
 /* Tablet/Desktop: multi-column layouts */
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .col2 {
     grid-template-columns: 1fr 1fr;
   }
@@ -329,7 +328,7 @@ button {
 }
 
 /* Tablet/Desktop: restore multi-column spanning */
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .form-compact .form-group:has(div > .span2),
   .form-compact .span2 {
     grid-column: span 2;

@@ -1,6 +1,6 @@
-/*------------------------------------------------
+/* ------------------------------------------------
 Base badge styles (shared by all badge types)
-------------------------------------------------*/
+------------------------------------------------ */
 
 .app-badge {
   display: inline-block;
@@ -31,9 +31,9 @@ a.app-badge:visited {
   margin-right: 0.25rem;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Badge color classes
-------------------------------------------------*/
+------------------------------------------------ */
 
 .app-badge.badge-blue { background-color: var(--blue-100); }
 .app-badge.badge-gray { background-color: var(--label-gray); }
@@ -44,9 +44,9 @@ Badge color classes
 .app-badge.badge-red { background-color: var(--label-red); }
 .app-badge.badge-yellow { background-color: var(--label-yellow); }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Badge size variants
-------------------------------------------------*/
+------------------------------------------------ */
 
 .app-badge-sm {
   padding: 0 0.375rem;

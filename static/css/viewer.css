@@ -48,7 +48,7 @@ body {
   background: var(--background-panel);
   border-left: 1px solid var(--border-medium);
   overflow-y: auto;
-  padding: 0.5rem 1rem 1rem 1rem;
+  padding: 0.5rem 1rem 1rem;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -59,7 +59,7 @@ body {
   align-items: center;
   justify-content: space-between;
   height: 49px;
-  margin: -0.5rem -1rem 0.75rem -1rem;
+  margin: -0.5rem -1rem 0.75rem;
   padding: 0 1rem;
   background: var(--background-muted);
   border-bottom: 1px solid var(--border-medium);
@@ -140,7 +140,7 @@ body {
 
 .highlight-slug {
   font-size: 0.9rem;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .highlight-citation {

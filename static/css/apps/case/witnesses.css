@@ -24,7 +24,7 @@
 .witnesses-list .knowledge {
   /* Variable width - takes remaining space */
   white-space: normal;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .witnesses-list .phone {

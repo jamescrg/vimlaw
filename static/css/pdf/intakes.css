@@ -3,7 +3,7 @@ Intakes Report PDF Styles - Landscape Orientation
 ========================================================================== */
 
 @page {
-  size: Letter landscape;
+  size: letter landscape;
   margin: 0.5in;
 }
 
@@ -39,7 +39,7 @@ Header
 }
 
 .header-right h3 {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.25rem;
   font-size: 16pt;
 }
 
@@ -62,7 +62,7 @@ Table
 }
 
 .section h2 {
-  margin: 1rem 0 0.5rem 0;
+  margin: 1rem 0 0.5rem;
   font-size: 14pt;
   color: #333;
 }
@@ -131,5 +131,5 @@ Typography
 }
 
 .page-break-before {
-  page-break-before: always;
+  break-before: always;
 }

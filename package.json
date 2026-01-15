@@ -5,7 +5,9 @@
   "description": "Frontend assets for Law Admin",
   "scripts": {
     "build": "node build.mjs",
-    "build:watch": "node build.mjs --watch"
+    "build:watch": "node build.mjs --watch",
+    "lint:css": "stylelint 'static/css/**/*.css'",
+    "lint:css:fix": "stylelint 'static/css/**/*.css' --fix"
   },
   "dependencies": {
     "@tiptap/core": "^2.1.13",
@@ -33,5 +35,9 @@
     "htmx.org": "^1.9.12",
     "lucide-static": "^0.462.0",
     "sortablejs": "^1.15.0"
+  },
+  "devDependencies": {
+    "stylelint": "^17.0.0",
+    "stylelint-config-standard": "^40.0.0"
   }
 }

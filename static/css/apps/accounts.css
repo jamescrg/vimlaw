@@ -28,7 +28,7 @@ body {
 .auth-card {
   background: var(--background-section);
   border-radius: var(--radius-md);
-  box-shadow: 0 0.125rem 0.5rem oklch(0 0 0 / 0.08);
+  box-shadow: 0 0.125rem 0.5rem oklch(0% 0 0deg / 8%);
   padding: 1.25rem;
   width: 31.25rem;
 }
@@ -50,7 +50,7 @@ body {
 .auth-info {
   color: var(--color-primary);
   font-size: 1rem;
-  margin: 2rem 0 2rem;
+  margin: 2rem 0;
   text-align: center;
 }
 
@@ -74,7 +74,7 @@ body {
 }
 
 .account-form p {
-  margin: 2rem 0 0 0;
+  margin: 2rem 0 0;
   padding: 0;
 }
 

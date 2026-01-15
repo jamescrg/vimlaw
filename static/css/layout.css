@@ -98,7 +98,7 @@ body {
 .end-0 { right: 0; }
 
 /* Responsive flex utilities */
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .flex-md-row { flex-direction: row; }
 }
 

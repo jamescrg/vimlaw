@@ -1,6 +1,9 @@
 /* ------------------------------------------------------------------------- */
+
 /* Site Search Modal                                                         */
+
 /* All rules scoped to .search (modal) to avoid conflicts with doc search    */
+
 /* ------------------------------------------------------------------------- */
 
 .search.modal-dialog {

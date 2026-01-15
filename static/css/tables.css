@@ -173,14 +173,14 @@ th.numeric {
   flex-shrink: 0;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .totals-table {
     flex-direction: column;
     width: 100%;
   }
 
   .totals-table table {
-    margin: 1rem 0 0 0;
+    margin: 1rem 0 0;
     min-width: auto;
     width: 100%;
   }

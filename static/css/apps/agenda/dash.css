@@ -8,7 +8,7 @@
   gap: 1rem;
 }
 
-@media (min-width: 1200px) {
+@media (width >= 1200px) {
   .dashboard-grid {
     flex-direction: row;
     gap: 1.5rem;
@@ -168,7 +168,7 @@
  Mobile Responsive
 ========================================================================== */
 
-@media (max-width: 1199px) {
+@media (width <= 1199px) {
   /* Make events and tasks tables scrollable */
   .dashboard-card {
     overflow-x: auto;

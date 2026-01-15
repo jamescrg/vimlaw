@@ -25,7 +25,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgb(0 0 0 / 50%);
   z-index: 1040;
 }
 
@@ -53,7 +53,7 @@
   background: var(--background-section);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 15%);
 }
 
 .modal-header {
@@ -167,7 +167,7 @@
 ========================================================================== */
 
 /* Mobile: Make modals full-width with small margins */
-@media (max-width: 767px) {
+@media (width <= 767px) {
   .modal-dialog {
     margin: 0.5rem;
     max-width: calc(100% - 1rem);
@@ -193,7 +193,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgb(0 0 0 / 40%);
   z-index: 1060;
 }
 
@@ -206,7 +206,7 @@ body.modal-open .confirm-modal-overlay {
   background: var(--background-section);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 15%);
   min-width: 20rem;
   max-width: 28rem;
   overflow: hidden;

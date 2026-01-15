@@ -67,7 +67,7 @@ Settings Contacts - Two Column Layout
   max-width: 25rem;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .settings-contacts-container {
     flex-direction: column;
   }

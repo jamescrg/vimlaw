@@ -43,7 +43,7 @@ Content
 ========================================================================== */
 
 .invoice-totals {
-  page-break-inside: avoid;
+  break-inside: avoid;
   table-layout: fixed;
 }
 

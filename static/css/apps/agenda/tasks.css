@@ -119,7 +119,7 @@
 .tasks-table .complete > a,
 .tasks-table .complete .button-link {
   color: var(--color-muted);
-  font-variant: strikethrough;
+  text-decoration: line-through;
 }
 
 .tasks-form #id_description,

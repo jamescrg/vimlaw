@@ -94,7 +94,7 @@ body {
 #viewer {
   position: relative;
   background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
 }
 
 #loading-indicator {
@@ -112,6 +112,7 @@ body {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -133,7 +134,7 @@ body {
 
 /* Text Layer - use PDF.js viewer CSS, just customize selection color */
 .textLayer ::selection {
-  background: rgba(0, 100, 200, 0.35);
+  background: rgb(0 100 200 / 35%);
 }
 
 /* Highlight Layer */
@@ -167,7 +168,7 @@ body {
 }
 
 #highlights-sidebar h4 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1rem;
   font-size: 1rem;
   color: var(--color-darker);
 }
@@ -243,7 +244,7 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .toolbar-left .matter-name {
     display: none;
   }
@@ -253,7 +254,7 @@ body {
   }
 }
 
-@media (max-width: 576px) {
+@media (width <= 576px) {
   .toolbar-left {
     display: none;
   }

@@ -243,7 +243,7 @@ td:hover .btn-ghost,
   background: white;
   border-radius: 50%;
   transition: transform 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
 .toggle-switch input:checked + .toggle-track {

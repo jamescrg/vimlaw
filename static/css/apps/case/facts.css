@@ -1,6 +1,6 @@
-/*------------------------------------------------
+/* ------------------------------------------------
 Display
-------------------------------------------------*/
+------------------------------------------------ */
 
 .filter-form input {
   margin-right: 1.25rem;
@@ -35,7 +35,7 @@ Display
 .facts-list .description {
   min-width: 18rem;
   white-space: normal;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .facts-list .importance {
@@ -117,9 +117,9 @@ Display
   width: 100%;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Form
-------------------------------------------------*/
+------------------------------------------------ */
 
 .facts-form #id_fact {
   border: none;
@@ -143,9 +143,9 @@ Form
   text-align: right;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Filter form
-------------------------------------------------*/
+------------------------------------------------ */
 
 .toolbar .filter-tools {
   align-items: center;
@@ -171,9 +171,9 @@ Filter form
   width: 9.5rem;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Overflow fixes
-------------------------------------------------*/
+------------------------------------------------ */
 
 /* Fix dropdown overflow issues while allowing horizontal scroll */
 .table-container:has(.facts-list) {
@@ -193,9 +193,9 @@ Overflow fixes
   overflow: visible;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Fact row layout
-------------------------------------------------*/
+------------------------------------------------ */
 
 .facts-list .fact-content {
   display: flex;
@@ -226,9 +226,9 @@ Fact row layout
   opacity: 1;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Assign results (sources modal)
-------------------------------------------------*/
+------------------------------------------------ */
 
 #sources-results .assign-results i {
   margin-right: 1rem;
@@ -238,11 +238,11 @@ Assign results (sources modal)
   margin-left: 2rem;
 }
 
-/*------------------------------------------------
+/* ------------------------------------------------
 Responsive
-------------------------------------------------*/
+------------------------------------------------ */
 
-@media (max-width: 1000px) {
+@media (width <= 1000px) {
   /* Facts toolbar: h2 and add button on first line, inputs wrap below */
   .facts-toolbar .toolbar-left {
     align-items: flex-start;
@@ -284,7 +284,7 @@ Responsive
   }
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .filter-form input[type="date"].filter-input-date,
   .filter-form input[type="text"].filter-input-date,
   .filter-form .filter-input {
