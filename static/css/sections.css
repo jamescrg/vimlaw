@@ -166,7 +166,7 @@ Section Layout (header / nav / body)
 }
 
 /* Section Nav without header - rounded top corners */
-.section-nav:first-child {
+.section > .section-nav:first-child {
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
