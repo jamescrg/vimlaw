@@ -164,18 +164,16 @@ i.with-text {
 }
 
 /* Icons followed by text in toolbar buttons */
-.btn-icon > .icon-list-filter,
 .btn-icon > .icon-x {
   margin-right: 0.5rem;
-}
-
-.btn-icon > .icon-x {
   position: relative;
   top: 0.5px;
 }
 
-.btn-icon > .icon-list-filter {
+/* Filter icon - always violet with right margin */
+.icon-list-filter {
   color: var(--icon-violet);
+  margin-right: 0.5rem;
 }
 
 /* Chevron in dropdown buttons - add left margin */

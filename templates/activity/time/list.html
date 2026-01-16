@@ -10,7 +10,7 @@
         <button hx-get="{% url 'activity:time-filter' %}"
                 hx-target="#htmx-modal-container"
                 class="{% if filter_label == "custom" %}toggle-active{% endif %}">
-          <i class="icon-list-filter with-text"></i>Filter
+          <i class="icon-list-filter"></i>Filter
         </button>
         <button class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
                 hx-post="{% url 'activity:time-filter-quick' 'unbilled' %}">
