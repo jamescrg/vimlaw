@@ -463,7 +463,7 @@ def time_export_to_csv(request, format):
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(
         content_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content-Disposition": f'attachment; filename="{filename}.csv"'},
     )
 
     # get the time entries per the user filter
