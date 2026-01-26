@@ -4,4 +4,13 @@
        hx-trigger="conversationsChanged from:body"
        hx-get="{% url 'case:ai-list' matter.id %}"
        hx-target="this">{% include "case/ai/list.html" %}</div>
+  <script>
+    // Listen for cross-tab conversation updates
+    const aiChannel = new BroadcastChannel('ai-conversations');
+    aiChannel.onmessage = function(event) {
+      if (event.data.type === 'conversationsChanged' && event.data.matterId === {{ matter.id }}) {
+        document.body.dispatchEvent(new CustomEvent('conversationsChanged'));
+      }
+    };
+  </script>
 {% endblock subcontent %}

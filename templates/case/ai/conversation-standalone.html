@@ -179,6 +179,9 @@
       }
     }
 
+    // BroadcastChannel for cross-tab communication
+    const aiChannel = new BroadcastChannel('ai-conversations');
+
     function handleConversationCreated(event) {
       // When a new conversation is created, update the hidden field with the ID
       const xhr = event.detail.xhr;
@@ -189,6 +192,8 @@
           // Update URL without reload so browser history works
           const newUrl = '/case/ai/conversations/' + convId + '/view/';
           window.history.replaceState({}, '', newUrl);
+          // Notify other tabs that a conversation was created
+          aiChannel.postMessage({ type: 'conversationsChanged', matterId: {{ matter.id }} });
         }
       }
     }
