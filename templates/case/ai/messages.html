@@ -35,6 +35,7 @@
                   hx-post="{% url 'case:ai-split-conversation' message.id %}"
                   hx-swap="none"
                   hx-confirm="Split this exchange and all following into a new conversation?"
+                  data-confirm-text="Split"
                   title="Split from here">
             <i class="icon-scissors"></i>
           </button>
