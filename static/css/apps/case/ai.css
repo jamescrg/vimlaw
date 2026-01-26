@@ -609,6 +609,32 @@
   font-size: 1rem;
 }
 
+.ai-message-split {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--stone-400);
+  cursor: pointer;
+  opacity: 0;
+  padding: 0.25rem;
+  position: absolute;
+  right: 2rem;
+  top: 0.5rem;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.ai-message:hover .ai-message-split {
+  opacity: 1;
+}
+
+.ai-message-split:hover {
+  color: var(--primary);
+}
+
+.ai-message-split i {
+  font-size: 1rem;
+}
+
 .ai-message-user .ai-message-content {
   position: relative;
 }

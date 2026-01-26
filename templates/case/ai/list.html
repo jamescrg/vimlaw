@@ -101,6 +101,12 @@
                    hx-swap="none"><i class="icon-copy"></i> Clone</a>
               </li>
               <li>
+                <a class="dropdown-item"
+                   href="#"
+                   hx-get="{% url 'case:ai-append-form' conv.id %}"
+                   hx-target="#htmx-modal-container"><i class="icon-arrow-right-to-line"></i> Append to...</a>
+              </li>
+              <li>
               <a class="dropdown-item"
                  href="#"
                  hx-post="{% url 'case:ai-toggle-reference' conv.id %}"

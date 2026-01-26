@@ -1,0 +1,44 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Append to Conversation</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted">
+        Append all messages from "{{ conversation.title }}" to another conversation.
+        The source conversation will be deleted after appending.
+      </p>
+      <form id="append-conversation-form"
+            hx-post="{% url 'case:ai-append-conversation' conversation.id %}"
+            hx-target="#htmx-modal-container"
+            class="form-compact">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="target_id">Target Conversation</label>
+          <select name="target_id" id="target_id" class="form-control" required>
+            <option value="">Select a conversation...</option>
+            {% for conv in other_conversations %}
+              <option value="{{ conv.id }}">{{ conv.title }} ({{ conv.created_at|date:"Y-m-d" }})</option>
+            {% empty %}
+              <option value="" disabled>No other conversations available</option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit"
+              form="append-conversation-form"
+              class="btn btn-primary"
+              {% if not other_conversations %}disabled{% endif %}>Append</button>
+    </div>
+  </div>
+</div>

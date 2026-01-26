@@ -30,6 +30,15 @@
         </div>
       {% else %}
         <div class="ai-message-text">{{ message.content|linebreaks }}</div>
+        {% if not forloop.first %}
+          <button class="ai-message-split"
+                  hx-post="{% url 'case:ai-split-conversation' message.id %}"
+                  hx-swap="none"
+                  hx-confirm="Split this exchange and all following into a new conversation?"
+                  title="Split from here">
+            <i class="icon-scissors"></i>
+          </button>
+        {% endif %}
         <button class="ai-message-delete"
                 hx-post="{% url 'case:ai-delete-message' message.id %}"
                 hx-swap="none"

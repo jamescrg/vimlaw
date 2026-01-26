@@ -592,6 +592,114 @@ def clone_conversation(request, conv_id):
 
 
 @login_required
+def append_conversation_form(request, conv_id):
+    """Show modal to select target conversation for append."""
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter__in=get_accessible_matters()
+    )
+
+    # Get other conversations in the same matter
+    other_conversations = (
+        Conversation.objects.filter(matter=conversation.matter)
+        .exclude(pk=conv_id)
+        .order_by("-created_at")
+    )
+
+    return render(
+        request,
+        "case/ai/append-modal.html",
+        {
+            "conversation": conversation,
+            "other_conversations": other_conversations,
+        },
+    )
+
+
+@login_required
+def append_conversation(request, conv_id):
+    """Append messages from source conversation to target conversation."""
+    source = get_object_or_404(
+        Conversation, pk=conv_id, matter__in=get_accessible_matters()
+    )
+
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    target_id = request.POST.get("target_id")
+    if not target_id:
+        return HttpResponse("No target conversation selected", status=400)
+
+    target = get_object_or_404(Conversation, pk=target_id, matter=source.matter)
+
+    # Append all messages from source to target
+    for message in source.messages.all():
+        Message.objects.create(
+            conversation=target,
+            role=message.role,
+            content=message.content,
+            user=message.user,
+            input_tokens=message.input_tokens,
+            output_tokens=message.output_tokens,
+            verified_citations=message.verified_citations,
+        )
+
+    # Delete source conversation
+    source.delete()
+
+    # Trigger refresh of conversation list
+    response = HttpResponse(status=204)
+    response["HX-Trigger"] = "conversationsChanged"
+    return response
+
+
+@login_required
+def split_conversation(request, message_id):
+    """Split conversation from a message, moving it and subsequent messages to a new conversation."""
+    message = get_object_or_404(
+        Message, pk=message_id, conversation__matter__in=get_accessible_matters()
+    )
+
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    if message.role != "user":
+        return HttpResponse("Can only split from user messages", status=400)
+
+    conversation = message.conversation
+
+    # Get this message and all subsequent messages
+    messages_to_move = conversation.messages.filter(
+        created_at__gte=message.created_at
+    ).order_by("created_at")
+
+    # Create new conversation
+    new_conversation = Conversation.objects.create(
+        matter=conversation.matter,
+        user=request.user,
+        title=f"{conversation.title} (Split)",
+        llm=conversation.llm,
+    )
+
+    # Move messages to new conversation
+    for msg in messages_to_move:
+        Message.objects.create(
+            conversation=new_conversation,
+            role=msg.role,
+            content=msg.content,
+            user=msg.user,
+            input_tokens=msg.input_tokens,
+            output_tokens=msg.output_tokens,
+            verified_citations=msg.verified_citations,
+        )
+        msg.delete()
+
+    # Trigger refresh
+    response = HttpResponse(status=204)
+    response["HX-Trigger"] = "messagesUpdated, conversationsChanged"
+    return response
+
+
+@login_required
 def toggle_reference(request, conv_id):
     """Toggle the is_reference flag on a conversation."""
     conversation = get_object_or_404(

@@ -781,6 +781,21 @@ urlpatterns = [
         name="ai-clone-conversation",
     ),
     path(
+        "case/ai/conversations/<int:conv_id>/append-form/",
+        ai.append_conversation_form,
+        name="ai-append-form",
+    ),
+    path(
+        "case/ai/conversations/<int:conv_id>/append/",
+        ai.append_conversation,
+        name="ai-append-conversation",
+    ),
+    path(
+        "case/ai/messages/<int:message_id>/split/",
+        ai.split_conversation,
+        name="ai-split-conversation",
+    ),
+    path(
         "case/ai/conversations/<int:conv_id>/toggle-reference/",
         ai.toggle_reference,
         name="ai-toggle-reference",
