@@ -1,4 +1,7 @@
 {% extends "settings/main.html" %}
 {% block subcontent %}
-  <div>These are the company settings</div>
+  <div id="company"
+       hx-trigger="firmProfileReload from:body"
+       hx-get="{% url 'settings:company-profile' %}"
+       hx-target="this">{% include "settings/company/profile.html" %}</div>
 {% endblock subcontent %}

@@ -2,6 +2,7 @@
 {% load static %}
 {% load cache_buster %}
 {% load mathfilters %}
+{% load firm_tags %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -14,29 +15,33 @@
     <link rel="stylesheet" href={% static_v 'css/pdf/ledger.css' %} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap"
           rel="stylesheet" />
   </head>
   <body>
+    {% get_firm as firm %}
     <div class="template">
       <div class="header">
         <div class="header-left">
-          <div class="header-left-left">
-            <img width="100"
-                 height="auto"
-                 class="cb-logo"
-                 alt="cb_logo"
-                 src="{% static 'images/cb_logo.png' %}" />
-          </div>
+          {% if firm.logo %}
+            <div class="header-left-left">
+              <img class="firm-logo"
+                   height="auto"
+                   width="100"
+                   alt="{{ firm.name }} logo"
+                   src="{{ firm.logo.url }}" />
+            </div>
+          {% endif %}
           <div class="header-left-right">
             <p>
-              CB Legal, <span class="llc">LLC</span>
+              {{ firm.name }}
+              {% if firm.name_suffix %}, <span class="llc">{{ firm.name_suffix }}</span>{% endif %}
             </p>
-            <p>5565 Glenridge Connector</p>
-            <p>Suite 350</p>
-            <p>Atlana, GA 30342</p>
-            <p>(770) 426 - 7740</p>
-            <p>jcraig@cblegal.law</p>
+            <p>{{ firm.address_line1 }}</p>
+            {% if firm.address_line2 %}<p>{{ firm.address_line2 }}</p>{% endif %}
+            <p>{{ firm.city }}, {{ firm.state }} {{ firm.zip_code }}</p>
+            <p>{{ firm.phone }}</p>
+            <p>{{ firm.email }}</p>
           </div>
         </div>
         <div class="header-right">

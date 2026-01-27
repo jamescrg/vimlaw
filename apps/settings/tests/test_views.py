@@ -163,3 +163,83 @@ def test_password_change_mismatch(client, user):
     response = client.post("/settings/profile/personal/password/", data)
     assert response.status_code == 200
     assert "error" in response.content.decode().lower()
+
+
+# -----------------------------------------------------
+# Company / Firm Profile tests
+# -----------------------------------------------------
+def test_company_index(client):
+    response = client.get("/settings/company/")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "settings/company/index.html")
+
+
+def test_company_profile(client):
+    response = client.get("/settings/company/profile/")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "settings/company/profile.html")
+
+
+def test_edit_firm_profile_get(client):
+    response = client.get("/settings/company/edit/")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "settings/company/form.html")
+
+
+def test_edit_firm_profile_post(client):
+    from apps.settings.models import FirmProfile
+
+    data = {
+        "name": "Test Legal",
+        "name_suffix": "LLC",
+        "address_line1": "123 Main St",
+        "address_line2": "Suite 100",
+        "city": "Atlanta",
+        "state": "GA",
+        "zip_code": "30319",
+        "phone": "(404) 555-1234",
+        "email": "test@testlegal.com",
+        "trust_caption": "Trust funds are held per the agreement.",
+    }
+    response = client.post("/settings/company/edit/", data)
+    assert response.status_code == 204
+
+    firm = FirmProfile.get_instance()
+    assert firm.name == "Test Legal"
+    assert firm.name_suffix == "LLC"
+    assert firm.city == "Atlanta"
+
+
+def test_firm_profile_singleton():
+    from apps.settings.models import FirmProfile
+
+    # Get or create the first instance
+    firm1 = FirmProfile.get_instance()
+    firm1.name = "First Firm"
+    firm1.save()
+
+    # Get again - should be the same instance
+    firm2 = FirmProfile.get_instance()
+    assert firm2.pk == firm1.pk
+    assert firm2.name == "First Firm"
+
+    # Create should still return pk=1
+    firm3 = FirmProfile()
+    firm3.name = "Third Firm"
+    firm3.save()
+    assert firm3.pk == 1
+
+
+def test_firm_profile_full_name():
+    from apps.settings.models import FirmProfile
+
+    firm = FirmProfile.get_instance()
+    firm.name = "Craig Legal"
+    firm.name_suffix = "LLC"
+    firm.save()
+
+    assert firm.full_name == "Craig Legal, LLC"
+
+    firm.name_suffix = ""
+    firm.save()
+    assert firm.full_name == "Craig Legal"

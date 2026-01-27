@@ -28,6 +28,11 @@ Header
   margin-right: 1.25rem;
 }
 
+.firm-logo {
+  height: auto;
+  max-width: 6.25rem;
+}
+
 .header-left-right p {
   font-size: 9pt;
   line-height: 1.3;

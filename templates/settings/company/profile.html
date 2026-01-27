@@ -1,0 +1,75 @@
+<div class="firm-profile">
+  <div class="firm-profile-header">
+    <h2>Firm Profile</h2>
+    <button class="btn btn-secondary"
+            hx-get="{% url 'settings:edit-firm-profile' %}"
+            hx-target="#htmx-modal-container"
+            @click="$dispatch('open-modal')">Edit</button>
+  </div>
+  <hr />
+  <div class="firm-profile-content">
+    {% if firm.logo %}
+      <div class="firm-logo">
+        <img src="{{ firm.logo.url }}"
+             height="auto"
+             width="200"
+             alt="{{ firm.name }} logo" />
+      </div>
+    {% endif %}
+    <div class="firm-info">
+      <div class="firm-info-row">
+        <span class="firm-info-label">Name</span>
+        <span class="firm-info-value">
+          {% if firm.name %}
+            {{ firm.name }}
+            {% if firm.name_suffix %}, {{ firm.name_suffix }}{% endif %}
+          {% else %}
+            <span class="text-muted">Not set</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="firm-info-row">
+        <span class="firm-info-label">Address</span>
+        <span class="firm-info-value">
+          {% if firm.address_line1 %}
+            {{ firm.address_line1 }}
+            <br />
+            {% if firm.address_line2 %}
+              {{ firm.address_line2 }}
+              <br />
+            {% endif %}
+            {{ firm.city }}, {{ firm.state }} {{ firm.zip_code }}
+          {% else %}
+            <span class="text-muted">Not set</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="firm-info-row">
+        <span class="firm-info-label">Phone</span>
+        <span class="firm-info-value">
+          {% if firm.phone %}
+            {{ firm.phone }}
+          {% else %}
+            <span class="text-muted">Not set</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="firm-info-row">
+        <span class="firm-info-label">Email</span>
+        <span class="firm-info-value">
+          {% if firm.email %}
+            {{ firm.email }}
+          {% else %}
+            <span class="text-muted">Not set</span>
+          {% endif %}
+        </span>
+      </div>
+      {% if firm.trust_caption %}
+        <div class="firm-info-row">
+          <span class="firm-info-label">Trust Caption</span>
+          <span class="firm-info-value">{{ firm.trust_caption|truncatewords:30 }}</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

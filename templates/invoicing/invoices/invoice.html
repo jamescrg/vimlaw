@@ -1,6 +1,7 @@
 {% load humanize %}
 {% load static %}
 {% load cache_buster %}
+{% load firm_tags %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -12,24 +13,36 @@
     <link rel="stylesheet" href={% static_v 'css/palette.css' %} />
     <link rel="stylesheet" href={% static_v 'css/colors.css' %} />
     <link rel="stylesheet" href={% static_v 'css/pdf/general.css' %} />
-    <link rel="stylesheet" href={% static_v 'css/pdf/invoice-craig.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/invoice.css' %} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap"
           rel="stylesheet" />
   </head>
   <body class="{% if invoice.status == 'DRAFT' %}invoice-body-draft{% elif invoice.status == 'CANCELED' %}invoice-body-canceled{% endif %}">
+    {% get_firm as firm %}
     <div class="template">
       <div class="header">
         <div class="header-left">
+          {% if firm.logo %}
+            <div class="header-left-left">
+              <img class="firm-logo"
+                   height="auto"
+                   width="100"
+                   alt="{{ firm.name }} logo"
+                   src="{{ firm.logo.url }}" />
+            </div>
+          {% endif %}
           <div class="header-left-right">
             <p>
-              Craig Legal <span class="llc">LLC</span>
+              {{ firm.name }}
+              {% if firm.name_suffix %}<span class="llc">{{ firm.name_suffix }}</span>{% endif %}
             </p>
-            <p>3408 Clairmont Rd., No. 160</p>
-            <p>Atlanta, GA 30319</p>
-            <p>(404) 470 - 4950</p>
-            <p>james@craiglegal.law</p>
+            <p>{{ firm.address_line1 }}</p>
+            {% if firm.address_line2 %}<p>{{ firm.address_line2 }}</p>{% endif %}
+            <p>{{ firm.city }}, {{ firm.state }} {{ firm.zip_code }}</p>
+            <p>{{ firm.phone }}</p>
+            <p>{{ firm.email }}</p>
           </div>
         </div>
         <div class="header-right">
@@ -144,9 +157,7 @@
               <td class="money">${{ confirmed_balance|floatformat:2|intcomma }}</td>
             </tr>
           </table>
-          <p class="trust-caption">
-            * Please note: funds on retainer are not applied to invoices before the end of the case. They are held for the full duration of the matter as described in Paragraph 4.3 of your Attorney Client Agreement, and if applicable, your Retainer Addendum. This invoice does not indicate any change in your trust balance. Please pay the amount due highlighted above.
-          </p>
+          {% if firm.trust_caption %}<p class="trust-caption">* {{ firm.trust_caption }}</p>{% endif %}
         </div>
       {% endif %}
       {% if invoice.message %}

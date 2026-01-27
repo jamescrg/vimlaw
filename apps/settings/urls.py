@@ -29,6 +29,16 @@ urlpatterns = [
     ),
     # Company
     path("settings/company/", company_urls.company_index, name="company-index"),
+    path(
+        "settings/company/profile/",
+        company_urls.company_profile,
+        name="company-profile",
+    ),
+    path(
+        "settings/company/edit/",
+        company_urls.edit_firm_profile,
+        name="edit-firm-profile",
+    ),
     # Users
     path("settings/users/", user_urls.users_index, name="users-index"),
     path("settings/users/list/", user_urls.user_list, name="user-list"),

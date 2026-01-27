@@ -162,3 +162,58 @@ Settings Contacts - Two Column Layout
 .groups-table .drag-handle:active {
   cursor: grabbing;
 }
+
+/* ==========================================================================
+Firm Profile
+========================================================================== */
+
+.firm-profile {
+  max-width: 37.5rem;
+}
+
+.firm-profile-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.firm-profile-header h2 {
+  margin: 0;
+}
+
+.firm-profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 1rem;
+}
+
+.firm-logo {
+  max-width: 12.5rem;
+}
+
+.firm-logo img {
+  height: auto;
+  max-width: 100%;
+}
+
+.firm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.firm-info-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.firm-info-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 7rem;
+}
+
+.firm-info-value {
+  flex: 1;
+}

@@ -11,9 +11,9 @@
             <a href="{% url 'settings:settings' %}">Session</a>
           </li>
           {% if user.role == 'ADMIN' %}
-            <!--<li {% if subapp == "company" %}class="active"{% endif %}>-->
-            <!--  <a href="{% url 'settings:company-index' %}">Company</a>-->
-            <!--</li>-->
+            <li {% if subapp == "company" %}class="active"{% endif %}>
+              <a href="{% url 'settings:company-index' %}">Company</a>
+            </li>
             <li {% if subapp == "users" %}class="active"{% endif %}>
               <a href="{% url 'settings:users-index' %}">Users</a>
             </li>

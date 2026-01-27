@@ -1,0 +1,29 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Edit Firm Profile</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="firm-profile-form"
+            hx-post="{% url 'settings:edit-firm-profile' %}"
+            hx-target="#htmx-modal-container"
+            hx-encoding="multipart/form-data"
+            role="form"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit" form="firm-profile-form" class="btn btn-success">Save</button>
+    </div>
+  </div>
+</div>

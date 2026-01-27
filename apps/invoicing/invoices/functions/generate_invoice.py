@@ -45,12 +45,13 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
         "confirmed_balance": confirmed_balance,
     }
 
-    # Select template based on invoice issue date
+    # Use unified template for all new invoices
+    # Legacy templates kept for historical invoices issued before cutoff
     cutoff_date = date(2025, 11, 10)
     if invoice.date_issued <= cutoff_date:
         template_name = "invoicing/invoices/invoice-cb.html"
     else:
-        template_name = "invoicing/invoices/invoice-craig.html"
+        template_name = "invoicing/invoices/invoice.html"
 
     html_string = render_to_string(template_name, context)
     base_url = request.build_absolute_uri("/").rstrip("/")
