@@ -1,16 +1,58 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import F, Func, Q, Value
+from django.db.models.functions import Lower
 from django.shortcuts import render
 from watson import search as watson
 
 from apps.contacts.models import Contact
 from apps.intakes.models import Intake
 from apps.matters.models import Matter
+from apps.matters.proceedings.models import Proceeding
 from apps.notes.models import Note
+
+
+class RegexpReplace(Func):
+    """PostgreSQL REGEXP_REPLACE function for normalizing strings."""
+
+    function = "REGEXP_REPLACE"
+
+
+def normalize_case_number(text):
+    """Remove non-alphanumeric characters and lowercase for fuzzy case number matching."""
+    return "".join(c.lower() for c in text if c.isalnum())
+
+
+def search_proceedings_by_case_number(search_text):
+    """
+    Search proceedings by case number with fuzzy matching.
+
+    Normalizes both the search term and case numbers by removing
+    non-alphanumeric characters, allowing matches like:
+    - "2024cv12345" matches "2024-CV-12345"
+    - "cv12345" matches "CV-12345"
+    """
+    normalized_search = normalize_case_number(search_text)
+    if not normalized_search:
+        return Proceeding.objects.none()
+
+    # Annotate with normalized case_number (strip non-alphanumeric, lowercase)
+    return (
+        Proceeding.objects.annotate(
+            normalized_case_number=Lower(
+                RegexpReplace(
+                    F("case_number"), Value("[^a-zA-Z0-9]"), Value(""), Value("g")
+                )
+            )
+        )
+        .filter(normalized_case_number__icontains=normalized_search)
+        .select_related("matter")
+    )
+
 
 # Available search scopes
 SEARCH_SCOPES = [
     ("matters", "Matters", Matter),
+    ("proceedings", "Proceedings", Proceeding),
     ("contacts", "Contacts", Contact),
     ("intakes", "Intakes", Intake),
     ("notes", "Notes", Note),
@@ -36,8 +78,19 @@ def expand_search_with_synonyms(query):
 
 def get_active_scopes(request):
     """Get active search scopes from session, defaulting to all enabled."""
-    default_scopes = ["matters", "contacts", "intakes", "notes"]
-    return request.session.get("search_scopes", default_scopes)
+    default_scopes = ["matters", "proceedings", "contacts", "intakes", "notes"]
+    stored_scopes = request.session.get("search_scopes")
+
+    if stored_scopes is None:
+        return default_scopes
+
+    # Add any new default scopes that weren't in the stored session
+    # (e.g., "proceedings" added after user's last search)
+    for scope in default_scopes:
+        if scope not in stored_scopes:
+            stored_scopes.append(scope)
+
+    return stored_scopes
 
 
 @login_required
@@ -59,18 +112,29 @@ def results(request):
 
     # Get scope filters from POST (checkboxes)
     scope_matters = request.POST.get("scope_matters") == "on"
+    scope_proceedings = request.POST.get("scope_proceedings") == "on"
     scope_contacts = request.POST.get("scope_contacts") == "on"
     scope_intakes = request.POST.get("scope_intakes") == "on"
     scope_notes = request.POST.get("scope_notes") == "on"
 
     # If no scopes selected, enable all (first load or all unchecked)
-    if not any([scope_matters, scope_contacts, scope_intakes, scope_notes]):
-        scope_matters = scope_contacts = scope_intakes = scope_notes = True
+    all_scopes = [
+        scope_matters,
+        scope_proceedings,
+        scope_contacts,
+        scope_intakes,
+        scope_notes,
+    ]
+    if not any(all_scopes):
+        scope_matters = scope_proceedings = scope_contacts = True
+        scope_intakes = scope_notes = True
 
     # Save to session for persistence
     active_scopes = []
     if scope_matters:
         active_scopes.append("matters")
+    if scope_proceedings:
+        active_scopes.append("proceedings")
     if scope_contacts:
         active_scopes.append("contacts")
     if scope_intakes:
@@ -85,6 +149,7 @@ def results(request):
             "search/results.html",
             {
                 "matters": None,
+                "proceedings": None,
                 "contacts": None,
                 "intakes": None,
                 "notes": None,
@@ -94,6 +159,7 @@ def results(request):
         )
 
     matters = []
+    proceedings = []
     contacts = []
     intakes = []
     notes = []
@@ -104,6 +170,8 @@ def results(request):
             matters = list(
                 Matter.objects.filter(client_reference_id=text).order_by("name")
             )
+        if scope_proceedings:
+            proceedings = list(search_proceedings_by_case_number(text))
         if scope_contacts:
             contacts = list(
                 Contact.objects.filter(
@@ -159,11 +227,16 @@ def results(request):
                             seen_ids["note"].add(obj.id)
                             notes.append(obj)
 
+            # Search proceedings by case number (fuzzy match)
+            if scope_proceedings:
+                proceedings = list(search_proceedings_by_case_number(text))
+
     context = {
         "app": "search",
         "action": "/search/results",
         "results": True,
         "matters": matters,
+        "proceedings": proceedings,
         "contacts": contacts,
         "intakes": intakes,
         "notes": notes,

@@ -19,6 +19,30 @@
     </div>
   </div>
 {% endif %}
+{% if proceedings %}
+  <div class="search-section">
+    <div class="search-section-header">
+      <span class="search-section-title">Proceedings</span>
+      <span class="app-badge badge-gray">{{ proceedings|length }}</span>
+    </div>
+    <div class="search-cards">
+      {% for proceeding in proceedings %}
+        <a href="{% url 'matters:proceedings-index' id=proceeding.matter.id %}"
+           class="search-card">
+          <span class="app-badge app-badge-lg badge-gray"><i class="icon-gavel"></i></span>
+          <div class="search-card-content">
+            <div class="search-card-title">{{ proceeding.case_number }}</div>
+            <div class="search-card-meta">
+              {{ proceeding.display_name }}
+              {% if proceeding.matter %}&bull; {{ proceeding.matter.name|truncatewords:5 }}{% endif %}
+            </div>
+          </div>
+          <span class="app-badge {% if proceeding.status == 'Ongoing' %}badge-green{% else %}badge-gray{% endif %}">{{ proceeding.status }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
 {% if contacts %}
   <div class="search-section">
     <div class="search-section-header">
@@ -91,7 +115,7 @@
     </div>
   </div>
 {% endif %}
-{% if not matters and not contacts and not intakes and not notes %}
+{% if not matters and not proceedings and not contacts and not intakes and not notes %}
   <div class="search-empty">
     <i class="icon-search"></i>
     <p>No results found</p>

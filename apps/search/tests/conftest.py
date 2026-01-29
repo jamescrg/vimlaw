@@ -6,6 +6,7 @@ from apps.contacts.models import Contact
 from apps.folders.models import Folder
 from apps.intakes.models import Intake
 from apps.matters.models import Matter, PracticeArea, Relationship, Role
+from apps.matters.proceedings.models import Proceeding
 
 
 @pytest.fixture
@@ -114,3 +115,16 @@ def intake():
     )
     intake.save()
     return intake
+
+
+@pytest.fixture
+def proceeding(matter):
+    proceeding = Proceeding.objects.create(
+        matter=matter,
+        forum="District Court",
+        case_number="2024-CV-12345",
+        status="Ongoing",
+        primary=True,
+    )
+    proceeding.save()
+    return proceeding
