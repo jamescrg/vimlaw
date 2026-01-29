@@ -46,7 +46,11 @@ def process_ai_request(
                 msg["content"] = f"[{msg['user_name']}]: {msg['content']}"
 
     def update_status(status: str, message: str):
-        """Update the cache with current status."""
+        """Update the cache with current status, unless cancelled."""
+        # Don't overwrite if already cancelled
+        current = cache.get(cache_key, {})
+        if current.get("status") == "cancelled":
+            return
         cache.set(
             cache_key,
             {
@@ -144,7 +148,11 @@ def process_ai_request(
             )
             citations_data = []
 
-        # Set complete status with response data
+        # Set complete status with response data (unless cancelled)
+        if is_cancelled():
+            logger.info("AI request cancelled for conversation %s", conversation_id)
+            return
+
         logger.info(
             "Storing %d citations in cache for conversation %s",
             len(citations_data),
@@ -171,14 +179,17 @@ def process_ai_request(
         logger.exception(
             "Error in background AI request for conversation %s", conversation_id
         )
-        cache.set(
-            cache_key,
-            {
-                "status": "error",
-                "message": f"Error: {str(e)}",
-            },
-            timeout=600,
-        )
+        # Don't overwrite if already cancelled
+        current = cache.get(cache_key, {})
+        if current.get("status") != "cancelled":
+            cache.set(
+                cache_key,
+                {
+                    "status": "error",
+                    "message": f"Error: {str(e)}",
+                },
+                timeout=600,
+            )
 
 
 # Minimum characters to consider a PDF as having a sufficient text layer
