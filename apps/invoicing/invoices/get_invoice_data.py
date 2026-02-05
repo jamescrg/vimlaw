@@ -94,12 +94,21 @@ def get_annotated_invoice_queryset():
             + F("annotated_net_expenses")
             - F("discount"),
             # Calculate amount_remaining = final_total - payments - credits
-            # Note: Legacy PAID invoices handled in template/view logic
-            annotated_amount_remaining=F("annotated_net_fees")
-            + F("annotated_net_expenses")
-            - F("discount")
-            - F("annotated_payments")
-            - F("annotated_credits"),
+            # Legacy PAID invoices without allocations are considered fully paid (0)
+            annotated_amount_remaining=Case(
+                When(
+                    status="PAID",
+                    annotated_payments=Decimal("0"),
+                    annotated_credits=Decimal("0"),
+                    then=Value(Decimal("0")),
+                ),
+                default=F("annotated_net_fees")
+                + F("annotated_net_expenses")
+                - F("discount")
+                - F("annotated_payments")
+                - F("annotated_credits"),
+                output_field=DecimalField(),
+            ),
         )
         .select_related("matter", "created_by")
     )

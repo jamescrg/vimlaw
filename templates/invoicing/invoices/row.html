@@ -10,8 +10,8 @@
   <td class="status dropdown-cell">{% include "invoicing/invoices/status.html" %}</td>
   <td class="amount">${{ invoice.annotated_net_fees|floatformat:2|intcomma }}</td>
   <td class="amount">${{ invoice.annotated_net_expenses|floatformat:2|intcomma }}</td>
-  <td class="amount total">${{ invoice.annotated_final_total|floatformat:2|intcomma }}</td>
-  <td class="amount">
+  <td class="amount amount-total">${{ invoice.annotated_final_total|floatformat:2|intcomma }}</td>
+  <td class="amount amount-due">
     $
     {% if invoice.status == "PAID" and invoice.annotated_payments == 0 and invoice.annotated_credits == 0 %}
       0.00
@@ -32,7 +32,7 @@
         <li>
           <a class="dropdown-item"
              target="_blank"
-             href="{% url 'invoicing:invoices-pdf-download' invoice.id %}"><i class="icon-file-pdf"></i> Download PDF</a>
+             href="{% url 'invoicing:invoices-pdf-download' invoice.id %}"><i class="icon-file-down"></i> Download PDF</a>
         </li>
         <li>
           <a class="dropdown-item"

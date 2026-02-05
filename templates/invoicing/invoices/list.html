@@ -70,8 +70,20 @@
         </th>
         <th class="amount">Fees</th>
         <th class="amount">Expenses</th>
-        <th class="amount">Total</th>
-        <th class="amount">Amount Due</th>
+        <th class="amount amount-total">
+          Total
+          <button class="btn-sort {% if current_order == 'total' %}active{% endif %}"
+                  hx-get="{% url 'invoicing:invoices-order-by' 'total' %}">
+            <i class="icon-chevrons-up-down"></i>
+          </button>
+        </th>
+        <th class="amount amount-due">
+          Amount Due
+          <button class="btn-sort {% if current_order == 'amount_due' %}active{% endif %}"
+                  hx-get="{% url 'invoicing:invoices-order-by' 'amount_due' %}">
+            <i class="icon-chevrons-up-down"></i>
+          </button>
+        </th>
         <th class="download">
           <i class="icon-download"></i>
         </th>

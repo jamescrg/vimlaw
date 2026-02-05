@@ -3,7 +3,7 @@ List View
 ========================================================================== */
 
 .invoices {
-  min-width: 72.5rem;
+  min-width: 78.5rem;
 }
 
 .invoices .invoice-id {
@@ -23,8 +23,13 @@ List View
   width: 7.5rem;
 }
 
+.invoices .amount-total,
+.invoices .amount-due {
+  width: 9.5rem;
+}
+
 .invoices .status {
-  width: 7rem;
+  width: 9rem;
 }
 
 .invoices .download {

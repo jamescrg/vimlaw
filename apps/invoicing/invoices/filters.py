@@ -22,6 +22,8 @@ class InvoiceFilter(django_filters.FilterSet):
             (("date_issued", "id"), "date_issued"),
             ("matter__name", "matter"),
             ("status", "status"),
+            ("annotated_final_total", "total"),
+            ("annotated_amount_remaining", "amount_due"),
         ],
         empty_label=None,
     )
