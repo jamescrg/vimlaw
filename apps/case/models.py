@@ -379,7 +379,7 @@ class CaseLaw(AuditMixin, models.Model):
     importance = models.IntegerField(default=5)  # 1-10, like documents
 
     # AI context - determines if case full text is submitted to AI conversations
-    include_in_ai = models.BooleanField(default=False)
+    include_in_ai = models.BooleanField(default=True)
 
     # Labels (like other case app models)
     labels = models.ManyToManyField(Label, blank=True, related_name="case_laws")
