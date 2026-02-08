@@ -19,4 +19,3 @@ __pycache__/
 .direnv/
 .postgres-data/
 result
-media/
