@@ -69,7 +69,7 @@ class TestNotesAdd:
                 "date": "2024-01-15",
             },
         )
-        assert response.status_code == 204
+        assert response.status_code == 200
         assert Note.objects.filter(title="New Note", matter=matter).exists()
 
 

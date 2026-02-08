@@ -182,11 +182,13 @@ def entry(user, matter):
 
 @pytest.fixture
 def entry_data(entry):
-    entry_data = entry.__dict__
+    entry_data = entry.__dict__.copy()
     keys = "_state id".split()
+
     for key in keys:
         del entry_data[key]
-    return entry_data
+
+    return {k: v for k, v in entry_data.items() if v is not None}
 
 
 @pytest.fixture

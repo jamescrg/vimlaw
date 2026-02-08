@@ -1,6 +1,6 @@
 import pytest
 
-from apps.case.forms import FactForm
+from apps.case.facts.forms import FactForm
 from apps.matters.forms import MatterForm
 from apps.matters.proceedings.forms import ProceedingForm
 from apps.matters.settlement.forms import SettlementEntryForm

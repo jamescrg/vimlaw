@@ -102,7 +102,7 @@ def test_payments_index_requires_login(unauthenticated_client):
 # Trust app - unauthenticated access tests
 # -----------------------------------------------------
 def test_trust_index_requires_login(unauthenticated_client):
-    response = unauthenticated_client.get("/trust/")
+    response = unauthenticated_client.get("/invoicing/trust/")
     assert response.status_code == 302
     assert "/accounts/login/" in response.url
 

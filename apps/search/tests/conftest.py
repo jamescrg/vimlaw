@@ -62,11 +62,13 @@ def contact(user, folder):
 
 @pytest.fixture
 def contact_data(contact):
-    contact_data = contact.__dict__
+    contact_data = contact.__dict__.copy()
     keys = "_state id google_id map intake_id".split()
+
     for key in keys:
         del contact_data[key]
-    return contact_data
+
+    return {k: v for k, v in contact_data.items() if v is not None}
 
 
 @pytest.fixture

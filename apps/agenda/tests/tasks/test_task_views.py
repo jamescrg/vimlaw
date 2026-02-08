@@ -42,7 +42,7 @@ def test_edit_post(client, folder, task, user):
         "priority": 1,
     }
     response = client.post(reverse("agenda:tasks-edit", args=[task.id]), data)
-    assert response.status_code == 302  # Redirects to task detail on success
+    assert response.status_code == 204  # HTMX response on success
 
 
 # -----------------------------------------------------

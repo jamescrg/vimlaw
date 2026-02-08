@@ -60,11 +60,13 @@ def contact(user, folder):
 
 @pytest.fixture
 def contact_data(contact):
-    contact_data = contact.__dict__
+    contact_data = contact.__dict__.copy()
     keys = "_state id google_id map intake_id".split()
+
     for key in keys:
         del contact_data[key]
-    return contact_data
+
+    return {k: v for k, v in contact_data.items() if v is not None}
 
 
 @pytest.fixture
@@ -83,7 +85,7 @@ def transaction(contact):
 
 @pytest.fixture
 def transaction_data(transaction):
-    transaction_data = transaction.__dict__
+    transaction_data = transaction.__dict__.copy()
 
     keys = "_state id".split()
 
@@ -93,4 +95,5 @@ def transaction_data(transaction):
     transaction_data["contact"] = transaction_data["contact_id"]
     del transaction_data["entered"]
 
-    return transaction_data
+    # Filter out None values - Django test client rejects them
+    return {k: v for k, v in transaction_data.items() if v is not None}

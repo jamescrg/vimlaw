@@ -181,11 +181,11 @@ class TestDocumentViewer:
 
 class TestDocumentSelection:
     def test_toggle_select(self, client_with_matter, document):
+        matter_id = client_with_matter.matter.id
         response = client_with_matter.post(
-            f"/case/documents/{document.id}/toggle-select/"
+            f"/case/{matter_id}/documents/toggle-select/{document.id}/"
         )
         assert response.status_code == 204
-        matter_id = client_with_matter.matter.id
         session = client_with_matter.session
         selected = session.get(f"selected_documents_{matter_id}", [])
         assert document.id in selected
@@ -193,7 +193,9 @@ class TestDocumentSelection:
     def test_clear_selection(self, client_with_matter, document):
         matter_id = client_with_matter.matter.id
         # First select a document
-        client_with_matter.post(f"/case/documents/{document.id}/toggle-select/")
+        client_with_matter.post(
+            f"/case/{matter_id}/documents/toggle-select/{document.id}/"
+        )
         # Then clear
         response = client_with_matter.post(
             f"/case/{matter_id}/documents/clear-selection/"

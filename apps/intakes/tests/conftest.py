@@ -102,8 +102,10 @@ def note(user, intake):
 
 @pytest.fixture
 def note_data(note):
-    note_data = note.__dict__
+    note_data = note.__dict__.copy()
     keys = "_state id".split()
+
     for key in keys:
         del note_data[key]
-    return note_data
+
+    return {k: v for k, v in note_data.items() if v is not None}

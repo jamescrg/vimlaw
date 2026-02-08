@@ -288,11 +288,16 @@ def get_sidebar_sort(request):
 
 def record_note_view(user, note):
     """Record that a user viewed a note, updating or creating the NoteView record."""
+    from django.utils import timezone
+
     NoteView.objects.update_or_create(
         user=user,
         note=note,
         defaults={},  # viewed_at is auto_now, so it updates automatically
     )
+
+    note.viewed_at = timezone.now()
+    note.save(update_fields=["viewed_at"])
 
 
 def get_sorted_standalone_notes(user, sort_order="-viewed_at"):
