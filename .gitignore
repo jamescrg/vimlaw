@@ -16,3 +16,6 @@ google/*
 node_modules/
 __pycache__/
 .claude/
+.direnv/
+.postgres-data/
+result

@@ -1,0 +1,63 @@
+version: "0.5"
+
+processes:
+  setup-venv:
+    command: |
+      if [ ! -d "venv" ]; then
+        echo "Creating venv..."
+        python -m venv venv
+      fi
+      source venv/bin/activate
+      pip install -q --upgrade pip
+      pip install -q -r requirements.txt
+      echo "Python environment ready"
+    availability:
+      restart: "no"
+
+  postgres:
+    command: |
+      if [ ! -d "$PGDATA" ]; then
+        echo "Initializing PostgreSQL..."
+        initdb -D "$PGDATA" --auth=trust --no-locale --encoding=UTF8
+        echo "port = 5433" >> "$PGDATA/postgresql.conf"
+        echo "listen_addresses = 'localhost'" >> "$PGDATA/postgresql.conf"
+        echo "unix_socket_directories = '$PGDATA'" >> "$PGDATA/postgresql.conf"
+      fi
+      postgres -D "$PGDATA"
+    readiness_probe:
+      exec:
+        command: pg_isready -h localhost -p 5433
+      initial_delay_seconds: 2
+      period_seconds: 2
+    shutdown:
+      command: pg_ctl -D "$PGDATA" stop -m fast
+
+  setup-db:
+    command: |
+      # Create role if it doesn't exist (uses .env values)
+      DB_USER="${DB_USER:-lawadminuser}"
+      DB_PASSWORD="${DB_PASSWORD:-lawadminpass}"
+      DB_NAME="${DB_NAME:-lawadmin}"
+
+      psql -h localhost -p 5433 -d postgres -tc \
+        "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1 || \
+        psql -h localhost -p 5433 -d postgres -c \
+        "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASSWORD' CREATEDB;"
+
+      # Create database if it doesn't exist
+      createdb -h localhost -p 5433 -O "$DB_USER" "$DB_NAME" 2>/dev/null || true
+
+      echo "Database ready (run 'python manage.py migrate' manually)"
+    depends_on:
+      postgres:
+        condition: process_healthy
+    availability:
+      restart: "no"
+
+  django:
+    command: |
+      source venv/bin/activate
+      python manage.py runserver
+    depends_on:
+      setup-db:
+        condition: process_completed_successfully
