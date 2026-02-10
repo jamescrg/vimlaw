@@ -99,7 +99,14 @@ def events_filter_status(request, status):
     request.session["events_filter"] = events_filter
     request.session.modified = True
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "eventsChanged"})
+    # Return updated dropdown with OOB swap, plus trigger refresh
+    response = render(
+        request,
+        "agenda/events/status-dropdown.html",
+        {"events_filter_status": status, "oob_swap": True},
+    )
+    response["HX-Trigger"] = "eventsChanged"
+    return response
 
 
 @login_required

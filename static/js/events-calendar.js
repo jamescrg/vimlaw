@@ -13,26 +13,38 @@ document.body.addEventListener("htmx:afterSwap", (event) => {
   }
 });
 
-// In calendar mode, intercept eventsChanged triggers and refetch instead of reloading
-// Allow all other requests (view mode changes, filter changes, etc.) through
+// Track when we're intentionally switching views
+let viewSwitchPending = false;
+
+document.body.addEventListener("eventsViewChanged", () => {
+  viewSwitchPending = true;
+});
+
+// In calendar mode, intercept auto-refresh triggers and refetch instead of reloading
+// Allow requests from buttons/links (status changes, etc.) through
 document.body.addEventListener("htmx:beforeRequest", (event) => {
   const target = event.detail.target;
   if (target && target.id === "events") {
     const calendarContainer = document.getElementById("fullcalendar-container");
     if (calendarContainer && calendarContainer._x_dataStack) {
-      // We're in calendar mode - check what triggered this request
       const elt = event.detail.elt;
-      const triggeringEvent = event.detail.triggeringEvent;
 
-      // Only block if this is from the eventsChanged trigger (not eventsViewChanged)
-      // The triggering event type tells us which custom event fired
-      if (elt.id === "events" && triggeringEvent?.type === "eventsChanged") {
+      // If the request originates from the #events div itself (auto-refresh),
+      // block it and refetch calendar events instead - unless it's a view switch
+      if (elt.id === "events") {
+        if (viewSwitchPending) {
+          viewSwitchPending = false;
+          return; // Allow view mode switch through
+        }
+
+        // Block auto-refresh and refetch calendar instead
         const alpineData = calendarContainer._x_dataStack[0];
         if (alpineData && alpineData.calendar) {
           event.preventDefault();
           alpineData.calendar.refetchEvents();
         }
       }
+      // Requests from other elements (buttons, links) targeting #events are allowed
     }
   }
 });
