@@ -2,7 +2,13 @@
 {% block subcontent %}
   {% load humanize %}
   <div id="events"
-       hx-trigger="eventsChanged from:body"
+       hx-trigger="eventsChanged from:body, eventsViewChanged from:body"
        hx-get="{% url 'agenda:events-list' %}"
-       hx-target="this">{% include "agenda/events/list.html" %}</div>
+       hx-target="this">
+    {% if view_mode == "calendar" %}
+      {% include "agenda/events/calendar.html" %}
+    {% else %}
+      {% include "agenda/events/list.html" %}
+    {% endif %}
+  </div>
 {% endblock subcontent %}

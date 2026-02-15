@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
+from apps.accounts.models import CustomUser
 from config.settings import CustomFormRendererCompact
 
 from .models import Event
@@ -19,6 +20,7 @@ class EventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "location",
+            "assigned_to",
         )
         PARTIES = (
             ("Client", "Client"),
@@ -49,6 +51,13 @@ class EventForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
+
+        # Filter assigned_to to active users, alphabetical, title case
+        self.fields["assigned_to"].queryset = CustomUser.objects.filter(
+            is_active=True
+        ).order_by("first_name", "last_name")
+        self.fields["assigned_to"].label_from_instance = lambda u: u.full_name
+        self.fields["assigned_to"].empty_label = "Firm"
 
     def clean_description(self):
         description = self.cleaned_data["description"]

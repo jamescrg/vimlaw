@@ -17,7 +17,14 @@ class Event(AuditMixin, models.Model):
     user = models.ForeignKey(
         "accounts.CustomUser", on_delete=models.SET_NULL, null=True, blank=True
     )
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
+    assigned_to = models.ForeignKey(
+        "accounts.CustomUser",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_events",
+    )
+    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField(null=True)
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)

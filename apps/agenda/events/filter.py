@@ -17,6 +17,21 @@ STATUS_CHOICES = (
 )
 
 
+class AssignedToFilter(django_filters.Filter):
+    """Custom filter for assigned_to with special 'unassigned' option."""
+
+    def filter(self, qs, value):
+        if not value:
+            return qs
+        if value == "unassigned":
+            return qs.filter(assigned_to__isnull=True)
+        try:
+            user_id = int(value)
+            return qs.filter(assigned_to_id=user_id)
+        except (ValueError, TypeError):
+            return qs
+
+
 class EventFilter(django_filters.FilterSet):
     status = django_filters.ChoiceFilter(
         field_name="status",
@@ -35,6 +50,7 @@ class EventFilter(django_filters.FilterSet):
     party = django_filters.ChoiceFilter(
         field_name="party", choices=PARTY_CHOICES, empty_label="All Parties"
     )
+    assigned_to = AssignedToFilter()
     order_by = django_filters.OrderingFilter(
         fields=(
             ("date", "date"),
@@ -48,4 +64,4 @@ class EventFilter(django_filters.FilterSet):
 
     class Meta:
         model = Event
-        fields = ["date", "matter", "party", "status"]
+        fields = ["date", "matter", "party", "status", "assigned_to"]

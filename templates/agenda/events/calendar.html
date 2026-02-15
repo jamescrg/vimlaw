@@ -1,0 +1,46 @@
+{% block subcontent %}
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
+        <button type="button" hx-get="/events/add" hx-target="#htmx-modal-container">
+          <i class="icon-plus"></i>
+        </button>
+        <button type="button"
+                hx-get="{% url 'agenda:events-filter' %}"
+                hx-target="#htmx-modal-container">
+          <i class="icon-list-filter"></i>Filter
+        </button>
+        {% include "agenda/events/status-dropdown.html" %}
+        {% include "agenda/events/assigned-dropdown.html" %}
+        <div class="view-toggle">
+          <button type="button"
+                  class="{% if view_mode == 'list' %}toggle-active{% endif %}"
+                  hx-post="{% url 'agenda:events-view-mode' 'list' %}"
+                  hx-swap="none"
+                  title="List View">
+            <i class="icon-list"></i>
+          </button>
+          <button type="button"
+                  class="{% if view_mode == 'calendar' %}toggle-active{% endif %}"
+                  hx-post="{% url 'agenda:events-view-mode' 'calendar' %}"
+                  hx-swap="none"
+                  title="Calendar View">
+            <i class="icon-calendar"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <a href="#"
+         hx-get="{% url 'agenda:events-deadline-modal' %}"
+         hx-target="#htmx-modal-container">
+        <i class="icon-calendar"></i>Deadline Calculator
+      </a>
+    </div>
+  </div>
+  <div id="fullcalendar-container"
+       x-data="eventsCalendar()"
+       x-init="initCalendar()"
+       hx-disinherit="*"
+       hx-boost="false"></div>
+{% endblock subcontent %}

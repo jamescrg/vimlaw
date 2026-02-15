@@ -10,44 +10,23 @@
                 hx-target="#htmx-modal-container">
           <i class="icon-list-filter"></i>Filter
         </button>
-        <div class="dropdown" x-data="dropdown()">
+        {% include "agenda/events/status-dropdown.html" %}
+        {% include "agenda/events/assigned-dropdown.html" %}
+        <div class="view-toggle">
           <button type="button"
-                  id="events-status-filter"
-                  class="select-btn filter-dropdown-button {% if events_filter_status %}toggle-active{% endif %}"
-                  x-ref="button"
-                  @click="toggle()"
-                  :aria-expanded="open">
-            {{ events_filter_status|default:"All Statuses" }}
-            <small>
-              <i class="icon-chevron-down"></i>
-            </small>
+                  class="{% if view_mode == 'list' %}toggle-active{% endif %}"
+                  hx-post="{% url 'agenda:events-view-mode' 'list' %}"
+                  hx-swap="none"
+                  title="List View">
+            <i class="icon-list"></i>
           </button>
-          <ul class="dropdown-menu" x-ref="menu" x-show="open">
-            <li>
-              <a class="dropdown-item {% if not events_filter_status %}active{% endif %}"
-                 href="#"
-                 hx-post="{% url 'agenda:events-filter-status-all' %}"
-                 hx-target="#events">All Statuses</a>
-            </li>
-            <li>
-              <a class="dropdown-item {% if events_filter_status == 'Pending' %}active{% endif %}"
-                 href="#"
-                 hx-post="{% url 'agenda:events-filter-status' 'Pending' %}"
-                 hx-target="#events">Pending</a>
-            </li>
-            <li>
-              <a class="dropdown-item {% if events_filter_status == 'Complete' %}active{% endif %}"
-                 href="#"
-                 hx-post="{% url 'agenda:events-filter-status' 'Complete' %}"
-                 hx-target="#events">Complete</a>
-            </li>
-            <li>
-              <a class="dropdown-item {% if events_filter_status == 'Missed' %}active{% endif %}"
-                 href="#"
-                 hx-post="{% url 'agenda:events-filter-status' 'Missed' %}"
-                 hx-target="#events">Missed</a>
-            </li>
-          </ul>
+          <button type="button"
+                  class="{% if view_mode == 'calendar' %}toggle-active{% endif %}"
+                  hx-post="{% url 'agenda:events-view-mode' 'calendar' %}"
+                  hx-swap="none"
+                  title="Calendar View">
+            <i class="icon-calendar"></i>
+          </button>
         </div>
       </div>
     </div>

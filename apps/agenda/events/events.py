@@ -60,6 +60,19 @@ def get_table_data(request):
         current_order = current_order[0] if current_order else "date"
     current_order = current_order.lstrip("-")
 
+    # Get assigned_to filter display value
+    assigned_to_value = filter.data.get("assigned_to", "")
+    if assigned_to_value == "unassigned":
+        events_filter_assigned = "Firm"
+    elif assigned_to_value:
+        try:
+            user = CustomUser.objects.get(pk=int(assigned_to_value))
+            events_filter_assigned = user.get_short_name() or user.username
+        except (ValueError, CustomUser.DoesNotExist):
+            events_filter_assigned = ""
+    else:
+        events_filter_assigned = ""
+
     table_data["pagination"] = pagination
     table_data["session_key"] = "events_pagination"
     table_data["trigger_key"] = "eventsChanged"
@@ -67,8 +80,12 @@ def get_table_data(request):
     table_data["matters"] = Matter.objects.filter(
         status__in=["Pending", "Open"]
     ).order_by("name")
-    table_data["users"] = CustomUser.objects.all().order_by("username")
+    table_data["users"] = CustomUser.objects.filter(is_active=True).order_by(
+        "first_name", "last_name"
+    )
     table_data["events_filter_status"] = filter.data.get("status")
+    table_data["events_filter_assigned"] = events_filter_assigned
+    table_data["events_filter_assigned_value"] = assigned_to_value
     table_data["current_order"] = current_order
 
     return table_data

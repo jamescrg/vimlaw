@@ -1,0 +1,39 @@
+<div class="dropdown" id="events-status-dropdown" x-data="dropdown()">
+  <button type="button"
+          id="events-status-filter"
+          class="select-btn filter-dropdown-button {% if events_filter_status %}toggle-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    {{ events_filter_status|default:"All Statuses" }}
+    <small>
+      <i class="icon-chevron-down"></i>
+    </small>
+  </button>
+  <ul class="dropdown-menu"
+      x-ref="menu"
+      x-show="open"
+      hx-target="#events-status-dropdown"
+      hx-swap="outerHTML">
+    <li>
+      <a class="dropdown-item {% if not events_filter_status %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-status-all' %}">All Statuses</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if events_filter_status == 'Pending' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-status' 'Pending' %}">Pending</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if events_filter_status == 'Complete' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-status' 'Complete' %}">Complete</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if events_filter_status == 'Missed' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-status' 'Missed' %}">Missed</a>
+    </li>
+  </ul>
+</div>

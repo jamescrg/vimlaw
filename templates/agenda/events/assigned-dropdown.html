@@ -1,0 +1,36 @@
+<div class="dropdown" id="events-assigned-dropdown" x-data="dropdown()">
+  <button type="button"
+          id="events-assigned-filter"
+          class="select-btn filter-dropdown-button {% if events_filter_assigned %}toggle-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    {{ events_filter_assigned|default:"All Assignees" }}
+    <small>
+      <i class="icon-chevron-down"></i>
+    </small>
+  </button>
+  <ul class="dropdown-menu"
+      x-ref="menu"
+      x-show="open"
+      hx-target="#events-assigned-dropdown"
+      hx-swap="outerHTML">
+    <li>
+      <a class="dropdown-item {% if not events_filter_assigned_value %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-assigned-all' %}">All Assignees</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if events_filter_assigned_value == 'unassigned' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-assigned' 'unassigned' %}">Firm</a>
+    </li>
+    {% for user in users %}
+      <li>
+        <a class="dropdown-item {% if events_filter_assigned_value == user.id|stringformat:'d' %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'agenda:events-filter-assigned' user.id %}">{{ user.get_short_name|default:user.username }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
