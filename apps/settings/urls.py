@@ -5,6 +5,7 @@ import apps.settings.company.views as company_urls
 import apps.settings.contacts.views as contact_urls
 import apps.settings.integrations.views as integration_urls
 import apps.settings.matters.views as matter_urls
+import apps.settings.notifications.views as notification_urls
 import apps.settings.profile.views as profile_urls
 import apps.settings.session.views as session_urls
 import apps.settings.users.views as user_urls
@@ -53,6 +54,27 @@ urlpatterns = [
         "settings/users/add/",
         user_urls.add_user,
         name="add-user",
+    ),
+    # Notifications
+    path(
+        "settings/notifications/",
+        notification_urls.notifications_index,
+        name="notifications-index",
+    ),
+    path(
+        "settings/notifications/toggle-digest/",
+        notification_urls.toggle_digest,
+        name="toggle-digest",
+    ),
+    path(
+        "settings/notifications/toggle-weekends/",
+        notification_urls.toggle_weekends,
+        name="toggle-weekends",
+    ),
+    path(
+        "settings/notifications/send-test/",
+        notification_urls.send_test_digest,
+        name="send-test-digest",
     ),
     # Profile
     path("settings/profile/", profile_urls.profile_index, name="profile-index"),

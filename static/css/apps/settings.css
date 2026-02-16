@@ -110,6 +110,28 @@ Settings Contacts - Two Column Layout
   padding: 0.5rem 1.25rem;
 }
 
+/* Notifications */
+.notifications-list {
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  width: 30rem;
+}
+
+.notifications-item {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+}
+
+.notifications-item:not(:last-child) {
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.notifications-item .btn {
+  padding: 0.5rem 1.25rem;
+}
+
 /* Users Table */
 .users-table {
   min-width: 62rem;

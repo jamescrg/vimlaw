@@ -1,0 +1,44 @@
+<div id="notification-preferences" class="notifications-list">
+  <div class="notifications-item">
+    <span>Daily Digest Email</span>
+    {% if user.digest_enabled %}
+      <button class="btn btn-danger"
+              hx-post="{% url 'settings:toggle-digest' %}"
+              hx-target="#notification-preferences"
+              hx-swap="outerHTML">Disable</button>
+    {% else %}
+      <button class="btn btn-success"
+              hx-post="{% url 'settings:toggle-digest' %}"
+              hx-target="#notification-preferences"
+              hx-swap="outerHTML">Enable</button>
+    {% endif %}
+  </div>
+  {% if user.digest_enabled %}
+    <div class="notifications-item">
+      <span>Include Weekends</span>
+      {% if user.digest_include_weekends %}
+        <button class="btn btn-danger"
+                hx-post="{% url 'settings:toggle-weekends' %}"
+                hx-target="#notification-preferences"
+                hx-swap="outerHTML">7 Days (Disable)</button>
+      {% else %}
+        <button class="btn btn-success"
+                hx-post="{% url 'settings:toggle-weekends' %}"
+                hx-target="#notification-preferences"
+                hx-swap="outerHTML">Mon&ndash;Fri Only (Enable)</button>
+      {% endif %}
+    </div>
+    <div class="notifications-item">
+      <span>Send Test Email</span>
+      <button class="btn btn-success"
+              hx-post="{% url 'settings:send-test-digest' %}"
+              hx-target="#notification-preferences"
+              hx-swap="outerHTML">Send Test</button>
+    </div>
+    {% if test_message %}
+      <div class="notifications-item">
+        <span class="{% if test_result == 'error' %}error-msg{% else %}success-msg{% endif %}">{{ test_message }}</span>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>

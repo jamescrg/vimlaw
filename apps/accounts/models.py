@@ -19,6 +19,8 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=5, choices=ROLE_OPTIONS, default="USER")
     is_attorney = models.BooleanField(default=True)
     last_dash_check = models.DateField(null=True, blank=True)
+    digest_enabled = models.BooleanField(default=False)
+    digest_include_weekends = models.BooleanField(default=False)
     history = HistoricalRecords()
 
     objects = CustomUserManager()

@@ -39,10 +39,12 @@ repos:
       - id: djlint-django
         language_version: python3.13
         args: [ --profile, django ]
+        exclude: "templates/emails/"
       - id: djlint-reformat-django
         files: "\\.html"
         language_version: python3.13
         args: [ --profile, django ]
+        exclude: "templates/emails/"
 
   - repo: local
     hooks:

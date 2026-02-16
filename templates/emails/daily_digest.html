@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Digest</title>
+  </head>
+  <body style="margin: 0;
+               padding: 0;
+               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td>
+          <table role="presentation"
+                 width="100%"
+                 cellpadding="0"
+                 cellspacing="0"
+                 style="background-color: #fafaf9">
+            <!-- Header -->
+            <tr>
+              <td style="background-color: #eeeeec; color: #57534e; padding: 24px 32px">
+                <h1 style="margin: 0; font-size: 20px; font-weight: 600;">Daily Digest</h1>
+                <p style="margin: 4px 0 0; font-size: 14px; color: #78716c;">{{ today|date:"l, F j, Y" }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 24px 32px;">
+                <p style="margin: 0 0 20px; font-size: 14px; color: #57534e;">
+                  Hi {{ user.first_name|default:user.username }}, here's your schedule summary.
+                </p>
+                {% if overdue_events or overdue_tasks %}
+                  <!-- Overdue Section -->
+                  <table role="presentation"
+                         width="100%"
+                         cellpadding="0"
+                         cellspacing="0"
+                         style="margin-bottom: 24px">
+                    <tr>
+                      <td style="background-color: #ffedd5;
+                                 border-left: 4px solid #9a3412;
+                                 border-radius: 4px;
+                                 padding: 16px">
+                        <h2 style="margin: 0 0 12px; font-size: 16px; color: #9a3412;">Overdue</h2>
+                        {% for event in overdue_events %}
+                          <table role="presentation"
+                                 width="100%"
+                                 cellpadding="0"
+                                 cellspacing="0"
+                                 style="margin-bottom: 8px">
+                            <tr>
+                              <td style="font-size: 13px; color: #44403c; padding: 4px 0;">
+                                <span style="color: #9a3412; font-weight: 600;">{{ event.date|date:"M j" }}</span>
+                                {% if event.start_time %}<span style="color: #a8a29e;">{{ event.start_time|time:"g:i A" }}</span>{% endif %}
+                                &mdash; {{ event.description }}
+                                {% if event.matter %}<span style="color: #78716c; font-size: 12px;">({{ event.matter.name }})</span>{% endif %}
+                              </td>
+                            </tr>
+                          </table>
+                        {% endfor %}
+                        {% for task in overdue_tasks %}
+                          <table role="presentation"
+                                 width="100%"
+                                 cellpadding="0"
+                                 cellspacing="0"
+                                 style="margin-bottom: 8px">
+                            <tr>
+                              <td style="font-size: 13px; color: #44403c; padding: 4px 0;">
+                                <span style="color: #9a3412; font-weight: 600;">{{ task.date_due|date:"M j" }}</span>
+                                &mdash; {{ task.description }}
+                                {% if task.matter %}<span style="color: #78716c; font-size: 12px;">({{ task.matter.name }})</span>{% endif %}
+                              </td>
+                            </tr>
+                          </table>
+                        {% endfor %}
+                      </td>
+                    </tr>
+                  </table>
+                {% endif %}
+                {% if today_events or today_tasks %}
+                  <!-- Today Section -->
+                  <table role="presentation"
+                         width="100%"
+                         cellpadding="0"
+                         cellspacing="0"
+                         style="margin-bottom: 24px">
+                    <tr>
+                      <td style="border-left: 4px solid #5b21b6;
+                                 border-radius: 4px;
+                                 padding: 16px;
+                                 background-color: #ede9fe">
+                        <h2 style="margin: 0 0 12px; font-size: 16px; color: #5b21b6;">Today</h2>
+                        {% for event in today_events %}
+                          <table role="presentation"
+                                 width="100%"
+                                 cellpadding="0"
+                                 cellspacing="0"
+                                 style="margin-bottom: 8px">
+                            <tr>
+                              <td style="font-size: 13px; color: #44403c; padding: 4px 0;">
+                                {% if event.start_time %}
+                                  <span style="font-weight: 600;">{{ event.start_time|time:"g:i A" }}
+                                    {% if event.end_time %}&ndash; {{ event.end_time|time:"g:i A" }}{% endif %}
+                                  </span> &mdash;
+                                {% endif %}
+                                {{ event.description }}
+                                {% if event.location %}<span style="color: #78716c; font-size: 12px;">({{ event.location }})</span>{% endif %}
+                                {% if event.matter %}<span style="color: #78716c; font-size: 12px;">&bull; {{ event.matter.name }}</span>{% endif %}
+                              </td>
+                            </tr>
+                          </table>
+                        {% endfor %}
+                        {% for task in today_tasks %}
+                          <table role="presentation"
+                                 width="100%"
+                                 cellpadding="0"
+                                 cellspacing="0"
+                                 style="margin-bottom: 8px">
+                            <tr>
+                              <td style="font-size: 13px; color: #44403c; padding: 4px 0;">
+                                <span style="display: inline-block;
+                                             width: 8px;
+                                             height: 8px;
+                                             border-radius: 50%;
+                                             background-color: {% if task.priority == 3 %}#9a3412{% elif task.priority == 2 %}#a8a29e{% else %}#4d7c0f{% endif %};
+                                             margin-right: 6px;
+                                             vertical-align: middle"></span>
+                                {{ task.description }}
+                                {% if task.matter %}<span style="color: #78716c; font-size: 12px;">({{ task.matter.name }})</span>{% endif %}
+                              </td>
+                            </tr>
+                          </table>
+                        {% endfor %}
+                      </td>
+                    </tr>
+                  </table>
+                {% endif %}
+                {% if upcoming_events or upcoming_tasks %}
+                  <!-- Upcoming Section -->
+                  <table role="presentation"
+                         width="100%"
+                         cellpadding="0"
+                         cellspacing="0"
+                         style="margin-bottom: 24px">
+                    <tr>
+                      <td style="border-left: 4px solid #3f6212;
+                                 border-radius: 4px;
+                                 padding: 16px;
+                                 background-color: #ecfccb">
+                        <h2 style="margin: 0 0 12px; font-size: 16px; color: #3f6212;">Next {{ lookahead_days }} Days</h2>
+                        {% for event in upcoming_events %}
+                          <table role="presentation"
+                                 width="100%"
+                                 cellpadding="0"
+                                 cellspacing="0"
+                                 style="margin-bottom: 8px">
+                            <tr>
+                              <td style="font-size: 13px; color: #44403c; padding: 4px 0;">
+                                <span style="font-weight: 600;">{{ event.date|date:"D, M j" }}</span>
+                                {% if event.start_time %}<span style="color: #a8a29e;">{{ event.start_time|time:"g:i A" }}</span>{% endif %}
+                                &mdash; {{ event.description }}
+                                {% if event.matter %}<span style="color: #78716c; font-size: 12px;">({{ event.matter.name }})</span>{% endif %}
+                              </td>
+                            </tr>
+                          </table>
+                        {% endfor %}
+                        {% for task in upcoming_tasks %}
+                          <table role="presentation"
+                                 width="100%"
+                                 cellpadding="0"
+                                 cellspacing="0"
+                                 style="margin-bottom: 8px">
+                            <tr>
+                              <td style="font-size: 13px; color: #44403c; padding: 4px 0;">
+                                <span style="font-weight: 600;">{{ task.date_due|date:"D, M j" }}</span>
+                                &mdash; {{ task.description }}
+                                {% if task.matter %}<span style="color: #78716c; font-size: 12px;">({{ task.matter.name }})</span>{% endif %}
+                              </td>
+                            </tr>
+                          </table>
+                        {% endfor %}
+                      </td>
+                    </tr>
+                  </table>
+                {% endif %}
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="padding: 16px 32px;
+                         background-color: #eeeeec;
+                         border-top: 1px solid #e7e5e4">
+                <p style="margin: 0; font-size: 12px; color: #a8a29e;">
+                  You can manage your digest preferences in Settings &gt; Notifications.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
