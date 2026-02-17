@@ -8,7 +8,6 @@ Lucide pattern: <i class="icon-icon-name"></i>
 
 import os
 import re
-from pathlib import Path
 
 # Mapping from Bootstrap icon names to Lucide icon names
 # Format: 'bootstrap-name': 'lucide-name'
@@ -195,7 +194,7 @@ def migrate_file(filepath):
 
 def main():
     """Main migration function."""
-    base_dir = str(Path(__file__).resolve().parent.parent)
+    base_dir = "/home/james/law"
 
     # Directories to process
     dirs_to_process = [

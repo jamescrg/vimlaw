@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "apps.case",
     "apps.folders",
     "apps.intakes",
+    "apps.lab",
     "apps.matters",
     "apps.search",
     "apps.settings",
