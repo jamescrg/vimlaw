@@ -39,6 +39,40 @@ Profile Form
 }
 
 /* ==========================================================================
+Company Form
+========================================================================== */
+
+.company-form #id_name,
+.company-form #id_address_line_1,
+.company-form #id_address_line_2,
+.company-form #id_city,
+.company-form #id_state,
+.company-form #id_zip_code,
+.company-form #id_phone,
+.company-form #id_email {
+  max-width: 18.75rem;
+  width: 100%;
+}
+
+.company-form #id_logo {
+  margin-top: 1rem;
+  max-width: 18.75rem;
+  padding: 0;
+  width: 100%;
+}
+
+.company-logo-preview {
+  margin-bottom: 1.5rem;
+}
+
+.company-logo-preview img {
+  border-radius: var(--radius-md);
+  height: auto;
+  max-height: 6rem;
+  max-width: 12rem;
+}
+
+/* ==========================================================================
 Miscellaneous
 ========================================================================== */
 

@@ -1,36 +1,34 @@
-<div class="modal-body">
-  <h2>General Info</h2>
-  <hr />
-  <form hx-post="{% url 'settings:personal-profile' 'profile' %}"
-        hx-target="#success-msg-profile"
-        role="form"
-        id="profile-form"
-        class="form-responsive form-spacious profile-form">
-    {% csrf_token %}
-    {{ form }}
-    <br />
-    <div class="flex-center-space">
-      <div>
-        <button type="submit" class="btn btn-success">Update Profile</button>
-        <div class="success-msg" id="success-msg-profile"></div>
-      </div>
+<h2>General Info</h2>
+<hr />
+<form hx-post="{% url 'settings:personal-profile' 'profile' %}"
+      hx-target="#success-msg-profile"
+      role="form"
+      id="profile-form"
+      class="form-responsive form-spacious profile-form">
+  {% csrf_token %}
+  {{ form }}
+  <br />
+  <div class="flex-center-space">
+    <div>
+      <button type="submit" class="btn btn-success">Update Profile</button>
+      <div class="success-msg" id="success-msg-profile"></div>
     </div>
-  </form>
-  <h2>Change Password</h2>
-  <hr />
-  <form hx-post="{% url 'settings:personal-profile' 'password' %}"
-        hx-target="#password"
-        role="form"
-        id="password-form"
-        class="form-responsive form-spacious profile-form">
-    {% csrf_token %}
-    {{ change_password_form }}
-    <br />
-    <div class="flex-center-space">
-      <div>
-        <button type="submit" class="btn btn-success">Change Password</button>
-        <div id="password"></div>
-      </div>
+  </div>
+</form>
+<h2>Change Password</h2>
+<hr />
+<form hx-post="{% url 'settings:personal-profile' 'password' %}"
+      hx-target="#password"
+      role="form"
+      id="password-form"
+      class="form-responsive form-spacious profile-form">
+  {% csrf_token %}
+  {{ change_password_form }}
+  <br />
+  <div class="flex-center-space">
+    <div>
+      <button type="submit" class="btn btn-success">Change Password</button>
+      <div id="password"></div>
     </div>
-  </form>
-</div>
+  </div>
+</form>

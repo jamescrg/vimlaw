@@ -19,6 +19,12 @@ form .errorlist {
   padding: 0;
 }
 
+.help-text {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
 input,
 select,
 textarea {

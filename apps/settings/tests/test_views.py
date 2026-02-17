@@ -163,3 +163,78 @@ def test_password_change_mismatch(client, user):
     response = client.post("/settings/profile/personal/password/", data)
     assert response.status_code == 200
     assert "error" in response.content.decode().lower()
+
+
+# -----------------------------------------------------
+# Company management tests
+# -----------------------------------------------------
+def test_company_index(client):
+    response = client.get("/settings/company/")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "settings/company/index.html")
+
+
+def test_company_index_has_form(client):
+    response = client.get("/settings/company/")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "settings/company/form.html")
+    assert "id_name" in response.content.decode()
+
+
+def test_company_create(client):
+    from apps.settings.models import Company
+
+    data = {
+        "name": "Test Law Firm",
+        "address_line_1": "123 Main St",
+        "city": "Anytown",
+        "state": "MT",
+        "zip_code": "59801",
+        "phone": "406-555-1234",
+        "email": "info@testfirm.com",
+    }
+    response = client.post("/settings/company/", data)
+    assert response.status_code == 200
+    assert "success" in response.content.decode().lower()
+    assert Company.objects.count() == 1
+    company = Company.objects.first()
+    assert company.name == "Test Law Firm"
+    assert company.city == "Anytown"
+
+
+def test_company_update(client):
+    from apps.settings.models import Company
+
+    Company.objects.create(name="Original Firm", city="Missoula")
+    data = {
+        "name": "Updated Firm",
+        "city": "Helena",
+    }
+    response = client.post("/settings/company/", data)
+    assert response.status_code == 200
+    assert "success" in response.content.decode().lower()
+    assert Company.objects.count() == 1
+    company = Company.objects.first()
+    assert company.name == "Updated Firm"
+    assert company.city == "Helena"
+
+
+def test_company_post_returns_partial(client):
+    """POST should return only the form partial, not the full page layout."""
+    data = {"name": "Test Firm"}
+    response = client.post("/settings/company/", data)
+    content = response.content.decode()
+    assert "section-nav" not in content
+    assert "<nav" not in content
+    assert "Company Info" in content
+
+
+def test_company_form_prepopulated(client):
+    from apps.settings.models import Company
+
+    Company.objects.create(name="My Firm", phone="555-0000")
+    response = client.get("/settings/company/")
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "My Firm" in content
+    assert "555-0000" in content
