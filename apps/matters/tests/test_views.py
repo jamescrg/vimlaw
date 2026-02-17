@@ -100,6 +100,14 @@ def test_filter_update(client):
     assert response.context["form"]["practice_area"].value() == "CB"
 
 
+# def test_filter_quick(client):
+# response = client.get("/matters/filter-quick/open")
+# breakpoint()
+# assert response.status_code == 301
+# response = client.get("/matters/")
+# assert all([matter.status == "Open" for matter in response.context["matters"]])
+
+
 def test_filter_order(client):
     response = client.get("/matters/order-by/name")
     assert response.status_code == 204
