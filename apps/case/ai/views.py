@@ -852,6 +852,9 @@ def create_prompt(request, matter_id):
         )
 
     # Build the prompt text with proper markdown formatting
+
+    company = Company.objects.first()
+
     company_name = company.name if company else ""
     prompt_text = f"""## Request Date
 

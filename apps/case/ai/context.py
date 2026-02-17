@@ -433,6 +433,7 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
             role_description = (
                 f"{user.get_full_name()} is a paralegal supporting an attorney"
             )
+        company = Company.objects.first()
         request_info = REQUEST_INFO_TEMPLATE.format(
             request_date=date.today().strftime("%B %d, %Y"),
             user_name=user.get_full_name(),
