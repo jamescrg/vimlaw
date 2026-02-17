@@ -20,40 +20,13 @@ from .models import AbbreviationCode, TimeEntry
 def calculate_rate_for_matter(matter, user):
     """
     Calculate the appropriate rate for a matter and user.
-
-    For Campbell & Brannon (client ID 1792), uses tiered billing:
-    - First 25 hours/month: $175/hr (attorney), $75/hr (paralegal)
-    - After 25 hours/month: $250/hr (attorney), $100/hr (paralegal)
-
-    For other clients, uses matter rate or user rate.
+    Uses matter-specific rate if set, otherwise falls back to user rate.
     """
-    # Special logic for Campbell & Brannon (client ID 1792)
-    if matter.client and matter.client.id == 1792:
-        from django.db.models import Sum
-
-        # Get total hours billed to CB this month
-        today = date.today()
-        cb_hours = (
-            TimeEntry.objects.filter(
-                matter__client__id=1792,
-                date__year=today.year,
-                date__month=today.month,
-            ).aggregate(Sum("hours"))["hours__sum"]
-            or 0
-        )
-
-        # Determine rate based on threshold and user type
-        if cb_hours < 25:
-            return 175 if user.is_attorney else 75
-        else:
-            return 250 if user.is_attorney else 100
-    else:
-        # Standard logic for non-CB clients
-        try:
-            rate = Rate.objects.filter(matter=matter, user=user).get()
-            return rate.matter_rate
-        except ObjectDoesNotExist:
-            return user.user_rate
+    try:
+        rate = Rate.objects.filter(matter=matter, user=user).get()
+        return rate.matter_rate
+    except ObjectDoesNotExist:
+        return user.user_rate
 
 
 @login_required
@@ -123,7 +96,6 @@ def time_filter_matter(request, matter_id):
     new_values = {
         "date_min": "",
         "date_max": "",
-        "firm": None,
         "matter": matter_id,
         "keyword": "",
         "comp": None,
@@ -151,7 +123,6 @@ def time_filter_quick(request, quick_filter):
         "unbilled": {
             "date_min": "",
             "date_max": "",
-            "firm": "Campbell & Brannon",
             "matter": None,
             "keyword": "",
             "comp": None,
@@ -163,7 +134,6 @@ def time_filter_quick(request, quick_filter):
         "today": {
             "date_min": date.today().strftime("%Y-%m-%d"),
             "date_max": date.today().strftime("%Y-%m-%d"),
-            "firm": "Campbell & Brannon",
             "matter": None,
             "keyword": "",
             "comp": None,
@@ -379,7 +349,6 @@ def export_old(request):
     )
 
     entries = TimeEntry.objects.all()
-    entries = entries.filter(matter__firm="Campbell & Brannon")
     entries = entries.exclude(matter__clio_matter_id__isnull=True)
     entries = entries.filter(entered=False)
     entries = entries.order_by("-date", "-id")
@@ -423,7 +392,6 @@ def export_old(request):
         )
 
     entries = ExpenseEntry.objects.all()
-    entries = entries.filter(matter__firm="Campbell & Brannon")
     entries = entries.exclude(matter__clio_matter_id="")
     entries = entries.filter(entered=False)
     entries = entries.order_by("-date", "-id")
@@ -486,13 +454,7 @@ def time_export_to_csv(request, format):
 
 @login_required
 def set_rate(request, matter_id):
-    """
-    AJAX endpoint to get the rate for a matter and return it as plain text
-
-    For Campbell & Brannon (client ID 1792), uses tiered billing:
-    - First 25 hours/month: $175/hr (attorney), $75/hr (paralegal)
-    - After 25 hours/month: $250/hr (attorney), $100/hr (paralegal)
-    """
+    """AJAX endpoint to get the rate for a matter and return it as plain text."""
     try:
         matter = Matter.objects.get(pk=matter_id)
         rate_value = calculate_rate_for_matter(matter, request.user)

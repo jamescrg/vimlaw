@@ -79,20 +79,6 @@
               <td class="money">-${{ interpleader_total|floatformat:2|intcomma }}</td>
             </tr>
           {% endif %}
-          {% if is_cb_client %}
-            <tr>
-              <td>Pre-Payment</td>
-              <td class="text-right">-</td>
-              <td class="text-right">-</td>
-              <td class="money">${{ prepayment|floatformat:2|intcomma }}</td>
-            </tr>
-            <tr class="amount-due-row">
-              <td class="total">Amount Due</td>
-              <td class="text-right total">-</td>
-              <td class="text-right total">-</td>
-              <td class="money total">${{ amount_due|floatformat:2|intcomma }}</td>
-            </tr>
-          {% endif %}
         </table>
       </div>
       <!-- Matters Summary Section -->

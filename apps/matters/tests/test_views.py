@@ -52,7 +52,6 @@ def test_edit_post(client, user, matter):
         "work_status": "New description",
         "status": "Open",
         "date_start": "2020-08-07",
-        "firm": "Craig Legal",
         "practice_area": matter.practice_area.id,
         "client": matter.client.id,
     }
@@ -92,7 +91,6 @@ def test_filter_update(client):
         "status": "Open",
         "date_from": "",
         "date_to": "",
-        "firm": "Campbell & Brannon",
         "order": "name",
         "practice_area": "CB",
     }

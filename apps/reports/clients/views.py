@@ -423,12 +423,6 @@ def client_statement(request):
         if matter["matter"].practice_area == "Interpleader"
     )
 
-    # Campbell & Brannon prepayment logic
-    is_cb_client = client and client.name == "Campbell & Brannon"
-    prepayment = 3500 if is_cb_client else 0
-    total_activity = total_fees + total_expenses
-    amount_due = max(0, total_activity - prepayment) if is_cb_client else 0
-
     context = {
         "app": "reports",
         "subapp": "client-statement",
@@ -441,9 +435,6 @@ def client_statement(request):
         "total_fees": total_fees,
         "total_expenses": total_expenses,
         "interpleader_total": interpleader_total,
-        "is_cb_client": is_cb_client,
-        "prepayment": prepayment,
-        "amount_due": amount_due,
     }
 
     # Return partial template for HTMX requests

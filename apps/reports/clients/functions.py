@@ -136,12 +136,6 @@ def generate_client_statement_pdf(
         if matter["matter"].practice_area == "Interpleader"
     )
 
-    # Campbell & Brannon prepayment logic
-    is_cb_client = client and client.name == "Campbell & Brannon"
-    prepayment = 3500 if is_cb_client else 0
-    total_activity = total_fees + total_expenses
-    amount_due = max(0, total_activity - prepayment) if is_cb_client else 0
-
     context = {
         "client": client,
         "matters_data": matters_data,
@@ -151,9 +145,6 @@ def generate_client_statement_pdf(
         "total_fees": total_fees,
         "total_expenses": total_expenses,
         "interpleader_total": interpleader_total,
-        "is_cb_client": is_cb_client,
-        "prepayment": prepayment,
-        "amount_due": amount_due,
         "date_from": date_from,
         "date_to": date_to,
         "current_date": datetime.now().date(),

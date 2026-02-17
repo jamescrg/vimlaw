@@ -14,7 +14,6 @@ def get_time_data(request):
     default_filter = {
         "date_min": "",
         "date_max": "",
-        "firm": "Campbell & Brannon",
         "matter": None,
         "keyword": "",
         "comp": None,

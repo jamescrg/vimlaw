@@ -17,7 +17,6 @@ class MatterForm(forms.ModelForm):
             "description",
             "work_status",
             "practice_area",
-            "firm",
         )
 
         STATUSES = (
@@ -25,11 +24,6 @@ class MatterForm(forms.ModelForm):
             ("Open", "Open"),
             ("Complete", "Complete"),
             ("Closed", "Closed"),
-        )
-
-        FIRMS = (
-            ("Craig Legal", "Craig Legal"),
-            ("Campbell & Brannon", "Campbell & Brannon"),
         )
 
         widgets = {
@@ -58,9 +52,6 @@ class MatterForm(forms.ModelForm):
                     "class": "span2",
                 }
             ),
-            "firm": forms.Select(
-                choices=FIRMS,
-            ),
             "date_start": forms.DateInput(attrs={"type": "date"}),
         }
 
@@ -79,7 +70,3 @@ class MatterForm(forms.ModelForm):
         self.fields["practice_area"].queryset = PracticeArea.objects.filter(
             is_active=True
         )
-
-        # Set Craig Legal as default for new matters
-        if not self.instance.pk:
-            self.fields["firm"].initial = "Craig Legal"

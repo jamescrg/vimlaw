@@ -74,7 +74,6 @@ def expenses_filter_quick(request, quick_filter):
         "unbilled": {
             "date_min": "",
             "date_max": "",
-            "firm": "Campbell & Brannon",
             "matter": None,
             "keyword": "",
             "comp": None,
@@ -85,7 +84,6 @@ def expenses_filter_quick(request, quick_filter):
         "today": {
             "date_min": date.today().strftime("%Y-%m-%d"),
             "date_max": date.today().strftime("%Y-%m-%d"),
-            "firm": "Campbell & Brannon",
             "matter": None,
             "keyword": "",
             "comp": None,
