@@ -71,6 +71,69 @@ def test_delete(client, transaction):
 
 
 # -----------------------------------------------------
+# toggle views
+# -----------------------------------------------------
+def test_toggle_entered(client, transaction):
+    assert not transaction.entered
+    # Default session is summary view
+    response = client.get(f"/invoicing/trust/{transaction.id}/entered")
+    assert response.status_code == 204
+    assert response["HX-Trigger"] == "trustChanged"
+    transaction.refresh_from_db()
+    assert transaction.entered
+
+    # Toggle back
+    response = client.get(f"/invoicing/trust/{transaction.id}/entered")
+    assert response.status_code == 204
+    transaction.refresh_from_db()
+    assert not transaction.entered
+
+
+def test_toggle_confirmed(client, transaction):
+    assert not transaction.confirmed
+    # Default session is summary view
+    response = client.get(f"/invoicing/trust/{transaction.id}/confirmed")
+    assert response.status_code == 204
+    assert response["HX-Trigger"] == "trustChanged"
+    transaction.refresh_from_db()
+    assert transaction.confirmed
+
+    # Toggle back
+    response = client.get(f"/invoicing/trust/{transaction.id}/confirmed")
+    assert response.status_code == 204
+    transaction.refresh_from_db()
+    assert not transaction.confirmed
+
+
+def test_toggle_entered_triggers_history_view(client, transaction):
+    session = client.session
+    session["trust_view"] = "history"
+    session.save()
+    response = client.get(f"/invoicing/trust/{transaction.id}/entered")
+    assert response.status_code == 204
+    assert response["HX-Trigger"] == "trustHistoryChanged"
+
+
+def test_toggle_confirmed_triggers_client_view(client, transaction):
+    session = client.session
+    session["trust_view"] = "client"
+    session.save()
+    response = client.get(f"/invoicing/trust/{transaction.id}/confirmed")
+    assert response.status_code == 204
+    assert response["HX-Trigger"] == "trustClientChanged"
+
+
+def test_toggle_entered_nonexistent(client):
+    response = client.get("/invoicing/trust/99999/entered")
+    assert response.status_code == 404
+
+
+def test_toggle_confirmed_nonexistent(client):
+    response = client.get("/invoicing/trust/99999/confirmed")
+    assert response.status_code == 404
+
+
+# -----------------------------------------------------
 # edge case tests - nonexistent records
 # -----------------------------------------------------
 def test_edit_nonexistent(client):

@@ -256,6 +256,8 @@ def toggle_entered(request, id):
         return HttpResponse(status=204, headers={"HX-Trigger": "trustHistoryChanged"})
     elif trust_view == "client":
         return HttpResponse(status=204, headers={"HX-Trigger": "trustClientChanged"})
+    else:
+        return HttpResponse(status=204, headers={"HX-Trigger": "trustChanged"})
 
 
 @login_required
@@ -273,6 +275,8 @@ def toggle_confirmed(request, id):
         return HttpResponse(status=204, headers={"HX-Trigger": "trustHistoryChanged"})
     elif trust_view == "client":
         return HttpResponse(status=204, headers={"HX-Trigger": "trustClientChanged"})
+    else:
+        return HttpResponse(status=204, headers={"HX-Trigger": "trustChanged"})
 
 
 @login_required
