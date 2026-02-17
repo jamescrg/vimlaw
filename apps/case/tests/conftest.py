@@ -8,6 +8,7 @@ from apps.contacts.models import Contact
 from apps.folders.models import Folder
 from apps.matters.models import Matter, PracticeArea
 from apps.matters.proceedings.models import Proceeding
+from apps.settings.models import Company
 
 
 @pytest.fixture
@@ -26,6 +27,11 @@ def client(user):
     client.login(username="testuser", password="testpass123")
     client.get("/dash/")  # Set daily dash session to avoid redirect
     return client
+
+
+@pytest.fixture(autouse=True)
+def company():
+    return Company.objects.create(name="Test Firm LLC")
 
 
 @pytest.fixture

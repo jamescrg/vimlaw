@@ -46,7 +46,7 @@ def generate_invoice(invoice: Invoice, request: WSGIRequest) -> NamedTemporaryFi
         "company": Company.objects.first(),
     }
 
-    html_string = render_to_string("invoicing/invoices/invoice-craig.html", context)
+    html_string = render_to_string("invoicing/invoices/invoice.html", context)
     base_url = request.build_absolute_uri("/").rstrip("/")
     html = HTML(string=html_string, base_url=base_url)
 

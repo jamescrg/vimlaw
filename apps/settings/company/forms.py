@@ -20,6 +20,7 @@ class CompanyForm(forms.ModelForm):
             "phone",
             "email",
             "logo",
+            "jurisdiction",
         ]
         widgets = {
             "logo": forms.ClearableFileInput(attrs={"accept": ".png,.jpg,.jpeg,.svg"}),

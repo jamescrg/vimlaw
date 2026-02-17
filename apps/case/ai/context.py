@@ -32,6 +32,7 @@ from apps.matters.models import Relationship
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
 from apps.notes.models import Note
+from apps.settings.models import Company
 
 from .models import Conversation
 
@@ -297,7 +298,7 @@ REQUEST_INFO_TEMPLATE = """## Request Date
 - Name: {user_name}
 - Email: {user_email}
 - Role: {role_description}
-- Law Firm: Craig Legal, LLC
+- Law Firm: {firm_name}
 """
 
 MATTER_CONTEXT_TEMPLATE = """
@@ -345,21 +346,27 @@ Items marked [REFERENCE] are background information.
 """
 
 
-def load_legal_prompt() -> str:
+def load_legal_prompt(jurisdiction: str = "") -> str:
     """
     Load the legal AI instructions from docs/ai-prompt.md.
 
     This file is read fresh on each call so edits take effect immediately.
+    If *jurisdiction* is provided, ``[JURISDICTION]`` placeholders are replaced.
     """
     try:
         if LEGAL_PROMPT_FILE.exists():
-            return LEGAL_PROMPT_FILE.read_text(encoding="utf-8")
+            text = LEGAL_PROMPT_FILE.read_text(encoding="utf-8")
         else:
             logger.warning(f"Legal prompt file not found: {LEGAL_PROMPT_FILE}")
             return "You are a legal assistant. Be accurate and cite sources."
     except Exception as e:
         logger.error(f"Error reading legal prompt file: {e}")
         return "You are a legal assistant. Be accurate and cite sources."
+
+    if jurisdiction:
+        text = text.replace("[JURISDICTION]", jurisdiction)
+
+    return text
 
 
 def assemble_matter_context(matter, user=None, conversation=None) -> str:
@@ -416,6 +423,8 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     sections["settlement"] = format_settlement(matter)
 
     # Build the full system prompt
+    company = Company.objects.first()
+
     request_info = ""
     if user:
         if user.is_attorney:
@@ -429,9 +438,15 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
             user_name=user.get_full_name(),
             user_email=user.email,
             role_description=role_description,
+            firm_name=company.name if company else "",
         )
 
-    legal_prompt = load_legal_prompt()
+    jurisdiction = (
+        matter.jurisdiction
+        or (company.jurisdiction if company else "")
+        or "United States common law"
+    )
+    legal_prompt = load_legal_prompt(jurisdiction=jurisdiction)
     matter_context = MATTER_CONTEXT_TEMPLATE.format(matter_name=matter.name, **sections)
 
     return f"{request_info}{legal_prompt}\n\n---\n{matter_context}"

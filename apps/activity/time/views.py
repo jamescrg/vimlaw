@@ -369,14 +369,6 @@ def export_old(request):
     )
 
     for entry in entries:
-        clio_user = ""
-
-        if entry.user.initials == "JC":
-            clio_user = "James Craig"
-
-        if entry.user.initials == "LK":
-            clio_user = "Lexi Krier"
-
         writer.writerow(
             [
                 entry.matter.clio_matter_id,
@@ -386,7 +378,7 @@ def export_old(request):
                 entry.rate,
                 entry.hours,
                 "TimeEntry",
-                clio_user,
+                entry.user.get_full_name(),
                 entry.comp,
             ]
         )
@@ -397,14 +389,6 @@ def export_old(request):
     entries = entries.order_by("-date", "-id")
 
     for entry in entries:
-        clio_user = ""
-
-        if entry.user.initials == "JC":
-            clio_user = "James Craig"
-
-        if entry.user.initials == "LK":
-            clio_user = "Lexi Krier"
-
         writer.writerow(
             [
                 entry.matter.clio_matter_id,
@@ -414,7 +398,7 @@ def export_old(request):
                 entry.amount,
                 "1",
                 "ExpenseEntry",
-                clio_user,
+                entry.user.get_full_name(),
                 entry.comp,
             ]
         )

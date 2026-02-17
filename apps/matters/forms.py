@@ -17,6 +17,7 @@ class MatterForm(forms.ModelForm):
             "description",
             "work_status",
             "practice_area",
+            "jurisdiction",
         )
 
         STATUSES = (
@@ -53,6 +54,11 @@ class MatterForm(forms.ModelForm):
                 }
             ),
             "date_start": forms.DateInput(attrs={"type": "date"}),
+            "jurisdiction": forms.TextInput(
+                attrs={
+                    "class": "span2",
+                }
+            ),
         }
 
         labels = {
