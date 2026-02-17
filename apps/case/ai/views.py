@@ -6,9 +6,7 @@ import logging
 import threading
 import time
 from datetime import date
-from pathlib import Path
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db.models import F, Max
@@ -21,7 +19,7 @@ from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
 from apps.settings.models import Company
 
-from .context import assemble_matter_context
+from .context import assemble_matter_context, load_legal_prompt
 from .filters import ConversationFilter
 from .models import ChatAttachment, Conversation, Message
 from .tasks import process_ai_request, process_chat_attachment_ocr
@@ -789,12 +787,14 @@ def create_prompt(request, matter_id):
     """Generate a prompt stuffing document for external AI chat clients."""
     matter, _ = get_matter_from_url(request, matter_id)
 
-    # Load ai-prompt.md content
-    legal_md_path = Path(settings.BASE_DIR) / "docs" / "ai-prompt.md"
-    try:
-        legal_guidelines = legal_md_path.read_text()
-    except FileNotFoundError:
-        legal_guidelines = "(Guidelines file not found)"
+    # Load ai-prompt.md content with jurisdiction substitution
+    company = Company.objects.first()
+    jurisdiction = (
+        matter.jurisdiction
+        or (company.jurisdiction if company else "")
+        or "United States common law"
+    )
+    legal_guidelines = load_legal_prompt(jurisdiction=jurisdiction)
 
     # Determine user role description
     user = request.user
@@ -852,7 +852,9 @@ def create_prompt(request, matter_id):
         )
 
     # Build the prompt text with proper markdown formatting
+
     company = Company.objects.first()
+
     company_name = company.name if company else ""
     prompt_text = f"""## Request Date
 
@@ -989,11 +991,19 @@ def context_preview(request, matter_id):
 
     matter, _ = get_matter_from_url(request, matter_id)
 
+    # Resolve jurisdiction
+    company = Company.objects.first()
+    jurisdiction = (
+        matter.jurisdiction
+        or (company.jurisdiction if company else "")
+        or "United States common law"
+    )
+
     # Build structured sections for display
     sections = []
 
     # Legal guidelines
-    legal_prompt = load_legal_prompt()
+    legal_prompt = load_legal_prompt(jurisdiction=jurisdiction)
     sections.append(
         {"title": "Legal Guidelines", "content": legal_prompt, "expanded": False}
     )

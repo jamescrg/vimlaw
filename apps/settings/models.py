@@ -13,6 +13,7 @@ class Company(AuditMixin):
     phone = models.CharField(max_length=30, blank=True)
     email = models.EmailField(blank=True)
     logo = models.ImageField(upload_to="company/", blank=True, null=True)
+    jurisdiction = models.CharField(max_length=100, blank=True)
 
     class Meta:
         verbose_name_plural = "companies"

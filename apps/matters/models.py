@@ -30,6 +30,7 @@ class Matter(AuditMixin, models.Model):
     client = models.ForeignKey(
         Contact, related_name="client_matters", on_delete=models.SET_NULL, null=True
     )
+    jurisdiction = models.CharField(max_length=100, blank=True)
     history = HistoricalRecords()
 
     def __str__(self):

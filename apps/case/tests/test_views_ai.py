@@ -73,3 +73,40 @@ class TestAICreatePrompt:
         assert response.status_code == 200
         content = response.content.decode()
         assert "is a paralegal supporting an attorney" in content
+
+    def test_create_prompt_uses_company_jurisdiction(self, client_with_matter, matter):
+        company = Company.objects.first()
+        company.jurisdiction = "Georgia"
+        company.save()
+        matter.jurisdiction = ""
+        matter.save()
+        response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
+        content = response.content.decode()
+        assert "jurisdiction of Georgia" in content
+        assert "[JURISDICTION]" not in content
+
+    def test_create_prompt_matter_jurisdiction_overrides_company(
+        self, client_with_matter, matter
+    ):
+        company = Company.objects.first()
+        company.jurisdiction = "Georgia"
+        company.save()
+        matter.jurisdiction = "Florida"
+        matter.save()
+        response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
+        content = response.content.decode()
+        assert "jurisdiction of Florida" in content
+        assert "jurisdiction of Georgia" not in content
+
+    def test_create_prompt_falls_back_to_us_common_law(
+        self, client_with_matter, matter
+    ):
+        company = Company.objects.first()
+        company.jurisdiction = ""
+        company.save()
+        matter.jurisdiction = ""
+        matter.save()
+        response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
+        content = response.content.decode()
+        assert "United States common law" in content
+        assert "[JURISDICTION]" not in content
