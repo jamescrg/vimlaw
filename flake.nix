@@ -59,6 +59,7 @@
           pre-commit
           ruff
           nodejs
+          uv
         ];
 
         libraryPath = pkgs.lib.makeLibraryPath systemDeps;
@@ -130,25 +131,22 @@
           export PGDATA="$PWD/.postgres-data"
           export PGPORT="''${POSTGRES_PORT:-5433}"
 
-          # Virtual environment setup
-          VENV_DIR="venv"
+          # Virtual environment setup with uv
+          VENV_DIR=".venv"
 
           if [ ! -d "$VENV_DIR" ]; then
-            echo "Creating Python virtual environment..."
-            ${python}/bin/python -m venv "$VENV_DIR"
+            echo "Creating Python virtual environment with uv..."
+            uv venv "$VENV_DIR" --python ${python}/bin/python
           fi
 
           source "$VENV_DIR/bin/activate"
 
-          # Check if requirements need to be installed
-          if [ ! -f "$VENV_DIR/.requirements-installed" ] || [ requirements.txt -nt "$VENV_DIR/.requirements-installed" ]; then
-            echo "Installing Python dependencies..."
-            pip install --upgrade pip setuptools wheel
+          # Check if dependencies need to be synced
+          if [ ! -f "$VENV_DIR/.deps-installed" ] || [ pyproject.toml -nt "$VENV_DIR/.deps-installed" ]; then
+            echo "Syncing Python dependencies with uv..."
+            uv sync
 
-            # Install all requirements
-            pip install -r requirements.txt
-
-            touch "$VENV_DIR/.requirements-installed"
+            touch "$VENV_DIR/.deps-installed"
             echo "Dependencies installed!"
           fi
 

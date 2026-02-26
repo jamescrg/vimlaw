@@ -3,13 +3,13 @@ version: "0.5"
 processes:
   setup-venv:
     command: |
-      if [ ! -d "venv" ]; then
-        echo "Creating venv..."
-        python -m venv venv
+      if [ ! -d ".venv" ]; then
+        echo "Creating venv with uv..."
+        uv venv .venv
       fi
-      source venv/bin/activate
-      pip install -q --upgrade pip
-      pip install -q -r requirements.txt
+      source .venv/bin/activate
+      echo "Syncing dependencies with uv..."
+      uv sync --quiet
       echo "Python environment ready"
     availability:
       restart: "no"
@@ -56,7 +56,7 @@ processes:
 
   django:
     command: |
-      source venv/bin/activate
+      source .venv/bin/activate
       python manage.py runserver
     depends_on:
       setup-db:

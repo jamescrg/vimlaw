@@ -35,6 +35,7 @@ Make sure to have the following installed on your machine:
 
 - Python 3.10 or higher
 - PostgreSQL
+- [uv](https://docs.astral.sh/uv/)
 
 ### Additional Machine Requirements
 
@@ -79,8 +80,10 @@ To create a virtual environment, navigate to the project root directory
 and run the following command:
 
 ```bash
-python -m venv venv
+uv venv
 ```
+
+This creates a `.venv` directory with the virtual environment.
 
 ______________________________________________________________________
 
@@ -89,13 +92,13 @@ After creating the virtual environment, activate it by running:
 **Windows:**
 
 ```bash
-.\venv\Scripts\activate
+.\.venv\Scripts\activate
 ```
 
 **Linux/MacOS:**
 
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 **NOTE:** We will be installing all dependencies, running migrations,
@@ -105,13 +108,13 @@ the virtual environment is activated.
 
 ### Installing Dependencies
 
-All the project dependencies are listed in the `requirements.txt` file
-located in the project root directory.
+All the project dependencies are defined in `pyproject.toml` located in the
+project root directory.
 
-To install all dependencies, run the following command:
+To install all dependencies (including dev dependencies), run:
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 If any problems occur during the installation of dependencies, please refer to the
@@ -202,7 +205,7 @@ After=network.target
 User=<your_user>
 Group=<your_group>
 WorkingDirectory=/path/to/law
-ExecStart=/path/to/law/venv/bin/python manage.py qcluster
+ExecStart=/path/to/law/.venv/bin/python manage.py qcluster
 Restart=always
 RestartSec=10
 
@@ -242,13 +245,11 @@ to create the superuser.
 If any problems occur during the installation of dependencies, make sure
 to check the following:
 
-- Python version is 3.9 and not 3.10 or higher
-- You are running the command inside the virtual environment created in [Step 2](#virtual-environment)
-- The `requirements.txt` file is located in the project root directory
-- The `requirements.txt` file is not corrupted or missing any dependencies
-- The `pip` command is working correctly
-- The `pip` version is up-to-date
-- The `pip` command is not blocked by any firewall or antivirus software
+- Python version is 3.10 or higher
+- You are running the command inside the virtual environment created in [Virtual Environment](#virtual-environment)
+- The `pyproject.toml` file is located in the project root directory
+- The `uv` command is installed and working correctly (`uv --version`)
+- The `uv` command is not blocked by any firewall or antivirus software
 - The internet connection is stable and working correctly
 
 ### Troubleshoot Running Migrations
