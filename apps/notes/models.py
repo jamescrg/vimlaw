@@ -15,6 +15,7 @@ class Note(AuditMixin, models.Model):
     CATEGORY_CHOICES = [
         ("analysis", "Analysis"),
         ("drafting", "Drafting"),
+        ("guide", "Guide"),
         ("interview", "Interview"),
         ("issue", "Issue"),
         ("note", "Note"),
