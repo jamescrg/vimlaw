@@ -33,8 +33,8 @@ def get_accessible_matters():
 
 
 def get_selected_llm(request):
-    """Get the selected LLM from session, defaulting to gemini-3-pro."""
-    return request.session.get("ai_selected_llm", "gemini-3-pro")
+    """Get the selected LLM from session, defaulting to gemini-pro-latest."""
+    return request.session.get("ai_selected_llm", "gemini-pro-latest")
 
 
 def get_llm_display(llm_key):
@@ -186,15 +186,15 @@ def new_conversation_view(request, matter_id):
     matter, _ = get_matter_from_url(request, matter_id)
 
     # Get LLM from query parameter
-    llm = request.GET.get("llm", "gemini-3-pro")
+    llm = request.GET.get("llm", "gemini-pro-latest")
     if llm not in [
         "claude",
         "claude-opus",
         "gemini-flash",
         "gemini-pro",
-        "gemini-3-pro",
+        "gemini-pro-latest",
     ]:
-        llm = "gemini-3-pro"
+        llm = "gemini-pro-latest"
 
     # Create a dummy conversation object for template (not saved)
     conversation = Conversation(
@@ -252,7 +252,7 @@ def send_message(request, matter_id):
 
     user_message = request.POST.get("message", "").strip()
     conversation_id = request.POST.get("conversation_id")
-    llm = request.POST.get("llm", "gemini-3-pro")
+    llm = request.POST.get("llm", "gemini-pro-latest")
 
     if not user_message:
         return HttpResponse(status=400)
@@ -263,9 +263,9 @@ def send_message(request, matter_id):
         "claude-opus",
         "gemini-flash",
         "gemini-pro",
-        "gemini-3-pro",
+        "gemini-pro-latest",
     ]:
-        llm = "gemini-3-pro"
+        llm = "gemini-pro-latest"
 
     # Get or create conversation
     is_new = False
@@ -767,7 +767,7 @@ def prompt_editor_modal(request, matter_id):
     """Return the rich text prompt editor modal."""
     matter, _ = get_matter_from_url(request, matter_id)
     conversation_id = request.GET.get("conversation_id", "")
-    llm = request.GET.get("llm", "gemini-3-pro")
+    llm = request.GET.get("llm", "gemini-pro-latest")
     initial_text = request.GET.get("text", "")
 
     return render(
@@ -1083,7 +1083,7 @@ def context_preview(request, matter_id):
             "context_limit": 1_000_000,
         },
         {
-            "name": "Gemini 3 Pro",
+            "name": "Gemini Pro (Latest)",
             "input_price": 2.00,
             "cost": (token_estimate / 1_000_000) * 2.00,
             "context_limit": 1_000_000,

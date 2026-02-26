@@ -78,12 +78,12 @@ def process_ai_request(
             logger.info("AI request cancelled for conversation %s", conversation_id)
             return
 
-        if llm in ("gemini-flash", "gemini-pro", "gemini-3-pro"):
+        if llm in ("gemini-flash", "gemini-pro", "gemini-pro-latest"):
             # Use streaming with thought summaries for Gemini
             model_map = {
                 "gemini-flash": "gemini-2.5-flash",
                 "gemini-pro": "gemini-2.5-pro",
-                "gemini-3-pro": "gemini-3-pro-preview",
+                "gemini-pro-latest": "gemini-pro-latest",
             }
             model = model_map[llm]
 
