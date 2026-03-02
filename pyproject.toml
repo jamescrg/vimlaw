@@ -58,6 +58,7 @@ dev = [
     "pytest==8.4.1",
     "pytest-django==4.8.0",
     "pytest-xdist==3.8.0",
+    "pytest-split==0.10.0",
 
     # Code formatting and linting
     "black==24.4.2",
