@@ -63,4 +63,7 @@ jobs:
         run: pre-commit run --all-files
 
       - name: Run tests
-        run: pytest -n auto
+        # --dist=loadscope groups tests by module
+        # --tb=short reduces the traceback output to increase performance
+        # -q reduces output to increase performance
+        run: pytest -n auto --dist=loadscope --tb=short -q
