@@ -11,6 +11,8 @@
       hx-target="#company-tab"
       hx-encoding="multipart/form-data"
       role="form"
+      autocomplete="off"
+      novalidate
       class="form-responsive form-spacious company-form">
   {% csrf_token %}
   {{ form }}
