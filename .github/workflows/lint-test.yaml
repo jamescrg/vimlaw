@@ -25,9 +25,34 @@ env:
   DIGITAL_OCEAN_SECRET_ACCESS_KEY: ${{ secrets.DIGITAL_OCEAN_SECRET_ACCESS_KEY }}
 
 jobs:
-  lint-and-test:
-    name: Linting and Testing
+  lint:
+    name: Lint Code
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        run: uv sync
+
+      - name: Lint code
+        run: pre-commit run --all-files
+
+  test:
+    name: Test (Group ${{ matrix.group }})
+    runs-on: ubuntu-latest
+    needs: lint
+
+    strategy:
+      matrix:
+        group: [1, 2, 3, 4]
+      fail-fast: false
 
     services:
       database:
@@ -59,11 +84,5 @@ jobs:
       - name: Run migrations
         run: python manage.py migrate
 
-      - name: Lint code
-        run: pre-commit run --all-files
-
       - name: Run tests
-        # --dist=loadscope groups tests by module
-        # --tb=short reduces the traceback output to increase performance
-        # -q reduces output to increase performance
-        run: pytest -n auto --dist=loadscope --tb=short -q
+        run: pytest --splits 4 --group ${{ matrix.group }} -n auto --dist=loadscope --tb=short -q
