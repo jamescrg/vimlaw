@@ -29,8 +29,25 @@ class CompanyForm(forms.ModelForm):
             "logo": "PNG, JPG, or SVG. Max 2 MB.",
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        text_fields = [
+            "name",
+            "address_line_1",
+            "address_line_2",
+            "city",
+            "state",
+            "zip_code",
+            "phone",
+            "email",
+            "jurisdiction",
+        ]
+        for field_name in text_fields:
+            self.fields[field_name].widget.attrs["autocomplete"] = "off"
+
     def clean_logo(self):
         logo = self.cleaned_data.get("logo")
+
         if not logo or not hasattr(logo, "content_type"):
             return logo
 
