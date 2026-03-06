@@ -21,7 +21,7 @@
               x-text="cancelText"></button>
       <button type="button"
               class="btn confirm-modal-confirm"
-              :class="isDangerous ? 'btn-danger' : 'btn-primary'"
+              :class="confirmClass || (isDangerous ? 'btn-danger' : 'btn-primary')"
               @click="confirm()"
               x-text="confirmText"></button>
     </div>

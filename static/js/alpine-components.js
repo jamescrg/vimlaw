@@ -222,6 +222,7 @@ document.addEventListener('alpine:init', () => {
     confirmText: 'Confirm',
     cancelText: 'Cancel',
     isDangerous: false,
+    confirmClass: '',
     onConfirm: null,
     onCancel: null,
 
@@ -231,6 +232,7 @@ document.addEventListener('alpine:init', () => {
       this.confirmText = options.confirmText || 'Confirm';
       this.cancelText = options.cancelText || 'Cancel';
       this.isDangerous = options.isDangerous !== false;
+      this.confirmClass = options.confirmClass || '';
       this.onConfirm = options.onConfirm || null;
       this.onCancel = options.onCancel || null;
       this.isOpen = true;
@@ -336,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = triggerEl.dataset.confirmTitle || 'Confirm';
     const confirmText = triggerEl.dataset.confirmText || 'Delete';
     const cancelText = triggerEl.dataset.cancelText || 'Cancel';
+    const confirmStyle = triggerEl.dataset.confirmStyle || 'danger';
 
     // Get Alpine component and show modal
     const component = Alpine.$data(confirmModal);
@@ -344,7 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
       message: message,
       confirmText: confirmText,
       cancelText: cancelText,
-      isDangerous: true,
+      isDangerous: confirmStyle === 'danger',
+      confirmClass: 'btn-' + confirmStyle,
       onConfirm: () => {
         e.detail.issueRequest(true);
       }
