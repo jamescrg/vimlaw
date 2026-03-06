@@ -27,7 +27,8 @@
             <i class="icon-copy"></i>
           </button>
         {% endif %}
-        <a href="{% url 'contacts:toggle-google-sync' id=selected_contact.id %}">
+        <a href="{% url 'contacts:toggle-google-sync' id=selected_contact.id %}"
+           class="btn-icon {% if selected_contact.google_id %}toggle-active{% endif %}">
           {% if selected_contact.google_id %}
             <i class="icon-cloud-off"></i>
           {% else %}
