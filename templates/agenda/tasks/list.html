@@ -5,6 +5,8 @@
               hx-target="#htmx-modal-container">
         <i class="icon-plus"></i>
       </button>
+      {% url 'agenda:tasks-clear-selection' as clear_url %}
+      {% include "selection/toolbar.html" with selected_ids=selected_tasks clear_url=clear_url actions_template="agenda/tasks/bulk-actions.html" %}
       <button type="button"
               class="btn-icon"
               hx-get="{% url 'agenda:tasks-filter' %}"
@@ -107,6 +109,10 @@
   <table class="table tasks-table">
     <thead>
       <tr>
+        <th class="col-select">
+          {% url 'agenda:tasks-select-all' as select_all_url %}
+          {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
+        </th>
         <th class="priority">
           <button class="btn-sort {% if current_order == 'priority' %}active{% endif %}"
                   hx-target="#tasks"
@@ -165,6 +171,10 @@
     <tbody>
       {% for task in objects %}
         <tr>
+          <td class="col-select">
+            {% url 'agenda:tasks-toggle-select' task.id as toggle_url %}
+            {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=task.id selected_ids=selected_tasks %}
+          </td>
           <td class="priority dropdown-cell {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due and task.date_due <= today %}hl-yellow{% endif %}"
               data-label="Priority">{% include "agenda/tasks/priority.html" %}</td>
           <td class="matter {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due and task.date_due <= today %}hl-yellow{% endif %}"
@@ -190,7 +200,7 @@
         </tr>
       {% empty %}
         <tr>
-          <td colspan="6" class="empty-message">No tasks found.</td>
+          <td colspan="7" class="empty-message">No tasks found.</td>
         </tr>
       {% endfor %}
     </tbody>

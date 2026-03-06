@@ -195,6 +195,31 @@ urlpatterns = [
         tasks.tasks_filter_sort,
         name="tasks-filter-sort",
     ),
+    path(
+        "matters/<int:id>/tasks/toggle-select/<int:task_id>",
+        tasks.tasks_toggle_select,
+        name="tasks-toggle-select",
+    ),
+    path(
+        "matters/<int:id>/tasks/select-all",
+        tasks.tasks_select_all,
+        name="tasks-select-all",
+    ),
+    path(
+        "matters/<int:id>/tasks/clear-selection",
+        tasks.tasks_clear_selection,
+        name="tasks-clear-selection",
+    ),
+    path(
+        "matters/<int:id>/tasks/bulk-update",
+        tasks.tasks_bulk_update,
+        name="tasks-bulk-update",
+    ),
+    path(
+        "matters/<int:id>/tasks/bulk-delete",
+        tasks.tasks_bulk_delete,
+        name="tasks-bulk-delete",
+    ),
     # proceedings
     path(
         "matters/<int:id>/proceedings/",

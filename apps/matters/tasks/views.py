@@ -4,13 +4,25 @@ from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_POST
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
-from apps.agenda.tasks.forms import TaskForm
+from apps.agenda.tasks.forms import BulkTasksForm, TaskForm
 from apps.agenda.tasks.models import Task, TaskNote, UserTaskNoteView
 from apps.management.pagination import CustomPaginator
+from apps.management.selection import (
+    all_visible_selected,
+    clear_selected_ids,
+    get_selected_ids,
+    get_session_key,
+    select_all_ids,
+    selection_response,
+    toggle_id,
+)
 from apps.matters.models import Matter
+
+TASKS_TRIGGER = "tasksListChanged"
 
 
 def get_matter_tasks_data(request, matter_id):
@@ -98,10 +110,16 @@ def get_matter_tasks_data(request, matter_id):
     )
     current_order = current_order.lstrip("-")
 
+    # Selection state
+    selected_session_key = get_session_key("selected_tasks", matter_id)
+    selected_tasks = get_selected_ids(request, selected_session_key)
+    visible_ids = [task.id for task in task_list]
+    all_selected = all_visible_selected(selected_tasks, visible_ids)
+
     list_data = {
         "pagination": pagination,
         "session_key": "matter_tasks_pagination",
-        "trigger_key": "tasksListChanged",
+        "trigger_key": TASKS_TRIGGER,
         "objects": task_list,
         "matter": matter,
         "today": today,
@@ -114,6 +132,8 @@ def get_matter_tasks_data(request, matter_id):
         "focus": focus,
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,
         "current_order": current_order,
+        "selected_tasks": selected_tasks,
+        "all_selected": all_selected,
     }
 
     return list_data
@@ -463,4 +483,110 @@ def tasks_filter_sort(request, id, order):
             if tasks_to_update:
                 Task.objects.bulk_update(tasks_to_update, ["custom_order"])
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
+    return HttpResponse(status=204, headers={"HX-Trigger": TASKS_TRIGGER})
+
+
+@login_required
+@require_POST
+def tasks_toggle_select(request, id, task_id):
+    """Toggle selection of a single task."""
+    get_object_or_404(Task, pk=task_id, matter_id=id)
+
+    key = get_session_key("selected_tasks", id)
+    toggle_id(request, key, task_id)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_select_all(request, id):
+    """Toggle select-all for visible tasks."""
+    key = get_session_key("selected_tasks", id)
+
+    visible_ids = [t.id for t in get_matter_tasks_data(request, id)["objects"]]
+    select_all_ids(request, key, visible_ids)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_clear_selection(request, id):
+    """Clear all task selections for this matter."""
+    clear_selected_ids(request, get_session_key("selected_tasks", id))
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+def tasks_bulk_update(request, id):
+    """Bulk update selected tasks."""
+    matter = get_object_or_404(Matter, pk=id)
+
+    key = get_session_key("selected_tasks", id)
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    if request.method == "POST":
+        form = BulkTasksForm(request.POST)
+
+        if form.is_valid():
+            tasks = Task.objects.filter(id__in=selected_tasks, matter=matter)
+            status = form.cleaned_data.get("status")
+            priority = form.cleaned_data.get("priority")
+            date_due = form.cleaned_data.get("date_due")
+            user = form.cleaned_data.get("user")
+            new_matter = form.cleaned_data.get("matter")
+
+            for task in tasks:
+                if status:
+                    task.status = status
+
+                if priority:
+                    task.priority = int(priority)
+
+                if date_due:
+                    task.date_due = date_due
+
+                if user:
+                    task.user = user
+
+                if new_matter:
+                    task.matter = new_matter
+
+                task.save()
+
+            clear_selected_ids(request, key)
+            return selection_response(TASKS_TRIGGER)
+
+        return render(
+            request,
+            "matters/tasks/bulk-update-modal.html",
+            {"form": form, "matter": matter},
+        )
+
+    form = BulkTasksForm()
+    return render(
+        request,
+        "matters/tasks/bulk-update-modal.html",
+        {"form": form, "matter": matter},
+    )
+
+
+@login_required
+@require_POST
+def tasks_bulk_delete(request, id):
+    """Bulk delete selected tasks."""
+    key = get_session_key("selected_tasks", id)
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    Task.objects.filter(id__in=selected_tasks, matter_id=id).delete()
+    clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)

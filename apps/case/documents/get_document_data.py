@@ -1,8 +1,13 @@
 from django.db.models import Count
 
 from apps.case.models import Document, Label
-from apps.case.views import get_matter_from_url, get_session_key
+from apps.case.views import get_matter_from_url
 from apps.management.pagination import CustomPaginator
+from apps.management.selection import (
+    all_visible_selected,
+    get_selected_ids,
+    get_session_key,
+)
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 
@@ -69,13 +74,11 @@ def get_document_data(request, matter_id):
 
     # Use matter-specific key for selected documents
     selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    selected_documents = get_selected_ids(request, selected_session_key)
 
     # Check if all visible documents are selected
     visible_ids = [doc.id for doc in pagination.get_object_list()]
-    all_selected = visible_ids and all(
-        doc_id in selected_documents for doc_id in visible_ids
-    )
+    all_selected = all_visible_selected(selected_documents, visible_ids)
 
     # Get proceedings for the matter (for inline proceeding dropdown)
     proceedings = Proceeding.objects.filter(matter=matter).order_by(

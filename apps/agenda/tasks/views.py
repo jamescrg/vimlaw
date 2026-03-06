@@ -4,14 +4,25 @@ import markdown
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
-from apps.agenda.tasks.forms import TaskForm, TaskNoteForm
+from apps.agenda.tasks.forms import BulkTasksForm, TaskForm, TaskNoteForm
 from apps.agenda.tasks.models import Task, TaskNote, UserTaskNoteView
 from apps.agenda.tasks.services import process_quick_task_description
 from apps.agenda.tasks.tasks import get_list_data
+from apps.management.selection import (
+    clear_selected_ids,
+    get_selected_ids,
+    get_session_key,
+    select_all_ids,
+    selection_response,
+    toggle_id,
+)
 from apps.matters.models import Matter
+
+TASKS_TRIGGER = "tasksListChanged"
 
 
 @login_required
@@ -549,3 +560,91 @@ def tasks_delete_note(request, id):
     if matter_id:
         redirect_url += f"?matter_id={matter_id}"
     return redirect(redirect_url)
+
+
+@login_required
+@require_POST
+def tasks_toggle_select(request, task_id):
+    get_object_or_404(Task, pk=task_id)
+    toggle_id(request, get_session_key("selected_tasks"), task_id)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_select_all(request):
+    visible_ids = [t.id for t in get_list_data(request)["objects"]]
+    select_all_ids(request, get_session_key("selected_tasks"), visible_ids)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_clear_selection(request):
+    clear_selected_ids(request, get_session_key("selected_tasks"))
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+def tasks_bulk_update(request):
+    key = get_session_key("selected_tasks")
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    if request.method == "POST":
+        form = BulkTasksForm(request.POST)
+        if form.is_valid():
+            tasks = Task.objects.filter(id__in=selected_tasks)
+            status = form.cleaned_data.get("status")
+            priority = form.cleaned_data.get("priority")
+            date_due = form.cleaned_data.get("date_due")
+            user = form.cleaned_data.get("user")
+            matter = form.cleaned_data.get("matter")
+
+            for task in tasks:
+                if status:
+                    task.status = status
+
+                if priority:
+                    task.priority = int(priority)
+
+                if date_due:
+                    task.date_due = date_due
+
+                if user:
+                    task.user = user
+
+                if matter:
+                    task.matter = matter
+
+                task.save()
+
+            clear_selected_ids(request, key)
+
+            return selection_response(TASKS_TRIGGER)
+
+        return render(request, "agenda/tasks/bulk-update-modal.html", {"form": form})
+
+    form = BulkTasksForm()
+
+    return render(request, "agenda/tasks/bulk-update-modal.html", {"form": form})
+
+
+@login_required
+@require_POST
+def tasks_bulk_delete(request):
+    key = get_session_key("selected_tasks")
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    Task.objects.filter(id__in=selected_tasks).delete()
+    clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)

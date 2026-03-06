@@ -1,0 +1,26 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Bulk Update Tasks</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted">Leave any field as "No change" to keep existing values.</p>
+      <form id="tasks-bulk-update-form"
+            hx-post="{% url 'matters:tasks-bulk-update' matter.id %}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" form="tasks-bulk-update-form" class="btn btn-success">Apply</button>
+    </div>
+  </div>
+</div>
