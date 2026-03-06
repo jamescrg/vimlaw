@@ -271,6 +271,21 @@ def tasks_filter_quick(request, quick_filter):
     end_of_week = end_of_week.strftime("%Y-%m-%d")
     filter_data = request.session.get("tasks_filter", {})
     quick_filters = {
+        "all": {
+            "filter_label": "all",
+            "status": "Pending",
+            "matter": filter_data.get("matter"),
+            "user": filter_data.get("user"),
+            "order_by": filter_data.get("order_by"),
+        },
+        "unscheduled": {
+            "filter_label": "unscheduled",
+            "status": "Pending",
+            "has_due_date": "false",
+            "matter": filter_data.get("matter"),
+            "user": filter_data.get("user"),
+            "order_by": filter_data.get("order_by"),
+        },
         "today": {
             "filter_label": "today",
             "status": "Pending",
@@ -293,7 +308,9 @@ def tasks_filter_quick(request, quick_filter):
         filter_data[key] = val
     request.session["tasks_filter"] = filter_data
     request.session.modified = True
-    return redirect("agenda:tasks-list")
+
+    context = get_list_data(request)
+    return render(request, "agenda/tasks/list.html", context)
 
 
 @login_required

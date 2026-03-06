@@ -101,6 +101,64 @@
     {% endfor %}
   </ul>
 </div>
+<div class="dropdown" x-data="dropdown()">
+  <button type="button"
+          id="tasks-date-filter"
+          class="select-btn filter-dropdown-button {% if filter_label == 'today' or filter_label == 'week' or filter_label == 'unscheduled' %}toggle-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    <span>
+      <i class="icon-calendar with-text"></i>
+      {% if filter_label == "today" %}
+        Today
+      {% elif filter_label == "week" %}
+        This Week
+      {% elif filter_label == "unscheduled" %}
+        Unscheduled
+      {% else %}
+        All Tasks
+      {% endif %}
+    </span>
+    <small>
+      <i class="icon-chevron-down"></i>
+    </small>
+  </button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open">
+    <li>
+      <a class="dropdown-item {% if not filter_label or filter_label == 'all' or filter_label == 'default' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:tasks-filter-quick' 'all' %}"
+         hx-target="#tasks">
+        <i class="icon-calendar"></i> All Tasks
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if filter_label == 'unscheduled' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:tasks-filter-quick' 'unscheduled' %}"
+         hx-target="#tasks">
+        <i class="icon-calendar"></i> Unscheduled
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if filter_label == 'today' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:tasks-filter-quick' 'today' %}"
+         hx-target="#tasks">
+        <i class="icon-calendar"></i> Today
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if filter_label == 'week' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:tasks-filter-quick' 'week' %}"
+         hx-target="#tasks">
+        <i class="icon-calendar"></i> This Week
+      </a>
+    </li>
+  </ul>
+</div>
 </div>
 </div>
 </div>

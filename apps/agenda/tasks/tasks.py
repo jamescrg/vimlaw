@@ -125,6 +125,7 @@ def get_list_data(request):
         "selected_matter": selected_matter.name if selected_matter else "",
         "selected_user": selected_user.username.capitalize() if selected_user else "",
         "selected_priority": f"Priority {priority_value}" if priority_value else "",
+        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
         "current_order": current_order,
         "selected_tasks": selected_tasks,
         "all_selected": all_selected,
