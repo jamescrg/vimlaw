@@ -103,6 +103,10 @@ Codes Table Action Icons
   color: var(--color-primary);
 }
 
+.codes-table .delete-icon {
+  color: var(--urgent);
+}
+
 /* .codes-table .code-column { */
 
 /*   text-align: left; */
