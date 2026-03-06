@@ -1,0 +1,21 @@
+{% if selected_ids %}
+  <div class="dropdown" x-data="dropdown()">
+    <button type="button"
+            class="btn-icon toggle-active"
+            x-ref="button"
+            @click="toggle()"
+            :aria-expanded="open">
+      Actions ({{ selected_ids|length }})
+      <small><i class="icon-chevron-down"></i></small>
+    </button>
+    <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+      {% include actions_template %}
+    </ul>
+  </div>
+  <button type="button"
+          class="btn-icon toggle-active"
+          hx-post="{{ clear_url }}"
+          hx-swap="none">
+    <i class="icon-x"></i> Clear
+  </button>
+{% endif %}

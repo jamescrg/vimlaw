@@ -1,0 +1,17 @@
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-get="{% url 'matters:tasks-bulk-update' matter.id %}"
+     hx-target="#htmx-modal-container">
+    <i class="icon-pencil"></i> Update Selected...
+  </a>
+</li>
+<li>
+  <a class="dropdown-item text-danger"
+     href="#"
+     hx-post="{% url 'matters:tasks-bulk-delete' matter.id %}"
+     hx-confirm="Delete {{ selected_ids|length }} selected task(s)? This cannot be undone."
+     hx-swap="none">
+    <i class="icon-trash-2"></i> Delete Selected
+  </a>
+</li>

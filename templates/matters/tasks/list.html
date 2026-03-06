@@ -5,6 +5,8 @@
               hx-target="#htmx-modal-container">
         <i class="icon-plus"></i>
       </button>
+      {% url 'matters:tasks-clear-selection' matter.id as clear_url %}
+      {% include "selection/toolbar.html" with selected_ids=selected_tasks clear_url=clear_url actions_template="matters/tasks/bulk-actions.html" %}
       <button type="button"
               class="btn-icon"
               hx-get="{% url 'matters:tasks-filter' matter.id %}"
@@ -110,6 +112,10 @@
   <table class="table tasks-table">
     <thead>
       <tr>
+        <th class="col-select">
+          {% url 'matters:tasks-select-all' matter.id as select_all_url %}
+          {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
+        </th>
         <th class="priority">
           <button class="btn-sort {% if current_order == 'priority' %}active{% endif %}"
                   hx-target="#matterTasks"
@@ -168,6 +174,10 @@
     <tbody>
       {% for task in objects %}
         <tr>
+          <td class="col-select">
+            {% url 'matters:tasks-toggle-select' matter.id task.id as toggle_url %}
+            {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=task.id selected_ids=selected_tasks %}
+          </td>
           <td class="priority dropdown-cell {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due and task.date_due <= today %}hl-yellow{% endif %}"
               data-label="Priority">{% include "matters/tasks/priority.html" %}</td>
           <td class="matter {% if task.status == 'Complete' %}complete{% endif %} {% if task.date_due and task.date_due <= today %}hl-yellow{% endif %}"
@@ -195,7 +205,7 @@
         </tr>
       {% empty %}
         <tr>
-          <td colspan="6" class="empty-message">No tasks found for this matter.</td>
+          <td colspan="7" class="empty-message">No tasks found for this matter.</td>
         </tr>
       {% endfor %}
     </tbody>

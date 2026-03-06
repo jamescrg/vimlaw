@@ -9,7 +9,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.case.models import Document, Label
-from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
+from apps.case.views import get_matter_from_url, set_last_tab
+from apps.management.selection import (
+    clear_selected_ids,
+    get_selected_ids,
+    get_session_key,
+    select_all_ids,
+    selection_response,
+    toggle_id,
+)
 
 from .filters import FilesFilter
 from .forms import BulkFilesForm, FilesForm
@@ -476,8 +484,9 @@ def documents_edit(request, document_id):
 @login_required
 def bulk_documents_update(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+
+    key = get_session_key("selected_documents", matter_id)
+    selected_documents = get_selected_ids(request, key)
 
     if not selected_documents:
         return HttpResponse(status=400, content="No documents selected.")
@@ -494,17 +503,15 @@ def bulk_documents_update(request, matter_id):
             for document in documents:
                 if proceeding:
                     document.proceeding = proceeding
+
                 if labels:
                     document.labels.set(labels)
 
                 document.save()
 
-            request.session[selected_session_key] = []
+            clear_selected_ids(request, key)
 
-            return HttpResponse(
-                status=204,
-                headers={"HX-Trigger": "documentsChanged"},
-            )
+            return selection_response("documentsChanged")
 
         return render(
             request,
@@ -529,11 +536,9 @@ def documents_delete(request, document_id):
         document.delete()
 
         # Clean up from selected documents
-        selected_session_key = get_session_key("selected_documents", matter_id)
-        selected_documents = request.session.get(selected_session_key, [])
-        if document_id in selected_documents:
-            selected_documents.remove(document_id)
-            request.session[selected_session_key] = selected_documents
+        key = get_session_key("selected_documents", matter_id)
+        if document_id in get_selected_ids(request, key):
+            toggle_id(request, key, document_id)
     except Document.DoesNotExist:
         return HttpResponse(status=404)
 
@@ -615,28 +620,20 @@ def get_proceedings_and_labels(request, matter_id):
 @login_required
 @require_POST
 def toggle_document_select(request, matter_id, document_id):
-    """Toggle selection of a single document."""
     # Validate document exists and belongs to matter
     get_object_or_404(Document, id=document_id, matter_id=matter_id)
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    key = get_session_key("selected_documents", matter_id)
 
-    if document_id in selected_documents:
-        selected_documents.remove(document_id)
-    else:
-        selected_documents.append(document_id)
+    toggle_id(request, key, document_id)
 
-    request.session[selected_session_key] = selected_documents
-
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    return selection_response("documentsChanged")
 
 
 @login_required
 def clear_document_selection(request, matter_id):
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    request.session[selected_session_key] = []
+    clear_selected_ids(request, get_session_key("selected_documents", matter_id))
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    return selection_response("documentsChanged")
 
 
 @login_required
@@ -644,8 +641,9 @@ def document_row(request, document_id):
     """Return a single file row (for HTMX polling of OCR status)."""
     document = get_object_or_404(Document, id=document_id)
     matter_id = document.matter_id
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    selected_documents = get_selected_ids(
+        request, get_session_key("selected_documents", matter_id)
+    )
     matter = document.matter
     proceedings = matter.proceeding_set.all().order_by("forum", "case_number")
 
@@ -666,13 +664,14 @@ def documents_edit_name(request, document_id):
     """Edit file name inline."""
     document = get_object_or_404(Document, id=document_id)
     matter_id = document.matter_id
-    selected_session_key = get_session_key("selected_documents", matter_id)
 
     if request.method == "POST":
         document.name = request.POST.get("name", document.name)
         document.save()
 
-        selected_documents = request.session.get(selected_session_key, [])
+        selected_documents = get_selected_ids(
+            request, get_session_key("selected_documents", matter_id)
+        )
         proceedings = document.matter.proceeding_set.all().order_by(
             "forum", "case_number"
         )
@@ -867,82 +866,61 @@ def documents_toggle_ai(request, document_id):
 @require_POST
 def select_all_documents(request, matter_id):
     """Toggle select-all for documents."""
-    matter, _ = get_matter_from_url(request, matter_id)
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    key = get_session_key("selected_documents", matter_id)
 
-    # Get all visible document IDs (respecting current filters)
-    documents_data = get_document_data(request, matter_id)
-    visible_ids = [doc.id for doc in documents_data["objects"]]
+    visible_ids = [doc.id for doc in get_document_data(request, matter_id)["objects"]]
+    select_all_ids(request, key, visible_ids)
 
-    # If all visible are selected, deselect all; otherwise select all visible
-    all_selected = visible_ids and all(
-        doc_id in selected_documents for doc_id in visible_ids
-    )
-
-    if all_selected:
-        # Deselect all
-        request.session[selected_session_key] = []
-    else:
-        # Select all visible (merge with existing selection)
-        new_selection = list(set(selected_documents + visible_ids))
-        request.session[selected_session_key] = new_selection
-
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    return selection_response("documentsChanged")
 
 
 @login_required
 @require_POST
 def bulk_documents_ai(request, matter_id, action):
     """Bulk add/remove documents from AI context."""
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    key = get_session_key("selected_documents", matter_id)
+    selected_documents = get_selected_ids(request, key)
 
     if not selected_documents:
         return HttpResponse(status=400, content="No documents selected.")
 
-    include_in_ai = action == "add"
     Document.objects.filter(id__in=selected_documents).update(
-        include_in_ai=include_in_ai
+        include_in_ai=action == "add"
     )
 
-    # Clear selection after action
-    request.session[selected_session_key] = []
-
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    clear_selected_ids(request, key)
+    return selection_response("documentsChanged")
 
 
 @login_required
 @require_POST
 def bulk_documents_delete(request, matter_id):
     """Bulk delete selected documents."""
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    key = get_session_key("selected_documents", matter_id)
+    selected_documents = get_selected_ids(request, key)
 
     if not selected_documents:
         return HttpResponse(status=400, content="No documents selected.")
 
     Document.objects.filter(id__in=selected_documents).delete()
+    clear_selected_ids(request, key)
 
-    # Clear selection
-    request.session[selected_session_key] = []
-
-    return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+    return selection_response("documentsChanged")
 
 
 @login_required
 def bulk_documents_category(request, matter_id):
     """Show modal to select category for bulk move."""
     matter, _ = get_matter_from_url(request, matter_id)
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    key = get_session_key("selected_documents", matter_id)
+    selected_documents = get_selected_ids(request, key)
 
     if request.method == "POST":
         category = request.POST.get("category")
         if category:
             Document.objects.filter(id__in=selected_documents).update(category=category)
-            request.session[selected_session_key] = []
-            return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+            clear_selected_ids(request, key)
+            return selection_response("documentsChanged")
 
         return HttpResponse(status=400, content="No category selected.")
 
@@ -971,11 +949,12 @@ def bulk_documents_matter(request, matter_id):
     from apps.matters.models import Matter
 
     matter, matters = get_matter_from_url(request, matter_id)
-    selected_session_key = get_session_key("selected_documents", matter_id)
-    selected_documents = request.session.get(selected_session_key, [])
+    key = get_session_key("selected_documents", matter_id)
+    selected_documents = get_selected_ids(request, key)
 
     if request.method == "POST":
         target_matter_id = request.POST.get("matter")
+
         if target_matter_id:
             target_matter = get_object_or_404(Matter, id=target_matter_id)
 
@@ -1004,8 +983,8 @@ def bulk_documents_matter(request, matter_id):
                     except Exception:
                         pass  # File move failed, but document is still moved
 
-            request.session[selected_session_key] = []
-            return HttpResponse(status=204, headers={"HX-Trigger": "documentsChanged"})
+            clear_selected_ids(request, key)
+            return selection_response("documentsChanged")
 
         return HttpResponse(status=400, content="No matter selected.")
 

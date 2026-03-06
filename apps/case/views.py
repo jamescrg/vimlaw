@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 
+from apps.management.selection import get_session_key
 from apps.matters.models import Matter
 
 # Valid tabs for the case app
@@ -254,8 +255,3 @@ def get_matter_from_url(request, matter_id):
     request.session["last_viewed_matter"] = matter.id
 
     return matter, matters
-
-
-def get_session_key(base_key, matter_id):
-    """Generate a matter-specific session key."""
-    return f"{base_key}_{matter_id}"

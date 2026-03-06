@@ -1,3 +1,17 @@
+/* ==========================================================================
+ Tasks Table
+========================================================================== */
+
+#tasks th.col-select,
+#tasks td.col-select,
+#matterTasks th.col-select,
+#matterTasks td.col-select {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  vertical-align: middle;
+  width: 2.5rem;
+}
 
 /* ==========================================================================
  Shared Agenda Styles

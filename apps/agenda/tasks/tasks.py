@@ -4,6 +4,11 @@ from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
 from apps.agenda.tasks.models import TaskNote, UserTaskNoteView
 from apps.management.pagination import CustomPaginator
+from apps.management.selection import (
+    all_visible_selected,
+    get_selected_ids,
+    get_session_key,
+)
 from apps.matters.models import Matter
 
 
@@ -97,6 +102,12 @@ def get_list_data(request):
     )
     current_order = current_order.lstrip("-")
 
+    # Selection state
+    selected_session_key = get_session_key("selected_tasks")
+    selected_tasks = get_selected_ids(request, selected_session_key)
+    visible_ids = [task.id for task in task_list]
+    all_selected = all_visible_selected(selected_tasks, visible_ids)
+
     list_data = {
         "pagination": pagination,
         "session_key": "tasks_pagination",
@@ -115,6 +126,8 @@ def get_list_data(request):
         "selected_user": selected_user.username.capitalize() if selected_user else "",
         "selected_priority": f"Priority {priority_value}" if priority_value else "",
         "current_order": current_order,
+        "selected_tasks": selected_tasks,
+        "all_selected": all_selected,
     }
 
     return list_data

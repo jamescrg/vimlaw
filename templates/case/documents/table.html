@@ -12,12 +12,8 @@
     </colgroup>
     <tr>
       <th class="col-select">
-        <button class="btn-check"
-                hx-post="{% url 'case:documents-select-all' matter.id %}"
-                hx-swap="none"
-                title="Select all">
-          <i class="icon-square{% if all_selected %}-check{% endif %}"></i>
-        </button>
+        {% url 'case:documents-select-all' matter.id as select_all_url %}
+        {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
       </th>
       <th class="col-category">Category</th>
       <th class="col-document">

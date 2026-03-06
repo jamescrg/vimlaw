@@ -1,12 +1,13 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
+from apps.accounts.models import CustomUser
 from apps.agenda.tasks.models import Task, TaskNote
+from apps.matters.models import Matter
 from config.settings import CustomFormRendererCompact
 
 
 class TaskForm(forms.ModelForm):
-
     class Meta:
         model = Task
 
@@ -75,6 +76,46 @@ class TaskForm(forms.ModelForm):
         #     raise ValidationError("This field is required")
 
         return matter
+
+
+class BulkTasksForm(forms.Form):
+    STATUS_CHOICES = [
+        ("", "— No change —"),
+        ("Pending", "Pending"),
+        ("Complete", "Complete"),
+    ]
+
+    PRIORITY_CHOICES = [("", "— No change —")] + [
+        (str(i), f"Priority {i}") for i in range(1, 11)
+    ]
+
+    status = forms.ChoiceField(choices=STATUS_CHOICES, required=False, label="Status")
+    priority = forms.ChoiceField(
+        choices=PRIORITY_CHOICES, required=False, label="Priority"
+    )
+    date_due = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}),
+        required=False,
+        label="Due Date",
+    )
+    user = forms.ModelChoiceField(
+        queryset=CustomUser.objects.filter(is_active=True).order_by("username"),
+        required=False,
+        empty_label="— No change —",
+        label="User",
+    )
+    matter = forms.ModelChoiceField(
+        queryset=Matter.objects.filter(status__in=["Pending", "Open"]).order_by("name"),
+        required=False,
+        empty_label="— No change —",
+        label="Matter",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.renderer = CustomFormRendererCompact()
+        self.fields["user"].label_from_instance = lambda obj: obj.username.title()
 
 
 class TaskNoteForm(forms.ModelForm):

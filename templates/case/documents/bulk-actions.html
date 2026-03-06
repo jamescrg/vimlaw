@@ -1,0 +1,41 @@
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-post="{% url 'case:documents-bulk-ai' matter.id 'add' %}"
+     hx-swap="none">
+    <i class="icon-bookmark-plus"></i> Add to AI Context
+  </a>
+</li>
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-post="{% url 'case:documents-bulk-ai' matter.id 'remove' %}"
+     hx-swap="none">
+    <i class="icon-bookmark-minus"></i> Remove from AI Context
+  </a>
+</li>
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-get="{% url 'case:documents-bulk-category' matter.id %}"
+     hx-target="#htmx-modal-container">
+    <i class="icon-folder"></i> Move to Category...
+  </a>
+</li>
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-get="{% url 'case:documents-bulk-matter' matter.id %}"
+     hx-target="#htmx-modal-container">
+    <i class="icon-briefcase"></i> Move to Matter...
+  </a>
+</li>
+<li>
+  <a class="dropdown-item text-danger"
+     href="#"
+     hx-post="{% url 'case:documents-bulk-delete' matter.id %}"
+     hx-confirm="Delete {{ selected_ids|length }} selected document(s)?"
+     hx-swap="none">
+    <i class="icon-trash-2"></i> Delete Selected
+  </a>
+</li>

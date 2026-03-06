@@ -1,10 +1,7 @@
 <tr id="document-{{ document.id }}" data-document-id="{{ document.id }}">
   <td class="col-select">
-    <button class="btn-check"
-            hx-post="{% url 'case:documents-toggle-select' matter.id document.id %}"
-            hx-swap="none">
-      <i class="icon-square{% if document.id in selected_documents %}-check{% endif %}"></i>
-    </button>
+    {% url 'case:documents-toggle-select' matter.id document.id as toggle_url %}
+    {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=document.id selected_ids=selected_documents %}
   </td>
   <td class="col-category dropdown-cell">{% include "case/documents/category-display.html" %}</td>
   <td class="col-document dropdown-cell">
