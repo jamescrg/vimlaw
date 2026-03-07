@@ -70,6 +70,9 @@ def get_list_data(request):
     for task in task_list:
         task.has_notes = task.notes.exists()
         if task.has_notes:
+            task.latest_note_date = (
+                task.notes.order_by("-date").values_list("date", flat=True).first()
+            )
             last_viewed = view_times.get(task.id)
             if last_viewed:
                 # Check if there are notes created after last view by other users

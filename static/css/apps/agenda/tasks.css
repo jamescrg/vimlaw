@@ -213,3 +213,11 @@
 .tasks-table td.description:hover .task-notes-btn {
   opacity: 1;
 }
+
+.task-notes-date {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  position: relative;
+  top: 1px;
+  margin-left: 0.25rem;
+}
