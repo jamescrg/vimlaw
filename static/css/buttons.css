@@ -164,7 +164,7 @@ i.with-text {
 }
 
 /* Icons followed by text in toolbar buttons */
-.btn-icon > .icon-x {
+.btn-icon > .icon-x:not(:only-child) {
   margin-right: 0.5rem;
   position: relative;
   top: 0.5px;

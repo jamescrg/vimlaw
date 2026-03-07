@@ -136,18 +136,25 @@
   color: var(--selected-color);
 }
 
+.flatpickr-calendar {
+  background: var(--background-light);
+  border-radius: var(--radius-md);
+}
+
 .flatpickr-clear {
-  background: none;
-  border: none;
-  color: var(--color-muted);
+  background: var(--blue-50);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
   cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.5rem 0;
-  width: 100%;
+  font-size: 0.9rem;
+  margin: 0.5rem auto;
+  padding: 0.25rem 0;
+  width: 30%;
 }
 
 .flatpickr-clear:hover {
-  color: var(--color-primary);
+  /* opacity: 0.8; */
 }
 
 

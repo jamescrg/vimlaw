@@ -7,17 +7,6 @@
   </a>
 </li>
 <li>
-  <a class="dropdown-item"
-     href="#"
-     hx-post="{% url 'agenda:tasks-bulk-clear-due-date' %}"
-     hx-confirm="Clear due dates on {{ selected_ids|length }} selected task(s)?"
-     hx-swap="none"
-     data-confirm-text="Clear"
-     data-confirm-style="success">
-    <i class="icon-calendar-x"></i> Clear Due Dates
-  </a>
-</li>
-<li>
   <a class="dropdown-item text-danger"
      href="#"
      hx-post="{% url 'agenda:tasks-bulk-delete' %}"

@@ -32,8 +32,8 @@
   vertical-align: middle;
 }
 
-.toolbar a:has(.icon-plus),
-.toolbar button:has(.icon-plus) {
+.toolbar a:has(> i:only-child),
+.toolbar button:has(> i:only-child) {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
