@@ -136,6 +136,20 @@
   color: var(--selected-color);
 }
 
+.flatpickr-clear {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+  width: 100%;
+}
+
+.flatpickr-clear:hover {
+  color: var(--color-primary);
+}
+
 
 .tasks-table .menu {
   margin: 0;
