@@ -1,7 +1,25 @@
+{% load matter_tags %}
+{% get_open_matters as open_matters %}
 <div class="section-header">
   <div class="toolbar">
     <div class="toolbar-left">
-      <h1>{{ matter.name }}</h1>
+      <div class="matter-switcher dropdown" x-data="dropdown()">
+        <button type="button" x-ref="button" @click="toggle()" :aria-expanded="open">
+          <h1>
+            {{ matter.name }} <i class="icon-chevron-down"></i>
+          </h1>
+        </button>
+        <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+          {% for m in open_matters %}
+            <li>
+              <a class="dropdown-item {% if m.id == matter.id %}toggle-active{% endif %}"
+                 href="{% if mode == 'case' %}{% url 'case:select-matter' m.id %}{% else %}{% url 'matters:detail' id=m.id %}{% endif %}">
+                {{ m.name }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
       {% include "matters/includes/mode-pills.html" %}
       <div class="filter-tools">{% include "matters/includes/action_buttons.html" %}</div>
     </div>

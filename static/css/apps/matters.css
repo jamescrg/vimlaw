@@ -83,6 +83,37 @@ Matter List
 
 
 /* ==========================================================================
+Matter Switcher
+========================================================================== */
+
+.toolbar .matter-switcher > button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.125rem 0.75rem;
+}
+
+.matter-switcher > button > h1 {
+  align-items: center;
+  display: flex;
+  font-size: 1.3rem;
+  gap: 0.5rem;
+  margin-right: 0;
+}
+
+.matter-switcher .icon-chevron-down {
+  color: var(--color-muted);
+  font-size: 0.75em;
+}
+
+.matter-switcher .dropdown-menu {
+  max-height: 28rem;
+  min-width: 16rem;
+  overflow-y: auto;
+}
+
+
+/* ==========================================================================
 Matter Details
 ========================================================================== */
 
