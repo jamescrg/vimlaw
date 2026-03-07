@@ -581,6 +581,26 @@ def tasks_bulk_update(request, id):
 
 @login_required
 @require_POST
+def tasks_bulk_set_due_date(request, id):
+    """Set due date on selected tasks."""
+    key = get_session_key("selected_tasks", id)
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    date_due = request.POST.get("date_due")
+    if date_due:
+        Task.objects.filter(id__in=selected_tasks, matter_id=id).update(
+            date_due=date_due
+        )
+        clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
 def tasks_bulk_clear_due_date(request, id):
     """Clear due dates on selected tasks."""
     key = get_session_key("selected_tasks", id)

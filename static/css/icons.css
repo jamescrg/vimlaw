@@ -51,8 +51,6 @@
   color: var(--urgent);
 }
 
-.icon-calendar,
-.icon-calendar-days,
 .icon-arrow-up-right {
   margin-right: 0.5rem;
 }

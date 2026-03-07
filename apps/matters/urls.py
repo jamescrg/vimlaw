@@ -216,6 +216,11 @@ urlpatterns = [
         name="tasks-bulk-update",
     ),
     path(
+        "matters/<int:id>/tasks/bulk-set-due-date",
+        tasks.tasks_bulk_set_due_date,
+        name="tasks-bulk-set-due-date",
+    ),
+    path(
         "matters/<int:id>/tasks/bulk-clear-due-date",
         tasks.tasks_bulk_clear_due_date,
         name="tasks-bulk-clear-due-date",

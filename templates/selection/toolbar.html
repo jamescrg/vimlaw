@@ -12,6 +12,14 @@
       {% include actions_template %}
     </ul>
   </div>
+  {% if date_url %}
+    <button type="button"
+            class="btn-icon toggle-active"
+            x-data
+            @click.prevent=" const input = document.createElement('input'); input.style.cssText = 'position:absolute;visibility:hidden;height:0;width:0;padding:0;'; $el.parentElement.appendChild(input); flatpickr(input, { dateFormat: 'Y-m-d', allowInput: true, onReady: (_, __, fp) => fp.open(), onChange: (_, dateStr) => { htmx.ajax('POST', '{{ date_url }}', { swap: 'none', values: { date_due: dateStr } }); }, onClose: () => { input.remove(); } }); ">
+      <i class="icon-calendar"></i>
+    </button>
+  {% endif %}
   <button type="button"
           class="btn-icon toggle-active"
           hx-post="{{ clear_url }}"
