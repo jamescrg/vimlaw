@@ -12,18 +12,13 @@
       {% include actions_template %}
     </ul>
   </div>
-  {% if date_url %}
-    <button type="button"
-            class="btn-icon toggle-active"
-            x-data
-            @click.prevent=" const input = document.createElement('input'); input.style.cssText = 'position:absolute;visibility:hidden;height:0;width:0;padding:0;'; $el.parentElement.appendChild(input); flatpickr(input, { dateFormat: 'Y-m-d', allowInput: true, onReady: (_, __, fp) => { const btn = document.createElement('button'); btn.textContent = 'Clear'; btn.className = 'flatpickr-clear'; btn.type = 'button'; btn.addEventListener('click', () => { htmx.ajax('POST', '{{ clear_date_url }}', { swap: 'none' }); fp.close(); }); fp.calendarContainer.appendChild(btn); fp.open(); }, onChange: (_, dateStr) => { htmx.ajax('POST', '{{ date_url }}', { swap: 'none', values: { date_due: dateStr } }); }, onClose: () => { input.remove(); } }); ">
-      <i class="icon-calendar"></i>
-    </button>
+  {% if bulk_toolbar %}
+    {% include bulk_toolbar %}
   {% endif %}
   <button type="button"
-          class="btn-icon toggle-active"
+          class="btn-icon"
           hx-post="{{ clear_url }}"
           hx-swap="none">
-    <i class="icon-x"></i>
+    <i class="icon-x with-text"></i> Cancel
   </button>
 {% endif %}

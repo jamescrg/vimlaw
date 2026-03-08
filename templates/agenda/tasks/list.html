@@ -1,72 +1,72 @@
 <div class="toolbar">
   <div class="toolbar-left">
     <div class="filter-tools">
-      <button hx-get="{% url 'agenda:tasks-add' %}"
-              hx-target="#htmx-modal-container">
-        <i class="icon-plus"></i>
-      </button>
-      {% url 'agenda:tasks-clear-selection' as clear_url %}
-      {% url 'agenda:tasks-bulk-set-due-date' as date_url %}
-      {% url 'agenda:tasks-bulk-clear-due-date' as clear_date_url %}
-      {% include "selection/toolbar.html" with selected_ids=selected_tasks clear_url=clear_url date_url=date_url clear_date_url=clear_date_url actions_template="agenda/tasks/bulk-actions.html" %}
-      <button type="button"
-              class="btn-icon"
-              hx-get="{% url 'agenda:tasks-filter' %}"
-              hx-target="#htmx-modal-container"
-              hx-trigger="click"
-              hx-swap="#outerHTML">
-        <i class="icon-list-filter"></i>Filter
-      </button>
-      <div class="dropdown" x-data="dropdown()">
+      {% if selected_tasks %}
+        {% url 'agenda:tasks-clear-selection' as clear_url %}
+        {% include "selection/toolbar.html" with selected_ids=selected_tasks clear_url=clear_url bulk_toolbar="agenda/tasks/bulk-toolbar.html" actions_template="agenda/tasks/bulk-actions.html" %}
+      {% else %}
+        <button hx-get="{% url 'agenda:tasks-add' %}"
+                hx-target="#htmx-modal-container">
+          <i class="icon-plus"></i>
+        </button>
         <button type="button"
-                id="tasks-priority-filter"
-                class="select-btn filter-dropdown-button priority-dropdown {% if priority_value %}toggle-active{% endif %}"
-                x-ref="button"
-                @click="toggle()"
-                :aria-expanded="open">
-        <span><i class="icon-flag with-text"></i>
-        {% if priority_value %}
-          {% if priority_value == 1 %}
+                class="btn-icon"
+                hx-get="{% url 'agenda:tasks-filter' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                hx-swap="#outerHTML">
+          <i class="icon-list-filter"></i>Filter
+        </button>
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  id="tasks-priority-filter"
+                  class="select-btn filter-dropdown-button priority-dropdown {% if priority_value %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+          <span><i class="icon-flag with-text"></i>
+          {% if priority_value %}
+            {% if priority_value == 1 %}
+              1 only
+            {% else %}
+              {{ priority_value }} and above
+            {% endif %}
+          {% else %}
+            Priority
+          {% endif %}
+        </span>
+        <small>
+          <i class="icon-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu"
+          x-ref="menu"
+          x-show="open"
+          hx-target="#tasks-priority-filter"
+          hx-swap="outerHTML">
+        {% for priority in priorities %}
+          <li>
+          <a class="dropdown-item {% if priority == priority_value %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'agenda:tasks-filter-priority' priority %}"
+             hx-target="#tasks"
+             hx-swap="#outerHTML"><i class="icon-flag"></i>
+          {% if priority == 1 %}
             1 only
           {% else %}
-            {{ priority_value }} and above
+            {{ priority }} and above
           {% endif %}
-        {% else %}
-          Priority
-        {% endif %}
-      </span>
-      <small>
-        <i class="icon-chevron-down"></i>
-      </small>
-    </button>
-    <ul class="dropdown-menu"
-        x-ref="menu"
-        x-show="open"
-        hx-target="#tasks-priority-filter"
-        hx-swap="outerHTML">
-      {% for priority in priorities %}
-        <li>
-        <a class="dropdown-item {% if priority == priority_value %}active{% endif %}"
-           href="#"
-           hx-post="{% url 'agenda:tasks-filter-priority' priority %}"
-           hx-target="#tasks"
-           hx-swap="#outerHTML"><i class="icon-flag"></i>
-        {% if priority == 1 %}
-          1 only
-        {% else %}
-          {{ priority }} and above
-        {% endif %}
-      </a>
+        </a>
+      </li>
+    {% endfor %}
+    <li>
+      <a class="dropdown-item {% if not priority_value %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:tasks-filter-priority' 0 %}"
+         hx-target="#tasks"
+         hx-swap="#outerHTML"><i class="icon-flag"></i> All Levels</a>
     </li>
-  {% endfor %}
-  <li>
-    <a class="dropdown-item {% if not priority_value %}active{% endif %}"
-       href="#"
-       hx-post="{% url 'agenda:tasks-filter-priority' 0 %}"
-       hx-target="#tasks"
-       hx-swap="#outerHTML"><i class="icon-flag"></i> All Levels</a>
-  </li>
-</ul>
+  </ul>
 </div>
 <div class="dropdown" x-data="dropdown()">
   <button type="button"
@@ -161,6 +161,7 @@
     </li>
   </ul>
 </div>
+{% endif %}
 </div>
 </div>
 </div>

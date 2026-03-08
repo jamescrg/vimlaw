@@ -125,7 +125,7 @@ def tasks_add_quick(request):
     # set task description and some property values
     task.description = description
     task.status = "Pending"
-    task.priority = 1
+    task.priority = 5
 
     # get filter values to auto populate task properties
     filter_data = request.session.get("tasks_filter", {})
@@ -682,6 +682,61 @@ def tasks_bulk_clear_due_date(request):
 
     Task.objects.filter(id__in=selected_tasks).update(date_due=None)
     clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_bulk_set_priority(request):
+    """Set priority on selected tasks."""
+    key = get_session_key("selected_tasks")
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    priority = request.POST.get("priority")
+    if priority:
+        Task.objects.filter(id__in=selected_tasks).update(priority=int(priority))
+        clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_bulk_set_status(request):
+    """Set status on selected tasks."""
+    key = get_session_key("selected_tasks")
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    status = request.POST.get("status")
+    if status:
+        Task.objects.filter(id__in=selected_tasks).update(status=status)
+        clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_bulk_set_user(request):
+    """Set user on selected tasks."""
+    key = get_session_key("selected_tasks")
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    user_id = request.POST.get("user")
+    if user_id:
+        user = get_object_or_404(CustomUser, pk=user_id)
+        Task.objects.filter(id__in=selected_tasks).update(user=user)
+        clear_selected_ids(request, key)
 
     return selection_response(TASKS_TRIGGER)
 

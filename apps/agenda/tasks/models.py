@@ -16,7 +16,7 @@ class Task(AuditMixin, models.Model):
     date_completed = models.DateField(blank=True, null=True)
     matter = models.ForeignKey(Matter, on_delete=models.CASCADE, blank=True, null=True)
     status = models.CharField(max_length=50, blank=True, null=True)
-    priority = models.IntegerField(default=1)
+    priority = models.IntegerField(default=5)
     custom_order = models.DecimalField(
         max_digits=18, decimal_places=8, null=True, blank=True, default=None
     )

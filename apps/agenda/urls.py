@@ -29,6 +29,9 @@ from apps.agenda.tasks.views import (
     tasks_bulk_clear_due_date,
     tasks_bulk_delete,
     tasks_bulk_set_due_date,
+    tasks_bulk_set_priority,
+    tasks_bulk_set_status,
+    tasks_bulk_set_user,
     tasks_bulk_update,
     tasks_clear_selection,
     tasks_date,
@@ -145,6 +148,21 @@ urlpatterns = [
         "agenda/tasks/bulk-set-due-date/",
         tasks_bulk_set_due_date,
         name="tasks-bulk-set-due-date",
+    ),
+    path(
+        "agenda/tasks/bulk-set-priority/",
+        tasks_bulk_set_priority,
+        name="tasks-bulk-set-priority",
+    ),
+    path(
+        "agenda/tasks/bulk-set-status/",
+        tasks_bulk_set_status,
+        name="tasks-bulk-set-status",
+    ),
+    path(
+        "agenda/tasks/bulk-set-user/",
+        tasks_bulk_set_user,
+        name="tasks-bulk-set-user",
     ),
     path(
         "agenda/tasks/bulk-clear-due-date/",
