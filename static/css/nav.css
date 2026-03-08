@@ -54,6 +54,16 @@
   right: calc(-1 * var(--radius-md));
 }
 
+/* When page has subnav, main nav tab blends with subnav background */
+body.has-subnav .navbar .active {
+  background: var(--background-subnav);
+}
+
+body.has-subnav .navbar .active::before,
+body.has-subnav .navbar .active::after {
+  background: var(--background-subnav);
+}
+
 .navbar .settings-link {
   font-size: 1.25rem;
 }

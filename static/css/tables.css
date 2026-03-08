@@ -6,6 +6,7 @@
 }
 
 .table {
+  background: var(--background-body);
   border: solid 1px var(--border-medium);
   border-collapse: separate;
   border-radius: var(--radius-md);

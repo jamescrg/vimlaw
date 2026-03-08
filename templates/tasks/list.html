@@ -1,5 +1,8 @@
 <div class="toolbar tasks-toolbar">
   <div class="toolbar-left tasks-toolbar-left">
+    <button hx-get="{% url 'tasks:add' %}" hx-target="#htmx-modal-container">
+      <i class="icon-plus"></i>
+    </button>
     {% include "tasks/form-quick.html" %}
     <div class="filter-tools">
       {% if selected_tasks %}

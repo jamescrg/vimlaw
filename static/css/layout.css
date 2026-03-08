@@ -19,9 +19,7 @@ body {
 
 .content {
   padding-bottom: 3rem;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  padding-top: 1.25rem;
+  /* padding-top: 1.25rem; */
 }
 
 .flex-start-space {

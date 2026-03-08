@@ -83,7 +83,7 @@
     <link rel="stylesheet" href="{% static_v 'css/dev.css' %}" />
   {% endif %}
 </head>
-<body class="{% if env == 'dev' %}env-dev{% endif %}"
+<body class="{% if env == 'dev' %}env-dev {% endif %}{% block body_class %}{% endblock body_class %}"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% if env == 'dev' %}
     <div class="dev-banner">

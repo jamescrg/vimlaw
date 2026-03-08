@@ -1,8 +1,6 @@
 
 .section {
-  background: var(--background-section);
-  border-radius: var(--radius-md);
-  box-shadow: 0 0.0625rem 0.2rem rgb(0 0 0 / 14%);
+  /* background: var(--background-section); */
   margin-bottom: 1.5rem;
   padding: 1.25rem 1rem 1.5rem;
 }
@@ -23,6 +21,7 @@
   border-radius: var(--radius-md);
   color: var(--button-toolbar);
   display: inline-flex;
+  gap: 0.375rem;
   line-height: 1.25;
   outline: none;
   padding: 0.5rem 0.75rem;
@@ -87,7 +86,6 @@ Section Layout (header / nav / body)
 /* Section Header - title/toolbar area */
 .section-header {
   background: var(--background-subnav);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
   padding: 1.25rem 1rem 0.5rem;
 }
 
@@ -108,7 +106,7 @@ Section Layout (header / nav / body)
 .section-nav {
   background: var(--background-subnav);
   margin: 0;
-  padding: 0.25rem 0 0;
+  padding: 0.25rem 0 0 calc(var(--radius-md) * 1.5);
 }
 
 .section-nav ul {
@@ -158,15 +156,6 @@ Section Layout (header / nav / body)
 }
 
 .section-nav li:first-child.active {
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-}
-
-.section-nav li:first-child.active::before {
-  display: none;
-}
-
-/* Section Nav without header - rounded top corners */
-.section > .section-nav:first-child {
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 

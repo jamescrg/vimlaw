@@ -123,10 +123,6 @@
    FullCalendar Integration
    ========================================================================== */
 
-#fullcalendar-container {
-  margin-top: 0.5rem;
-}
-
 /* Ensure calendar borders are visible and rounded */
 .fc .fc-scrollgrid {
   border-bottom-width: 1px !important;
@@ -210,7 +206,11 @@
 
 /* Header toolbar */
 .fc .fc-toolbar {
-  margin-bottom: 1rem;
+  gap: 1.25rem;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1.25rem;
 }
 
 .fc .fc-toolbar-title {

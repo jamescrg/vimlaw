@@ -1,4 +1,62 @@
 /* ==========================================================================
+   Contacts Page - Restore padding and contrast
+   ========================================================================== */
+
+body.contacts-page {
+  background-color: var(--background-subnav);
+}
+
+body.contacts-page .content {
+  padding-top: 1.25rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Main nav tab blends with darker body background */
+body.contacts-page .navbar .active {
+  background: var(--background-subnav);
+}
+
+body.contacts-page .navbar .active::before,
+body.contacts-page .navbar .active::after {
+  background: var(--background-subnav);
+}
+
+/* Restore section card styling on contacts page */
+body.contacts-page .section {
+  background: var(--background-section);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0.0625rem 0.2rem rgb(0 0 0 / 14%);
+}
+
+/* Section header/nav need contrast against the darker page body */
+body.contacts-page .section-header,
+body.contacts-page .section-nav {
+  background: var(--stone-225);
+}
+
+/* Preserve rounded top corners on contact section cards */
+body.contacts-page .section-header {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+body.contacts-page .section > .section-nav:first-child {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+body.contacts-page .section-nav {
+  padding-left: 0;
+}
+
+body.contacts-page .section-nav li:first-child.active::before {
+  display: none;
+}
+
+body.contacts-page .section {
+  margin-bottom: 1.25rem;
+}
+
+/* ==========================================================================
    Contacts Layout (Bootstrap grid replacement)
    ========================================================================== */
 
@@ -11,22 +69,22 @@
 @media (width >= 768px) {
   .contacts-layout {
     flex-direction: row;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .contacts-layout > .contacts-sidebar {
-    flex: 0 0 calc(25% - 0.75rem);
-    max-width: calc(25% - 0.75rem);
+    flex: 0 0 calc(25% - 0.625rem);
+    max-width: calc(25% - 0.625rem);
   }
 
   .contacts-layout > .contacts-list {
-    flex: 0 0 calc(25% - 0.75rem);
-    max-width: calc(25% - 0.75rem);
+    flex: 0 0 calc(25% - 0.625rem);
+    max-width: calc(25% - 0.625rem);
   }
 
   .contacts-layout > .contacts-detail {
-    flex: 0 0 calc(50% - 1.5rem);
-    max-width: calc(50% - 1.5rem);
+    flex: 0 0 calc(50% - 1.25rem);
+    max-width: calc(50% - 1.25rem);
   }
 }
 
@@ -112,7 +170,7 @@
   .contacts-form-grid {
     align-items: start;
     display: grid;
-    gap: 1.5rem;
+    gap: 1.25rem;
     grid-template-columns: 1fr 1fr;
   }
 
@@ -302,7 +360,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
 }
 
 .action-buttons .btn {
