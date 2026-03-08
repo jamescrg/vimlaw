@@ -136,6 +136,10 @@
   row-gap: 1.25rem;
 }
 
+.tasks-toolbar-left > button:first-child {
+  margin-right: 1.25rem;
+}
+
 .tasks-toolbar .filter-tools .filter-dropdown-button {
   min-width: 5.5rem;
   padding-left: 0.5rem;

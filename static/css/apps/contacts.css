@@ -44,6 +44,14 @@ body.contacts-page .section > .section-nav:first-child {
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
+body.contacts-page .section-nav {
+  padding-left: 0;
+}
+
+body.contacts-page .section-nav li:first-child.active::before {
+  display: none;
+}
+
 body.contacts-page .section {
   margin-bottom: 1.25rem;
 }
