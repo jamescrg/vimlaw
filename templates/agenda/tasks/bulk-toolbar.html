@@ -1,0 +1,26 @@
+<div class="dropdown" x-data="dropdown()">
+  <button type="button"
+          class="btn-icon toggle-active"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    <i class="icon-flag with-text"></i> Priority
+  </button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    {% for p in priorities %}
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'agenda:tasks-bulk-set-priority' %}"
+           hx-vals='{"priority": "{{ p }}"}'
+           hx-swap="none"><i class="icon-flag"></i> {{ p }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+<button type="button"
+        class="btn-icon toggle-active"
+        x-data
+        @click.prevent=" const input = document.createElement('input'); input.style.cssText = 'position:absolute;visibility:hidden;height:0;width:0;padding:0;'; $el.parentElement.appendChild(input); flatpickr(input, { dateFormat: 'Y-m-d', allowInput: true, onReady: (_, __, fp) => { const btn = document.createElement('button'); btn.textContent = 'Clear'; btn.className = 'flatpickr-clear'; btn.type = 'button'; btn.addEventListener('click', () => { htmx.ajax('POST', '{% url 'agenda:tasks-bulk-clear-due-date' %}', { swap: 'none' }); fp.close(); }); fp.calendarContainer.appendChild(btn); fp.open(); }, onChange: (_, dateStr) => { htmx.ajax('POST', '{% url 'agenda:tasks-bulk-set-due-date' %}', { swap: 'none', values: { date_due: dateStr } }); }, onClose: () => { input.remove(); } }); ">
+  <i class="icon-calendar with-text"></i> Date
+</button>

@@ -617,6 +617,63 @@ def tasks_bulk_clear_due_date(request, id):
 
 @login_required
 @require_POST
+def tasks_bulk_set_priority(request, id):
+    """Set priority on selected tasks."""
+    key = get_session_key("selected_tasks", id)
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    priority = request.POST.get("priority")
+    if priority:
+        Task.objects.filter(id__in=selected_tasks, matter_id=id).update(
+            priority=int(priority)
+        )
+        clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_bulk_set_status(request, id):
+    """Set status on selected tasks."""
+    key = get_session_key("selected_tasks", id)
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    status = request.POST.get("status")
+    if status:
+        Task.objects.filter(id__in=selected_tasks, matter_id=id).update(status=status)
+        clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
+def tasks_bulk_set_user(request, id):
+    """Set user on selected tasks."""
+    key = get_session_key("selected_tasks", id)
+    selected_tasks = get_selected_ids(request, key)
+
+    if not selected_tasks:
+        return HttpResponse(status=400, content="No tasks selected.")
+
+    user_id = request.POST.get("user")
+    if user_id:
+        user = get_object_or_404(CustomUser, pk=user_id)
+        Task.objects.filter(id__in=selected_tasks, matter_id=id).update(user=user)
+        clear_selected_ids(request, key)
+
+    return selection_response(TASKS_TRIGGER)
+
+
+@login_required
+@require_POST
 def tasks_bulk_delete(request, id):
     """Bulk delete selected tasks."""
     key = get_session_key("selected_tasks", id)
