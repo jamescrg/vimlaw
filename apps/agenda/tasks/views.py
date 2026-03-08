@@ -27,11 +27,9 @@ TASKS_TRIGGER = "tasksListChanged"
 
 @login_required
 def tasks_index(request):
-    request.session["agenda_last_tab"] = "tasks"
     context = get_list_data(request)
     context = context | {
-        "app": "agenda",
-        "subapp": "tasks",
+        "app": "tasks",
     }
     return render(request, "agenda/tasks/tasks.html", context)
 
@@ -101,7 +99,7 @@ def tasks_add(request):
     form.fields["user"].queryset = users
 
     context = {
-        "app": "agenda",
+        "app": "tasks",
         "edit": False,
         "add": True,
         "form": form,
@@ -201,7 +199,7 @@ def tasks_edit(request, id):
     form.fields["user"].queryset = users
 
     context = {
-        "app": "agenda",
+        "app": "tasks",
         "edit": True,
         "task": task,
         "form": form,

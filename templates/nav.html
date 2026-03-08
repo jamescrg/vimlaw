@@ -2,11 +2,17 @@
   <div class="container">
     <div class="nav-scroll-container">
       <ul>
-        <li {% if app == 'agenda' %}class="active"{% endif %}>
-          <a id="nav-agenda" href={% url 'agenda:agenda-redirect' %}>Agenda</a>
+        <li {% if app == 'dash' %}class="active"{% endif %}>
+          <a id="nav-dash" href={% url 'agenda:dash-index' %}>Dash</a>
         </li>
         <li {% if app == 'matters' %}class="active"{% endif %}>
           <a id="nav-matters" href={% url 'matters:index' %}>Matters</a>
+        </li>
+        <li {% if app == 'events' %}class="active"{% endif %}>
+          <a id="nav-events" href={% url 'agenda:events-index' %}>Calendar</a>
+        </li>
+        <li {% if app == 'tasks' %}class="active"{% endif %}>
+          <a id="nav-tasks" href={% url 'agenda:tasks-index' %}>Tasks</a>
         </li>
         <li {% if app == 'contacts' %}class="active"{% endif %}>
           <a id="nav-contacts" href="{% url 'contacts:index' %}">Contacts</a>

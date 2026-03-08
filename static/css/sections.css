@@ -177,6 +177,11 @@ Section Layout (header / nav / body)
   padding: 1.25rem 1rem 1.5rem;
 }
 
+/* Section Body without nav - fully rounded corners */
+.section > .section-body:first-child {
+  border-radius: var(--radius-md);
+}
+
 
 /* ==========================================================================
  Mobile Responsive

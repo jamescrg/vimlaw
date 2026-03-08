@@ -19,19 +19,17 @@ from .events import get_table_data
 
 @login_required
 def events_index(request):
-    request.session["agenda_last_tab"] = "events"
     today = date.today()
     third_day = today + timedelta(days=3)
 
-    view_mode = request.session.get("events_view_mode", "list")
+    view_mode = request.session.get("events_view_mode", "calendar")
     table_data = get_table_data(request)
 
     events_filter = request.session.get("events_filter", {})
     events_filter_status = events_filter.get("status", "")
 
     context = {
-        "app": "agenda",
-        "subapp": "events",
+        "app": "events",
         "third_day": third_day,
         "view_mode": view_mode,
         "events_filter_status": events_filter_status,
@@ -48,7 +46,7 @@ def events_list(request):
     today = date.today()
     third_day = today + timedelta(days=3)
 
-    view_mode = request.session.get("events_view_mode", "list")
+    view_mode = request.session.get("events_view_mode", "calendar")
     events_filter = request.session.get("events_filter", {})
     events_filter_status = events_filter.get("status", "")
 
@@ -66,8 +64,7 @@ def events_list(request):
         events_filter_assigned = ""
 
     context = {
-        "app": "agenda",
-        "subapp": "events",
+        "app": "events",
         "third_day": third_day,
         "view_mode": view_mode,
         "events_filter_status": events_filter_status,
@@ -260,8 +257,7 @@ def events_add(request, matter_id=None, origin="events"):
     today = date.today().strftime("%Y-%m-%d")
 
     context = {
-        "app": "agenda",
-        "subapp": "events",
+        "app": "events",
         "today": today,
         "edit": False,
         "add": True,
@@ -444,7 +440,6 @@ def events_deadline_modal(request):
 @login_required
 def events_calendar(request):
     """Render the calendar view partial."""
-    request.session["agenda_last_tab"] = "events"
     today = date.today()
     third_day = today + timedelta(days=3)
 
@@ -452,8 +447,7 @@ def events_calendar(request):
     events_filter_status = events_filter.get("status", "")
 
     context = {
-        "app": "agenda",
-        "subapp": "events",
+        "app": "events",
         "third_day": third_day,
         "view_mode": "calendar",
         "events_filter_status": events_filter_status,

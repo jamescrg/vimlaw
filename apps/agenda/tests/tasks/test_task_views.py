@@ -13,7 +13,7 @@ def test_index(client, folder, task, matter):
     response = client.get(reverse("agenda:tasks-index"))
     assert response.status_code == 200
     assertTemplateUsed(response, "agenda/tasks/list.html")
-    assert response.context["app"] == "agenda"
+    assert response.context["app"] == "tasks"
 
 
 def test_add_post(client, folder, task_data):

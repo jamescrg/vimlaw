@@ -58,7 +58,6 @@ from apps.agenda.tasks.views import (
     tasks_toggle_select,
     tasks_user,
 )
-from apps.agenda.views import agenda_redirect
 
 app_name = "agenda"
 
@@ -244,5 +243,4 @@ urlpatterns = [
         name="events-filter-assigned",
     ),
     path("dash/", dash_index, name="dash-index"),
-    path("redirect/", agenda_redirect, name="agenda-redirect"),
 ]

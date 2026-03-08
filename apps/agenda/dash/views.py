@@ -247,8 +247,7 @@ def dash_index(request):
     open_intakes = Intake.objects.filter(status="Open").order_by("-date")[:10]
 
     context = {
-        "app": "agenda",
-        "subapp": "dash",
+        "app": "dash",
         "upcoming_events": upcoming_events,
         "upcoming_events_count": len(upcoming_events),
         "events_next_7_days_count": events_next_7_days_count,

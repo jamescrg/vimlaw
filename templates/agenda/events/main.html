@@ -1,14 +1,20 @@
-{% extends "agenda/list.html" %}
-{% block subcontent %}
-  {% load humanize %}
-  <div id="events"
-       hx-trigger="eventsChanged from:body, eventsViewChanged from:body"
-       hx-get="{% url 'agenda:events-list' %}"
-       hx-target="this">
-    {% if view_mode == "calendar" %}
-      {% include "agenda/events/calendar.html" %}
-    {% else %}
-      {% include "agenda/events/list.html" %}
-    {% endif %}
+{% extends "base.html" %}
+{% block content %}
+  <div id="content" class="container content">
+    <div class="section">
+      <div class="section-body">
+        {% load humanize %}
+        <div id="events"
+             hx-trigger="eventsChanged from:body, eventsViewChanged from:body"
+             hx-get="{% url 'agenda:events-list' %}"
+             hx-target="this">
+          {% if view_mode == "calendar" %}
+            {% include "agenda/events/calendar.html" %}
+          {% else %}
+            {% include "agenda/events/list.html" %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
-{% endblock subcontent %}
+{% endblock content %}
