@@ -2,7 +2,7 @@ from datetime import date
 
 from apps.accounts.models import CustomUser
 from apps.agenda.tasks.filter import TasksFilter
-from apps.agenda.tasks.models import TaskNote, UserTaskNoteView
+from apps.agenda.tasks.models import Task, TaskNote, UserTaskNoteView
 from apps.management.pagination import CustomPaginator
 from apps.management.selection import (
     all_visible_selected,
@@ -55,6 +55,13 @@ def get_list_data(request):
         matter_id = None
         priority_value = None
 
+    # Force-show newly created tasks at the top regardless of filters
+    new_task_ids = request.session.pop("new_task_ids", [])
+
+    # Exclude new tasks from main queryset to avoid duplicates
+    if new_task_ids:
+        tasks = tasks.exclude(id__in=new_task_ids)
+
     pagination = CustomPaginator(
         tasks, per_page=20, request=request, session_key="tasks_pagination"
     )
@@ -65,8 +72,12 @@ def get_list_data(request):
     )
     view_times = {v["task_id"]: v["last_viewed_at"] for v in user_note_views}
 
-    # Check each task for notes and new notes
-    task_list = pagination.get_object_list()
+    # Prepend new tasks to the top of the page
+    if new_task_ids:
+        new_tasks = list(Task.objects.filter(id__in=new_task_ids))
+        task_list = new_tasks + list(pagination.get_object_list())
+    else:
+        task_list = pagination.get_object_list()
     for task in task_list:
         task.has_notes = task.notes.exists()
         if task.has_notes:
@@ -132,6 +143,7 @@ def get_list_data(request):
         "current_order": current_order,
         "selected_tasks": selected_tasks,
         "all_selected": all_selected,
+        "new_task_ids": new_task_ids,
     }
 
     return list_data
