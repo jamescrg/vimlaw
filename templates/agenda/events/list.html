@@ -5,13 +5,6 @@
         <button type="button" hx-get="/events/add" hx-target="#htmx-modal-container">
           <i class="icon-plus"></i>
         </button>
-        <button type="button"
-                hx-get="{% url 'agenda:events-filter' %}"
-                hx-target="#htmx-modal-container">
-          <i class="icon-list-filter"></i>Filter
-        </button>
-        {% include "agenda/events/status-dropdown.html" %}
-        {% include "agenda/events/assigned-dropdown.html" %}
         <div class="view-toggle">
           <button type="button"
                   class="{% if view_mode == 'list' %}toggle-active{% endif %}"
@@ -28,6 +21,14 @@
             <i class="icon-calendar"></i>
           </button>
         </div>
+        <button type="button"
+                hx-get="{% url 'agenda:events-filter' %}"
+                hx-target="#htmx-modal-container">
+          <i class="icon-list-filter"></i>Filter
+        </button>
+        {% include "agenda/events/status-dropdown.html" %}
+        {% include "agenda/events/assigned-dropdown.html" %}
+        {% include "agenda/events/matter-dropdown.html" %}
       </div>
     </div>
     <div class="toolbar-right">

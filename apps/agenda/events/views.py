@@ -19,6 +19,8 @@ from .events import get_table_data
 
 @login_required
 def events_index(request):
+    from apps.accounts.models import CustomUser
+
     today = date.today()
     third_day = today + timedelta(days=3)
 
@@ -28,11 +30,55 @@ def events_index(request):
     events_filter = request.session.get("events_filter", {})
     events_filter_status = events_filter.get("status", "")
 
+    # Get assigned_to filter display value
+    assigned_to_value = events_filter.get("assigned_to", "")
+    if assigned_to_value == "unassigned":
+        events_filter_assigned = "Firm"
+    elif assigned_to_value and assigned_to_value.startswith("firm_and_user:"):
+        try:
+            user_id = int(assigned_to_value.split(":")[1])
+            user = CustomUser.objects.get(pk=user_id)
+            name = user.get_short_name() or user.username
+            events_filter_assigned = f"Firm + {name}"
+        except (ValueError, TypeError, IndexError, CustomUser.DoesNotExist):
+            events_filter_assigned = ""
+    elif assigned_to_value:
+        try:
+            user = CustomUser.objects.get(pk=int(assigned_to_value))
+            events_filter_assigned = user.get_short_name() or user.username
+        except (ValueError, CustomUser.DoesNotExist):
+            events_filter_assigned = ""
+    else:
+        events_filter_assigned = ""
+
+    # Get matter filter display value
+    matter_value = events_filter.get("matter", "")
+    if matter_value == "unassigned":
+        events_filter_matter = "Unassigned"
+    elif matter_value:
+        try:
+            matter_obj = Matter.objects.get(pk=int(matter_value))
+            events_filter_matter = matter_obj.name
+        except (ValueError, Matter.DoesNotExist):
+            events_filter_matter = ""
+    else:
+        events_filter_matter = ""
+
     context = {
         "app": "events",
         "third_day": third_day,
         "view_mode": view_mode,
         "events_filter_status": events_filter_status,
+        "events_filter_assigned": events_filter_assigned,
+        "events_filter_assigned_value": assigned_to_value,
+        "events_filter_matter": events_filter_matter,
+        "events_filter_matter_value": matter_value,
+        "matters": Matter.objects.filter(status__in=["Pending", "Open"]).order_by(
+            "name"
+        ),
+        "users": CustomUser.objects.filter(is_active=True).order_by(
+            "first_name", "last_name"
+        ),
     } | table_data
 
     return render(request, "agenda/events/main.html", context)
@@ -54,6 +100,14 @@ def events_list(request):
     assigned_to_value = events_filter.get("assigned_to", "")
     if assigned_to_value == "unassigned":
         events_filter_assigned = "Firm"
+    elif assigned_to_value and assigned_to_value.startswith("firm_and_user:"):
+        try:
+            user_id = int(assigned_to_value.split(":")[1])
+            user = CustomUser.objects.get(pk=user_id)
+            name = user.get_short_name() or user.username
+            events_filter_assigned = f"Firm + {name}"
+        except (ValueError, TypeError, IndexError, CustomUser.DoesNotExist):
+            events_filter_assigned = ""
     elif assigned_to_value:
         try:
             user = CustomUser.objects.get(pk=int(assigned_to_value))
@@ -63,6 +117,19 @@ def events_list(request):
     else:
         events_filter_assigned = ""
 
+    # Get matter filter display value
+    matter_value = events_filter.get("matter", "")
+    if matter_value == "unassigned":
+        events_filter_matter = "Unassigned"
+    elif matter_value:
+        try:
+            matter_obj = Matter.objects.get(pk=int(matter_value))
+            events_filter_matter = matter_obj.name
+        except (ValueError, Matter.DoesNotExist):
+            events_filter_matter = ""
+    else:
+        events_filter_matter = ""
+
     context = {
         "app": "events",
         "third_day": third_day,
@@ -70,6 +137,11 @@ def events_list(request):
         "events_filter_status": events_filter_status,
         "events_filter_assigned": events_filter_assigned,
         "events_filter_assigned_value": assigned_to_value,
+        "events_filter_matter": events_filter_matter,
+        "events_filter_matter_value": matter_value,
+        "matters": Matter.objects.filter(status__in=["Pending", "Open"]).order_by(
+            "name"
+        ),
         "users": CustomUser.objects.filter(is_active=True).order_by(
             "first_name", "last_name"
         ),
@@ -138,6 +210,14 @@ def events_filter_assigned(request, assigned):
     # Get display value for the dropdown
     if assigned == "unassigned":
         display_value = "Firm"
+    elif assigned and assigned.startswith("firm_and_user:"):
+        try:
+            user_id = int(assigned.split(":")[1])
+            user = CustomUser.objects.get(pk=user_id)
+            name = user.get_short_name() or user.username
+            display_value = f"Firm + {name}"
+        except (ValueError, TypeError, IndexError, CustomUser.DoesNotExist):
+            display_value = ""
     elif assigned:
         try:
             user = CustomUser.objects.get(pk=int(assigned))
@@ -155,6 +235,41 @@ def events_filter_assigned(request, assigned):
             "events_filter_assigned_value": assigned,
             "users": CustomUser.objects.filter(is_active=True).order_by(
                 "first_name", "last_name"
+            ),
+        },
+    )
+    response["HX-Trigger"] = "eventsChanged"
+    return response
+
+
+@login_required
+def events_filter_matter(request, matter):
+    """Filter events by matter value."""
+    events_filter = request.session.get("events_filter", {})
+    events_filter["matter"] = matter if matter else ""
+    request.session["events_filter"] = events_filter
+    request.session.modified = True
+
+    # Get display value for the dropdown
+    if matter == "unassigned":
+        display_value = "Unassigned"
+    elif matter:
+        try:
+            matter_obj = Matter.objects.get(pk=int(matter))
+            display_value = matter_obj.name
+        except (ValueError, Matter.DoesNotExist):
+            display_value = ""
+    else:
+        display_value = ""
+
+    response = render(
+        request,
+        "agenda/events/matter-dropdown.html",
+        {
+            "events_filter_matter": display_value,
+            "events_filter_matter_value": matter,
+            "matters": Matter.objects.filter(status__in=["Pending", "Open"]).order_by(
+                "name"
             ),
         },
     )
@@ -520,12 +635,17 @@ def events_api(request):
             fc_event["allDay"] = True
 
         # Add status-based styling
+        classes = []
         if event.status == "Pending":
-            fc_event["className"] = "fc-event-pending"
+            classes.append("fc-event-pending")
         elif event.status == "Complete":
-            fc_event["className"] = "fc-event-complete"
+            classes.append("fc-event-complete")
         elif event.status == "Missed":
-            fc_event["className"] = "fc-event-missed"
+            classes.append("fc-event-missed")
+        if not event.matter:
+            classes.append("fc-event-no-matter")
+        if classes:
+            fc_event["className"] = " ".join(classes)
 
         calendar_events.append(fc_event)
 

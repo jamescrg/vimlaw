@@ -1,0 +1,36 @@
+<div class="dropdown" id="events-matter-dropdown" x-data="dropdown()">
+  <button type="button"
+          id="events-matter-filter"
+          class="select-btn filter-dropdown-button {% if events_filter_matter %}toggle-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    {{ events_filter_matter|default:"All Matters" }}
+    <small>
+      <i class="icon-chevron-down"></i>
+    </small>
+  </button>
+  <ul class="dropdown-menu"
+      x-ref="menu"
+      x-show="open"
+      hx-target="#events-matter-dropdown"
+      hx-swap="outerHTML">
+    <li>
+      <a class="dropdown-item {% if not events_filter_matter_value %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-matter-all' %}">All Matters</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if events_filter_matter_value == 'unassigned' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'agenda:events-filter-matter' 'unassigned' %}">Unassigned</a>
+    </li>
+    {% for matter in matters %}
+      <li>
+        <a class="dropdown-item {% if events_filter_matter_value == matter.id|stringformat:'d' %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'agenda:events-filter-matter' matter.id %}">{{ matter.name }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

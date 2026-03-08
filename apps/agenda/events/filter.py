@@ -1,7 +1,7 @@
 import django_filters
+from django.db.models import Q
 
 from apps.agenda.events.models import Event
-from apps.matters.models import Matter
 
 PARTY_CHOICES = (
     ("All", "All"),
@@ -25,9 +25,32 @@ class AssignedToFilter(django_filters.Filter):
             return qs
         if value == "unassigned":
             return qs.filter(assigned_to__isnull=True)
+        if value.startswith("firm_and_user:"):
+            try:
+                user_id = int(value.split(":")[1])
+                return qs.filter(
+                    Q(assigned_to__isnull=True) | Q(assigned_to_id=user_id)
+                )
+            except (ValueError, TypeError, IndexError):
+                return qs
         try:
             user_id = int(value)
             return qs.filter(assigned_to_id=user_id)
+        except (ValueError, TypeError):
+            return qs
+
+
+class MatterFilter(django_filters.Filter):
+    """Custom filter for matter with special 'unassigned' option."""
+
+    def filter(self, qs, value):
+        if not value:
+            return qs
+        if value == "unassigned":
+            return qs.filter(matter__isnull=True)
+        try:
+            matter_id = int(value)
+            return qs.filter(matter_id=matter_id)
         except (ValueError, TypeError):
             return qs
 
@@ -38,11 +61,7 @@ class EventFilter(django_filters.FilterSet):
         choices=STATUS_CHOICES,
         empty_label="All",
     )
-    matter = django_filters.ModelChoiceFilter(
-        field_name="matter",
-        queryset=Matter.objects.filter(status__in=["Pending", "Open"]).order_by("name"),
-        empty_label="All",
-    )
+    matter = MatterFilter()
     date = django_filters.DateFromToRangeFilter(
         widget=django_filters.widgets.RangeWidget(attrs={"type": "date"}),
         label="Date",

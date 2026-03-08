@@ -255,6 +255,11 @@
   white-space: normal;
 }
 
+/* No-matter events: blue highlight */
+.fc-event.fc-event-no-matter {
+  background-color: var(--blue-100) !important;
+}
+
 /* Day cells */
 .fc .fc-daygrid-day-frame {
   min-height: 6rem;

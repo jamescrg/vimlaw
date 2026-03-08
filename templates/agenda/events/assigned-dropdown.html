@@ -25,6 +25,11 @@
          href="#"
          hx-post="{% url 'agenda:events-filter-assigned' 'unassigned' %}">Firm</a>
     </li>
+    <li>
+      <a class="dropdown-item {% if events_filter_assigned_value|slice:':14' == 'firm_and_user:' %}active{% endif %}"
+         href="#"
+         hx-post="/events/filter/assigned/firm_and_user:{{ request.user.id }}">Firm + {{ request.user.get_short_name|default:request.user.username }}</a>
+    </li>
     {% for user in users %}
       <li>
         <a class="dropdown-item {% if events_filter_assigned_value == user.id|stringformat:'d' %}active{% endif %}"

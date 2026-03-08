@@ -12,6 +12,7 @@ from apps.agenda.events.views import (
     events_edit,
     events_filter,
     events_filter_assigned,
+    events_filter_matter,
     events_filter_quick,
     events_filter_sort,
     events_filter_status,
@@ -241,6 +242,17 @@ urlpatterns = [
         "events/filter/assigned/<str:assigned>",
         events_filter_assigned,
         name="events-filter-assigned",
+    ),
+    path(
+        "events/filter/matter/",
+        events_filter_matter,
+        {"matter": ""},
+        name="events-filter-matter-all",
+    ),
+    path(
+        "events/filter/matter/<str:matter>",
+        events_filter_matter,
+        name="events-filter-matter",
     ),
     path("dash/", dash_index, name="dash-index"),
 ]
