@@ -176,7 +176,7 @@
     </thead>
     <tbody>
       {% for task in objects %}
-        <tr>
+        <tr {% if task.id in new_task_ids %}class="task-new-highlight"{% endif %}>
           <td class="col-select">
             {% url 'matters:tasks-toggle-select' matter.id task.id as toggle_url %}
             {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=task.id selected_ids=selected_tasks %}

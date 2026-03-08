@@ -65,6 +65,13 @@ def get_matter_tasks_data(request, matter_id):
         user_id = None
         focus = ""
 
+    # Force-show newly created tasks at the top regardless of filters
+    new_task_ids = request.session.pop("new_task_ids", [])
+
+    # Exclude new tasks from main queryset to avoid duplicates
+    if new_task_ids:
+        tasks = tasks.exclude(id__in=new_task_ids)
+
     pagination = CustomPaginator(
         tasks, per_page=20, request=request, session_key="matter_tasks_pagination"
     )
@@ -75,8 +82,12 @@ def get_matter_tasks_data(request, matter_id):
     )
     view_times = {v["task_id"]: v["last_viewed_at"] for v in user_note_views}
 
-    # Check each task for notes and new notes
-    task_list = pagination.get_object_list()
+    # Prepend new tasks to the top of the page
+    if new_task_ids:
+        new_tasks = list(Task.objects.filter(id__in=new_task_ids, matter=matter))
+        task_list = new_tasks + list(pagination.get_object_list())
+    else:
+        task_list = pagination.get_object_list()
     for task in task_list:
         task.has_notes = task.notes.exists()
         if task.has_notes:
@@ -137,6 +148,7 @@ def get_matter_tasks_data(request, matter_id):
         "current_order": current_order,
         "selected_tasks": selected_tasks,
         "all_selected": all_selected,
+        "new_task_ids": new_task_ids,
     }
 
     return list_data
@@ -176,6 +188,12 @@ def tasks_add(request, id):
             task.status = "Pending"
             task.matter = matter  # Automatically assign to the current matter
             task.save()
+
+            # Store new task ID for force-show in filtered lists
+            new_task_ids = request.session.get("new_task_ids", [])
+            new_task_ids.append(task.id)
+            request.session["new_task_ids"] = new_task_ids
+
             return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
     else:
         # Get the currently filtered user if available
@@ -227,14 +245,20 @@ def tasks_add_quick(request, id):
     if not request.POST["description"]:
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
+    # get filter values to auto populate task properties
+    filter_data = request.session.get("matter_tasks_filter", {})
+
     # set task description and some property values
     task.description = request.POST["description"]
     task.status = "Pending"
-    task.priority = 5
     task.matter = matter  # Always assign to the current matter
 
-    # get filter values to auto populate task properties
-    filter_data = request.session.get("matter_tasks_filter", {})
+    # auto populate priority from filter
+    filter_priority = filter_data.get("priority")
+    if filter_priority and int(filter_priority) != 0:
+        task.priority = int(filter_priority)
+    else:
+        task.priority = 5
 
     # auto populate the user
     user_id = filter_data.get("user", None)
@@ -250,6 +274,12 @@ def tasks_add_quick(request, id):
         task.focus = "Long Term"
 
     task.save()
+
+    # Store new task ID for force-show in filtered lists
+    new_task_ids = request.session.get("new_task_ids", [])
+    new_task_ids.append(task.id)
+    request.session["new_task_ids"] = new_task_ids
+
     return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 

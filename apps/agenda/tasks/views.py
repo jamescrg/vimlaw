@@ -55,6 +55,12 @@ def tasks_add(request):
             task = form.save(commit=False)
             task.status = "Pending"
             task.save()
+
+            # Store new task ID for force-show in filtered lists
+            new_task_ids = request.session.get("new_task_ids", [])
+            new_task_ids.append(task.id)
+            request.session["new_task_ids"] = new_task_ids
+
             if task.matter:
                 request.session["tasks_matter"] = task.matter.id
             return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
@@ -122,13 +128,19 @@ def tasks_add_quick(request):
     if not description.strip():
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
+    # get filter values to auto populate task properties
+    filter_data = request.session.get("tasks_filter", {})
+
     # set task description and some property values
     task.description = description
     task.status = "Pending"
-    task.priority = 5
 
-    # get filter values to auto populate task properties
-    filter_data = request.session.get("tasks_filter", {})
+    # auto populate priority from filter
+    filter_priority = filter_data.get("priority")
+    if filter_priority and int(filter_priority) != 0:
+        task.priority = int(filter_priority)
+    else:
+        task.priority = 5
 
     # auto populate the user
     user_id = filter_data.get("user", None)
@@ -145,6 +157,11 @@ def tasks_add_quick(request):
             task.matter = Matter.objects.filter(pk=int(matter_id)).get()
 
     task.save()
+
+    # Store new task ID for force-show in filtered lists
+    new_task_ids = request.session.get("new_task_ids", [])
+    new_task_ids.append(task.id)
+    request.session["new_task_ids"] = new_task_ids
 
     # Store the matter ID (or None for Admin) in session for next quick task
     if task.matter:

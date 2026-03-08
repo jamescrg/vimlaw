@@ -243,6 +243,16 @@
   opacity: 1;
 }
 
+/* New task highlight animation */
+@keyframes task-highlight-fade {
+  from { background-color: var(--selected-background); }
+  to { background-color: transparent; }
+}
+
+.task-new-highlight td {
+  animation: task-highlight-fade 2s ease-out;
+}
+
 .task-notes-date {
   color: var(--color-muted);
   font-size: 0.9rem;
