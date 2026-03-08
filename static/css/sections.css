@@ -85,7 +85,6 @@ Section Layout (header / nav / body)
 /* Section Header - title/toolbar area */
 .section-header {
   background: var(--background-subnav);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
   padding: 1.25rem 1rem 0.5rem;
 }
 
@@ -161,11 +160,6 @@ Section Layout (header / nav / body)
 
 .section-nav li:first-child.active::before {
   display: none;
-}
-
-/* Section Nav without header - rounded top corners */
-.section > .section-nav:first-child {
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 /* Section Body - main content area */

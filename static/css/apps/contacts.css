@@ -35,6 +35,15 @@ body.contacts-page .section-nav {
   background: var(--stone-225);
 }
 
+/* Preserve rounded top corners on contact section cards */
+body.contacts-page .section-header {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+body.contacts-page .section > .section-nav:first-child {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
 /* ==========================================================================
    Contacts Layout (Bootstrap grid replacement)
    ========================================================================== */

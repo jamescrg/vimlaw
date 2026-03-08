@@ -31,10 +31,6 @@
  Dashboard
 ========================================================================== */
 
-.dashboard {
-  padding: 1rem 0;
-}
-
 .dashboard-card {
   overflow: hidden;
 }
