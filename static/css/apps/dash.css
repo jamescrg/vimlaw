@@ -11,18 +11,18 @@
 @media (width >= 1200px) {
   .dashboard-grid {
     flex-direction: row;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .dashboard-grid > .dashboard-sidebar {
-    flex: 0 0 calc(33.333% - 1rem);
-    max-width: calc(33.333% - 1rem);
+    flex: 0 0 calc(33.333% - 0.833rem);
+    max-width: calc(33.333% - 0.833rem);
     order: 1;
   }
 
   .dashboard-grid > .dashboard-main {
-    flex: 0 0 calc(66.666% - 0.5rem);
-    max-width: calc(66.666% - 0.5rem);
+    flex: 0 0 calc(66.666% - 0.417rem);
+    max-width: calc(66.666% - 0.417rem);
     order: 2;
   }
 }
@@ -31,16 +31,12 @@
  Dashboard
 ========================================================================== */
 
-.dashboard {
-  padding: 1rem 0;
-}
-
 .dashboard-card {
   overflow: hidden;
 }
 
 .dashboard .gap-custom {
-  gap: 1.75rem;
+  gap: 1.25rem;
 }
 
 .dashboard-table {
