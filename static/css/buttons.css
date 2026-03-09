@@ -175,10 +175,6 @@ i.with-text {
   color: var(--icon-violet);
 }
 
-.icon-list-filter:not(:only-child) {
-  margin-right: 0.5rem;
-}
-
 /* Chevron in dropdown buttons - add left margin */
 .btn-icon > small {
   margin-left: 0.5rem;

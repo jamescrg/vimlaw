@@ -30,7 +30,7 @@
         <button hx-get="{% url 'activity:expenses-filter' %}"
                 hx-target="#htmx-modal-container"
                 class="{% if filter_label == "custom" %}toggle-active{% endif %}">
-          <i class="icon-list-filter"></i>Filter
+          <i class="icon-list-filter with-text"></i>Filter
         </button>
         <a href="#"
            class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
