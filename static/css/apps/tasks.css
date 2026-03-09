@@ -131,29 +131,21 @@
  Tasks
 ========================================================================== */
 
-.tasks-toolbar-left {
-  flex-wrap: wrap;
-  gap: 1.25rem;
-}
-
-.tasks-toolbar .filter-tools .filter-dropdown-button {
-  min-width: 5.5rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
 .tasks-add-quick-input {
   background: var(--background-light);
   color: var(--color-primary);
-  max-width: 30rem;
-  min-width: 10rem;
   padding-left: 1rem;
-  width: 100%;
+  width: 20rem;
 }
-
 
 .tasks-add-quick-input::placeholder {
   color: var(--border-medium);
+}
+
+@media (width <= 768px) {
+  .tasks-add-quick-input {
+    display: none;
+  }
 }
 
 .tasks-btn-status {

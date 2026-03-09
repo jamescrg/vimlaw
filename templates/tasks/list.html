@@ -1,18 +1,21 @@
-<div class="toolbar tasks-toolbar">
-  <div class="toolbar-left tasks-toolbar-left">
-    {% include "tasks/form-quick.html" %}
+<div class="toolbar">
+  <div class="toolbar-left">
     <div class="filter-tools">
       {% if selected_tasks %}
         {% url 'tasks:clear-selection' as clear_url %}
         {% include "selection/toolbar.html" with selected_ids=selected_tasks clear_url=clear_url bulk_toolbar="tasks/bulk-toolbar.html" actions_template="tasks/bulk-actions.html" %}
       {% else %}
+        {% include "tasks/form-quick.html" %}
+        <button hx-get="{% url 'tasks:add' %}" hx-target="#htmx-modal-container">
+          <i class="icon-plus"></i>
+        </button>
         <button type="button"
                 class="btn-icon"
                 hx-get="{% url 'tasks:filter' %}"
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 hx-swap="#outerHTML">
-          <i class="icon-list-filter"></i>
+          <i class="icon-list-filter"></i>Filter
         </button>
         <div class="dropdown" x-data="dropdown()">
           <button type="button"

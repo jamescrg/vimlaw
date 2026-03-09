@@ -170,9 +170,10 @@ i.with-text {
   top: 0.5px;
 }
 
-/* Filter icon - always violet, margin only when paired with text */
+/* Filter icon - always violet with right margin */
 .icon-list-filter {
   color: var(--icon-violet);
+  margin-right: 0.5rem;
 }
 
 /* Chevron in dropdown buttons - add left margin */
