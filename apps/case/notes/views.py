@@ -88,7 +88,7 @@ def notes_index(request, matter_id):
     set_last_tab(request, matter_id, "notes")
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "notes",
         "matter": matter,
         "matters": matters,
@@ -103,7 +103,7 @@ def notes_list(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "notes",
         "matter": matter,
         "matters": matters,
@@ -136,7 +136,7 @@ def notes_add(request, matter_id):
         form = NoteForm(initial={"matter": matter}, use_required_attribute=False)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "notes",
         "matter": matter,
         "form": form,
@@ -263,7 +263,7 @@ def note_edit(request, note_id):
         form = NoteForm(instance=note, use_required_attribute=False)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "notes",
         "matter": matter,
         "note": note,

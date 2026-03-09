@@ -61,7 +61,7 @@ def witnesses_index(request, matter_id):
     set_last_tab(request, matter_id, "witnesses")
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "witnesses",
         "matter": matter,
         "matters": matters,
@@ -76,7 +76,7 @@ def witnesses_list(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "witnesses",
         "matter": matter,
         "matters": matters,
@@ -103,7 +103,7 @@ def witnesses_add(request, matter_id):
         form = WitnessForm(use_required_attribute=False)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "witnesses",
         "matter": matter,
         "form": form,
@@ -131,7 +131,7 @@ def witnesses_edit(request, witness_id):
         form = WitnessForm(instance=witness, use_required_attribute=False)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "witnesses",
         "matter": matter,
         "witness": witness,

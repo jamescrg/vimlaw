@@ -77,7 +77,7 @@ def ai_index(request, matter_id):
     selected_llm = get_selected_llm(request)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "ai",
         "matter": matter,
         "matters": matters,

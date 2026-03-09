@@ -82,7 +82,7 @@ def caselaws_index(request, matter_id):
     set_last_tab(request, matter_id, "caselaws")
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "caselaws",
         "matter": matter,
         "matters": matters,

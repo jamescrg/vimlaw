@@ -30,7 +30,7 @@ def index(request, matter_id):
     set_last_tab(request, matter_id, "documents")
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "documents",
     } | documents_data
 
@@ -42,7 +42,7 @@ def documents_list(request, matter_id):
     documents_data = get_document_data(request, matter_id)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "documents",
     } | documents_data
 

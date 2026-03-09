@@ -115,7 +115,7 @@ def highlights_index(request, matter_id):
     set_last_tab(request, matter_id, "highlights")
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "highlights",
         "matter": matter,
         "matters": matters,
@@ -130,7 +130,7 @@ def highlights_list(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "highlights",
         "matter": matter,
         "matters": matters,

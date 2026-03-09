@@ -198,7 +198,7 @@ def search_index(request, matter_id):
     set_last_tab(request, matter_id, "search")
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "search",
         "matter": matter,
         "matters": matters,
@@ -213,7 +213,7 @@ def search_list(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "search",
         "matter": matter,
         "matters": matters,

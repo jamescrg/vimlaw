@@ -62,7 +62,7 @@ def facts_index(request, matter_id):
     set_last_tab(request, matter_id, "facts")
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "facts",
         "matter": matter,
         "matters": matters,
@@ -77,7 +77,7 @@ def facts_list(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "facts",
         "matter": matter,
         "matters": matters,
@@ -104,7 +104,7 @@ def facts_add(request, matter_id):
         form = FactForm(use_required_attribute=False)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "facts",
         "matter": matter,
         "form": form,
@@ -132,7 +132,7 @@ def facts_edit(request, fact_id):
         form = FactForm(instance=fact, use_required_attribute=False)
 
     context = {
-        "app": "documents",
+        "app": "matters",
         "subapp": "facts",
         "matter": matter,
         "fact": fact,
