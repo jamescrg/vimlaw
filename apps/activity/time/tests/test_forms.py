@@ -45,9 +45,9 @@ def test_abbreviation_code_duplicate():
     form = AbbreviationCodeForm(data)
 
     is_valid = form.is_valid()
-    assert (
-        not is_valid
-    ), f"Form should be invalid. Code: {unique_code}, Errors: {form.errors}"
+    assert not is_valid, (
+        f"Form should be invalid. Code: {unique_code}, Errors: {form.errors}"
+    )
     assert "code" in form.errors
     assert "already exists" in form.errors["code"][0]
 

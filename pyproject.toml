@@ -52,14 +52,34 @@ dev = [
     "pytest-django==4.8.0",
     "pytest-xdist==3.8.0",
     "pytest-split==0.10.0",
-
     # Code formatting and linting
-    "black==24.4.2",
+    "ruff>=0.15.5",
     "pre-commit==3.7.1",
 ]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I"]
+ignore = ["E501"]
+fixable = ["ALL"]
+extend-unsafe-fixes = ["F401"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.coverage.run]
 omit = ["*migration*", "*__init__.py*"]

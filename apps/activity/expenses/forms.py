@@ -6,7 +6,6 @@ from .models import ExpenseEntry
 
 
 class ExpenseEntryForm(forms.ModelForm):
-
     class Meta:
         model = ExpenseEntry
 

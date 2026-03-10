@@ -57,8 +57,8 @@ class TimeEntryFilter(django_filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Capitalize user display names
-        self.form.fields["user"].label_from_instance = (
-            lambda obj: obj.username.capitalize()
+        self.form.fields["user"].label_from_instance = lambda obj: (
+            obj.username.capitalize()
         )
 
     def filter_invoice(self, queryset, _, value):

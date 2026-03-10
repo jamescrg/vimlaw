@@ -169,9 +169,7 @@ def get_sorted_notes(matter, user, sort_order="-viewed_at"):
         user_views = NoteView.objects.filter(
             user=user,
             note=OuterRef("pk"),
-        ).values(
-            "viewed_at"
-        )[:1]
+        ).values("viewed_at")[:1]
 
         notes = notes.annotate(user_viewed_at=Subquery(user_views)).order_by(
             F("user_viewed_at").desc(nulls_last=True)

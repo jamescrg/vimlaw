@@ -67,7 +67,6 @@ def add(request):
     if request.method == "POST":
         form = ContactForm(request.POST, use_required_attribute=False)
         if form.is_valid():
-
             # initialize the contact
             contact = form.save(commit=False)
             contact.user = request.user

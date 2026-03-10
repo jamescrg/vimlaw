@@ -1,4 +1,3 @@
-
 .btn {
   border: solid 1px transparent;
   border-radius: var(--radius-md);
@@ -185,7 +184,9 @@ i.with-text {
   color: var(--icon-muted);
   margin-left: 1rem;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
 }
 
 button.btn-ghost {

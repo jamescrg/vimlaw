@@ -119,6 +119,6 @@ class TasksFilter(django_filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Customize user field to show title case usernames
-        self.filters["user"].field.label_from_instance = (
-            lambda obj: obj.username.title()
+        self.filters["user"].field.label_from_instance = lambda obj: (
+            obj.username.title()
         )
