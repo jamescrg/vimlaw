@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from .jurisdictions import ALL_JURISDICTIONS, JURISDICTIONS
+from .jurisdictions import STATES
 from .models import ResearchQuery, ResearchResult
 from .tasks import process_research_query
 
@@ -28,7 +28,7 @@ def research_index(request):
         "research/main.html",
         {
             "app": "research",
-            "jurisdictions": JURISDICTIONS,
+            "states": STATES,
             "queries": queries,
         },
     )
@@ -40,19 +40,18 @@ def research_search(request):
         return HttpResponse(status=405)
 
     query_text = request.POST.get("query_text", "").strip()
-    jurisdiction = request.POST.get("jurisdiction", "")
+    state = request.POST.get("state", "")
+    include_federal = request.POST.get("include_federal") == "on"
 
     if not query_text:
         return HttpResponse(
             '<div class="research-error">Please enter a search query.</div>'
         )
 
-    jurisdiction_display = ALL_JURISDICTIONS.get(jurisdiction, "All Jurisdictions")
-
     query = ResearchQuery.objects.create(
         query_text=query_text,
-        jurisdiction=jurisdiction,
-        jurisdiction_display=jurisdiction_display,
+        state=state,
+        include_federal=include_federal,
         status="pending",
         created_by=request.user,
     )
@@ -109,7 +108,7 @@ def research_detail(request, query_id):
         "research/main.html",
         {
             "app": "research",
-            "jurisdictions": JURISDICTIONS,
+            "states": STATES,
             "queries": queries,
             "active_query": query,
             "results": results,
@@ -130,7 +129,7 @@ def research_delete(request, query_id):
         request,
         "research/search-form.html",
         {
-            "jurisdictions": JURISDICTIONS,
+            "states": STATES,
             "queries": queries,
             "deleted": True,
         },

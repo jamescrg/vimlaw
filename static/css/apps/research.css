@@ -108,6 +108,16 @@
   max-width: 300px;
 }
 
+.research-federal-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 /* Results */
 .research-results-container {
   margin-top: 0.5rem;
@@ -132,44 +142,64 @@
   color: var(--text-muted);
 }
 
-.research-results-table {
-  width: 100%;
-  border-collapse: collapse;
+/* Structured Query Display */
+.research-structured-query {
+  background: var(--hover);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.research-results-table th {
-  text-align: left;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.research-structured-query code {
+  font-size: 0.8rem;
   color: var(--text-muted);
-  padding: 0.5rem 0.6rem;
-  border-bottom: 2px solid var(--border);
+  word-break: break-word;
 }
 
-.research-results-table td {
-  padding: 0.65rem 0.6rem;
+/* Cards */
+.research-cards {
+  display: flex;
+  flex-direction: column;
+}
+
+.research-card {
+  padding: 0.75rem 0;
   border-bottom: 1px solid var(--border);
-  font-size: 0.85rem;
-  vertical-align: top;
 }
 
-.col-pos { width: 2rem; }
-.col-court { width: 120px; }
-.col-date { width: 90px; }
-.col-relevance { width: 80px; }
+.research-card:last-child {
+  border-bottom: none;
+}
 
-.research-case-name a {
+.research-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.research-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.research-card-title a {
   color: var(--primary);
   text-decoration: none;
   font-weight: 500;
 }
 
-.research-case-name a:hover {
+.research-card-title a:hover {
   text-decoration: underline;
 }
 
-.research-citation {
+.research-card-citation {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.research-card-meta {
   font-size: 0.8rem;
   color: var(--text-muted);
   margin-top: 0.15rem;
@@ -227,7 +257,7 @@
 
 /* Final Summary */
 .research-final-summary {
-  margin-top: 1.5rem;
+  margin-bottom: 1rem;
   padding: 1rem 1.25rem;
   background: var(--hover);
   border-radius: 6px;
@@ -285,13 +315,5 @@
 
   .research-history li a {
     white-space: nowrap;
-  }
-
-  .research-results-table {
-    font-size: 0.8rem;
-  }
-
-  .col-court, .col-date {
-    display: none;
   }
 }
