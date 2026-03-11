@@ -11,14 +11,14 @@
                 required></textarea>
     </div>
     <div class="research-search-controls">
-      <select name="jurisdiction">
-        <option value="">All Jurisdictions</option>
-        {% for group_name, courts in jurisdictions.items %}
-          <optgroup label="{{ group_name }}">
-            {% for court_id, display_name in courts %}<option value="{{ court_id }}">{{ display_name }}</option>{% endfor %}
-          </optgroup>
-        {% endfor %}
+      <select name="state">
+        <option value="">All States</option>
+        {% for state in states %}<option value="{{ state.id }}">{{ state.name }}</option>{% endfor %}
       </select>
+      <label class="research-federal-check">
+        <input type="checkbox" name="include_federal">
+        Include federal
+      </label>
       <button type="submit" class="btn btn-primary">
         <i class="icon-search"></i> Search
       </button>

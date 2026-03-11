@@ -8,6 +8,7 @@ from apps.case.ai.gemini_client import send_to_gemini
 from apps.case.courtlistener import fetch_cluster, fetch_opinion
 
 from .courtlistener import search_opinions
+from .jurisdictions import get_court_ids
 from .models import ResearchQuery, ResearchResult
 
 logger = logging.getLogger(__name__)
@@ -19,18 +20,55 @@ def process_research_query(query_id):
     thread.start()
 
 
+def _refine_query(query_id):
+    """Use AI to convert natural language query into structured search syntax."""
+    ResearchQuery.objects.filter(pk=query_id).update(status="refining")
+
+    query = ResearchQuery.objects.get(pk=query_id)
+
+    system_prompt = (
+        "You are a legal search query optimizer. Convert the user's natural language "
+        "legal research question into an optimized search query for CourtListener. "
+        "Use search syntax: AND, OR, NOT, quoted phrases for exact match, parenthetical "
+        'grouping, proximity operator ~N (e.g. "negligence duty"~5), and wildcards *. '
+        "Return ONLY the search query string, nothing else."
+    )
+    user_prompt = f"Convert this legal research question into an optimized search query:\n\n{query.query_text}"
+
+    try:
+        response_text, _, _ = send_to_gemini(
+            system_prompt, [{"role": "user", "content": user_prompt}]
+        )
+        structured = response_text.strip().strip("`").strip()
+        ResearchQuery.objects.filter(pk=query_id).update(structured_query=structured)
+    except Exception:
+        logger.exception("Error refining query %s, using raw text", query_id)
+        ResearchQuery.objects.filter(pk=query_id).update(
+            structured_query=query.query_text
+        )
+
+
 def _process_query(query_id):
-    """Process a research query: search, evaluate, summarize."""
+    """Process a research query: refine, search, evaluate, summarize."""
     try:
         query = ResearchQuery.objects.get(pk=query_id)
     except ResearchQuery.DoesNotExist:
         return
 
     try:
+        # Phase 0: Refine query with AI
+        _refine_query(query_id)
+
+        # Reload to get structured_query
+        query = ResearchQuery.objects.get(pk=query_id)
+
         # Phase 1: Search CourtListener
         ResearchQuery.objects.filter(pk=query_id).update(status="searching")
 
-        results = search_opinions(query.query_text, court=query.jurisdiction, limit=5)
+        search_text = query.structured_query or query.query_text
+        court = get_court_ids(query.state, query.include_federal)
+
+        results = search_opinions(search_text, court=court, limit=5)
 
         if not results:
             ResearchQuery.objects.filter(pk=query_id).update(

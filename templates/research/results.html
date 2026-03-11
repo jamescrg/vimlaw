@@ -13,7 +13,20 @@
       </button>
     </form>
   </div>
-  {% if query.status == "pending" or query.status == "searching" %}
+  {% if query.structured_query %}
+    <div class="research-structured-query">
+      <code>{{ query.structured_query }}</code>
+    </div>
+  {% endif %}
+  {% if query.status == "pending" or query.status == "refining" %}
+    <div class="research-loading"
+         hx-get="{% url 'research:query-status' query.id %}"
+         hx-trigger="load delay:2s"
+         hx-swap="outerHTML">
+      <i class="icon-loader spin"></i>
+      <span>Refining query...</span>
+    </div>
+  {% elif query.status == "searching" %}
     <div class="research-loading"
          hx-get="{% url 'research:query-status' query.id %}"
          hx-trigger="load delay:2s"
@@ -27,23 +40,13 @@
       {{ query.error_message }}
     </div>
   {% else %}
+    {% include "research/summary.html" %}
     {% if results %}
-      <table class="research-results-table">
-        <thead>
-          <tr>
-            <th class="col-pos">#</th>
-            <th class="col-case">Case</th>
-            <th class="col-court">Court</th>
-            <th class="col-date">Date</th>
-            <th class="col-relevance">Relevance</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for result in results %}
-            {% include "research/result-row.html" %}
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="research-cards">
+        {% for result in results %}
+          {% include "research/result-row.html" %}
+        {% endfor %}
+      </div>
     {% else %}
       {% if query.status == "processing" %}
         <div hx-get="{% url 'research:query-status' query.id %}"
@@ -56,6 +59,5 @@
         </div>
       {% endif %}
     {% endif %}
-    {% include "research/summary.html" %}
   {% endif %}
 </div>

@@ -3,7 +3,7 @@
     <h4>Research Summary</h4>
     <p>{{ query.final_summary }}</p>
   </div>
-{% elif query.status == "processing" or query.status == "searching" %}
+{% elif query.status == "processing" or query.status == "searching" or query.status == "refining" %}
   <div id="research-summary-poll"
        hx-get="{% url 'research:query-status' query.id %}"
        hx-trigger="load delay:3s"

@@ -4,6 +4,7 @@ from utils.models import AuditMixin
 
 STATUS_CHOICES = [
     ("pending", "Pending"),
+    ("refining", "Refining"),
     ("searching", "Searching"),
     ("processing", "Processing"),
     ("complete", "Complete"),
@@ -21,8 +22,9 @@ RELEVANCE_CHOICES = [
 
 class ResearchQuery(AuditMixin):
     query_text = models.TextField()
-    jurisdiction = models.CharField(max_length=100, blank=True, default="")
-    jurisdiction_display = models.CharField(max_length=200, blank=True, default="")
+    state = models.CharField(max_length=20, blank=True, default="")
+    include_federal = models.BooleanField(default=False)
+    structured_query = models.TextField(blank=True, default="")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     final_summary = models.TextField(blank=True, default="")
     error_message = models.TextField(blank=True, default="")
@@ -32,6 +34,15 @@ class ResearchQuery(AuditMixin):
 
     def __str__(self):
         return f"Research: {self.query_text[:50]}"
+
+    @property
+    def jurisdiction_display(self):
+        from .jurisdictions import get_state_display
+
+        if not self.state:
+            return "All Jurisdictions"
+        label = get_state_display(self.state)
+        return f"{label} + Federal" if self.include_federal else label
 
 
 class ResearchResult(AuditMixin):
