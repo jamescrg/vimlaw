@@ -1,0 +1,6 @@
+{% include "research/search-form.html" %}
+<div id="research-results">
+  {% if active_query %}
+    {% include "research/results.html" with query=active_query %}
+  {% endif %}
+</div>

@@ -127,10 +127,9 @@ def research_delete(request, query_id):
     queries = ResearchQuery.objects.filter(created_by=request.user)[:20]
     return render(
         request,
-        "research/search-form.html",
+        "research/layout-inner.html",
         {
             "states": STATES,
             "queries": queries,
-            "deleted": True,
         },
     )

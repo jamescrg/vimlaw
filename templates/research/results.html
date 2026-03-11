@@ -5,7 +5,7 @@
       <span class="research-results-meta">{{ query.jurisdiction_display }} &middot; {{ query.created_at|date:"M j, Y g:i A" }}</span>
     </div>
     <form hx-post="{% url 'research:delete' query.id %}"
-          hx-target="#research-results"
+          hx-target=".research-layout"
           hx-swap="innerHTML"
           hx-confirm="Delete this query and its results?">
       <button type="submit" class="btn btn-icon" title="Delete query">
