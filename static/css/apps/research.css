@@ -172,7 +172,7 @@
 
 .research-structured-query code {
   color: var(--color-muted);
-  font-size: 0.8125rem;
+  font-size: 0.9rem;
   word-break: break-word;
 }
 
@@ -187,7 +187,7 @@
 
 .research-card {
   border-bottom: 1px solid var(--border-medium);
-  padding: 1.25rem 0 0 0;
+  padding: 1rem 0;
 }
 
 .research-card:first-child {
@@ -236,25 +236,27 @@
 .research-card-meta {
   color: var(--color-muted);
   font-size: 0.8125rem;
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
 }
 
 .research-snippet {
   color: var(--color-muted);
   font-size: 0.8125rem;
-  line-height: 1.5;
-  margin-top: 0.5rem;
 }
 
 .research-summary {
   margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem 0.5rem 0;
+  padding: 0 0.75rem 0 0;
+}
+
+.research-summary p {
+  margin-bottom: 0;
 }
 
 .research-status-msg {
   color: var(--color-muted);
   font-size: 0.8125rem;
-  margin-top: 0.35rem;
+  margin-top: 0.5rem;
   padding-bottom: 1rem;
 }
 
