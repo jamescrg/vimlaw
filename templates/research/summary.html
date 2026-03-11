@@ -4,10 +4,4 @@
     <h4>Research Summary</h4>
     <div>{{ query.final_summary|render_markdown }}</div>
   </div>
-{% elif query.status == "processing" or query.status == "searching" or query.status == "refining" %}
-  <div id="research-summary-poll"
-       hx-get="{% url 'research:query-status' query.id %}"
-       hx-trigger="load delay:3s"
-       hx-target="#research-results"
-       hx-swap="innerHTML"></div>
 {% endif %}

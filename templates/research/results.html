@@ -18,25 +18,7 @@
       <code>{{ query.structured_query }}</code>
     </div>
   {% endif %}
-  {% if query.status == "pending" or query.status == "refining" %}
-    <div class="research-loading"
-         hx-get="{% url 'research:query-status' query.id %}"
-         hx-trigger="load delay:2s"
-         hx-target="#research-results"
-         hx-swap="innerHTML">
-      <i class="icon-loader spin"></i>
-      <span>Refining query...</span>
-    </div>
-  {% elif query.status == "searching" %}
-    <div class="research-loading"
-         hx-get="{% url 'research:query-status' query.id %}"
-         hx-trigger="load delay:2s"
-         hx-target="#research-results"
-         hx-swap="innerHTML">
-      <i class="icon-search spin"></i>
-      <span>Searching CourtListener...</span>
-    </div>
-  {% elif query.status == "error" %}
+  {% if query.status == "error" %}
     <div class="research-error">
       <i class="icon-alert-triangle"></i>
       {{ query.error_message }}
@@ -49,14 +31,23 @@
           {% include "research/result-row.html" %}
         {% endfor %}
       </div>
-    {% elif query.status == "processing" %}
+    {% endif %}
+    {% if query.status != "complete" %}
       <div class="research-loading"
            hx-get="{% url 'research:query-status' query.id %}"
            hx-trigger="load delay:2s"
            hx-target="#research-results"
            hx-swap="innerHTML">
         <i class="icon-loader spin"></i>
-        <span>Processing results...</span>
+        <span>
+          {% if query.status == "pending" or query.status == "refining" %}
+            Refining query...
+          {% elif query.status == "searching" %}
+            Searching CourtListener...
+          {% else %}
+            Processing results...
+          {% endif %}
+        </span>
       </div>
     {% endif %}
   {% endif %}
