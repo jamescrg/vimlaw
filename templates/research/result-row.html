@@ -1,0 +1,40 @@
+<tr id="result-{{ result.id }}"
+    {% if result.relevance == "pending" %} hx-get="{% url 'research:result-status' result.id %}" hx-trigger="load delay:2s" hx-target="#result-{{ result.id }}" hx-swap="outerHTML" {% endif %}>
+  <td class="col-pos">{{ result.position }}</td>
+  <td class="col-case">
+    <div class="research-case-name">
+      {% if result.courtlistener_url %}
+        <a href="{{ result.courtlistener_url }}" target="_blank" rel="noopener">{{ result.case_name }}</a>
+      {% else %}
+        {{ result.case_name }}
+      {% endif %}
+    </div>
+    {% if result.citation %}<div class="research-citation">{{ result.citation }}</div>{% endif %}
+    {% if result.relevance == "pending" %}
+      <div class="research-status-msg">
+        <i class="icon-loader spin"></i>
+        {{ result.status_message|default:"Waiting..." }}
+      </div>
+    {% elif result.relevance == "high" and result.gemini_summary %}
+      <div class="research-summary">{{ result.gemini_summary }}</div>
+    {% endif %}
+    {% if result.snippet and result.relevance != "high" %}
+      <div class="research-snippet">{{ result.snippet|safe|truncatechars:200 }}</div>
+    {% endif %}
+  </td>
+  <td class="col-court">{{ result.court }}</td>
+  <td class="col-date">{{ result.date_filed }}</td>
+  <td class="col-relevance">
+    {% if result.relevance == "pending" %}
+      <span class="badge badge-muted">Pending</span>
+    {% elif result.relevance == "high" %}
+      <span class="badge badge-green">High</span>
+    {% elif result.relevance == "medium" %}
+      <span class="badge badge-yellow">Medium</span>
+    {% elif result.relevance == "low" %}
+      <span class="badge badge-muted">Low</span>
+    {% elif result.relevance == "error" %}
+      <span class="badge badge-red">Error</span>
+    {% endif %}
+  </td>
+</tr>

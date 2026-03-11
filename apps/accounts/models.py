@@ -25,6 +25,7 @@ class CustomUser(AbstractUser):
     perm_financial = models.BooleanField(default=True)
     perm_intakes = models.BooleanField(default=True)
     perm_reports = models.BooleanField(default=True)
+    perm_research = models.BooleanField(default=True)
     history = HistoricalRecords()
 
     objects = CustomUserManager()

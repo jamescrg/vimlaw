@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+  <div id="content" class="container content">
+    <div class="research-layout">
+      <div class="research-sidebar">
+        <h3>History</h3>
+        <ul class="research-history">
+          {% for q in queries %}
+            <li {% if active_query and active_query.id == q.id %}class="active"{% endif %}>
+              <a href="{% url 'research:detail' q.id %}">
+                <span class="research-history-query">{{ q.query_text|truncatechars:50 }}</span>
+                <span class="research-history-meta">{{ q.jurisdiction_display }} &middot; {{ q.created_at|date:"M j" }}</span>
+              </a>
+            </li>
+          {% empty %}
+            <li class="research-history-empty">No past queries</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="research-main">
+        {% include "research/search-form.html" %}
+        <div id="research-results">
+          {% if active_query %}
+            {% include "research/results.html" with query=active_query %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

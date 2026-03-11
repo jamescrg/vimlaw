@@ -38,6 +38,11 @@
             <a id="nav-reports" href={% url 'reports:index' %}>Reports</a>
           </li>
         {% endif %}
+        {% if user.is_admin or user.perm_research %}
+          <li {% if app == 'research' %}class="active"{% endif %}>
+            <a id="nav-research" href="{% url 'research:index' %}">Research</a>
+          </li>
+        {% endif %}
       </ul>
       <ul class="navbar-right">
         <li {% if app == 'search' %}class="active"{% endif %}>

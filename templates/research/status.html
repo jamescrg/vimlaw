@@ -1,0 +1,63 @@
+{% if query.status == "pending" or query.status == "searching" %}
+  <div class="research-loading"
+       hx-get="{% url 'research:query-status' query.id %}"
+       hx-trigger="load delay:2s"
+       hx-swap="outerHTML">
+    <i class="icon-search spin"></i>
+    <span>Searching CourtListener...</span>
+  </div>
+{% elif query.status == "processing" %}
+  {% if results %}
+    <table class="research-results-table">
+      <thead>
+        <tr>
+          <th class="col-pos">#</th>
+          <th class="col-case">Case</th>
+          <th class="col-court">Court</th>
+          <th class="col-date">Date</th>
+          <th class="col-relevance">Relevance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in results %}
+          {% include "research/result-row.html" %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "research/summary.html" %}
+  {% else %}
+    <div hx-get="{% url 'research:query-status' query.id %}"
+         hx-trigger="load delay:2s"
+         hx-swap="outerHTML">
+      <div class="research-loading">
+        <i class="icon-loader spin"></i>
+        <span>Processing results...</span>
+      </div>
+    </div>
+  {% endif %}
+{% elif query.status == "error" %}
+  <div class="research-error">
+    <i class="icon-alert-triangle"></i>
+    {{ query.error_message }}
+  </div>
+{% elif query.status == "complete" %}
+  {% if results %}
+    <table class="research-results-table">
+      <thead>
+        <tr>
+          <th class="col-pos">#</th>
+          <th class="col-case">Case</th>
+          <th class="col-court">Court</th>
+          <th class="col-date">Date</th>
+          <th class="col-relevance">Relevance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in results %}
+          {% include "research/result-row.html" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+  {% include "research/summary.html" %}
+{% endif %}

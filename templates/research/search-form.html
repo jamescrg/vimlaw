@@ -1,0 +1,27 @@
+{% if deleted %}<div id="research-results"></div>{% endif %}
+<form class="research-search-form"
+      hx-post="{% url 'research:search' %}"
+      hx-target="#research-results"
+      hx-swap="innerHTML">
+  <div class="research-search-row">
+    <div class="research-search-input">
+      <textarea name="query_text"
+                placeholder="Enter your legal research query..."
+                rows="2"
+                required></textarea>
+    </div>
+    <div class="research-search-controls">
+      <select name="jurisdiction">
+        <option value="">All Jurisdictions</option>
+        {% for group_name, courts in jurisdictions.items %}
+          <optgroup label="{{ group_name }}">
+            {% for court_id, display_name in courts %}<option value="{{ court_id }}">{{ display_name }}</option>{% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">
+        <i class="icon-search"></i> Search
+      </button>
+    </div>
+  </div>
+</form>

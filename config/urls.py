@@ -46,6 +46,8 @@ urlpatterns = [
     path("", include("apps.invoicing.urls")),
     # Reports App
     path("", include("apps.reports.urls")),
+    # Research App
+    path("", include("apps.research.urls")),
     # Management App
     path("", include("apps.management.urls")),
 ]
