@@ -1,0 +1,17 @@
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-get="{% url 'notes:bulk-move' %}"
+     hx-target="#htmx-modal-container">
+    <i class="icon-arrow-right"></i> Move Selected...
+  </a>
+</li>
+<li>
+  <a class="dropdown-item text-danger"
+     href="#"
+     hx-post="{% url 'notes:bulk-delete' %}"
+     hx-confirm="Delete {{ selected_ids|length }} selected note(s)? This cannot be undone."
+     hx-swap="none">
+    <i class="icon-trash-2"></i> Delete Selected
+  </a>
+</li>

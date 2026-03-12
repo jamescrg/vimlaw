@@ -894,6 +894,15 @@ body:has(.note-page.standalone) {
   min-width: 54rem;
 }
 
+.notes-list th.col-select,
+.notes-list td.col-select {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  vertical-align: middle;
+  width: 2.5rem;
+}
+
 .notes-list .category {
   width: 10rem;
 }

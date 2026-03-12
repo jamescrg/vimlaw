@@ -120,4 +120,19 @@ urlpatterns = [
         views.note_folder_toggle_all,
         name="folder-toggle-all",
     ),
+    # Note multi-select views
+    path(
+        "notes/toggle-select/<int:note_id>/",
+        views.notes_toggle_select,
+        name="toggle-select",
+    ),
+    path("notes/select-all/", views.notes_select_all, name="select-all"),
+    path("notes/clear-selection/", views.notes_clear_selection, name="clear-selection"),
+    path(
+        "notes/bulk-set-importance/",
+        views.notes_bulk_set_importance,
+        name="bulk-set-importance",
+    ),
+    path("notes/bulk-move/", views.notes_bulk_move, name="bulk-move"),
+    path("notes/bulk-delete/", views.notes_bulk_delete, name="bulk-delete"),
 ]

@@ -1,38 +1,65 @@
 <div class="section">
   <div class="toolbar notes-toolbar">
     <div class="toolbar-left">
-      <h2>
-        {% if all_folders_selected %}
-          All Folders
-        {% elif selected_note_folder %}
-          {{ selected_note_folder.name }}
-        {% else %}
-          Inbox
-        {% endif %}
-      </h2>
+      {% if selected_notes %}
+        <div class="filter-tools">
+          {% include "notes/bulk-toolbar.html" %}
+          <button type="button"
+                  class="btn-icon toggle-active"
+                  hx-get="{% url 'notes:bulk-move' %}"
+                  hx-target="#htmx-modal-container">
+            <i class="icon-arrow-right with-text"></i> Move ({{ selected_notes|length }})
+          </button>
+          <button type="button"
+                  class="btn-icon toggle-active"
+                  hx-post="{% url 'notes:bulk-delete' %}"
+                  hx-confirm="Delete {{ selected_notes|length }} selected note(s)? This cannot be undone."
+                  hx-swap="none">
+            <i class="icon-trash-2 with-text"></i> Delete ({{ selected_notes|length }})
+          </button>
+          <button type="button"
+                  class="btn-icon"
+                  hx-post="{% url 'notes:clear-selection' %}"
+                  hx-swap="none">
+            <i class="icon-x with-text"></i> Cancel
+          </button>
+        </div>
+      {% else %}
+        <h2>
+          {% if all_folders_selected %}
+            All Folders
+          {% elif selected_note_folder %}
+            {{ selected_note_folder.name }}
+          {% else %}
+            Inbox
+          {% endif %}
+        </h2>
+      {% endif %}
     </div>
-    <div class="toolbar-center">
-      <input type="text"
-             id="notes-keyword-input"
-             name="keyword"
-             placeholder="Keyword Search"
-             value="{{ keyword }}"
-             class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
-             hx-get="{% url 'notes:filter-keyword' %}"
-             hx-target="#notes-table"
-             hx-trigger="keyup changed delay:500ms"
-             hx-include="this"
-             oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
-    </div>
-    <div class="toolbar-right">
-      <button type="button"
-              class="btn-icon"
-              hx-get="{% url 'notes:add' %}"
-              hx-target="#htmx-modal-container"
-              hx-trigger="click">
-        <i class="icon-plus"></i>
-      </button>
-    </div>
+    {% if not selected_notes %}
+      <div class="toolbar-center">
+        <input type="text"
+               id="notes-keyword-input"
+               name="keyword"
+               placeholder="Keyword Search"
+               value="{{ keyword }}"
+               class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
+               hx-get="{% url 'notes:filter-keyword' %}"
+               hx-target="#notes-table"
+               hx-trigger="keyup changed delay:500ms"
+               hx-include="this"
+               oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
+      </div>
+      <div class="toolbar-right">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'notes:add' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click">
+          <i class="icon-plus"></i>
+        </button>
+      </div>
+    {% endif %}
   </div>
   <div id="notes-table">{% include "notes/table.html" %}</div>
   <div class="flex-start-space">

@@ -1,0 +1,20 @@
+<div class="dropdown" x-data="dropdown()">
+  <button type="button"
+          class="btn-icon toggle-active"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    <i class="icon-flag with-text"></i> Importance
+  </button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    {% for i in "1234567890"|make_list %}
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'notes:bulk-set-importance' %}"
+           hx-vals='{"importance": "{{ forloop.counter }}"}'
+           hx-swap="none"><i class="icon-flag"></i> {{ forloop.counter }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,6 +1,10 @@
 <div class="table-container">
   <table id="notes-list" class="table notes-list">
     <tr>
+      <th class="col-select">
+        {% url 'notes:select-all' as select_all_url %}
+        {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
+      </th>
       <th class="title">
         Title
         <button class="btn-sort {% if 'title' in current_order %}active{% endif %}"
@@ -39,7 +43,7 @@
       {% include "notes/row.html" %}
     {% empty %}
       <tr>
-        <td colspan="5" class="empty-message">No notes found.</td>
+        <td colspan="6" class="empty-message">No notes found.</td>
       </tr>
     {% endfor %}
   </table>

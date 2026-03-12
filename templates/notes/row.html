@@ -1,4 +1,8 @@
 <tr id="note-{{ note.id }}">
+  <td class="col-select">
+    {% url 'notes:toggle-select' note.id as toggle_url %}
+    {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=note.id selected_ids=selected_notes %}
+  </td>
   <td class="title">
     <div class="dropdown" x-data="dropdown()">
       <a href="#"

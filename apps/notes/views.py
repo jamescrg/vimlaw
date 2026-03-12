@@ -6,10 +6,21 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.management.pagination import CustomPaginator
+from apps.management.selection import (
+    all_visible_selected,
+    clear_selected_ids,
+    get_selected_ids,
+    get_session_key,
+    select_all_ids,
+    selection_response,
+    toggle_id,
+)
 
 from .filters import NotesFilter
 from .forms import NoteFolderForm, NoteFolderMoveForm, NoteForm
 from .models import Note, NoteFolder, NoteView
+
+NOTES_TRIGGER = "notesChanged"
 
 SIDEBAR_SORT_OPTIONS = [
     ("-viewed_at", "Recently viewed"),
@@ -166,6 +177,11 @@ def get_notes_data(request):
         notes_list, per_page=20, request=request, session_key="standalone_notes_page"
     )
 
+    # Selection state
+    session_key = get_session_key("selected_notes")
+    selected_notes = get_selected_ids(request, session_key)
+    visible_ids = [n.id for n in pagination.get_object_list()]
+
     return {
         "notes": pagination.get_object_list(),
         "pagination": pagination,
@@ -184,6 +200,8 @@ def get_notes_data(request):
         "selected_category_key": category_key,
         "topics": topics,
         "selected_topic": selected_topic,
+        "selected_notes": selected_notes,
+        "all_selected": all_visible_selected(selected_notes, visible_ids),
     }
 
 
@@ -830,3 +848,96 @@ def note_move(request, note_id):
         "move_targets": tree,
     }
     return render(request, "notes/move.html", context)
+
+
+# ---------------------------------------------------------------------------
+# Note multi-select views
+# ---------------------------------------------------------------------------
+
+
+@login_required
+@require_POST
+def notes_toggle_select(request, note_id):
+    """Toggle a single note's selection."""
+    get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    toggle_id(request, get_session_key("selected_notes"), note_id)
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+@require_POST
+def notes_select_all(request):
+    """Select or deselect all visible notes."""
+    visible_ids = [n.id for n in get_notes_data(request)["notes"]]
+    select_all_ids(request, get_session_key("selected_notes"), visible_ids)
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+@require_POST
+def notes_clear_selection(request):
+    """Clear all note selections."""
+    clear_selected_ids(request, get_session_key("selected_notes"))
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+@require_POST
+def notes_bulk_set_importance(request):
+    """Set importance on selected notes."""
+    key = get_session_key("selected_notes")
+    selected = get_selected_ids(request, key)
+    if not selected:
+        return HttpResponse(status=400, content="No notes selected.")
+
+    importance = request.POST.get("importance")
+    if importance:
+        Note.objects.filter(id__in=selected, matter__isnull=True).update(
+            importance=int(importance)
+        )
+        clear_selected_ids(request, key)
+
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+def notes_bulk_move(request):
+    """Move selected notes to a folder via modal."""
+    key = get_session_key("selected_notes")
+    selected = get_selected_ids(request, key)
+    if not selected:
+        return HttpResponse(status=400, content="No notes selected.")
+
+    if request.method == "POST":
+        folder_id = request.POST.get("destination")
+        if folder_id:
+            folder = get_object_or_404(NoteFolder, pk=folder_id)
+        else:
+            folder = None
+        Note.objects.filter(id__in=selected, matter__isnull=True).update(folder=folder)
+        clear_selected_ids(request, key)
+        return HttpResponse(status=204, headers={"HX-Trigger": NOTES_TRIGGER})
+
+    all_folders = NoteFolder.objects.all()
+    tree = build_note_folder_tree_flat(all_folders, set())
+
+    context = {
+        "selected_count": len(selected),
+        "move_targets": tree,
+    }
+    return render(request, "notes/bulk-move.html", context)
+
+
+@login_required
+@require_POST
+def notes_bulk_delete(request):
+    """Delete selected notes."""
+    key = get_session_key("selected_notes")
+    selected = get_selected_ids(request, key)
+    if not selected:
+        return HttpResponse(status=400, content="No notes selected.")
+
+    Note.objects.filter(id__in=selected, matter__isnull=True).delete()
+    clear_selected_ids(request, key)
+
+    return selection_response(NOTES_TRIGGER)
