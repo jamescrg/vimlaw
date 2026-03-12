@@ -1,15 +1,13 @@
 {% load humanize %}
-{% if show_select %}
-  <td class="col-select">
-    {% url 'activity:time-toggle-select' entry.id as toggle_url %}
-    {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=entry.id selected_ids=selected_time %}
-  </td>
-{% endif %}
+<td class="col-select">
+  <button class="btn-check"
+          hx-post="{% url 'matters:activity-toggle-select' matter.id entry.id %}"
+          hx-swap="none">
+    <i class="icon-square{% if entry.id in selected_entries %}-check{% endif %}"></i>
+  </button>
+</td>
 <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
 <td class="user">{{ entry.user.initials }}</td>
-<td class="matter">
-  <a href={% url 'matters:activity-index' id=entry.matter.id %}>{{ entry.matter.name }}</a>
-</td>
 <td class="actions">
   {% if entry.invoice and not entry.invoice.status == 'DRAFT' %}
     {{ entry.actions }}
@@ -22,11 +20,11 @@
        data-bs-target="#htmx-modal-container">{{ entry.actions }}</a>
   {% endif %}
   {% for label in entry.labels.all %}
-    {% include "activity/labels/badge.html" with object_type="time" object=entry %}
+    {% include "activity/labels/badge.html" with object_type="time" object=entry view="matter" %}
   {% empty %}
     <a href="#"
        class="add-icon"
-       hx-get="{% url 'activity:labels-apply-modal' 'time' entry.id %}"
+       hx-get="{% url 'activity:labels-apply-modal' 'time' entry.id %}?view=matter&matter_id={{ matter.id }}"
        hx-target="#htmx-modal-container"
        data-bs-toggle="modal"
        data-bs-target="#htmx-modal-container">
@@ -34,15 +32,15 @@
     </a>
   {% endfor %}
 </td>
-<td class="hours">{{ entry.hours|floatformat:1 }}</td>
-<td class="rate">
+<td class="hours numeric">{{ entry.hours|floatformat:1 }}</td>
+<td class="rate numeric">
   {% if entry.comp %}
     comp
   {% else %}
     ${{ entry.rate }}
   {% endif %}
 </td>
-<td class="fee">
+<td class="fee numeric">
   {% if entry.comp %}
     comp
   {% else %}

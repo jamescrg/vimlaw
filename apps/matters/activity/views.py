@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
+from apps.activity.models import ActivityLabel
 from apps.activity.time.models import TimeEntry
 from apps.activity.time.summary import calculate_summary
 from apps.management.pagination import CustomPaginator
@@ -268,3 +269,43 @@ def activity_bulk_update_comp(request, matter_id):
     }
 
     return render(request, "matters/activity/bulk-comp-form.html", context)
+
+
+@login_required
+def activity_bulk_apply_labels(request, matter_id):
+    key = get_session_key("selected_matter_activity", matter_id)
+    selected_entries = get_selected_ids(request, key)
+
+    if not selected_entries:
+        return HttpResponse(status=400, content="No time entries selected.")
+
+    if request.method == "POST":
+        label_ids = request.POST.getlist("labels")
+        action = request.POST.get("action", "add")
+
+        if label_ids:
+            entries = TimeEntry.objects.filter(id__in=selected_entries)
+            labels = ActivityLabel.objects.filter(id__in=label_ids)
+
+            for entry in entries:
+                if action == "add":
+                    entry.labels.add(*labels)
+                elif action == "remove":
+                    entry.labels.remove(*labels)
+                elif action == "set":
+                    entry.labels.set(labels)
+
+            clear_selected_ids(request, key)
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": MATTER_ACTIVITY_TRIGGER}
+            )
+
+    labels = ActivityLabel.objects.all()
+
+    context = {
+        "selected_count": len(selected_entries),
+        "labels": labels,
+        "matter_id": matter_id,
+    }
+
+    return render(request, "matters/activity/bulk-labels-form.html", context)

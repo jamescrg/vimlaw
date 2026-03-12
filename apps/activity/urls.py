@@ -18,6 +18,20 @@ from apps.activity.expenses.views import (
     expenses_toggle_select,
     order_by_expenses,
 )
+from apps.activity.labels.views import (
+    add_label,
+    add_label_to,
+    bulk_apply_label_expenses,
+    bulk_apply_label_time,
+    delete_label,
+    edit_label,
+    labels_apply_modal,
+    labels_create_and_apply,
+    labels_index,
+    labels_list,
+    labels_search,
+    remove_label_from,
+)
 from apps.activity.time.views import (
     abbreviation_code_add,
     abbreviation_code_delete,
@@ -178,5 +192,48 @@ urlpatterns = [
         "activity/expenses/bulk/update-comp",
         expenses_bulk_update_comp,
         name="expenses-bulk-update-comp",
+    ),
+    # Labels subtab
+    path("activity/labels/", labels_index, name="labels-index"),
+    path("activity/labels/list/", labels_list, name="labels-list"),
+    path("activity/labels/add/", add_label, name="labels-add"),
+    path("activity/labels/<int:label_id>/edit/", edit_label, name="labels-edit"),
+    path("activity/labels/<int:label_id>/delete/", delete_label, name="labels-delete"),
+    # Label application to entries
+    path(
+        "activity/labels/apply/<str:object_type>/<int:object_id>/",
+        labels_apply_modal,
+        name="labels-apply-modal",
+    ),
+    path(
+        "activity/labels/search/<str:object_type>/<int:object_id>/",
+        labels_search,
+        name="labels-search",
+    ),
+    path(
+        "activity/labels/add-to/<str:object_type>/<int:object_id>/",
+        add_label_to,
+        name="labels-add-to",
+    ),
+    path(
+        "activity/labels/remove-from/<str:object_type>/<int:object_id>/",
+        remove_label_from,
+        name="labels-remove-from",
+    ),
+    path(
+        "activity/labels/create-and-apply/<str:object_type>/<int:object_id>/",
+        labels_create_and_apply,
+        name="labels-create-and-apply",
+    ),
+    # Bulk label actions
+    path(
+        "activity/time/bulk/apply-labels",
+        bulk_apply_label_time,
+        name="time-bulk-apply-labels",
+    ),
+    path(
+        "activity/expenses/bulk/apply-labels",
+        bulk_apply_label_expenses,
+        name="expenses-bulk-apply-labels",
     ),
 ]

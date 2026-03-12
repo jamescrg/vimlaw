@@ -136,6 +136,11 @@ urlpatterns = [
         activity.activity_bulk_update_comp,
         name="activity-bulk-update-comp",
     ),
+    path(
+        "matters/<int:matter_id>/activity/bulk/apply-labels",
+        activity.activity_bulk_apply_labels,
+        name="activity-bulk-apply-labels",
+    ),
     # events
     path("matters/<int:id>/events/", events.events_index, name="events-index"),
     path("matters/<int:id>/events/list/", events.events_list, name="events"),

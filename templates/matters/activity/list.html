@@ -61,44 +61,7 @@
           <th class="numeric fee">Fee</th>
         </tr>
         {% for entry in entries %}
-          <tr id="time-{{ entry.id }}">
-            <td class="col-select">
-              <button class="btn-check"
-                      hx-post="{% url 'matters:activity-toggle-select' matter.id entry.id %}"
-                      hx-swap="none">
-                <i class="icon-square{% if entry.id in selected_entries %}-check{% endif %}"></i>
-              </button>
-            </td>
-            <td class="date">{{ entry.date|date:'Y-m-d' }}</td>
-            <td class="user">{{ entry.user.initials }}</td>
-            <td class="actions">
-              {% if entry.invoice and not entry.invoice.status == 'DRAFT' %}
-                {{ entry.actions }}
-              {% else %}
-                <a href="#"
-                   hx-get="{% url 'activity:time-edit' id=entry.id %}"
-                   hx-target="#htmx-modal-container"
-                   hx-trigger="click"
-                   data-bs-toggle="modal"
-                   data-bs-target="#htmx-modal-container">{{ entry.actions }}</a>
-              {% endif %}
-            </td>
-            <td class="hours numeric">{{ entry.hours|floatformat:1 }}</td>
-            <td class="rate numeric">
-              {% if entry.comp %}
-                comp
-              {% else %}
-                ${{ entry.rate }}
-              {% endif %}
-            </td>
-            <td class="fee numeric">
-              {% if entry.comp %}
-                comp
-              {% else %}
-                ${{ entry.fee|floatformat:2|intcomma }}
-              {% endif %}
-            </td>
-          </tr>
+          <tr id="time-{{ entry.id }}">{% include "matters/activity/table-row.html" %}</tr>
         {% empty %}
           <tr>
             <td colspan="7" class="empty-message">No time entries found for this matter.</td>

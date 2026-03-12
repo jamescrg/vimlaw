@@ -1,0 +1,27 @@
+<div class="labels-cards">
+  <div class="card">
+    <div class="card-header">
+      <span>Activity Labels</span>
+      <button type="button"
+              class="btn-icon-sm"
+              hx-get="{% url 'activity:labels-add' %}"
+              hx-target="#htmx-modal-container"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container">
+        <i class="icon-plus"></i>
+      </button>
+    </div>
+    <div class="card-body labels-flow">
+      {% for label in labels %}
+        <a href="#"
+           class="app-badge label-{{ label.color }}"
+           hx-get="{% url 'activity:labels-edit' label.id %}"
+           hx-target="#htmx-modal-container"
+           data-bs-toggle="modal"
+           data-bs-target="#htmx-modal-container">{{ label.name }}</a>
+      {% empty %}
+        <span class="text-muted">No activity labels defined. Create one to categorize your time entries and expenses.</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>

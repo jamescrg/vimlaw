@@ -14,3 +14,11 @@
     <i class="icon-check"></i> Update Comp Status...
   </a>
 </li>
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-get="{% url 'matters:activity-bulk-apply-labels' matter.id %}"
+     hx-target="#htmx-modal-container">
+    <i class="icon-tag"></i> Labels...
+  </a>
+</li>

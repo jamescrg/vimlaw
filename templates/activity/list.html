@@ -10,6 +10,9 @@
           <li {% if subapp == "expenses" %}class="active"{% endif %}>
             <a href="{% url 'activity:expenses-index' %}">Expenses</a>
           </li>
+          <li {% if subapp == "labels" %}class="active"{% endif %}>
+            <a href="{% url 'activity:labels-index' %}">Labels</a>
+          </li>
         </ul>
       </nav>
       <div class="section-body">
