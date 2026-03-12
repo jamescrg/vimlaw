@@ -21,15 +21,6 @@
   {% endif %}
   {% for label in entry.labels.all %}
     {% include "activity/labels/badge.html" with object_type="time" object=entry view="matter" %}
-  {% empty %}
-    <a href="#"
-       class="add-icon"
-       hx-get="{% url 'activity:labels-apply-modal' 'time' entry.id %}?view=matter&matter_id={{ matter.id }}"
-       hx-target="#htmx-modal-container"
-       data-bs-toggle="modal"
-       data-bs-target="#htmx-modal-container">
-      <i class="icon-tag"></i>
-    </a>
   {% endfor %}
 </td>
 <td class="hours numeric">{{ entry.hours|floatformat:1 }}</td>
