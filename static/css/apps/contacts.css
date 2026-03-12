@@ -138,7 +138,7 @@
 /* Contact Cards (Address and Email) */
 .contact-card {
   border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   line-height: 1.6;
   margin-bottom: 1rem;
   padding: 1.25rem;

@@ -5,7 +5,7 @@ Base badge styles (shared by all badge types)
 .app-badge {
   background-color: var(--label-gray);
   border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--color-primary);
   display: inline-block;
   font-size: 0.8125rem;

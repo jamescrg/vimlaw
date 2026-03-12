@@ -30,7 +30,7 @@ select,
 textarea {
   background: var(--input-background);
   border: solid 1px var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 1rem;
   line-height: 1.5;
@@ -58,7 +58,7 @@ button {
   align-items: center;
   background: var(--input-background) !important;
   border: solid 1px var(--border-medium) !important;
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-sm) !important;
   color: var(--color-primary);
   cursor: pointer;
   display: flex;
@@ -89,7 +89,7 @@ button {
   align-items: center;
   background: var(--background-section);
   border: solid 1px var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex !important;
   justify-content: space-between;
   margin: 0.5rem 0 0 !important;
@@ -175,7 +175,7 @@ button {
 
 .form-control,
 .form-select {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
 }
 
 .form-control:focus,
@@ -375,7 +375,7 @@ input[type="file"]::file-selector-button {
   appearance: none;
   background: var(--background-control);
   border: none;
-  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   border-right: solid 1px var(--border-medium);
   color: var(--color-primary);
   cursor: pointer;

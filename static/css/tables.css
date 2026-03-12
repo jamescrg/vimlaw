@@ -8,7 +8,7 @@
 .table {
   border: solid 1px var(--border-medium);
   border-collapse: separate;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border-spacing: 0;
   color: inherit;
   margin-bottom: 0;
@@ -72,19 +72,19 @@ tbody tr:last-child td {
 
 /* Round corner cells */
 thead tr:first-child th:first-child {
-  border-top-left-radius: calc(var(--radius-md) - 1px);
+  border-top-left-radius: calc(var(--radius-sm) - 1px);
 }
 
 thead tr:first-child th:last-child {
-  border-top-right-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-sm);
 }
 
 tbody tr:last-child td:first-child {
-  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+  border-bottom-left-radius: calc(var(--radius-sm) - 1px);
 }
 
 tbody tr:last-child td:last-child {
-  border-bottom-right-radius: calc(var(--radius-md) - 1px);
+  border-bottom-right-radius: calc(var(--radius-sm) - 1px);
 }
 
 td.dropdown-cell {
@@ -129,7 +129,7 @@ th.numeric,
 .totals-table table {
   border: solid 1px var(--border-medium);
   border-collapse: separate;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border-spacing: 0;
   margin: 1.5rem 0 0 1.5rem;
   min-width: 25rem;
@@ -138,22 +138,22 @@ th.numeric,
 /* Totals table corner rounding (no thead/tbody structure) */
 .totals-table tr:first-child td:first-child,
 .totals-table tr:first-child th:first-child {
-  border-top-left-radius: calc(var(--radius-md) - 1px);
+  border-top-left-radius: calc(var(--radius-sm) - 1px);
 }
 
 .totals-table tr:first-child td:last-child,
 .totals-table tr:first-child th:last-child {
-  border-top-right-radius: calc(var(--radius-md) - 1px);
+  border-top-right-radius: calc(var(--radius-sm) - 1px);
 }
 
 .totals-table tr:last-child td:first-child,
 .totals-table tr:last-child th:first-child {
-  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+  border-bottom-left-radius: calc(var(--radius-sm) - 1px);
 }
 
 .totals-table tr:last-child td:last-child,
 .totals-table tr:last-child th:last-child {
-  border-bottom-right-radius: calc(var(--radius-md) - 1px);
+  border-bottom-right-radius: calc(var(--radius-sm) - 1px);
 }
 
 .totals-table tr:last-child td,

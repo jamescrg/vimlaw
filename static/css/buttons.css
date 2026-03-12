@@ -1,6 +1,6 @@
 .btn {
   border: solid 1px transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   box-shadow: none;
   box-sizing: border-box;
   cursor: pointer;

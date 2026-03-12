@@ -9,7 +9,7 @@
 
 .dropdown-menu {
   border: solid 1px var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   margin: 0;
   overflow: hidden;
   padding: 0;
@@ -81,12 +81,12 @@
 }
 
 .dropdown-menu li:first-child {
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   border-top: none;
 }
 
 .dropdown-menu li:last-child {
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
 .dropdown-menu-overflow li > a {
@@ -156,7 +156,7 @@
 }
 
 .card {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
 }
 
 i.icon-plus {
