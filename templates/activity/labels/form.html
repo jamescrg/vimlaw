@@ -1,0 +1,42 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if edit %}
+          Edit Label
+        {% else %}
+          Add Label
+        {% endif %}
+      </h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="label-form"
+            hx-post="{% if edit %}{% url 'activity:labels-edit' label.id %}{% else %}{% url 'activity:labels-add' %}{% endif %}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      {% if edit %}
+        <button type="button"
+                class="btn btn-danger"
+                hx-confirm="Are you sure you want to delete this label?"
+                hx-delete="{% url 'activity:labels-delete' label.id %}"
+                hx-target="#htmx-modal-container">Delete</button>
+      {% else %}
+        <button type="button"
+                class="btn btn-secondary"
+                @click="$dispatch('close-modal')">Cancel</button>
+      {% endif %}
+      <button type="submit" form="label-form" class="btn btn-success">Submit</button>
+    </div>
+  </div>
+</div>

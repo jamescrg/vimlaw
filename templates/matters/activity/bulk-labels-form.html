@@ -1,0 +1,73 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Apply Labels to {{ selected_count }} Entries</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="bulk-label-form"
+            hx-post="{% url 'matters:activity-bulk-apply-labels' matter_id %}"
+            hx-target="#htmx-modal-container"
+            role="form">
+        {% csrf_token %}
+        <div class="form-group mb-3">
+          <label class="form-label">Action</label>
+          <select name="action" class="form-select">
+            <option value="add" selected>Add labels to entries</option>
+            <option value="remove">Remove labels from entries</option>
+            <option value="set">Replace all labels with selection</option>
+          </select>
+        </div>
+        <div class="form-group mb-3">
+          <label class="form-label">Labels</label>
+          <div class="labels-checkbox-list">
+            {% for label in labels %}
+              <label class="label-checkbox">
+                <input type="checkbox" name="labels" value="{{ label.id }}">
+                <span class="app-badge label-{{ label.color }}">{{ label.name }}</span>
+              </label>
+            {% empty %}
+              <p class="text-muted">No labels available. Create labels in the Activity > Labels tab first.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit"
+              form="bulk-label-form"
+              class="btn btn-success"
+              {% if not labels %}disabled{% endif %}>Apply</button>
+    </div>
+  </div>
+</div>
+<style>
+  .labels-checkbox-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+  }
+
+  .label-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+  }
+
+  .label-checkbox input[type="checkbox"] {
+    margin: 0;
+  }
+</style>

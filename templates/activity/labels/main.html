@@ -1,0 +1,7 @@
+{% extends "activity/list.html" %}
+{% block subcontent %}
+  <div id="labels"
+       hx-trigger="activityLabelsChanged from:body"
+       hx-get="{% url 'activity:labels-list' %}"
+       hx-target="this">{% include "activity/labels/list.html" %}</div>
+{% endblock subcontent %}

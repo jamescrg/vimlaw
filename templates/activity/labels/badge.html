@@ -1,0 +1,23 @@
+<span class="label-badge dropdown" x-data="dropdown()">
+  <a href="#"
+     class="app-badge label-{{ label.color }}"
+     x-ref="button"
+     @click.prevent="toggle()"
+     :aria-expanded="open"><i class="icon-tag"></i>{{ label.name }}</a>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open">
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'activity:labels-apply-modal' object_type object.id %}{% if view %}?view={{ view }}&matter_id={{ matter.id }}{% endif %}"
+         hx-target="#htmx-modal-container"><i class="icon-tag"></i> Add Label</a>
+    </li>
+    <li>
+      <a class="dropdown-item urgent"
+         href="#"
+         hx-post="{% url 'activity:labels-remove-from' object_type object.id %}"
+         hx-vals='{"label_id": "{{ label.id }}"{% if view %}, "view": "{{ view }}", "matter_id": "{{ matter.id }}"{% endif %}}'
+         hx-target="#{{ object_type }}-{{ object.id }}"
+         hx-swap="innerHTML"><i class="icon-x"></i> Remove</a>
+    </li>
+  </ul>
+</span>

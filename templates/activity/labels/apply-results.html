@@ -1,0 +1,45 @@
+<ul class="assign-results">
+  {% for label in labels %}
+    <li>
+      <a href="#"
+         hx-post="{% url 'activity:labels-add-to' object_type object.id %}"
+         hx-vals='{"label_id": "{{ label.id }}"{% if view %}, "view": "{{ view }}", "matter_id": "{{ matter_id }}"{% endif %}}'
+         hx-target="#{{ object_type }}-{{ object.id }}"
+         hx-swap="innerHTML"
+         @click="$dispatch('close-modal')">
+        <span class="badge label-{{ label.color }}">{{ label.name }}</span>
+      </a>
+    </li>
+  {% empty %}
+    <li class="empty-message">No matching labels found.</li>
+  {% endfor %}
+</ul>
+<div class="create-label-section">
+  <div class="create-label-header">
+    <i class="icon-plus"></i>Create New Label
+  </div>
+  <form class="create-label-form"
+        hx-post="{% url 'activity:labels-create-and-apply' object_type object.id %}"
+        hx-target="#{{ object_type }}-{{ object.id }}"
+        hx-swap="innerHTML">
+    {% if view %}<input type="hidden" name="view" value="{{ view }}">{% endif %}
+    {% if matter_id %}<input type="hidden" name="matter_id" value="{{ matter_id }}">{% endif %}
+    <input type="text"
+           name="name"
+           placeholder="Label name"
+           class="form-control"
+           required>
+    <select name="color" class="form-select">
+      <option value="blue">Blue</option>
+      <option value="gray" selected>Gray</option>
+      <option value="green">Green</option>
+      <option value="orange">Orange</option>
+      <option value="purple">Purple</option>
+      <option value="red">Red</option>
+      <option value="yellow">Yellow</option>
+    </select>
+    <button type="submit"
+            class="btn btn-success"
+            @click="$dispatch('close-modal')">Create</button>
+  </form>
+</div>

@@ -24,6 +24,18 @@
       {% if expense.category %}{{ expense.category }} -{% endif %}
     {{ expense.description }}</a>
   {% endif %}
+  {% for label in expense.labels.all %}
+    {% include "activity/labels/badge.html" with object_type="expense" object=expense %}
+  {% empty %}
+    <a href="#"
+       class="add-icon"
+       hx-get="{% url 'activity:labels-apply-modal' 'expense' expense.id %}"
+       hx-target="#htmx-modal-container"
+       data-bs-toggle="modal"
+       data-bs-target="#htmx-modal-container">
+      <i class="icon-tag"></i>
+    </a>
+  {% endfor %}
 </td>
 <td class="amount {% if not expense.entered and not expense.invoice %}urgent{% endif %}">
   {% if expense.invoice %}
