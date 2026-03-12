@@ -16,66 +16,6 @@
                 hx-trigger="click">
           <i class="icon-list-filter with-text"></i>Filter
         </button>
-        <div class="dropdown" x-data="dropdown()">
-          <button type="button"
-                  id="notes-category-filter"
-                  class="select-btn filter-dropdown-button {% if selected_category %}toggle-active{% endif %}"
-                  x-ref="button"
-                  @click="toggle()"
-                  :aria-expanded="open">
-            {{ selected_category|default:"All Categories" }}
-            <small>
-              <i class="icon-chevron-down"></i>
-            </small>
-          </button>
-          <ul class="dropdown-menu" x-ref="menu" x-show="open">
-            <li>
-              <a class="dropdown-item {% if not selected_category_key %}active{% endif %}"
-                 href="#"
-                 hx-get="{% url 'notes:filter-category-clear' %}"
-                 hx-target="#notes">All Categories</a>
-            </li>
-            {% for key, label in category_choices %}
-              <li>
-                <a class="dropdown-item {% if selected_category_key == key %}active{% endif %}"
-                   href="#"
-                   hx-get="{% url 'notes:filter-category' key %}"
-                   hx-target="#notes">{{ label }}</a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-        {% if topics %}
-          <div class="dropdown" x-data="dropdown()">
-            <button type="button"
-                    id="notes-topic-filter"
-                    class="select-btn filter-dropdown-button {% if selected_topic %}toggle-active{% endif %}"
-                    x-ref="button"
-                    @click="toggle()"
-                    :aria-expanded="open">
-              <span class="btn-text">{{ selected_topic|default:"All Topics" }}</span>
-              <small>
-                <i class="icon-chevron-down"></i>
-              </small>
-            </button>
-            <ul class="dropdown-menu" x-ref="menu" x-show="open">
-              <li>
-                <a class="dropdown-item {% if not selected_topic %}active{% endif %}"
-                   href="#"
-                   hx-get="{% url 'notes:filter-topic-clear' %}"
-                   hx-target="#notes">All Topics</a>
-              </li>
-              {% for topic in topics %}
-                <li>
-                  <a class="dropdown-item {% if selected_topic == topic %}active{% endif %}"
-                     href="#"
-                     hx-get="{% url 'notes:filter-topic' topic %}"
-                     hx-target="#notes">{{ topic }}</a>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
         <input type="text"
                id="notes-keyword-input"
                name="keyword"

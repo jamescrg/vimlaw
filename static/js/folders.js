@@ -105,3 +105,54 @@ function toggleNoteFolder(folderId, evt) {
     headers: { "X-CSRFToken": token },
   });
 }
+
+function selectMoveTarget(el, value) {
+  const tree = el.closest(".move-tree");
+  tree.querySelectorAll(".move-tree-item").forEach((item) => {
+    item.classList.remove("move-selected");
+  });
+  el.classList.add("move-selected");
+  tree.closest("form").querySelector("#move-destination").value = value;
+}
+
+function getMoveDescendantIds(folderId) {
+  const ids = [];
+  document
+    .querySelectorAll(`[data-move-parent-id="${folderId}"]`)
+    .forEach((child) => {
+      const childId = child.dataset.moveFolderId;
+      ids.push(childId);
+      ids.push(...getMoveDescendantIds(childId));
+    });
+  return ids;
+}
+
+function toggleMoveFolder(folderId, evt) {
+  evt.preventDefault();
+  evt.stopPropagation();
+
+  const folderEl = document.querySelector(
+    `[data-move-folder-id="${folderId}"]`
+  );
+  if (!folderEl) return;
+
+  const caret = folderEl.querySelector(".caret-icon");
+  if (!caret) return;
+
+  const isExpanded = caret.classList.contains("icon-chevron-down");
+
+  if (isExpanded) {
+    caret.classList.replace("icon-chevron-down", "icon-chevron-right");
+    getMoveDescendantIds(folderId).forEach((id) => {
+      const el = document.querySelector(`[data-move-folder-id="${id}"]`);
+      if (el) el.classList.add("folder-hidden");
+    });
+  } else {
+    caret.classList.replace("icon-chevron-right", "icon-chevron-down");
+    document
+      .querySelectorAll(`[data-move-parent-id="${folderId}"]`)
+      .forEach((child) => {
+        child.classList.remove("folder-hidden");
+      });
+  }
+}

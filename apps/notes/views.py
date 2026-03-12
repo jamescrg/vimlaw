@@ -501,7 +501,7 @@ def note_edit(request, note_id):
         "app": "notes",
         "note": note,
         "form": form,
-        "action": "Edit",
+        "action": "Rename",
     }
 
     return render(request, "notes/form.html", context)
@@ -763,8 +763,8 @@ def note_folder_move(request, folder_id):
             response["HX-Trigger-After-Swap"] = "closeModal"
             return response
 
-    # Build tree for move modal
-    expanded_ids = set(f.pk for f in valid_targets)  # Show all expanded
+    # Build tree for move modal — expand ancestors of current parent
+    expanded_ids = set(a.pk for a in folder.get_ancestors()) if folder.parent else set()
     tree = build_note_folder_tree_flat(valid_targets, expanded_ids)
 
     context = {
@@ -787,3 +787,32 @@ def note_folder_toggle_expand(request, folder_id):
     request.session["note_folders_expanded"] = expanded
     request.session.modified = True
     return HttpResponse(status=204)
+
+
+@login_required
+def note_move(request, note_id):
+    """Move a note to a different folder via modal."""
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    all_folders = NoteFolder.objects.all()
+
+    if request.method == "POST":
+        folder_id = request.POST.get("destination")
+        if folder_id:
+            note.folder = get_object_or_404(NoteFolder, pk=folder_id)
+        else:
+            note.folder = None
+        note.save(update_fields=["folder"])
+        return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
+
+    # Build tree — expand ancestors of current folder so selection is visible
+    if note.folder:
+        expanded_ids = set(a.pk for a in note.folder.get_ancestors())
+    else:
+        expanded_ids = set()
+    tree = build_note_folder_tree_flat(all_folders, expanded_ids)
+
+    context = {
+        "note": note,
+        "move_targets": tree,
+    }
+    return render(request, "notes/move.html", context)

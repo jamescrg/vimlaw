@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-md move-modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Move: {{ folder.name }}</h1>
+      <h1 class="modal-title">Move: {{ note.title|truncatechars:40 }}</h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
@@ -9,27 +9,26 @@
       </div>
     </div>
     <div class="modal-body">
-      <form id="note-folder-move-form"
-            hx-post="{% url 'notes:folder-move' folder.id %}"
-            hx-target="#note-folders"
-            hx-swap="innerHTML"
+      <form id="note-move-form"
+            hx-post="{% url 'notes:note-move' note.id %}"
+            hx-target="#htmx-modal-container"
             role="form">
         {% csrf_token %}
         <input type="hidden"
                name="destination"
                id="move-destination"
-               value="{{ folder.parent_id|default:'' }}">
+               value="{{ note.folder_id|default:'' }}">
         <ul class="list-group move-tree">
-          <li class="move-tree-item list-group-item{% if not folder.parent_id %} move-current move-selected{% endif %}"
+          <li class="move-tree-item list-group-item{% if not note.folder_id %} move-current move-selected{% endif %}"
               onclick="selectMoveTarget(this, '')">
             <div>
               <span class="folder-caret-placeholder"></span>
-              <i class="icon-folder"></i>
-              Root level
+              <i class="icon-inbox"></i>
+              Inbox
             </div>
           </li>
           {% for node in move_targets %}
-            <li class="move-tree-item list-group-item move-depth-{{ node.level }}{% if folder.parent_id == node.folder.id %} move-current move-selected{% endif %}{% if not node.is_visible %} folder-hidden{% endif %}"
+            <li class="move-tree-item list-group-item move-depth-{{ node.level }}{% if note.folder_id == node.folder.id %} move-current move-selected{% endif %}{% if not node.is_visible %} folder-hidden{% endif %}"
                 data-move-folder-id="{{ node.folder.id }}"
                 data-move-parent-id="{{ node.parent_id|default:'root' }}"
                 onclick="selectMoveTarget(this, '{{ node.folder.id }}')">
@@ -54,7 +53,7 @@
       <button type="button"
               class="btn btn-secondary"
               @click="$dispatch('close-modal')">Cancel</button>
-      <button type="submit" form="note-folder-move-form" class="btn btn-success">Move</button>
+      <button type="submit" form="note-move-form" class="btn btn-success">Move</button>
     </div>
   </div>
 </div>

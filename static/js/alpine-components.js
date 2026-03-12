@@ -55,7 +55,9 @@ document.addEventListener('alpine:init', () => {
       menu.style.left = `${rect.left}px`;
       menu.style.right = 'auto';
       menu.style.bottom = 'auto';
-      menu.style.minWidth = `${rect.width}px`;
+      if (button.tagName === 'BUTTON') {
+        menu.style.minWidth = `${rect.width}px`;
+      }
 
       // Check if menu would overflow viewport and adjust
       this.$nextTick(() => {

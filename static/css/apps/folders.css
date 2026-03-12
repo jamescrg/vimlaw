@@ -78,15 +78,29 @@
   font-size: 0.75rem;
 }
 
+/* Move modal */
+.move-modal .modal-header { border-bottom: none; }
+.move-modal .modal-footer { border-top: none; }
+
 /* Move modal tree */
+.move-tree .list-group-item {
+  padding-left: 0.125rem;
+}
+
 .move-tree-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
   cursor: pointer;
 }
 
-.move-depth-1 { padding-left: 1.625rem; }
-.move-depth-2 { padding-left: 2.5rem; }
-.move-depth-3 { padding-left: 3.375rem; }
+.move-tree-item.folder-hidden {
+  display: none;
+}
+
+.move-tree .move-depth-1 { padding-left: 1.125rem; }
+.move-tree .move-depth-2 { padding-left: 2rem; }
+.move-tree .move-depth-3 { padding-left: 2.875rem; }
+
+.move-tree-item.move-current { background: var(--violet-100); }
+.move-tree-item.move-selected { background: var(--lime-100); }
+.move-tree-item.move-current.move-selected { background: var(--violet-100); }

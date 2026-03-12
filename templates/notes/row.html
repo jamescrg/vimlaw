@@ -1,5 +1,4 @@
 <tr id="note-{{ note.id }}">
-  <td class="topic">{{ note.topic|default:"—" }}</td>
   <td class="title">
     <div class="dropdown" x-data="dropdown()">
       <a href="#"
@@ -16,7 +15,13 @@
           <a class="dropdown-item"
              href="#"
              hx-get="{% url 'notes:edit' note.id %}"
-             hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit Details</a>
+             hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Rename</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'notes:note-move' note.id %}"
+             hx-target="#htmx-modal-container"><i class="icon-arrow-right"></i> Move</a>
         </li>
         <li>
           <a class="dropdown-item urgent"

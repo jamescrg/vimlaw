@@ -1,14 +1,6 @@
 <div class="table-container">
   <table id="notes-list" class="table notes-list">
     <tr>
-      <th class="topic">
-        Topic
-        <button class="btn-sort {% if 'topic' in current_order %}active{% endif %}"
-                hx-get="{% url 'notes:order-by' 'topic' %}"
-                hx-target="#notes">
-          <i class="icon-chevrons-up-down"></i>
-        </button>
-      </th>
       <th class="title">
         Title
         <button class="btn-sort {% if 'title' in current_order %}active{% endif %}"
@@ -47,7 +39,7 @@
       {% include "notes/row.html" %}
     {% empty %}
       <tr>
-        <td colspan="6" class="empty-message">No notes found.</td>
+        <td colspan="5" class="empty-message">No notes found.</td>
       </tr>
     {% endfor %}
   </table>
