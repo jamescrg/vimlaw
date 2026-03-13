@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, render
 
 from .jurisdictions import STATES
 from .models import ResearchQuery, ResearchResult
-from .tasks import process_research_query
+from .tasks import process_research_query, refine_research_query, verify_result
 
 
 def research_permission_required(view_func):
@@ -56,8 +56,8 @@ def research_search(request):
         created_by=request.user,
     )
 
-    # Start background processing
-    process_research_query(query.id)
+    # Start background refinement (pauses for user review)
+    refine_research_query(query.id)
 
     # Return the results shell with polling
     queries = ResearchQuery.objects.filter(created_by=request.user)[:20]
@@ -113,6 +113,51 @@ def research_detail(request, query_id):
             "active_query": query,
             "results": results,
         },
+    )
+
+
+@research_permission_required
+def research_verify(request, result_id):
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    result = get_object_or_404(
+        ResearchResult, pk=result_id, query__created_by=request.user
+    )
+
+    # Start background verification
+    result.verify_status = "verifying"
+    result.save(update_fields=["verify_status"])
+    verify_result(result.id)
+
+    return render(request, "research/result-row.html", {"result": result})
+
+
+@research_permission_required
+def research_confirm(request, query_id):
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    query = get_object_or_404(ResearchQuery, pk=query_id, created_by=request.user)
+
+    # Update structured query with user's edits
+    structured_query = request.POST.get("structured_query", "").strip()
+    if structured_query:
+        query.structured_query = structured_query
+        query.save(update_fields=["structured_query"])
+
+    # Mark as searching before starting background thread to avoid race condition
+    query.status = "searching"
+    query.save(update_fields=["status"])
+
+    # Continue with search + processing
+    process_research_query(query.id)
+
+    results = query.results.all()
+    return render(
+        request,
+        "research/results.html",
+        {"query": query, "results": results},
     )
 
 

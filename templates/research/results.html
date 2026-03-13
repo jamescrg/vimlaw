@@ -13,7 +13,21 @@
       </button>
     </form>
   </div>
-  {% if query.structured_query %}
+  {% if query.status == "refined" %}
+    <div class="research-review">
+      <p class="research-review-label">Review search parameters before proceeding:</p>
+      <form hx-post="{% url 'research:confirm' query.id %}"
+            hx-target="#research-results"
+            hx-swap="innerHTML">
+        <textarea name="structured_query" class="research-review-input" rows="4">{{ query.structured_query }}</textarea>
+        <div class="research-review-actions">
+          <button type="submit" class="btn btn-success">
+            <i class="icon-search"></i> Run Search
+          </button>
+        </div>
+      </form>
+    </div>
+  {% elif query.structured_query and query.status != "refining" and query.status != "pending" %}
     <div class="research-structured-query">
       <code>{{ query.structured_query }}</code>
     </div>
@@ -32,7 +46,7 @@
         {% endfor %}
       </div>
     {% endif %}
-    {% if query.status != "complete" %}
+    {% if query.status != "complete" and query.status != "refined" %}
       <div class="research-loading"
            hx-get="{% url 'research:query-status' query.id %}"
            hx-trigger="load delay:2s"

@@ -1,7 +1,7 @@
 {% load markdown_extras %}
 <div class="research-card"
      id="result-{{ result.id }}"
-     {% if result.relevance == "pending" %} hx-get="{% url 'research:result-status' result.id %}" hx-trigger="load delay:2s" hx-target="#result-{{ result.id }}" hx-swap="outerHTML" {% endif %}>
+     {% if result.relevance == "pending" %} hx-get="{% url 'research:result-status' result.id %}" hx-trigger="load delay:2s" hx-target="#result-{{ result.id }}" hx-swap="outerHTML" {% elif result.verify_status == "verifying" %} hx-get="{% url 'research:result-status' result.id %}" hx-trigger="load delay:3s" hx-target="#result-{{ result.id }}" hx-swap="outerHTML" {% endif %}>
   <div class="research-card-header">
     <div class="research-card-title">
       {{ result.case_name }}
@@ -31,6 +31,11 @@
     {% if result.citation %}{{ result.citation }} &middot;{% endif %}
     {{ result.court }}
     {% if result.date_filed %}({{ result.date_filed }}){% endif %}
+    {% if result.forward_citation_count is not None %}
+      <span class="research-fwd-cite-count" title="Forward citations">
+        <i class="icon-arrow-right"></i> Cited {{ result.forward_citation_count }} time{{ result.forward_citation_count|pluralize }}
+      </span>
+    {% endif %}
   </div>
   {% if result.relevance == "pending" %}
     <div class="research-status-msg">
@@ -42,5 +47,45 @@
   {% endif %}
   {% if result.snippet and result.relevance != "high" %}
     <div class="research-snippet">{{ result.snippet|safe|truncatechars:200 }}</div>
+  {% endif %}
+  {% if result.relevance != "pending" and result.verify_status == "none" and result.forward_citation_count %}
+    <div class="research-verify-action">
+      <button class="btn btn-sm"
+              hx-post="{% url 'research:verify' result.id %}"
+              hx-target="#result-{{ result.id }}"
+              hx-swap="outerHTML">
+        <i class="icon-check-circle"></i> Verify
+      </button>
+    </div>
+  {% elif result.verify_status == "verifying" %}
+    <div class="research-status-msg">
+      <i class="icon-loader spin"></i>
+      Verifying citations...
+    </div>
+  {% elif result.verify_status == "complete" and result.verifications.exists %}
+    <div class="research-verifications">
+      <div class="research-verifications-header">Forward Citations</div>
+      {% for v in result.verifications.all %}
+        <div class="research-verification-item">
+          <div class="research-verification-case">
+            {{ v.case_name }}
+            {% if v.courtlistener_url %}
+              <a href="{{ v.courtlistener_url }}"
+                 target="_blank"
+                 rel="noopener"
+                 class="btn btn-icon research-card-link"
+                 title="View on CourtListener"><i class="icon-external-link"></i></a>
+            {% endif %}
+          </div>
+          <div class="research-verification-meta">
+            {% if v.citation %}{{ v.citation }} &middot;{% endif %}
+            {{ v.court }}
+            {% if v.date_filed %}({{ v.date_filed }}){% endif %}
+            &middot; Cited {{ v.depth }} time{{ v.depth|pluralize }}
+          </div>
+          {% if v.summary %}<div class="research-verification-summary">{{ v.summary|render_markdown }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
   {% endif %}
 </div>
