@@ -9,7 +9,13 @@ from apps.management.selection import (
 )
 from apps.matters.models import Matter
 from apps.tasks.filter import TasksFilter
-from apps.tasks.models import Checklist, Task, TaskNote, UserTaskNoteView
+from apps.tasks.models import (
+    Checklist,
+    Task,
+    TaskNote,
+    UserChecklistView,
+    UserTaskNoteView,
+)
 
 
 def get_list_data(request):
@@ -87,6 +93,12 @@ def get_list_data(request):
     )
     checklists_by_task = {cl.task_id: cl for cl in checklists}
 
+    # Checklist view tracking
+    checklist_views = UserChecklistView.objects.filter(
+        user=request.user, task_id__in=task_ids
+    ).values_list("task_id", flat=True)
+    viewed_checklist_task_ids = set(checklist_views)
+
     for task in task_list:
         task.has_notes = task.notes.exists()
         if task.has_notes:
@@ -115,8 +127,10 @@ def get_list_data(request):
             task.checklist_total = len(items)
             task.checklist_done = sum(1 for i in items if i.is_complete)
             task.checklist_complete = task.checklist_done == task.checklist_total
+            task.has_unviewed_checklist = task.id not in viewed_checklist_task_ids
         else:
             task.has_checklist = False
+            task.has_unviewed_checklist = False
 
     selected_matter = None
     if matter_id:

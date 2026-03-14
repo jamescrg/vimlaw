@@ -83,3 +83,7 @@ i.spin {
   margin-left: 0.5rem;
   vertical-align: middle;
 }
+
+.checklist-badge-icon.checklist-badge-new {
+  color: var(--icon-violet);
+}

@@ -191,6 +191,20 @@
   white-space: normal;
 }
 
+.tasks-table td.description {
+  align-items: baseline;
+  display: flex;
+}
+
+.tasks-table td.description > a:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-decorators {
+  flex-shrink: 0;
+}
+
 .tasks-table .status {
   width: 9rem;
 }
@@ -406,11 +420,7 @@
   opacity: 1;
 }
 
-.task-checklist-progress {
-  color: var(--color-muted);
-  font-size: 1rem;
-  margin-left: 0.25rem;
-}
+
 
 /* ==========================================================================
  Checklist (modal)
@@ -644,17 +654,12 @@
     margin-bottom: 0.5rem;
   }
 
-  /* Stretched link: description covers the entire card */
-  .tasks-table td.description > .dropdown > .button-link::after {
+  /* Stretched link: description's edit link covers the entire card */
+  .tasks-table td.description > a:first-child::after {
     content: "";
     inset: 0;
     position: absolute;
     z-index: 0;
-  }
-
-  /* Disable dropdown on mobile - tap goes straight to the card */
-  .tasks-table td.description .dropdown-menu {
-    display: none !important;
   }
 
   /* Interactive elements sit above the stretched link */
@@ -724,8 +729,7 @@
   }
 
   /* Hide notes and checklist icons on mobile */
-  .task-notes-btn,
-  .task-checklist-btn {
+  .task-decorators {
     display: none;
   }
 

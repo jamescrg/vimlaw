@@ -25,6 +25,7 @@ from apps.tasks.models import (
     Checklist,
     Task,
     TaskNote,
+    UserChecklistView,
     UserTaskNoteView,
     can_complete_task,
 )
@@ -103,6 +104,12 @@ def get_matter_tasks_data(request, matter_id):
     )
     checklists_by_task = {cl.task_id: cl for cl in checklists}
 
+    # Checklist view tracking
+    checklist_views = UserChecklistView.objects.filter(
+        user=request.user, task_id__in=task_ids
+    ).values_list("task_id", flat=True)
+    viewed_checklist_task_ids = set(checklist_views)
+
     for task in task_list:
         task.has_notes = task.notes.exists()
         if task.has_notes:
@@ -131,8 +138,10 @@ def get_matter_tasks_data(request, matter_id):
             task.checklist_total = len(items)
             task.checklist_done = sum(1 for i in items if i.is_complete)
             task.checklist_complete = task.checklist_done == task.checklist_total
+            task.has_unviewed_checklist = task.id not in viewed_checklist_task_ids
         else:
             task.has_checklist = False
+            task.has_unviewed_checklist = False
 
     selected_user = None
     if user_id:
@@ -320,7 +329,7 @@ def tasks_edit(request, id, task_id):
             if task.status == "Complete" and not can_complete_task(task):
                 form.add_error(
                     "status",
-                    "Complete all checklist items before marking this task as done.",
+                    "Please complete all checklist items before marking this task as done.",
                 )
             else:
                 task.save()
@@ -442,8 +451,8 @@ def tasks_status(request, id, task_id):
             response = HttpResponse(status=204)
             response["HX-Toast"] = json.dumps(
                 {
-                    "type": "warning",
-                    "message": "Complete all checklist items before marking this task as done.",
+                    "type": "items incomplete",
+                    "message": "Please complete all checklist items before marking this task as done.",
                 }
             )
             return response
@@ -462,7 +471,7 @@ def tasks_set_status(request, id, task_id, status):
         response["HX-Toast"] = json.dumps(
             {
                 "type": "warning",
-                "message": "Complete all checklist items before marking this task as done.",
+                "message": "Please complete all checklist items before marking this task as done.",
             }
         )
         return response

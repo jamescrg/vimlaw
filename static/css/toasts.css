@@ -23,7 +23,6 @@
 }
 
 #toast-container .toast-header strong {
-    color: var(--color-darker);
     flex: 1;
     font-size: 1rem;
 }

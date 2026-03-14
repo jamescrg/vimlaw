@@ -185,56 +185,25 @@
               data-label="Priority">{% include "matters/tasks/priority.html" %}</td>
           <td class="matter {% if task.status == 'Complete' %}complete{% endif %}"
               data-label="Matter">{% include "matters/tasks/matter.html" %}</td>
-          <td class="description dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
+          <td class="description {% if task.status == 'Complete' %}complete{% endif %}"
               data-label="Description">
-            <div class="dropdown" x-data="dropdown()">
-              <button class="button-link"
-                      type="button"
-                      x-ref="button"
-                      @click="toggle()"
-                      :aria-expanded="open">{{ task.description }}</button>
-              <ul class="dropdown-menu" x-ref="menu" x-show="open">
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-get="{% url 'matters:tasks-edit' matter.id task.id %}"
-                     hx-target="#htmx-modal-container"
-                     hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
-                </li>
-                {% if task.has_checklist %}
-                  <li>
-                    <a class="dropdown-item"
-                       href="#"
-                       hx-post="{% url 'tasks:remove-checklist' task.id %}?matter_id={{ matter.id }}"
-                       hx-target="#matterTasks"
-                       hx-confirm="Remove this checklist?"><i class="icon-x"></i> Remove Checklist</a>
-                  </li>
-                {% else %}
-                  <li>
-                    <a class="dropdown-item"
-                       href="#"
-                       hx-get="{% url 'tasks:attach-checklist' task.id %}?matter_id={{ matter.id }}"
-                       hx-target="#htmx-modal-container"
-                       hx-trigger="click"><i class="icon-list-checks"></i> Add Checklist</a>
-                  </li>
-                {% endif %}
-              </ul>
-            </div>
-            {% if task.has_checklist %}
-              <a href="#"
-                 class="task-checklist-btn has-checklist"
-                 hx-get="{% url 'tasks:checklist-modal' task.id %}?matter_id={{ matter.id }}"
-                 hx-target="#htmx-modal-container">
-                <i class="icon-list-checks checklist-badge-icon"></i>
-                <span class="task-checklist-progress">{{ task.checklist_done }}/{{ task.checklist_total }}</span>
-              </a>
-            {% endif %}
             <a href="#"
-               class="task-notes-btn {% if task.has_notes %}has-notes{% endif %}"
-               hx-get="{% url 'tasks:detail' id=task.id %}?matter_id={{ matter.id }}"
-               hx-target="#htmx-modal-container">
-              <i class="icon-sticky-note note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
-            </a>
+               hx-get="{% url 'matters:tasks-edit' matter.id task.id %}"
+               hx-target="#htmx-modal-container">{{ task.description }}</a>
+            <span class="task-decorators">
+              <a href="#"
+                 class="task-checklist-btn {% if task.has_checklist %}has-checklist{% endif %}"
+                 hx-get="{% if task.has_checklist %}{% url 'tasks:checklist-modal' task.id %}?matter_id={{ matter.id }}{% else %}{% url 'tasks:attach-checklist' task.id %}?matter_id={{ matter.id }}{% endif %}"
+                 hx-target="#htmx-modal-container">
+                <i class="icon-list-checks checklist-badge-icon {% if task.has_unviewed_checklist %}checklist-badge-new{% endif %}"></i>
+              </a>
+              <a href="#"
+                 class="task-notes-btn {% if task.has_notes %}has-notes{% endif %}"
+                 hx-get="{% url 'tasks:detail' id=task.id %}?matter_id={{ matter.id }}"
+                 hx-target="#htmx-modal-container">
+                <i class="icon-sticky-note note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
+              </a>
+            </span>
           </td>
           <td class="status dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
               data-label="Status">{% include "matters/tasks/status.html" %}</td>

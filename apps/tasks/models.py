@@ -124,6 +124,21 @@ class UserTaskNoteView(models.Model):
         return f"{self.user.username} viewed {self.task.description} notes at {self.last_viewed_at}"
 
 
+class UserChecklistView(models.Model):
+    """Tracks when users last viewed a task's checklist."""
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    last_viewed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "app_user_checklist_view"
+        unique_together = ("user", "task")
+
+    def __str__(self):
+        return f"{self.user.username} viewed {self.task.description} checklist at {self.last_viewed_at}"
+
+
 class Checklist(AuditMixin, models.Model):
     task = models.OneToOneField(
         Task, on_delete=models.CASCADE, related_name="checklist"

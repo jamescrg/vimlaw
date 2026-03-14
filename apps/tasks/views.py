@@ -25,6 +25,7 @@ from apps.tasks.models import (
     ChecklistTemplate,
     Task,
     TaskNote,
+    UserChecklistView,
     UserTaskNoteView,
     can_complete_task,
 )
@@ -192,7 +193,7 @@ def tasks_edit(request, id):
             if task.status == "Complete" and not can_complete_task(task):
                 form.add_error(
                     "status",
-                    "Complete all checklist items before marking this task as done.",
+                    "Please complete all checklist items before marking this task as done.",
                 )
             else:
                 task.save()
@@ -408,7 +409,7 @@ def tasks_status(request, id):
             response["HX-Toast"] = json.dumps(
                 {
                     "type": "warning",
-                    "message": "Complete all checklist items before marking this task as done.",
+                    "message": "Please complete all checklist items before marking this task as done.",
                 }
             )
             return response
@@ -424,8 +425,8 @@ def tasks_set_status(request, task_id, status):
         response = HttpResponse(status=204)
         response["HX-Toast"] = json.dumps(
             {
-                "type": "warning",
-                "message": "Complete all checklist items before marking this task as done.",
+                "type": "items incomplete",
+                "message": "Please complete all checklist items before marking this task as done.",
             }
         )
         return response
@@ -840,6 +841,8 @@ def tasks_checklist_modal(request, task_id):
         checklist = task.checklist
     except Checklist.DoesNotExist:
         return HttpResponse(status=404)
+
+    UserChecklistView.objects.update_or_create(user=request.user, task=task)
 
     checklist_items = checklist.items.all()
     checklist_total = checklist_items.count()
