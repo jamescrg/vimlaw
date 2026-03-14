@@ -33,20 +33,6 @@
             Inbox
           {% endif %}
         </h2>
-        <div class="filter-tools">
-          <a class="{% if status_filter == 'active' %}toggle-active{% endif %}"
-             href="#"
-             hx-get="{% url 'settings:checklists-filter-status' 'active' %}"
-             hx-target="#checklists">Active</a>
-          <a class="{% if status_filter == 'inactive' %}toggle-active{% endif %}"
-             href="#"
-             hx-get="{% url 'settings:checklists-filter-status' 'inactive' %}"
-             hx-target="#checklists">Inactive</a>
-          <a class="{% if status_filter == 'all' %}toggle-active{% endif %}"
-             href="#"
-             hx-get="{% url 'settings:checklists-filter-status' 'all' %}"
-             hx-target="#checklists">All</a>
-        </div>
       {% endif %}
     </div>
     {% if not selected_checklists %}

@@ -565,6 +565,11 @@
  Checklists Settings Layout
 ========================================================================== */
 
+.checklists-layout .section {
+  border: 1px solid var(--border-medium);
+  box-shadow: none;
+}
+
 .checklists-layout {
   display: flex;
   flex-direction: column-reverse;
@@ -672,6 +677,10 @@
 
 #checklist-folders .list-group-item {
   padding-left: 0.125rem;
+}
+
+#checklist-folders .list-group-item.empty-message {
+  padding-left: 2rem;
 }
 
 /* ==========================================================================

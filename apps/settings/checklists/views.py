@@ -110,7 +110,7 @@ def get_checklists_data(request):
     queryset = ChecklistTemplate.objects.select_related("created_by").all()
 
     # Active/inactive filter
-    status_filter = filter_data.get("status", "active")
+    status_filter = filter_data.get("status", "all")
     if status_filter == "active":
         queryset = queryset.filter(is_active=True)
     elif status_filter == "inactive":
