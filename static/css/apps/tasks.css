@@ -197,12 +197,12 @@
 }
 
 .tasks-table td.description > a:first-child {
-  flex: 1;
   min-width: 0;
 }
 
 .task-decorators {
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .tasks-table .status {

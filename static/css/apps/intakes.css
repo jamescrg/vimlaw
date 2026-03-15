@@ -99,8 +99,13 @@ Detail View - Left Panel
   width: 7.5rem;
 }
 
-.intake-name {
+.intake-list td.intake-name {
+  display: flex;
   min-width: 18rem;
+}
+
+.intake-list td.intake-name .note-badge-icon {
+  margin-left: auto;
 }
 
 .intake-phone {

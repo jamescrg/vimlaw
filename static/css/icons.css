@@ -79,7 +79,6 @@ i.spin {
 
 .checklist-badge-icon {
   color: var(--color-muted-more);
-  font-size: 1rem;
   margin-left: 0.5rem;
   vertical-align: middle;
 }
