@@ -217,11 +217,14 @@
   align-items: center;
   background: var(--background-control);
   border-bottom: solid 1px var(--border-medium);
-  border-top: solid 1px var(--border-medium);
   display: flex;
   font-weight: 600;
   gap: 0.5rem;
   padding: 0.5rem 0.25rem;
+}
+
+.template-group:first-child .template-section-header {
+  border-top: solid 1px var(--border-medium);
 }
 
 .template-section-handle {
