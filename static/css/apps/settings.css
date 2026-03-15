@@ -176,7 +176,7 @@ Settings Contacts - Two Column Layout
 }
 
 .users-table .name {
-  width: 10rem;
+  width: 13rem;
 }
 
 .users-table .email {
@@ -188,7 +188,7 @@ Settings Contacts - Two Column Layout
 }
 
 .users-table .initials {
-  width: 8rem;
+  width: 4rem;
 }
 
 .users-table .attorney {
@@ -200,12 +200,13 @@ Settings Contacts - Two Column Layout
 }
 
 .users-table .is-active {
-  width: 8rem;
+  text-align: center;
+  width: 7rem;
 }
 
 /* Permissions */
 .users-table .permissions {
-  width: 10rem;
+  width: 13rem;
 }
 
 .perm-icons {

@@ -123,7 +123,13 @@ def toggle_permission(request, user_id, perm):
     if not request.user.is_admin:
         return HttpResponseForbidden()
 
-    VALID_PERMS = ["perm_all_matters", "perm_financial", "perm_intakes", "perm_reports"]
+    VALID_PERMS = [
+        "perm_all_matters",
+        "perm_financial",
+        "perm_intakes",
+        "perm_reports",
+        "perm_research",
+    ]
     if perm not in VALID_PERMS:
         return HttpResponseBadRequest()
 
