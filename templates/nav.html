@@ -2,6 +2,9 @@
   <div class="container">
     <div class="nav-scroll-container">
       <ul>
+        <li {% if app == 'dash' %}class="active"{% endif %}>
+          <a id="nav-dash" href={% url 'dash:index' %}>Dash</a>
+        </li>
         <li {% if app == 'matters' %}class="active"{% endif %}>
           <a id="nav-matters" href={% url 'matters:index' %}>Matters</a>
         </li>
