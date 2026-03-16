@@ -43,8 +43,6 @@
             <a id="nav-research" href="{% url 'research:index' %}">Research</a>
           </li>
         {% endif %}
-      </ul>
-      <ul class="navbar-right">
         <li {% if app == 'search' %}class="active"{% endif %}>
           <a href="#"
              hx-get="{% url 'search:search' %}"

@@ -69,6 +69,7 @@
 
 .nav-scroll-container {
   display: flex;
+  justify-content: center;
   -webkit-overflow-scrolling: touch;
   -ms-overflow-style: none; /* IE/Edge */
   overflow-x: auto;
@@ -85,18 +86,11 @@
   flex-direction: row;
   flex-shrink: 0;
   flex-wrap: nowrap;
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 
 .nav-scroll-container li {
   flex-shrink: 0;
   white-space: nowrap;
-}
-
-/* Keep right-aligned items at the end */
-.navbar-right {
-  margin-left: auto !important;
 }
 
 
