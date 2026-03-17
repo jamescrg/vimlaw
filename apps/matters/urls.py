@@ -23,6 +23,7 @@ from .views import (
     mode_content,
     order_by,
     print,
+    quick_search,
     tab_content,
     update_work_status,
 )
@@ -358,6 +359,7 @@ urlpatterns = [
         timeline.update_fact_citations,
         name="timeline-update-citations",
     ),
+    path("matters/quick-search/", quick_search, name="quick-search"),
     path("matters/filter", filter, name="filter"),
     path("matters/order-by/<str:order>", order_by, name="order-by"),
     path("matters/filter-quick/<str:quick_filter>/", filter_quick, name="filter-quick"),

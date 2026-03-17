@@ -20,6 +20,16 @@ function showStatusForm() {
 }
 
 
+document.addEventListener('keydown', function(event) {
+    if (event.key !== 'Enter') return;
+    const input = event.target;
+    if (!input.classList.contains('toolbar-search')) return;
+    event.preventDefault();
+    const url = input.getAttribute('data-search-url');
+    htmx.ajax('GET', url + '?q=' + encodeURIComponent(input.value) + '&enter=1', {target: '#matter-list-body'});
+});
+
+
 function hideStatusForm() {
     /**
      * Hide a matter's "edit status" form.

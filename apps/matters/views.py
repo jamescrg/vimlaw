@@ -3,8 +3,9 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
-from apps.accounts.access import matter_access_required
+from apps.accounts.access import filter_matters_for_user, matter_access_required
 from apps.calendar.models import Event
 from apps.case.models import Fact
 from apps.contacts.functions.load_contacts import load_contacts
@@ -123,6 +124,39 @@ def filter_quick_status(request, status):
     filter_data["filter_label"] = status
     request.session["matter_filter"] = filter_data
     return HttpResponse(status=204, headers={"HX-Trigger": "mattersChanged"})
+
+
+@login_required
+def quick_search(request):
+    """Live search within current filter set, returns filtered rows."""
+    query = request.GET.get("q", "").strip()
+
+    default_filter = {
+        "status": "Open",
+        "practice_area": "",
+        "date_start": "",
+        "date_end": "",
+        "order_by": "name",
+    }
+    filter_data = request.session.get("matter_filter", default_filter)
+
+    # Apply the current filter (without ordering on computed fields)
+    filter_data_copy = filter_data.copy()
+    filter_data_copy.pop("order_by", None)
+    matters = MatterFilter(filter_data_copy).qs
+    matters = filter_matters_for_user(matters, request.user)
+
+    if query:
+        matters = matters.filter(name__icontains=query)
+
+    matters = matters.order_by("name")
+
+    # If Enter was pressed, redirect to top result
+    if request.GET.get("enter") and matters.exists():
+        url = reverse("matters:contacts", kwargs={"id": matters.first().id})
+        return HttpResponse(status=200, headers={"HX-Redirect": url})
+
+    return render(request, "matters/search-results.html", {"matters": matters})
 
 
 @login_required

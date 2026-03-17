@@ -1,0 +1,7 @@
+{% for matter in matters %}
+  {% include "matters/row.html" %}
+{% empty %}
+  <tr>
+    <td colspan="3" class="empty-message">No matters found.</td>
+  </tr>
+{% endfor %}

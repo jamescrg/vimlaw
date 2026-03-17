@@ -16,6 +16,12 @@ Matter Form
   width: 100%;
 }
 
+.toolbar-search {
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  width: 14rem;
+}
+
 /* ==========================================================================
 Matter List
 ========================================================================== */

@@ -22,6 +22,16 @@
                   hx-post="{% url 'matters:filter-quick-status' 'Open' %}">Open</button>
           <button class="{% if filter_label == "Complete" %}toggle-active{% endif %}"
                   hx-post="{% url 'matters:filter-quick-status' 'Complete' %}">Complete</button>
+          <input type="search"
+                 name="q"
+                 class="toolbar-search"
+                 placeholder="Find Matter . . ."
+                 hx-get="{% url 'matters:quick-search' %}"
+                 hx-trigger="keyup changed delay:300ms, search"
+                 hx-target="#matter-list-body"
+                 autocomplete="off"
+                 data-search-url="{% url 'matters:quick-search' %}"
+                 autofocus>
         </div>
       </div>
       <div class="toolbar-right">
@@ -30,30 +40,34 @@
     </div>
     <div class="table-container">
       <table id="matter-list" class="table matter-list">
-        <tr>
-          <th class="name">
-            Matter
-            <button class="btn-sort {% if current_order == 'name' %}active{% endif %}"
-                    hx-post="{% url 'matters:order-by' 'name' %}">
-              <i class="icon-chevrons-up-down"></i>
-            </button>
-          </th>
-          <th class="work-status">
-            Work Status
-            <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
-                    hx-post="{% url 'matters:order-by' 'description' %}">
-              <i class="icon-chevrons-up-down"></i>
-            </button>
-          </th>
-          <th class="case-no">Proceeding</th>
-        </tr>
-        {% for matter in matters %}
-          {% include "matters/row.html" %}
-        {% empty %}
+        <thead>
           <tr>
-            <td colspan="3" class="empty-message">No matters found.</td>
+            <th class="name">
+              Matter
+              <button class="btn-sort {% if current_order == 'name' %}active{% endif %}"
+                      hx-post="{% url 'matters:order-by' 'name' %}">
+                <i class="icon-chevrons-up-down"></i>
+              </button>
+            </th>
+            <th class="work-status">
+              Work Status
+              <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
+                      hx-post="{% url 'matters:order-by' 'description' %}">
+                <i class="icon-chevrons-up-down"></i>
+              </button>
+            </th>
+            <th class="case-no">Proceeding</th>
           </tr>
-        {% endfor %}
+        </thead>
+        <tbody id="matter-list-body">
+          {% for matter in matters %}
+            {% include "matters/row.html" %}
+          {% empty %}
+            <tr>
+              <td colspan="3" class="empty-message">No matters found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
     <div class="flex-start-space">
