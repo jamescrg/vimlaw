@@ -1,8 +1,8 @@
-// Tiptap imports from local bundle (built with: npm run build)
+// Notes editor — main entry point
+// Orchestrates init, toolbar, keyboard shortcuts, panels, HTMX, and import/export
+
 import {
   Editor,
-  Node as TiptapNode,
-  Extension,
   Document,
   Paragraph,
   Text,
@@ -14,156 +14,147 @@ import {
   OrderedList,
   ListItem,
   Blockquote,
+  Code,
+  CodeBlockLowlight,
+  HorizontalRule,
+  lowlightAll,
+  createLowlight,
   HardBreak,
   History,
   Dropcursor,
   Gapcursor,
   Highlight,
-  Plugin,
-  PluginKey,
-  Decoration,
-  DecorationSet,
 } from "./vendor/tiptap.bundle.js";
 
-// Search highlight plugin for ProseMirror decorations
-const searchPluginKey = new PluginKey("search");
+import { state, getCSRFToken, bindClick } from "./notes/state.js";
+import { markdownToHtml } from "./notes/markdown.js";
+import {
+  getMarkdownContent,
+  scheduleAutosave,
+  performAutosave,
+} from "./notes/autosave.js";
+import {
+  SearchHighlight,
+  setupSearchBar,
+  toggleSearchBar,
+} from "./notes/search.js";
+import {
+  NoteRef,
+  setupReferenceClicks,
+  refreshReferenceCitations,
+  setupReferencePicker,
+  openReferencePicker,
+} from "./notes/references.js";
+import {
+  buildOutline,
+  scheduleOutlineUpdate,
+  setupOutlineCollapseAll,
+} from "./notes/outline.js";
 
-const SearchHighlight = Extension.create({
-  name: "searchHighlight",
+// ─── Code Block Language Selector ────────────────────────────────────────────
 
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: searchPluginKey,
-        state: {
-          init() {
-            return { searchTerm: "", decorations: DecorationSet.empty, matches: [] };
-          },
-          apply(tr, prev, oldState, newState) {
-            const meta = tr.getMeta(searchPluginKey);
-            if (meta !== undefined) {
-              if (!meta.searchTerm) {
-                return { searchTerm: "", decorations: DecorationSet.empty, matches: [] };
-              }
-              const decorations = [];
-              const matches = [];
-              const escapedTerm = meta.searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-              const regex = new RegExp(escapedTerm, "gi");
+const CODE_LANGUAGES = [
+  "bash",
+  "css",
+  "go",
+  "html",
+  "java",
+  "javascript",
+  "json",
+  "markdown",
+  "python",
+  "rust",
+  "sql",
+  "typescript",
+  "xml",
+  "yaml",
+];
 
-              newState.doc.descendants(function(node, pos) {
-                if (node.isText) {
-                  const text = node.text;
-                  let match;
-                  while ((match = regex.exec(text)) !== null) {
-                    const from = pos + match.index;
-                    const to = from + match[0].length;
-                    matches.push({ from: from, to: to });
-                    const className = meta.currentIndex === matches.length - 1
-                      ? "search-match search-match-current"
-                      : "search-match";
-                    decorations.push(
-                      Decoration.inline(from, to, { class: className })
-                    );
-                  }
-                }
-              });
+function setupCodeBlockLangSelector() {
+  state.langSelector = document.createElement("select");
+  state.langSelector.id = "code-lang-selector";
 
-              return {
-                searchTerm: meta.searchTerm,
-                decorations: DecorationSet.create(newState.doc, decorations),
-                matches: matches,
-              };
-            }
-            // Map decorations through document changes
-            const mapped = prev.decorations.map(tr.mapping, tr.doc);
-            const mappedMatches = prev.matches.map(function(m) {
-              return {
-                from: tr.mapping.map(m.from),
-                to: tr.mapping.map(m.to),
-              };
-            });
-            return {
-              searchTerm: prev.searchTerm,
-              decorations: mapped,
-              matches: mappedMatches,
-            };
-          },
-        },
-        props: {
-          decorations(state) {
-            return this.getState(state).decorations;
-          },
-        },
-      }),
-    ];
-  },
-});
+  const autoOpt = document.createElement("option");
+  autoOpt.value = "";
+  autoOpt.textContent = "auto";
+  state.langSelector.appendChild(autoOpt);
 
-// Custom extension for note references (documents and highlights)
-const NoteRef = TiptapNode.create({
-  name: "noteRef",
-  group: "inline",
-  inline: true,
-  atom: true,
+  for (const lang of CODE_LANGUAGES) {
+    const opt = document.createElement("option");
+    opt.value = lang;
+    opt.textContent = lang;
+    state.langSelector.appendChild(opt);
+  }
 
-  addAttributes() {
-    return {
-      type: {
-        default: "document",
-      },
-      id: {
-        default: null,
-      },
-      label: {
-        default: "",
-      },
-    };
-  },
+  state.langSelector.addEventListener("change", () => {
+    state.editor
+      .chain()
+      .focus()
+      .updateAttributes("codeBlock", {
+        language: state.langSelector.value || null,
+      })
+      .run();
+  });
 
-  parseHTML() {
-    return [
-      {
-        tag: 'span.note-ref',
-        getAttrs: (dom) => ({
-          type: dom.getAttribute("data-type"),
-          id: dom.getAttribute("data-id"),
-          label: dom.textContent,
-        }),
-      },
-    ];
-  },
+  state.langSelector.addEventListener("mousedown", (e) => e.stopPropagation());
 
-  renderHTML({ node }) {
-    return [
-      "span",
-      {
-        class: "note-ref",
-        "data-type": node.attrs.type,
-        "data-id": node.attrs.id,
-      },
-      node.attrs.label,
-    ];
-  },
-});
+  const container = document.querySelector(".note-page");
+  if (container) {
+    container.style.position = "relative";
+    container.appendChild(state.langSelector);
+  }
+}
 
-let editor = null;
-let autosaveTimer = null;
-let lastSavedContent = "";
+function updateCodeBlockLangSelector() {
+  if (!state.langSelector) return;
 
-// Search state
-let searchMatches = [];
-let currentMatchIndex = -1;
+  const { $from } = state.editor.state.selection;
+  let codeBlockNode = null;
+  let codeBlockPos = null;
 
-// Initialize editor
+  for (let depth = $from.depth; depth >= 0; depth--) {
+    const node = $from.node(depth);
+    if (node.type.name === "codeBlock") {
+      codeBlockNode = node;
+      codeBlockPos = $from.start(depth) - 1;
+      break;
+    }
+  }
+
+  if (!codeBlockNode) {
+    state.langSelector.style.display = "none";
+    return;
+  }
+
+  const dom = state.editor.view.nodeDOM(codeBlockPos);
+  if (!dom || dom.tagName !== "PRE") {
+    state.langSelector.style.display = "none";
+    return;
+  }
+
+  const container = state.langSelector.parentElement;
+  if (!container) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const preRect = dom.getBoundingClientRect();
+
+  state.langSelector.style.display = "block";
+  state.langSelector.style.top =
+    preRect.top - containerRect.top + container.scrollTop + 6 + "px";
+  state.langSelector.style.right =
+    containerRect.right - preRect.right + 8 + "px";
+  state.langSelector.value = codeBlockNode.attrs.language || "";
+}
+
+// ─── Editor Init ─────────────────────────────────────────────────────────────
+
 function initEditor() {
   const container = document.getElementById("note-editor");
   if (!container || !window.NOTE_DATA) return;
 
-  // Parse initial content - convert markdown references to HTML
-  let initialContent = window.NOTE_DATA.content || "";
-  initialContent = markdownToHtml(initialContent);
+  const initialContent = markdownToHtml(window.NOTE_DATA.content || "");
 
-  editor = new Editor({
+  state.editor = new Editor({
     element: container,
     extensions: [
       Document,
@@ -173,12 +164,9 @@ function initEditor() {
       Italic.extend({
         addKeyboardShortcuts() {
           return {
-            "Mod-i": ({ editor, event }) => {
-              // Don't handle if Shift is pressed (allow Ctrl+Shift+I for DevTools)
-              if (event && event.shiftKey) {
-                return false;
-              }
-              return editor.commands.toggleItalic();
+            "Mod-i": ({ editor: ed, event }) => {
+              if (event && event.shiftKey) return false;
+              return ed.commands.toggleItalic();
             },
           };
         },
@@ -194,18 +182,25 @@ function initEditor() {
       Dropcursor,
       Gapcursor,
       Highlight.configure({ multicolor: true }),
+      Code,
+      CodeBlockLowlight.configure({ lowlight: createLowlight(lowlightAll) }),
+      HorizontalRule,
       NoteRef,
       SearchHighlight,
     ],
     content: initialContent,
     autofocus: true,
-    onUpdate: function () {
+    onUpdate() {
       scheduleAutosave();
       scheduleOutlineUpdate();
     },
+    onSelectionUpdate() {
+      updateCodeBlockLangSelector();
+    },
   });
 
-  lastSavedContent = getMarkdownContent();
+  state.lastSavedContent = getMarkdownContent();
+  setupCodeBlockLangSelector();
   setupToolbar();
   setupKeyboardShortcuts();
   setupReferencePicker();
@@ -213,164 +208,11 @@ function initEditor() {
   setupTitleEdit();
   setupSearchBar();
   setupImportExport();
-
-  // Refresh reference citations on load
   refreshReferenceCitations();
-
-  // Build heading outline
   buildOutline();
 }
 
-function setupReferenceClicks() {
-  const container = document.getElementById("note-editor");
-  if (!container) return;
-
-  const dropdown = document.getElementById("highlight-ref-dropdown");
-  const detailLink = document.getElementById("highlight-ref-detail");
-  const sourceLink = document.getElementById("highlight-ref-source");
-  let currentHighlightId = null;
-
-  // Close dropdown when clicking elsewhere
-  document.addEventListener("click", function (e) {
-    if (dropdown && !dropdown.contains(e.target) && !e.target.closest(".note-ref")) {
-      dropdown.classList.remove("show");
-    }
-  });
-
-  // Handle detail link click
-  if (detailLink) {
-    detailLink.addEventListener("click", function (e) {
-      e.preventDefault();
-      dropdown.classList.remove("show");
-      if (currentHighlightId) {
-        const modalContainer = document.getElementById("htmx-modal-container");
-        htmx.ajax("GET", "/case/highlights/" + currentHighlightId + "/detail/", {
-          target: modalContainer,
-          swap: "innerHTML"
-        });
-      }
-    });
-  }
-
-  // Handle source link click
-  if (sourceLink) {
-    sourceLink.addEventListener("click", function (e) {
-      e.preventDefault();
-      dropdown.classList.remove("show");
-      if (currentHighlightId) {
-        window.open("/case/highlights/" + currentHighlightId + "/link/", "_blank");
-      }
-    });
-  }
-
-  container.addEventListener("click", function (e) {
-    const ref = e.target.closest(".note-ref");
-    if (!ref) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const refType = ref.getAttribute("data-type");
-    const refId = ref.getAttribute("data-id");
-
-    if (!refId) return;
-
-    if (refType === "document") {
-      // Documents open directly
-      window.open("/documents/view/" + refId + "/", "_blank");
-    } else if (refType === "highlight") {
-      // Store current highlight ID
-      currentHighlightId = refId;
-
-      // Position and show dropdown
-      if (dropdown) {
-        const rect = ref.getBoundingClientRect();
-        dropdown.style.position = "fixed";
-        dropdown.style.left = rect.left + "px";
-        dropdown.style.top = (rect.bottom + 4) + "px";
-        dropdown.classList.add("show");
-      }
-    }
-  });
-}
-
-function collectReferenceIds() {
-  const docIds = [];
-  const hlIds = [];
-
-  editor.state.doc.descendants(function(node) {
-    if (node.type.name === "noteRef") {
-      if (node.attrs.type === "document" && node.attrs.id) {
-        docIds.push(node.attrs.id);
-      } else if (node.attrs.type === "highlight" && node.attrs.id) {
-        hlIds.push(node.attrs.id);
-      }
-    }
-  });
-
-  return { docIds: docIds, hlIds: hlIds };
-}
-
-function refreshReferenceCitations() {
-  if (!editor || !window.NOTE_DATA.citationsUrl) return;
-
-  const refs = collectReferenceIds();
-
-  if (refs.docIds.length === 0 && refs.hlIds.length === 0) return;
-
-  // Build query string
-  const params = new URLSearchParams();
-  refs.docIds.forEach(function(id) { params.append("doc", id); });
-  refs.hlIds.forEach(function(id) { params.append("hl", id); });
-
-  const url = window.NOTE_DATA.citationsUrl + "?" + params.toString();
-
-  fetch(url, {
-    headers: {
-      "X-CSRFToken": getCSRFToken(),
-    },
-  })
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(citations) {
-      let hasChanges = false;
-
-      // Collect updates to apply
-      const updates = [];
-      editor.state.doc.descendants(function(node, pos) {
-        if (node.type.name === "noteRef") {
-          const key = node.attrs.type === "document"
-            ? "doc:" + node.attrs.id
-            : "hl:" + node.attrs.id;
-          const newLabel = citations[key];
-
-          if (newLabel && newLabel !== node.attrs.label) {
-            updates.push({ pos: pos, node: node, newLabel: newLabel });
-            hasChanges = true;
-          }
-        }
-      });
-
-      // Apply updates in reverse order to preserve positions
-      updates.reverse().forEach(function(update) {
-        editor.chain()
-          .setNodeMarkup(update.pos, null, {
-            type: update.node.attrs.type,
-            id: update.node.attrs.id,
-            label: update.newLabel,
-          })
-          .run();
-      });
-
-      if (hasChanges) {
-        scheduleAutosave();
-      }
-    })
-    .catch(function(err) {
-      console.error("Failed to refresh citations:", err);
-    });
-}
+// ─── Title Edit ──────────────────────────────────────────────────────────────
 
 function setupTitleEdit() {
   const input = document.getElementById("note-title");
@@ -378,7 +220,7 @@ function setupTitleEdit() {
 
   let originalTitle = input.value;
 
-  input.addEventListener("blur", function () {
+  input.addEventListener("blur", () => {
     const newTitle = input.value.trim();
     if (!newTitle) {
       input.value = originalTitle;
@@ -386,18 +228,15 @@ function setupTitleEdit() {
     }
     if (newTitle === originalTitle) return;
 
-    // Save the new title
     const formData = new FormData();
     formData.append("title", newTitle);
 
     fetch(window.NOTE_DATA.titleUrl, {
       method: "POST",
-      headers: {
-        "X-CSRFToken": getCSRFToken(),
-      },
+      headers: { "X-CSRFToken": getCSRFToken() },
       body: formData,
     })
-      .then((response) => response.json())
+      .then((r) => r.json())
       .then((data) => {
         if (data.saved) {
           originalTitle = data.title;
@@ -411,7 +250,7 @@ function setupTitleEdit() {
       });
   });
 
-  input.addEventListener("keydown", function (e) {
+  input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       input.blur();
@@ -423,584 +262,156 @@ function setupTitleEdit() {
   });
 }
 
-// Convert simple markdown to HTML for editor
-function markdownToHtml(md) {
-  if (!md) return "<p></p>";
+// ─── Toolbar ─────────────────────────────────────────────────────────────────
 
-  // Convert reference syntax to spans
-  md = md.replace(
-    /\[\[doc:(\d+)\|([^\]]+)\]\]/g,
-    '<span class="note-ref" data-type="document" data-id="$1">$2</span>'
-  );
-  md = md.replace(
-    /\[\[hl:(\d+)\|([^\]]+)\]\]/g,
-    '<span class="note-ref" data-type="highlight" data-id="$1">$2</span>'
-  );
-
-  function formatInline(text) {
-    return text
-      .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/~~(.+?)~~/g, "<s>$1</s>")
-      // Colored highlights: g==, r==, p==, o==, c==, a==
-      .replace(/g==(.+?)==/g, '<mark data-color="mark-green">$1</mark>')
-      .replace(/r==(.+?)==/g, '<mark data-color="mark-red">$1</mark>')
-      .replace(/p==(.+?)==/g, '<mark data-color="mark-purple">$1</mark>')
-      .replace(/o==(.+?)==/g, '<mark data-color="mark-orange">$1</mark>')
-      .replace(/c==(.+?)==/g, '<mark data-color="mark-citation">$1</mark>')
-      .replace(/a==(.+?)==/g, '<mark data-color="mark-gray">$1</mark>')
-      // Default highlight: ==text==
-      .replace(/==(.+?)==/g, "<mark>$1</mark>");
-  }
-
-  // Parse lines into list items with depth info
-  // Handle both Unix (\n) and Windows (\r\n) line endings
-  const lines = md.split(/\r?\n/);
-  const parsed = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    if (!trimmed) {
-      parsed.push({ type: "blank" });
-      continue;
-    }
-
-    // Check for headers
-    const headerMatch = trimmed.match(/^(#{1,5}) (.+)$/);
-    if (headerMatch) {
-      parsed.push({
-        type: "header",
-        level: headerMatch[1].length,
-        content: formatInline(headerMatch[2]),
-      });
-      continue;
-    }
-
-    // Check for blockquote
-    if (trimmed.startsWith("> ")) {
-      parsed.push({
-        type: "blockquote",
-        content: formatInline(trimmed.substring(2)),
-      });
-      continue;
-    }
-
-    // Check for unordered list item (handle tabs, empty items, windows line endings)
-    const ulMatch = line.replace(/\r$/, "").match(/^([ \t]*)[-*] (.*)$/);
-    if (ulMatch) {
-      // Normalize: count tabs as 2 spaces each
-      const indentStr = ulMatch[1].replace(/\t/g, "  ");
-      const depth = Math.floor(indentStr.length / 2);
-      parsed.push({
-        type: "li",
-        listType: "ul",
-        depth: depth,
-        content: formatInline(ulMatch[2] || ""),
-      });
-      continue;
-    }
-
-    // Check for ordered list item
-    const olMatch = line.replace(/\r$/, "").match(/^([ \t]*)(\d+)\. (.*)$/);
-    if (olMatch) {
-      const indentStr = olMatch[1].replace(/\t/g, "  ");
-      const depth = Math.floor(indentStr.length / 2);
-      parsed.push({
-        type: "li",
-        listType: "ol",
-        depth: depth,
-        content: formatInline(olMatch[3] || ""),
-      });
-      continue;
-    }
-
-    // Regular paragraph
-    parsed.push({
-      type: "paragraph",
-      content: formatInline(trimmed),
-    });
-  }
-
-  // Build HTML with proper nesting for ProseMirror
-  // ProseMirror expects: <ul><li><p>text</p><ul><li><p>nested</p></li></ul></li></ul>
-  const result = [];
-  let i = 0;
-
-  function buildList(startIndex, minDepth) {
-    let idx = startIndex;
-    const items = [];
-
-    while (idx < parsed.length) {
-      const item = parsed[idx];
-
-      if (item.type !== "li") {
-        break;
-      }
-
-      if (item.depth < minDepth) {
-        break;
-      }
-
-      if (item.depth === minDepth) {
-        // This item is at our level
-        const listType = item.listType;
-        let liContent = "<li><p>" + item.content + "</p>";
-        idx++;
-
-        // Check if next items are nested (deeper)
-        if (idx < parsed.length && parsed[idx].type === "li" && parsed[idx].depth > minDepth) {
-          const nested = buildList(idx, parsed[idx].depth);
-          liContent += nested.html;
-          idx = nested.endIndex;
-        }
-
-        liContent += "</li>";
-        items.push({ html: liContent, listType: listType });
-      } else {
-        // Deeper item - should be handled by recursion
-        break;
-      }
-    }
-
-    if (items.length === 0) {
-      return { html: "", endIndex: idx };
-    }
-
-    // Group consecutive items by list type
-    const listType = items[0].listType;
-    const html = "<" + listType + ">" + items.map(function(it) { return it.html; }).join("") + "</" + listType + ">";
-
-    return { html: html, endIndex: idx };
-  }
-
-  while (i < parsed.length) {
-    const item = parsed[i];
-
-    if (item.type === "blank") {
-      i++;
-      continue;
-    }
-
-    if (item.type === "header") {
-      result.push("<h" + item.level + ">" + item.content + "</h" + item.level + ">");
-      i++;
-      continue;
-    }
-
-    if (item.type === "blockquote") {
-      result.push("<blockquote><p>" + item.content + "</p></blockquote>");
-      i++;
-      continue;
-    }
-
-    if (item.type === "paragraph") {
-      result.push("<p>" + item.content + "</p>");
-      i++;
-      continue;
-    }
-
-    if (item.type === "li") {
-      const listResult = buildList(i, item.depth);
-      result.push(listResult.html);
-      i = listResult.endIndex;
-      continue;
-    }
-
-    i++;
-  }
-
-  return result.join("") || "<p></p>";
-}
-
-// Convert editor HTML to markdown
-function htmlToMarkdown(html) {
-  const tempDiv = document.createElement("div");
-  tempDiv.innerHTML = html;
-
-  function processNode(node, listDepth, listType, listIndex) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent;
-    }
-
-    if (node.nodeType !== Node.ELEMENT_NODE) return "";
-
-    const tag = node.tagName.toLowerCase();
-
-    // For most elements, process children normally
-    function getChildren() {
-      return Array.from(node.childNodes).map(function(child) {
-        return processNode(child, listDepth, null, 0);
-      }).join("");
-    }
-
-    switch (tag) {
-      case "h1":
-        return "# " + getChildren() + "\n\n";
-      case "h2":
-        return "## " + getChildren() + "\n\n";
-      case "h3":
-        return "### " + getChildren() + "\n\n";
-      case "h4":
-        return "#### " + getChildren() + "\n\n";
-      case "h5":
-        return "##### " + getChildren() + "\n\n";
-      case "p":
-        // If inside a list item, don't add extra newlines
-        if (listDepth > 0) {
-          return getChildren();
-        }
-        return getChildren() + "\n\n";
-      case "strong":
-        return "**" + getChildren() + "**";
-      case "em":
-        return "*" + getChildren() + "*";
-      case "s":
-        return "~~" + getChildren() + "~~";
-      case "mark":
-        // Check both class and data-color attribute (Tiptap uses data-color)
-        const markColor = node.dataset.color || "";
-        if (node.classList.contains("mark-green") || markColor === "mark-green")
-          return "g==" + getChildren() + "==";
-        if (node.classList.contains("mark-red") || markColor === "mark-red")
-          return "r==" + getChildren() + "==";
-        if (node.classList.contains("mark-purple") || markColor === "mark-purple")
-          return "p==" + getChildren() + "==";
-        if (node.classList.contains("mark-orange") || markColor === "mark-orange")
-          return "o==" + getChildren() + "==";
-        if (node.classList.contains("mark-citation") || markColor === "mark-citation")
-          return "c==" + getChildren() + "==";
-        if (node.classList.contains("mark-gray") || markColor === "mark-gray")
-          return "a==" + getChildren() + "==";
-        return "==" + getChildren() + "==";
-      case "blockquote":
-        return (
-          getChildren()
-            .trim()
-            .split("\n")
-            .map(function (line) {
-              return "> " + line;
-            })
-            .join("\n") + "\n\n"
-        );
-      case "ul":
-      case "ol":
-        // Process list items with incremented depth
-        let result = "";
-        let idx = 1;
-        Array.from(node.children).forEach(function(child) {
-          if (child.tagName.toLowerCase() === "li") {
-            result += processNode(child, listDepth + 1, tag, idx);
-            idx++;
-          }
-        });
-        // Add trailing newline only for top-level lists
-        if (listDepth === 0) {
-          result += "\n";
-        }
-        return result;
-      case "li":
-        const indent = "  ".repeat(listDepth - 1);
-        let prefix;
-        if (listType === "ol") {
-          prefix = listIndex + ". ";
-        } else {
-          prefix = "- ";
-        }
-
-        // Process li children: separate text content from nested lists
-        let textContent = "";
-        let nestedLists = "";
-
-        Array.from(node.childNodes).forEach(function(child) {
-          if (child.nodeType === Node.ELEMENT_NODE) {
-            const childTag = child.tagName.toLowerCase();
-            if (childTag === "ul" || childTag === "ol") {
-              nestedLists += processNode(child, listDepth, null, 0);
-            } else if (childTag === "p") {
-              textContent += processNode(child, listDepth, null, 0);
-            } else {
-              textContent += processNode(child, listDepth, null, 0);
-            }
-          } else {
-            textContent += processNode(child, listDepth, null, 0);
-          }
-        });
-
-        return indent + prefix + textContent.trim() + "\n" + nestedLists;
-      case "br":
-        return "\n";
-      case "span":
-        if (
-          node.classList.contains("note-ref") ||
-          node.getAttribute("data-type")
-        ) {
-          const refType = node.getAttribute("data-type");
-          const refId = node.getAttribute("data-id");
-          const label = node.textContent || getChildren();
-          if (refType === "document") {
-            return "[[doc:" + refId + "|" + label + "]]";
-          } else if (refType === "highlight") {
-            return "[[hl:" + refId + "|" + label + "]]";
-          }
-        }
-        return getChildren();
-      default:
-        return getChildren();
-    }
-  }
-
-  let markdown = processNode(tempDiv, 0, null, 0);
-  // Clean up multiple newlines
-  markdown = markdown.replace(/\n{3,}/g, "\n\n").trim();
-  return markdown;
-}
-
-function getMarkdownContent() {
-  if (!editor) return "";
-  const html = editor.getHTML();
-  return htmlToMarkdown(html);
-}
-
-// Autosave with debounce
-function scheduleAutosave() {
-  if (autosaveTimer) clearTimeout(autosaveTimer);
-  updateSaveStatus("unsaved");
-  autosaveTimer = setTimeout(performAutosave, 2000);
-}
-
-function performAutosave() {
-  const content = getMarkdownContent();
-  if (content === lastSavedContent) {
-    updateSaveStatus("saved");
-    return;
-  }
-
-  updateSaveStatus("saving");
-
-  const formData = new FormData();
-  formData.append("content", content);
-
-  fetch(window.NOTE_DATA.autosaveUrl, {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCSRFToken(),
-    },
-    body: formData,
-  })
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (data) {
-      if (data.saved) {
-        lastSavedContent = content;
-        updateSaveStatus("saved");
-      }
-    })
-    .catch(function () {
-      updateSaveStatus("unsaved");
-    });
-}
-
-function updateSaveStatus(status) {
-  const btn = document.getElementById("save-status-btn");
-  if (!btn) return;
-
-  const icon = btn.querySelector("i");
-  if (!icon) return;
-
-  if (status === "unsaved") {
-    btn.classList.add("active");
-    btn.title = "Unsaved changes";
-    icon.className = "icon-cloud-upload";
-  } else if (status === "saving") {
-    btn.classList.add("active");
-    btn.title = "Saving...";
-    icon.className = "icon-cloud-upload";
-  } else {
-    btn.classList.remove("active");
-    btn.title = "Saved";
-    icon.className = "icon-cloud";
-  }
-}
-
-function getCSRFToken() {
-  const el = document.querySelector("[name=csrfmiddlewaretoken]");
-  return el ? el.value : "";
-}
-
-// Toolbar setup
 function setupToolbar() {
-  const btnBold = document.getElementById("btn-bold");
-  const btnItalic = document.getElementById("btn-italic");
-  const btnStrike = document.getElementById("btn-strike");
-  const btnH1 = document.getElementById("btn-heading-1");
-  const btnH2 = document.getElementById("btn-heading-2");
-  const btnH3 = document.getElementById("btn-heading-3");
-  const btnBullet = document.getElementById("btn-bullet-list");
-  const btnOrdered = document.getElementById("btn-ordered-list");
-  const btnQuote = document.getElementById("btn-blockquote");
+  const toolbarActions = {
+    "btn-bold": () => state.editor.chain().focus().toggleBold().run(),
+    "btn-italic": () => state.editor.chain().focus().toggleItalic().run(),
+    "btn-strike": () => state.editor.chain().focus().toggleStrike().run(),
+    "btn-heading-1": () =>
+      state.editor.chain().focus().toggleHeading({ level: 1 }).run(),
+    "btn-heading-2": () =>
+      state.editor.chain().focus().toggleHeading({ level: 2 }).run(),
+    "btn-heading-3": () =>
+      state.editor.chain().focus().toggleHeading({ level: 3 }).run(),
+    "btn-bullet-list": () =>
+      state.editor.chain().focus().toggleBulletList().run(),
+    "btn-ordered-list": () =>
+      state.editor.chain().focus().toggleOrderedList().run(),
+    "btn-blockquote": () =>
+      state.editor.chain().focus().toggleBlockquote().run(),
+  };
 
-  if (btnBold) {
-    btnBold.addEventListener("click", function () {
-      editor.chain().focus().toggleBold().run();
-    });
-  }
-  if (btnItalic) {
-    btnItalic.addEventListener("click", function () {
-      editor.chain().focus().toggleItalic().run();
-    });
-  }
-  if (btnStrike) {
-    btnStrike.addEventListener("click", function () {
-      editor.chain().focus().toggleStrike().run();
-    });
-  }
-  if (btnH1) {
-    btnH1.addEventListener("click", function () {
-      editor.chain().focus().toggleHeading({ level: 1 }).run();
-    });
-  }
-  if (btnH2) {
-    btnH2.addEventListener("click", function () {
-      editor.chain().focus().toggleHeading({ level: 2 }).run();
-    });
-  }
-  if (btnH3) {
-    btnH3.addEventListener("click", function () {
-      editor.chain().focus().toggleHeading({ level: 3 }).run();
-    });
-  }
-  if (btnBullet) {
-    btnBullet.addEventListener("click", function () {
-      editor.chain().focus().toggleBulletList().run();
-    });
-  }
-  if (btnOrdered) {
-    btnOrdered.addEventListener("click", function () {
-      editor.chain().focus().toggleOrderedList().run();
-    });
-  }
-  if (btnQuote) {
-    btnQuote.addEventListener("click", function () {
-      editor.chain().focus().toggleBlockquote().run();
-    });
+  for (const [id, handler] of Object.entries(toolbarActions)) {
+    bindClick(id, handler);
   }
 
-  // Insert source button
-  const insertSourceBtn = document.getElementById("insert-source-btn");
-  if (insertSourceBtn) {
-    insertSourceBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      openReferencePicker();
-    });
-  }
+  bindClick("insert-source-btn", (e) => {
+    e.preventDefault();
+    openReferencePicker();
+  });
 }
+
+// ─── Keyboard Shortcuts ──────────────────────────────────────────────────────
 
 function setupKeyboardShortcuts() {
-  document.addEventListener("keydown", function (e) {
+  const HEADING_KEYS = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
+  const FKEY_HEADINGS = { F2: 2, F3: 3, F4: 4 };
+  const HIGHLIGHT_COLORS = {
+    y: null,
+    g: "mark-green",
+    r: "mark-red",
+    p: "mark-purple",
+    o: "mark-orange",
+    a: "mark-gray",
+  };
+
+  document.addEventListener("keydown", (e) => {
     const mod = e.ctrlKey || e.metaKey;
+
+    // Tab inside code blocks
+    if (e.key === "Tab" && !mod && state.editor.isActive("codeBlock")) {
+      e.preventDefault();
+      if (e.shiftKey) {
+        const { $from } = state.editor.state.selection;
+        const lineStart = $from.pos - $from.parentOffset;
+        const textBefore = state.editor.state.doc.textBetween(
+          lineStart,
+          $from.pos,
+        );
+        let spacesToRemove = 0;
+        for (let si = 0; si < 4 && si < textBefore.length; si++) {
+          if (textBefore[textBefore.length - 1 - si] === " ") spacesToRemove++;
+          else break;
+        }
+        if (spacesToRemove) {
+          state.editor
+            .chain()
+            .focus()
+            .deleteRange({ from: $from.pos - spacesToRemove, to: $from.pos })
+            .run();
+        }
+      } else {
+        state.editor.chain().focus().insertContent("    ").run();
+      }
+      return;
+    }
 
     // Save: Ctrl+S
     if (mod && e.key === "s") {
       e.preventDefault();
-      if (autosaveTimer) clearTimeout(autosaveTimer);
+      if (state.autosaveTimer) clearTimeout(state.autosaveTimer);
       performAutosave();
       return;
     }
 
     // Headings: Ctrl+1 through Ctrl+5
-    if (mod && !e.shiftKey && e.key === "1") {
+    if (mod && !e.shiftKey && HEADING_KEYS[e.key]) {
       e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 1 }).run();
-      return;
-    }
-    if (mod && !e.shiftKey && e.key === "2") {
-      e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 2 }).run();
-      return;
-    }
-    if (mod && !e.shiftKey && e.key === "3") {
-      e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 3 }).run();
-      return;
-    }
-    if (mod && !e.shiftKey && e.key === "4") {
-      e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 4 }).run();
-      return;
-    }
-    if (mod && !e.shiftKey && e.key === "5") {
-      e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 5 }).run();
+      state.editor
+        .chain()
+        .focus()
+        .toggleHeading({ level: HEADING_KEYS[e.key] })
+        .run();
       return;
     }
 
-    // Clear formatting / convert to paragraph: Ctrl+0
+    // Clear formatting: Ctrl+0
     if (mod && !e.shiftKey && e.key === "0") {
       e.preventDefault();
-      editor.chain().focus().setParagraph().run();
+      state.editor.chain().focus().setParagraph().run();
       return;
     }
 
-    // F-key shortcuts for headings: F2, F3, F4
-    if (e.key === "F2") {
+    // F-key headings: F2, F3, F4
+    if (FKEY_HEADINGS[e.key]) {
       e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 2 }).run();
-      return;
-    }
-    if (e.key === "F3") {
-      e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 3 }).run();
-      return;
-    }
-    if (e.key === "F4") {
-      e.preventDefault();
-      editor.chain().focus().toggleHeading({ level: 4 }).run();
+      state.editor
+        .chain()
+        .focus()
+        .toggleHeading({ level: FKEY_HEADINGS[e.key] })
+        .run();
       return;
     }
 
     // F7 for bullet list
     if (e.key === "F7") {
       e.preventDefault();
-      editor.chain().focus().toggleBulletList().run();
+      state.editor.chain().focus().toggleBulletList().run();
       return;
     }
 
     // Bullet list: Ctrl+7
     if (mod && !e.shiftKey && e.key === "7") {
       e.preventDefault();
-      editor.chain().focus().toggleBulletList().run();
+      state.editor.chain().focus().toggleBulletList().run();
       return;
     }
 
     // Blockquote: Ctrl+8
     if (mod && !e.shiftKey && e.key === "8") {
       e.preventDefault();
-      editor.chain().focus().toggleBlockquote().run();
+      state.editor.chain().focus().toggleBlockquote().run();
       return;
     }
 
-    // Move list item up: Ctrl+Up
-    if (mod && e.key === "ArrowUp" && editor.isActive("listItem")) {
+    // Move list items: Ctrl+Up/Down
+    if (mod && e.key === "ArrowUp" && state.editor.isActive("listItem")) {
       e.preventDefault();
       moveListItem("up");
       return;
     }
-
-    // Move list item down: Ctrl+Down
-    if (mod && e.key === "ArrowDown" && editor.isActive("listItem")) {
+    if (mod && e.key === "ArrowDown" && state.editor.isActive("listItem")) {
       e.preventDefault();
       moveListItem("down");
       return;
     }
 
-    // Delete block/list item: Ctrl+Delete or Ctrl+D
+    // Delete block: Ctrl+Delete or Ctrl+D
     if (mod && (e.key === "Delete" || e.key === "d")) {
       e.preventDefault();
-      editor.chain().focus().deleteNode("paragraph").run();
+      state.editor.chain().focus().deleteNode("paragraph").run();
       return;
     }
 
@@ -1014,34 +425,28 @@ function setupKeyboardShortcuts() {
     // Show shortcuts: Ctrl+?
     if (mod && e.key === "?") {
       e.preventDefault();
-      showShortcutsModal();
+      const btn = document.querySelector('[title="Keyboard shortcuts"]');
+      if (btn) btn.click();
       return;
     }
 
-    // Highlight shortcuts: Alt+Y (yellow), Alt+G (green), Alt+R (red), Alt+P (purple), Alt+O (orange), Alt+A (gray)
-    if (e.altKey && !mod && ["y", "g", "r", "p", "o", "a"].includes(e.key.toLowerCase())) {
+    // Highlight shortcuts: Alt+key
+    const lowerKey = e.key.toLowerCase();
+    if (e.altKey && !mod && lowerKey in HIGHLIGHT_COLORS) {
       e.preventDefault();
-      const colorMap = {
-        y: null, // default yellow
-        g: "mark-green",
-        r: "mark-red",
-        p: "mark-purple",
-        o: "mark-orange",
-        a: "mark-gray",
-      };
-      const color = colorMap[e.key.toLowerCase()];
+      const color = HIGHLIGHT_COLORS[lowerKey];
       if (color) {
-        editor.chain().focus().toggleHighlight({ color }).run();
+        state.editor.chain().focus().toggleHighlight({ color }).run();
       } else {
-        editor.chain().focus().toggleHighlight().run();
+        state.editor.chain().focus().toggleHighlight().run();
       }
       return;
     }
 
     // Remove highlight: Alt+C
-    if (e.altKey && !mod && e.key.toLowerCase() === "c") {
+    if (e.altKey && !mod && lowerKey === "c") {
       e.preventDefault();
-      editor.chain().focus().unsetHighlight().run();
+      state.editor.chain().focus().unsetHighlight().run();
       return;
     }
 
@@ -1049,34 +454,24 @@ function setupKeyboardShortcuts() {
     if (mod && e.key === "h") {
       e.preventDefault();
       toggleSearchBar();
-      return;
     }
   });
 }
 
-function showShortcutsModal() {
-  // Trigger click on the keyboard shortcuts button to load via HTMX
-  const btn = document.querySelector('[title="Keyboard shortcuts"]');
-  if (btn) {
-    btn.click();
-  }
-}
+// ─── List Item Reordering ────────────────────────────────────────────────────
 
 function moveListItem(direction) {
-  const { state, view } = editor;
-  const { selection } = state;
-  const { $from } = selection;
+  const { state: editorState, view } = state.editor;
+  const { $from } = editorState.selection;
 
-  // Find the list item node
   let listItemPos = null;
   let listItemNode = null;
   let listItemDepth = null;
 
   for (let d = $from.depth; d > 0; d--) {
-    const node = $from.node(d);
-    if (node.type.name === "listItem") {
+    if ($from.node(d).type.name === "listItem") {
       listItemPos = $from.before(d);
-      listItemNode = node;
+      listItemNode = $from.node(d);
       listItemDepth = d;
       break;
     }
@@ -1088,532 +483,59 @@ function moveListItem(direction) {
   const indexInParent = $from.index(listItemDepth - 1);
 
   if (direction === "up" && indexInParent === 0) return;
-  if (direction === "down" && indexInParent >= parentList.childCount - 1) return;
+  if (direction === "down" && indexInParent >= parentList.childCount - 1)
+    return;
 
-  const tr = state.tr;
+  const tr = editorState.tr;
   const listItemEnd = listItemPos + listItemNode.nodeSize;
-  const cursorOffset = $from.pos - listItemPos;
   let newCursorPos;
 
   if (direction === "up") {
-    const prevItemNode = parentList.child(indexInParent - 1);
-    const prevItemSize = prevItemNode.nodeSize;
-    // New position will be prevItemSize earlier
+    const prevItemSize = parentList.child(indexInParent - 1).nodeSize;
     newCursorPos = $from.pos - prevItemSize;
-    // Move current item before previous
     const slice = tr.doc.slice(listItemPos, listItemEnd);
     tr.delete(listItemPos, listItemEnd);
     tr.insert(listItemPos - prevItemSize, slice.content);
   } else {
-    const nextItemNode = parentList.child(indexInParent + 1);
-    const nextItemSize = nextItemNode.nodeSize;
-    // New position will be nextItemSize later
+    const nextItemSize = parentList.child(indexInParent + 1).nodeSize;
     newCursorPos = $from.pos + nextItemSize;
-    // Move next item before current
     const nextItemPos = listItemEnd;
     const nextSlice = tr.doc.slice(nextItemPos, nextItemPos + nextItemSize);
     tr.delete(nextItemPos, nextItemPos + nextItemSize);
     tr.insert(listItemPos, nextSlice.content);
   }
 
-  // Set cursor position
-  tr.setSelection(state.selection.constructor.near(tr.doc.resolve(newCursorPos)));
+  tr.setSelection(
+    editorState.selection.constructor.near(tr.doc.resolve(newCursorPos)),
+  );
   view.dispatch(tr.scrollIntoView());
 }
 
-// Reference picker
-function setupReferencePicker() {
-  const picker = document.getElementById("reference-picker");
-  const searchInput = document.getElementById("reference-search");
-
-  if (searchInput) {
-    let searchTimer;
-    searchInput.addEventListener("input", function () {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(function () {
-        searchReferences(searchInput.value);
-      }, 300);
-    });
-
-    searchInput.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") {
-        closeReferencePicker();
-      }
-    });
-  }
-
-  // Handle result clicks and tab switches (event delegation for dynamic content)
-  document
-    .getElementById("reference-results")
-    .addEventListener("click", function (e) {
-      // Handle tab clicks
-      const tab = e.target.closest(".sources-tab");
-      if (tab) {
-        e.preventDefault();
-        document.querySelectorAll("#reference-results .sources-tab").forEach(function(t) {
-          t.classList.remove("active");
-        });
-        tab.classList.add("active");
-        const tabName = tab.dataset.tab;
-        document.querySelectorAll("#reference-results .sources-tab-content").forEach(function(content) {
-          content.classList.toggle("hidden", content.dataset.tab !== tabName);
-        });
-        return;
-      }
-
-      // Handle result item clicks
-      const link = e.target.closest("a[data-type]");
-      if (link) {
-        e.preventDefault();
-        insertReference(link.dataset.type, link.dataset.id, link.dataset.label);
-      }
-    });
-
-  // Close picker on click outside
-  document.addEventListener("mousedown", function (e) {
-    if (!picker) return;
-    if (!picker.classList.contains("active")) return;
-
-    // Don't close if clicking inside picker
-    if (picker.contains(e.target)) return;
-
-    // Don't close if clicking Insert button
-    if (e.target.closest("#insert-source-btn")) return;
-
-    closeReferencePicker();
-  });
-
-  // Close on Escape anywhere
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && picker && picker.classList.contains("active")) {
-      closeReferencePicker();
-    }
-  });
-}
-
-function openReferencePicker() {
-  const picker = document.getElementById("reference-picker");
-  const searchInput = document.getElementById("reference-search");
-  const results = document.getElementById("reference-results");
-
-  // Position picker below the cursor
-  if (editor && picker) {
-    const { from } = editor.state.selection;
-    const coords = editor.view.coordsAtPos(from);
-
-    // Validate coords - fall back to center of editor if invalid
-    let top, left;
-    if (coords && coords.bottom > 0) {
-      top = coords.bottom + 8;
-      left = coords.left;
-    } else {
-      // Fallback: position in center of editor
-      const editorEl = document.getElementById("note-editor");
-      const editorRect = editorEl.getBoundingClientRect();
-      top = editorRect.top + 100;
-      left = editorRect.left + 50;
-    }
-
-    // Ensure picker doesn't go off-screen right
-    const pickerWidth = 320; // 20rem
-    if (left + pickerWidth > window.innerWidth - 16) {
-      left = window.innerWidth - pickerWidth - 16;
-    }
-
-    // Ensure picker doesn't go off-screen bottom
-    const pickerHeight = 400; // approximate max height
-    if (top + pickerHeight > window.innerHeight - 16) {
-      top = Math.max(100, coords ? coords.top - pickerHeight - 8 : 100);
-    }
-
-    picker.style.top = top + "px";
-    picker.style.left = Math.max(16, left) + "px";
-  }
-
-  results.innerHTML = '<div class="sources-empty-state"><i class="icon-search"></i><p>Search for highlights and documents to insert</p></div>';
-  picker.classList.add("active");
-  searchInput.value = "";
-
-  // Delay focus to prevent scroll jump
-  setTimeout(function() {
-    searchInput.focus({ preventScroll: true });
-  }, 10);
-}
-
-function closeReferencePicker() {
-  const picker = document.getElementById("reference-picker");
-  if (picker) {
-    picker.classList.remove("active");
-  }
-  if (editor) {
-    editor.commands.focus();
-  }
-}
-
-function searchReferences(query) {
-  if (!query.trim()) {
-    document.getElementById("reference-results").innerHTML =
-      '<div class="sources-empty-state"><i class="icon-search"></i><p>Search for highlights and documents to insert</p></div>';
-    return;
-  }
-
-  const url = window.NOTE_DATA.searchUrl + "?q=" + encodeURIComponent(query);
-
-  fetch(url, {
-    headers: {
-      "X-CSRFToken": getCSRFToken(),
-    },
-  })
-    .then(function (response) {
-      return response.text();
-    })
-    .then(function (html) {
-      document.getElementById("reference-results").innerHTML = html;
-    });
-}
-
-function insertReference(type, id, label) {
-  editor
-    .chain()
-    .focus()
-    .insertContent([
-      {
-        type: "noteRef",
-        attrs: { type: type, id: id, label: label },
-      },
-      { type: "text", text: " " },
-    ])
-    .run();
-
-  closeReferencePicker();
-}
-
-// =============================================================================
-// Search and Replace
-// =============================================================================
-
-function setupSearchBar() {
-  const searchInput = document.getElementById("search-input");
-  const replaceInput = document.getElementById("replace-input");
-  const prevBtn = document.getElementById("search-prev");
-  const nextBtn = document.getElementById("search-next");
-  const replaceBtn = document.getElementById("replace-one");
-  const replaceAllBtn = document.getElementById("replace-all");
-  const closeBtn = document.getElementById("search-close");
-  const toggleBtn = document.getElementById("search-toggle-btn");
-
-  if (searchInput) {
-    let searchTimer;
-    searchInput.addEventListener("input", function () {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(function () {
-        performSearch(searchInput.value);
-      }, 200);
-    });
-
-    searchInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        goToNextMatch();
-      } else if (e.key === "Escape") {
-        hideSearchBar();
-      }
-    });
-  }
-
-  if (replaceInput) {
-    replaceInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        replaceCurrentMatch();
-      } else if (e.key === "Escape") {
-        hideSearchBar();
-      }
-    });
-  }
-
-  if (prevBtn) {
-    prevBtn.addEventListener("click", goToPrevMatch);
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener("click", goToNextMatch);
-  }
-
-  if (replaceBtn) {
-    replaceBtn.addEventListener("click", replaceCurrentMatch);
-  }
-
-  if (replaceAllBtn) {
-    replaceAllBtn.addEventListener("click", replaceAllMatches);
-  }
-
-  if (closeBtn) {
-    closeBtn.addEventListener("click", hideSearchBar);
-  }
-
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      toggleSearchBar();
-    });
-  }
-}
-
-function toggleSearchBar() {
-  const bar = document.getElementById("search-replace-bar");
-  if (bar && bar.classList.contains("visible")) {
-    hideSearchBar();
-  } else {
-    showSearchBar();
-  }
-}
-
-function showSearchBar() {
-  const bar = document.getElementById("search-replace-bar");
-  const searchInput = document.getElementById("search-input");
-  const toggleBtn = document.getElementById("search-toggle-btn");
-
-  if (bar) {
-    bar.classList.add("visible");
-  }
-  if (toggleBtn) {
-    toggleBtn.classList.add("active");
-  }
-  if (searchInput) {
-    searchInput.focus();
-    searchInput.select();
-  }
-}
-
-function hideSearchBar() {
-  const bar = document.getElementById("search-replace-bar");
-  const toggleBtn = document.getElementById("search-toggle-btn");
-  const searchInput = document.getElementById("search-input");
-  const replaceInput = document.getElementById("replace-input");
-
-  if (bar) {
-    bar.classList.remove("visible");
-  }
-  if (toggleBtn) {
-    toggleBtn.classList.remove("active");
-  }
-
-  clearSearchHighlights();
-  searchMatches = [];
-  currentMatchIndex = -1;
-  updateSearchCount();
-
-  if (searchInput) searchInput.value = "";
-  if (replaceInput) replaceInput.value = "";
-
-  if (editor) {
-    editor.commands.focus();
-  }
-}
-
-function performSearch(searchTerm) {
-  searchMatches = [];
-  currentMatchIndex = -1;
-
-  if (!searchTerm || !editor) {
-    // Clear decorations
-    const tr = editor.state.tr;
-    tr.setMeta(searchPluginKey, { searchTerm: "", currentIndex: -1 });
-    editor.view.dispatch(tr);
-    updateSearchCount();
-    return;
-  }
-
-  // Dispatch transaction to update search decorations
-  const tr = editor.state.tr;
-  tr.setMeta(searchPluginKey, { searchTerm: searchTerm, currentIndex: 0 });
-  editor.view.dispatch(tr);
-
-  // Get matches from plugin state
-  const pluginState = searchPluginKey.getState(editor.state);
-  if (pluginState && pluginState.matches) {
-    searchMatches = pluginState.matches;
-  }
-
-  if (searchMatches.length > 0) {
-    currentMatchIndex = 0;
-    scrollToCurrentMatch();
-  }
-
-  updateSearchCount();
-}
-
-function clearSearchHighlights() {
-  if (!editor) return;
-
-  // Clear decorations by dispatching empty search
-  const tr = editor.state.tr;
-  tr.setMeta(searchPluginKey, { searchTerm: "", currentIndex: -1 });
-  editor.view.dispatch(tr);
-
-  searchMatches = [];
-  currentMatchIndex = -1;
-}
-
-function updateSearchDecorations() {
-  if (!editor) return;
-
-  const searchInput = document.getElementById("search-input");
-  const searchTerm = searchInput ? searchInput.value : "";
-
-  const tr = editor.state.tr;
-  tr.setMeta(searchPluginKey, { searchTerm: searchTerm, currentIndex: currentMatchIndex });
-  editor.view.dispatch(tr);
-}
-
-function scrollToCurrentMatch() {
-  if (currentMatchIndex < 0 || currentMatchIndex >= searchMatches.length) return;
-
-  // Wait a tick for decorations to be applied, then find the current match element
-  requestAnimationFrame(function() {
-    const currentMatchEl = document.querySelector(".search-match-current");
-    if (!currentMatchEl) return;
-
-    const notePage = document.querySelector(".note-page");
-    if (notePage) {
-      const matchRect = currentMatchEl.getBoundingClientRect();
-      const containerRect = notePage.getBoundingClientRect();
-      const centerOffset = notePage.clientHeight / 2;
-      const scrollTop = notePage.scrollTop + (matchRect.top - containerRect.top) - centerOffset;
-      notePage.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
-    }
-  });
-}
-
-function updateSearchCount() {
-  const countEl = document.getElementById("search-count");
-  if (countEl) {
-    if (searchMatches.length === 0) {
-      countEl.textContent = "";
-    } else {
-      countEl.textContent = (currentMatchIndex + 1) + " of " + searchMatches.length;
-    }
-  }
-}
-
-function goToNextMatch() {
-  if (searchMatches.length === 0) return;
-  currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
-  updateSearchDecorations();
-  scrollToCurrentMatch();
-  updateSearchCount();
-}
-
-function goToPrevMatch() {
-  if (searchMatches.length === 0) return;
-  currentMatchIndex =
-    (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
-  updateSearchDecorations();
-  scrollToCurrentMatch();
-  updateSearchCount();
-}
-
-function replaceCurrentMatch() {
-  if (currentMatchIndex < 0 || currentMatchIndex >= searchMatches.length) return;
-
-  const searchInput = document.getElementById("search-input");
-  const replaceInput = document.getElementById("replace-input");
-  if (!searchInput || !editor) return;
-
-  const searchTerm = searchInput.value;
-  const replaceTerm = replaceInput ? replaceInput.value : "";
-
-  const match = searchMatches[currentMatchIndex];
-  if (!match) return;
-
-  // Replace the match using Tiptap's chain
-  editor
-    .chain()
-    .focus()
-    .setTextSelection({ from: match.from, to: match.to })
-    .deleteSelection()
-    .insertContent(replaceTerm)
-    .run();
-
-  // Re-run search to update matches
-  performSearch(searchTerm);
-
-  // Trigger autosave
-  scheduleAutosave();
-}
-
-function replaceAllMatches() {
-  const searchInput = document.getElementById("search-input");
-  const replaceInput = document.getElementById("replace-input");
-  if (!searchInput || !editor) return;
-
-  const searchTerm = searchInput.value;
-  const replaceTerm = replaceInput ? replaceInput.value : "";
-
-  if (!searchTerm || searchMatches.length === 0) return;
-
-  // Replace all matches in reverse order to preserve positions
-  const matchesCopy = searchMatches.slice().reverse();
-
-  editor.chain().focus().run();
-
-  matchesCopy.forEach(function(match) {
-    editor
-      .chain()
-      .setTextSelection({ from: match.from, to: match.to })
-      .deleteSelection()
-      .insertContent(replaceTerm)
-      .run();
-  });
-
-  // Clear search state
-  clearSearchHighlights();
-  updateSearchCount();
-
-  // Trigger autosave
-  scheduleAutosave();
-}
-
-// =============================================================================
-// Import/Export
-// =============================================================================
+// ─── Import/Export ───────────────────────────────────────────────────────────
 
 function setupImportExport() {
-  // Export button
-  const exportBtn = document.getElementById("export-btn");
-  if (exportBtn) {
-    exportBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      exportToMarkdown();
-    });
-  }
+  bindClick("export-btn", (e) => {
+    e.preventDefault();
+    exportToMarkdown();
+  });
 
-  // Listen for HTMX content swap to set up import handlers
-  document.body.addEventListener("htmx:afterSwap", function (e) {
-    // Check if the import modal was just loaded
-    if (document.getElementById("import-confirm-btn")) {
-      setupImportModal();
-    }
+  document.body.addEventListener("htmx:afterSwap", () => {
+    if (document.getElementById("import-confirm-btn")) setupImportModal();
   });
 }
 
 function exportToMarkdown() {
-  if (!editor) return;
+  if (!state.editor) return;
 
   const markdown = getMarkdownContent();
   const title = window.NOTE_DATA.title || "note";
-
-  // Sanitize filename
   const safeTitle = title.replace(/[^a-zA-Z0-9 \-_]/g, "").trim() || "note";
-  const filename = safeTitle + ".md";
 
-  // Create download
   const blob = new Blob([markdown], { type: "text/markdown" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = filename;
+  link.download = safeTitle + ".md";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -1624,285 +546,50 @@ function setupImportModal() {
   const fileInput = document.getElementById("import-file");
   const textInput = document.getElementById("import-text");
   const confirmBtn = document.getElementById("import-confirm-btn");
-
   if (!fileInput || !textInput || !confirmBtn) return;
 
-  // Handle file selection
-  fileInput.addEventListener("change", function () {
+  fileInput.addEventListener("change", () => {
     const file = fileInput.files[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onload = function (e) {
+    reader.onload = (e) => {
       textInput.value = e.target.result;
     };
     reader.readAsText(file);
   });
 
-  // Handle import confirmation
-  confirmBtn.addEventListener("click", function () {
+  confirmBtn.addEventListener("click", () => {
     const content = textInput.value.trim();
     if (!content) return;
 
     const replaceContent = document.getElementById("import-replace").checked;
     importMarkdown(content, replaceContent);
-
-    // Close modal
-    window.dispatchEvent(new CustomEvent('close-modal'));
+    window.dispatchEvent(new CustomEvent("close-modal"));
   });
 }
 
 function importMarkdown(markdown, replace) {
-  if (!editor) return;
-
-  // Convert markdown to HTML
+  if (!state.editor) return;
   const html = markdownToHtml(markdown);
 
   if (replace) {
-    // Replace all content
-    editor.commands.setContent(html);
+    state.editor.commands.setContent(html);
   } else {
-    // Append to end
-    editor.commands.focus("end");
-    editor.commands.insertContent("<p></p>" + html);
+    state.editor.commands.focus("end");
+    state.editor.commands.insertContent("<p></p>" + html);
   }
 
-  // Trigger autosave
   scheduleAutosave();
 }
 
-// =============================================================================
-// Outline Panel - Heading Navigation
-// =============================================================================
-
-function buildOutline() {
-  const outlineList = document.getElementById("outline-list");
-  if (!outlineList || !editor) return;
-
-  const headings = [];
-
-  // Collect headings from the editor (exclude h1 since title serves as h1)
-  editor.state.doc.descendants(function(node, pos) {
-    if (node.type.name === "heading" && node.attrs.level >= 2) {
-      headings.push({
-        level: node.attrs.level,
-        text: node.textContent.trim(),
-        pos: pos,
-      });
-    }
-  });
-
-  // Build outline HTML
-  if (headings.length === 0) {
-    outlineList.innerHTML = '<li class="outline-empty">No headings</li>';
-    return;
-  }
-
-  // Get collapsed state from localStorage
-  const noteId = window.NOTE_DATA ? window.NOTE_DATA.id : "default";
-  const storageKey = "outline-collapsed-" + noteId;
-  let collapsedItems = [];
-  try {
-    collapsedItems = JSON.parse(localStorage.getItem(storageKey)) || [];
-  } catch (e) {
-    collapsedItems = [];
-  }
-
-  // Build hierarchical structure - group children under their parent h2
-  function buildHierarchicalHtml(headings) {
-    let html = "";
-    let i = 0;
-
-    while (i < headings.length) {
-      const heading = headings[i];
-      const text = heading.text || "(empty)";
-
-      // Find children (headings with level > current until next heading at same or lower level)
-      const children = [];
-      let j = i + 1;
-      while (j < headings.length && headings[j].level > heading.level) {
-        children.push(headings[j]);
-        j++;
-      }
-
-      const hasChildren = children.length > 0;
-      const isCollapsed = collapsedItems.includes(heading.pos);
-      const collapsedClass = isCollapsed ? " collapsed" : "";
-
-      if (hasChildren) {
-        html += '<li class="outline-item has-children level-' + heading.level + collapsedClass + '" data-pos="' + heading.pos + '">';
-        html += '<span class="outline-toggle"><i class="icon-chevron-down"></i></span>';
-        html += '<span class="outline-text">' + text + '</span>';
-        html += '<ul class="outline-children">';
-        html += buildHierarchicalHtml(children);
-        html += '</ul>';
-        html += '</li>';
-      } else {
-        html += '<li class="outline-item level-' + heading.level + '" data-pos="' + heading.pos + '">';
-        html += '<span class="outline-toggle-spacer"></span>';
-        html += '<span class="outline-text">' + text + '</span>';
-        html += '</li>';
-      }
-
-      // Skip processed children
-      i = j;
-    }
-
-    return html;
-  }
-
-  outlineList.innerHTML = buildHierarchicalHtml(headings);
-
-  // Add click handlers for toggle arrows
-  outlineList.querySelectorAll(".outline-toggle").forEach(function(toggle) {
-    toggle.addEventListener("click", function(e) {
-      e.stopPropagation();
-      const item = toggle.closest(".outline-item");
-      if (!item) return;
-
-      item.classList.toggle("collapsed");
-
-      // Save collapsed state
-      const pos = parseInt(item.dataset.pos, 10);
-      if (item.classList.contains("collapsed")) {
-        if (!collapsedItems.includes(pos)) {
-          collapsedItems.push(pos);
-        }
-      } else {
-        collapsedItems = collapsedItems.filter(function(p) { return p !== pos; });
-      }
-      localStorage.setItem(storageKey, JSON.stringify(collapsedItems));
-    });
-  });
-
-  // Add click handlers for heading text
-  outlineList.querySelectorAll(".outline-text").forEach(function(textEl) {
-    textEl.addEventListener("click", function() {
-      const item = textEl.closest(".outline-item");
-      if (!item) return;
-      const pos = parseInt(item.dataset.pos, 10);
-      scrollToHeading(pos);
-    });
-  });
-
-  // Also allow clicking items without children
-  outlineList.querySelectorAll(".outline-item:not(.has-children)").forEach(function(item) {
-    if (!item.querySelector(".outline-toggle")) {
-      item.style.cursor = "pointer";
-      item.addEventListener("click", function() {
-        const pos = parseInt(item.dataset.pos, 10);
-        scrollToHeading(pos);
-      });
-    }
-  });
-
-  // Update collapse button icon
-  updateCollapseButtonIcon();
-}
-
-function scrollToHeading(pos) {
-  if (!editor) return;
-
-  // Find the DOM node at this position
-  const domAtPos = editor.view.domAtPos(pos + 1);
-  if (domAtPos && domAtPos.node) {
-    let element = domAtPos.node;
-    // Get the parent element if we have a text node
-    if (element.nodeType === Node.TEXT_NODE) {
-      element = element.parentElement;
-    }
-    // Find the heading element
-    const heading = element.closest("h1, h2, h3, h4, h5, h6");
-    if (heading) {
-      // Scroll manually within the .note-page container
-      const notePage = document.querySelector(".note-page");
-      if (notePage) {
-        const headingRect = heading.getBoundingClientRect();
-        const containerRect = notePage.getBoundingClientRect();
-        const scrollTop = notePage.scrollTop + (headingRect.top - containerRect.top) - 32;
-        notePage.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
-      }
-    }
-  }
-}
-
-// Debounced outline update
-let outlineTimer = null;
-function scheduleOutlineUpdate() {
-  if (outlineTimer) clearTimeout(outlineTimer);
-  outlineTimer = setTimeout(buildOutline, 500);
-}
-
-// Collapse/Expand all outline items
-function setupOutlineCollapseAll() {
-  const btn = document.getElementById("outline-collapse-btn");
-  if (!btn) return;
-
-  btn.addEventListener("click", function() {
-    const outlineList = document.getElementById("outline-list");
-    if (!outlineList) return;
-
-    const collapsibleItems = outlineList.querySelectorAll(".outline-item.has-children");
-    if (collapsibleItems.length === 0) return;
-
-    // Check if all are collapsed
-    const allCollapsed = Array.from(collapsibleItems).every(function(item) {
-      return item.classList.contains("collapsed");
-    });
-
-    // Toggle: if all collapsed, expand all; otherwise collapse all
-    const noteId = window.NOTE_DATA ? window.NOTE_DATA.id : "default";
-    const storageKey = "outline-collapsed-" + noteId;
-    let collapsedPositions = [];
-
-    collapsibleItems.forEach(function(item) {
-      if (allCollapsed) {
-        item.classList.remove("collapsed");
-      } else {
-        item.classList.add("collapsed");
-        const pos = parseInt(item.dataset.pos, 10);
-        if (!isNaN(pos)) {
-          collapsedPositions.push(pos);
-        }
-      }
-    });
-
-    // Save state
-    localStorage.setItem(storageKey, JSON.stringify(collapsedPositions));
-
-    // Update button icon
-    updateCollapseButtonIcon();
-  });
-}
-
-function updateCollapseButtonIcon() {
-  const btn = document.getElementById("outline-collapse-btn");
-  const outlineList = document.getElementById("outline-list");
-  if (!btn || !outlineList) return;
-
-  const icon = btn.querySelector("i");
-  if (!icon) return;
-
-  const collapsibleItems = outlineList.querySelectorAll(".outline-item.has-children");
-  const allCollapsed = collapsibleItems.length > 0 && Array.from(collapsibleItems).every(function(item) {
-    return item.classList.contains("collapsed");
-  });
-
-  icon.className = allCollapsed ? "icon-chevrons-up-down" : "icon-chevrons-down-up";
-}
-
-// =============================================================================
-// HTMX Integration for Note Switching
-// =============================================================================
+// ─── HTMX Integration ───────────────────────────────────────────────────────
 
 function setupHtmxHandlers() {
-  // Trigger autosave and update active state before HTMX request
-  document.body.addEventListener("htmx:beforeRequest", function(e) {
+  document.body.addEventListener("htmx:beforeRequest", (e) => {
     if (e.detail.target && e.detail.target.id === "note-editor-container") {
-      if (autosaveTimer) clearTimeout(autosaveTimer);
+      if (state.autosaveTimer) clearTimeout(state.autosaveTimer);
       performAutosave();
 
-      // Update active state immediately from clicked element
       const clickedItem = e.detail.elt;
       if (clickedItem && clickedItem.dataset.noteId) {
         updateSidebarActive(clickedItem.dataset.noteId);
@@ -1910,30 +597,19 @@ function setupHtmxHandlers() {
     }
   });
 
-  // Reinitialize editor after HTMX swaps new note content
-  document.body.addEventListener("htmx:afterSwap", function(e) {
+  document.body.addEventListener("htmx:afterSwap", (e) => {
     if (e.detail.target && e.detail.target.id === "note-editor-container") {
-      // Destroy old editor
-      if (editor) {
-        editor.destroy();
-        editor = null;
+      if (state.editor) {
+        state.editor.destroy();
+        state.editor = null;
       }
 
-      // Reset state
-      lastSavedContent = "";
-      searchMatches = [];
-      currentMatchIndex = -1;
+      state.lastSavedContent = "";
+      state.searchMatches = [];
+      state.currentMatchIndex = -1;
 
-      // Delay to ensure inline script has executed and NOTE_DATA is updated
-      setTimeout(function() {
-        initEditor();
-      }, 50);
+      setTimeout(initEditor, 50);
     }
-  });
-
-  // Handle browser back/forward navigation
-  window.addEventListener("popstate", function(e) {
-    // Let the browser handle the navigation - page will reload
   });
 }
 
@@ -1941,36 +617,26 @@ function updateSidebarActive(noteId) {
   const sidebar = document.querySelector(".sidebar-notes-list");
   if (!sidebar) return;
 
-  // Remove active class from all items
-  sidebar.querySelectorAll("li").forEach(function(item) {
-    item.classList.remove("active");
-  });
+  sidebar
+    .querySelectorAll("li")
+    .forEach((item) => item.classList.remove("active"));
 
-  // Add active class to current note
   const activeItem = sidebar.querySelector('li[data-note-id="' + noteId + '"]');
-  if (activeItem) {
-    activeItem.classList.add("active");
-  }
+  if (activeItem) activeItem.classList.add("active");
 }
 
-// =============================================================================
-// Panel Collapse Toggle
-// =============================================================================
+// ─── Panel Collapse ──────────────────────────────────────────────────────────
 
 function togglePanel(panelClass) {
   const panel = document.querySelector("." + panelClass);
   if (!panel) return;
 
-  // Check if panel is currently visible
   const isVisible = panel.offsetWidth > 0;
-
   if (isVisible) {
-    // Collapse it
     panel.classList.add("collapsed");
     panel.classList.remove("expanded");
     localStorage.setItem("notes-editor-" + panelClass, "collapsed");
   } else {
-    // Expand it
     panel.classList.remove("collapsed");
     panel.classList.add("expanded");
     localStorage.setItem("notes-editor-" + panelClass, "expanded");
@@ -1980,36 +646,28 @@ function togglePanel(panelClass) {
 function restorePanelStates() {
   const screenWidth = window.innerWidth;
 
-  // Restore sidebar state (default collapsed < 1200px)
   const sidebarState = localStorage.getItem("notes-editor-note-sidebar");
   const sidebar = document.querySelector(".note-sidebar");
   if (sidebar) {
-    if (sidebarState === "collapsed") {
-      sidebar.classList.add("collapsed");
-    } else if (sidebarState === "expanded" && screenWidth >= 1200) {
-      // Only restore expanded on large screens
+    if (sidebarState === "collapsed") sidebar.classList.add("collapsed");
+    else if (sidebarState === "expanded" && screenWidth >= 1200)
       sidebar.classList.add("expanded");
-    }
   }
 
-  // Restore outline state (default collapsed < 768px)
   const outlineState = localStorage.getItem("notes-editor-note-outline");
   const outline = document.querySelector(".note-outline");
   if (outline) {
-    if (outlineState === "collapsed") {
-      outline.classList.add("collapsed");
-    } else if (outlineState === "expanded" && screenWidth >= 768) {
-      // Only restore expanded on larger screens
+    if (outlineState === "collapsed") outline.classList.add("collapsed");
+    else if (outlineState === "expanded" && screenWidth >= 768)
       outline.classList.add("expanded");
-    }
   }
 }
 
-// Expose togglePanel globally for onclick handlers
 window.togglePanel = togglePanel;
 
-// Initialize on load
-document.addEventListener("DOMContentLoaded", function() {
+// ─── Init ────────────────────────────────────────────────────────────────────
+
+document.addEventListener("DOMContentLoaded", () => {
   restorePanelStates();
   initEditor();
   setupHtmxHandlers();
