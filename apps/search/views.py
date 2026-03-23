@@ -78,7 +78,9 @@ def expand_search_with_synonyms(query):
 
 @login_required
 def index(request):
-    active_scope = request.session.get("search_scope", "all")
+    active_scope = request.GET.get("scope") or request.session.get(
+        "search_scope", "all"
+    )
     context = {
         "app": "search",
         "action": "/search/results",

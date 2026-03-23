@@ -346,7 +346,12 @@ document.addEventListener('keydown', function(event) {
   // Define leader sequences and their actions
   const LEADER_ACTIONS = {
     'n': () => commandPalette.open(),
-    'ff': () => htmx.ajax('GET', '/search/', { target: '#htmx-modal-container' }),
+    'ff': () => htmx.ajax('GET', '/search/?scope=all', { target: '#htmx-modal-container' }),
+    'fm': () => htmx.ajax('GET', '/search/?scope=matters', { target: '#htmx-modal-container' }),
+    'fp': () => htmx.ajax('GET', '/search/?scope=proceedings', { target: '#htmx-modal-container' }),
+    'fc': () => htmx.ajax('GET', '/search/?scope=contacts', { target: '#htmx-modal-container' }),
+    'fi': () => htmx.ajax('GET', '/search/?scope=intakes', { target: '#htmx-modal-container' }),
+    'fn': () => htmx.ajax('GET', '/search/?scope=notes', { target: '#htmx-modal-container' }),
   };
 
   const action = LEADER_ACTIONS[seq];
@@ -430,39 +435,86 @@ const searchNav = {
     const current = tabs.findIndex(t => t.classList.contains('active'));
     const next = (current + delta + tabs.length) % tabs.length;
     tabs[next].click();
+    tabs[next].focus();
+    // Clear any highlighted cards when switching tabs
+    this.getCards().forEach(c => c.classList.remove('active'));
   },
 
   handleKeydown(event) {
     if (!this.getModal()) return false;
-    if (!event.ctrlKey || !event.shiftKey) return false;
+    const input = this.getModal().querySelector('.search-text');
+    const inInput = document.activeElement === input;
 
-    // Ctrl+Shift+J / Ctrl+Shift+K — navigate results
-    if (event.key === 'J') {
+    // --- Input mode ---
+    if (inInput) {
+      // Enter — open first result
+      if (event.key === 'Enter') {
+        const firstCard = this.getModal().querySelector('.search-card');
+        if (firstCard) {
+          event.preventDefault();
+          firstCard.click();
+          return true;
+        }
+      }
+      // Tab — enter navigation mode (focus active tab)
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        input.blur();
+        const activeTab = this.getModal().querySelector('.search-tab.active');
+        if (activeTab) activeTab.focus();
+        return true;
+      }
+      return false;
+    }
+
+    // --- Navigation mode (input not focused) ---
+    // Shift+Tab — back to input
+    if (event.key === 'Tab') {
       event.preventDefault();
-      this.moveCard(1);
+      this.getCards().forEach(c => c.classList.remove('active'));
+      input.focus();
       return true;
     }
-    if (event.key === 'K') {
+    // j / k — navigate results (first j highlights first item)
+    if (event.key === 'j' || event.key === 'ArrowDown') {
       event.preventDefault();
-      this.moveCard(-1);
+      const current = this.getActiveCardIndex();
+      this.moveCard(current < 0 ? 0 : 1);
       return true;
     }
-    // Ctrl+Shift+H / Ctrl+Shift+L — switch tabs
-    if (event.key === 'H') {
+    if (event.key === 'k' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const current = this.getActiveCardIndex();
+      this.moveCard(current < 0 ? 0 : -1);
+      return true;
+    }
+    // h / l — switch tabs
+    if (event.key === 'h' || event.key === 'ArrowLeft') {
       event.preventDefault();
       this.moveTab(-1);
       return true;
     }
-    if (event.key === 'L') {
+    if (event.key === 'l' || event.key === 'ArrowRight') {
       event.preventDefault();
       this.moveTab(1);
       return true;
     }
-    // Ctrl+Shift+Enter — open highlighted result
+    // Enter — open highlighted result (or first if none highlighted)
     if (event.key === 'Enter') {
       event.preventDefault();
-      this.selectCard();
+      if (this.getActiveCardIndex() >= 0) {
+        this.selectCard();
+      } else {
+        const firstCard = this.getModal().querySelector('.search-card');
+        if (firstCard) firstCard.click();
+      }
       return true;
+    }
+    // Any printable character — refocus input
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      this.getCards().forEach(c => c.classList.remove('active'));
+      input.focus();
+      return false; // let the key pass through to input
     }
     return false;
   }
