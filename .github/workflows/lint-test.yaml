@@ -31,15 +31,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python and uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.13"
 
       - name: Install Python dependencies
         run: uv sync
+
+      - name: Install ruff on PATH for pre-commit system hooks
+        run: uv tool install ruff
 
       - name: Lint code
         run: uv run pre-commit run --all-files
@@ -71,21 +74,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python and uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.13"
 
       - name: Install Python dependencies
         run: uv sync
 
-      - name: Install ruff on PATH for pre-commit system hooks
-        run: uv tool install ruff
-
       - name: Run migrations
-        run: python manage.py migrate
+        run: uv run python manage.py migrate
 
       - name: Run tests
-        run: pytest --splits 4 --group ${{ matrix.group }} -n auto --dist=loadscope --tb=short -q
+        run: uv run pytest --splits 4 --group ${{ matrix.group }} -n auto --dist=loadscope --tb=short -q
