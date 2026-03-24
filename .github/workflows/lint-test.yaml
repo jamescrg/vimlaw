@@ -41,6 +41,9 @@ jobs:
       - name: Install Python dependencies
         run: uv sync
 
+      - name: Install ruff on PATH for pre-commit system hooks
+        run: uv tool install ruff
+
       - name: Lint code
         run: uv run pre-commit run --all-files
 
@@ -80,9 +83,6 @@ jobs:
 
       - name: Install Python dependencies
         run: uv sync
-
-      - name: Install ruff on PATH for pre-commit system hooks
-        run: uv tool install ruff
 
       - name: Run migrations
         run: python manage.py migrate
