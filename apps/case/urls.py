@@ -488,9 +488,9 @@ urlpatterns = [
         name="document-importance",
     ),
     path(
-        "case/documents/<int:document_id>/toggle-ai/",
-        documents.documents_toggle_ai,
-        name="documents-toggle-ai",
+        "case/documents/<int:document_id>/set-ai/<str:state>/",
+        documents.documents_set_ai,
+        name="documents-set-ai",
     ),
     path(
         "case/documents/<int:document_id>/row/",
@@ -585,9 +585,9 @@ urlpatterns = [
         name="caselaw-importance",
     ),
     path(
-        "case/caselaws/<int:caselaw_id>/toggle-ai/",
-        caselaws.caselaw_toggle_ai,
-        name="caselaw-toggle-ai",
+        "case/caselaws/<int:caselaw_id>/set-ai/<str:state>/",
+        caselaws.caselaw_set_ai,
+        name="caselaw-set-ai",
     ),
     path(
         "case/caselaws/<int:caselaw_id>/view/",

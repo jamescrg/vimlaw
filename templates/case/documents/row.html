@@ -66,15 +66,6 @@
   <td class="col-pages">{{ document.page_count|default:"" }}</td>
   <td class="col-date">{% include "case/documents/date-display.html" %}</td>
   <td class="col-added">{{ document.created_at|date:"Y-m-d" }}</td>
-  <td class="col-ai">
-    <label class="toggle-switch"
-           title="{% if document.include_in_ai %}Remove from AI context{% else %}Include in AI context{% endif %}">
-      <input type="checkbox"
-             {% if document.include_in_ai %}checked{% endif %}
-             hx-post="{% url 'case:documents-toggle-ai' document.id %}"
-             hx-swap="none">
-      <span class="toggle-track"></span>
-    </label>
-  </td>
+  <td class="col-ai" id="doc-ai-{{ document.id }}">{% include "case/documents/ai-context-cell.html" %}</td>
   <td class="col-importance dropdown-cell">{% include "case/documents/importance-display.html" %}</td>
 </tr>

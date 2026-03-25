@@ -1,17 +1,25 @@
 <li>
   <a class="dropdown-item"
      href="#"
-     hx-post="{% url 'case:documents-bulk-ai' matter.id 'add' %}"
+     hx-post="{% url 'case:documents-bulk-ai' matter.id 'always' %}"
      hx-swap="none">
-    <i class="icon-bookmark-plus"></i> Add to AI Context
+    <i class="icon-bookmark"></i> Always Include
   </a>
 </li>
 <li>
   <a class="dropdown-item"
      href="#"
-     hx-post="{% url 'case:documents-bulk-ai' matter.id 'remove' %}"
+     hx-post="{% url 'case:documents-bulk-ai' matter.id 'auto' %}"
      hx-swap="none">
-    <i class="icon-bookmark-minus"></i> Remove from AI Context
+    <i class="icon-sparkles"></i> Auto
+  </a>
+</li>
+<li>
+  <a class="dropdown-item"
+     href="#"
+     hx-post="{% url 'case:documents-bulk-ai' matter.id 'never' %}"
+     hx-swap="none">
+    <i class="icon-bookmark-x"></i> Never Include
   </a>
 </li>
 <li>

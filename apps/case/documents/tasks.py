@@ -248,11 +248,76 @@ def process_document_ocr(document_id, force=False):
             search_vector=SearchVector("name", "description", "ocr_text")
         )
 
+        # Queue AI summary generation
+        from django_q.tasks import async_task
+
+        async_task(
+            "apps.case.documents.tasks.generate_document_summary",
+            document_id,
+            task_name=f"Summary-{document_id}",
+            group="summary_generation",
+        )
+
     except Exception as e:
         logger.exception(f"OCR failed for document {document_id}")
         document.ocr_status = "failed"
         document.ocr_error = str(e)
         document.save(update_fields=["ocr_status", "ocr_error"])
+
+
+SUMMARY_PROMPT = (
+    "You are a legal document summarizer. Produce a concise 2-3 sentence summary "
+    "of this document. Focus on: what type of document it is, who the key parties "
+    "are, key dates, and what it establishes or proves. Be specific and factual."
+)
+
+# Maximum characters of OCR text to send for summarization
+SUMMARY_TEXT_LIMIT = 10_000
+
+
+def generate_document_summary(document_id):
+    """
+    Generate an AI summary of a document using Gemini Flash.
+
+    Called automatically after OCR completes, or as a backfill task.
+    The summary is used in the manifest for intelligent context selection.
+    """
+    from apps.case.ai.gemini_client import send_to_gemini
+    from apps.case.models import Document
+
+    try:
+        document = Document.objects.get(id=document_id)
+    except Document.DoesNotExist:
+        logger.error(f"Document {document_id} not found for summary generation")
+        return
+
+    # Skip if already has a summary or no text to summarize
+    if document.summary:
+        return
+    if not document.ocr_text or document.ocr_status not in ("completed", "extracted"):
+        return
+
+    try:
+        text_excerpt = document.ocr_text[:SUMMARY_TEXT_LIMIT]
+        if len(document.ocr_text) > SUMMARY_TEXT_LIMIT:
+            text_excerpt += "\n... (document continues)"
+
+        response_text, _, _ = send_to_gemini(
+            system_context=SUMMARY_PROMPT,
+            messages=[{"role": "user", "content": text_excerpt}],
+            model="gemini-2.5-flash",
+        )
+
+        document.summary = response_text.strip()
+        document.save(update_fields=["summary"])
+
+        logger.info(
+            f"Summary generated for document {document_id}: "
+            f"{len(document.summary)} chars"
+        )
+
+    except Exception as e:
+        logger.warning(f"Summary generation failed for document {document_id}: {e}")
 
 
 def retry_failed_ocr(document_id):

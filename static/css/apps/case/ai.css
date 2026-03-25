@@ -1551,10 +1551,6 @@
 }
 
 /* Context Preview Button */
-.ai-context-btn i {
-  color: var(--icon-violet);
-  margin-right: 0.5rem;
-}
 
 /* Context Preview Page */
 .context-stats {
@@ -1690,11 +1686,122 @@
 
 .context-section-text {
   color: var(--stone-700);
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;
   overflow-wrap: break-word;
   padding: 1rem;
-  white-space: pre-wrap;
+}
+
+.context-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.importance-badge {
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  line-height: 1;
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.importance-high {
+  background: var(--red-100);
+  color: var(--red-700);
+}
+
+.importance-med {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+
+.importance-low {
+  background: var(--stone-100);
+  color: var(--stone-500);
+}
+
+/* Context Section Groups (Auto Pool, Excluded) */
+.context-section-group {
+  margin-top: 2rem;
+}
+
+.context-group-header {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--stone-700);
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  margin: 0 0 0.25rem;
+  padding: 0.5rem 0;
+  text-align: left;
+  width: 100%;
+}
+
+.context-group-header:hover {
+  color: var(--stone-900);
+}
+
+.context-group-header > i {
+  color: var(--stone-400);
+  font-size: 1rem;
+  transition: transform 0.15s ease;
+}
+
+.context-group-header > i.rotated {
+  transform: rotate(90deg);
+}
+
+.context-group-header.excluded {
+  color: var(--stone-500);
+}
+
+.context-group-meta {
+  color: var(--stone-400);
+  font-size: 1rem;
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.context-group-description {
+  color: var(--stone-500);
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+.manifest-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manifest-item-meta {
+  color: var(--stone-400);
+  flex-shrink: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.excluded-item .context-section-header.excluded {
+  background: var(--stone-50);
+  color: var(--stone-400);
+  cursor: default;
+}
+
+.excluded-item .context-section-header.excluded:hover {
+  background: var(--stone-50);
 }

@@ -12,6 +12,12 @@ from utils.models import AuditMixin
 
 User = get_user_model()
 
+AI_CONTEXT_CHOICES = [
+    ("auto", "Auto"),
+    ("always", "Always"),
+    ("never", "Never"),
+]
+
 
 class Label(AuditMixin, models.Model):
     COLOR_CHOICES = [
@@ -105,9 +111,16 @@ class Document(AuditMixin, models.Model):
     importance = models.PositiveIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    include_in_ai = models.BooleanField(
-        default=True,
-        help_text="Include full document text in AI context",
+    ai_context = models.CharField(
+        max_length=6,
+        choices=AI_CONTEXT_CHOICES,
+        default="auto",
+        help_text="AI context inclusion: auto (selector decides), always, or never",
+    )
+    summary = models.TextField(
+        blank=True,
+        null=True,
+        help_text="AI-generated summary for intelligent context selection",
     )
     history = HistoricalRecords()
 
@@ -378,8 +391,10 @@ class CaseLaw(AuditMixin, models.Model):
     notes = models.TextField(blank=True)
     importance = models.IntegerField(default=5)  # 1-10, like documents
 
-    # AI context - determines if case full text is submitted to AI conversations
-    include_in_ai = models.BooleanField(default=True)
+    # AI context inclusion: auto (selector decides), always, or never
+    ai_context = models.CharField(
+        max_length=6, choices=AI_CONTEXT_CHOICES, default="auto"
+    )
 
     # Labels (like other case app models)
     labels = models.ManyToManyField(Label, blank=True, related_name="case_laws")

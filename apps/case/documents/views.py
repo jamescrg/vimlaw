@@ -852,14 +852,20 @@ def force_ocr(request, document_id):
 
 @login_required
 @require_POST
-def documents_toggle_ai(request, document_id):
-    """Toggle the include_in_ai flag on a document."""
+def documents_set_ai(request, document_id, state):
+    """Set the ai_context state on a document."""
+    if state not in ("auto", "always", "never"):
+        return HttpResponse(status=400)
+
     document = get_object_or_404(Document, pk=document_id)
+    document.ai_context = state
+    document.save(update_fields=["ai_context", "updated_by", "updated_at"])
 
-    document.include_in_ai = not document.include_in_ai
-    document.save(update_fields=["include_in_ai", "updated_by", "updated_at"])
-
-    return HttpResponse(status=204)
+    return render(
+        request,
+        "case/documents/ai-context-cell.html",
+        {"document": document},
+    )
 
 
 @login_required
@@ -877,16 +883,17 @@ def select_all_documents(request, matter_id):
 @login_required
 @require_POST
 def bulk_documents_ai(request, matter_id, action):
-    """Bulk add/remove documents from AI context."""
+    """Bulk set AI context state on documents."""
+    if action not in ("always", "auto", "never"):
+        return HttpResponse(status=400, content="Invalid action.")
+
     key = get_session_key("selected_documents", matter_id)
     selected_documents = get_selected_ids(request, key)
 
     if not selected_documents:
         return HttpResponse(status=400, content="No documents selected.")
 
-    Document.objects.filter(id__in=selected_documents).update(
-        include_in_ai=action == "add"
-    )
+    Document.objects.filter(id__in=selected_documents).update(ai_context=action)
 
     clear_selected_ids(request, key)
     return selection_response("documentsChanged")

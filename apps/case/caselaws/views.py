@@ -349,19 +349,23 @@ def caselaw_viewer(request, caselaw_id):
 
 @login_required
 @require_POST
-def caselaw_toggle_ai(request, caselaw_id):
-    """Toggle the include_in_ai flag on a case law entry."""
+def caselaw_set_ai(request, caselaw_id, state):
+    """Set the ai_context state on a case law entry."""
+    if state not in ("auto", "always", "never"):
+        return HttpResponse(status=400)
+
     case_law = get_object_or_404(
         CaseLaw, pk=caselaw_id, matter__in=get_accessible_matters()
     )
 
-    case_law.include_in_ai = not case_law.include_in_ai
-    case_law.save(update_fields=["include_in_ai", "updated_by", "updated_at"])
+    case_law.ai_context = state
+    case_law.save(update_fields=["ai_context", "updated_by", "updated_at"])
 
-    # Trigger refresh of case law list
-    response = HttpResponse(status=204)
-    response["HX-Trigger"] = "caselawsChanged"
-    return response
+    return render(
+        request,
+        "case/caselaws/ai-context-cell.html",
+        {"case_law": case_law},
+    )
 
 
 @login_required
@@ -495,7 +499,10 @@ def bulk_caselaws_delete(request, matter_id):
 @login_required
 @require_POST
 def bulk_caselaws_ai(request, matter_id, action):
-    """Add or remove selected cases from AI context."""
+    """Bulk set AI context state on case laws."""
+    if action not in ("always", "auto", "never"):
+        return HttpResponse(status=400, content="Invalid action.")
+
     matter, _ = get_matter_from_url(request, matter_id)
     selected_session_key = get_session_key("selected_caselaws", matter_id)
     selected_caselaws = request.session.get(selected_session_key, [])
@@ -503,12 +510,8 @@ def bulk_caselaws_ai(request, matter_id, action):
     if not selected_caselaws:
         return HttpResponse(status=400, content="No cases selected.")
 
-    if action not in ("add", "remove"):
-        return HttpResponse(status=400, content="Invalid action.")
-
-    include_in_ai = action == "add"
     CaseLaw.objects.filter(id__in=selected_caselaws, matter=matter).update(
-        include_in_ai=include_in_ai
+        ai_context=action
     )
 
     return HttpResponse(status=204, headers={"HX-Trigger": "caselawsChanged"})

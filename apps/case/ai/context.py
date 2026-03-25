@@ -12,7 +12,12 @@ Gathers matter data for the system prompt, organized by importance:
 Content types with importance ratings:
 - Documents, Highlights, Facts, Notes
 - Reference Conversations (automatically HIGH importance since explicitly flagged)
-- Case Law (user-selected via include_in_ai flag, shown as HIGH importance)
+- Case Law (ai_context field controls inclusion)
+
+Documents and Case Law have a three-state ai_context field:
+- "always": Always included with full content
+- "auto": Included by intelligent selector based on relevance to user's question
+- "never": Completely excluded from context
 
 Time entries are excluded per user request.
 """
@@ -108,7 +113,11 @@ class ContextItem:
 
 def collect_context_items(matter, current_conversation=None) -> list[ContextItem]:
     """
-    Collect all items with importance ratings from the matter.
+    Collect items that are always included in context (ai_context="always"
+    for Documents/CaseLaw, plus all Highlights, Facts, Notes, Conversations).
+
+    Items with ai_context="auto" are handled by the selector in selector.py.
+    Items with ai_context="never" are excluded entirely.
 
     Args:
         matter: The Matter object
@@ -118,23 +127,19 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
     """
     items = []
 
-    # Collect Documents
-    for doc in Document.objects.filter(matter=matter).select_related():
+    # Collect Documents — only "always" items get full content here
+    for doc in Document.objects.filter(matter=matter).exclude(ai_context="never"):
+        if doc.ai_context == "auto":
+            continue  # Handled by selector
+
+        # ai_context="always" — include full content
         content_parts = [f"**Document: {doc.name}** ({doc.category})"]
         if doc.date:
             content_parts[0] += f" - {doc.date}"
         if doc.description:
             content_parts.append(f"Description: {doc.description}")
         if doc.ocr_text and doc.ocr_status in ["completed", "extracted"]:
-            if doc.include_in_ai:
-                # Full text for documents marked for AI inclusion
-                content_parts.append(f"Content:\n{doc.ocr_text}")
-            else:
-                # Truncated excerpt for other documents
-                excerpt = doc.ocr_text[:1500].strip()
-                if len(doc.ocr_text) > 1500:
-                    excerpt += "..."
-                content_parts.append(f"Content: {excerpt}")
+            content_parts.append(f"Content:\n{doc.ocr_text}")
 
         items.append(
             ContextItem(
@@ -145,7 +150,7 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
             )
         )
 
-    # Collect Highlights
+    # Collect Highlights (always included — no ai_context field)
     for hl in Highlight.objects.filter(document__matter=matter).select_related(
         "document"
     ):
@@ -166,7 +171,7 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
             )
         )
 
-    # Collect Facts (Timeline)
+    # Collect Facts (Timeline — always included)
     for fact in Fact.objects.filter(matter=matter).prefetch_related(
         "documents", "highlights"
     ):
@@ -213,8 +218,8 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
             )
         )
 
-    # Collect Case Law (only cases explicitly marked for AI context)
-    for caselaw in CaseLaw.objects.filter(matter=matter, include_in_ai=True):
+    # Collect Case Law — only "always" items
+    for caselaw in CaseLaw.objects.filter(matter=matter, ai_context="always"):
         content_parts = [f"**Case Law: {caselaw.case_name}**, {caselaw.citation}"]
         if caselaw.court:
             content_parts.append(f"Court: {caselaw.court}")
@@ -451,6 +456,163 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     matter_context = MATTER_CONTEXT_TEMPLATE.format(matter_name=matter.name, **sections)
 
     return f"{request_info}{legal_prompt}\n\n---\n{matter_context}"
+
+
+def assemble_matter_context_with_selection(
+    matter, user_message, llm, user=None, conversation=None
+) -> str:
+    """
+    Assemble context using intelligent selection for ai_context="auto" items.
+
+    This is the primary context assembly function for AI chat. It:
+    1. Builds fixed sections (overview, contacts, etc.) and "always" items
+    2. Estimates remaining token budget
+    3. Uses the selector to choose relevant "auto" items
+    4. Assembles final context with selected items + "also available" list
+
+    Args:
+        matter: The Matter object
+        user_message: The user's question (used by the selector)
+        llm: The LLM key (for token budget)
+        user: The requesting user
+        conversation: Optional Conversation for chat attachments
+    """
+    from .selector import (
+        MODEL_CONTEXT_LIMITS,
+        build_manifest,
+        estimate_tokens,
+        select_context,
+    )
+
+    # Build the fixed sections (same as assemble_matter_context)
+    sections = {}
+    sections["matter_overview"] = format_matter_overview(matter)
+    sections["contacts"] = format_contacts(matter)
+    sections["proceedings"] = format_proceedings(matter)
+
+    if conversation:
+        sections["chat_attachments"] = format_chat_attachments(conversation)
+    else:
+        sections["chat_attachments"] = ""
+
+    sections["tasks"] = format_tasks(matter)
+    sections["events"] = format_events(matter)
+    sections["settlement"] = format_settlement(matter)
+
+    # Collect "always" items (Documents/CaseLaw with ai_context="always",
+    # plus all Highlights, Facts, Notes, Conversations)
+    always_items = collect_context_items(matter, current_conversation=conversation)
+
+    # Build request info and legal prompt
+    company = Company.objects.first()
+    request_info = ""
+    if user:
+        if user.is_attorney:
+            role_description = f"{user.get_full_name()} is an attorney"
+        else:
+            role_description = (
+                f"{user.get_full_name()} is a paralegal supporting an attorney"
+            )
+        company = Company.objects.first()
+        request_info = REQUEST_INFO_TEMPLATE.format(
+            request_date=date.today().strftime("%B %d, %Y"),
+            user_name=user.get_full_name(),
+            user_email=user.email,
+            role_description=role_description,
+            firm_name=company.name if company else "",
+        )
+
+    jurisdiction = (
+        matter.jurisdiction
+        or (company.jurisdiction if company else "")
+        or "United States common law"
+    )
+    legal_prompt = load_legal_prompt(jurisdiction=jurisdiction)
+
+    # Format always items by tier
+    always_critical = format_items_by_tier(always_items, ImportanceTier.CRITICAL)
+    always_high = format_items_by_tier(always_items, ImportanceTier.HIGH)
+    always_medium = format_items_by_tier(always_items, ImportanceTier.MEDIUM)
+    always_reference = format_items_by_tier(always_items, ImportanceTier.REFERENCE)
+
+    # Estimate tokens used by fixed content so far
+    fixed_content = (
+        request_info
+        + legal_prompt
+        + sections["matter_overview"]
+        + sections["contacts"]
+        + sections["proceedings"]
+        + sections["chat_attachments"]
+        + always_critical
+        + always_high
+        + always_medium
+        + always_reference
+        + sections["tasks"]
+        + sections["events"]
+        + sections["settlement"]
+    )
+    fixed_tokens = estimate_tokens(fixed_content)
+
+    # Calculate remaining budget for auto items
+    total_budget = MODEL_CONTEXT_LIMITS.get(llm, 150_000)
+    # Reserve 10K for conversation history + response
+    remaining_budget = total_budget - fixed_tokens - 10_000
+
+    # Build manifest and run selector for "auto" items
+    manifest_items, content_map = build_manifest(
+        matter, current_conversation=conversation
+    )
+
+    selected_contents = []
+    unselected_items = []
+    if manifest_items and remaining_budget > 0:
+        selected_contents, unselected_items = select_context(
+            manifest_items, content_map, user_message, remaining_budget
+        )
+
+    # Build the selected items section
+    selected_section = ""
+    if selected_contents:
+        selected_section = (
+            "\n\n## Selected Materials\n"
+            "The following materials were selected as relevant to your question:\n\n"
+            + "\n\n".join(selected_contents)
+        )
+
+    # Build "also available" section for non-selected auto items
+    also_available = ""
+    if unselected_items:
+        lines = [
+            "\n\n## Also Available (not included in this context)",
+            "The following materials exist but were not included. "
+            "Ask to see specific items if needed:",
+        ]
+        for item in unselected_items:
+            date_str = f", {item.date}" if item.date else ""
+            lines.append(
+                f'- {item.item_type.title()}: "{item.name}" ({item.category}{date_str})'
+            )
+        also_available = "\n".join(lines)
+
+    # Assemble full context
+    matter_context = MATTER_CONTEXT_TEMPLATE.format(
+        matter_name=matter.name,
+        critical_items=always_critical,
+        high_items=always_high,
+        medium_items=always_medium,
+        reference_items=always_reference,
+        **{
+            k: v
+            for k, v in sections.items()
+            if k
+            not in ("critical_items", "high_items", "medium_items", "reference_items")
+        },
+    )
+
+    return (
+        f"{request_info}{legal_prompt}\n\n---\n{matter_context}"
+        f"{selected_section}{also_available}"
+    )
 
 
 def format_matter_overview(matter) -> str:

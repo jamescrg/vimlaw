@@ -34,12 +34,13 @@ class FilesForm(forms.ModelForm):
             "date",
             "name",
             "description",
-            "include_in_ai",
+            "ai_context",
         ]
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
             "name": forms.TextInput(attrs={"class": "span2", "autofocus": True}),
             "description": forms.Textarea(attrs={"class": "span2", "rows": 2}),
+            "ai_context": forms.Select(),
         }
 
     def __init__(

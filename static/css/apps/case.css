@@ -36,10 +36,8 @@
 }
 
 #documents-list .col-ai {
-  padding-left: 0;
-  padding-right: 0;
   text-align: center;
-  width: 3rem;
+  width: 6rem;
 }
 
 #documents-list .col-importance {
@@ -324,10 +322,8 @@
 }
 
 #caselaws-table .col-ai {
-  padding-left: 0;
-  padding-right: 0;
   text-align: center;
-  width: 3rem;
+  width: 6rem;
 }
 
 #caselaws-table .btn-icon-toggle {

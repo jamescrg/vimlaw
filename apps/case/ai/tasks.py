@@ -21,33 +21,36 @@ logger = logging.getLogger(__name__)
 
 def process_ai_request(
     conversation_id: int,
-    context_text: str,
-    chat_history: list[dict],
+    matter_id: int,
+    user_message: str,
+    user_id: int,
     llm: str,
 ):
     """
     Process AI request in background thread, updating status along the way.
 
+    Assembles context (including intelligent selection for large matters),
+    builds chat history, then sends to the AI model.
+
     Args:
         conversation_id: ID of the conversation being processed
-        context_text: The assembled matter context
-        chat_history: List of message dicts with role, content, and optionally user_name
+        matter_id: ID of the matter for context assembly
+        user_message: The user's question (used by intelligent selector)
+        user_id: ID of the requesting user
         llm: The LLM to use (claude, gemini-flash, gemini-pro)
     """
+    from django.contrib.auth import get_user_model
+
+    from apps.matters.models import Matter
+
+    from .context import assemble_matter_context_with_selection
+    from .models import Conversation
+
     cache_key = f"ai_status_{conversation_id}"
     started_at = time.time()
 
-    # Check if there are multiple participants and format messages accordingly
-    user_names = {msg.get("user_name") for msg in chat_history if msg.get("user_name")}
-    if len(user_names) > 1:
-        # Multiple participants - prepend names to user messages
-        for msg in chat_history:
-            if msg["role"] == "user" and msg.get("user_name"):
-                msg["content"] = f"[{msg['user_name']}]: {msg['content']}"
-
     def update_status(status: str, message: str):
         """Update the cache with current status, unless cancelled."""
-        # Don't overwrite if already cancelled
         current = cache.get(cache_key, {})
         if current.get("status") == "cancelled":
             return
@@ -67,6 +70,43 @@ def process_ai_request(
         return status_data.get("status") == "cancelled"
 
     try:
+        # Assemble context (may call Gemini Flash for intelligent selection)
+        update_status("context", "Building context...")
+
+        User = get_user_model()
+        matter = Matter.objects.get(id=matter_id)
+        user = User.objects.get(id=user_id)
+        conversation = Conversation.objects.get(id=conversation_id)
+
+        context_text = assemble_matter_context_with_selection(
+            matter,
+            user_message=user_message,
+            llm=llm,
+            user=user,
+            conversation=conversation,
+        )
+
+        if is_cancelled():
+            logger.info("AI request cancelled for conversation %s", conversation_id)
+            return
+
+        # Build chat history with user names for multi-participant context
+        chat_history = []
+        for msg in conversation.messages.select_related("user"):
+            entry = {"role": msg.role, "content": msg.content}
+            if msg.role == "user" and msg.user:
+                entry["user_name"] = msg.user.get_full_name() or msg.user.username
+            chat_history.append(entry)
+
+        # Format messages for multi-participant conversations
+        user_names = {
+            msg.get("user_name") for msg in chat_history if msg.get("user_name")
+        }
+        if len(user_names) > 1:
+            for msg in chat_history:
+                if msg["role"] == "user" and msg.get("user_name"):
+                    msg["content"] = f"[{msg['user_name']}]: {msg['content']}"
+
         # Set connecting status
         update_status("connecting", "Connecting to AI...")
 

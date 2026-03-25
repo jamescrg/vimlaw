@@ -51,11 +51,9 @@
           <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
           <div>{{ form.description }}{{ form.description.errors }}</div>
         </div>
-        <div class="span2">
-          <label class="checkbox-label">
-            {{ form.include_in_ai }}
-            Include full text in AI context
-          </label>
+        <div class="form-group">
+          <label for="{{ form.ai_context.id_for_label }}">AI Context</label>
+          <div>{{ form.ai_context }}{{ form.ai_context.errors }}</div>
         </div>
         <div class="span2">
           <label>File</label>

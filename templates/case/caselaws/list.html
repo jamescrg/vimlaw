@@ -22,14 +22,20 @@
             <li>
               <a class="dropdown-item"
                  href="#"
-                 hx-post="{% url 'case:caselaws-bulk-ai' matter.id 'add' %}"
-                 hx-swap="none"><i class="icon-bookmark-plus"></i> Add to AI Context</a>
+                 hx-post="{% url 'case:caselaws-bulk-ai' matter.id 'always' %}"
+                 hx-swap="none"><i class="icon-bookmark"></i> Always Include</a>
             </li>
             <li>
               <a class="dropdown-item"
                  href="#"
-                 hx-post="{% url 'case:caselaws-bulk-ai' matter.id 'remove' %}"
-                 hx-swap="none"><i class="icon-bookmark-minus"></i> Remove from AI Context</a>
+                 hx-post="{% url 'case:caselaws-bulk-ai' matter.id 'auto' %}"
+                 hx-swap="none"><i class="icon-sparkles"></i> Auto</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:caselaws-bulk-ai' matter.id 'never' %}"
+                 hx-swap="none"><i class="icon-bookmark-x"></i> Never Include</a>
             </li>
             <li>
               <a class="dropdown-item"

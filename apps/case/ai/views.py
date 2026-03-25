@@ -19,7 +19,10 @@ from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
 from apps.settings.models import Company
 
-from .context import assemble_matter_context, load_legal_prompt
+from .context import (
+    assemble_matter_context,
+    load_legal_prompt,
+)
 from .filters import ConversationFilter
 from .models import ChatAttachment, Conversation, Message
 from .tasks import process_ai_request, process_chat_attachment_ocr
@@ -75,6 +78,26 @@ def ai_index(request, matter_id):
 
     # Get selected LLM from session
     selected_llm = get_selected_llm(request)
+
+    # Backfill: queue summary generation for documents missing summaries
+    from apps.case.models import Document
+
+    docs_needing_summary = Document.objects.filter(
+        matter=matter,
+        summary__isnull=True,
+        ocr_text__isnull=False,
+        ocr_status__in=["completed", "extracted"],
+    )
+    if docs_needing_summary.exists():
+        from django_q.tasks import async_task
+
+        for doc in docs_needing_summary[:20]:
+            async_task(
+                "apps.case.documents.tasks.generate_document_summary",
+                doc.id,
+                task_name=f"Summary-{doc.id}",
+                group="summary_generation",
+            )
 
     context = {
         "app": "matters",
@@ -293,19 +316,6 @@ def send_message(request, matter_id):
         conversation=conversation, role="user", content=user_message, user=request.user
     )
 
-    # Assemble context and get chat history for AI (include user for identity)
-    context_text = assemble_matter_context(
-        matter, user=request.user, conversation=conversation
-    )
-
-    # Build chat history with user names for multi-participant context
-    chat_history = []
-    for msg in conversation.messages.select_related("user"):
-        entry = {"role": msg.role, "content": msg.content}
-        if msg.role == "user" and msg.user:
-            entry["user_name"] = msg.user.get_full_name() or msg.user.username
-        chat_history.append(entry)
-
     # Initialize status in cache
     cache_key = f"ai_status_{conversation.id}"
     cache.set(
@@ -314,10 +324,16 @@ def send_message(request, matter_id):
         timeout=600,
     )
 
-    # Start background thread for AI processing
+    # Start background thread — context assembly + AI processing
     thread = threading.Thread(
         target=process_ai_request,
-        args=(conversation.id, context_text, chat_history, conversation.llm),
+        args=(
+            conversation.id,
+            matter.id,
+            user_message,
+            request.user.id,
+            conversation.llm,
+        ),
         daemon=True,
     )
     thread.start()
@@ -971,21 +987,34 @@ def delete_attachment(request, attachment_id):
     )
 
 
+def _importance_label(importance):
+    """Map importance value (1-10) to a display label."""
+    if importance <= 3:
+        return "high"
+    elif importance <= 6:
+        return "med"
+    else:
+        return "low"
+
+
 @login_required
 def context_preview(request, matter_id):
     """Preview the AI context prompt for a matter."""
+    from collections import OrderedDict
+
+    from apps.case.models import CaseLaw, Document
+
     from .context import (
-        ImportanceTier,
         collect_context_items,
         format_contacts,
         format_events,
-        format_items_by_tier,
         format_matter_overview,
         format_proceedings,
         format_settlement,
         format_tasks,
         load_legal_prompt,
     )
+    from .selector import build_manifest, estimate_tokens
 
     matter, _ = get_matter_from_url(request, matter_id)
 
@@ -997,16 +1026,14 @@ def context_preview(request, matter_id):
         or "United States common law"
     )
 
-    # Build structured sections for display
+    # --- Fixed context sections (always included) ---
     sections = []
 
-    # Legal guidelines
     legal_prompt = load_legal_prompt(jurisdiction=jurisdiction)
     sections.append(
         {"title": "Legal Guidelines", "content": legal_prompt, "expanded": False}
     )
 
-    # Matter Overview
     sections.append(
         {
             "title": "Matter Overview",
@@ -1015,96 +1042,124 @@ def context_preview(request, matter_id):
         }
     )
 
-    # Contacts
     sections.append({"title": "Contacts & Parties", "content": format_contacts(matter)})
 
-    # Proceedings
     sections.append(
         {"title": "Court Proceedings", "content": format_proceedings(matter)}
     )
 
-    # Collect importance-rated items
-    all_items = collect_context_items(matter)
-
-    # Critical items
-    critical = format_items_by_tier(all_items, ImportanceTier.CRITICAL)
-    sections.append(
-        {
-            "title": "Critical Evidence & Information",
-            "content": critical,
-            "expanded": True,
-        }
-    )
-
-    # High importance
-    high = format_items_by_tier(all_items, ImportanceTier.HIGH)
-    sections.append({"title": "High Importance Materials", "content": high})
-
-    # Medium importance
-    medium = format_items_by_tier(all_items, ImportanceTier.MEDIUM)
-    sections.append({"title": "Supporting Materials", "content": medium})
-
-    # Reference
-    reference = format_items_by_tier(all_items, ImportanceTier.REFERENCE)
-    sections.append({"title": "Reference Materials", "content": reference})
-
-    # Tasks
     sections.append({"title": "Tasks", "content": format_tasks(matter)})
-
-    # Events
-    sections.append({"title": "Upcoming Events", "content": format_events(matter)})
-
-    # Settlement
+    sections.append({"title": "Events", "content": format_events(matter)})
     sections.append(
         {"title": "Settlement Information", "content": format_settlement(matter)}
     )
 
-    # Calculate stats from full context
-    context_text = assemble_matter_context(matter, user=request.user)
-    char_count = len(context_text)
-    token_estimate = char_count // 4
+    # --- Always-included items grouped by type ---
+    all_items = collect_context_items(matter)
 
-    # Calculate cost estimates per model (input tokens only, per million)
-    # Prices as of Jan 2025 (for contexts ≤200K tokens)
-    # Context windows: Claude 200K standard, Gemini 1M
+    # Add timeline/facts as a flat section in case details
+    fact_items = [item for item in all_items if item.item_type == "fact"]
+    if fact_items:
+        fact_lines = [item.content.replace("**", "").strip() for item in fact_items]
+        sections.append(
+            {
+                "title": f"Timeline ({len(fact_items)} facts)",
+                "content": "\n\n".join(fact_lines),
+            }
+        )
+
+    # Define display order and labels for item types (facts handled above)
+    type_config = OrderedDict(
+        [
+            ("document", "Documents"),
+            ("caselaw", "Case Law"),
+            ("highlight", "Highlights"),
+            ("note", "Notes"),
+            ("conversation", "Reference Conversations"),
+        ]
+    )
+
+    # Group items by type
+    type_groups = []
+    for type_key, title in type_config.items():
+        items = [item for item in all_items if item.item_type == type_key]
+        if items:
+            type_groups.append(
+                {
+                    "title": title,
+                    "count": len(items),
+                    "items": [
+                        {
+                            "name": item.content.split("\n")[0]
+                            .replace("**", "")
+                            .strip(),
+                            "content": item.content,
+                            "importance": item.importance,
+                            "importance_label": _importance_label(item.importance),
+                        }
+                        for item in items
+                    ],
+                }
+            )
+
+    # --- Auto selection pool ---
+    manifest_items, content_map = build_manifest(matter)
+
+    # --- Excluded items (ai_context="never") ---
+    excluded_items = []
+    for doc in Document.objects.filter(matter=matter, ai_context="never"):
+        excluded_items.append(
+            {
+                "type": "Document",
+                "name": doc.name,
+                "category": doc.category,
+                "date": doc.date,
+            }
+        )
+    for cl in CaseLaw.objects.filter(matter=matter, ai_context="never"):
+        excluded_items.append(
+            {
+                "type": "Case Law",
+                "name": cl.case_name,
+                "category": cl.court or "",
+                "date": cl.date_filed,
+            }
+        )
+
+    # --- Token stats ---
+    baseline_text = assemble_matter_context(matter, user=request.user)
+    baseline_tokens = estimate_tokens(baseline_text)
+
+    auto_pool_tokens = sum(
+        estimate_tokens(content_map[(item.item_type, item.item_id)])
+        for item in manifest_items
+        if (item.item_type, item.item_id) in content_map
+    )
+
+    total_tokens = baseline_tokens + auto_pool_tokens
+
+    # --- Cost estimates per model ---
     model_costs = [
-        {
-            "name": "Gemini 2.5 Flash",
-            "input_price": 0.15,  # per million tokens
-            "cost": (token_estimate / 1_000_000) * 0.15,
-            "context_limit": 1_000_000,
-        },
-        {
-            "name": "Gemini 2.5 Pro",
-            "input_price": 1.25,
-            "cost": (token_estimate / 1_000_000) * 1.25,
-            "context_limit": 1_000_000,
-        },
+        {"name": "Gemini 2.5 Flash", "input_price": 0.15, "context_limit": 1_000_000},
+        {"name": "Gemini 2.5 Pro", "input_price": 1.25, "context_limit": 1_000_000},
         {
             "name": "Gemini Pro (Latest)",
             "input_price": 2.00,
-            "cost": (token_estimate / 1_000_000) * 2.00,
             "context_limit": 1_000_000,
         },
-        {
-            "name": "Claude Sonnet 4",
-            "input_price": 3.00,
-            "cost": (token_estimate / 1_000_000) * 3.00,
-            "context_limit": 200_000,
-        },
-        {
-            "name": "Claude Opus 4.5",
-            "input_price": 15.00,
-            "cost": (token_estimate / 1_000_000) * 15.00,
-            "context_limit": 200_000,
-        },
+        {"name": "Claude Sonnet 4", "input_price": 3.00, "context_limit": 200_000},
+        {"name": "Claude Opus 4.5", "input_price": 15.00, "context_limit": 200_000},
     ]
 
-    # Add usage percentage and warning status
     for model in model_costs:
-        model["usage_pct"] = (token_estimate / model["context_limit"]) * 100
-        model["exceeded"] = token_estimate > model["context_limit"]
-        model["warning"] = token_estimate > model["context_limit"] * 0.8
+        model["baseline_cost"] = (baseline_tokens / 1_000_000) * model["input_price"]
+        model["max_cost"] = (total_tokens / 1_000_000) * model["input_price"]
+        model["baseline_usage_pct"] = (baseline_tokens / model["context_limit"]) * 100
+        model["max_usage_pct"] = (total_tokens / model["context_limit"]) * 100
+        model["exceeded"] = total_tokens > model["context_limit"]
+        model["warning"] = (
+            total_tokens > model["context_limit"] * 0.8 and not model["exceeded"]
+        )
 
     return render(
         request,
@@ -1112,8 +1167,14 @@ def context_preview(request, matter_id):
         {
             "matter": matter,
             "sections": sections,
-            "char_count": char_count,
-            "token_estimate": token_estimate,
+            "type_groups": type_groups,
+            "baseline_tokens": baseline_tokens,
+            "auto_pool_tokens": auto_pool_tokens,
+            "total_tokens": total_tokens,
+            "manifest_items": manifest_items,
+            "manifest_count": len(manifest_items),
+            "excluded_items": excluded_items,
+            "excluded_count": len(excluded_items),
             "model_costs": model_costs,
         },
     )

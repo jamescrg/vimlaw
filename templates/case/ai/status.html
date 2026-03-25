@@ -4,7 +4,9 @@
      hx-trigger="load delay:1s"
      hx-swap="outerHTML">
   <div class="ai-status-content">
-    {% if status == "connecting" %}
+    {% if status == "context" %}
+      <i class="icon-sparkles pulse"></i>
+    {% elif status == "connecting" %}
       <i class="icon-cloud-upload spin"></i>
     {% elif status == "thinking" %}
       <i class="icon-lightbulb pulse"></i>

@@ -1,0 +1,29 @@
+<div class="dropdown" x-data="dropdown()">
+  <button class="ai-context-btn{% if case_law.ai_context == 'always' %} ai-context-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ case_law.get_ai_context_display }}</button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    <li>
+      <a class="dropdown-item{% if case_law.ai_context == 'auto' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'case:caselaw-set-ai' case_law.id 'auto' %}"
+         hx-target="#caselaw-ai-{{ case_law.id }}"
+         hx-swap="innerHTML">Auto</a>
+    </li>
+    <li>
+      <a class="dropdown-item{% if case_law.ai_context == 'always' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'case:caselaw-set-ai' case_law.id 'always' %}"
+         hx-target="#caselaw-ai-{{ case_law.id }}"
+         hx-swap="innerHTML">Always</a>
+    </li>
+    <li>
+      <a class="dropdown-item{% if case_law.ai_context == 'never' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'case:caselaw-set-ai' case_law.id 'never' %}"
+         hx-target="#caselaw-ai-{{ case_law.id }}"
+         hx-swap="innerHTML">Never</a>
+    </li>
+  </ul>
+</div>

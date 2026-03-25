@@ -257,6 +257,27 @@ td:hover .btn-ghost,
   outline: none;
 }
 
+/* AI Context State Buttons */
+.ai-context-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--link);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem 0.375rem;
+}
+
+.ai-context-btn:hover {
+  color: var(--link-hover);
+}
+
+.ai-context-btn.ai-context-active {
+  background: var(--selected-background);
+  border-color: var(--selected-border);
+  color: var(--stone-700);
+}
+
 /* Icon Checkbox Button */
 .btn-check {
   background: none;
