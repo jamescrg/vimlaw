@@ -1,5 +1,5 @@
 <form class="research-search-form"
-      hx-post="{% url 'research:search' %}"
+      hx-post="{% url 'case:research-search' matter.id %}"
       hx-target="#research-results"
       hx-swap="innerHTML">
   <div class="research-search-row">

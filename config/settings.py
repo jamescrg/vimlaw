@@ -75,7 +75,6 @@ INSTALLED_APPS = [
     "apps.trust",
     "apps.invoicing",
     "apps.reports",
-    "apps.research",
     "apps.management",
     "apps.notes",
     "django_filters",

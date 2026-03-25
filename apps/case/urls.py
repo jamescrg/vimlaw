@@ -8,6 +8,7 @@ from apps.case.facts import views as facts
 from apps.case.highlights import views as highlights
 from apps.case.labels import views as labels
 from apps.case.notes import views as notes
+from apps.case.research import views as research
 from apps.case.search import views as search
 from apps.case.witnesses import views as witnesses
 
@@ -443,6 +444,67 @@ urlpatterns = [
         ai.context_preview,
         name="ai-context-preview",
     ),
+    # Research (matter-scoped)
+    path(
+        "case/<int:matter_id>/research/",
+        research.research_index,
+        name="research-index",
+    ),
+    path(
+        "case/<int:matter_id>/research/list/",
+        research.research_list,
+        name="research-list",
+    ),
+    path(
+        "case/<int:matter_id>/research/caselaws/",
+        research.research_caselaws_tab,
+        name="research-caselaws-tab",
+    ),
+    path(
+        "case/<int:matter_id>/research/search-tab/",
+        research.research_search_tab,
+        name="research-search-tab",
+    ),
+    path(
+        "case/<int:matter_id>/research/history-tab/",
+        research.research_history_tab,
+        name="research-history-tab",
+    ),
+    path(
+        "case/<int:matter_id>/research/review-tab/",
+        research.research_review_tab,
+        name="research-review-tab",
+    ),
+    path(
+        "case/<int:matter_id>/research/search/",
+        research.research_search,
+        name="research-search",
+    ),
+    path(
+        "case/<int:matter_id>/research/review/lookup/",
+        research.research_review_lookup,
+        name="research-review-lookup",
+    ),
+    path(
+        "case/<int:matter_id>/research/results/<int:query_id>/",
+        research.research_results,
+        name="research-results",
+    ),
+    path(
+        "case/<int:matter_id>/research/<int:query_id>/",
+        research.research_detail,
+        name="research-detail",
+    ),
+    path(
+        "case/<int:matter_id>/research/<int:query_id>/confirm/",
+        research.research_confirm,
+        name="research-confirm",
+    ),
+    path(
+        "case/<int:matter_id>/research/<int:query_id>/delete/",
+        research.research_delete,
+        name="research-delete",
+    ),
     # ==========================================================================
     # OBJECT-SPECIFIC ROUTES (operate on specific objects by ID)
     # ==========================================================================
@@ -824,6 +886,47 @@ urlpatterns = [
         "case/ai/attachments/<int:attachment_id>/delete/",
         ai.delete_attachment,
         name="ai-delete-attachment",
+    ),
+    # Research operations (object-specific)
+    path(
+        "case/research/query/<int:query_id>/status/",
+        research.query_status,
+        name="research-query-status",
+    ),
+    path(
+        "case/research/result/<int:result_id>/status/",
+        research.result_status,
+        name="research-result-status",
+    ),
+    path(
+        "case/research/result/<int:result_id>/review/",
+        research.research_review,
+        name="research-review",
+    ),
+    path(
+        "case/research/review/<int:result_id>/status/",
+        research.research_review_status,
+        name="research-review-status",
+    ),
+    path(
+        "case/research/review/<int:result_id>/more/",
+        research.research_review_more,
+        name="research-review-more",
+    ),
+    path(
+        "case/research/citation/<int:verification_id>/assess/",
+        research.research_assess_citation,
+        name="research-assess-citation",
+    ),
+    path(
+        "case/research/citation/<int:verification_id>/status/",
+        research.research_citation_status,
+        name="research-citation-status",
+    ),
+    path(
+        "case/research/result/<int:result_id>/save-caselaw/",
+        research.research_save_to_caselaws,
+        name="research-save-caselaw",
     ),
     # ==========================================================================
     # LEGACY ROUTES (redirect to new structure)

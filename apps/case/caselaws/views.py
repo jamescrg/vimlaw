@@ -77,18 +77,25 @@ def get_caselaws_data(request, matter, matter_id):
 
 @login_required
 def caselaws_index(request, matter_id):
-    """Main case law view."""
+    """Redirect to research tab with Case Law pill active."""
+    from apps.case.research.views import get_research_data
+
     matter, matters = get_matter_from_url(request, matter_id)
-    set_last_tab(request, matter_id, "caselaws")
+    set_last_tab(request, matter_id, "research")
 
-    context = {
-        "app": "matters",
-        "subapp": "caselaws",
-        "matter": matter,
-        "matters": matters,
-    } | get_caselaws_data(request, matter, matter_id)
+    context = (
+        {
+            "app": "matters",
+            "subapp": "research",
+            "matter": matter,
+            "matters": matters,
+            "research_tab": "caselaws",
+        }
+        | get_caselaws_data(request, matter, matter_id)
+        | get_research_data(request, matter, matter_id)
+    )
 
-    return render(request, "case/caselaws/main.html", context)
+    return render(request, "case/research/main.html", context)
 
 
 @login_required

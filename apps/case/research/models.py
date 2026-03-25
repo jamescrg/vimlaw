@@ -22,6 +22,11 @@ RELEVANCE_CHOICES = [
 
 
 class ResearchQuery(AuditMixin):
+    matter = models.ForeignKey(
+        "matters.Matter",
+        on_delete=models.CASCADE,
+        related_name="research_queries",
+    )
     query_text = models.TextField()
     state = models.CharField(max_length=20, blank=True, default="")
     include_federal = models.BooleanField(default=False)

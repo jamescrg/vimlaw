@@ -31,7 +31,7 @@
     <div class="research-verification-summary">{{ v.summary|render_markdown }}</div>
   {% elif assessing %}
     <div class="research-status-msg"
-         hx-get="{% url 'research:citation-status' v.id %}"
+         hx-get="{% url 'case:research-citation-status' v.id %}"
          hx-trigger="load delay:3s"
          hx-target="#citation-{{ v.id }}"
          hx-swap="outerHTML">
@@ -40,7 +40,7 @@
   {% else %}
     <div class="research-verification-assess">
       <button class="btn btn-sm"
-              hx-post="{% url 'research:assess-citation' v.id %}"
+              hx-post="{% url 'case:research-assess-citation' v.id %}"
               hx-target="#citation-{{ v.id }}"
               hx-swap="outerHTML">
         <i class="icon-check-circle"></i> Assess

@@ -31,24 +31,24 @@
         <div class="research-verifications">
           <div class="research-verifications-header">Forward Citations</div>
         {% endif %}
-        {% include "research/citation-item.html" %}
+        {% include "case/research/citation-item.html" %}
         {% if forloop.last %}</div>{% endif %}
     {% endif %}
   {% endfor %}
   <div class="research-status-msg"
-       hx-get="{% url 'research:review-status' result.id %}"
+       hx-get="{% url 'case:research-review-status' result.id %}"
        hx-trigger="load delay:3s"
        hx-target="#review-detail"
        hx-swap="innerHTML">
     <i class="icon-loader spin"></i>
-    Reviewing forward citations...
+    Validating forward citations...
   </div>
 {% elif result.verify_status == "complete" %}
   {% if result.verifications.exists %}
     <div class="research-verifications">
       <div class="research-verifications-header">Forward Citations</div>
       {% for v in result.verifications.all %}
-        {% include "research/citation-item.html" %}
+        {% include "case/research/citation-item.html" %}
       {% endfor %}
     </div>
   {% else %}
@@ -57,6 +57,6 @@
 {% elif result.verify_status == "error" %}
   <div class="research-error">
     <i class="icon-alert-triangle"></i>
-    Review failed. Please try again.
+    Validation failed. Please try again.
   </div>
 {% endif %}
