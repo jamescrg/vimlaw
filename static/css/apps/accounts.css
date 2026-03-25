@@ -1,5 +1,6 @@
 
 body {
+  background-color: var(--background-subnav);
   color: var(--color-darker);
   font-family: 'Open Sans', sans-serif;
   font-size: 1.125rem;
@@ -27,9 +28,9 @@ body {
 
 .auth-card {
   background: var(--background-section);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0.125rem 0.5rem oklch(0% 0 0deg / 8%);
-  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 0.0625rem 0.2rem rgb(0 0 0 / 14%);
+  padding: 1.25rem 1rem 1.5rem;
   width: 31.25rem;
 }
 

@@ -16,6 +16,7 @@ class TestFilesForm:
             "description": "Description",
             "category": "Evidence",
             "date": "2024-01-15",
+            "ai_context": "auto",
         }
         form = FilesForm(data, matter=matter)
         assert form.is_valid()
