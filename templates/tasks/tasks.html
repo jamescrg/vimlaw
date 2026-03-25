@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="section">
-      <div class="section-body">
-        {% load humanize %}
-        <div id="tasks"
-             hx-trigger="tasksListChanged from:body"
-             hx-get="{% url 'tasks:list' %}"
-             hx-target="this">{% include "tasks/list.html" %}</div>
-      </div>
-    </div>
+    {% load humanize %}
+    <div id="tasks"
+         hx-trigger="tasksListChanged from:body"
+         hx-get="{% url 'tasks:list' %}"
+         hx-target="this">{% include "tasks/list.html" %}</div>
   </div>
 {% endblock content %}

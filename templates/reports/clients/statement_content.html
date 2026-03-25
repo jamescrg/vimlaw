@@ -29,7 +29,7 @@
   {% if client %}
     <h1 class="client-name">{{ client.name }}</h1>
     <!-- Summary Section -->
-    <div class="section">
+    <div class="report-section">
       <h1>Activity Summary</h1>
       <div class="table-container">
         <table class="table invoice-totals">
@@ -63,7 +63,7 @@
       </div>
     </div>
     <!-- Matters Summary Section -->
-    <div class="section">
+    <div class="report-section">
       <h1>Matters Summary</h1>
       <div class="table-container">
         <table class="table">
@@ -89,11 +89,11 @@
       </div>
     </div>
     <!-- Matters Detail Section -->
-    <div class="section">
+    <div class="report-section">
       <h1>Matters Detail</h1>
     </div>
     {% for matter_data in matters_data %}
-      <div class="section">
+      <div class="report-section">
         <h2>{{ matter_data.matter.name }}</h2>
         <!-- Time Entries for this matter -->
         {% if matter_data.time_entries %}

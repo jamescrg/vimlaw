@@ -131,6 +131,24 @@
  Tasks
 ========================================================================== */
 
+.tasks-toolbar-left {
+  flex-wrap: wrap-reverse;
+  row-gap: 1.25rem;
+}
+
+.tasks-toolbar-left > .tasks-add-quick-input + button {
+  margin-right: 1.25rem;
+}
+
+.tasks-toolbar .filter-tools .filter-dropdown-button {
+  max-width: 9rem;
+  min-width: 4.5rem;
+  width: 9rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+
 .tasks-add-quick-input {
   background: var(--background-light);
   color: var(--color-primary);

@@ -1,11 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="section">
-      <div class="section-body">
-        {% load humanize %}
-        {% include "dash/content.html" %}
-      </div>
-    </div>
+    {% load humanize %}
+    {% include "dash/content.html" %}
   </div>
 {% endblock content %}

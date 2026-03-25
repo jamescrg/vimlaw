@@ -34,7 +34,9 @@
   <link rel="stylesheet" href="{% static_v 'css/badges.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/layout.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/nav.css' %}" />
-  <link rel="stylesheet" href="{% static_v 'css/sections.css' %}" />
+  <link rel="stylesheet" href="{% static_v 'css/toolbar.css' %}" />
+  <link rel="stylesheet" href="{% static_v 'css/detail.css' %}" />
+  <link rel="stylesheet" href="{% static_v 'css/cards.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/tables.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/lists.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/modals.css' %}" />
@@ -86,7 +88,7 @@
     <link rel="stylesheet" href="{% static_v 'css/dev.css' %}" />
   {% endif %}
 </head>
-<body class="{% if env == 'dev' %}env-dev{% endif %}"
+<body class="{% if env == 'dev' %}env-dev {% endif %}{% block body_class %}{% endblock body_class %}"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% if env == 'dev' %}
     <div class="dev-banner">

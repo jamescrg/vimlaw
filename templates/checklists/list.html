@@ -1,64 +1,62 @@
-<div class="section">
-  <div class="toolbar checklists-toolbar">
-    <div class="toolbar-left">
-      {% if selected_checklists %}
-        <div class="filter-tools">
-          <button type="button"
-                  class="btn-icon toggle-active"
-                  hx-get="{% url 'checklists:bulk-move' %}"
-                  hx-target="#htmx-modal-container">
-            <i class="icon-arrow-right with-text"></i> Move ({{ selected_checklists|length }})
-          </button>
-          <button type="button"
-                  class="btn-icon toggle-active"
-                  hx-post="{% url 'checklists:bulk-delete' %}"
-                  hx-confirm="Delete {{ selected_checklists|length }} selected checklist(s)? This cannot be undone."
-                  hx-swap="none">
-            <i class="icon-trash-2 with-text"></i> Delete ({{ selected_checklists|length }})
-          </button>
-          <button type="button"
-                  class="btn-icon"
-                  hx-post="{% url 'checklists:clear-selection' %}"
-                  hx-swap="none">
-            <i class="icon-x with-text"></i> Cancel
-          </button>
-        </div>
-      {% else %}
-        <h2>
-          {% if all_folders_selected %}
-            All Folders
-          {% elif selected_checklist_folder %}
-            {{ selected_checklist_folder.name }}
-          {% else %}
-            Inbox
-          {% endif %}
-        </h2>
-      {% endif %}
-    </div>
-    {% if not selected_checklists %}
-      <div class="toolbar-center">
-        <input type="text"
-               id="checklists-keyword-input"
-               name="keyword"
-               placeholder="Keyword Search"
-               value="{{ keyword }}"
-               class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
-               hx-get="{% url 'checklists:filter-keyword' %}"
-               hx-target="#checklists-table"
-               hx-trigger="keyup changed delay:500ms"
-               hx-include="this"
-               oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
-      </div>
-      <div class="toolbar-right">
+<div class="toolbar checklists-toolbar">
+  <div class="toolbar-left">
+    {% if selected_checklists %}
+      <div class="filter-tools">
+        <button type="button"
+                class="btn-icon toggle-active"
+                hx-get="{% url 'checklists:bulk-move' %}"
+                hx-target="#htmx-modal-container">
+          <i class="icon-arrow-right with-text"></i> Move ({{ selected_checklists|length }})
+        </button>
+        <button type="button"
+                class="btn-icon toggle-active"
+                hx-post="{% url 'checklists:bulk-delete' %}"
+                hx-confirm="Delete {{ selected_checklists|length }} selected checklist(s)? This cannot be undone."
+                hx-swap="none">
+          <i class="icon-trash-2 with-text"></i> Delete ({{ selected_checklists|length }})
+        </button>
         <button type="button"
                 class="btn-icon"
-                hx-get="{% url 'checklists:add-checklist-template' %}"
-                hx-target="#htmx-modal-container"
-                hx-trigger="click">
-          <i class="icon-plus"></i>
+                hx-post="{% url 'checklists:clear-selection' %}"
+                hx-swap="none">
+          <i class="icon-x with-text"></i> Cancel
         </button>
       </div>
+    {% else %}
+      <h2>
+        {% if all_folders_selected %}
+          All Folders
+        {% elif selected_checklist_folder %}
+          {{ selected_checklist_folder.name }}
+        {% else %}
+          Inbox
+        {% endif %}
+      </h2>
     {% endif %}
   </div>
-  <div id="checklists-table">{% include "checklists/table.html" %}</div>
+  {% if not selected_checklists %}
+    <div class="toolbar-center">
+      <input type="text"
+             id="checklists-keyword-input"
+             name="keyword"
+             placeholder="Keyword Search"
+             value="{{ keyword }}"
+             class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
+             hx-get="{% url 'checklists:filter-keyword' %}"
+             hx-target="#checklists-table"
+             hx-trigger="keyup changed delay:500ms"
+             hx-include="this"
+             oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
+    </div>
+    <div class="toolbar-right">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'checklists:add-checklist-template' %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click">
+        <i class="icon-plus"></i>
+      </button>
+    </div>
+  {% endif %}
 </div>
+<div id="checklists-table">{% include "checklists/table.html" %}</div>

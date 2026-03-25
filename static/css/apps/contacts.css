@@ -1,4 +1,33 @@
 /* ==========================================================================
+   Contacts Page - Restore padding and contrast
+   ========================================================================== */
+
+body.contacts-page {
+  background-color: var(--background-subnav);
+}
+
+body.contacts-page .content {
+  padding-top: 1.25rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Detail header/subnav need contrast against the darker page body */
+.contacts-page .detail-header,
+.contacts-page .subnav {
+  background: var(--background-subnav-contrast);
+}
+
+.contacts-page .subnav {
+  padding-left: 0;
+}
+
+.contacts-page .contacts-detail > .detail {
+  box-shadow: 0 0.0625rem 0.2rem rgb(0 0 0 / 14%);
+  border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
    Contacts Layout (Bootstrap grid replacement)
    ========================================================================== */
 
@@ -11,22 +40,22 @@
 @media (width >= 768px) {
   .contacts-layout {
     flex-direction: row;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .contacts-layout > .contacts-sidebar {
-    flex: 0 0 calc(25% - 0.75rem);
-    max-width: calc(25% - 0.75rem);
+    flex: 0 0 calc(25% - 0.625rem);
+    max-width: calc(25% - 0.625rem);
   }
 
   .contacts-layout > .contacts-list {
-    flex: 0 0 calc(25% - 0.75rem);
-    max-width: calc(25% - 0.75rem);
+    flex: 0 0 calc(25% - 0.625rem);
+    max-width: calc(25% - 0.625rem);
   }
 
   .contacts-layout > .contacts-detail {
-    flex: 0 0 calc(50% - 1.5rem);
-    max-width: calc(50% - 1.5rem);
+    flex: 0 0 calc(50% - 1.25rem);
+    max-width: calc(50% - 1.25rem);
   }
 }
 
@@ -38,7 +67,7 @@
   padding-bottom: 1.25rem;
 }
 
-.contact .section-body {
+.contact .detail-body {
   padding-top: 1rem;
 }
 
@@ -112,7 +141,7 @@
   .contacts-form-grid {
     align-items: start;
     display: grid;
-    gap: 1.5rem;
+    gap: 1.25rem;
     grid-template-columns: 1fr 1fr;
   }
 
@@ -296,12 +325,11 @@
   width: 5rem;
 }
 
-
 .action-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
 }
 
 .action-buttons .btn {

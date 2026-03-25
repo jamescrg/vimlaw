@@ -210,7 +210,11 @@
 
 /* Header toolbar */
 .fc .fc-toolbar {
-  margin-bottom: 1rem;
+  gap: 1.25rem;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1.25rem;
 }
 
 .fc .fc-toolbar-title {

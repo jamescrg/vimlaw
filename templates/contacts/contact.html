@@ -1,6 +1,6 @@
 {% load phone_numbers %}
-<div class="section">
-  <div class="section-header">
+<div class="detail">
+  <div class="detail-header">
     <div class="toolbar">
       <div class="toolbar-left">
         <h1>{{ selected_contact.name }}</h1>
@@ -46,7 +46,7 @@
       </div>
     </div>
   </div>
-  <nav class="section-nav">
+  <nav class="subnav">
     <ul>
       <li {% if not contact_subapp or contact_subapp == 'details' %}class="active"{% endif %}>
         <a href="{% url 'contacts:detail-details' selected_contact.id %}">Details</a>
@@ -64,7 +64,7 @@
       {% endif %}
     </ul>
   </nav>
-  <div class="section-body">
+  <div class="detail-body">
     {% if contact_subapp == 'details' %}
       {% include "contacts/details/main.html" %}
     {% elif contact_subapp == 'matters' %}

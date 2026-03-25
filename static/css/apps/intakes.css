@@ -1,4 +1,16 @@
 /* ==========================================================================
+   Intakes Detail Page - Restore section card styling
+   ========================================================================== */
+
+body.intake-detail {
+  background-color: var(--background-subnav);
+}
+
+body.intake-detail .content {
+  padding-top: 1.25rem;
+}
+
+/* ==========================================================================
    Intakes Detail Layout (Bootstrap grid replacement)
    ========================================================================== */
 

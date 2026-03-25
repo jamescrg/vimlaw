@@ -33,11 +33,15 @@
     margin-top: 1rem;
   }
 
-  .section {
+  .report-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .report-section:last-child {
     margin-bottom: 0;
   }
 
-  .section-body {
+  .detail-body {
     padding-bottom: 0;
   }
 

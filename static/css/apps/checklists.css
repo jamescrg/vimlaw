@@ -261,7 +261,7 @@
  Checklists Layout
 ========================================================================== */
 
-.checklists-layout .section {
+.checklists-layout .card {
   border: 1px solid var(--border-medium);
   box-shadow: none;
 }

@@ -1,80 +1,78 @@
 {% load phone_numbers %}
 {% block content %}
-  <div class="section">
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="filter-tools">
-          <button hx-get="/intakes/add"
-                  hx-target="#htmx-modal-container"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="icon-plus"></i>
-          </button>
-          <button hx-get="/intakes/filter-intakes"
-                  hx-target="#htmx-modal-container"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="icon-list-filter with-text"></i>Filter
-          </button>
-          <button href="#"
-                  class="{% if filter_label == "all" %} toggle-active {% endif %}"
-                  hx-post="{% url 'intakes:quick-filter-all' %}">All</button>
-          <button href="#"
-                  class="{% if filter_label == "Open" %} toggle-active {% endif %}"
-                  hx-post="{% url 'intakes:quick-filter-status' 'Open' %}">Open</button>
-          <button href="#"
-                  class="{% if filter_label == "Pending" %} toggle-active {% endif %}"
-                  hx-post="{% url 'intakes:quick-filter-status' 'Pending' %}">Pending</button>
-          <button href="#"
-                  class="{% if filter_label == "Accepted" %} toggle-active {% endif %}"
-                  hx-post="{% url 'intakes:quick-filter-status' 'Accepted' %}">Accepted</button>
-        </div>
-      </div>
-      <div class="toolbar-right">
-        <span class="app-badge app-badge-lg">Count: {{ number_intakes }}</span>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-tools">
+        <button hx-get="/intakes/add"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="icon-plus"></i>
+        </button>
+        <button hx-get="/intakes/filter-intakes"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="icon-list-filter with-text"></i>Filter
+        </button>
+        <button href="#"
+                class="{% if filter_label == "all" %} toggle-active {% endif %}"
+                hx-post="{% url 'intakes:quick-filter-all' %}">All</button>
+        <button href="#"
+                class="{% if filter_label == "Open" %} toggle-active {% endif %}"
+                hx-post="{% url 'intakes:quick-filter-status' 'Open' %}">Open</button>
+        <button href="#"
+                class="{% if filter_label == "Pending" %} toggle-active {% endif %}"
+                hx-post="{% url 'intakes:quick-filter-status' 'Pending' %}">Pending</button>
+        <button href="#"
+                class="{% if filter_label == "Accepted" %} toggle-active {% endif %}"
+                hx-post="{% url 'intakes:quick-filter-status' 'Accepted' %}">Accepted</button>
       </div>
     </div>
-    <div class="table-container">
-      <table class="table intake-list">
+    <div class="toolbar-right">
+      <span class="app-badge app-badge-lg">Count: {{ number_intakes }}</span>
+    </div>
+  </div>
+  <div class="table-container">
+    <table class="table intake-list">
+      <tr>
+        <th class="intake-date">
+          Date
+          <button class="btn-sort {% if current_order == 'date' %}active{% endif %}"
+                  hx-post="{% url 'intakes:order-by' 'date' %}">
+            <i class="icon-chevrons-up-down"></i>
+          </button>
+        </th>
+        <th class="intake-name">
+          Name
+          <button class="btn-sort {% if current_order == 'name' %}active{% endif %}"
+                  hx-post="{% url 'intakes:order-by' 'name' %}">
+            <i class="icon-chevrons-up-down"></i>
+          </button>
+        </th>
+        <th class="intake-phone">Phone</th>
+        <th class="intake-source">Source</th>
+        <th class="intake-practice-area">Practice Area</th>
+        <th class="intake-status">Status</th>
+      </tr>
+      {% for intake in intakes %}
         <tr>
-          <th class="intake-date">
-            Date
-            <button class="btn-sort {% if current_order == 'date' %}active{% endif %}"
-                    hx-post="{% url 'intakes:order-by' 'date' %}">
-              <i class="icon-chevrons-up-down"></i>
-            </button>
-          </th>
-          <th class="intake-name">
-            Name
-            <button class="btn-sort {% if current_order == 'name' %}active{% endif %}"
-                    hx-post="{% url 'intakes:order-by' 'name' %}">
-              <i class="icon-chevrons-up-down"></i>
-            </button>
-          </th>
-          <th class="intake-phone">Phone</th>
-          <th class="intake-source">Source</th>
-          <th class="intake-practice-area">Practice Area</th>
-          <th class="intake-status">Status</th>
+          <td class="intake-date">{{ intake.date|date:"Y-m-d" }}</td>
+          <td class="intake-name">
+            <a href={% url 'intakes:detail-index' id=intake.id %}>{{ intake.name }}</a>
+            {% if intake.has_new_notes %}<i class="icon-sticky-note note-badge-icon note-badge-new"></i>{% endif %}
+          </td>
+          <td class="intake-phone">{{ intake.phone|phone_number|default:'' }}</td>
+          <td class="intake-source">{{ intake.source|default:'' }}</td>
+          <td class="intake-practice-area dropdown-cell">{% include "intakes/intake-practice-area.html" %}</td>
+          <td class="intake-status dropdown-cell">{% include "intakes/intake-status.html" %}</td>
         </tr>
-        {% for intake in intakes %}
-          <tr>
-            <td class="intake-date">{{ intake.date|date:"Y-m-d" }}</td>
-            <td class="intake-name">
-              <a href={% url 'intakes:detail-index' id=intake.id %}>{{ intake.name }}</a>
-              {% if intake.has_new_notes %}<i class="icon-sticky-note note-badge-icon note-badge-new"></i>{% endif %}
-            </td>
-            <td class="intake-phone">{{ intake.phone|phone_number|default:'' }}</td>
-            <td class="intake-source">{{ intake.source|default:'' }}</td>
-            <td class="intake-practice-area dropdown-cell">{% include "intakes/intake-practice-area.html" %}</td>
-            <td class="intake-status dropdown-cell">{% include "intakes/intake-status.html" %}</td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6" class="empty-message">No intakes found.</td>
-          </tr>
-        {% endfor %}
-      </table>
-      {% include "pagination.html" %}
-    </div>
+      {% empty %}
+        <tr>
+          <td colspan="6" class="empty-message">No intakes found.</td>
+        </tr>
+      {% endfor %}
+    </table>
+    {% include "pagination.html" %}
   </div>
 {% endblock content %}

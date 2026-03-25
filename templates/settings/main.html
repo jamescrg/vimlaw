@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{# djlint:off #}{% block body_class %}has-subnav{% endblock body_class %}{# djlint:on #}
 {% block content %}
   <div id="content" class="container content">
-    <div class="section">
-      <nav class="section-nav">
+    <div class="detail">
+      <nav class="subnav">
         <ul>
           {% if user.role == 'ADMIN' %}
             <li {% if subapp == "company" %}class="active"{% endif %}>
@@ -39,7 +40,7 @@
           {% endif %}
         </ul>
       </nav>
-      <div class="section-body">
+      <div class="detail-body">
         {% block subcontent %}
         {% endblock subcontent %}
       </div>

@@ -4,8 +4,8 @@
   <link rel="stylesheet" href="{% static 'css/apps/activity.css' %}" />
 {% endblock head %}
 {% block content %}
-  <div class="section">
-    <div class="section-header">
+  <div class="detail">
+    <div class="detail-header">
       <div class="toolbar">
         <div class="toolbar-left">
           <h1>Invoice {{ invoice.id }} - {{ invoice.matter.name }}</h1>
@@ -55,7 +55,7 @@
         </div>
       </div>
     </div>
-    <nav class="section-nav">
+    <nav class="subnav">
       <ul>
         <li {% if subapp == "details" %}class="active"{% endif %}>
           <a href="#"
@@ -75,7 +75,7 @@
         </li>
       </ul>
     </nav>
-    <div class="section-body">
+    <div class="detail-body">
       {% block subcontent %}
       {% endblock subcontent %}
     </div>

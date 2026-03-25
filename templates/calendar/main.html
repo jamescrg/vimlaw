@@ -1,20 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
   <div id="content" class="container content">
-    <div class="section">
-      <div class="section-body">
-        {% load humanize %}
-        <div id="events"
-             hx-trigger="eventsChanged from:body, eventsViewChanged from:body"
-             hx-get="{% url 'calendar:list' %}"
-             hx-target="this">
-          {% if view_mode == "calendar" %}
-            {% include "calendar/calendar.html" %}
-          {% else %}
-            {% include "calendar/list.html" %}
-          {% endif %}
-        </div>
-      </div>
+    {% load humanize %}
+    <div id="events"
+         hx-trigger="eventsChanged from:body, eventsViewChanged from:body"
+         hx-get="{% url 'calendar:list' %}"
+         hx-target="this">
+      {% if view_mode == "calendar" %}
+        {% include "calendar/calendar.html" %}
+      {% else %}
+        {% include "calendar/list.html" %}
+      {% endif %}
     </div>
   </div>
 {% endblock content %}

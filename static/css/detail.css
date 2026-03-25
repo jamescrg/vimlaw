@@ -1,0 +1,179 @@
+
+.detail {
+  margin-bottom: 1.5rem;
+}
+
+.content > .detail {
+  margin: -1.25rem -1rem 1.5rem;
+}
+
+.detail-text {
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+}
+
+.detail > .list-group,
+.card > .list-group {
+  border: none;
+}
+
+
+/* ==========================================================================
+Detail Layout (header / subnav / body)
+========================================================================== */
+
+/* Container resets when using detail layout children */
+.detail:has(.detail-body) {
+  padding: 0;
+}
+
+/* Detail Header - title/toolbar area */
+.detail-header {
+  background: var(--background-subnav);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+.detail-header .toolbar {
+  padding-bottom: 0;
+}
+
+.detail-header .toolbar a,
+.detail-header .toolbar button {
+  border: solid 1px var(--border-medium);
+}
+
+.detail-header .dropdown-menu a {
+  border: none;
+}
+
+/* Subnav - tab navigation */
+.subnav {
+  background: var(--background-subnav);
+  margin: 0;
+  padding: 0.25rem 0 0 calc(var(--radius-md) * 1.5);
+}
+
+.subnav ul {
+  margin: 0.25rem 0 0;
+  padding: 0;
+}
+
+.subnav li {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+}
+
+.subnav a {
+  color: var(--color-nav);
+  margin: 0;
+  padding-bottom: 0.5rem;
+  position: relative;
+  top: 0.05rem;
+}
+
+.subnav .active {
+  background: var(--background-subnav-tab-active);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  position: relative;
+}
+
+.subnav .active::before,
+.subnav .active::after {
+  background: var(--background-subnav-tab-active);
+  bottom: 0;
+  content: "";
+  height: var(--radius-md);
+  position: absolute;
+  width: var(--radius-md);
+}
+
+.subnav .active::before {
+  left: calc(-1 * var(--radius-md));
+  -webkit-mask-image: var(--mask-tab-left);
+  mask-image: var(--mask-tab-left);
+}
+
+.subnav .active::after {
+  -webkit-mask-image: var(--mask-tab-right);
+  mask-image: var(--mask-tab-right);
+  right: calc(-1 * var(--radius-md));
+}
+
+.subnav li:first-child.active {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.subnav li:first-child.active::before {
+  display: none;
+}
+
+/* Round top corners when subnav is first child (no header above) */
+.detail > .subnav:first-child {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+/* Detail Body - main content area */
+.detail-body {
+  background: var(--background-section);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: 1.25rem 1rem 1.5rem;
+}
+
+/* Detail Body without nav - fully rounded corners */
+.detail > .detail-body:first-child {
+  border-radius: var(--radius-md);
+}
+
+
+/* ==========================================================================
+ Mobile Responsive
+========================================================================== */
+
+@media (width <= 1000px) {
+  /* Detail header toolbar: allow wrapping, keep badge next to title */
+  .detail-header .toolbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .detail-header .toolbar-left {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .detail-header .toolbar-left h1 {
+    flex: 1 1 100%;
+    margin-bottom: 1rem;
+    margin-right: 1rem;
+  }
+
+  .detail-header .toolbar-left .filter-tools {
+    flex: 0 1 auto;
+  }
+
+  /* Remove left margin from copy button on small screens */
+  .detail-header .toolbar-right .copy-btn {
+    margin-left: 0;
+  }
+
+  /* Subnav mobile: horizontal scroll */
+  .subnav {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+
+  .subnav ul {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  .subnav li {
+    flex-shrink: 0;
+  }
+
+  .subnav .active {
+    padding-bottom: 0;
+  }
+}

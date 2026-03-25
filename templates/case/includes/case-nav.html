@@ -1,59 +1,59 @@
-<nav id="section-nav"
-     class="section-nav"
+<nav id="detail-subnav"
+     class="subnav"
      {% if oob %}hx-swap-oob="true"{% endif %}>
   <ul>
     <li {% if subapp == "documents" %}class="active"{% endif %}>
       <a href="{% url 'case:documents-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='documents' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:documents-index' matter.id %}">Documents</a>
     </li>
     <li {% if subapp == "caselaws" %}class="active"{% endif %}>
       <a href="{% url 'case:caselaws-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='caselaws' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:caselaws-index' matter.id %}">Case Law</a>
     </li>
     <li {% if subapp == "highlights" %}class="active"{% endif %}>
       <a href="{% url 'case:highlights-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='highlights' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:highlights-index' matter.id %}">Highlights</a>
     </li>
     <li {% if subapp == "facts" %}class="active"{% endif %}>
       <a href="{% url 'case:facts-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='facts' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:facts-index' matter.id %}">Timeline</a>
     </li>
     <li {% if subapp == "witnesses" %}class="active"{% endif %}>
       <a href="{% url 'case:witnesses-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='witnesses' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:witnesses-index' matter.id %}">Witnesses</a>
     </li>
     <li {% if subapp == "notes" %}class="active"{% endif %}>
       <a href="{% url 'case:notes-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='notes' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:notes-index' matter.id %}">Notes</a>
     </li>
     <li {% if subapp == "labels" %}class="active"{% endif %}>
       <a href="{% url 'case:labels-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='labels' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:labels-index' matter.id %}">Labels</a>
     </li>
     <li {% if subapp == "search" %}class="active"{% endif %}>
       <a href="{% url 'case:search-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='search' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:search-index' matter.id %}">Search</a>
     </li>
     <li {% if subapp == "ai" %}class="active"{% endif %}>
       <a href="{% url 'case:ai-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='ai' %}"
-         hx-target=".section-body"
+         hx-target=".detail-body"
          hx-push-url="{% url 'case:ai-index' matter.id %}">AI</a>
     </li>
   </ul>

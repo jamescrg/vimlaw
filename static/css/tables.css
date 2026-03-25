@@ -6,6 +6,7 @@
 }
 
 .table {
+  background: var(--background-body);
   border: solid 1px var(--border-medium);
   border-collapse: separate;
   border-radius: var(--radius-md);
@@ -53,6 +54,7 @@ th:last-child,
 }
 
 td {
+  background: var(--background-td);
   border-bottom: solid 1px var(--border-medium);
   border-right: solid 1px var(--border-medium);
   overflow: hidden;

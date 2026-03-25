@@ -155,10 +155,6 @@
   flex-shrink: 0;
 }
 
-.card {
-  border-radius: var(--radius-sm);
-}
-
 i.icon-plus {
   vertical-align: middle;
 }
