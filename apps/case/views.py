@@ -151,7 +151,6 @@ def _get_case_tab_data(request, matter, matters, matter_id, tab):
     """Fetch data for the specified case tab."""
     from apps.case.ai.filters import ConversationFilter
     from apps.case.ai.models import Conversation
-    from apps.case.caselaws.views import get_caselaws_data
     from apps.case.documents.views import get_document_data
     from apps.case.facts.views import get_facts_data
     from apps.case.highlights.views import get_highlights_data
@@ -164,12 +163,6 @@ def _get_case_tab_data(request, matter, matters, matter_id, tab):
         return {
             "tab_template": "case/documents/list.html",
             **get_document_data(request, matter_id),
-        }
-
-    elif tab == "caselaws":
-        return {
-            "tab_template": "case/caselaws/list.html",
-            **get_caselaws_data(request, matter, matter_id),
         }
 
     elif tab == "highlights":

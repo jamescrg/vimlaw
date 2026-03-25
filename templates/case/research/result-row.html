@@ -48,26 +48,43 @@
   {% if result.snippet and result.relevance != "high" %}
     <div class="research-snippet">{{ result.snippet|safe|truncatechars:200 }}</div>
   {% endif %}
-  {% if result.relevance != "pending" and result.verify_status == "none" and result.forward_citation_count %}
-    <div class="research-verify-action">
-      <form method="post" action="{% url 'case:research-review' result.id %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-sm">
-          <i class="icon-check-circle"></i> Review
+  {% if result.relevance != "pending" %}
+    <div class="research-card-actions">
+      {% if saved_to_caselaws %}
+        <span class="research-saved-badge">
+          <i class="icon-check"></i> Saved to Case Law
+        </span>
+      {% elif save_error %}
+        <span class="research-save-error">{{ save_error }}</span>
+      {% elif result.cluster_id %}
+        <button class="btn"
+                hx-post="{% url 'case:research-save-caselaw' result.id %}"
+                hx-target="#result-{{ result.id }}"
+                hx-swap="outerHTML">
+          <i class="icon-plus"></i> Save to Case Law
         </button>
-      </form>
-    </div>
-  {% elif result.verify_status == "verifying" %}
-    <div class="research-status-msg">
-      <i class="icon-loader spin"></i>
-      Reviewing citations...
-    </div>
-  {% elif result.verify_status == "complete" %}
-    <div class="research-verify-action">
-      <a href="{% url 'case:research-review-tab' result.query.matter.id %}?result={{ result.id }}"
-         class="btn btn-sm">
-        <i class="icon-check-circle"></i> View Review
-      </a>
+      {% endif %}
+      {% if result.verify_status == "none" and result.forward_citation_count %}
+        <form hx-post="{% url 'case:research-review' result.id %}"
+              hx-target="#research"
+              hx-swap="innerHTML">
+          <button type="submit" class="btn">
+            <i class="icon-check-circle"></i> Validate
+          </button>
+        </form>
+      {% elif result.verify_status == "verifying" %}
+        <span class="research-status-msg">
+          <i class="icon-loader spin"></i> Validating...
+        </span>
+      {% elif result.verify_status == "complete" %}
+        <a href="#"
+           hx-get="{% url 'case:research-review-tab' result.query.matter.id %}?result={{ result.id }}"
+           hx-target="#research"
+           hx-swap="innerHTML"
+           class="btn">
+          <i class="icon-check-circle"></i> View Validation
+        </a>
+      {% endif %}
     </div>
   {% endif %}
 </div>

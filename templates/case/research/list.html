@@ -14,7 +14,12 @@
        class="research-internal-tab{% if research_tab == 'review' %} active{% endif %}"
        hx-get="{% url 'case:research-review-tab' matter.id %}"
        hx-target="#research"
-       hx-swap="innerHTML">Review</a>
+       hx-swap="innerHTML">Validate</a>
+    <a href="#"
+       class="research-internal-tab{% if research_tab == 'caselaws' %} active{% endif %}"
+       hx-get="{% url 'case:research-caselaws-tab' matter.id %}"
+       hx-target="#research"
+       hx-swap="innerHTML">Case Law</a>
   </nav>
 </div>
 <div id="research-tab-content">
@@ -22,6 +27,8 @@
     {% include "case/research/history.html" %}
   {% elif research_tab == "review" %}
     {% include "case/research/review.html" %}
+  {% elif research_tab == "caselaws" %}
+    {% include "case/research/caselaws.html" %}
   {% else %}
     {% include "case/research/search.html" %}
   {% endif %}

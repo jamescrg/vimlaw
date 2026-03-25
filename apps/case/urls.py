@@ -456,6 +456,11 @@ urlpatterns = [
         name="research-list",
     ),
     path(
+        "case/<int:matter_id>/research/caselaws/",
+        research.research_caselaws_tab,
+        name="research-caselaws-tab",
+    ),
+    path(
         "case/<int:matter_id>/research/search-tab/",
         research.research_search_tab,
         name="research-search-tab",
@@ -917,6 +922,11 @@ urlpatterns = [
         "case/research/citation/<int:verification_id>/status/",
         research.research_citation_status,
         name="research-citation-status",
+    ),
+    path(
+        "case/research/result/<int:result_id>/save-caselaw/",
+        research.research_save_to_caselaws,
+        name="research-save-caselaw",
     ),
     # ==========================================================================
     # LEGACY ROUTES (redirect to new structure)

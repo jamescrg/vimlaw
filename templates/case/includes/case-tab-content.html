@@ -3,11 +3,6 @@
        hx-trigger="documentsChanged from:body"
        hx-get="{% url 'case:documents-list' matter.id %}"
        hx-target="this">{% include tab_template %}</div>
-{% elif subapp == "caselaws" %}
-  <div id="caselaws"
-       hx-trigger="caselawsChanged from:body"
-       hx-get="{% url 'case:caselaws-list' matter.id %}"
-       hx-target="this">{% include tab_template %}</div>
 {% elif subapp == "highlights" %}
   <div id="highlights"
        hx-trigger="highlightsChanged from:body"

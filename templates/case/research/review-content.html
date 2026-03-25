@@ -41,7 +41,7 @@
        hx-target="#review-detail"
        hx-swap="innerHTML">
     <i class="icon-loader spin"></i>
-    Reviewing forward citations...
+    Validating forward citations...
   </div>
 {% elif result.verify_status == "complete" %}
   {% if result.verifications.exists %}
@@ -57,6 +57,6 @@
 {% elif result.verify_status == "error" %}
   <div class="research-error">
     <i class="icon-alert-triangle"></i>
-    Review failed. Please try again.
+    Validation failed. Please try again.
   </div>
 {% endif %}

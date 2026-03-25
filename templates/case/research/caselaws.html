@@ -1,0 +1,4 @@
+<div id="caselaws"
+     hx-trigger="caselawsChanged from:body"
+     hx-get="{% url 'case:caselaws-list' matter.id %}"
+     hx-target="this">{% include "case/caselaws/list.html" %}</div>

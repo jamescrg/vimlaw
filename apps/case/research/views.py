@@ -3,7 +3,12 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from apps.case.courtlistener import fetch_cluster, lookup_citation
+from apps.case.courtlistener import (
+    fetch_case_by_citation,
+    fetch_cluster,
+    lookup_citation,
+)
+from apps.case.models import CaseLaw
 from apps.case.views import get_matter_from_url, set_last_tab
 
 from .courtlistener import count_forward_citations
@@ -57,6 +62,21 @@ def research_list(request, matter_id):
 
 
 # ── Internal sub-tab views ────────────────────────────────────────────────
+
+
+@login_required
+def research_caselaws_tab(request, matter_id):
+    """HTMX partial for the Case Law sub-tab content."""
+    from apps.case.caselaws.views import get_caselaws_data
+
+    matter, _ = get_matter_from_url(request, matter_id)
+
+    context = {
+        "matter": matter,
+        "research_tab": "caselaws",
+    } | get_caselaws_data(request, matter, matter_id)
+
+    return render(request, "case/research/list.html", context)
 
 
 @login_required
@@ -289,9 +309,12 @@ def research_review(request, result_id):
     result.save(update_fields=["verify_status"])
     review_result(result.id)
 
-    return HttpResponseRedirect(
-        f"{reverse('case:research-review-tab', args=[matter.id])}?result={result.id}"
-    )
+    context = {
+        "matter": matter,
+        "research_tab": "review",
+        "result": result,
+    }
+    return render(request, "case/research/list.html", context)
 
 
 @login_required
@@ -304,9 +327,11 @@ def research_review_lookup(request, matter_id):
 
     citation_text = request.POST.get("citation", "").strip()
     if not citation_text:
-        return HttpResponseRedirect(
-            reverse("case:research-review-tab", args=[matter_id])
-        )
+        context = {
+            "matter": matter,
+            "research_tab": "review",
+        }
+        return render(request, "case/research/list.html", context)
 
     lookup = lookup_citation(citation_text)
     if not lookup.found:
@@ -316,7 +341,7 @@ def research_review_lookup(request, matter_id):
             "lookup_error": lookup.error or "Citation not found.",
             "lookup_citation": citation_text,
         }
-        return render(request, "case/research/review.html", context)
+        return render(request, "case/research/list.html", context)
 
     fwd_count = None
     cluster = fetch_cluster(lookup.cluster_id)
@@ -432,4 +457,68 @@ def research_citation_status(request, verification_id):
         request,
         "case/research/citation-item.html",
         {"v": verification, "assessing": not verification.summary},
+    )
+
+
+# ── Save to Case Law ─────────────────────────────────────────────────────
+
+
+@login_required
+def research_save_to_caselaws(request, result_id):
+    """POST: save a research result to the matter's case law library."""
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    result = get_object_or_404(
+        ResearchResult, pk=result_id, query__created_by=request.user
+    )
+    matter = result.query.matter
+
+    # Check for duplicate
+    if result.cluster_id:
+        existing = CaseLaw.objects.filter(
+            matter=matter, cluster_id=result.cluster_id
+        ).first()
+        if existing:
+            return render(
+                request,
+                "case/research/result-row.html",
+                {"result": result, "matter": matter, "saved_to_caselaws": True},
+            )
+
+    # Fetch full case data from CourtListener
+    case_data = fetch_case_by_citation(result.citation or result.case_name)
+
+    if not case_data.get("found"):
+        return render(
+            request,
+            "case/research/result-row.html",
+            {
+                "result": result,
+                "matter": matter,
+                "save_error": "Could not fetch case data from CourtListener.",
+            },
+        )
+
+    CaseLaw.objects.create(
+        matter=matter,
+        case_name=case_data.get("case_name", result.case_name),
+        citation=case_data.get("citation", result.citation),
+        court=case_data.get("court", result.court),
+        court_id=case_data.get("court_id", ""),
+        date_filed=case_data.get("date_filed"),
+        docket_number=case_data.get("docket_number", ""),
+        cluster_id=case_data.get("cluster_id", result.cluster_id),
+        opinion_id=case_data.get("opinion_id"),
+        courtlistener_url=case_data.get("courtlistener_url", result.courtlistener_url),
+        text=case_data.get("text", ""),
+        html=case_data.get("html", ""),
+        created_by=request.user,
+        updated_by=request.user,
+    )
+
+    return render(
+        request,
+        "case/research/result-row.html",
+        {"result": result, "matter": matter, "saved_to_caselaws": True},
     )

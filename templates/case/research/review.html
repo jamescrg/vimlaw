@@ -9,7 +9,7 @@
          value="{{ lookup_citation|default:'' }}"
          required>
   <button type="submit" class="btn btn-success">
-    <i class="icon-search"></i> Review
+    <i class="icon-search"></i> Validate
   </button>
 </form>
 {% if lookup_error %}
@@ -37,6 +37,6 @@
   </div>
 {% elif not lookup_error %}
   <div class="research-empty-state">
-    No reviewed cases yet. Enter a citation above or use the Review button on search results.
+    No validated cases yet. Enter a citation above or use the Validate button on search results.
   </div>
 {% endif %}
