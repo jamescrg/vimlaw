@@ -30,7 +30,6 @@ Detail Layout (header / subnav / body)
 /* Detail Header - title/toolbar area */
 .detail-header {
   background: var(--background-subnav);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
   padding: 1.25rem 1rem 0.5rem;
 }
 
@@ -51,7 +50,7 @@ Detail Layout (header / subnav / body)
 .subnav {
   background: var(--background-subnav);
   margin: 0;
-  padding: 0.25rem 0 0 calc(var(--radius-md) * 1.5);
+  padding: 0.25rem 0 0 calc(var(--radius-md) * 2.5);
 }
 
 .subnav ul {
@@ -98,19 +97,6 @@ Detail Layout (header / subnav / body)
   -webkit-mask-image: var(--mask-tab-right);
   mask-image: var(--mask-tab-right);
   right: calc(-1 * var(--radius-md));
-}
-
-.subnav li:first-child.active {
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-}
-
-.subnav li:first-child.active::before {
-  display: none;
-}
-
-/* Round top corners when subnav is first child (no header above) */
-.detail > .subnav:first-child {
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 /* Detail Body - main content area */
