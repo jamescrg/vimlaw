@@ -130,7 +130,7 @@
 }
 
 i.with-text {
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
 }
 
 .action-btn {
@@ -172,7 +172,7 @@ i.with-text {
 /* Filter icon - always violet with right margin */
 .icon-list-filter {
   color: var(--icon-violet);
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
 }
 
 /* Chevron in dropdown buttons - add left margin */

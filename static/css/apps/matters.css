@@ -171,7 +171,7 @@ Mode Pills (Detail/Case toggle)
 }
 
 .toolbar .mode-pill > i {
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
 }
 
 .toolbar .mode-pill:first-child {

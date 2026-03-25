@@ -124,7 +124,7 @@
 }
 
 .priority-dropdown i.with-text {
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
 }
 
 /* ==========================================================================
@@ -134,10 +134,6 @@
 .tasks-toolbar-left {
   flex-wrap: wrap-reverse;
   row-gap: 1.25rem;
-}
-
-.tasks-toolbar-left > .tasks-add-quick-input + button {
-  margin-right: 1.25rem;
 }
 
 .tasks-toolbar .filter-tools .filter-dropdown-button {
