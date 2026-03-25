@@ -1690,11 +1690,110 @@
 
 .context-section-text {
   color: var(--stone-700);
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;
   overflow-wrap: break-word;
   padding: 1rem;
-  white-space: pre-wrap;
+}
+
+.context-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.importance-badge {
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  line-height: 1;
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.importance-high {
+  background: var(--red-100);
+  color: var(--red-700);
+}
+
+.importance-med {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+
+.importance-low {
+  background: var(--stone-100);
+  color: var(--stone-500);
+}
+
+/* Context Section Groups (Auto Pool, Excluded) */
+.context-section-group {
+  margin-top: 2rem;
+}
+
+.context-group-title {
+  align-items: center;
+  color: var(--stone-700);
+  display: flex;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  margin: 0 0 0.25rem;
+}
+
+.context-group-title > i {
+  font-size: 1.125rem;
+}
+
+.context-group-title.excluded {
+  color: var(--stone-500);
+}
+
+.context-group-meta {
+  color: var(--stone-400);
+  font-size: 1rem;
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.context-group-description {
+  color: var(--stone-500);
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+.manifest-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manifest-item-meta {
+  color: var(--stone-400);
+  flex-shrink: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.excluded-item .context-section-header.excluded {
+  background: var(--stone-50);
+  color: var(--stone-400);
+  cursor: default;
+}
+
+.excluded-item .context-section-header.excluded:hover {
+  background: var(--stone-50);
+}
+
+.excluded-item .context-section-header.excluded i {
+  color: var(--stone-400);
 }
