@@ -51,11 +51,7 @@
           </div>
         </div>
       </div>
-      <div class="task-notes"
-           id="task-notes"
-           hx-trigger="taskNotesChanged from:body"
-           hx-get="{% url 'tasks:detail-notes' id=task.id %}{% if matter_id %}?matter_id={{ matter_id }}{% endif %}"
-           hx-target="this">{% include "tasks/detail-notes.html" %}</div>
+      <div class="task-notes" id="task-notes">{% include "tasks/detail-notes.html" %}</div>
     </div>
   </div>
 </div>

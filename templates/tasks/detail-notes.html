@@ -16,4 +16,30 @@
 {% empty %}
   <p class="empty-message">No notes yet.</p>
 {% endfor %}
-{% include "pagination.html" %}
+{% if pagination.paginator.num_pages > 1 %}
+  <div class="pagination-row">
+    <a href="#"
+       hx-get="{% url 'tasks:detail-notes' id=task.id %}?page=1{% if matter_id %}&matter_id={{ matter_id }}{% endif %}"
+       hx-target="#task-notes"
+       class="{% if not pagination.has_previous %}pagination-disabled{% endif %}">&lt;&lt;</a>
+    <a href="#"
+       {% if pagination.has_previous %}hx-get="{% url 'tasks:detail-notes' id=task.id %}?page={{ pagination.previous_page_number }}{% if matter_id %}&matter_id={{ matter_id }}{% endif %}
+       "
+       {% endif %}
+       hx-target="#task-notes"
+       class="{% if not pagination.has_previous %}pagination-disabled{% endif %}">&lt;</a>
+    <p>Page {{ pagination.number }} of {{ pagination.paginator.num_pages }}</p>
+    <a href="#"
+       {% if pagination.has_next %}hx-get="{% url 'tasks:detail-notes' id=task.id %}?page={{ pagination.next_page_number }}{% if matter_id %}&matter_id={{ matter_id }}{% endif %}
+       "
+       {% endif %}
+       hx-target="#task-notes"
+       class="{% if not pagination.has_next %}pagination-disabled{% endif %}">&gt;</a>
+    <a href="#"
+       {% if pagination.has_next %}hx-get="{% url 'tasks:detail-notes' id=task.id %}?page={{ pagination.paginator.num_pages }}{% if matter_id %}&matter_id={{ matter_id }}{% endif %}
+       "
+       {% endif %}
+       hx-target="#task-notes"
+       class="{% if not pagination.has_next %}pagination-disabled{% endif %}">&gt;&gt;</a>
+  </div>
+{% endif %}

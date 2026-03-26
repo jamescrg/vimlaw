@@ -619,6 +619,11 @@ def tasks_detail_notes(request, id):
     notes = task.notes.all()
     matter_id = request.GET.get("matter_id")
 
+    # Accept page param directly so pagination doesn't need a trigger round-trip
+    page = request.GET.get("page")
+    if page:
+        request.session["task_notes_pagination"] = int(page)
+
     pagination = CustomPaginator(
         notes, per_page=5, request=request, session_key="task_notes_pagination"
     )
