@@ -153,11 +153,11 @@ class TestDocumentInlineEdit:
 
     def test_edit_importance(self, client_with_matter, document):
         response = client_with_matter.get(
-            f"/case/documents/{document.id}/importance/8/"
+            f"/case/documents/{document.id}/importance/4/"
         )
         assert response.status_code == 302  # Redirects to list
         document.refresh_from_db()
-        assert document.importance == 8
+        assert document.importance == 4
 
     def test_edit_proceeding(self, client_with_matter, document, proceeding):
         response = client_with_matter.get(

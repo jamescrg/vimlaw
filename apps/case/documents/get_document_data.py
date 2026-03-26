@@ -133,10 +133,14 @@ def get_document_data(request, matter_id):
         "proceedings": proceedings,
         "selected_proceeding": selected_proceeding,
         "current_order": current_order,
-        "importances": list(range(1, 11)),
+        "importances": list(range(5, 0, -1)),
         "importance_value": importance_value,
         "selected_importance": (
-            f"Importance {importance_value}" if importance_value else ""
+            {5: "Highest", 4: "High", 3: "Normal", 2: "Low", 1: "Lowest"}.get(
+                importance_value, ""
+            )
+            if importance_value
+            else ""
         ),
     }
 

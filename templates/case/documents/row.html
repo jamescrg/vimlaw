@@ -1,4 +1,6 @@
-<tr id="document-{{ document.id }}" data-document-id="{{ document.id }}">
+<tr id="document-{{ document.id }}"
+    class="importance-{{ document.importance }}"
+    data-document-id="{{ document.id }}">
   <td class="col-select">
     {% url 'case:documents-toggle-select' matter.id document.id as toggle_url %}
     {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=document.id selected_ids=selected_documents %}

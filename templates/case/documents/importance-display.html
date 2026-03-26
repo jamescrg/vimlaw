@@ -3,15 +3,49 @@
           type="button"
           x-ref="button"
           @click="toggle()"
-          :aria-expanded="open">{{ document.importance }}</button>
+          :aria-expanded="open">
+    {% if document.importance == 5 %}
+      <i class="icon-chevrons-up"></i>
+    {% elif document.importance == 4 %}
+      <i class="icon-chevron-up"></i>
+    {% elif document.importance == 3 %}
+      <i class="icon-equal"></i>
+    {% elif document.importance == 2 %}
+      <i class="icon-chevron-down"></i>
+    {% else %}
+      <i class="icon-chevrons-down"></i>
+    {% endif %}
+  </button>
   <ul class="dropdown-menu" x-ref="menu" x-show="open">
-    {% for i in "1234567890"|make_list %}
-      <li>
-        <a class="dropdown-item"
-           href="#"
-           hx-get="{% url 'case:document-importance' document.id forloop.counter %}"
-           hx-target="#documents"><i class="icon-flag"></i> {{ forloop.counter }}</a>
-      </li>
-    {% endfor %}
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'case:document-importance' document.id 5 %}"
+         hx-target="#documents"><i class="icon-chevrons-up importance-5"></i> Highest</a>
+    </li>
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'case:document-importance' document.id 4 %}"
+         hx-target="#documents"><i class="icon-chevron-up importance-4"></i> High</a>
+    </li>
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'case:document-importance' document.id 3 %}"
+         hx-target="#documents"><i class="icon-equal"></i> Normal</a>
+    </li>
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'case:document-importance' document.id 2 %}"
+         hx-target="#documents"><i class="icon-chevron-down importance-2"></i> Low</a>
+    </li>
+    <li>
+      <a class="dropdown-item"
+         href="#"
+         hx-get="{% url 'case:document-importance' document.id 1 %}"
+         hx-target="#documents"><i class="icon-chevrons-down importance-1"></i> Lowest</a>
+    </li>
   </ul>
 </div>

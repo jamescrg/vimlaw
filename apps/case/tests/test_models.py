@@ -74,7 +74,7 @@ class TestDocument:
         assert document.category == "Record"
 
     def test_importance_default(self, document):
-        assert document.importance == 5
+        assert document.importance == 3
 
     def test_labels_relationship(self, document, label):
         document.labels.add(label)
@@ -117,7 +117,7 @@ class TestHighlight:
         assert ". at " in citation
 
     def test_importance_default(self, highlight):
-        assert highlight.importance == 5
+        assert highlight.importance == 3
 
     def test_labels_relationship(self, highlight, label):
         highlight.labels.add(label)
@@ -143,7 +143,7 @@ class TestFact:
         assert str(fact.date) == "2024-01-25"
 
     def test_importance_default(self, fact):
-        assert fact.importance == 5
+        assert fact.importance == 3
 
     def test_documents_relationship(self, fact, document):
         fact.documents.add(document)

@@ -275,7 +275,7 @@ td:hover .btn-ghost,
 .ai-context-btn.ai-context-active {
   background: var(--selected-background);
   border-color: var(--selected-border);
-  color: var(--stone-700);
+  color: var(--color-primary);
 }
 
 /* Icon Checkbox Button */

@@ -44,7 +44,7 @@
       <th class="col-ai">AI</th>
       <th class="col-importance">
         <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:documents-sort' matter.id 'importance' %}"
+                hx-get="{% url 'case:documents-sort' matter.id '-importance' %}"
                 hx-target="#documents"
                 title="Sort by importance">
           <i class="icon-flag"></i>

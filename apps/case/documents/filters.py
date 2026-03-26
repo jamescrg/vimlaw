@@ -5,7 +5,13 @@ from django.db.models import Q
 from apps.case.models import Document, Label
 from apps.matters.proceedings.models import Proceeding
 
-IMPORTANCE_CHOICES = tuple((i, f"Importance {i}") for i in range(1, 11))
+IMPORTANCE_CHOICES = (
+    (5, "Highest"),
+    (4, "High"),
+    (3, "Normal"),
+    (2, "Low"),
+    (1, "Lowest"),
+)
 
 
 class ProceedingChoiceFilter(django_filters.ModelChoiceFilter):
@@ -52,8 +58,8 @@ class FilesFilter(django_filters.FilterSet):
     importance = django_filters.ChoiceFilter(
         field_name="importance",
         choices=IMPORTANCE_CHOICES,
-        lookup_expr="lte",
-        label="Importance (≤)",
+        lookup_expr="gte",
+        label="Importance (≥)",
         empty_label="All",
     )
     order_by = django_filters.OrderingFilter(

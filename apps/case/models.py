@@ -109,7 +109,7 @@ class Document(AuditMixin, models.Model):
     search_vector = SearchVectorField(null=True, blank=True)
 
     importance = models.PositiveIntegerField(
-        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+        default=3, validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     ai_context = models.CharField(
         max_length=6,
@@ -203,7 +203,7 @@ class Highlight(AuditMixin, models.Model):
     search_vector = SearchVectorField(null=True, blank=True)
 
     importance = models.PositiveIntegerField(
-        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+        default=3, validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     labels = models.ManyToManyField(Label, related_name="highlights", blank=True)
     history = HistoricalRecords()
@@ -312,7 +312,7 @@ class Fact(AuditMixin, models.Model):
     highlights = models.ManyToManyField("Highlight", blank=True, related_name="facts")
 
     importance = models.PositiveIntegerField(
-        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+        default=3, validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     labels = models.ManyToManyField(Label, related_name="facts", blank=True)
     history = HistoricalRecords()
@@ -349,7 +349,7 @@ class Witness(AuditMixin, models.Model):
     )
     knowledge = models.TextField(blank=True)
     importance = models.PositiveIntegerField(
-        default=5, validators=[MinValueValidator(1), MaxValueValidator(10)]
+        default=3, validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     history = HistoricalRecords()
 
@@ -389,7 +389,7 @@ class CaseLaw(AuditMixin, models.Model):
 
     # User notes and importance
     notes = models.TextField(blank=True)
-    importance = models.IntegerField(default=5)  # 1-10, like documents
+    importance = models.IntegerField(default=3)  # 1-5, like documents
 
     # AI context inclusion: auto (selector decides), always, or never
     ai_context = models.CharField(
