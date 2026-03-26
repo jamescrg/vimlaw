@@ -324,7 +324,7 @@ def notes_filter_keyword(request):
     request.session.modified = True
 
     context = {"app": "notes"} | get_notes_data(request)
-    return render(request, "notes/table.html", context)
+    return render(request, "notes/table-with-pagination.html", context)
 
 
 @login_required
