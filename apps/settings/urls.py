@@ -15,6 +15,11 @@ app_name = "settings"
 urlpatterns = [
     # Session
     path("settings/", session_urls.index, name="settings"),
+    path(
+        "settings/keyboard-shortcuts/",
+        session_urls.keyboard_shortcuts,
+        name="keyboard-shortcuts",
+    ),
     # Integrations
     path("settings/integrations/", integration_urls.index, name="integrations-index"),
     path(

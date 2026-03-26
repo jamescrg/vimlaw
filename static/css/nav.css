@@ -64,11 +64,13 @@ body.has-subnav .navbar .active::after {
   background: var(--background-subnav);
 }
 
-.navbar .settings-link {
+.navbar .settings-link,
+.navbar .shortcuts-link {
   font-size: 1.25rem;
 }
 
-.navbar .settings-link i {
+.navbar .settings-link i,
+.navbar .shortcuts-link i {
   position: relative;
   top: calc(-0.25rem + 1px);
 }
