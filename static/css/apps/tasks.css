@@ -27,6 +27,10 @@ i.priority-4 {
   color: var(--violet-600);
 }
 
+tr.priority-3 > td.priority .button-link {
+  color: var(--color-muted-more);
+}
+
 tr.priority-2 > td.priority .button-link,
 i.priority-2,
 tr.priority-1 > td.priority .button-link,
@@ -214,7 +218,8 @@ i.priority-1 {
 }
 
 .tasks-table .priority .dropdown-menu {
-  min-width: 2rem;
+  min-width: auto;
+  text-align: left;
 }
 
 .tasks-table .matter {

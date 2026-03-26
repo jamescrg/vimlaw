@@ -21,31 +21,31 @@
       <a class="dropdown-item"
          href="#"
          hx-get="{% url 'tasks:task-priority' task_id=task.id priority=5 %}"
-         hx-target="#tasks"><i class="icon-chevrons-up priority-5"></i> 5</a>
+         hx-target="#tasks"><i class="icon-chevrons-up priority-5"></i> Highest</a>
     </li>
     <li>
       <a class="dropdown-item"
          href="#"
          hx-get="{% url 'tasks:task-priority' task_id=task.id priority=4 %}"
-         hx-target="#tasks"><i class="icon-chevron-up priority-4"></i> 4</a>
+         hx-target="#tasks"><i class="icon-chevron-up priority-4"></i> High</a>
     </li>
     <li>
       <a class="dropdown-item"
          href="#"
          hx-get="{% url 'tasks:task-priority' task_id=task.id priority=3 %}"
-         hx-target="#tasks"><i class="icon-equal"></i> 3</a>
+         hx-target="#tasks"><i class="icon-equal"></i> Normal</a>
     </li>
     <li>
       <a class="dropdown-item"
          href="#"
          hx-get="{% url 'tasks:task-priority' task_id=task.id priority=2 %}"
-         hx-target="#tasks"><i class="icon-chevron-down priority-2"></i> 2</a>
+         hx-target="#tasks"><i class="icon-chevron-down priority-2"></i> Low</a>
     </li>
     <li>
       <a class="dropdown-item"
          href="#"
          hx-get="{% url 'tasks:task-priority' task_id=task.id priority=1 %}"
-         hx-target="#tasks"><i class="icon-chevrons-down priority-1"></i> 1</a>
+         hx-target="#tasks"><i class="icon-chevrons-down priority-1"></i> Lowest</a>
     </li>
   </ul>
 </div>

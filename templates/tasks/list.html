@@ -27,9 +27,15 @@
           <span><i class="icon-flag with-text"></i>
           {% if priority_value %}
             {% if priority_value == 5 %}
-              5 only
+              <i class="icon-chevrons-up"></i> Only
+            {% elif priority_value == 4 %}
+              <i class="icon-chevron-up"></i> And above
+            {% elif priority_value == 3 %}
+              <i class="icon-equal"></i> And above
+            {% elif priority_value == 2 %}
+              <i class="icon-chevron-down"></i> And above
             {% else %}
-              {{ priority_value }} and above
+              <i class="icon-chevrons-down"></i> And above
             {% endif %}
           {% else %}
             Priority
@@ -44,124 +50,144 @@
           x-show="open"
           hx-target="#tasks-priority-filter"
           hx-swap="outerHTML">
-        {% for priority in priorities %}
-          <li>
-          <a class="dropdown-item {% if priority == priority_value %}active{% endif %}"
+        <li>
+          <a class="dropdown-item {% if priority_value == 5 %}active{% endif %}"
              href="#"
-             hx-post="{% url 'tasks:filter-priority' priority %}"
+             hx-post="{% url 'tasks:filter-priority' 5 %}"
              hx-target="#tasks"
-             hx-swap="#outerHTML"><i class="icon-flag"></i>
-          {% if priority == 5 %}
-            5 only
+             hx-swap="#outerHTML"><i class="icon-chevrons-up priority-5"></i> Only</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if priority_value == 4 %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-priority' 4 %}"
+             hx-target="#tasks"
+             hx-swap="#outerHTML"><i class="icon-chevron-up priority-4"></i> And above</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if priority_value == 3 %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-priority' 3 %}"
+             hx-target="#tasks"
+             hx-swap="#outerHTML"><i class="icon-equal"></i> And above</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if priority_value == 2 %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-priority' 2 %}"
+             hx-target="#tasks"
+             hx-swap="#outerHTML"><i class="icon-chevron-down priority-2"></i> And above</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if priority_value == 1 %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-priority' 1 %}"
+             hx-target="#tasks"
+             hx-swap="#outerHTML"><i class="icon-chevrons-down priority-1"></i> And above</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if not priority_value %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-priority' 0 %}"
+             hx-target="#tasks"
+             hx-swap="#outerHTML"><i class="icon-flag"></i> All Levels</a>
+        </li>
+      </ul>
+    </div>
+    <div class="dropdown" x-data="dropdown()">
+      <button type="button"
+              id="tasks-user-filter"
+              class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">
+        <span><i class="icon-{% if user_id %}user{% else %}users{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
+        <small>
+          <i class="icon-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu"
+          x-ref="menu"
+          x-show="open"
+          hx-target="#tasks-user-filter"
+          hx-swap="outerHTML">
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'tasks:filter-user' 0 %}"
+             hx-target="#tasks"
+             hx-swap="#outerHTML"><i class="icon-users"></i> All Users</a>
+        </li>
+        {% for user in users %}
+          <li>
+            <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
+               href="#"
+               hx-post="{% url 'tasks:filter-user' user.id %}"
+               hx-target="#tasks"
+               hx-swap="#outerHTML"><i class="icon-user"></i> {{ user.username|title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="dropdown" x-data="dropdown()">
+      <button type="button"
+              id="tasks-date-filter"
+              class="select-btn filter-dropdown-button {% if filter_label == 'today' or filter_label == 'week' or filter_label == 'unscheduled' %}toggle-active{% endif %}"
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">
+        <span>
+          <i class="icon-calendar with-text"></i>
+          {% if filter_label == "today" %}
+            Today
+          {% elif filter_label == "week" %}
+            This Week
+          {% elif filter_label == "unscheduled" %}
+            Unscheduled
           {% else %}
-            {{ priority }} and above
+            All Tasks
           {% endif %}
-        </a>
-      </li>
-    {% endfor %}
-    <li>
-      <a class="dropdown-item {% if not priority_value %}active{% endif %}"
-         href="#"
-         hx-post="{% url 'tasks:filter-priority' 0 %}"
-         hx-target="#tasks"
-         hx-swap="#outerHTML"><i class="icon-flag"></i> All Levels</a>
-    </li>
-  </ul>
-</div>
-<div class="dropdown" x-data="dropdown()">
-  <button type="button"
-          id="tasks-user-filter"
-          class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
-          x-ref="button"
-          @click="toggle()"
-          :aria-expanded="open">
-    <span><i class="icon-{% if user_id %}user{% else %}users{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
-    <small>
-      <i class="icon-chevron-down"></i>
-    </small>
-  </button>
-  <ul class="dropdown-menu"
-      x-ref="menu"
-      x-show="open"
-      hx-target="#tasks-user-filter"
-      hx-swap="outerHTML">
-    <li>
-      <a class="dropdown-item"
-         href="#"
-         hx-post="{% url 'tasks:filter-user' 0 %}"
-         hx-target="#tasks"
-         hx-swap="#outerHTML"><i class="icon-users"></i> All Users</a>
-    </li>
-    {% for user in users %}
-      <li>
-        <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
-           href="#"
-           hx-post="{% url 'tasks:filter-user' user.id %}"
-           hx-target="#tasks"
-           hx-swap="#outerHTML"><i class="icon-user"></i> {{ user.username|title }}</a>
-      </li>
-    {% endfor %}
-  </ul>
-</div>
-<div class="dropdown" x-data="dropdown()">
-  <button type="button"
-          id="tasks-date-filter"
-          class="select-btn filter-dropdown-button {% if filter_label == 'today' or filter_label == 'week' or filter_label == 'unscheduled' %}toggle-active{% endif %}"
-          x-ref="button"
-          @click="toggle()"
-          :aria-expanded="open">
-    <span>
-      <i class="icon-calendar with-text"></i>
-      {% if filter_label == "today" %}
-        Today
-      {% elif filter_label == "week" %}
-        This Week
-      {% elif filter_label == "unscheduled" %}
-        Unscheduled
-      {% else %}
-        All Tasks
-      {% endif %}
-    </span>
-    <small>
-      <i class="icon-chevron-down"></i>
-    </small>
-  </button>
-  <ul class="dropdown-menu" x-ref="menu" x-show="open">
-    <li>
-      <a class="dropdown-item {% if not filter_label or filter_label == 'all' or filter_label == 'default' %}active{% endif %}"
-         href="#"
-         hx-post="{% url 'tasks:filter-quick' 'all' %}"
-         hx-target="#tasks">
-        <i class="icon-calendar"></i> All Tasks
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item {% if filter_label == 'unscheduled' %}active{% endif %}"
-         href="#"
-         hx-post="{% url 'tasks:filter-quick' 'unscheduled' %}"
-         hx-target="#tasks">
-        <i class="icon-calendar"></i> Unscheduled
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item {% if filter_label == 'today' %}active{% endif %}"
-         href="#"
-         hx-post="{% url 'tasks:filter-quick' 'today' %}"
-         hx-target="#tasks">
-        <i class="icon-calendar"></i> Today
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item {% if filter_label == 'week' %}active{% endif %}"
-         href="#"
-         hx-post="{% url 'tasks:filter-quick' 'week' %}"
-         hx-target="#tasks">
-        <i class="icon-calendar"></i> This Week
-      </a>
-    </li>
-  </ul>
-</div>
-{% endif %}
+        </span>
+        <small>
+          <i class="icon-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
+        <li>
+          <a class="dropdown-item {% if not filter_label or filter_label == 'all' or filter_label == 'default' %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-quick' 'all' %}"
+             hx-target="#tasks">
+            <i class="icon-calendar"></i> All Tasks
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if filter_label == 'unscheduled' %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-quick' 'unscheduled' %}"
+             hx-target="#tasks">
+            <i class="icon-calendar"></i> Unscheduled
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if filter_label == 'today' %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-quick' 'today' %}"
+             hx-target="#tasks">
+            <i class="icon-calendar"></i> Today
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if filter_label == 'week' %}active{% endif %}"
+             href="#"
+             hx-post="{% url 'tasks:filter-quick' 'week' %}"
+             hx-target="#tasks">
+            <i class="icon-calendar"></i> This Week
+          </a>
+        </li>
+      </ul>
+    </div>
+  {% endif %}
 </div>
 </div>
 </div>
