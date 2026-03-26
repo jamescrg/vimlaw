@@ -136,7 +136,7 @@
                class="ai-title-link"
                x-ref="button"
                @click.prevent="toggle()"
-               :aria-expanded="open">{{ conv.title|truncatechars:60 }}</a>
+               :aria-expanded="open">{{ conv.title|truncatechars:85 }}</a>
             <ul class="dropdown-menu" x-ref="menu" x-show="open">
               <li>
                 <a class="dropdown-item"
