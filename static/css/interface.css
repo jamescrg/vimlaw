@@ -144,6 +144,7 @@
 }
 
 .select-btn > span {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-align: left;
