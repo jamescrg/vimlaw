@@ -1,0 +1,20 @@
+{% load humanize %}
+{% if subapp == "details" %}
+  {% include "invoicing/invoices/detail/details-content.html" %}
+{% elif subapp == "time" %}
+  <div id="time"
+       hx-trigger="timeChanged from:body"
+       hx-get="{% url 'invoicing:invoice-time-entries' invoice.id %}"
+       hx-target="this">{% include "invoicing/invoices/time/list.html" %}</div>
+{% elif subapp == "expenses" %}
+  <div id="expenses"
+       hx-trigger="expensesChanged from:body"
+       hx-get="{% url 'invoicing:invoice-expense-entries' invoice.id %}"
+       hx-target="this">{% include "invoicing/invoices/expenses/list.html" %}</div>
+{% elif subapp == "preview" %}
+  <div id="preview"
+       hx-trigger="previewChanged from:body"
+       hx-get="{% url 'invoicing:invoice-pdf-preview' invoice.id %}"
+       hx-target="this">{% include "invoicing/invoices/preview/preview.html" %}</div>
+{% endif %}
+{% include "invoicing/invoices/detail/detail-nav.html" with oob=True %}

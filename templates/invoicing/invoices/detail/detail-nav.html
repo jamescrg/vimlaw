@@ -1,0 +1,30 @@
+<nav id="invoice-subnav"
+     class="subnav"
+     {% if oob %}hx-swap-oob="true"{% endif %}>
+  <ul>
+    <li {% if subapp == "details" %}class="active"{% endif %}>
+      <a href="{% url 'invoicing:invoice-details-index' invoice.id %}"
+         hx-get="{% url 'invoicing:invoice-tab-content' invoice.id 'details' %}"
+         hx-target=".detail-body"
+         hx-push-url="{% url 'invoicing:invoice-details-index' invoice.id %}">Details</a>
+    </li>
+    <li {% if subapp == "time" %}class="active"{% endif %}>
+      <a href="{% url 'invoicing:invoice-time-entries-index' invoice.id %}"
+         hx-get="{% url 'invoicing:invoice-tab-content' invoice.id 'time' %}"
+         hx-target=".detail-body"
+         hx-push-url="{% url 'invoicing:invoice-time-entries-index' invoice.id %}">Time</a>
+    </li>
+    <li {% if subapp == "expenses" %}class="active"{% endif %}>
+      <a href="{% url 'invoicing:invoice-tab-content' invoice.id 'expenses' %}"
+         hx-get="{% url 'invoicing:invoice-tab-content' invoice.id 'expenses' %}"
+         hx-target=".detail-body"
+         hx-push-url="{% url 'invoicing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
+    </li>
+    <li {% if subapp == "preview" %}class="active"{% endif %}>
+      <a href="{% url 'invoicing:invoice-pdf-preview-index' invoice.id %}"
+         hx-get="{% url 'invoicing:invoice-tab-content' invoice.id 'preview' %}"
+         hx-target=".detail-body"
+         hx-push-url="{% url 'invoicing:invoice-pdf-preview-index' invoice.id %}">Review</a>
+    </li>
+  </ul>
+</nav>

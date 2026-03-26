@@ -84,6 +84,59 @@ def invoices_detail(request, pk):
 
 
 @login_required
+def invoice_tab_content(request, pk, tab):
+    """Return tab content for HTMX tab switching (matches matter detail pattern)."""
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    context = {
+        "app": "invoicing",
+        "subapp": tab,
+        "invoice": invoice,
+        "view": "detail",
+    }
+
+    if tab == "time":
+        entries = TimeEntry.objects.filter(invoice=invoice).order_by("date")
+        summary = calculate_time_summary(entries)
+        pagination = CustomPaginator(
+            entries, per_page=10, request=request, session_key="invoice_time_pagination"
+        )
+        context.update(
+            {
+                "objects": pagination.get_object_list(),
+                "pagination": pagination,
+                "session_key": "invoice_time_pagination",
+                "trigger_key": "timeChanged",
+                "summary": summary,
+            }
+        )
+    elif tab == "expenses":
+        expenses = ExpenseEntry.objects.filter(invoice=invoice).order_by("date")
+        summary = calculate_expense_summary(expenses)
+        pagination = CustomPaginator(
+            expenses,
+            per_page=10,
+            request=request,
+            session_key="invoice_expenses_pagination",
+        )
+        context.update(
+            {
+                "objects": pagination.get_object_list(),
+                "pagination": pagination,
+                "session_key": "invoice_expenses_pagination",
+                "trigger_key": "expensesChanged",
+                "summary": summary,
+            }
+        )
+    elif tab == "preview":
+        context["file_url"] = reverse_lazy(
+            "invoicing:invoices-pdf", kwargs={"pk": invoice.pk}
+        )
+
+    return render(request, "invoicing/invoices/detail/detail-tab-content.html", context)
+
+
+@login_required
 def invoice_details_index(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
 

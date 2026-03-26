@@ -55,26 +55,7 @@
         </div>
       </div>
     </div>
-    <nav class="subnav">
-      <ul>
-        <li {% if subapp == "details" %}class="active"{% endif %}>
-          <a href="#"
-             hx-post="{% url 'invoicing:invoice-details-index' invoice.id %}">Details</a>
-        </li>
-        <li {% if subapp == "time" %}class="active"{% endif %}>
-          <a href="#"
-             hx-post="{% url 'invoicing:invoice-time-entries-index' invoice.id %}">Time</a>
-        </li>
-        <li {% if subapp == "expenses" %}class="active"{% endif %}>
-          <a href="#"
-             hx-post="{% url 'invoicing:invoice-expense-entries-index' invoice.id %}">Expenses</a>
-        </li>
-        <li {% if subapp == "preview" %}class="active"{% endif %}>
-          <a href="#"
-             hx-post="{% url 'invoicing:invoice-pdf-preview-index' invoice.id %}">Review</a>
-        </li>
-      </ul>
-    </nav>
+    {% include "invoicing/invoices/detail/detail-nav.html" %}
     <div class="detail-body">
       {% block subcontent %}
       {% endblock subcontent %}
