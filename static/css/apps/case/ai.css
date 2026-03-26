@@ -19,7 +19,8 @@
   align-items: center;
   background: var(--stone-50);
   display: flex;
-  gap: 2rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
   padding: 0.75rem 1rem;
 }
 
@@ -29,6 +30,15 @@
   font-weight: normal;
   margin: 0;
   text-align: center;
+}
+
+.ai-conversation-summary {
+  color: var(--color-muted);
+  flex-basis: 100%;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0.25rem 0;
 }
 
 .ai-chat-sidebar {

@@ -65,6 +65,7 @@
         <span class="app-badge badge-purple">{{ matter.name }}</span>
         <h1 id="conversationTitle">{{ conversation.title }}</h1>
         <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
+        {% if conversation.summary %}<p class="ai-conversation-summary">{{ conversation.summary }}</p>{% endif %}
       </header>
       <div id="messageContainer"
            class="ai-messages"
