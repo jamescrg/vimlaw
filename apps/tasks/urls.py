@@ -17,6 +17,7 @@ from apps.tasks.views import (
     tasks_delete,
     tasks_delete_note,
     tasks_detail,
+    tasks_detail_notes,
     tasks_edit,
     tasks_edit_note,
     tasks_filter,
@@ -71,6 +72,7 @@ urlpatterns = [
     path("tasks/<int:task_id>/task-date", tasks_date, name="date"),
     path("tasks/<int:id>/add-note/", tasks_add_note, name="add-note"),
     path("tasks/<int:id>/detail/", tasks_detail, name="detail"),
+    path("tasks/<int:id>/detail-notes/", tasks_detail_notes, name="detail-notes"),
     path("tasks/note/<int:id>/edit/", tasks_edit_note, name="edit-note"),
     path(
         "tasks/note/<int:id>/delete/",

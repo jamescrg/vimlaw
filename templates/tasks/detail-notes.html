@@ -1,0 +1,19 @@
+{% for note in notes %}
+  <div class="task-note">
+    <div class="task-note-title">
+      <div class="task-note-title-left">
+        <a href="#"
+           hx-get="{% url 'tasks:edit-note' id=note.id %}{% if matter_id %}?matter_id={{ matter_id }}{% endif %}"
+           hx-target="#htmx-modal-container"
+           hx-trigger="click">
+          <span class="task-note-date-time">{{ note.date|date:"M j, Y" }} {{ note.time|time:"g:i A" }}</span>
+        </a>
+        <span class="task-note-username">{{ note.user.username|title }}</span>
+      </div>
+    </div>
+    <div class="task-note-details">{{ note.details|safe }}</div>
+  </div>
+{% empty %}
+  <p class="empty-message">No notes yet.</p>
+{% endfor %}
+{% include "pagination.html" %}

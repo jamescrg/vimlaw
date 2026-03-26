@@ -613,6 +613,33 @@ def tasks_detail(request, id):
 
 
 @login_required
+def tasks_detail_notes(request, id):
+    """Return just the notes partial for HTMX pagination."""
+    task = get_object_or_404(Task, pk=id)
+    notes = task.notes.all()
+    matter_id = request.GET.get("matter_id")
+
+    pagination = CustomPaginator(
+        notes, per_page=5, request=request, session_key="task_notes_pagination"
+    )
+    page_notes = pagination.get_object_list()
+
+    for note in page_notes:
+        if note.details:
+            note.details = markdown.markdown(note.details)
+
+    context = {
+        "task": task,
+        "notes": page_notes,
+        "pagination": pagination,
+        "session_key": "task_notes_pagination",
+        "trigger_key": "taskNotesChanged",
+        "matter_id": matter_id,
+    }
+    return render(request, "tasks/detail-notes.html", context)
+
+
+@login_required
 def tasks_edit_note(request, id):
     note = get_object_or_404(TaskNote, pk=id)
     matter_id = request.GET.get("matter_id") or request.POST.get("matter_id")
