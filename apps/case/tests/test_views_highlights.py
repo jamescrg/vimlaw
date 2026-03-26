@@ -80,7 +80,7 @@ class TestEditHighlight:
             "slug": "Updated Slug",
             "text": highlight.text,
             "color": "blue",
-            "importance": 8,
+            "importance": 4,
             "paragraph_number": "7",
         }
         response = client_with_matter.post(
@@ -90,7 +90,7 @@ class TestEditHighlight:
         highlight.refresh_from_db()
         assert highlight.slug == "Updated Slug"
         assert highlight.color == "blue"
-        assert highlight.importance == 8
+        assert highlight.importance == 4
 
     def test_edit_viewer_context_returns_json(self, client_with_matter, highlight):
         data = {
@@ -123,11 +123,11 @@ class TestDeleteHighlight:
 class TestHighlightImportance:
     def test_set_importance(self, client_with_matter, highlight):
         response = client_with_matter.get(
-            f"/case/highlights/{highlight.id}/importance/9/"
+            f"/case/highlights/{highlight.id}/importance/4/"
         )
         assert response.status_code == 302
         highlight.refresh_from_db()
-        assert highlight.importance == 9
+        assert highlight.importance == 4
 
 
 class TestHighlightsFilter:

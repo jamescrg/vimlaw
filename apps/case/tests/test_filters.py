@@ -58,7 +58,7 @@ class TestFilesFilter:
 
     def test_filter_by_importance(self, matter, document):
         queryset = Document.objects.filter(matter=matter)
-        filter_obj = FilesFilter({"importance": "5"}, queryset=queryset, matter=matter)
+        filter_obj = FilesFilter({"importance": "3"}, queryset=queryset, matter=matter)
         assert document in filter_obj.qs
 
     def test_filter_by_label(self, matter, document, label):
@@ -117,7 +117,7 @@ class TestHighlightsFilter:
     def test_filter_by_importance(self, matter, highlight):
         queryset = Highlight.objects.filter(document__matter=matter)
         filter_obj = HighlightsFilter(
-            {"importance": "5"}, queryset=queryset, matter=matter
+            {"importance": "3"}, queryset=queryset, matter=matter
         )
         assert highlight in filter_obj.qs
 
@@ -173,7 +173,7 @@ class TestFactsFilter:
 
     def test_filter_by_importance(self, matter, fact):
         queryset = Fact.objects.filter(matter=matter)
-        filter_obj = FactsFilter({"importance": "5"}, queryset=queryset, matter=matter)
+        filter_obj = FactsFilter({"importance": "3"}, queryset=queryset, matter=matter)
         assert fact in filter_obj.qs
 
     def test_filter_by_label(self, matter, fact, label):
