@@ -140,7 +140,7 @@
 .hl-red { background: var(--hl-red) !important; }
 .hl-yellow { background: var(--hl-yellow) !important; }
 
-.past-due { background: var(--yellow-50); }
+.past-due td { background: var(--yellow-50); }
 
 /* ==========================================================================
    Utility Classes - Text
