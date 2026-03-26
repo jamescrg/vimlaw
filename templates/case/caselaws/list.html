@@ -1,14 +1,7 @@
 <div class="toolbar">
   <div class="toolbar-left">
-    <div class="filter-tools">
-      <button type="button"
-              class="btn-icon"
-              hx-get="{% url 'case:caselaws-add' matter.id %}"
-              hx-target="#htmx-modal-container"
-              hx-trigger="click">
-        <i class="icon-plus"></i>
-      </button>
-      {% if selected_caselaws %}
+    {% if selected_caselaws %}
+      <div class="filter-tools">
         <div class="dropdown" x-data="dropdown()">
           <button type="button"
                   class="btn-icon toggle-active"
@@ -58,19 +51,29 @@
                 hx-swap="none">
           <i class="icon-x"></i> Clear
         </button>
-      {% endif %}
-      <input type="text"
-             id="caselaws-keyword-input"
-             name="keyword"
-             placeholder="Search cases..."
-             value="{{ keyword }}"
-             class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
-             hx-get="{% url 'case:caselaws-list' matter.id %}"
-             hx-target="#caselaws"
-             hx-trigger="keyup changed delay:500ms"
-             hx-include="this"
-             oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
-    </div>
+      </div>
+    {% else %}
+      <div class="filter-tools">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'case:caselaws-add' matter.id %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click">
+          <i class="icon-plus"></i>
+        </button>
+        <input type="text"
+               id="caselaws-keyword-input"
+               name="keyword"
+               placeholder="Search cases..."
+               value="{{ keyword }}"
+               class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
+               hx-get="{% url 'case:caselaws-list' matter.id %}"
+               hx-target="#caselaws"
+               hx-trigger="keyup changed delay:500ms"
+               hx-include="this"
+               oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
+      </div>
+    {% endif %}
   </div>
 </div>
 <div id="caselaws-table">

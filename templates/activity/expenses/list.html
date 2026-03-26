@@ -2,45 +2,46 @@
   {% load humanize %}
   <div class="toolbar">
     <div class="toolbar-left">
-      <div class="filter-tools">
-        <button hx-get="/activity/expenses/add" hx-target="#htmx-modal-container">
-          <i class="icon-plus"></i>
-        </button>
-        {% if user.is_admin or user.perm_financial %}
-          {% if selected_expenses %}
-            <div class="dropdown" x-data="dropdown()">
-              <button type="button"
-                      class="btn-icon toggle-active"
-                      x-ref="button"
-                      @click="toggle()"
-                      :aria-expanded="open">
-                Actions ({{ selected_expenses|length }})
-                <small><i class="icon-chevron-down"></i></small>
-              </button>
-              <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
-                {% include "activity/expenses/bulk-actions.html" %}
-              </ul>
-            </div>
+      {% if selected_expenses %}
+        <div class="filter-tools">
+          <div class="dropdown" x-data="dropdown()">
             <button type="button"
                     class="btn-icon toggle-active"
-                    hx-post="{% url 'activity:expenses-clear-selection' %}"
-                    hx-swap="none">
-              <i class="icon-x"></i> Clear
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">
+              Actions ({{ selected_expenses|length }})
+              <small><i class="icon-chevron-down"></i></small>
             </button>
-          {% endif %}
-        {% endif %}
-        <button hx-get="{% url 'activity:expenses-filter' %}"
-                hx-target="#htmx-modal-container"
-                class="{% if filter_label == "custom" %}toggle-active{% endif %}">
-          <i class="icon-list-filter with-text"></i>Filter
-        </button>
-        <a href="#"
-           class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
-           hx-post="{% url 'activity:expenses-filter-quick' 'unbilled' %}"><i class="icon-mail-x with-text"></i>Unbilled</a>
-        <a class="{% if filter_label == "today" %}toggle-active{% endif %}"
-           href="#"
-           hx-post="{% url 'activity:expenses-filter-quick' 'today' %}"><i class="icon-calendar with-text"></i>Today</a>
-      </div>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+              {% include "activity/expenses/bulk-actions.html" %}
+            </ul>
+          </div>
+          <button type="button"
+                  class="btn-icon toggle-active"
+                  hx-post="{% url 'activity:expenses-clear-selection' %}"
+                  hx-swap="none">
+            <i class="icon-x"></i> Clear
+          </button>
+        </div>
+      {% else %}
+        <div class="filter-tools">
+          <button hx-get="/activity/expenses/add" hx-target="#htmx-modal-container">
+            <i class="icon-plus"></i>
+          </button>
+          <button hx-get="{% url 'activity:expenses-filter' %}"
+                  hx-target="#htmx-modal-container"
+                  class="{% if filter_label == "custom" %}toggle-active{% endif %}">
+            <i class="icon-list-filter with-text"></i>Filter
+          </button>
+          <a href="#"
+             class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
+             hx-post="{% url 'activity:expenses-filter-quick' 'unbilled' %}"><i class="icon-mail-x with-text"></i>Unbilled</a>
+          <a class="{% if filter_label == "today" %}toggle-active{% endif %}"
+             href="#"
+             hx-post="{% url 'activity:expenses-filter-quick' 'today' %}"><i class="icon-calendar with-text"></i>Today</a>
+        </div>
+      {% endif %}
     </div>
     <div class="toolbar-right">
       <div class="dropdown" x-data="dropdown()">

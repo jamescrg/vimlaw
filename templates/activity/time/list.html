@@ -2,83 +2,84 @@
   {% load humanize %}
   <div class="toolbar">
     <div class="toolbar-left">
-      <div class="filter-tools">
-        <button hx-get="{% url 'activity:time-add' %}"
-                hx-target="#htmx-modal-container">
-          <i class="icon-plus"></i>
-        </button>
-        {% if user.is_admin or user.perm_financial %}
-          {% if selected_time %}
-            <div class="dropdown" x-data="dropdown()">
-              <button type="button"
-                      class="btn-icon toggle-active"
-                      x-ref="button"
-                      @click="toggle()"
-                      :aria-expanded="open">
-                Actions ({{ selected_time|length }})
-                <small><i class="icon-chevron-down"></i></small>
-              </button>
-              <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
-                {% include "activity/time/bulk-actions.html" %}
-              </ul>
-            </div>
+      {% if selected_time %}
+        <div class="filter-tools">
+          <div class="dropdown" x-data="dropdown()">
             <button type="button"
                     class="btn-icon toggle-active"
-                    hx-post="{% url 'activity:time-clear-selection' %}"
-                    hx-swap="none">
-              <i class="icon-x"></i> Clear
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">
+              Actions ({{ selected_time|length }})
+              <small><i class="icon-chevron-down"></i></small>
             </button>
-          {% endif %}
-        {% endif %}
-        <button hx-get="{% url 'activity:time-filter' %}"
-                hx-target="#htmx-modal-container"
-                class="{% if filter_label == "custom" %}toggle-active{% endif %}">
-          <i class="icon-list-filter with-text"></i>Filter
-        </button>
-        <button class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
-                hx-post="{% url 'activity:time-filter-quick' 'unbilled' %}">
-          <i class="icon-mail-x with-text"></i>Unbilled
-        </button>
-        <button class="{% if filter_label == "today" %}toggle-active{% endif %}"
-                hx-post="{% url 'activity:time-filter-quick' 'today' %}">
-          <i class="icon-calendar with-text"></i>Today
-        </button>
-        <div class="dropdown" x-data="dropdown()">
+            <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+              {% include "activity/time/bulk-actions.html" %}
+            </ul>
+          </div>
           <button type="button"
-                  id="time-user-filter"
-                  class="select-btn filter-dropdown-button {% if selected_user %}toggle-active{% endif %}"
-                  x-ref="button"
-                  @click="toggle()"
-                  :aria-expanded="open">
-            <span><i class="icon-{% if selected_user %}user{% else %}users{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
-            <small>
-              <i class="icon-chevron-down"></i>
-            </small>
+                  class="btn-icon toggle-active"
+                  hx-post="{% url 'activity:time-clear-selection' %}"
+                  hx-swap="none">
+            <i class="icon-x"></i> Clear
           </button>
-          <ul class="dropdown-menu"
-              x-ref="menu"
-              x-show="open"
-              hx-target="#time-user-filter"
-              hx-swap="outerHTML">
-            <li>
-              <a class="dropdown-item"
-                 href="#"
-                 hx-post="{% url 'activity:time-filter-user' 0 %}"
-                 hx-target="#time-table"
-                 hx-swap="outerHTML"><i class="icon-users"></i> All Users</a>
-            </li>
-            {% for user in users %}
-              <li>
-                <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
-                   href="#"
-                   hx-post="{% url 'activity:time-filter-user' user.id %}"
-                   hx-target="#time-table"
-                   hx-swap="outerHTML"><i class="icon-user"></i> {{ user.username|title }}</a>
-              </li>
-            {% endfor %}
-          </ul>
         </div>
-      </div>
+      {% else %}
+        <div class="filter-tools">
+          <button hx-get="{% url 'activity:time-add' %}"
+                  hx-target="#htmx-modal-container">
+            <i class="icon-plus"></i>
+          </button>
+          <button hx-get="{% url 'activity:time-filter' %}"
+                  hx-target="#htmx-modal-container"
+                  class="{% if filter_label == "custom" %}toggle-active{% endif %}">
+            <i class="icon-list-filter with-text"></i>Filter
+          </button>
+          <button class="{% if filter_label == "unbilled" %}toggle-active{% endif %}"
+                  hx-post="{% url 'activity:time-filter-quick' 'unbilled' %}">
+            <i class="icon-mail-x with-text"></i>Unbilled
+          </button>
+          <button class="{% if filter_label == "today" %}toggle-active{% endif %}"
+                  hx-post="{% url 'activity:time-filter-quick' 'today' %}">
+            <i class="icon-calendar with-text"></i>Today
+          </button>
+          <div class="dropdown" x-data="dropdown()">
+            <button type="button"
+                    id="time-user-filter"
+                    class="select-btn filter-dropdown-button {% if selected_user %}toggle-active{% endif %}"
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">
+              <span><i class="icon-{% if selected_user %}user{% else %}users{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
+              <small>
+                <i class="icon-chevron-down"></i>
+              </small>
+            </button>
+            <ul class="dropdown-menu"
+                x-ref="menu"
+                x-show="open"
+                hx-target="#time-user-filter"
+                hx-swap="outerHTML">
+              <li>
+                <a class="dropdown-item"
+                   href="#"
+                   hx-post="{% url 'activity:time-filter-user' 0 %}"
+                   hx-target="#time-table"
+                   hx-swap="outerHTML"><i class="icon-users"></i> All Users</a>
+              </li>
+              {% for user in users %}
+                <li>
+                  <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
+                     href="#"
+                     hx-post="{% url 'activity:time-filter-user' user.id %}"
+                     hx-target="#time-table"
+                     hx-swap="outerHTML"><i class="icon-user"></i> {{ user.username|title }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endif %}
     </div>
     <div class="toolbar-right">
       <button type="button"

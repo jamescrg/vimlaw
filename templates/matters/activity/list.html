@@ -2,7 +2,6 @@
   {% load humanize %}
   <div class="toolbar">
     <div class="toolbar-left">
-      <h2>Time Entries</h2>
       {% if selected_entries %}
         <div class="filter-tools">
           <div class="dropdown" x-data="dropdown()">
@@ -25,6 +24,8 @@
             <i class="icon-x"></i> Clear
           </button>
         </div>
+      {% else %}
+        <h2>Time Entries</h2>
       {% endif %}
     </div>
     <div class="toolbar-right">
