@@ -14,7 +14,7 @@ from pypdf import PdfReader
 
 from .anthropic_client import send_to_claude
 from .citations import citations_to_dict, verify_all_citations
-from .gemini_client import send_to_gemini_streaming
+from .gemini_client import send_to_gemini, send_to_gemini_streaming
 
 logger = logging.getLogger(__name__)
 
@@ -363,3 +363,67 @@ def process_chat_attachment_ocr(attachment_id):
         attachment.ocr_status = "failed"
         attachment.ocr_text = f"(OCR failed: {str(e)})"
         attachment.save(update_fields=["ocr_status", "ocr_text"])
+
+
+# ── Conversation Summary ─────────────────────────────────────────────────────
+
+CONVERSATION_SUMMARY_PROMPT = (
+    "You are a legal conversation summarizer. Produce a concise ~100-word summary "
+    "of this AI conversation. Focus on: what legal questions were asked, what "
+    "advice or analysis was provided, key conclusions reached, and any specific "
+    "documents or case law discussed. Be specific and factual."
+)
+
+CONVERSATION_TEXT_LIMIT = 15_000
+
+
+def generate_conversation_summary(conversation_id):
+    """Generate an AI summary of a conversation using Gemini Flash.
+
+    Called after each AI response and as a backfill task.
+    Always overwrites existing summary (conversations grow over time).
+    """
+    from .models import Conversation
+
+    try:
+        conversation = Conversation.objects.get(id=conversation_id)
+    except Conversation.DoesNotExist:
+        logger.error(f"Conversation {conversation_id} not found for summary")
+        return
+
+    messages = conversation.messages.select_related("user").order_by("created_at")
+    if not messages.exists():
+        return
+
+    # Format messages into text
+    lines = []
+    for msg in messages:
+        if msg.role == "user":
+            name = msg.user.get_full_name() if msg.user else "User"
+            lines.append(f"[User - {name}]: {msg.content}")
+        else:
+            lines.append(f"[Assistant]: {msg.content}")
+
+    text = "\n\n".join(lines)
+    if len(text) > CONVERSATION_TEXT_LIMIT:
+        text = text[:CONVERSATION_TEXT_LIMIT] + "\n... (conversation continues)"
+
+    try:
+        response_text, _, _ = send_to_gemini(
+            system_context=CONVERSATION_SUMMARY_PROMPT,
+            messages=[{"role": "user", "content": text}],
+            model="gemini-2.5-flash",
+        )
+
+        conversation.summary = response_text.strip()
+        conversation.save(update_fields=["summary"])
+
+        logger.info(
+            f"Summary generated for conversation {conversation_id}: "
+            f"{len(conversation.summary)} chars"
+        )
+
+    except Exception as e:
+        logger.warning(
+            f"Summary generation failed for conversation {conversation_id}: {e}"
+        )

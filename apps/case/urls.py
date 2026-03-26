@@ -858,9 +858,9 @@ urlpatterns = [
         name="ai-split-conversation",
     ),
     path(
-        "case/ai/conversations/<int:conv_id>/toggle-reference/",
-        ai.toggle_reference,
-        name="ai-toggle-reference",
+        "case/ai/conversations/<int:conv_id>/set-ai/<str:state>/",
+        ai.set_ai_context,
+        name="ai-set-ai-context",
     ),
     path(
         "case/ai/conversations/<int:conv_id>/rename/",

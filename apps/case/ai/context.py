@@ -239,9 +239,9 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
             )
         )
 
-    # Collect Reference Conversations (importance 4 = HIGH since explicitly flagged)
+    # Collect Conversations with ai_context="always" (full content, HIGH importance)
     reference_convos = Conversation.objects.filter(
-        matter=matter, is_reference=True
+        matter=matter, ai_context="always"
     ).order_by("-updated_at")
     if current_conversation:
         reference_convos = reference_convos.exclude(id=current_conversation.id)

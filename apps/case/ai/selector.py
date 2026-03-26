@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from apps.case.models import CaseLaw, Document
 
 from .gemini_client import send_to_gemini
+from .models import Conversation
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ and a manifest of available case materials, select which materials should be \
 included in context to answer the question effectively.
 
 Return ONLY a JSON object with this format:
-{"selected": [{"type": "document", "id": 123}, {"type": "caselaw", "id": 45}]}
+{"selected": [{"type": "document", "id": 123}, {"type": "caselaw", "id": 45}, {"type": "conversation", "id": 67}]}
 
 Rules:
 - Select materials that are relevant to the user's question.
@@ -50,7 +51,7 @@ Rules:
 class ManifestItem:
     """A lightweight description of a material for the selector."""
 
-    item_type: str  # "document" or "caselaw"
+    item_type: str  # "document", "caselaw", or "conversation"
     item_id: int
     name: str
     category: str
@@ -154,6 +155,65 @@ def build_manifest(matter, current_conversation=None):
             content_parts.append(f"Opinion:\n{caselaw.text}")
         content_map[("caselaw", caselaw.id)] = "\n".join(content_parts)
 
+    # Conversations with ai_context="auto"
+    auto_convos = Conversation.objects.filter(matter=matter, ai_context="auto")
+    if current_conversation:
+        auto_convos = auto_convos.exclude(id=current_conversation.id)
+
+    for conv in auto_convos:
+        messages = conv.messages.select_related("user").order_by("created_at")
+        msg_count = messages.count()
+        if msg_count == 0:
+            continue
+
+        # Best available description
+        desc = conv.summary or conv.title or "Untitled conversation"
+
+        # Participant names
+        participants = conv.get_participants()
+        participant_names = ", ".join(u.get_full_name() for u in participants[:3])
+
+        # Date range
+        first_msg = messages.first()
+        last_msg = messages.order_by("-created_at").first()
+        date_str = (
+            f"{first_msg.created_at.strftime('%Y-%m-%d')} to "
+            f"{last_msg.created_at.strftime('%Y-%m-%d')}"
+        )
+
+        # Word count
+        total_words = sum(len(m.content.split()) for m in messages)
+
+        manifest_items.append(
+            ManifestItem(
+                item_type="conversation",
+                item_id=conv.id,
+                name=conv.title or "Untitled",
+                category=f"{msg_count} messages, {participant_names}",
+                date=date_str,
+                description=desc,
+                word_count=total_words,
+                importance=3,
+            )
+        )
+
+        # Build full content
+        content_parts = [
+            f"**Conversation: {conv.title or 'Untitled'}**",
+            f"Date: {conv.updated_at.strftime('%b %d, %Y')}",
+            f"Participants: {participant_names}",
+        ]
+        msg_lines = []
+        for msg in messages:
+            if msg.role == "user":
+                user_name = msg.user.get_full_name() if msg.user else "User"
+                msg_lines.append(f"**{user_name}:** {msg.content}")
+            else:
+                msg_lines.append(f"**Assistant:** {msg.content}")
+        if msg_lines:
+            content_parts.append("\n".join(msg_lines))
+        content_map[("conversation", conv.id)] = "\n".join(content_parts)
+
     return manifest_items, content_map
 
 
@@ -162,7 +222,9 @@ def format_manifest_for_prompt(items: list[ManifestItem], token_budget: int) -> 
     lines = [f"TOKEN BUDGET: ~{token_budget:,} tokens available for materials.\n"]
 
     for item in items:
-        type_label = "DOC" if item.item_type == "document" else "CASE"
+        type_label = {"document": "DOC", "caselaw": "CASE", "conversation": "CONV"}.get(
+            item.item_type, item.item_type.upper()
+        )
         date_str = f", {item.date}" if item.date else ""
         lines.append(
             f'[{type_label}-{item.item_id}] "{item.name}" '
@@ -269,7 +331,7 @@ def _parse_selector_response(response_text: str) -> list[tuple[str, int]]:
     for item in selected:
         item_type = item.get("type", "")
         item_id = item.get("id")
-        if item_type in ("document", "caselaw") and item_id is not None:
+        if item_type in ("document", "caselaw", "conversation") and item_id is not None:
             keys.append((item_type, int(item_id)))
 
     return keys

@@ -99,6 +99,22 @@ def ai_index(request, matter_id):
                 group="summary_generation",
             )
 
+    # Backfill: queue summary generation for conversations missing summaries
+    convos_needing_summary = Conversation.objects.filter(
+        matter=matter,
+        summary__isnull=True,
+    ).exclude(messages=None)
+    if convos_needing_summary.exists():
+        from django_q.tasks import async_task as async_task_conv
+
+        for conv in convos_needing_summary[:20]:
+            async_task_conv(
+                "apps.case.ai.tasks.generate_conversation_summary",
+                conv.id,
+                task_name=f"ConvSummary-{conv.id}",
+                group="conversation_summary",
+            )
+
     context = {
         "app": "matters",
         "subapp": "ai",
@@ -389,6 +405,19 @@ def ai_status(request, conv_id):
 
         # Update conversation timestamp
         conversation.save()
+
+        # Generate conversation summary async
+        try:
+            from django_q.tasks import async_task
+
+            async_task(
+                "apps.case.ai.tasks.generate_conversation_summary",
+                conversation.id,
+                task_name=f"ConvSummary-{conversation.id}",
+                group="conversation_summary",
+            )
+        except Exception:
+            logger.warning("Failed to queue conversation summary task")
 
         # Clear the cache
         cache.delete(cache_key)
@@ -709,19 +738,23 @@ def split_conversation(request, message_id):
 
 
 @login_required
-def toggle_reference(request, conv_id):
-    """Toggle the is_reference flag on a conversation."""
+def set_ai_context(request, conv_id, state):
+    """Set the ai_context state on a conversation."""
+    if state not in ("auto", "always", "never"):
+        return HttpResponse(status=400)
+
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
 
-    conversation.is_reference = not conversation.is_reference
+    conversation.ai_context = state
     conversation.save()
 
-    # Trigger refresh of conversation list
-    response = HttpResponse(status=204)
-    response["HX-Trigger"] = "conversationsChanged"
-    return response
+    return render(
+        request,
+        "case/ai/ai-context-cell.html",
+        {"conv": conversation},
+    )
 
 
 @login_required

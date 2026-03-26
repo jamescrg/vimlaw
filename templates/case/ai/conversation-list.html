@@ -1,10 +1,14 @@
 {% for conv in conversations %}
-  <div class="ai-conversation-item {% if conv.id == conversation.id %}active{% endif %}{% if conv.is_reference %} is-reference{% endif %}"
+  <div class="ai-conversation-item {% if conv.id == conversation.id %}active{% endif %}{% if conv.ai_context == 'always' %} is-reference{% endif %}"
        hx-get="{% url 'case:ai-select-conversation' conv.id %}"
        hx-target="#chatArea"
        hx-swap="innerHTML">
     <span class="ai-conversation-title">
-      {% if conv.is_reference %}<i class="icon-bookmark-check" title="Reference conversation"></i>{% endif %}
+      {% if conv.ai_context == 'always' %}
+        <i class="icon-bookmark-check" title="Always in AI context"></i>
+      {% elif conv.ai_context == 'never' %}
+        <i class="icon-eye-off" title="Excluded from AI"></i>
+      {% endif %}
       {{ conv.title|truncatechars:30 }}
     </span>
     <span class="ai-conversation-participants">
@@ -24,12 +28,12 @@
             title="Rename conversation">
       <i class="icon-pencil"></i>
     </button>
-    <button class="ai-conversation-reference {% if conv.is_reference %}active{% endif %}"
-            hx-post="{% url 'case:ai-toggle-reference' conv.id %}"
+    <button class="ai-conversation-reference {% if conv.ai_context == 'always' %}active{% endif %}"
+            hx-post="{% url 'case:ai-set-ai-context' conv.id 'always' %}"
             hx-swap="none"
             onclick="event.stopPropagation();"
-            title="{% if conv.is_reference %}Remove from reference{% else %}Mark as reference{% endif %}">
-      <i class="icon-bookmark{% if conv.is_reference %}-check{% endif %}"></i>
+            title="{% if conv.ai_context == 'always' %}Always in context{% elif conv.ai_context == 'never' %}Excluded{% else %}Auto{% endif %}">
+      <i class="icon-bookmark{% if conv.ai_context == 'always' %}-check{% endif %}"></i>
     </button>
     <button class="ai-conversation-delete"
             hx-post="{% url 'case:ai-delete-conversation' conv.id %}"

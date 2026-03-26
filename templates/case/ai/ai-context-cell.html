@@ -1,0 +1,29 @@
+<div class="dropdown" x-data="dropdown()">
+  <button class="ai-context-btn{% if conv.ai_context == 'always' %} ai-context-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ conv.get_ai_context_display }}</button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    <li>
+      <a class="dropdown-item{% if conv.ai_context == 'auto' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'case:ai-set-ai-context' conv.id 'auto' %}"
+         hx-target="#conv-ai-{{ conv.id }}"
+         hx-swap="innerHTML">Auto</a>
+    </li>
+    <li>
+      <a class="dropdown-item{% if conv.ai_context == 'always' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'case:ai-set-ai-context' conv.id 'always' %}"
+         hx-target="#conv-ai-{{ conv.id }}"
+         hx-swap="innerHTML">Always</a>
+    </li>
+    <li>
+      <a class="dropdown-item{% if conv.ai_context == 'never' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'case:ai-set-ai-context' conv.id 'never' %}"
+         hx-target="#conv-ai-{{ conv.id }}"
+         hx-swap="innerHTML">Never</a>
+    </li>
+  </ul>
+</div>

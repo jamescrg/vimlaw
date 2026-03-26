@@ -2,6 +2,7 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
+from apps.case.models import AI_CONTEXT_CHOICES
 from apps.matters.models import Matter
 from utils.models import AuditMixin
 
@@ -31,9 +32,16 @@ class Conversation(AuditMixin, models.Model):
     llm = models.CharField(
         max_length=20, choices=LLM_CHOICES, default="gemini-pro-latest"
     )
-    is_reference = models.BooleanField(
-        default=False,
-        help_text="Flag this conversation to be included as reference material in other conversations",
+    ai_context = models.CharField(
+        max_length=6,
+        choices=AI_CONTEXT_CHOICES,
+        default="auto",
+        help_text="AI context inclusion: auto (selector decides), always, or never",
+    )
+    summary = models.TextField(
+        blank=True,
+        null=True,
+        help_text="AI-generated summary for intelligent context selection",
     )
     history = HistoricalRecords()
 
