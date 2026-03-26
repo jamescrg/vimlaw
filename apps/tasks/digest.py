@@ -36,55 +36,54 @@ def send_digest_for_user(user):
     """Build and send a single digest email for the given user.
 
     Returns True if an email was sent, False if there was nothing to report.
+    Limited users (perm_all_matters=False) only see items for their matters.
     """
     today = timezone.localdate()
     upcoming_end = today + timedelta(days=LOOKAHEAD_DAYS)
 
-    # Events (all users — firm-wide visibility)
-    overdue_events = Event.objects.filter(
+    # Scope to user's matters if limited user
+    matter_filter = {}
+    if not user.perm_all_matters:
+        user_matter_ids = list(user.assigned_matters.values_list("id", flat=True))
+        matter_filter = {"matter__id__in": user_matter_ids}
+
+    # Events
+    events_qs = Event.objects.select_related("matter").filter(**matter_filter)
+
+    overdue_events = events_qs.filter(
         date__lt=today,
         status="Pending",
     ).order_by("date", "start_time")
 
-    today_events = Event.objects.filter(
+    today_events = events_qs.filter(
         date=today,
         status="Pending",
     ).order_by("start_time")
 
-    upcoming_events = Event.objects.filter(
+    upcoming_events = events_qs.filter(
         date__gt=today,
         date__lte=upcoming_end,
         status="Pending",
     ).order_by("date", "start_time")
 
-    # Tasks (all users — firm-wide visibility)
-    overdue_tasks = (
-        Task.objects.select_related("user")
-        .filter(
-            date_due__lt=today,
-            status="Pending",
-        )
-        .order_by("date_due", "-priority")
-    )
+    # Tasks
+    tasks_qs = Task.objects.select_related("user", "matter").filter(**matter_filter)
 
-    today_tasks = (
-        Task.objects.select_related("user")
-        .filter(
-            date_due=today,
-            status="Pending",
-        )
-        .order_by("-priority")
-    )
+    overdue_tasks = tasks_qs.filter(
+        date_due__lt=today,
+        status="Pending",
+    ).order_by("date_due", "-priority")
 
-    upcoming_tasks = (
-        Task.objects.select_related("user")
-        .filter(
-            date_due__gt=today,
-            date_due__lte=upcoming_end,
-            status="Pending",
-        )
-        .order_by("date_due", "-priority")
-    )
+    today_tasks = tasks_qs.filter(
+        date_due=today,
+        status="Pending",
+    ).order_by("-priority")
+
+    upcoming_tasks = tasks_qs.filter(
+        date_due__gt=today,
+        date_due__lte=upcoming_end,
+        status="Pending",
+    ).order_by("date_due", "-priority")
 
     has_content = (
         overdue_events.exists()
