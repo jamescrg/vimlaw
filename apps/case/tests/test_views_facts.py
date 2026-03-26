@@ -46,7 +46,7 @@ class TestFactsAdd:
         data = {
             "date": "2024-02-15",
             "description": "New fact added",
-            "importance": 7,
+            "importance": 4,
         }
         response = client_with_matter.post(f"/case/{matter_id}/facts/add/", data)
         assert response.status_code == 204
@@ -71,13 +71,13 @@ class TestFactsEdit:
         data = {
             "date": "2024-02-20",
             "description": "Updated fact description",
-            "importance": 8,
+            "importance": 4,
         }
         response = client_with_matter.post(f"/case/facts/{fact.id}/edit/", data)
         assert response.status_code == 204
         fact.refresh_from_db()
         assert fact.description == "Updated fact description"
-        assert fact.importance == 8
+        assert fact.importance == 4
 
     def test_edit_nonexistent(self, client_with_matter):
         response = client_with_matter.get("/case/facts/99999/edit/")
@@ -148,10 +148,10 @@ class TestFactsSort:
 
 class TestFactImportance:
     def test_set_importance(self, client_with_matter, fact):
-        response = client_with_matter.get(f"/case/facts/{fact.id}/importance/9/")
+        response = client_with_matter.get(f"/case/facts/{fact.id}/importance/4/")
         assert response.status_code == 302
         fact.refresh_from_db()
-        assert fact.importance == 9
+        assert fact.importance == 4
 
 
 class TestFactInlineEdit:
