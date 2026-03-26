@@ -234,10 +234,8 @@
 
 .ai-conversations-table th.reference,
 .ai-conversations-table td.reference {
-  padding-left: 0;
-  padding-right: 0;
   text-align: center;
-  width: 3rem;
+  width: 5rem;
 }
 
 .ai-conversations-table .btn-icon-toggle {
