@@ -1,7 +1,7 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -458,3 +458,12 @@ def print(request, id):
     }
 
     return render(request, "matters/print.html", context)
+
+
+@login_required
+def open_matters_json(request):
+    """Return open matters as JSON for the keyboard-driven matter switcher."""
+    matters = Matter.objects.filter(status="Open").order_by("name")
+    matters = filter_matters_for_user(matters, request.user)
+    data = [{"id": m.id, "name": m.name} for m in matters]
+    return JsonResponse(data, safe=False)

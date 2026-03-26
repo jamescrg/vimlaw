@@ -322,11 +322,163 @@ const commandPalette = {
   }
 };
 
-document.addEventListener('keydown', function(event) {
-  // Let the palette handle its own keys first
-  if (commandPalette.handleKeydown(event)) return;
+// ==========================================================================
+//  Matter Switcher — <Space>m quick matter jump
+// ==========================================================================
 
-  // Skip all leader-key handling when in editable fields or modals
+const matterSwitcher = {
+  overlay: null,
+  matters: [],
+  filtered: [],
+  activeIndex: 0,
+
+  open() {
+    if (this.overlay) return;
+    this.activeIndex = 0;
+    this.matters = [];
+    this.filtered = [];
+
+    // Build overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'cmd-palette-overlay';
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) this.close();
+    });
+
+    const dialog = document.createElement('div');
+    dialog.className = 'cmd-palette matter-switcher-palette';
+
+    const title = document.createElement('div');
+    title.className = 'cmd-palette-title';
+    title.textContent = 'Switch Matter';
+    dialog.appendChild(title);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'matter-switcher-input';
+    input.placeholder = 'Search matters…';
+    input.addEventListener('input', () => this.filter(input.value));
+    dialog.appendChild(input);
+
+    const list = document.createElement('ul');
+    list.className = 'cmd-palette-list matter-switcher-list';
+    dialog.appendChild(list);
+
+    const hint = document.createElement('div');
+    hint.className = 'cmd-palette-hint';
+    hint.innerHTML = '<span><kbd>&uarr;/&darr;</kbd> navigate</span><span><kbd>enter</kbd> select</span><span><kbd>esc</kbd> close</span>';
+    dialog.appendChild(hint);
+
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    this.overlay = overlay;
+
+    input.focus();
+    this.fetchMatters();
+  },
+
+  close() {
+    if (!this.overlay) return;
+    this.overlay.remove();
+    this.overlay = null;
+  },
+
+  fetchMatters() {
+    fetch('/matters/api/open/')
+      .then(r => r.json())
+      .then(data => {
+        this.matters = data;
+        this.filtered = data;
+        this.render();
+      });
+  },
+
+  filter(query) {
+    const q = query.toLowerCase();
+    this.filtered = q
+      ? this.matters.filter(m => m.name.toLowerCase().includes(q))
+      : this.matters;
+    this.activeIndex = 0;
+    this.render();
+  },
+
+  render() {
+    const list = this.overlay.querySelector('.matter-switcher-list');
+    list.innerHTML = '';
+    this.filtered.forEach((m, i) => {
+      const li = document.createElement('li');
+      li.className = 'cmd-palette-item' + (i === this.activeIndex ? ' active' : '');
+      li.innerHTML = `<i class="icon-briefcase-business"></i><span>${m.name}</span>`;
+      li.addEventListener('click', () => this.select(i));
+      li.addEventListener('mouseenter', () => this.highlight(i));
+      list.appendChild(li);
+    });
+  },
+
+  highlight(index) {
+    this.activeIndex = index;
+    const items = this.overlay.querySelectorAll('.cmd-palette-item');
+    items.forEach((el, i) => el.classList.toggle('active', i === index));
+  },
+
+  move(delta) {
+    if (!this.filtered.length) return;
+    const next = (this.activeIndex + delta + this.filtered.length) % this.filtered.length;
+    this.highlight(next);
+    // Scroll active item into view
+    const items = this.overlay.querySelectorAll('.cmd-palette-item');
+    if (items[next]) items[next].scrollIntoView({ block: 'nearest' });
+  },
+
+  select(index) {
+    const matter = this.filtered[index ?? this.activeIndex];
+    if (!matter) return;
+    this.close();
+    window.location.href = '/matters/' + matter.id;
+  },
+
+  handleKeydown(event) {
+    if (!this.overlay) return false;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.close();
+      return true;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.select();
+      return true;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.move(1);
+      return true;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.move(-1);
+      return true;
+    }
+    return false;
+  }
+};
+
+// ==========================================================================
+//  Global keydown — leader key, matter switcher, mode keys
+// ==========================================================================
+
+function getMatterId() {
+  const match = window.location.pathname.match(/^\/(?:matters|case)\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+document.addEventListener('keydown', function(event) {
+  // Let overlays handle their own keys first
+  if (commandPalette.handleKeydown(event)) return;
+  if (matterSwitcher.handleKeydown(event)) return;
+
+  // Skip all shortcut handling when in editable fields or modals
   if (leader.isEditable(event.target)) return;
   if (document.body.classList.contains('modal-open')) return;
 
@@ -338,32 +490,42 @@ document.addEventListener('keydown', function(event) {
   }
 
   // Leader actions (must follow a Space press within timeout)
-  if (!leader.pending) return;
+  if (leader.pending) {
+    event.preventDefault();
+    const seq = leader.feed(event.key);
 
-  event.preventDefault();
-  const seq = leader.feed(event.key);
+    const LEADER_ACTIONS = {
+      'n': () => commandPalette.open(),
+      'm': () => matterSwitcher.open(),
+      'ff': () => htmx.ajax('GET', '/search/?scope=all', { target: '#htmx-modal-container' }),
+      'fm': () => htmx.ajax('GET', '/search/?scope=matters', { target: '#htmx-modal-container' }),
+      'fp': () => htmx.ajax('GET', '/search/?scope=proceedings', { target: '#htmx-modal-container' }),
+      'fc': () => htmx.ajax('GET', '/search/?scope=contacts', { target: '#htmx-modal-container' }),
+      'fi': () => htmx.ajax('GET', '/search/?scope=intakes', { target: '#htmx-modal-container' }),
+      'fn': () => htmx.ajax('GET', '/search/?scope=notes', { target: '#htmx-modal-container' }),
+    };
 
-  // Define leader sequences and their actions
-  const LEADER_ACTIONS = {
-    'n': () => commandPalette.open(),
-    'ff': () => htmx.ajax('GET', '/search/?scope=all', { target: '#htmx-modal-container' }),
-    'fm': () => htmx.ajax('GET', '/search/?scope=matters', { target: '#htmx-modal-container' }),
-    'fp': () => htmx.ajax('GET', '/search/?scope=proceedings', { target: '#htmx-modal-container' }),
-    'fc': () => htmx.ajax('GET', '/search/?scope=contacts', { target: '#htmx-modal-container' }),
-    'fi': () => htmx.ajax('GET', '/search/?scope=intakes', { target: '#htmx-modal-container' }),
-    'fn': () => htmx.ajax('GET', '/search/?scope=notes', { target: '#htmx-modal-container' }),
-  };
-
-  const action = LEADER_ACTIONS[seq];
-  if (action) {
-    leader.consume();
-    action();
-  } else {
-    // Check if seq could still become a valid sequence
-    const isPrefix = Object.keys(LEADER_ACTIONS).some(s => s.startsWith(seq) && s !== seq);
-    if (!isPrefix) {
+    const action = LEADER_ACTIONS[seq];
+    if (action) {
       leader.consume();
+      action();
+    } else {
+      const isPrefix = Object.keys(LEADER_ACTIONS).some(s => s.startsWith(seq) && s !== seq);
+      if (!isPrefix) {
+        leader.consume();
+      }
     }
+    return;
+  }
+
+  // Bare keys (no leader prefix) — only on matter/case pages
+  const matterId = getMatterId();
+  if (!matterId) return;
+
+  if (event.key === 'c') {
+    window.location.href = '/case/select-matter/' + matterId + '/';
+  } else if (event.key === 'd') {
+    window.location.href = '/matters/' + matterId;
   }
 });
 

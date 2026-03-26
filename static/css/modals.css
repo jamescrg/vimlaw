@@ -345,3 +345,29 @@ body.modal-open .confirm-modal-overlay {
   font-size: 1rem;
   padding: 0 0.25rem;
 }
+
+/* Matter Switcher */
+
+.matter-switcher-palette {
+  min-width: 20rem;
+}
+
+.matter-switcher-input {
+  background: var(--background-primary);
+  border: none;
+  border-bottom: 1px solid var(--border-medium);
+  color: var(--color-primary);
+  font-size: 1rem;
+  outline: none;
+  padding: 0.5rem 1rem;
+  width: 100%;
+}
+
+.matter-switcher-input::placeholder {
+  color: var(--color-muted);
+}
+
+.matter-switcher-list {
+  max-height: 30rem;
+  overflow-y: auto;
+}
