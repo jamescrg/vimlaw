@@ -133,6 +133,11 @@ i.with-text {
   margin-right: 0.25rem;
 }
 
+.bulk-clear-icon {
+  position: relative;
+  top: 1px;
+}
+
 .action-btn {
   background: var(--background-control);
   border: solid 1px var(--border-medium);

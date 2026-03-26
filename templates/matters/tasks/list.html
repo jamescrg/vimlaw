@@ -6,7 +6,7 @@
                 class="btn-icon toggle-active"
                 hx-post="{% url 'matters:tasks-clear-selection' matter.id %}"
                 hx-swap="none">
-          <i class="icon-square-check with-text"></i> {{ selected_tasks|length }}
+          {{ selected_tasks|length }} <i class="icon-x bulk-clear-icon"></i>
         </button>
         <button type="button"
                 class="btn-icon"
