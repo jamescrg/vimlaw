@@ -49,6 +49,15 @@
   --background-subnav-tab-active: var(--background-section);
 
   /* ==========================================================================
+     Sidebar
+     ========================================================================== */
+  --sidebar-width: 15.5rem;
+  --sidebar-width-collapsed: 3.5rem;
+  --background-sidebar: var(--stone-350);
+  --background-sidebar-hover: var(--stone-300);
+  --background-sidebar-active: var(--stone-250);
+
+  /* ==========================================================================
      Buttons
      ========================================================================== */
   --button-primary-background: var(--link);

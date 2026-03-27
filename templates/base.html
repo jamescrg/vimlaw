@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="{% static_v 'css/typeography.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/badges.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/layout.css' %}" />
-  <link rel="stylesheet" href="{% static_v 'css/nav.css' %}" />
+  <link rel="stylesheet" href="{% static_v 'css/sidebar.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/toolbar.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/detail.css' %}" />
   <link rel="stylesheet" href="{% static_v 'css/cards.css' %}" />
@@ -87,21 +87,32 @@
   {% if env == 'dev' %}
     <link rel="stylesheet" href="{% static_v 'css/dev.css' %}" />
   {% endif %}
+  <script>
+    if (localStorage.getItem('sidebar-collapsed') === 'true') {
+      document.documentElement.classList.add('sidebar-collapsed');
+    }
+  </script>
 </head>
 <body class="{% if env == 'dev' %}env-dev {% endif %}{% block body_class %}{% endblock body_class %}"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  {% if env == 'dev' %}
-    <div class="dev-banner">
-      <span>DEVELOPMENT ENVIRONMENT</span>
-    </div>
-  {% endif %}
   {% include "modals.html" %}
   {% include "confirm-modal.html" %}
-  {% include "nav.html" %}
-  <div id="toast-container"
-       class="toast-container position-fixed top-0 end-0 p-3"></div>
-  {% block content %}
-  {% endblock content %}
+  {% include "sidebar.html" %}
+  <div class="main-content" id="main-content">
+    {% if env == 'dev' %}
+      <div class="dev-banner">
+        <span>DEVELOPMENT ENVIRONMENT</span>
+      </div>
+    {% endif %}
+    <button class="sidebar-mobile-trigger" id="sidebar-mobile-trigger">
+      <i class="icon-menu"></i>
+    </button>
+    <div id="toast-container"
+         class="toast-container position-fixed top-0 end-0 p-3"></div>
+    {% block content %}
+    {% endblock content %}
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.3/dist/cdn.min.js"></script>
   <script src="{% static_v 'js/alpine-components.js' %}"></script>
@@ -115,6 +126,7 @@
         href="https://unpkg.com/dropzone@5.9.3/dist/min/dropzone.min.css" />
   <script src="https://unpkg.com/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="{% static_v 'js/main.js' %}"></script>
+  <script src="{% static_v 'js/sidebar.js' %}"></script>
   <script src="{% static_v 'js/daily-dash-check.js' %}"></script>
   <script src="{% static_v 'js/folders.js' %}"></script>
   <script src="{% static_v 'js/groups.js' %}"></script>

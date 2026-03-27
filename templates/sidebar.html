@@ -1,0 +1,133 @@
+{% load static %}
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <a href="{% url 'tasks-index' %}" class="sidebar-brand">
+      <i class="icon-briefcase"></i>
+      <span class="sidebar-label">LawAdmin</span>
+    </a>
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav">
+    <ul class="sidebar-nav-main"
+        hx-boost="true"
+        hx-target="#main-content"
+        hx-select="#main-content"
+        hx-swap="outerHTML show:window:top">
+      <li {% if app == 'dash' %}class="active"{% endif %}>
+        <a id="nav-dash" href="{% url 'dash:index' %}" data-tooltip="Dash">
+          <i class="icon-layout-dashboard"></i>
+          <span class="sidebar-label">Dash</span>
+        </a>
+      </li>
+      <li {% if app == 'matters' %}class="active"{% endif %}>
+        <a id="nav-matters"
+           href="{% url 'matters:index' %}"
+           data-tooltip="Matters">
+          <i class="icon-briefcase-business"></i>
+          <span class="sidebar-label">Matters</span>
+        </a>
+      </li>
+      <li {% if app == 'events' %}class="active"{% endif %}>
+        <a id="nav-events"
+           href="{% url 'calendar:index' %}"
+           data-tooltip="Calendar">
+          <i class="icon-calendar"></i>
+          <span class="sidebar-label">Calendar</span>
+        </a>
+      </li>
+      <li {% if app == 'tasks' %}class="active"{% endif %}>
+        <a id="nav-tasks" href="{% url 'tasks:index' %}" data-tooltip="Tasks">
+          <i class="icon-square-check-big"></i>
+          <span class="sidebar-label">Tasks</span>
+        </a>
+      </li>
+      <li {% if app == 'contacts' %}class="active"{% endif %}>
+        <a id="nav-contacts"
+           href="{% url 'contacts:index' %}"
+           data-tooltip="Contacts">
+          <i class="icon-users"></i>
+          <span class="sidebar-label">Contacts</span>
+        </a>
+      </li>
+      <li {% if app == 'activity' %}class="active"{% endif %}>
+        <a id="nav-activity"
+           href="{% url 'activity:time-index' %}"
+           data-tooltip="Activity">
+          <i class="icon-clock"></i>
+          <span class="sidebar-label">Activity</span>
+        </a>
+      </li>
+      <li {% if app == 'notes' %}class="active"{% endif %}>
+        <a id="nav-notes" href="{% url 'notes:index' %}" data-tooltip="Notes">
+          <i class="icon-notebook-pen"></i>
+          <span class="sidebar-label">Notes</span>
+        </a>
+      </li>
+      {% if user.is_admin or user.perm_financial %}
+        <li {% if app == 'invoicing' %}class="active"{% endif %}>
+          <a id="nav-invoicing"
+             href="{% url 'invoicing:invoices-index' %}"
+             data-tooltip="Invoicing">
+            <i class="icon-receipt"></i>
+            <span class="sidebar-label">Invoicing</span>
+          </a>
+        </li>
+      {% endif %}
+      {% if user.is_admin or user.perm_intakes %}
+        <li {% if app == 'intakes' %}class="active"{% endif %}>
+          <a id="nav-intakes"
+             href="{% url 'intakes:index' %}"
+             data-tooltip="Intakes">
+            <i class="icon-inbox"></i>
+            <span class="sidebar-label">Intakes</span>
+          </a>
+        </li>
+      {% endif %}
+      {% if user.is_admin or user.perm_reports %}
+        <li {% if app == 'reports' %}class="active"{% endif %}>
+          <a id="nav-reports"
+             href="{% url 'reports:index' %}"
+             data-tooltip="Reports">
+            <i class="icon-chart-no-axes-combined"></i>
+            <span class="sidebar-label">Reports</span>
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+    <ul class="sidebar-nav-utils">
+      <li>
+        <a href="#"
+           hx-get="{% url 'search:search' %}"
+           hx-target="#htmx-modal-container"
+           data-tooltip="Search">
+          <i class="icon-search"></i>
+          <span class="sidebar-label">Search</span>
+        </a>
+      </li>
+      <li {% if app == 'settings' %}class="active"{% endif %}>
+        <a href="{% url 'settings:settings' %}"
+           data-tooltip="Settings"
+           hx-boost="true"
+           hx-target="#main-content"
+           hx-select="#main-content"
+           hx-swap="outerHTML show:window:top">
+          <i class="icon-settings"></i>
+          <span class="sidebar-label">Settings</span>
+        </a>
+      </li>
+      <li>
+        <a href="#"
+           hx-get="{% url 'settings:keyboard-shortcuts' %}"
+           hx-target="#htmx-modal-container"
+           data-tooltip="Shortcuts">
+          <i class="icon-keyboard"></i>
+          <span class="sidebar-label">Shortcuts</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <button class="sidebar-toggle"
+          id="sidebar-toggle"
+          aria-label="Toggle sidebar">
+    <i class="icon-panel-left-close"></i>
+  </button>
+</aside>
