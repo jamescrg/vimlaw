@@ -8,17 +8,8 @@ Development Environment Styles
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
-  left: 0;
   letter-spacing: 0.25rem;
+  margin-bottom: 0.5rem;
   padding: 0.25rem 0;
-  position: fixed;
-  right: 0;
   text-align: center;
-  top: 0;
-  z-index: 10000;
-}
-
-/* Push content down when banner is present */
-.env-dev {
-  padding-top: 1.5rem;
 }

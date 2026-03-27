@@ -1,0 +1,276 @@
+/* ==========================================================================
+   Sidebar Navigation
+   ========================================================================== */
+
+.sidebar {
+  background: var(--background-sidebar);
+  bottom: 0;
+  box-shadow: inset -1px 0 0 var(--border-medium);
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  position: fixed;
+  top: 0;
+  transition: width 120ms ease;
+  width: var(--sidebar-width);
+  z-index: 100;
+}
+
+.sidebar-collapsed .sidebar {
+  width: var(--sidebar-width-collapsed);
+}
+
+
+/* ==========================================================================
+   Sidebar Header (brand)
+   ========================================================================== */
+
+.sidebar-header {
+  padding: 0.875rem 1rem;
+}
+
+.sidebar-brand {
+  align-items: center;
+  color: var(--color-darker);
+  display: flex;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.sidebar-brand i {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+}
+
+
+/* ==========================================================================
+   Nav Lists
+   ========================================================================== */
+
+.sidebar-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0 0.5rem;
+  scrollbar-width: thin;
+}
+
+.sidebar-nav-main {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-nav-utils {
+  border-top: 1px solid var(--stone-375);
+  list-style: none;
+  margin: 0 -0.5rem;
+  padding: 0.5rem 0.5rem;
+}
+
+
+/* ==========================================================================
+   Nav Items
+   ========================================================================== */
+
+.sidebar-nav li {
+  margin-bottom: 1px;
+}
+
+.sidebar-nav li a {
+  align-items: center;
+  border-radius: var(--radius-md);
+  color: var(--color-nav);
+  display: flex;
+  font-size: 0.9375rem;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  text-decoration: none;
+  transition: background 100ms ease;
+}
+
+.sidebar-nav li a:hover {
+  background: var(--background-sidebar-hover);
+}
+
+.sidebar-nav li.active a {
+  background: var(--background-sidebar-active);
+  font-weight: 600;
+}
+
+
+/* ==========================================================================
+   Icons
+   ========================================================================== */
+
+.sidebar-nav li a i {
+  flex-shrink: 0;
+  font-size: 1.125rem;
+  text-align: center;
+  width: 1.5rem;
+}
+
+
+/* ==========================================================================
+   Collapsed State
+   ========================================================================== */
+
+.sidebar-collapsed .sidebar-label {
+  display: none;
+}
+
+.sidebar-collapsed .sidebar-header {
+  padding: 0.875rem 0;
+}
+
+.sidebar-collapsed .sidebar-brand {
+  justify-content: center;
+}
+
+.sidebar-collapsed .sidebar-nav {
+  padding: 0 0.25rem;
+}
+
+.sidebar-collapsed .sidebar-nav li a {
+  justify-content: center;
+  padding: 0.625rem;
+}
+
+
+/* ==========================================================================
+   Collapsed Tooltips (CSS-only, uses data-tooltip attribute)
+   ========================================================================== */
+
+.sidebar-collapsed .sidebar-nav li {
+  position: relative;
+}
+
+.sidebar-collapsed .sidebar-nav li a::after {
+  background: var(--stone-700);
+  border-radius: var(--radius-sm);
+  color: var(--stone-100);
+  content: attr(data-tooltip);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  left: var(--sidebar-width-collapsed);
+  opacity: 0;
+  padding: 0.25rem 0.5rem;
+  pointer-events: none;
+  position: fixed;
+  top: auto;
+  transition: opacity 150ms ease;
+  white-space: nowrap;
+  z-index: 200;
+}
+
+.sidebar-collapsed .sidebar-nav li a:hover::after {
+  opacity: 1;
+}
+
+
+/* ==========================================================================
+   Toggle Button
+   ========================================================================== */
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  border-top: 1px solid var(--stone-375);
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 0.75rem;
+  text-align: center;
+  transition: color 100ms ease;
+}
+
+.sidebar-toggle:hover {
+  color: var(--color-primary);
+}
+
+
+/* ==========================================================================
+   Mobile Hamburger Trigger
+   ========================================================================== */
+
+.sidebar-mobile-trigger {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  display: none;
+  font-size: 1.25rem;
+  padding: 0.75rem 1rem;
+}
+
+
+/* ==========================================================================
+   Mobile Overlay
+   ========================================================================== */
+
+.sidebar-overlay {
+  display: none;
+}
+
+.sidebar-overlay.visible {
+  background: rgb(0 0 0 / 30%);
+  display: block;
+  inset: 0;
+  position: fixed;
+  z-index: 99;
+}
+
+
+/* ==========================================================================
+   Main Content Offset
+   ========================================================================== */
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  transition: margin-left 120ms ease;
+}
+
+.sidebar-collapsed .main-content {
+  margin-left: var(--sidebar-width-collapsed);
+}
+
+
+/* ==========================================================================
+   Mobile Responsive
+   ========================================================================== */
+
+@media (width <= 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 120ms ease;
+    width: var(--sidebar-width);
+    z-index: 1000;
+  }
+
+  .sidebar-collapsed .sidebar {
+    width: var(--sidebar-width);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .sidebar-mobile-trigger {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar-collapsed .main-content {
+    margin-left: 0;
+  }
+}

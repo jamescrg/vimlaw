@@ -528,7 +528,7 @@ const navSwitcher = {
   collectItems() {
     const items = [];
     // Main nav links
-    document.querySelectorAll('.navbar ul:not(.navbar-right) a[href]').forEach(a => {
+    document.querySelectorAll('.sidebar-nav-main a[href]').forEach(a => {
       const label = a.textContent.trim();
       const href = a.getAttribute('href');
       if (label && href && href !== '#') {
@@ -652,6 +652,7 @@ document.addEventListener('keydown', function(event) {
       'n': () => commandPalette.open(),
       'm': () => matterSwitcher.open(),
       'g': () => navSwitcher.open(),
+      'b': () => document.getElementById('sidebar-toggle').click(),
       'ff': () => htmx.ajax('GET', '/search/?scope=all', { target: '#htmx-modal-container' }),
       'fm': () => htmx.ajax('GET', '/search/?scope=matters', { target: '#htmx-modal-container' }),
       'fp': () => htmx.ajax('GET', '/search/?scope=proceedings', { target: '#htmx-modal-container' }),
