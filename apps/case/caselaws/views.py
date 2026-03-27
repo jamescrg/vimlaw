@@ -215,8 +215,6 @@ def caselaws_save(request, matter_id):
     cluster_id = result.get("cluster_id")
     opinion_id = result.get("opinion_id")
     courtlistener_url = result.get("courtlistener_url", "")
-    text = result.get("text", "")
-    html = result.get("html", "")
 
     # Clean up session
     del request.session[session_key]
@@ -246,11 +244,13 @@ def caselaws_save(request, matter_id):
         cluster_id=cluster_id,
         opinion_id=opinion_id,
         courtlistener_url=courtlistener_url,
-        text=text,
-        html=html,
         created_by=request.user,
         updated_by=request.user,
     )
+
+    from apps.case.research.tasks import generate_caselaw_summary
+
+    generate_caselaw_summary(case_law.id)
 
     logger.info("Saved case law %s to matter %s", case_law, matter)
 
@@ -325,6 +325,51 @@ def caselaw_viewer(request, caselaw_id):
     except (TypeError, ValueError):
         initial_highlight = None
 
+    # Fetch opinion text from CourtListener on demand
+    opinion_html = ""
+    opinion_text = ""
+    fetch_error = ""
+
+    # Use stored text/html if available (legacy data), otherwise fetch
+    if case_law.html:
+        opinion_html = case_law.html
+    elif case_law.text and len(case_law.text) > 500:
+        opinion_text = case_law.text
+    elif case_law.opinion_id:
+        from apps.case.courtlistener import fetch_opinion
+
+        opinion = fetch_opinion(case_law.opinion_id)
+        if opinion.found:
+            opinion_html = opinion.html_with_citations
+            opinion_text = opinion.plain_text
+        else:
+            fetch_error = "Could not retrieve case text from CourtListener."
+    elif case_law.cluster_id:
+        from apps.case.courtlistener import fetch_cluster, fetch_opinion
+
+        cluster = fetch_cluster(case_law.cluster_id)
+        if cluster:
+            sub_opinions = cluster.get("sub_opinions", [])
+            if sub_opinions:
+                try:
+                    oid = int(sub_opinions[0].rstrip("/").split("/")[-1])
+                    opinion = fetch_opinion(oid)
+                    if opinion.found:
+                        opinion_html = opinion.html_with_citations
+                        opinion_text = opinion.plain_text
+                        # Save opinion_id for faster future fetches
+                        CaseLaw.objects.filter(pk=caselaw_id).update(opinion_id=oid)
+                    else:
+                        fetch_error = "Could not retrieve case text from CourtListener."
+                except (ValueError, IndexError):
+                    fetch_error = "Could not parse opinion ID from CourtListener."
+            else:
+                fetch_error = "No opinion text available on CourtListener."
+        else:
+            fetch_error = "Could not reach CourtListener."
+    else:
+        fetch_error = "No CourtListener ID available for this case."
+
     # Serialize highlights for JavaScript
     highlights_json = json.dumps(
         [
@@ -350,6 +395,9 @@ def caselaw_viewer(request, caselaw_id):
             "highlights": highlights,
             "highlights_json": highlights_json,
             "initial_highlight": initial_highlight,
+            "opinion_html": opinion_html,
+            "opinion_text": opinion_text,
+            "fetch_error": fetch_error,
         },
     )
 

@@ -17,6 +17,7 @@ from .models import CaseBrief, CitationVerification, ResearchQuery, ResearchResu
 from .tasks import (
     assess_single_citation,
     generate_brief,
+    generate_caselaw_summary,
     process_research_query,
     refine_research_query,
     review_more_citations,
@@ -501,7 +502,7 @@ def research_save_to_caselaws(request, result_id):
             },
         )
 
-    CaseLaw.objects.create(
+    case_law = CaseLaw.objects.create(
         matter=matter,
         case_name=case_data.get("case_name", result.case_name),
         citation=case_data.get("citation", result.citation),
@@ -512,11 +513,11 @@ def research_save_to_caselaws(request, result_id):
         cluster_id=case_data.get("cluster_id", result.cluster_id),
         opinion_id=case_data.get("opinion_id"),
         courtlistener_url=case_data.get("courtlistener_url", result.courtlistener_url),
-        text=case_data.get("text", ""),
-        html=case_data.get("html", ""),
         created_by=request.user,
         updated_by=request.user,
     )
+
+    generate_caselaw_summary(case_law.id)
 
     return render(
         request,

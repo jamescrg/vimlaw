@@ -111,6 +111,39 @@ class ContextItem:
         return f"{self.label} {self.icon} {self.content}"
 
 
+def _fetch_caselaw_opinion_text(caselaw) -> str:
+    """Fetch full opinion text from CourtListener for a CaseLaw entry.
+
+    Returns the plain text, or empty string if unavailable.
+    Uses stored text as fallback for legacy data.
+    """
+    # Legacy data with stored text
+    if caselaw.text and len(caselaw.text) > 500:
+        return caselaw.text
+
+    # Fetch from CourtListener
+    from apps.case.courtlistener import fetch_cluster, fetch_opinion
+
+    if caselaw.opinion_id:
+        opinion = fetch_opinion(caselaw.opinion_id)
+        if opinion.found:
+            return opinion.plain_text
+    elif caselaw.cluster_id:
+        cluster = fetch_cluster(caselaw.cluster_id)
+        if cluster:
+            sub_opinions = cluster.get("sub_opinions", [])
+            if sub_opinions:
+                try:
+                    oid = int(sub_opinions[0].rstrip("/").split("/")[-1])
+                    opinion = fetch_opinion(oid)
+                    if opinion.found:
+                        return opinion.plain_text
+                except (ValueError, IndexError):
+                    pass
+
+    return ""
+
+
 def collect_context_items(matter, current_conversation=None) -> list[ContextItem]:
     """
     Collect items that are always included in context (ai_context="always"
@@ -227,8 +260,13 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
             content_parts.append(f"Date: {caselaw.date_filed}")
         if caselaw.notes:
             content_parts.append(f"Notes: {caselaw.notes[:500]}")
-        if caselaw.text:
-            content_parts.append(f"Opinion:\n{caselaw.text}")
+
+        # Fetch full opinion text from CourtListener if available
+        opinion_text = _fetch_caselaw_opinion_text(caselaw)
+        if opinion_text:
+            content_parts.append(f"Opinion:\n{opinion_text}")
+        elif caselaw.summary:
+            content_parts.append(f"Summary:\n{caselaw.summary}")
 
         items.append(
             ContextItem(

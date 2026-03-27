@@ -45,10 +45,15 @@
             <h1 class="case-title">{{ caselaw.case_name }}</h1>
             <div class="case-citation">{{ caselaw.citation }}</div>
           </div>
-          {% if caselaw.html %}
-            {{ caselaw.html|safe }}
-          {% else %}
-            <pre class="caselaw-text-raw">{{ caselaw.text }}</pre>
+          {% if opinion_html %}
+            {{ opinion_html|safe }}
+          {% elif opinion_text %}
+            <pre class="caselaw-text-raw">{{ opinion_text }}</pre>
+          {% elif fetch_error %}
+            <div class="research-error caselaw-fetch-error">
+              <i class="icon-alert-triangle"></i>
+              {{ fetch_error }}
+            </div>
           {% endif %}
         </div>
       </div>

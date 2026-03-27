@@ -721,6 +721,60 @@ def _get_opinion_metadata(opinion_id):
         return {}
 
 
+def generate_caselaw_summary(caselaw_id):
+    """Generate a 200-word AI summary for a CaseLaw entry in a background thread."""
+    thread = threading.Thread(
+        target=_generate_caselaw_summary, args=(caselaw_id,), daemon=True
+    )
+    thread.start()
+
+
+def _generate_caselaw_summary(caselaw_id):
+    """Fetch opinion text and generate a 200-word summary."""
+    from apps.case.models import CaseLaw
+
+    try:
+        caselaw = CaseLaw.objects.get(pk=caselaw_id)
+    except CaseLaw.DoesNotExist:
+        return
+
+    try:
+        opinion_text = ""
+        if caselaw.opinion_id:
+            opinion = fetch_opinion(caselaw.opinion_id)
+            if opinion.found:
+                opinion_text = opinion.plain_text
+        elif caselaw.cluster_id:
+            opinion_text = _get_opinion_text(caselaw.cluster_id)
+
+        if not opinion_text:
+            return
+
+        truncated = opinion_text[:15000]
+
+        system_prompt = (
+            "You are a legal research assistant. Write clear, concise prose."
+        )
+        user_prompt = (
+            f"Write a 200-word summary of this case. Focus on the key facts, "
+            f"the legal issue, and the court's holding.\n\n"
+            f"Case: {caselaw.case_name}\n"
+            f"Citation: {caselaw.citation}\n"
+            f"Court: {caselaw.court}\n"
+            f"Date: {caselaw.date_filed}\n\n"
+            f"Opinion Text:\n{truncated}"
+        )
+
+        response_text, _, _ = send_to_gemini(
+            system_prompt, [{"role": "user", "content": user_prompt}]
+        )
+
+        CaseLaw.objects.filter(pk=caselaw_id).update(summary=response_text.strip())
+
+    except Exception:
+        logger.exception("Error generating summary for case law %s", caselaw_id)
+
+
 def generate_brief(brief_id):
     """Run case brief generation in a background daemon thread."""
     thread = threading.Thread(target=_generate_brief, args=(brief_id,), daemon=True)

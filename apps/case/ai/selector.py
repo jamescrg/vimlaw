@@ -121,14 +121,12 @@ def build_manifest(matter, current_conversation=None):
     for caselaw in CaseLaw.objects.filter(matter=matter, ai_context="auto"):
         if caselaw.notes:
             desc = caselaw.notes[:200]
-        elif caselaw.text:
-            desc = caselaw.text[:200].strip()
-            if len(caselaw.text) > 200:
+        elif caselaw.summary:
+            desc = caselaw.summary[:200].strip()
+            if len(caselaw.summary) > 200:
                 desc += "..."
         else:
             desc = ""
-
-        word_count = len(caselaw.text.split()) if caselaw.text else 0
 
         manifest_items.append(
             ManifestItem(
@@ -138,22 +136,13 @@ def build_manifest(matter, current_conversation=None):
                 category=caselaw.court or "",
                 date=str(caselaw.date_filed) if caselaw.date_filed else None,
                 description=desc,
-                word_count=word_count,
+                word_count=0,
                 importance=caselaw.importance,
             )
         )
 
-        # Build full content
-        content_parts = [f"**Case Law: {caselaw.case_name}**, {caselaw.citation}"]
-        if caselaw.court:
-            content_parts.append(f"Court: {caselaw.court}")
-        if caselaw.date_filed:
-            content_parts.append(f"Date: {caselaw.date_filed}")
-        if caselaw.notes:
-            content_parts.append(f"Notes: {caselaw.notes[:500]}")
-        if caselaw.text:
-            content_parts.append(f"Opinion:\n{caselaw.text}")
-        content_map[("caselaw", caselaw.id)] = "\n".join(content_parts)
+        # Content fetched on demand after selection — store caselaw obj for now
+        content_map[("caselaw", caselaw.id)] = caselaw  # Resolved lazily
 
     # Conversations with ai_context="auto"
     auto_convos = Conversation.objects.filter(matter=matter, ai_context="auto")
@@ -270,7 +259,9 @@ def select_context(
         for item in manifest_items:
             key = (item.item_type, item.item_id)
             if key in content_map:
-                all_contents.append(content_map[key])
+                content = _resolve_content(key, content_map)
+                if content:
+                    all_contents.append(content)
         return all_contents, []
 
     # Call Gemini Flash for intelligent selection
@@ -292,7 +283,7 @@ def select_context(
             manifest_items, content_map, token_budget
         )
 
-    # Build results
+    # Build results — resolve caselaw content on demand
     selected_contents = []
     selected_key_set = set(selected_keys)
     unselected_items = []
@@ -300,7 +291,9 @@ def select_context(
     for item in manifest_items:
         key = (item.item_type, item.item_id)
         if key in selected_key_set and key in content_map:
-            selected_contents.append(content_map[key])
+            content = _resolve_content(key, content_map)
+            if content:
+                selected_contents.append(content)
         else:
             unselected_items.append(item)
 
@@ -337,6 +330,37 @@ def _parse_selector_response(response_text: str) -> list[tuple[str, int]]:
     return keys
 
 
+def _resolve_content(key: tuple[str, int], content_map: dict) -> str:
+    """Resolve content for a manifest item, fetching from CourtListener if needed."""
+    value = content_map.get(key)
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+
+    # CaseLaw object — fetch full text on demand
+    caselaw = value
+    from apps.case.ai.context import _fetch_caselaw_opinion_text
+
+    content_parts = [f"**Case Law: {caselaw.case_name}**, {caselaw.citation}"]
+    if caselaw.court:
+        content_parts.append(f"Court: {caselaw.court}")
+    if caselaw.date_filed:
+        content_parts.append(f"Date: {caselaw.date_filed}")
+    if caselaw.notes:
+        content_parts.append(f"Notes: {caselaw.notes[:500]}")
+
+    opinion_text = _fetch_caselaw_opinion_text(caselaw)
+    if opinion_text:
+        content_parts.append(f"Opinion:\n{opinion_text}")
+    elif caselaw.summary:
+        content_parts.append(f"Summary:\n{caselaw.summary}")
+
+    resolved = "\n".join(content_parts)
+    content_map[key] = resolved  # Cache for reuse
+    return resolved
+
+
 def _fallback_by_importance(
     manifest_items: list[ManifestItem],
     content_map: dict,
@@ -349,7 +373,7 @@ def _fallback_by_importance(
 
     for item in sorted_items:
         key = (item.item_type, item.item_id)
-        content = content_map.get(key, "")
+        content = _resolve_content(key, content_map)
         item_tokens = estimate_tokens(content)
 
         if used_tokens + item_tokens > token_budget:

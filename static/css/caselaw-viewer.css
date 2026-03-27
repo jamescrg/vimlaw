@@ -304,3 +304,7 @@ body:has(#case-content-container) {
 #case-content ::selection {
   background: var(--gray-200);
 }
+
+.caselaw-fetch-error {
+  margin: 1rem 0;
+}

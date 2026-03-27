@@ -383,9 +383,10 @@ class CaseLaw(AuditMixin, models.Model):
     opinion_id = models.IntegerField(null=True, blank=True)
     courtlistener_url = models.URLField(max_length=500, blank=True)
 
-    # Full text
-    text = models.TextField()  # Plain text version
-    html = models.TextField(blank=True)  # HTML with citations (optional)
+    # Case text — summary stored in DB, full text fetched from CourtListener on demand
+    summary = models.TextField(blank=True)  # AI-generated 200-word summary
+    text = models.TextField(blank=True)  # Legacy — no longer populated
+    html = models.TextField(blank=True)  # Legacy — no longer populated
 
     # User notes and importance
     notes = models.TextField(blank=True)
