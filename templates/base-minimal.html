@@ -55,11 +55,6 @@
 </head>
 <body class="minimal-layout {% if env == 'dev' %}env-dev{% endif %}"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  {% if env == 'dev' %}
-    <div class="dev-banner">
-      <span>DEVELOPMENT ENVIRONMENT</span>
-    </div>
-  {% endif %}
   {% include "modals.html" %}
   {% include "confirm-modal.html" %}
   {% block content %}
