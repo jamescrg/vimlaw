@@ -6,3 +6,16 @@
   margin-bottom: 1.25rem;
   padding: 1.25rem 1rem 1.5rem;
 }
+
+.card .list-group {
+  margin: 0 -1rem -1.5rem;
+}
+
+.card .list-group .list-group-item {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.card .list-group .list-group-item:last-child {
+  border-bottom: none;
+}
