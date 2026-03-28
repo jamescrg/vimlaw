@@ -142,6 +142,11 @@
   padding: 0.5rem;
 }
 
+.sidebar-collapsed .sidebar-nav-utils {
+  margin: 0 -0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
 
 /* ==========================================================================
    Collapsed Tooltips (CSS-only, uses data-tooltip attribute)
