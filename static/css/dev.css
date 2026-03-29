@@ -20,9 +20,9 @@ Development Environment Styles
 }
 
 .env-dev .sidebar {
-  top: 2rem;
+  top: 2.25rem;
 }
 
 .env-dev .main-content {
-  padding-top: 2rem;
+  padding-top: 2.25rem;
 }
