@@ -7,6 +7,7 @@
   /* Slate */
   --slate-50: oklch(98.4% 0.003 247.9deg);
   --slate-100: oklch(96.8% 0.007 247.9deg);
+  --slate-150: oklch(94.9% 0.01 251.7deg);
   --slate-200: oklch(92.9% 0.013 255.5deg);
   --slate-300: oklch(86.9% 0.02 252.9deg);
   --slate-400: oklch(71.1% 0.035 256.8deg);
@@ -81,6 +82,7 @@
   /* Red */
   --red-50: oklch(97.1% 0.013 17.4deg);
   --red-100: oklch(93.6% 0.031 17.7deg);
+  --red-150: oklch(91.1% 0.045 18.0deg);
   --red-200: oklch(88.5% 0.059 18.3deg);
   --red-300: oklch(80.8% 0.103 19.6deg);
   --red-400: oklch(71.1% 0.166 22.2deg);
@@ -94,6 +96,7 @@
   /* Orange */
   --orange-50: oklch(98% 0.016 73.7deg);
   --orange-100: oklch(95.4% 0.037 75.2deg);
+  --orange-150: oklch(92.8% 0.055 73.0deg);
   --orange-200: oklch(90.1% 0.073 70.7deg);
   --orange-300: oklch(83.7% 0.117 66.3deg);
   --orange-400: oklch(75.8% 0.159 55.9deg);
@@ -120,6 +123,7 @@
   /* Yellow */
   --yellow-50: oklch(98.7% 0.026 102.2deg);
   --yellow-100: oklch(97.3% 0.069 103.2deg);
+  --yellow-150: oklch(95.9% 0.097 102.4deg);
   --yellow-200: oklch(94.5% 0.124 101.5deg);
   --yellow-300: oklch(90.5% 0.166 98.1deg);
   --yellow-400: oklch(86.1% 0.173 91.9deg);
@@ -146,6 +150,7 @@
   /* Green */
   --green-50: oklch(98.2% 0.018 155.8deg);
   --green-100: oklch(96.2% 0.043 156.7deg);
+  --green-150: oklch(94.4% 0.062 156.4deg);
   --green-200: oklch(92.5% 0.081 156.0deg);
   --green-300: oklch(87.1% 0.136 154.4deg);
   --green-400: oklch(80% 0.182 151.7deg);
@@ -211,6 +216,7 @@
   /* Blue */
   --blue-50: oklch(97% 0.014 254.6deg);
   --blue-100: oklch(93.2% 0.032 255.6deg);
+  --blue-150: oklch(90.7% 0.045 254.9deg);
   --blue-200: oklch(88.2% 0.057 254.1deg);
   --blue-300: oklch(80.9% 0.096 251.8deg);
   --blue-400: oklch(71.4% 0.143 254.6deg);
@@ -238,6 +244,7 @@
   --violet-50: oklch(96.9% 0.016 293.8deg);
   --violet-75: oklch(95.6% 0.022 294.2deg);
   --violet-100: oklch(94.3% 0.028 294.6deg);
+  --violet-150: oklch(91.9% 0.041 294.0deg);
   --violet-200: oklch(89.4% 0.055 293.3deg);
   --violet-300: oklch(81.1% 0.101 293.6deg);
   --violet-400: oklch(70.9% 0.159 293.5deg);

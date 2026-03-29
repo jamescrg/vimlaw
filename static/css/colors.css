@@ -84,9 +84,9 @@
   /* ==========================================================================
      Selection & Active States
      ========================================================================== */
-  --selected-background: var(--violet-100);
+  --selected-background: var(--violet-150);
   --selected-color: var(--stone-700);
-  --selected-border: var(--border-medium);
+  --selected-border: var(--border-medium-dark);
 
   /* ==========================================================================
      Status & Feedback
@@ -125,13 +125,13 @@
      Row Highlights
      ========================================================================== */
   --hl-gray: var(--background-control);
-  --hl-blue: var(--blue-50);
-  --hl-slate: var(--slate-50);
-  --hl-green: var(--lime-50);
-  --hl-orange: var(--orange-50);
-  --hl-violet: var(--violet-50);
-  --hl-red: var(--red-50);
-  --hl-yellow: var(--yellow-50);
+  --hl-blue: var(--blue-100);
+  --hl-slate: var(--slate-100);
+  --hl-green: var(--lime-100);
+  --hl-orange: var(--orange-100);
+  --hl-violet: var(--violet-100);
+  --hl-red: var(--red-100);
+  --hl-yellow: var(--yellow-100);
 
 }
 
@@ -149,7 +149,7 @@
 .hl-red { background: var(--hl-red) !important; }
 .hl-yellow { background: var(--hl-yellow) !important; }
 
-.past-due td { background: var(--yellow-50); }
+.past-due td { background: var(--yellow-100); }
 
 /* ==========================================================================
    Utility Classes - Text
