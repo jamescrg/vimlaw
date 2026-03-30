@@ -31,13 +31,14 @@ class TimeEntryForm(forms.ModelForm):
         )
 
         widgets = {
-            "matter": forms.Select(attrs={"onchange": "updateRate()"}),
-            "date": forms.DateInput(attrs={"type": "date"}),
+            "matter": forms.Select(attrs={"onchange": "updateRate()", "tabindex": "1"}),
+            "date": forms.DateInput(attrs={"type": "date", "tabindex": "3"}),
             "actions": forms.Textarea(
                 attrs={
                     "onfocus": "moveFocusToEnd(this)",
                     "rows": "3",
                     "class": "span2",
+                    "tabindex": "2",
                 }
             ),
             "comp": forms.Select(choices=COMP_CHOICES),
