@@ -308,19 +308,27 @@ def documents_add(request, matter_id):
                         f"{document.pk}.pdf", ContentFile(pdf_content), save=True
                     )
 
-                    # Queue OCR for the generated PDF
-                    from django_q.tasks import async_task
+                    # Verify file made it to storage
+                    if not document.file.storage.exists(document.file.name):
+                        document.delete()
+                        form.add_error(
+                            None,
+                            "FILE_REQUIRED: Upload failed — file did not save to storage.",
+                        )
+                    else:
+                        # Queue OCR for the generated PDF
+                        from django_q.tasks import async_task
 
-                    async_task(
-                        "apps.case.documents.tasks.process_document_ocr",
-                        document.id,
-                        task_name=f"OCR-{document.id}",
-                        group="ocr_processing",
-                    )
+                        async_task(
+                            "apps.case.documents.tasks.process_document_ocr",
+                            document.id,
+                            task_name=f"OCR-{document.id}",
+                            group="ocr_processing",
+                        )
 
-                    return HttpResponse(
-                        status=204, headers={"HX-Trigger": "documentsChanged"}
-                    )
+                        return HttpResponse(
+                            status=204, headers={"HX-Trigger": "documentsChanged"}
+                        )
 
                 except ValueError as e:
                     form.add_error(None, f"FILE_REQUIRED: {str(e)}")
@@ -342,19 +350,27 @@ def documents_add(request, matter_id):
                 document.file = uploaded_file
                 document.save()
 
-                # Queue OCR for PDF files
-                from django_q.tasks import async_task
+                # Verify file made it to storage
+                if not document.file.storage.exists(document.file.name):
+                    document.delete()
+                    form.add_error(
+                        None,
+                        "FILE_REQUIRED: Upload failed — file did not save to storage.",
+                    )
+                else:
+                    # Queue OCR for PDF files
+                    from django_q.tasks import async_task
 
-                async_task(
-                    "apps.case.documents.tasks.process_document_ocr",
-                    document.id,
-                    task_name=f"OCR-{document.id}",
-                    group="ocr_processing",
-                )
+                    async_task(
+                        "apps.case.documents.tasks.process_document_ocr",
+                        document.id,
+                        task_name=f"OCR-{document.id}",
+                        group="ocr_processing",
+                    )
 
-                return HttpResponse(
-                    status=204, headers={"HX-Trigger": "documentsChanged"}
-                )
+                    return HttpResponse(
+                        status=204, headers={"HX-Trigger": "documentsChanged"}
+                    )
 
         # Form has errors
         return render(
@@ -574,7 +590,13 @@ def serve_document(request, document_id):
     """Serve document inline for PDF viewer (avoids CORS issues with S3)."""
     document = get_object_or_404(Document, id=document_id)
 
-    file_content = document.file.read()
+    if not document.file:
+        return HttpResponse("No file attached to this document.", status=404)
+
+    try:
+        file_content = document.file.read()
+    except Exception:
+        return HttpResponse("Could not retrieve file from storage.", status=502)
 
     response = HttpResponse(file_content, content_type="application/pdf")
     response["Content-Length"] = len(file_content)
