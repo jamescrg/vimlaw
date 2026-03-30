@@ -15,7 +15,7 @@ from apps.trust.trust import get_confirmed_client_balance
 def proceeding_index(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    proceedings = Proceeding.objects.filter(matter=matter.id).order_by("-id")
+    proceedings = Proceeding.objects.filter(matter=matter.id).order_by("date_filed")
     proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
 
     # Get client trust balance

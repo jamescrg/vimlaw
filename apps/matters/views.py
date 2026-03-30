@@ -442,10 +442,10 @@ def update_work_status(request, id):
 @matter_access_required
 def print(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    proceeding = Proceeding.objects.filter(matter=matter.id).order_by("-id").first()
+    proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
     relationship_groups = load_contacts(matter)
     events = Event.objects.filter(matter=id).order_by("-date")
-    proceedings = Proceeding.objects.filter(matter=matter.id).order_by("-id")
+    proceedings = Proceeding.objects.filter(matter=matter.id).order_by("date_filed")
     entries = SettlementEntry.objects.filter(matter=matter.id).order_by("date")
     facts = Fact.objects.filter(matter=matter.id).order_by("date")
 
