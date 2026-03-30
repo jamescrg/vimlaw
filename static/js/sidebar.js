@@ -55,7 +55,10 @@
 
   // Cancel HTMX request if navigating to the current page
   sidebar.addEventListener("htmx:beforeRequest", function (e) {
-    if (e.detail.elt.closest("li.active")) e.preventDefault();
+    var link = e.detail.elt.closest("a");
+    if (link && link.getAttribute("href") === window.location.pathname) {
+      e.preventDefault();
+    }
   });
 
   // Sync body class and sidebar active state after HTMX content swap
