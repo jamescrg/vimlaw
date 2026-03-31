@@ -674,6 +674,16 @@ document.addEventListener('keydown', function(event) {
     return;
   }
 
+  // i — focus the visible text input on list views
+  if (event.key === 'i') {
+    const input = document.querySelector('.tasks-add-quick-input, .toolbar-search, #notes-keyword-input');
+    if (input) {
+      event.preventDefault();
+      input.focus();
+      return;
+    }
+  }
+
   // Bare keys (no leader prefix) — only on matter/case pages
   const matterId = getMatterId();
   if (!matterId) return;
