@@ -166,7 +166,8 @@ body:has(.note-page.standalone) {
 }
 
 .note-sidebar .sidebar-notes-list li.active {
-  background: var(--background-control);
+  background: var(--selected-background);
+  color: var(--selected-color);
 }
 
 /* Center Panel - Editor */
