@@ -24,6 +24,13 @@ def get_payment_data(request):
     current_order = filter_data.get("order_by", "date") if filter_data else "date"
     current_order = current_order.lstrip("-")
 
+    filter_active = bool(
+        filter_data
+        and any(
+            v for k, v in filter_data.items() if k != "order_by" and v not in (None, "")
+        )
+    )
+
     context = {
         "pagination": pagination,
         "session_key": "payments_pagination",
@@ -31,6 +38,7 @@ def get_payment_data(request):
         "objects": pagination.get_object_list(),
         "payments_total": payments_total,
         "current_order": current_order,
+        "filter_active": filter_active,
     }
 
     return context

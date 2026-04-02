@@ -12,7 +12,7 @@
             <i class="icon-plus"></i>
           </button>
           <button type="button"
-                  class="btn-icon"
+                  class="btn-icon{% if filter_active %} toggle-active{% endif %}"
                   hx-target="#htmx-modal-container"
                   hx-trigger="click"
                   hx-get="{% url 'invoicing:credits-filter' %}">

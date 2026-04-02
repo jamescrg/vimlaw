@@ -184,5 +184,11 @@ def get_unbilled_data(request):
     unbilled_data["total_clearance"] = total_clearance
     unbilled_data["order_by"] = order_by
     unbilled_data["current_order"] = current_order
+    unbilled_data["filter_active"] = bool(
+        filter_data
+        and any(
+            v for k, v in filter_data.items() if k != "order_by" and v not in (None, "")
+        )
+    )
 
     return unbilled_data

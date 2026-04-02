@@ -157,6 +157,14 @@ def get_invoice_data(request):
     )
 
     selected_status = filter_data.get("status", "") if filter_data else ""
+    filter_active = bool(
+        filter_data
+        and any(
+            v
+            for k, v in filter_data.items()
+            if k not in ("order_by", "status") and v not in (None, "")
+        )
+    )
 
     # Get current order and strip leading '-' for comparison
     current_order = (
@@ -176,6 +184,7 @@ def get_invoice_data(request):
         "status_options": INVOICE_STATUS,
         "selected_status": selected_status,
         "current_order": current_order,
+        "filter_active": filter_active,
     }
 
     return context
