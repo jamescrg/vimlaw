@@ -2,35 +2,13 @@
    Contacts Page - Restore padding and contrast
    ========================================================================== */
 
-body.contacts-page {
-  background-color: var(--background-subnav);
-}
-
-body.contacts-page .content {
-  /* padding-left: 1rem; */
-  /* padding-right: 1rem; */
-}
-
-/* Detail header/subnav need contrast against the darker page body */
-.contacts-page .detail-header,
-.contacts-page .subnav {
-  /* background: var(--background-subnav-contrast); */
-}
-
-
 .contacts-page .contacts-detail > .detail {
-  background: var(--background-body);
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
 }
 
 .contacts-page .detail-header {
-  background: var(--background-section);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-}
-
-.contacts-page .subnav {
-  background: var(--background-section);
 }
 
 /* ==========================================================================
@@ -296,7 +274,6 @@ body.contacts-page .content {
 
 /* Notes Section */
 .contact-notes {
-  background-color: var(--background-light);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   line-height: 1.6;
