@@ -3,15 +3,6 @@
     <div class="toolbar-left">
       <div class="filter-tools">
         <button type="button"
-                class="btn-icon"
-                hx-get="{% url 'invoicing:invoices-add' %}"
-                hx-target="#htmx-modal-container"
-                hx-trigger="click"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
-          <i class="icon-plus"></i>
-        </button>
-        <button type="button"
                 class="btn-icon{% if filter_active %} toggle-active{% endif %}"
                 hx-get="{% url 'invoicing:invoices-filter' %}"
                 hx-target="#htmx-modal-container"

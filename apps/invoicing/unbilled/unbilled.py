@@ -35,6 +35,10 @@ def get_unbilled_data(request):
         cutoff = date.today().replace(day=1)
         time_filters["date__lt"] = cutoff
         expense_filters["date__lt"] = cutoff
+    elif activity_period == "current_month":
+        cutoff = date.today().replace(day=1)
+        time_filters["date__gte"] = cutoff
+        expense_filters["date__gte"] = cutoff
 
     # Use subqueries to avoid JOIN multiplication when aggregating multiple related tables
     unbilled_hours_subquery = (

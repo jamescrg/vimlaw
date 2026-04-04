@@ -19,6 +19,15 @@
         </button>
       {% else %}
         <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'invoicing:invoices-add' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="icon-plus"></i>
+        </button>
+        <button type="button"
                 class="btn-icon{% if filter_label == 'custom' %} toggle-active{% endif %}"
                 hx-get="{% url 'invoicing:unbilled-filter' %}"
                 hx-target="#htmx-modal-container"
@@ -37,6 +46,8 @@
               <i class="icon-calendar with-text"></i>
               {% if activity_period == "prior_month" %}
                 Prior Month
+              {% elif activity_period == "current_month" %}
+                Current Month
               {% else %}
                 All Activity
               {% endif %}
@@ -51,6 +62,12 @@
                  href="#"
                  hx-post="{% url 'invoicing:unbilled-filter-period' 'all' %}"
                  hx-swap="none">All Activity</a>
+            </li>
+            <li>
+              <a class="dropdown-item{% if activity_period == 'current_month' %} active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'invoicing:unbilled-filter-period' 'current_month' %}"
+                 hx-swap="none">Current Month</a>
             </li>
             <li>
               <a class="dropdown-item{% if activity_period == 'prior_month' %} active{% endif %}"
@@ -108,15 +125,6 @@
         </td>
         <td class="unbilled-matter">
           <a href="{% url 'matters:ledger' matter.id %}">{{ matter.name }}</a>
-          <a href="#"
-             hx-get="{% url 'invoicing:invoices-add' %}?matter={{ matter.id }}"
-             hx-target="#htmx-modal-container"
-             data-bs-toggle="modal"
-             data-bs-target="#htmx-modal-container"
-             title="Create Invoice"
-             class="create-invoice-icon">
-            <i class="icon-copy-plus"></i>
-          </a>
         </td>
         <td class="numeric unbilled-hours">{{ matter.unbilled_hours|floatformat:1 }}</td>
         <td class="numeric unbilled-col">${{ matter.unbilled_fees|floatformat:2|intcomma }}</td>

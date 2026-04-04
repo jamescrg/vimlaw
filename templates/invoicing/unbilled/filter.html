@@ -18,6 +18,8 @@
         <div>
           <select id="activity_period" name="activity_period">
             <option value="" {% if not activity_period %}selected{% endif %}>All Activity</option>
+            <option value="current_month"
+                    {% if activity_period == "current_month" %}selected{% endif %}>Current Month</option>
             <option value="prior_month"
                     {% if activity_period == "prior_month" %}selected{% endif %}>Prior Month</option>
           </select>
