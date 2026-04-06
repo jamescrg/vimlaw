@@ -40,8 +40,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_accessible_matters():
-    """Get all matters accessible to logged-in users (currently all open matters)."""
-    return Matter.objects.filter(status="Open")
+    """Get all matters accessible to logged-in users."""
+    return Matter.objects.all()
 
 
 def get_selected_llm(request):
