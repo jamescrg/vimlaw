@@ -314,7 +314,7 @@ def intake_edit_importance(request, pk, importance):
     intake = get_object_or_404(Intake, pk=pk)
     intake.importance = importance
     intake.save(update_fields=["importance"])
-    return render(request, "intakes/intake-importance.html", {"intake": intake})
+    return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
 
 
 @login_required
