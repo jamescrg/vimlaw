@@ -9,7 +9,7 @@
       <input type="hidden" name="state" :value="stateId">
       <div class="dropdown" x-data="dropdown()">
         <button type="button"
-                class="select-btn research-filter-btn"
+                class="select-btn research-filter-btn research-jurisdiction-btn"
                 :class="{ 'research-filter-active': stateId !== '' }"
                 x-ref="button"
                 @click="toggle()"
@@ -37,7 +37,7 @@
       <input type="hidden" name="include_federal" :value="federal ? 'on' : ''">
       <div class="dropdown" x-data="dropdown()">
         <button type="button"
-                class="select-btn research-filter-btn"
+                class="select-btn research-filter-btn research-jurisdiction-btn"
                 :class="{ 'research-filter-active': federal }"
                 x-ref="button"
                 @click="toggle()"
