@@ -202,7 +202,7 @@ def research_results(request, matter_id, query_id):
 
     sort = request.GET.get("sort", "relevance")
     sort_map = {
-        "relevance": "-score",
+        "relevance": "position",
         "date": "-date_filed",
         "citations": "-forward_citation_count",
     }

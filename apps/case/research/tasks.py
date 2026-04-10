@@ -4,6 +4,7 @@ import json
 import logging
 import re
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
@@ -245,9 +246,75 @@ def _process_query(query_id):
                 score=result.get("score"),
                 forward_citation_count=result.get("cite_count"),
                 courtlistener_url=result.get("courtlistener_url", ""),
+                relevance="pending",
+                status_message="Evaluating...",
             )
 
-        ResearchQuery.objects.filter(pk=query_id).update(status="complete")
+        # ── Phase 2: Snippet Triage (Pass 1) ──
+        ResearchQuery.objects.filter(pk=query_id).update(status="processing")
+
+        result_records = list(
+            ResearchResult.objects.filter(query_id=query_id).order_by("position")
+        )
+
+        triage_results = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {
+                executor.submit(_triage_by_snippet, r, query.query_text): r
+                for r in result_records
+            }
+            for future in as_completed(futures):
+                r = futures[future]
+                try:
+                    triage_results[r.id] = future.result()
+                except Exception:
+                    triage_results[r.id] = True
+
+        skip_ids = [rid for rid, proceed in triage_results.items() if not proceed]
+        if skip_ids:
+            ResearchResult.objects.filter(pk__in=skip_ids).delete()
+
+        # ── Phase 3: Full Evaluation (Pass 2) ──
+        remaining = list(
+            ResearchResult.objects.filter(query_id=query_id).order_by("position")
+        )
+
+        if remaining:
+            ResearchResult.objects.filter(pk__in=[r.id for r in remaining]).update(
+                status_message="Fetching opinion..."
+            )
+
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {
+                    executor.submit(_evaluate_full, r, query.query_text): r
+                    for r in remaining
+                }
+                for future in as_completed(futures):
+                    try:
+                        future.result()
+                    except Exception:
+                        r = futures[future]
+                        logger.exception("Error evaluating result %s", r.id)
+                        ResearchResult.objects.filter(pk=r.id).update(
+                            relevance="error", status_message="Evaluation failed"
+                        )
+
+        # ── Phase 4: Filter & Reorder ──
+        ResearchResult.objects.filter(query_id=query_id, relevance="low").delete()
+
+        RELEVANCE_ORDER = {"high": 0, "medium": 1, "error": 2}
+        final_results = list(
+            ResearchResult.objects.filter(query_id=query_id).order_by("position")
+        )
+        final_results.sort(
+            key=lambda r: (RELEVANCE_ORDER.get(r.relevance, 1), r.position)
+        )
+        for i, result in enumerate(final_results, 1):
+            if result.position != i:
+                ResearchResult.objects.filter(pk=result.id).update(position=i)
+
+        # ── Phase 5: Final Summary ──
+        _generate_final_summary(query_id)
 
     except Exception:
         logger.exception("Error processing research query %s", query_id)
@@ -305,6 +372,115 @@ def _summarize_result(result_id):
             f'"summary": "100-word summary if relevance is high or medium, otherwise empty string"}}'
         )
 
+        response_text, _, _ = send_to_gemini(
+            system_prompt, [{"role": "user", "content": user_prompt}]
+        )
+
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+
+        parsed = json.loads(cleaned)
+        relevance = parsed.get("relevance", "medium")
+        if relevance not in ("high", "medium", "low"):
+            relevance = "medium"
+
+        summary = parsed.get("summary", "")
+
+        ResearchResult.objects.filter(pk=result_id).update(
+            relevance=relevance,
+            gemini_summary=summary,
+            status_message="Complete",
+        )
+
+    except (json.JSONDecodeError, KeyError):
+        logger.exception("Failed to parse Gemini response for result %s", result_id)
+        ResearchResult.objects.filter(pk=result_id).update(
+            relevance="medium", status_message="Complete"
+        )
+    except Exception:
+        logger.exception("Gemini error for result %s", result_id)
+        ResearchResult.objects.filter(pk=result_id).update(
+            relevance="error", status_message="AI evaluation failed"
+        )
+
+
+def _triage_by_snippet(result, query_text):
+    """Pass 1: Quick relevance check using only the search snippet. Returns True to proceed."""
+    if not result.snippet:
+        return True
+
+    system_prompt = (
+        "You are a legal research assistant performing a quick relevance triage. "
+        "Respond ONLY with valid JSON."
+    )
+    user_prompt = (
+        f"Based on the search snippet below, determine if this case is potentially "
+        f"relevant to the research query. Be INCLUSIVE — only mark as skip if the case "
+        f"is clearly unrelated to the legal issue being researched.\n\n"
+        f"Research Query: {query_text}\n\n"
+        f"Case: {result.case_name}\n"
+        f"Court: {result.court}\n"
+        f"Date Filed: {result.date_filed}\n\n"
+        f"Search Snippet:\n{result.snippet[:2000]}\n\n"
+        f'Respond with JSON: {{"proceed": true or false, "reason": "one sentence"}}'
+    )
+
+    try:
+        response_text, _, _ = send_to_gemini(
+            system_prompt, [{"role": "user", "content": user_prompt}]
+        )
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        parsed = json.loads(cleaned)
+        return parsed.get("proceed", True)
+    except Exception:
+        logger.exception("Snippet triage error for result %s", result.id)
+        return True
+
+
+def _evaluate_full(result, query_text):
+    """Pass 2: Fetch full opinion and evaluate relevance with Gemini."""
+    result_id = result.id
+
+    if not result.cluster_id:
+        ResearchResult.objects.filter(pk=result_id).update(
+            relevance="error", status_message="No cluster ID"
+        )
+        return
+
+    ResearchResult.objects.filter(pk=result_id).update(
+        status_message="Downloading opinion..."
+    )
+
+    opinion_text = _get_opinion_text(result.cluster_id)
+    if not opinion_text:
+        ResearchResult.objects.filter(pk=result_id).update(
+            relevance="error", status_message="Could not fetch opinion text"
+        )
+        return
+
+    ResearchResult.objects.filter(pk=result_id).update(
+        opinion_text=opinion_text[:50000],
+        status_message="Evaluating relevance...",
+    )
+
+    truncated_text = opinion_text[:8000]
+    system_prompt = "You are a legal research assistant. Respond ONLY with valid JSON."
+    user_prompt = (
+        f"Evaluate the relevance of this case to the following legal research query.\n\n"
+        f"Research Query: {query_text}\n\n"
+        f"Case: {result.case_name}\n"
+        f"Court: {result.court}\n"
+        f"Date Filed: {result.date_filed}\n\n"
+        f"Opinion Text (excerpt):\n{truncated_text}\n\n"
+        f"Respond with JSON in this exact format:\n"
+        f'{{"relevance": "high" or "medium" or "low", "reason": "brief explanation", '
+        f'"summary": "100-word summary if relevance is high or medium, otherwise empty string"}}'
+    )
+
+    try:
         response_text, _, _ = send_to_gemini(
             system_prompt, [{"role": "user", "content": user_prompt}]
         )

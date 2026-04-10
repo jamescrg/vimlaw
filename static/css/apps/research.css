@@ -483,6 +483,14 @@
   padding: 1.5rem 0;
 }
 
+.research-processing-banner {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+}
+
 .research-error {
   align-items: center;
   background: var(--error-background);
