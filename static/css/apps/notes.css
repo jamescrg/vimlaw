@@ -681,6 +681,12 @@ body:has(.note-page.standalone) {
   margin-right: -0.25rem;
 }
 
+.detail-body .notes-list {
+  border-left: solid 1px var(--border-medium);
+  border-radius: var(--radius-sm);
+  border-right: solid 1px var(--border-medium);
+}
+
 .notes-list {
   border-left: none;
   border-radius: 0;
