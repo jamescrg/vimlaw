@@ -9,6 +9,12 @@
       <td>Comp Hours</td>
       <td class="numeric">{{ summary.comp_hours|floatformat:1 }}</td>
     </tr>
+    {% if summary.admin_hours %}
+      <tr>
+        <td>Admin Hours</td>
+        <td class="numeric">{{ summary.admin_hours|floatformat:1 }}</td>
+      </tr>
+    {% endif %}
     <tr class="total">
       <th>Net Hours</th>
       <td class="numeric">{{ summary.net_hours|floatformat:1 }}</td>
@@ -23,6 +29,12 @@
       <td>Comp Fees</td>
       <td class="numeric">${{ summary.comp_fees|floatformat:2|intcomma }}</td>
     </tr>
+    {% if summary.admin_fees %}
+      <tr>
+        <td>Admin Fees</td>
+        <td class="numeric">${{ summary.admin_fees|floatformat:2|intcomma }}</td>
+      </tr>
+    {% endif %}
     <tr class="total">
       <th>Net Fees</th>
       <td class="numeric">${{ summary.net_fees|floatformat:2|intcomma }}</td>

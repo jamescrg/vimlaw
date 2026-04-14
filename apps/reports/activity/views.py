@@ -140,18 +140,22 @@ def activity_index(request):
                 date__month=month_info["month"],
             )
 
-            hours = entries.aggregate(Sum("hours"))["hours__sum"] or 0
-            # Calculate fees as sum of (hours * rate) for each entry
-            fees = entries.aggregate(total_fees=Sum(F("hours") * F("rate")))[
+            billable_entries = entries.filter(matter__billable=True)
+            admin_entries = entries.filter(matter__billable=False)
+
+            hours = billable_entries.aggregate(Sum("hours"))["hours__sum"] or 0
+            fees = billable_entries.aggregate(total_fees=Sum(F("hours") * F("rate")))[
                 "total_fees"
             ] or Decimal(0)
+            admin_hours = admin_entries.aggregate(Sum("hours"))["hours__sum"] or 0
 
             month_data["users"].append(
                 {
                     "user": user,
                     "hours": hours,
                     "fees": fees,
-                    "entries_count": entries.count(),
+                    "admin_hours": admin_hours,
+                    "entries_count": billable_entries.count(),
                 }
             )
 
@@ -326,18 +330,22 @@ def activity_list(request):
                 date__month=month_info["month"],
             )
 
-            hours = entries.aggregate(Sum("hours"))["hours__sum"] or 0
-            # Calculate fees as sum of (hours * rate) for each entry
-            fees = entries.aggregate(total_fees=Sum(F("hours") * F("rate")))[
+            billable_entries = entries.filter(matter__billable=True)
+            admin_entries = entries.filter(matter__billable=False)
+
+            hours = billable_entries.aggregate(Sum("hours"))["hours__sum"] or 0
+            fees = billable_entries.aggregate(total_fees=Sum(F("hours") * F("rate")))[
                 "total_fees"
             ] or Decimal(0)
+            admin_hours = admin_entries.aggregate(Sum("hours"))["hours__sum"] or 0
 
             month_data["users"].append(
                 {
                     "user": user,
                     "hours": hours,
                     "fees": fees,
-                    "entries_count": entries.count(),
+                    "admin_hours": admin_hours,
+                    "entries_count": billable_entries.count(),
                 }
             )
 

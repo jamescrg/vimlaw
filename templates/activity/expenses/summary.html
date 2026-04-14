@@ -9,6 +9,12 @@
       <td>Comp Expenses</td>
       <td class="numeric">${{ summary.comp_expenses|floatformat:2|intcomma }}</td>
     </tr>
+    {% if summary.admin_expenses %}
+      <tr>
+        <td>Admin Expenses</td>
+        <td class="numeric">${{ summary.admin_expenses|floatformat:2|intcomma }}</td>
+      </tr>
+    {% endif %}
     <tr class="total">
       <th>Net Expenses</th>
       <td class="numeric">${{ summary.net_expenses|floatformat:2|intcomma }}</td>

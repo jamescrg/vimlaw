@@ -13,7 +13,7 @@ from apps.management.selection import (
 
 
 def get_expenses_data(request):
-    expenses = ExpenseEntry.objects.all()
+    expenses = ExpenseEntry.objects.select_related("matter").all()
 
     # Filter expenses for users without perm_all_matters
     if not request.user.is_admin and not request.user.perm_all_matters:

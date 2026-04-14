@@ -74,7 +74,7 @@ def get_unbilled_data(request):
 
     # Annotate matters with all unbilled time/fees and expenses
     matters = (
-        Matter.objects.all()
+        Matter.objects.filter(billable=True)
         .annotate(
             unbilled_hours=Coalesce(
                 Subquery(unbilled_hours_subquery, output_field=DecimalField()),

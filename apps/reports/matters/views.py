@@ -21,7 +21,9 @@ def _get_matter_data(status_filter="Open", sort_by="matter_name", sort_direction
     ZERO = Value(0, output_field=DECIMAL)
     fee_expr = ExpressionWrapper(F("hours") * F("rate"), output_field=DECIMAL)
 
-    matters = Matter.objects.select_related("client").order_by("name")
+    matters = (
+        Matter.objects.filter(billable=True).select_related("client").order_by("name")
+    )
 
     if status_filter and status_filter != "All":
         matters = matters.filter(status=status_filter)

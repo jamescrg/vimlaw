@@ -2,6 +2,7 @@
 <tr id="matter-{{ matter.id }}">
   <td class="name">
     <a href={% url 'matters:contacts' id=matter.id %}>{{ matter.name }}</a>
+    {% if not matter.billable %}<span class="app-badge app-badge-sm badge-gray">Admin</span>{% endif %}
   </td>
   <td id="show-matter-work-status-{{ matter.id }}">
     <a class="button-link show-status-form-button"

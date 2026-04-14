@@ -31,6 +31,7 @@ class Matter(AuditMixin, models.Model):
         Contact, related_name="client_matters", on_delete=models.SET_NULL, null=True
     )
     jurisdiction = models.CharField(max_length=100, blank=True)
+    billable = models.BooleanField(default=True)
     members = models.ManyToManyField(
         "accounts.CustomUser",
         related_name="assigned_matters",
@@ -46,6 +47,7 @@ class Matter(AuditMixin, models.Model):
         indexes = [
             models.Index(fields=["status"]),
             models.Index(fields=["client"]),
+            models.Index(fields=["billable"]),
         ]
 
     def save(self, *args, **kwargs):

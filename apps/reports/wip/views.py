@@ -17,7 +17,9 @@ def _get_wip_data(sort_by="matter_name", sort_direction="asc"):
 
     # Unbilled time entries: no invoice and not entered
     time_by_matter = (
-        TimeEntry.objects.filter(invoice__isnull=True, entered=False)
+        TimeEntry.objects.filter(
+            invoice__isnull=True, entered=False, matter__billable=True
+        )
         .values("matter__id", "matter__name", "matter__client__name")
         .annotate(
             unbilled_hours=Coalesce(Sum("hours"), ZERO, output_field=DECIMAL),
@@ -27,7 +29,9 @@ def _get_wip_data(sort_by="matter_name", sort_direction="asc"):
 
     # Unbilled expense entries: no invoice and not entered
     expenses_by_matter = (
-        ExpenseEntry.objects.filter(invoice__isnull=True, entered=False)
+        ExpenseEntry.objects.filter(
+            invoice__isnull=True, entered=False, matter__billable=True
+        )
         .values("matter__id")
         .annotate(unbilled_expenses=Sum("amount"))
     )
@@ -64,7 +68,7 @@ def _get_wip_data(sort_by="matter_name", sort_direction="asc"):
     # Add matters that only have unbilled expenses (no time entries)
     if expense_lookup:
         expense_only_matters = Matter.objects.filter(
-            id__in=expense_lookup.keys()
+            id__in=expense_lookup.keys(), billable=True
         ).select_related("client")
         for matter in expense_only_matters:
             expenses = expense_lookup[matter.id]

@@ -87,7 +87,8 @@ def get_collection_data(request):
 
     # Annotate matters with billed, paid, deferred, credits, and due amounts
     matters = (
-        Matter.objects.annotate(
+        Matter.objects.filter(billable=True)
+        .annotate(
             billed=Coalesce(
                 Subquery(billed_subquery, output_field=DecimalField()),
                 0,

@@ -55,6 +55,7 @@ def dash_index(request):
             TimeEntry.objects.filter(
                 entered=False,
                 invoice__isnull=True,
+                matter__billable=True,
             )
             .exclude(comp=True)
             .values("user__username")
@@ -75,6 +76,7 @@ def dash_index(request):
             TimeEntry.objects.filter(
                 entered=False,
                 invoice__isnull=True,
+                matter__billable=True,
                 user=request.user,
                 date__gte=month_start,
                 date__lte=today,
@@ -119,7 +121,9 @@ def dash_index(request):
 
     # Get matters with unbilled activity
     matters_with_unbilled = (
-        filter_matters_for_user(Matter.objects.filter(status="Open"), request.user)
+        filter_matters_for_user(
+            Matter.objects.filter(status="Open", billable=True), request.user
+        )
         .annotate(
             unbilled_fees=Coalesce(
                 Subquery(unbilled_fees_subquery, output_field=DecimalField()),
@@ -236,7 +240,7 @@ def dash_index(request):
 
     # Annotate matters and filter for positive balance due
     balance_due_matters = list(
-        filter_matters_for_user(Matter.objects.all(), request.user)
+        filter_matters_for_user(Matter.objects.filter(billable=True), request.user)
         .annotate(
             billed=Coalesce(
                 Subquery(billed_subquery, output_field=DecimalField()),

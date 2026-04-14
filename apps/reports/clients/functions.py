@@ -19,18 +19,18 @@ def generate_client_statement_pdf(
     """
 
     # Get time entries
-    time_entries = TimeEntry.objects.filter(matter__client=client).order_by(
-        "matter__name", "-date", "-id"
-    )
+    time_entries = TimeEntry.objects.filter(
+        matter__client=client, matter__billable=True
+    ).order_by("matter__name", "-date", "-id")
     if date_from:
         time_entries = time_entries.filter(date__gte=date_from)
     if date_to:
         time_entries = time_entries.filter(date__lte=date_to)
 
     # Get expense entries
-    expense_entries = ExpenseEntry.objects.filter(matter__client=client).order_by(
-        "matter__name", "-date", "-id"
-    )
+    expense_entries = ExpenseEntry.objects.filter(
+        matter__client=client, matter__billable=True
+    ).order_by("matter__name", "-date", "-id")
     if date_from:
         expense_entries = expense_entries.filter(date__gte=date_from)
     if date_to:

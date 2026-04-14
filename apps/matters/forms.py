@@ -18,6 +18,7 @@ class MatterForm(forms.ModelForm):
             "work_status",
             "practice_area",
             "jurisdiction",
+            "billable",
         )
 
         STATUSES = (
@@ -57,6 +58,9 @@ class MatterForm(forms.ModelForm):
                 attrs={
                     "class": "span2",
                 }
+            ),
+            "billable": forms.Select(
+                choices=((True, "Yes"), (False, "No (Administrative)")),
             ),
         }
 
