@@ -19,3 +19,11 @@
    data-bs-target="#htmx-modal-container">
   <i class="icon-pencil"></i>
 </a>
+{% if user.is_admin %}
+  <a href="#"
+     hx-get="{% url 'matters:delete' id=matter.id %}"
+     hx-target="#htmx-modal-container"
+     data-tooltip="Delete Matter">
+    <i class="icon-trash-2"></i>
+  </a>
+{% endif %}

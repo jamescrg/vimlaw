@@ -397,8 +397,22 @@ def delete(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
     if request.method == "GET":
+        from apps.activity.expenses.models import ExpenseEntry
+        from apps.activity.time.models import TimeEntry
+        from apps.case.models import Document
+        from apps.invoicing.invoices.models import Invoice
+        from apps.notes.models import Note
+        from apps.tasks.models import Task
+
         context = {
             "matter": matter,
+            "time_entries_count": TimeEntry.objects.filter(matter=matter).count(),
+            "expense_entries_count": ExpenseEntry.objects.filter(matter=matter).count(),
+            "tasks_count": Task.objects.filter(matter=matter).count(),
+            "documents_count": Document.objects.filter(matter=matter).count(),
+            "notes_count": Note.objects.filter(matter=matter).count(),
+            "events_count": Event.objects.filter(matter=matter).count(),
+            "invoices_count": Invoice.objects.filter(matter=matter).count(),
         }
 
         return render(request, "matters/delete_confirmation.html", context)

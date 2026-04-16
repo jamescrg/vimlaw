@@ -10,7 +10,7 @@ from utils.models import AuditMixin
 
 class ExpenseEntry(AuditMixin, models.Model):
     date = models.DateField(null=True)
-    matter = models.ForeignKey(Matter, on_delete=models.PROTECT, null=True)
+    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     category = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(null=True)

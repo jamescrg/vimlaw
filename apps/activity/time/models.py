@@ -10,7 +10,7 @@ from utils.models import AuditMixin
 
 class TimeEntry(AuditMixin, models.Model):
     date = models.DateField(null=True)
-    matter = models.ForeignKey(Matter, on_delete=models.PROTECT, null=True)
+    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     actions = models.TextField(null=True)
     hours = models.DecimalField(max_digits=3, decimal_places=1, default=0)
