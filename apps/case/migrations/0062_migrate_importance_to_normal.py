@@ -1,0 +1,20 @@
+"""Migrate importance 1-3 to Normal (4) after expanding to 7-level scale."""
+
+from django.db import migrations
+
+
+def migrate_to_normal(apps, schema_editor):
+    for model_name in ["Document", "Highlight", "Fact", "Witness", "CaseLaw"]:
+        Model = apps.get_model("case", model_name)
+        Model.objects.filter(importance__lte=3).update(importance=4)
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("case", "0061_importance_7_levels"),
+    ]
+
+    operations = [
+        migrations.RunPython(migrate_to_normal, migrations.RunPython.noop),
+    ]
