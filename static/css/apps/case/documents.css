@@ -51,16 +51,13 @@
 }
 
 /* Importance icon colors in dropdowns */
-i.importance-7 {
+i.importance-7,
+i.importance-6 {
   color: var(--red-600);
 }
 
-i.importance-6 {
-  color: var(--violet-600);
-}
-
 i.importance-5 {
-  color: var(--violet-400);
+  color: var(--violet-600);
 }
 
 i.importance-3 {
@@ -154,16 +151,13 @@ i.importance-1 {
   color: var(--color-muted-more);
 }
 
-#documents-list tr.importance-7 > .col-importance .button-link {
+#documents-list tr.importance-7 > .col-importance .button-link,
+#documents-list tr.importance-6 > .col-importance .button-link {
   color: var(--red-600);
 }
 
-#documents-list tr.importance-6 > .col-importance .button-link {
-  color: var(--violet-600);
-}
-
 #documents-list tr.importance-5 > .col-importance .button-link {
-  color: var(--violet-400);
+  color: var(--violet-600);
 }
 
 /* Ghost buttons for empty date */

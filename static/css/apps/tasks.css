@@ -21,18 +21,15 @@ td.importance .button-link {
 }
 
 tr.importance-7 > td.importance .button-link,
-i.importance-7 {
-  color: var(--red-600);
-}
-
+i.importance-7,
 tr.importance-6 > td.importance .button-link,
 i.importance-6 {
-  color: var(--violet-600);
+  color: var(--red-600);
 }
 
 tr.importance-5 > td.importance .button-link,
 i.importance-5 {
-  color: var(--violet-400);
+  color: var(--violet-600);
 }
 
 tr.importance-3 > td.importance .button-link,

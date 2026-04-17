@@ -154,28 +154,22 @@ Detail View - Left Panel
   color: var(--color-muted-more);
 }
 
-.intake-list tr.importance-7 > .importance .button-link {
-  color: var(--red-600);
-}
-
+.intake-list tr.importance-7 > .importance .button-link,
 .intake-list tr.importance-6 > .importance .button-link {
-  color: var(--violet-600);
+  color: var(--red-600);
 }
 
 .intake-list tr.importance-5 > .importance .button-link {
-  color: var(--violet-400);
-}
-
-.intake-list .importance i.importance-7 {
-  color: var(--red-600);
-}
-
-.intake-list .importance i.importance-6 {
   color: var(--violet-600);
 }
 
+.intake-list .importance i.importance-7,
+.intake-list .importance i.importance-6 {
+  color: var(--red-600);
+}
+
 .intake-list .importance i.importance-5 {
-  color: var(--violet-400);
+  color: var(--violet-600);
 }
 
 .intake-list .importance i.importance-3 {
