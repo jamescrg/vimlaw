@@ -159,7 +159,7 @@ def tasks_add_quick(request):
     if filter_importance and int(filter_importance) != 0:
         task.importance = int(filter_importance)
     else:
-        task.importance = 3
+        task.importance = 4
 
     # auto populate the user
     user_id = filter_data.get("user", None)
@@ -395,7 +395,7 @@ def tasks_filter_default(request):
         "date_due_min": None,
         "matter": None,
         "user": request.user.id,
-        "order_by": "importance",
+        "order_by": "date_due",
     }
     request.session["tasks_filter"] = filter_data
     request.session.modified = True

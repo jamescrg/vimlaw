@@ -64,7 +64,7 @@ class TaskForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
-        self.fields["importance"].initial = 3
+        self.fields["importance"].initial = 4
         # Customize user field to display title case usernames
         self.fields["user"].label_from_instance = lambda obj: obj.username.title()
         if user:
