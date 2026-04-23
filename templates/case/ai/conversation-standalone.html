@@ -214,8 +214,12 @@
       }
     });
 
-    // Update UI when message container swaps content
+    // Update UI when message container swaps content. Elements marked
+    // data-no-auto-scroll (e.g. the vetting-status polling wrapper) opt
+    // out of the scroll-to-bottom so 3-second polls don't yank the
+    // viewport while the user is reading above.
     document.body.addEventListener('htmx:afterSwap', function(e) {
+      if (e.target.closest('[data-no-auto-scroll]')) return;
       if (e.target.id === 'messageContainer' || e.target.closest('#messageContainer')) {
         scrollMessagesToBottom();
         updatePromptList();

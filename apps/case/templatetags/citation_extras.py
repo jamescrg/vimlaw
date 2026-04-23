@@ -30,33 +30,55 @@ VETTING_ICON = {
 }
 
 
+def _vetting_modal_link(message_id, citation_index, icon_html):
+    """Render an HTMX anchor that loads the per-citation vetting modal."""
+    detail_url = reverse(
+        "case:ai-citation-vetting-detail",
+        args=[message_id, citation_index],
+    )
+    return (
+        f'<a href="#" '
+        f'hx-get="{escape(detail_url)}" '
+        f'hx-target="#htmx-modal-container" hx-swap="innerHTML" '
+        f"onclick=\"window.dispatchEvent(new CustomEvent('open-modal'));\">"
+        f"{icon_html}"
+        f"</a>"
+    )
+
+
 def create_vetting_badge(vetting, message_id, citation_index):
     """Render a badge for substantive Flash vetting of a single citation.
 
+    Every state is a clickable chip that opens the vetting modal. The
+    modal itself renders the current state (in-progress / completed /
+    failed), so re-clicking a pending badge after the response updates
+    shows the latest verdict.
+
     Returns an empty string if vetting hasn't been run (no vetting dict).
-    Pending/running show a small spinner; terminal states link to a modal
-    with the Flash verdict, extracted claim, and pull-quote.
     """
     if not vetting:
         return ""
 
     status = vetting.get("status")
+
     if status in ("pending", "running"):
         title = "Checking whether the case supports the claim…"
+        link = _vetting_modal_link(
+            message_id, citation_index, '<i class="icon-loader spinning"></i>'
+        )
         return (
             '<span class="citation-vetting citation-vetted-pending" '
-            f'title="{escape(title)}">'
-            '<i class="icon-loader spinning"></i>'
-            "</span>"
+            f'title="{escape(title)}">{link}</span>'
         )
 
     if status == "failed":
         err = vetting.get("error") or "Vetting failed"
+        link = _vetting_modal_link(
+            message_id, citation_index, '<i class="icon-circle-off"></i>'
+        )
         return (
             '<span class="citation-vetting citation-vetted-failed" '
-            f'title="{escape(err)}">'
-            '<i class="icon-circle-off"></i>'
-            "</span>"
+            f'title="{escape(err)}">{link}</span>'
         )
 
     if status == "completed":
@@ -65,19 +87,12 @@ def create_vetting_badge(vetting, message_id, citation_index):
             verdict, VETTING_ICON["unclear"]
         )
         explanation = vetting.get("explanation") or default_title
-        detail_url = reverse(
-            "case:ai-citation-vetting-detail",
-            args=[message_id, citation_index],
+        link = _vetting_modal_link(
+            message_id, citation_index, f'<i class="{icon_class}"></i>'
         )
         return (
-            f'<span class="citation-vetting {badge_class}" title="{escape(explanation)}">'
-            f'<a href="#" '
-            f'hx-get="{escape(detail_url)}" '
-            f'hx-target="#htmx-modal-container" hx-swap="innerHTML" '
-            f"onclick=\"window.dispatchEvent(new CustomEvent('open-modal'));\">"
-            f'<i class="{icon_class}"></i>'
-            f"</a>"
-            f"</span>"
+            f'<span class="citation-vetting {badge_class}" '
+            f'title="{escape(explanation)}">{link}</span>'
         )
 
     return ""
@@ -207,13 +222,12 @@ def enhance_citations(html_content, message):
     result = str(html_content)
     message_id = getattr(message, "id", None)
 
-    # Build a lookup of citations -> (citation_data, index) for case citations.
-    # Indexing is preserved from the full list so vetting badges link to the
-    # correct modal.
+    # Build a lookup of citations -> (citation_data, index). Only case
+    # citations need the indexed form (so vetting badges can link to the
+    # correct modal). Statutes get the text-keyed lookup and render the
+    # legacy name-match badge.
     citation_lookup = {}
     for idx, cit in enumerate(citations_list):
-        if cit.get("citation_type") != "case":
-            continue
         text = cit.get("original_text", "")
         if text:
             citation_lookup[text.lower()] = (cit, idx)
@@ -233,18 +247,27 @@ def enhance_citations(html_content, message):
         citation_data, citation_index = find_citation_in_text(li_content)
 
         if citation_data:
-            badge = create_citation_badge(citation_data)
-            vetting_badge = ""
-            if message_id is not None and citation_index is not None:
-                vetting_badge = create_vetting_badge(
-                    citation_data.get("vetting") or {},
-                    message_id,
-                    citation_index,
-                )
-            if badge or vetting_badge:
+            vetting = citation_data.get("vetting") or {}
+            # For case citations that have been through Flash vetting, the
+            # vetting badge is the single source of truth — it covers the
+            # same "is this a real, well-named case" signal as the old
+            # badge plus the substantive verdict, and its modal includes a
+            # link to CourtListener. For statutes and legacy/unvetted case
+            # citations, fall back to the old name-match badge.
+            if (
+                vetting
+                and citation_data.get("citation_type") == "case"
+                and message_id is not None
+                and citation_index is not None
+            ):
+                badge = create_vetting_badge(vetting, message_id, citation_index)
+            else:
+                badge = create_citation_badge(citation_data)
+
+            if badge:
                 return (
                     f'<li class="citation-row">'
-                    f'<span class="citation-badge-wrapper">{badge}{vetting_badge}</span>'
+                    f'<span class="citation-badge-wrapper">{badge}</span>'
                     f'<span class="citation-text">{li_content}</span>'
                     f"</li>"
                 )

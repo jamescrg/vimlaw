@@ -1445,9 +1445,7 @@
   vertical-align: middle;
 }
 
-.citation-vetting a,
-.citation-vetting.citation-vetted-pending,
-.citation-vetting.citation-vetted-failed {
+.citation-vetting a {
   align-items: center;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
@@ -1496,12 +1494,22 @@
   background: var(--stone-200);
 }
 
-.citation-vetted-pending {
+.citation-vetted-pending a {
+  background: var(--stone-50);
   color: var(--stone-500);
 }
 
-.citation-vetted-failed {
+.citation-vetted-pending a:hover {
+  background: var(--stone-100);
+}
+
+.citation-vetted-failed a {
+  background: var(--stone-50);
   color: var(--stone-400);
+}
+
+.citation-vetted-failed a:hover {
+  background: var(--stone-100);
 }
 
 .citation-vetted-pending .spinning {
