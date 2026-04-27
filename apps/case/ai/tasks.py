@@ -144,11 +144,9 @@ def process_ai_request(
             # Claude - show elapsed time updates
             update_status("generating", "Generating response...")
 
-            # Map llm choice to model ID
+            # Map llm choice to model ID. Both 4.6 models have 1M context GA.
             claude_model = (
-                "claude-opus-4-5-20251101"
-                if llm == "claude-opus"
-                else "claude-sonnet-4-20250514"
+                "claude-opus-4-6" if llm == "claude-opus" else "claude-sonnet-4-6"
             )
 
             response_text, input_tokens, output_tokens = send_to_claude(

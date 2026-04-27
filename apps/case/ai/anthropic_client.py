@@ -45,7 +45,7 @@ def _build_system(system_context: str):
 def send_to_claude(
     system_context: str,
     messages: list[dict],
-    model: str = "claude-sonnet-4-20250514",
+    model: str = "claude-sonnet-4-6",
     is_cancelled: Callable[[], bool] | None = None,
 ) -> tuple[str, int, int]:
     """
@@ -54,10 +54,13 @@ def send_to_claude(
     Uses streaming mode to allow cancellation mid-request. When cancelled,
     only tokens generated up to that point are billed.
 
+    Sonnet 4.6 and Opus 4.6 have 1M-token context windows generally
+    available; we don't pass any beta header.
+
     Args:
         system_context: The system prompt with matter context
         messages: List of {"role": "user"|"assistant", "content": str}
-        model: Claude model to use (claude-sonnet-4-20250514 or claude-opus-4-5-20251101)
+        model: Claude model to use (claude-sonnet-4-6 or claude-opus-4-6)
         is_cancelled: Optional callback that returns True if request should be cancelled
 
     Returns:

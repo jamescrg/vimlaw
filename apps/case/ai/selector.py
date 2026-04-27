@@ -18,10 +18,12 @@ from .models import Conversation
 logger = logging.getLogger(__name__)
 
 # Usable context budget per model (roughly 75% of full context window,
-# reserving space for conversation history and response).
+# reserving space for conversation history and response). Sonnet 4.6 and
+# Opus 4.6 both have 1M-token context windows GA, so they get the same
+# 750k budget as the Gemini models.
 MODEL_CONTEXT_LIMITS = {
-    "claude": 150_000,
-    "claude-opus": 150_000,
+    "claude": 750_000,
+    "claude-opus": 750_000,
     "gemini-flash": 750_000,
     "gemini-pro": 750_000,
     "gemini-pro-latest": 750_000,

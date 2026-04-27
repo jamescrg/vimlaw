@@ -11,8 +11,8 @@ class Conversation(AuditMixin, models.Model):
     """A chat conversation within a matter context."""
 
     LLM_CHOICES = [
-        ("claude", "Claude Sonnet 4"),
-        ("claude-opus", "Claude Opus 4.5"),
+        ("claude", "Claude Sonnet 4.6"),
+        ("claude-opus", "Claude Opus 4.6"),
         ("gemini-flash", "Gemini 2.5 Flash"),
         ("gemini-pro", "Gemini 2.5 Pro"),
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
