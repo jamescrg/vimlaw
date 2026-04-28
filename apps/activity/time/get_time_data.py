@@ -35,6 +35,11 @@ def get_time_data(request):
 
     filter_data = request.session.get("time_filter", {})
 
+    # Clean up legacy sessions that stored the "All Users" sentinel (0) — it
+    # isn't a valid pk for the ModelChoiceFilter and trips form validation.
+    if filter_data.get("user") in (0, "0"):
+        filter_data.pop("user", None)
+
     if filter_data:
         filter = TimeEntryFilter(filter_data, queryset=entries)
 

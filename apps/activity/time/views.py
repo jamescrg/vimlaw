@@ -81,6 +81,11 @@ def time_list(request):
 def time_filter(request):
     def get_filter(request):
         filter_data = request.session.get("time_filter", request.POST)
+        # Strip the legacy "All Users" sentinel (0) before binding the form.
+        if filter_data.get("user") in (0, "0"):
+            filter_data = dict(filter_data)
+            filter_data.pop("user", None)
+            request.session["time_filter"] = filter_data
         return TimeEntryFilter(filter_data, queryset=TimeEntry.objects.all())
 
     if request.method == "POST":
@@ -189,7 +194,14 @@ def time_filter_quick(request, quick_filter):
 @login_required
 def time_filter_user(request, user_id):
     filter_data = request.session.get("time_filter", {})
-    filter_data["user"] = user_id
+    # The "All Users" dropdown item posts user_id=0 as a sentinel. The user
+    # filter is a ModelChoiceFilter over active CustomUsers, so storing 0
+    # later trips form validation ("Select a valid choice...") when the
+    # filter modal is rendered. Treat 0 as "clear the filter" instead.
+    if user_id == 0:
+        filter_data.pop("user", None)
+    else:
+        filter_data["user"] = user_id
 
     request.session["time_filter"] = filter_data
 

@@ -62,7 +62,11 @@ def expenses_list(request):
 def expenses_filter(request):
     def get_filter(request):
         filter_data = request.session.get("expenses_filter", request.POST)
-
+        # Strip the legacy "All Users" sentinel (0) before binding the form.
+        if filter_data.get("user") in (0, "0"):
+            filter_data = dict(filter_data)
+            filter_data.pop("user", None)
+            request.session["expenses_filter"] = filter_data
         return ExpenseFilter(filter_data, queryset=ExpenseEntry.objects.all())
 
     if request.method == "POST":
@@ -131,7 +135,12 @@ def expenses_filter_quick(request, quick_filter):
 @login_required
 def expenses_filter_user(request, user_id):
     filter_data = request.session.get("expenses_filter", {})
-    filter_data["user"] = user_id
+    # See time_filter_user: 0 is the "All Users" sentinel. Clear instead
+    # of storing it so the ModelChoiceFilter doesn't trip on validation.
+    if user_id == 0:
+        filter_data.pop("user", None)
+    else:
+        filter_data["user"] = user_id
 
     request.session["expenses_filter"] = filter_data
 

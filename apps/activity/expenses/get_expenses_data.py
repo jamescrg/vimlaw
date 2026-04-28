@@ -35,6 +35,10 @@ def get_expenses_data(request):
 
     filter_data = request.session.get("expenses_filter", {})
 
+    # Clean up legacy sessions that stored the "All Users" sentinel (0).
+    if filter_data.get("user") in (0, "0"):
+        filter_data.pop("user", None)
+
     if filter_data:
         filter = ExpenseFilter(filter_data, queryset=expenses)
 
