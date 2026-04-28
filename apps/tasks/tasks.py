@@ -24,6 +24,13 @@ def get_list_data(request):
 
     filter_data = request.session.get("tasks_filter", {})
 
+    # Drop the legacy "All Users" sentinel (0) before binding. The user
+    # filter is a ModelChoiceFilter and would otherwise fail validation.
+    if filter_data.get("user") in (0, "0"):
+        filter_data = dict(filter_data)
+        filter_data.pop("user", None)
+        request.session["tasks_filter"] = filter_data
+
     if filter_data:
         filter_data = {
             **filter_data,

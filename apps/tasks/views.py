@@ -264,6 +264,11 @@ def tasks_filter(request, user=None):
             # Sanitize filter data to remove invalid values
             sanitized_data = filter_data.copy()
 
+            # Drop the legacy "All Users" sentinel (0). Note: the truthiness
+            # check below would skip 0, leaving it to fail validation later.
+            if sanitized_data.get("user") in (0, "0"):
+                sanitized_data["user"] = ""
+
             # Validate user field - remove if invalid or inactive
             if "user" in sanitized_data and sanitized_data["user"]:
                 try:
@@ -285,6 +290,10 @@ def tasks_filter(request, user=None):
                         sanitized_data["matter"] = ""
                 except (ValueError, TypeError):
                     sanitized_data["matter"] = ""
+
+            # Persist the cleanup so legacy poisoned sessions self-heal.
+            if sanitized_data != filter_data:
+                request.session["tasks_filter"] = sanitized_data
 
             filter = TasksFilter(sanitized_data, queryset=Task.objects.all())
 
@@ -369,7 +378,14 @@ def tasks_filter_matter(request, matter_id):
 @login_required
 def tasks_filter_user(request, user_id):
     filter_data = request.session.get("tasks_filter", {})
-    filter_data["user"] = user_id
+    # The "All Users" dropdown item posts user_id=0 as a sentinel. The user
+    # filter is a ModelChoiceFilter over active CustomUsers, so storing 0
+    # later trips form validation when the filter modal is rendered. Treat
+    # 0 as "clear the filter" instead.
+    if user_id == 0:
+        filter_data.pop("user", None)
+    else:
+        filter_data["user"] = user_id
 
     request.session["tasks_filter"] = filter_data
 
