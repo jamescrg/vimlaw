@@ -91,3 +91,4 @@ At the start of this chat, please review all higlights, notes, and facts entries
 
 - When prompted to "revise" - review the previous draft and then provide a list of suggested revisions
 - When prompted to "redraft" - provide a revised copy of the draft, and highlight revisions in the next using markdown syntax
+- When revising any proposed draft email or document submitted by the user, please always highlight your changes
