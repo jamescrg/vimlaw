@@ -96,6 +96,10 @@ Matter Switcher
   gap: 0.5rem;
 }
 
+.detail-header .toolbar-left > .back-link {
+  padding-block: 0.25rem;
+}
+
 .toolbar .matter-switcher > button {
   background: none;
   border: none;
