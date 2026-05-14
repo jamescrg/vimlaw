@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 import apps.contacts.google as google
 from apps.contacts.contacts import get_list_data
@@ -80,9 +81,12 @@ def add(request):
             # save the contact
             contact.save()
 
-            # For HTMX requests, return 204 to close modal and trigger refresh
+            # For HTMX requests, navigate to the new contact's detail page so
+            # it becomes the selected contact. A plain HX-Refresh would reload
+            # the current URL — and if the user opened the modal from a
+            # /contacts/<id>/details page, that view re-pins selected_contact_id
+            # from the URL on each hit, clobbering the new contact.
             if request.headers.get("HX-Request"):
-                # select newest contact for display
                 request.session["selected_contact_id"] = contact.id
                 # update folder/client_status to show the new contact's folder
                 if contact.folder_id:
@@ -94,7 +98,13 @@ def add(request):
                 request.session.modified = True
                 return HttpResponse(
                     status=204,
-                    headers={"HX-Trigger": "contactChanged", "HX-Refresh": "true"},
+                    headers={
+                        "HX-Trigger": "contactChanged",
+                        "HX-Redirect": reverse(
+                            "contacts:detail-details",
+                            kwargs={"contact_id": contact.id},
+                        ),
+                    },
                 )
             else:
                 # select newest contact for display
