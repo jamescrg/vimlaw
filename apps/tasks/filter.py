@@ -52,9 +52,14 @@ class TasksOrderingFilter(django_filters.OrderingFilter):
             return qs
         ordering = [self.get_ordering_value(param) for param in value]
         try:
-            if ordering[0] == "date_due":
+            if ordering[0] in ("date_due", "-date_due"):
+                date_expr = (
+                    F("date_due").desc(nulls_last=True)
+                    if ordering[0] == "-date_due"
+                    else F("date_due").asc(nulls_last=True)
+                )
                 return qs.order_by(
-                    F("date_due").asc(nulls_last=True),
+                    date_expr,
                     "-importance",
                     "matter__name",
                     "description",
