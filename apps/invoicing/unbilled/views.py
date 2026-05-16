@@ -67,7 +67,13 @@ def unbilled_filter(request):
     if request.method == "POST":
         filter_data = request.session.get("unbilled_filter", {})
         filter_data["last_invoice_before"] = request.POST.get("last_invoice_before", "")
-        filter_data["activity_period"] = request.POST.get("activity_period", "")
+        # activity_period is owned by the toolbar dropdown. Only overwrite it
+        # when the modal posts a non-empty value, so applying the modal with
+        # only a "last_invoice_before" change doesn't silently clear the
+        # period the user picked from the dropdown.
+        posted_period = request.POST.get("activity_period", "")
+        if posted_period:
+            filter_data["activity_period"] = posted_period
         order_by = request.POST.get("order_by", "")
         if order_by:
             filter_data["order_by"] = order_by
