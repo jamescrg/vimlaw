@@ -42,6 +42,8 @@
   --background-medium-light: var(--stone-75);
   --background-light: var(--stone-50);
   --background-table-header: var(--background-control);
+  --past-due-bg: var(--yellow-50);
+  --task-highlight-bg: var(--selected-background);
 
   /* ==========================================================================
      Navigation
@@ -154,7 +156,7 @@
 .hl-red { background: var(--hl-red) !important; }
 .hl-yellow { background: var(--hl-yellow) !important; }
 
-.past-due td { background: var(--yellow-50); }
+.past-due td { background: var(--past-due-bg); }
 
 /* ==========================================================================
    Utility Classes - Text
@@ -236,6 +238,8 @@
   --background-medium-light: var(--gb-dark-soft);
   --background-light: var(--gb-dark-soft);
   --background-table-header: var(--gb-dark2);
+  --past-due-bg: var(--gb-dark1);
+  --task-highlight-bg: var(--gb-dark3);
 
   /* Navigation */
   --background-nav-tab-active: var(--background-body);
@@ -309,5 +313,3 @@
   --hl-red: var(--red-950);
   --hl-yellow: var(--yellow-950);
 }
-
-[data-theme="dark"] .past-due td { background: var(--gb-dark1); }

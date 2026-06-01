@@ -32,6 +32,11 @@ i.importance-5 {
   color: var(--violet-600);
 }
 
+[data-theme="dark"] tr.importance-5 > td.importance .button-link,
+[data-theme="dark"] i.importance-5 {
+  color: var(--violet-400);
+}
+
 tr.importance-3 > td.importance .button-link,
 i.importance-3 {
   color: var(--slate-400);
@@ -446,13 +451,13 @@ tr > td.importance.complete .button-link {
 
 /* New task highlight animation */
 @keyframes task-highlight-fade {
-  from { background-color: var(--selected-background); }
+  from { background-color: var(--task-highlight-bg); }
   to { background-color: transparent; }
 }
 
 @keyframes task-highlight-fade-pastdue {
-  from { background-color: var(--selected-background); }
-  to { background-color: var(--yellow-50); }
+  from { background-color: var(--task-highlight-bg); }
+  to { background-color: var(--past-due-bg); }
 }
 
 .task-new-highlight td {
@@ -461,7 +466,7 @@ tr > td.importance.complete .button-link {
 
 .task-new-highlight.past-due td {
   animation: task-highlight-fade-pastdue 2s ease-out;
-  background-color: var(--yellow-50);
+  background-color: var(--past-due-bg);
 }
 
 
