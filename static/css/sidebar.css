@@ -421,6 +421,26 @@
     margin-left: 0;
   }
 
+  /* A page subnav sitting directly under the bar should read as a matching
+     second bar: same height (min-height so wrapping tabs can still grow it;
+     box-border, so the token is the outer height), and no top border — the
+     bar's own bottom border is the divider, so the two together would
+     otherwise double up. A subnav preceded by a header (e.g. contact detail)
+     is not :first-child, so it keeps its top border. */
+  [data-nav="horizontal"] .subnav {
+    align-items: center;
+    display: flex;
+    min-height: var(--topnav-height);
+  }
+
+  [data-nav="horizontal"] .subnav ul {
+    margin-block: 0;
+  }
+
+  [data-nav="horizontal"] .subnav:first-child {
+    border-top: none;
+  }
+
   /* Dev only: the banner is fixed for the vertical layout (whose sidebar is
      also fixed). The horizontal layout is fully in-flow, so put the banner in
      flow too — otherwise htmx's show:window:top tucks the top of the content
