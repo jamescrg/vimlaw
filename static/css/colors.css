@@ -17,7 +17,11 @@
       structural rule in the component. Do not start a monolithic dark.css.
    ========================================================================== */
 
-:root {
+/* The light token set is the default (:root). Tagging any element with
+   data-theme="light" re-applies it within that subtree — used to keep a "light
+   island" (e.g. the viewer's highlight cards) light inside a dark page. */
+:root,
+[data-theme="light"] {
   /* ==========================================================================
      Design System - Semantic Colors
      These reference the palette.css color definitions

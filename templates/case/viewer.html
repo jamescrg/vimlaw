@@ -25,6 +25,16 @@
     <link rel="stylesheet" href="{% static_v 'css/combobox.css' %}">
     <link rel="stylesheet" href="{% static_v 'css/apps/case/labels.css' %}">
     <link rel="stylesheet" href="{% static_v 'css/viewer.css' %}">
+    <script>
+      /* Match the app's theme (set before paint); this standalone page has its
+         own <head>, mirroring the IIFE in base.html. */
+      (function () {
+        var setting = localStorage.getItem('theme') || 'auto';
+        var dark = setting === 'dark' || (setting === 'auto' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      })();
+    </script>
     <script defer src="https://unpkg.com/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <script src="{% static_v 'js/alpine-components.js' %}"></script>
   </head>

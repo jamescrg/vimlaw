@@ -14,6 +14,7 @@ button:focus,
 }
 
 body {
+  background: var(--background-body);
   font-family: "Open Sans", sans-serif;
   margin: 0;
   overflow: hidden;
@@ -32,7 +33,7 @@ body {
 
 /* PDF iframe container */
 #pdf-iframe-container {
-  background: var(--background-panel);
+  background: var(--background-body);
   flex: 1;
 }
 
@@ -44,7 +45,7 @@ body {
 
 /* Highlights Sidebar */
 #highlights-sidebar {
-  background: var(--background-panel);
+  background: var(--background-section);
   border-left: 1px solid var(--border-medium);
   display: flex;
   flex-direction: column;
@@ -56,7 +57,7 @@ body {
 
 #highlights-header {
   align-items: center;
-  background: var(--background-muted);
+  background: var(--background-subnav-contrast);
   border-bottom: 1px solid var(--border-medium);
   display: flex;
   flex-shrink: 0;
@@ -71,7 +72,7 @@ body {
   background: none;
   border: none;
   border-radius: 0.375rem;
-  color: var(--stone-700);
+  color: var(--color-primary);
   cursor: pointer;
   display: flex;
   font-size: 1.25rem;
@@ -104,7 +105,7 @@ body {
 }
 
 .highlights-controls .btn-icon:hover {
-  color: var(--stone-900);
+  color: var(--color-darker);
 }
 
 #highlights-list {
@@ -236,7 +237,7 @@ body {
 }
 
 .no-highlights {
-  color: var(--stone-400);
+  color: var(--color-muted);
   font-size: 0.875rem;
   padding: 20px;
   text-align: center;
@@ -287,11 +288,11 @@ body {
 
 /* Modal */
 .modal-content {
-  background: var(--stone-100);
+  background: var(--background-section);
 }
 
 .modal-header {
-  border-bottom: 1px solid var(--stone-300);
+  border-bottom: 1px solid var(--border-medium);
 }
 
 .modal-header .modal-title {
@@ -300,24 +301,24 @@ body {
 }
 
 .modal-header a {
-  color: var(--green-800);
+  color: var(--link);
   text-decoration: none;
 }
 
 .modal-footer {
-  border-top: 1px solid var(--stone-300);
+  border-top: 1px solid var(--border-medium);
 }
 
 #highlight-form .form-control,
 #highlight-form .form-select {
-  background: var(--stone-50);
-  border: 1px solid var(--stone-300);
+  background: var(--input-background);
+  border: 1px solid var(--input-border);
   border-radius: var(--radius-sm);
 }
 
 #highlight-form .form-control:focus,
 #highlight-form .form-select:focus {
-  border-color: var(--stone-400);
+  border-color: var(--border-dark);
   box-shadow: none;
   outline: none;
 }
