@@ -54,7 +54,7 @@ def send_to_claude(
     Uses streaming mode to allow cancellation mid-request. When cancelled,
     only tokens generated up to that point are billed.
 
-    Sonnet 4.6 and Opus 4.6 expose a 1M-token context window on this account
+    Sonnet 4.6 and Opus 4.8 expose a 1M-token context window on this account
     without any beta header. The selector's MODEL_CONTEXT_LIMITS is a soft
     cap on auto-selected content; the assembler enforces a separate hard
     ceiling so the total prompt stays under the model window even when
@@ -64,7 +64,7 @@ def send_to_claude(
     Args:
         system_context: The system prompt with matter context
         messages: List of {"role": "user"|"assistant", "content": str}
-        model: Claude model to use (claude-sonnet-4-6 or claude-opus-4-6)
+        model: Claude model to use (claude-sonnet-4-6 or claude-opus-4-8)
         is_cancelled: Optional callback that returns True if request should be cancelled
 
     Returns:

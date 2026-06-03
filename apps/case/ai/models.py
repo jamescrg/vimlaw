@@ -12,7 +12,7 @@ class Conversation(AuditMixin, models.Model):
 
     LLM_CHOICES = [
         ("claude", "Claude Sonnet 4.6"),
-        ("claude-opus", "Claude Opus 4.6"),
+        ("claude-opus", "Claude Opus 4.8"),
         ("gemini-flash", "Gemini 2.5 Flash"),
         ("gemini-pro", "Gemini 2.5 Pro"),
         ("gemini-pro-latest", "Gemini Pro (Latest)"),

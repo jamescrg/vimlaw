@@ -189,11 +189,11 @@ def process_ai_request(
             # Claude - show elapsed time updates
             update_status("generating", "Generating response...")
 
-            # Map llm choice to model ID. Both 4.6 models have a 1M-token
+            # Map llm choice to model ID. Both models have a 1M-token
             # context window; the selector budget plus the hard-ceiling check
             # in context assembly together keep prompts within that window.
             claude_model = (
-                "claude-opus-4-6" if llm == "claude-opus" else "claude-sonnet-4-6"
+                "claude-opus-4-8" if llm == "claude-opus" else "claude-sonnet-4-6"
             )
 
             response_text, input_tokens, output_tokens = send_to_claude(
