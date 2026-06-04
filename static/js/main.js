@@ -695,6 +695,19 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
+// Autofocus the quick-add task input whenever the tasks list (re)renders, so
+// tasks can be typed back-to-back. The #tasks container swaps in a fresh input
+// on every tasksListChanged, which is why the autofocus attribute alone isn't
+// enough. Skip when focus is already in another field so we don't steal it.
+document.body.addEventListener('htmx:afterSwap', function(e) {
+  const input = e.target.querySelector && e.target.querySelector('.tasks-add-quick-input');
+  if (!input) return;
+  const active = document.activeElement;
+  if (!active || active === document.body) {
+    input.focus();
+  }
+});
+
 // Show toast when a command palette modal form is successfully submitted
 // (only if the backend didn't already send a custom toast via HX-Toast header)
 document.body.addEventListener('htmx:afterRequest', function(e) {
