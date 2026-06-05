@@ -552,17 +552,25 @@ tr > td.importance.complete .button-link {
 
 /* Dark mode: signal state with a left accent rail instead of a row fill.
    Fills are neutralised to the cell background (see colors.css), so the rail
-   is the only treatment. Past-due is a persistent rose rail on the due-date
-   cell; a recently-edited row gets a violet rail on the table's far-left edge
-   that fades out over 2s. The two live in different columns, so a row that is
-   both shows each signal independently. */
+   is the only treatment. Past-due shows a persistent rose rail to the left of
+   the description cell plus a rose underline on the due date; a recently-edited
+   row gets a violet rail on the table's far-left edge that fades out over 2s.
+   They live in different columns, so a row that is both shows each signal
+   independently. */
 @keyframes task-rail-fade {
   from { box-shadow: inset 3px 0 0 0 var(--task-highlight-rail); }
   to   { box-shadow: inset 3px 0 0 0 transparent; }
 }
 
-[data-theme="dark"] .past-due td.date {
+[data-theme="dark"] .past-due td.description {
   box-shadow: inset 3px 0 0 0 var(--past-due-rail);
+}
+
+[data-theme="dark"] .past-due td.date .task-date-link {
+  text-decoration: underline;
+  text-decoration-color: var(--past-due-rail);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
 }
 
 [data-theme="dark"] .task-new-highlight td {
