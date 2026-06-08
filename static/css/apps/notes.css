@@ -699,7 +699,7 @@ body:has(.note-page.standalone) {
   border-left: none;
   border-radius: 0;
   border-right: none;
-  min-width: 54rem;
+  min-width: 60rem;
 }
 
 .notes-list th.col-select,
@@ -736,6 +736,11 @@ body:has(.note-page.standalone) {
 
 .notes-list .updated {
   width: 8rem;
+}
+
+.notes-list .ai {
+  text-align: left;
+  width: 6rem;
 }
 
 .notes-list .importance {
