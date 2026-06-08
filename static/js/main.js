@@ -722,6 +722,18 @@ document.body.addEventListener('htmx:afterSwap', function(e) {
   }
 });
 
+// Autofocus the AI chat message box when a conversation/chat view is swapped in,
+// so you can start typing right away. Unlike the list inputs above, opening a
+// conversation often leaves a sidebar link focused (not body), so only skip when
+// focus is already in another text field.
+document.body.addEventListener('htmx:afterSwap', function(e) {
+  const input = e.target.querySelector && e.target.querySelector('#aiMessageInput');
+  if (!input) return;
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+  input.focus();
+});
+
 // Show toast when a command palette modal form is successfully submitted
 // (only if the backend didn't already send a custom toast via HX-Toast header)
 document.body.addEventListener('htmx:afterRequest', function(e) {
