@@ -1,6 +1,7 @@
 from django.urls import path
 
 # Import all from company.views as company_urls
+import apps.settings.appearance.views as appearance_urls
 import apps.settings.company.views as company_urls
 import apps.settings.contacts.views as contact_urls
 import apps.settings.integrations.views as integration_urls
@@ -107,6 +108,12 @@ urlpatterns = [
         "settings/profile/personal/<str:form_type>/",
         profile_urls.personal_profile,
         name="personal-profile",
+    ),
+    # Appearance
+    path(
+        "settings/appearance/",
+        appearance_urls.appearance_index,
+        name="appearance-index",
     ),
     # Contacts (Groups and Roles)
     path("settings/contacts/", contact_urls.contacts_index, name="contacts-index"),

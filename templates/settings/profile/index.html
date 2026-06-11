@@ -4,34 +4,4 @@
        hx-trigger="load, profileReload from:body"
        hx-get="{% url 'settings:personal-profile' %}"
        hx-target="this">{% include "settings/profile/profile.html" %}</div>
-  <h2>Theme</h2>
-  <hr />
-  <p class="detail-text">Theme is stored per device.</p>
-  <fieldset class="theme-options" onchange="setTheme(event.target.value)">
-    <label class="theme-option">
-      <input type="radio" name="theme" value="auto">
-      <span>Auto <small>(match system)</small></span>
-    </label>
-    <label class="theme-option">
-      <input type="radio" name="theme" value="light">
-      <span>Light</span>
-    </label>
-    <label class="theme-option">
-      <input type="radio" name="theme" value="dark">
-      <span>Dark</span>
-    </label>
-  </fieldset>
-  <h2>Navigation</h2>
-  <hr />
-  <p class="detail-text">Navigation layout is stored per device.</p>
-  <fieldset class="nav-options" onchange="setNavLayout(event.target.value)">
-    <label class="nav-option">
-      <input type="radio" name="nav-layout" value="vertical">
-      <span>Vertical <small>(sidebar)</small></span>
-    </label>
-    <label class="nav-option">
-      <input type="radio" name="nav-layout" value="horizontal">
-      <span>Horizontal <small>(top bar)</small></span>
-    </label>
-  </fieldset>
 {% endblock subcontent %}
