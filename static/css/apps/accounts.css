@@ -45,21 +45,18 @@ body {
   margin-bottom: 0.25rem;
 }
 
-/* Brand monogram: the ἀ mark, set to the left of the wordmark. Uses the SVG
-   path as a mask (not browser-rendered text) so it's pixel-identical across
-   browsers, tinted with var(--link) so it matches the wordmark in both themes.
-   Decorative — the title text is the accessible name. */
+/* Brand monogram: ἀ (alpha + smooth breathing), first letter of ἀλήθεια, set
+   to the left of the wordmark. Decorative — the title text is the accessible
+   name. */
 .auth-title::before {
-  content: "";
-  background-color: var(--link);
-  flex-shrink: 0;
-  height: 2.25rem;
+  content: "ἀ";
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1;
   margin-right: 0.5rem;
   position: relative;
-  top: -2px;
-  width: 2.25rem;
-  -webkit-mask: url("/static/images/aletheia-mark.svg") center / contain no-repeat;
-  mask: url("/static/images/aletheia-mark.svg") center / contain no-repeat;
+  top: -3px;
 }
 
 .auth-subtitle {
