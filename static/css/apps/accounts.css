@@ -35,23 +35,25 @@ body {
 }
 
 .auth-title {
+  align-items: center;
   color: var(--link);
+  display: flex;
   font-size: 1.75rem;
   font-weight: 500;
+  gap: 0.5rem;
+  justify-content: center;
   margin-bottom: 0.25rem;
-  text-align: center;
 }
 
-/* Brand monogram: ἀ (alpha + smooth breathing), first letter of ἀλήθεια.
-   Decorative — the title text provides the accessible name. */
+/* Brand monogram: ἀ (alpha + smooth breathing), first letter of ἀλήθεια, set
+   to the left of the wordmark. Decorative — the title text is the accessible
+   name. */
 .auth-title::before {
   content: "ἀ";
-  display: block;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 600;
   line-height: 1;
-  margin-bottom: 0.5rem;
 }
 
 .auth-subtitle {
