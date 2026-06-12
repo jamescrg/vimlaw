@@ -1,4 +1,4 @@
-aletheia Daily Digest for {{ today|date:"l, F j, Y" }}
+Aletheia Daily Digest for {{ today|date:"l, F j, Y" }}
 ============================================
 
 Hi {{ user.first_name|default:user.username }},

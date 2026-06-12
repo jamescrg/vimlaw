@@ -1,7 +1,7 @@
 [project]
 name = "aletheia"
 version = "0.1.0"
-description = "aletheia - Django law practice management application"
+description = "Aletheia - Django law practice management application"
 readme = "README.md"
 requires-python = ">=3.10"
 

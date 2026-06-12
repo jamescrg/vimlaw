@@ -253,7 +253,7 @@ def sync_from_google():
     """
     Synchronize events from Google Calendar to local database.
     Uses incremental sync with sync tokens for efficiency.
-    Conflict resolution: aletheia wins (local changes take precedence).
+    Conflict resolution: Aletheia wins (local changes take precedence).
     """
     # Import here to avoid circular dependency
     from apps.calendar.models import CalendarSyncState
@@ -362,7 +362,7 @@ def _process_google_event(google_event):
         # Get Google's last updated timestamp
         google_updated = date_parser.parse(google_event.get("updated"))
 
-        # aletheia wins: only update if Google is newer
+        # Aletheia wins: only update if Google is newer
         if local_event.updated_at and local_event.updated_at > google_updated:
             # Local is newer - push to Google instead
             logger.info(f"Local event {google_id} is newer, pushing to Google")

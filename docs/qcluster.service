@@ -1,5 +1,5 @@
 [Unit]
-Description=Django-Q Cluster for aletheia
+Description=Django-Q Cluster for Aletheia
 After=network.target postgresql.service
 
 [Service]

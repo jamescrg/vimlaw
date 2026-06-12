@@ -1,4 +1,4 @@
-# aletheia
+# Aletheia
 
 A web-based law practice management application with integrated case
 building and AI-powered legal analysis.
@@ -537,7 +537,7 @@ Create `/etc/systemd/system/drive-notes-sync.service`:
 
 ```ini
 [Unit]
-Description=aletheia Google Drive case-notes sync (oneshot)
+Description=Aletheia Google Drive case-notes sync (oneshot)
 After=network.target
 
 [Service]
@@ -552,7 +552,7 @@ Create `/etc/systemd/system/drive-notes-sync.timer`:
 
 ```ini
 [Unit]
-Description=Run aletheia Google Drive case-notes sync every ~30s
+Description=Run Aletheia Google Drive case-notes sync every ~30s
 
 [Timer]
 OnBootSec=30s

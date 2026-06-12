@@ -113,7 +113,7 @@ def send_digest_for_user(user):
     text_message = render_to_string("emails/daily_digest.txt", context)
 
     send_mail(
-        subject=f"aletheia Daily Digest for {today.strftime('%A, %B %-d')}",
+        subject=f"Aletheia Daily Digest for {today.strftime('%A, %B %-d')}",
         message=text_message,
         from_email=None,
         recipient_list=[user.email],
