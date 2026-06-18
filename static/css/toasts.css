@@ -7,6 +7,9 @@
 
 #toast-container .toast {
     border: 1px solid var(--border-dark);
+    /* Left accent rail in the toast's type colour (set in toasts.js) so the
+       type reads at a glance instead of relying on the small header icon. */
+    border-left: 4px solid var(--toast-accent, var(--border-dark));
     border-radius: var(--radius-sm);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-width: 18rem;
@@ -56,6 +59,21 @@
     display: block;
     margin-top: 0.5rem;
     text-decoration: none;
+}
+
+/* Warning toast wash. Surfaces and rail flip per theme via the tokens (yellow
+   wash + no rail in light, neutral surfaces + orange rail in dark); the type
+   class is added by toasts.js. */
+#toast-container .toast-warning {
+    border-left: var(--toast-warning-rail);
+}
+
+#toast-container .toast-warning .toast-header {
+    background: var(--toast-warning-header-bg);
+}
+
+#toast-container .toast-warning .toast-body {
+    background: var(--toast-warning-body-bg);
 }
 
 #toast-container .toast-link:hover {

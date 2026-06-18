@@ -62,7 +62,9 @@
       })
       .then(function (data) {
         if (!data || !data.ok) {
-          if (data && data.message && window.Toast) {
+          // Toast is a top-level const in toasts.js — a global binding, not a
+          // window property — so reach it by name, not via window.Toast.
+          if (data && data.message && typeof Toast !== "undefined") {
             Toast.warning(data.message);
           }
           // Re-render the board from the server's truth to undo the drop.
@@ -103,9 +105,9 @@
         ghostClass: "sortable-ghost",
         dragClass: "sortable-drag",
         draggable: ".kanban-card",
-        // Don't start a drag from the checklist/notes buttons; let their click
-        // (and htmx request) go through.
-        filter: ".kanban-card-btn",
+        // Don't start a drag from the interactive controls (priority dropdown,
+        // checklist/notes buttons); let their click (and htmx request) through.
+        filter: ".kanban-card-btn, .kanban-card-priority",
         preventOnFilter: false,
         // Sortable's own drag impl with a small pixel threshold so a click
         // (under 5px of movement) never registers as a drag.

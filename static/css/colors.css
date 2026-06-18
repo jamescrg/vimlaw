@@ -75,6 +75,13 @@
   --past-due-bg: var(--yellow-50);
   --task-highlight-bg: var(--selected-background);
 
+  /* Warning toast — a soft yellow wash in light mode so it reads against the
+     page; the type rail is dropped here (the wash carries the signal). The dark
+     block reverts to neutral surfaces and restores the rail. */
+  --toast-warning-header-bg: var(--yellow-100);
+  --toast-warning-body-bg: var(--yellow-50);
+  --toast-warning-rail: 1px solid var(--border-dark);
+
   /* ==========================================================================
      Navigation
      ========================================================================== */
@@ -304,6 +311,12 @@
   --task-highlight-bg: var(--background-td);
   --past-due-rail: oklch(0.60 0.17 358);        /* rose-pink — persistent "past due" */
   --task-highlight-rail: oklch(0.64 0.19 293);  /* violet — transient "recently changed" */
+
+  /* Warning toast keeps the neutral surfaces and the orange rail in dark, where
+     the rail already reads well. */
+  --toast-warning-header-bg: var(--background-section);
+  --toast-warning-body-bg: var(--background-light);
+  --toast-warning-rail: 4px solid var(--warning);
 
   /* Navigation */
   --background-nav-tab-active: var(--background-body);

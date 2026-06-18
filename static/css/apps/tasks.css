@@ -941,8 +941,8 @@ body.kanban-dragging .kanban-card {
   gap: 0.5rem;
 }
 
-/* Case name sits first; the colour goes to the priority icon, so the name
-   stays standard text. */
+/* Case name sits first as plain text; the colour on the card goes to the
+   priority icon instead. */
 .kanban-card-matter {
   flex: 1;
   min-width: 0;
@@ -951,13 +951,41 @@ body.kanban-dragging .kanban-card {
   white-space: nowrap;
 }
 
-/* Priority is the one accent on the card — colour comes from the shared
-   i.importance-N rules, matching the status dropdown menu. */
+/* Priority is a dropdown (change importance inline) and the one colour accent
+   on the card. There's no td.importance here to colour the trigger, so map the
+   card's importance class onto it — same palette as the dropdown menu. */
 .kanban-card-priority {
   display: inline-flex;
   flex: none;
   font-size: 1.125rem;
   margin-left: auto;
+}
+
+/* Normal (4) priority: match the muted icon colour used by the dropdown menu
+   items (.dropdown-item i) and the checklist/notes buttons. */
+.kanban-card-priority .button-link {
+  color: var(--color-muted-more);
+}
+
+.kanban-card.importance-7 .kanban-card-priority .button-link,
+.kanban-card.importance-6 .kanban-card-priority .button-link {
+  color: var(--red-600);
+}
+
+.kanban-card.importance-5 .kanban-card-priority .button-link {
+  color: var(--violet-600);
+}
+
+.kanban-card.importance-3 .kanban-card-priority .button-link {
+  color: var(--slate-400);
+}
+
+.kanban-card.importance-2 .kanban-card-priority .button-link {
+  color: var(--slate-500);
+}
+
+.kanban-card.importance-1 .kanban-card-priority .button-link {
+  color: var(--slate-600);
 }
 
 .kanban-card-description {
@@ -1015,6 +1043,10 @@ body.kanban-dragging .kanban-card {
    background in dark, so it would be invisible). */
 [data-theme="dark"] .kanban-card.importance-5 {
   border-left-color: var(--violet-400);
+}
+
+[data-theme="dark"] .kanban-card.importance-5 .kanban-card-priority .button-link {
+  color: var(--violet-400);
 }
 
 [data-theme="dark"] .kanban-card.past-due {

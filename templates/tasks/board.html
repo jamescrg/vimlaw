@@ -19,23 +19,7 @@
                   Admin
                 {% endif %}
               </span>
-              <span class="kanban-card-priority" title="Priority {{ task.importance }}">
-                {% if task.importance == 7 %}
-                  <i class="icon-chevrons-up importance-7"></i>
-                {% elif task.importance == 6 %}
-                  <i class="icon-chevron-up importance-6"></i>
-                {% elif task.importance == 5 %}
-                  <i class="icon-chevron-up importance-5"></i>
-                {% elif task.importance == 4 %}
-                  <i class="icon-equal importance-4"></i>
-                {% elif task.importance == 3 %}
-                  <i class="icon-chevron-down importance-3"></i>
-                {% elif task.importance == 2 %}
-                  <i class="icon-chevron-down importance-2"></i>
-                {% else %}
-                  <i class="icon-chevrons-down importance-1"></i>
-                {% endif %}
-              </span>
+              <div class="kanban-card-priority" title="Priority {{ task.importance }}">{% include "tasks/importance.html" %}</div>
             </div>
             <p class="kanban-card-description">{{ task.description }}</p>
             <div class="kanban-card-meta">

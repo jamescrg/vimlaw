@@ -49,12 +49,17 @@ const Toast = (function () {
 
     const toast = document.createElement("div");
     toast.className = "toast";
+    // Per-type class (e.g. toast-warning) so CSS can tint specific types.
+    if (type) toast.classList.add("toast-" + type.replace(/\s+/g, "-"));
     toast.setAttribute("role", "alert");
     toast.setAttribute("aria-live", "assertive");
     toast.setAttribute("aria-atomic", "true");
 
     const icon = ICONS[type] || ICONS.info;
     const color = COLORS[type] || COLORS.info;
+
+    // Drive the left accent rail (see toasts.css) from the same per-type colour.
+    toast.style.setProperty("--toast-accent", color);
 
     let bodyContent = escapeHtml(message);
     if (link && link.url && link.text) {
