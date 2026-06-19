@@ -3,10 +3,53 @@ import re
 import markdown
 from django import template
 from django.utils.safestring import mark_safe
+from markdown.extensions import Extension
+from markdown.treeprocessors import Treeprocessor
 
 from apps.case.notes.markdown_ext import NoteReferenceExtension
 
 register = template.Library()
+
+
+# --- Bluebook ellipses (Rule 5.3) -------------------------------------------
+# Normalise any ellipsis — a unicode "…", three-or-more periods, or already-
+# spaced dots — to the Bluebook form of space-separated periods: ". . ." mid-
+# sentence, ". . . ." when a fourth (sentence-terminating) period is present.
+# Regular spaces, so it may wrap. Runs as a tree-processor so it never touches
+# code spans/blocks (where "..." is meaningful, e.g. spread/rest operators).
+_ELLIPSIS_RE = re.compile(r"[ \t]*(…\.?|\.(?:[ \t]*\.){2,})[ \t]*")
+
+
+def _to_bluebook_ellipsis(match):
+    run = match.group(1)
+    dots = run.count(".") + (3 if "…" in run else 0)
+    dots = 4 if dots >= 4 else 3
+    return " " + " ".join(["."] * dots) + " "
+
+
+def _normalize_ellipses(text):
+    if not text or ("." not in text and "…" not in text):
+        return text
+    return _ELLIPSIS_RE.sub(_to_bluebook_ellipsis, text)
+
+
+class _BluebookEllipsisTreeprocessor(Treeprocessor):
+    def run(self, root):
+        for el in root.iter():
+            # An element's .text is its own content (skip code); its .tail is the
+            # prose that follows it in the parent, which is always fair game.
+            if el.text and el.tag not in ("code", "pre"):
+                el.text = _normalize_ellipses(el.text)
+            if el.tail:
+                el.tail = _normalize_ellipses(el.tail)
+        return root
+
+
+class BluebookEllipsisExtension(Extension):
+    def extendMarkdown(self, md):
+        md.treeprocessors.register(
+            _BluebookEllipsisTreeprocessor(md), "bluebook_ellipsis", 5
+        )
 
 
 def normalize_markdown(text):
@@ -50,17 +93,22 @@ def render_markdown(text):
             "nl2br",
             "pymdownx.mark",
             "smarty",
+            BluebookEllipsisExtension(),
             NoteReferenceExtension(),
         ],
-        # Curl quotes/apostrophes so copied text is typographically clean, but
-        # leave dashes and ellipses straight — legal quotations use the Bluebook
-        # ". . ." ellipsis, which auto-collapsing would break. smarty skips code.
         extension_configs={
+            # Curl quotes/apostrophes for clean copy-paste. Dashes and ellipses
+            # are left to smarty's defaults off — ellipses are handled by the
+            # Bluebook tree-processor instead. smarty skips code.
             "smarty": {
                 "smart_quotes": True,
                 "smart_dashes": False,
                 "smart_ellipses": False,
-            }
+            },
+            # Don't let adjacent punctuation/brackets suppress a ==highlight==;
+            # smart_mark's flanking rules otherwise drop marks next to "(", ".",
+            # quotes, etc.
+            "pymdownx.mark": {"smart_mark": False},
         },
     )
     return mark_safe(md.convert(text))

@@ -27,6 +27,7 @@ At the start of this chat, please review all higlights, notes, and facts entries
 - Use the citation format provided in highlights (e.g., "(Exhibit A at 5.)")
 - If uncertain about a fact, say so rather than guessing
 - Distinguish between facts from the case record and your legal analysis
+- When quoting and omitting text, use Bluebook ellipses (Rule 5.3): three periods for an omission within a sentence, and four when the omission runs through the end of a sentence. Never begin a quotation with an ellipsis.
 
 #### Jurisdiction
 
@@ -114,7 +115,7 @@ At the start of this chat, please review all higlights, notes, and facts entries
 #### When Highlighting Text
 
 - Use markdown syntax ==
-- Don't highlight empty spaces and be mindful of when adjacent punctuation might break the markdown syntax.
+- Don't highlight empty spaces — wrap only the words you mean, with the == flush against them. Adjacent punctuation is fine; the renderer handles marks next to brackets, quotes, and periods.
 
 #### When Revising a Draft
 
