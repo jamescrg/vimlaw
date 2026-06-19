@@ -1,24 +1,34 @@
 {% load humanize markdown_extras citation_extras %}
 <script>
-  // Idempotent global; defined here too because message-single may be the
-  // initial swap target via HTMX before the messages partial has loaded.
+  // Idempotent globals; defined here too because message-single may be the
+  // initial swap target via HTMX before the messages partial has loaded. The
+  // shared cleaner (and the native-copy interceptor) live in messages.html.
+  if (!window.aiCleanForExport) {
+    window.aiCleanForExport = function (root) {
+      root
+        .querySelectorAll(".citation-vetting, .citation-badge-wrapper")
+        .forEach((n) => n.remove());
+      root.querySelectorAll("mark").forEach((m) => {
+        const span = document.createElement("span");
+        span.style.backgroundColor = "#fff1a8";
+        span.style.color = "#000";
+        span.innerHTML = m.innerHTML;
+        m.replaceWith(span);
+      });
+      root.querySelectorAll("[class], [id]").forEach((n) => {
+        n.removeAttribute("class");
+        n.removeAttribute("id");
+      });
+      return root;
+    };
+  }
   if (typeof window.copyMessageText === "undefined") {
-    window.copyMessageText = function(buttonEl) {
+    window.copyMessageText = function (buttonEl) {
       const messageText = buttonEl
         .closest(".ai-message-content")
         .querySelector(".ai-message-text");
       if (!messageText) return;
-      const clone = messageText.cloneNode(true);
-      clone
-        .querySelectorAll(".citation-vetting, .citation-badge-wrapper")
-        .forEach((n) => n.remove());
-      // Drop chat-specific attributes so only structural tags reach the
-      // word processor.
-      clone.querySelectorAll("[class], [style], [id]").forEach((n) => {
-        n.removeAttribute("class");
-        n.removeAttribute("style");
-        n.removeAttribute("id");
-      });
+      const clone = window.aiCleanForExport(messageText.cloneNode(true));
       const showCopied = () => {
         buttonEl.innerHTML = "<i class='icon-check'></i>";
         setTimeout(() => {
@@ -26,9 +36,6 @@
         }, 2000);
       };
       const text = clone.innerText;
-      // Write rich HTML so numbered lists paste as real auto-numbered lists
-      // (LibreOffice, Word, etc.), with a plain-text flavor for plain targets.
-      // Fall back to plain text where ClipboardItem isn't supported.
       if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
         const item = new ClipboardItem({
           "text/html": new Blob([clone.innerHTML], { type: "text/html" }),

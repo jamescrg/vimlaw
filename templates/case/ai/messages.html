@@ -1,27 +1,39 @@
 {% load humanize markdown_extras citation_extras %}
 <script>
-  // Idempotent global: clean copy of an assistant message body. Clones the
-  // .ai-message-text node, strips citation badge wrappers from the clone,
-  // then writes the cleaned innerText to the clipboard. Defined here so the
-  // function is available wherever the messages partial is rendered (both
-  // standalone chat and the matter-detail conversation view).
+  // Shared: turn an AI-message subtree (a message clone or a selection
+  // fragment) into clean, theme-independent HTML for pasting into a document.
+  // Strips citation badges; renders ==highlights== as an inline yellow
+  // background (the on-screen fill comes from a CSS variable, and dark mode
+  // uses an underline -- neither survives a copy); drops chat-specific classes.
+  if (!window.aiCleanForExport) {
+    window.aiCleanForExport = function (root) {
+      root
+        .querySelectorAll(".citation-vetting, .citation-badge-wrapper")
+        .forEach((n) => n.remove());
+      root.querySelectorAll("mark").forEach((m) => {
+        const span = document.createElement("span");
+        span.style.backgroundColor = "#fff1a8";
+        span.style.color = "#000";
+        span.innerHTML = m.innerHTML;
+        m.replaceWith(span);
+      });
+      root.querySelectorAll("[class], [id]").forEach((n) => {
+        n.removeAttribute("class");
+        n.removeAttribute("id");
+      });
+      return root;
+    };
+  }
+
+  // Copy button: clean rich HTML so numbered lists paste as real lists and
+  // highlights survive; plain-text flavor + writeText fallback.
   if (typeof window.copyMessageText === "undefined") {
-    window.copyMessageText = function(buttonEl) {
+    window.copyMessageText = function (buttonEl) {
       const messageText = buttonEl
         .closest(".ai-message-content")
         .querySelector(".ai-message-text");
       if (!messageText) return;
-      const clone = messageText.cloneNode(true);
-      clone
-        .querySelectorAll(".citation-vetting, .citation-badge-wrapper")
-        .forEach((n) => n.remove());
-      // Drop chat-specific attributes so only structural tags reach the
-      // word processor.
-      clone.querySelectorAll("[class], [style], [id]").forEach((n) => {
-        n.removeAttribute("class");
-        n.removeAttribute("style");
-        n.removeAttribute("id");
-      });
+      const clone = window.aiCleanForExport(messageText.cloneNode(true));
       const showCopied = () => {
         buttonEl.innerHTML = "<i class='icon-check'></i>";
         setTimeout(() => {
@@ -29,9 +41,6 @@
         }, 2000);
       };
       const text = clone.innerText;
-      // Write rich HTML so numbered lists paste as real auto-numbered lists
-      // (LibreOffice, Word, etc.), with a plain-text flavor for plain targets.
-      // Fall back to plain text where ClipboardItem isn't supported.
       if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
         const item = new ClipboardItem({
           "text/html": new Blob([clone.innerHTML], { type: "text/html" }),
@@ -45,6 +54,32 @@
         navigator.clipboard.writeText(text).then(showCopied);
       }
     };
+  }
+
+  // Native selection copy (highlight + Ctrl-C / right-click): when the
+  // selection is inside an AI message, emit the same clean rich HTML so
+  // highlights paste correctly without resorting to "paste unformatted".
+  if (!window.__aiCopyInterceptor) {
+    window.__aiCopyInterceptor = true;
+    document.addEventListener("copy", function (e) {
+      try {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+        const inMsg = (node) => {
+          const el = node && (node.nodeType === 1 ? node : node.parentElement);
+          return el && el.closest && el.closest(".ai-message-text");
+        };
+        if (!inMsg(sel.anchorNode) || !inMsg(sel.focusNode)) return;
+        const wrapper = document.createElement("div");
+        wrapper.appendChild(sel.getRangeAt(0).cloneContents());
+        window.aiCleanForExport(wrapper);
+        e.clipboardData.setData("text/html", wrapper.innerHTML);
+        e.clipboardData.setData("text/plain", sel.toString());
+        e.preventDefault();
+      } catch (err) {
+        /* fall back to the browser's default copy */
+      }
+    });
   }
 </script>
 {% for message in messages %}
