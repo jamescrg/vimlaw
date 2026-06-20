@@ -341,7 +341,7 @@ Always run `pre-commit run --all-files` before committing.
 ## Key Files and Directories
 
 ```text
-aletheia/
+kosmos/
 ├── apps/                    # Django applications
 │   ├── accounts/           # User authentication
 │   ├── case/               # Case documents and management

@@ -45,19 +45,12 @@
   top: 1px;
 }
 
-/* Typographic brand mark: ἀ (alpha + smooth breathing), first letter of
-   ἀλήθεια. Set in a serif face so it reads as a crafted wordmark, and sized
-   a touch larger than the nav icons so it carries as the logo. */
-.sidebar-brand-mark {
+/* Brand mark: Lucide atom icon, sized a touch larger than the nav icons so it
+   carries as the logo. More specific than `.sidebar-brand i` so the size wins. */
+.sidebar-brand .sidebar-brand-mark {
   flex-shrink: 0;
-  /* Georgia/Times lack the polytonic ἀ; name Liberation Serif explicitly so
-     the glyph renders as a serif in every browser (matches the favicon). */
-  font-family: "Liberation Serif", Georgia, "Times New Roman", serif;
-  font-size: 1.65rem;
-  font-weight: 600;
-  line-height: 1;
-  position: relative;
-  top: -2px;
+  font-size: 1.5rem;
+  top: 0;
 }
 
 

@@ -5,18 +5,18 @@
   <meta charset="UTF-8" content="" />
   <title>
     {% block title %}
-      Aletheia
+      Kosmos
     {% endblock title %}
   </title>
   {% block favicon %}
     {% if env == 'dev' %}
       <link rel="icon"
             type="image/svg+xml"
-            href="{% static 'images/aletheia-mark-dev.svg' %}" />
+            href="{% static 'images/kosmos-mark-dev.svg' %}" />
     {% else %}
       <link rel="icon"
             type="image/svg+xml"
-            href="{% static 'images/aletheia-mark.svg' %}" />
+            href="{% static 'images/kosmos-mark.svg' %}" />
     {% endif %}
   {% endblock favicon %}
   <!-- set viewport for mobile devices -->

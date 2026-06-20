@@ -1,5 +1,5 @@
 [Unit]
-Description=Aletheia Google Drive case-notes sync (oneshot)
+Description=Kosmos Google Drive case-notes sync (oneshot)
 After=network.target
 
 [Service]

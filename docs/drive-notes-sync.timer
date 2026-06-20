@@ -1,5 +1,5 @@
 [Unit]
-Description=Run Aletheia Google Drive case-notes sync every ~30s
+Description=Run Kosmos Google Drive case-notes sync every ~30s
 
 [Timer]
 # Fire 30s after boot, then every 30s after each run completes.

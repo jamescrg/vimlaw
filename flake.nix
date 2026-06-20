@@ -185,7 +185,7 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          name = "aletheia-dev";
+          name = "kosmos-dev";
 
           buildInputs = systemDeps ++ runtimeDeps ++ [ python ] ++ (builtins.attrValues scripts);
 

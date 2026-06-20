@@ -38,6 +38,7 @@ body {
   align-items: center;
   color: var(--link);
   display: flex;
+  flex-direction: column;
   font-size: 1.75rem;
   font-weight: 500;
   gap: 0.5rem;
@@ -45,21 +46,15 @@ body {
   margin-bottom: 0.25rem;
 }
 
-/* Brand monogram: ἀ (alpha + smooth breathing), first letter of ἀλήθεια, set
-   to the left of the wordmark. Decorative — the title text is the accessible
-   name. */
+/* Brand monogram: the Lucide atom mark, stacked above the wordmark and matching
+   the favicon. Decorative — the title text is the accessible name.
+   (Auth pages don't load the Lucide font, so use the SVG as a background.) */
 .auth-title::before {
-  content: "ἀ";
-  /* Georgia/Times lack the polytonic ἀ; name Liberation Serif explicitly so
-     the glyph renders as a serif in every browser (Chrome otherwise falls
-     back to a sans-serif). Matches the outlined favicon. */
-  font-family: "Liberation Serif", Georgia, "Times New Roman", serif;
-  font-size: 2.5rem;
-  font-weight: 600;
-  line-height: 1;
-  margin-right: 0.5rem;
-  position: relative;
-  top: -3px;
+  content: "";
+  display: inline-block;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: url("../../images/kosmos-mark.svg") center / contain no-repeat;
 }
 
 .auth-subtitle {

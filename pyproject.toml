@@ -1,7 +1,7 @@
 [project]
-name = "aletheia"
+name = "kosmos"
 version = "0.1.0"
-description = "Aletheia - Django law practice management application"
+description = "Kosmos - Django law practice management application"
 readme = "README.md"
 requires-python = ">=3.10"
 
