@@ -115,6 +115,11 @@ urlpatterns = [
         appearance_urls.appearance_index,
         name="appearance-index",
     ),
+    path(
+        "settings/appearance/nav-layout/",
+        appearance_urls.set_nav_layout,
+        name="nav-layout",
+    ),
     # Contacts (Groups and Roles)
     path("settings/contacts/", contact_urls.contacts_index, name="contacts-index"),
     path("settings/contacts/roles/", contact_urls.role_list, name="role-list"),

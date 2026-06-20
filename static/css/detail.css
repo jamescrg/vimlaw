@@ -90,7 +90,7 @@ Detail Layout (header / subnav / body)
 
 /* Dark mode — active tab takes the lighter fill with no border; --selected-background
    otherwise matches the subnav's own gb-dark1 surface (no contrast). */
-[data-theme="dark"] .subnav .active {
+:is([data-theme="dark"], [data-theme="cosmic"]) .subnav .active {
   background: var(--background-subnav-tab-active);
   border: none;
 }

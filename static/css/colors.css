@@ -1,17 +1,24 @@
 /* ==========================================================================
-   THEMING CONVENTION (light + dark)
+   THEMING CONVENTION (light + dark + cosmic)
    --------------------------------------------------------------------------
    Theming is token-first. `:root` below defines every semantic token in its
-   LIGHT value; the `[data-theme="dark"]` block further down RE-DEFINES those
-   same tokens with dark (gb-*) values. Component CSS consumes var(--token)
-   and stays theme-agnostic — it flips automatically when the tokens change.
+   LIGHT value; the dark block further down RE-DEFINES those same tokens with
+   dark (gb-*) values. Component CSS consumes var(--token) and stays
+   theme-agnostic — it flips automatically when the tokens change.
+
+   THREE themes: light, dark (Gruvbox), and cosmic (Nord). Cosmic IS the dark
+   theme structurally — it shares the dark token block and every dark
+   structural rule, and only repoints the --gb-* ramp from Gruvbox to Nord (see
+   the [data-theme="cosmic"] block after the dark block). So any "dark" rule is
+   scoped to BOTH: `:is([data-theme="dark"], [data-theme="cosmic"])`.
 
    RULE OF THUMB:
    1. If dark only needs a different *value*, add/repoint a token here. Do NOT
       write a scoped rule.
    2. Only when dark needs a structurally *different rule* (e.g. filled vs
       outline buttons, accent rail vs fill — where the colour moves to a
-      different property) add a `[data-theme="dark"] .component` block,
+      different property) add a
+      `:is([data-theme="dark"], [data-theme="cosmic"]) .component` block,
       co-located at the bottom of that component's own CSS file under a
       "Dark mode —" comment. Keep the colour decision in a token, the
       structural rule in the component. Do not start a monolithic dark.css.
@@ -197,22 +204,22 @@
 /* Dark mode — bright "line" colour per highlight class, for contexts that show
    the colour as an accent (underline / rail / swatch) rather than a muddy dark
    fill. Harmless on the generic .hl-* fills, which ignore it. */
-[data-theme="dark"] .hl-yellow { --hl-line: var(--yellow-400); }
-[data-theme="dark"] .hl-red    { --hl-line: var(--red-400); }
-[data-theme="dark"] .hl-orange { --hl-line: var(--orange-400); }
-[data-theme="dark"] .hl-green  { --hl-line: var(--lime-400); }
-[data-theme="dark"] .hl-blue   { --hl-line: var(--blue-400); }
-[data-theme="dark"] :is(.hl-violet, .hl-purple) { --hl-line: var(--violet-400); }
-[data-theme="dark"] :is(.hl-slate, .hl-gray) { --hl-line: var(--slate-400); }
+:is([data-theme="dark"], [data-theme="cosmic"]) .hl-yellow { --hl-line: var(--yellow-400); }
+:is([data-theme="dark"], [data-theme="cosmic"]) .hl-red    { --hl-line: var(--red-400); }
+:is([data-theme="dark"], [data-theme="cosmic"]) .hl-orange { --hl-line: var(--orange-400); }
+:is([data-theme="dark"], [data-theme="cosmic"]) .hl-green  { --hl-line: var(--lime-400); }
+:is([data-theme="dark"], [data-theme="cosmic"]) .hl-blue   { --hl-line: var(--blue-400); }
+:is([data-theme="dark"], [data-theme="cosmic"]) :is(.hl-violet, .hl-purple) { --hl-line: var(--violet-400); }
+:is([data-theme="dark"], [data-theme="cosmic"]) :is(.hl-slate, .hl-gray) { --hl-line: var(--slate-400); }
 
 /* Dark mode — any table row flagged with a highlight colour shows it as a bright
    left rail on the first cell, never a full-row fill (dark fills go muddy and
    dominate). Covers facts/timeline, calendar & event rows, dash totals, etc. */
-[data-theme="dark"] tr[class*="hl-"],
-[data-theme="dark"] tr[class*="hl-"] > td {
+:is([data-theme="dark"], [data-theme="cosmic"]) tr[class*="hl-"],
+:is([data-theme="dark"], [data-theme="cosmic"]) tr[class*="hl-"] > td {
   background: transparent !important;
 }
-[data-theme="dark"] tr[class*="hl-"] > td:first-child {
+:is([data-theme="dark"], [data-theme="cosmic"]) tr[class*="hl-"] > td:first-child {
   box-shadow: inset 3px 0 0 0 var(--hl-line);
 }
 
@@ -250,7 +257,7 @@
    The bootstrap script in base.html resolves "auto" to either "light" or
    "dark" before paint, so CSS only handles the two concrete states.
    ========================================================================== */
-[data-theme="dark"] {
+:is([data-theme="dark"], [data-theme="cosmic"]) {
   /* Native form controls (radios, checkboxes) + scrollbars render dark */
   color-scheme: dark;
 
@@ -400,4 +407,42 @@
   --hl-violet: var(--violet-950);
   --hl-red: var(--red-950);
   --hl-yellow: oklch(0.31 0.075 92);  /* true-yellow hue so it reads mustard, not the red-brown of yellow-950 */
+}
+
+/* ==========================================================================
+   Cosmic — the dark theme, on the Nord palette.
+
+   Cosmic IS the dark theme structurally: it shares the entire token mapping
+   above and every co-located `:is([data-theme="dark"], [data-theme="cosmic"])`
+   rule. The ONLY thing it changes is the underlying ramp — the --gb-* tokens
+   are repointed from Gruvbox to Nord. Because the semantic tokens above resolve
+   var(--gb-*) per element, swapping the ramp re-skins the whole UI to Nord.
+   (The --gb-* names are kept, not renamed, so the shared structural rules that
+   reference them directly — buttons, flatpickr, calendar — still resolve here.)
+   ========================================================================== */
+[data-theme="cosmic"] {
+  /* Polar Night — deep base, lifting */
+  --gb-dark:      var(--nord0);
+  --gb-dark-soft: var(--nord0-soft);
+  --gb-dark1:     var(--nord1);
+  --gb-dark2:     var(--nord2);
+  --gb-dark3:     var(--nord3);
+  --gb-dark4:     var(--nord3-bright);
+
+  /* Snow Storm — text */
+  --gb-light:  var(--nord6);
+  --gb-light3: var(--nord4);
+  --gb-light4: var(--nord4-dim);
+  --gb-gray:   var(--nord-gray);
+
+  /* Frost — accent family (was the Gruvbox aqua family) */
+  --gb-bright-aqua: var(--nord8);
+  --gb-aqua:        var(--nord9);
+  --gb-faded-aqua:  var(--nord10);
+
+  /* Aurora — status accents */
+  --gb-bright-red:    var(--nord11);
+  --gb-bright-orange: var(--nord12);
+  --gb-bright-green:  var(--nord14);
+  --gb-bright-purple: var(--nord15);
 }

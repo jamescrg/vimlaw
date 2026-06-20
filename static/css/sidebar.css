@@ -115,7 +115,7 @@
 /* Dark mode — active item matches the hover fill (gb-dark2) with no border;
    the purple text alone marks it active. The shared --selected-background
    otherwise matches the sidebar's own gb-dark1, leaving no fill contrast. */
-[data-theme="dark"] .sidebar-nav li.active a {
+:is([data-theme="dark"], [data-theme="cosmic"]) .sidebar-nav li.active a {
   background: var(--background-sidebar-active);
   border: none;
 }
@@ -302,9 +302,10 @@
 /* ==========================================================================
    Horizontal Layout (top bar)
 
-   Opt-in via data-nav="horizontal" on <html>, stored per-device in
-   localStorage (mirrors the theme toggle). Desktop only — scoped above the
-   768px breakpoint so mobile keeps the existing off-canvas drawer for free.
+   Opt-in via data-nav="horizontal" on <html>, a per-user preference persisted
+   server-side (user.nav_layout) and rendered pre-paint in base.html. Desktop
+   only — scoped above the 768px breakpoint so mobile keeps the existing
+   off-canvas drawer for free.
 
    These rules sit last in the file so they win on source order over the
    equal-specificity .sidebar-collapsed rules above: collapse is a

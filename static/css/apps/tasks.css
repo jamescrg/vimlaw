@@ -32,8 +32,8 @@ i.importance-5 {
   color: var(--violet-600);
 }
 
-[data-theme="dark"] tr.importance-5 > td.importance .button-link,
-[data-theme="dark"] i.importance-5 {
+:is([data-theme="dark"], [data-theme="cosmic"]) tr.importance-5 > td.importance .button-link,
+:is([data-theme="dark"], [data-theme="cosmic"]) i.importance-5 {
   color: var(--violet-400);
 }
 
@@ -387,81 +387,81 @@ tr > td.importance.complete .button-link {
 /* Dark-mode overrides — flatpickr's CDN CSS hardcodes light-palette
    colors for day numbers, weekday labels, month nav, and faded-day
    states, none of which adapt to the dark canvas. */
-[data-theme="dark"] .flatpickr-calendar {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar {
   background: var(--gb-dark1);
   border: 1px solid var(--gb-dark2);
   box-shadow: 0 3px 13px rgb(0 0 0 / 40%);
   color: var(--color-primary);
 }
 
-[data-theme="dark"] .flatpickr-calendar.arrowTop::before,
-[data-theme="dark"] .flatpickr-calendar.arrowTop::after,
-[data-theme="dark"] .flatpickr-calendar.arrowBottom::before,
-[data-theme="dark"] .flatpickr-calendar.arrowBottom::after {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowTop::before,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowTop::after,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowBottom::before,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowBottom::after {
   border-bottom-color: var(--gb-dark2);
   border-top-color: var(--gb-dark2);
 }
 
-[data-theme="dark"] .flatpickr-months,
-[data-theme="dark"] .flatpickr-current-month,
-[data-theme="dark"] .flatpickr-current-month input.cur-year,
-[data-theme="dark"] .flatpickr-monthDropdown-months {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-months,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-current-month,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-current-month input.cur-year,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-monthDropdown-months {
   background: transparent;
   color: var(--color-primary);
 }
 
-[data-theme="dark"] .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
   background: var(--gb-dark1);
   color: var(--color-primary);
 }
 
-[data-theme="dark"] .flatpickr-weekday {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-weekday {
   color: var(--color-muted);
 }
 
-[data-theme="dark"] .flatpickr-day {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day {
   color: var(--color-primary);
 }
 
-[data-theme="dark"] .flatpickr-day:hover {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day:hover {
   background: var(--gb-dark2);
   border-color: var(--gb-dark3);
 }
 
-[data-theme="dark"] .flatpickr-day.prevMonthDay,
-[data-theme="dark"] .flatpickr-day.nextMonthDay {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.prevMonthDay,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.nextMonthDay {
   color: var(--color-muted-more);
 }
 
-[data-theme="dark"] .flatpickr-day.flatpickr-disabled,
-[data-theme="dark"] .flatpickr-day.flatpickr-disabled:hover {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.flatpickr-disabled,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.flatpickr-disabled:hover {
   color: var(--gb-dark4);
 }
 
-[data-theme="dark"] .flatpickr-day.today:not(.selected) {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.today:not(.selected) {
   border-color: var(--gb-bright-purple);
 }
 
-[data-theme="dark"] .flatpickr-day.today:not(.selected):hover {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.today:not(.selected):hover {
   background: var(--gb-dark2);
   border-color: var(--gb-bright-purple);
   color: var(--color-primary);
 }
 
-[data-theme="dark"] .flatpickr-prev-month,
-[data-theme="dark"] .flatpickr-next-month {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-prev-month,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-next-month {
   color: var(--color-primary);
   fill: var(--color-primary);
 }
 
-[data-theme="dark"] .flatpickr-prev-month:hover,
-[data-theme="dark"] .flatpickr-next-month:hover {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-prev-month:hover,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-next-month:hover {
   color: var(--gb-bright-aqua);
   fill: var(--gb-bright-aqua);
 }
 
-[data-theme="dark"] .flatpickr-prev-month svg,
-[data-theme="dark"] .flatpickr-next-month svg {
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-prev-month svg,
+:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-next-month svg {
   fill: currentColor;
 }
 
@@ -586,22 +586,22 @@ tr > td.importance.complete .button-link {
   to   { box-shadow: inset 3px 0 0 0 transparent; }
 }
 
-[data-theme="dark"] .past-due td.description {
+:is([data-theme="dark"], [data-theme="cosmic"]) .past-due td.description {
   box-shadow: inset 3px 0 0 0 var(--past-due-rail);
 }
 
-[data-theme="dark"] .past-due td.date .task-date-link {
+:is([data-theme="dark"], [data-theme="cosmic"]) .past-due td.date .task-date-link {
   text-decoration: underline;
   text-decoration-color: var(--past-due-rail);
   text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
 }
 
-[data-theme="dark"] .task-new-highlight td {
+:is([data-theme="dark"], [data-theme="cosmic"]) .task-new-highlight td {
   animation: none;
 }
 
-[data-theme="dark"] .task-new-highlight td:first-child {
+:is([data-theme="dark"], [data-theme="cosmic"]) .task-new-highlight td:first-child {
   animation: task-rail-fade 2s ease-out;
 }
 
@@ -1047,14 +1047,14 @@ body.kanban-dragging .kanban-card {
 /* Dark mode — board. Match the table's dark importance hue, and signal
    past-due with a rose ring instead of a fill (the fill resolves to the card
    background in dark, so it would be invisible). */
-[data-theme="dark"] .kanban-card.importance-5 {
+:is([data-theme="dark"], [data-theme="cosmic"]) .kanban-card.importance-5 {
   border-left-color: var(--violet-400);
 }
 
-[data-theme="dark"] .kanban-card.importance-5 .kanban-card-priority .button-link {
+:is([data-theme="dark"], [data-theme="cosmic"]) .kanban-card.importance-5 .kanban-card-priority .button-link {
   color: var(--violet-400);
 }
 
-[data-theme="dark"] .kanban-card.past-due {
+:is([data-theme="dark"], [data-theme="cosmic"]) .kanban-card.past-due {
   border-color: var(--past-due-rail);
 }

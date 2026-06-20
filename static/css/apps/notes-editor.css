@@ -295,7 +295,7 @@
 
 /* Dark mode — outline the reference chip instead of a grey fill (inset ring
    keeps the inline layout from shifting). */
-[data-theme="dark"] .note-ref {
+:is([data-theme="dark"], [data-theme="cosmic"]) .note-ref {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--border-medium-dark);
 }
@@ -353,57 +353,106 @@
 
 /* Dark mode — marks stay light (paper-highlighter look, matching how they'd
    print) but the inherited text would flip light, so force it dark. */
-[data-theme="dark"] #note-editor mark {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor mark {
   color: var(--stone-900);
 }
 
 /* Dark mode — Gruvbox Dark syntax colours; the code block background is a dark
    token, so the light Gruvbox hues would be unreadable on it. */
-[data-theme="dark"] #note-editor pre code .hljs-comment,
-[data-theme="dark"] #note-editor pre code .hljs-quote {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-comment,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-quote {
   color: #a89984;
 }
 
-[data-theme="dark"] #note-editor pre code .hljs-keyword,
-[data-theme="dark"] #note-editor pre code .hljs-selector-tag,
-[data-theme="dark"] #note-editor pre code .hljs-deletion,
-[data-theme="dark"] #note-editor pre code .hljs-name,
-[data-theme="dark"] #note-editor pre code .hljs-tag {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-keyword,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-selector-tag,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-deletion,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-name,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-tag {
   color: #fb4934;
 }
 
-[data-theme="dark"] #note-editor pre code .hljs-string,
-[data-theme="dark"] #note-editor pre code .hljs-addition {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-string,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-addition {
   color: #b8bb26;
 }
 
-[data-theme="dark"] #note-editor pre code .hljs-number,
-[data-theme="dark"] #note-editor pre code .hljs-literal {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-number,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-literal {
   color: #d3869b;
 }
 
-[data-theme="dark"] #note-editor pre code .hljs-type,
-[data-theme="dark"] #note-editor pre code .hljs-built_in {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-type,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-built_in {
   color: #fabd2f;
 }
 
-[data-theme="dark"] #note-editor pre code .hljs-title,
-[data-theme="dark"] #note-editor pre code .hljs-section,
-[data-theme="dark"] #note-editor pre code .hljs-attribute {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-title,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-section,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-attribute {
   color: #8ec07c;
 }
 
-[data-theme="dark"] #note-editor pre code .hljs-variable,
-[data-theme="dark"] #note-editor pre code .hljs-template-variable,
-[data-theme="dark"] #note-editor pre code .hljs-attr,
-[data-theme="dark"] #note-editor pre code .hljs-params {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-variable,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-template-variable,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-attr,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-params {
   color: #83a598;
 }
 
-[data-theme="dark"] #note-editor pre code .hljs-symbol,
-[data-theme="dark"] #note-editor pre code .hljs-meta,
-[data-theme="dark"] #note-editor pre code .hljs-operator {
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-symbol,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-meta,
+:is([data-theme="dark"], [data-theme="cosmic"]) #note-editor pre code .hljs-operator {
   color: #fe8019;
+}
+
+/* Cosmic — Nord syntax colours, overriding the shared Gruvbox hues above for
+   the Nord-based dark theme (same specificity, later source order = wins). */
+[data-theme="cosmic"] #note-editor pre code .hljs-comment,
+[data-theme="cosmic"] #note-editor pre code .hljs-quote {
+  color: var(--nord3-bright);
+}
+
+[data-theme="cosmic"] #note-editor pre code .hljs-keyword,
+[data-theme="cosmic"] #note-editor pre code .hljs-selector-tag,
+[data-theme="cosmic"] #note-editor pre code .hljs-deletion,
+[data-theme="cosmic"] #note-editor pre code .hljs-name,
+[data-theme="cosmic"] #note-editor pre code .hljs-tag {
+  color: var(--nord9);
+}
+
+[data-theme="cosmic"] #note-editor pre code .hljs-string,
+[data-theme="cosmic"] #note-editor pre code .hljs-addition {
+  color: var(--nord14);
+}
+
+[data-theme="cosmic"] #note-editor pre code .hljs-number,
+[data-theme="cosmic"] #note-editor pre code .hljs-literal {
+  color: var(--nord15);
+}
+
+[data-theme="cosmic"] #note-editor pre code .hljs-type,
+[data-theme="cosmic"] #note-editor pre code .hljs-built_in {
+  color: var(--nord7);
+}
+
+[data-theme="cosmic"] #note-editor pre code .hljs-title,
+[data-theme="cosmic"] #note-editor pre code .hljs-section,
+[data-theme="cosmic"] #note-editor pre code .hljs-attribute {
+  color: var(--nord8);
+}
+
+[data-theme="cosmic"] #note-editor pre code .hljs-variable,
+[data-theme="cosmic"] #note-editor pre code .hljs-template-variable,
+[data-theme="cosmic"] #note-editor pre code .hljs-attr,
+[data-theme="cosmic"] #note-editor pre code .hljs-params {
+  color: var(--nord4);
+}
+
+[data-theme="cosmic"] #note-editor pre code .hljs-symbol,
+[data-theme="cosmic"] #note-editor pre code .hljs-meta,
+[data-theme="cosmic"] #note-editor pre code .hljs-operator {
+  color: var(--nord12);
 }
 
 /* Search match highlight */

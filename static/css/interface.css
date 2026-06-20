@@ -130,7 +130,7 @@
 }
 
 /* Dark mode — alert state as a yellow outline + icon, not a yellow fill. */
-[data-theme="dark"] .toolbar .btn-icon.toggle-alert {
+:is([data-theme="dark"], [data-theme="cosmic"]) .toolbar .btn-icon.toggle-alert {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--yellow-400);
   color: var(--yellow-400);

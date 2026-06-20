@@ -10,23 +10,42 @@
     </label>
     <label class="theme-option">
       <input type="radio" name="theme" value="light">
-      <span>Light</span>
+      <span>Matcha <small>(light)</small></span>
     </label>
     <label class="theme-option">
       <input type="radio" name="theme" value="dark">
-      <span>Dark</span>
+      <span>Hojicha <small>(dark)</small></span>
+    </label>
+    <label class="theme-option">
+      <input type="radio" name="theme" value="cosmic">
+      <span>Cosmic <small>(dark)</small></span>
     </label>
   </fieldset>
   <h2>Navigation</h2>
   <hr />
-  <p class="detail-text">Navigation layout is stored per device.</p>
-  <fieldset class="nav-options" onchange="setNavLayout(event.target.value)">
+  <p class="detail-text">
+    Navigation layout syncs across your devices. On small
+    screens the sidebar layout is always used.
+  </p>
+  <fieldset class="nav-options" onchange="applyNavLayout(event.target.value)">
     <label class="nav-option">
-      <input type="radio" name="nav-layout" value="vertical">
+      <input type="radio"
+             name="nav-layout"
+             value="vertical"
+             {% if user.nav_layout == 'vertical' %}checked{% endif %}
+             hx-post="{% url 'settings:nav-layout' %}"
+             hx-trigger="change"
+             hx-swap="none">
       <span>Vertical <small>(sidebar)</small></span>
     </label>
     <label class="nav-option">
-      <input type="radio" name="nav-layout" value="horizontal">
+      <input type="radio"
+             name="nav-layout"
+             value="horizontal"
+             {% if user.nav_layout == 'horizontal' %}checked{% endif %}
+             hx-post="{% url 'settings:nav-layout' %}"
+             hx-trigger="change"
+             hx-swap="none">
       <span>Horizontal <small>(top bar)</small></span>
     </label>
   </fieldset>

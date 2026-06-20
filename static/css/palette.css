@@ -309,4 +309,28 @@
   --rose-800: oklch(45.5% 0.171 13.7deg);
   --rose-900: oklch(41% 0.15 10.3deg);
   --rose-950: oklch(27.1% 0.101 12.1deg);
+
+  /* Nord (https://www.nordtheme.com) — drives the "cosmic" dark theme.
+     Canonical Nord hex; the *-soft / *-dim / *-bright shades are interpolated
+     steps Nord doesn't ship, needed to fill the dark ramp's six levels. */
+  --nord0: #2e3440;          /* Polar Night — deepest base */
+  --nord0-soft: #333b49;     /* between nord0/nord1 — soft surface step */
+  --nord1: #3b4252;
+  --nord2: #434c5e;
+  --nord3: #4c566a;
+  --nord3-bright: #616e88;   /* Nord's lighter polar gray (comments) */
+  --nord4: #d8dee9;          /* Snow Storm — text */
+  --nord4-dim: #aab3c5;      /* dimmed snow for primary body text */
+  --nord5: #e5e9f0;
+  --nord6: #eceff4;          /* brightest text */
+  --nord-gray: #7b88a1;      /* muted text */
+  --nord7: #8fbcbb;          /* Frost — teal */
+  --nord8: #88c0d0;          /* Frost — signature cyan accent */
+  --nord9: #81a1c1;          /* Frost — blue */
+  --nord10: #5e81ac;         /* Frost — deep blue */
+  --nord11: #bf616a;         /* Aurora — red */
+  --nord12: #d08770;         /* Aurora — orange */
+  --nord13: #ebcb8b;         /* Aurora — yellow */
+  --nord14: #a3be8c;         /* Aurora — green */
+  --nord15: #b48ead;         /* Aurora — purple */
 }

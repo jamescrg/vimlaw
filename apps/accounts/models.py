@@ -10,6 +10,11 @@ ROLE_OPTIONS = (
     ("USER", "User"),
 )
 
+NAV_LAYOUT_OPTIONS = (
+    ("vertical", "Vertical"),
+    ("horizontal", "Horizontal"),
+)
+
 
 class CustomUser(AbstractUser):
     google_contacts_credentials = models.TextField(null=True, blank=True)
@@ -17,6 +22,9 @@ class CustomUser(AbstractUser):
     user_rate = models.IntegerField(default=0)
     initials = models.CharField(max_length=100, null=True, blank=True)
     role = models.CharField(max_length=5, choices=ROLE_OPTIONS, default="USER")
+    nav_layout = models.CharField(
+        max_length=20, choices=NAV_LAYOUT_OPTIONS, default="vertical"
+    )
     is_attorney = models.BooleanField(default=True)
     last_dash_check = models.DateField(null=True, blank=True)
     digest_enabled = models.BooleanField(default=False)

@@ -56,7 +56,7 @@ body {
 }
 
 /* Dark mode — strengthen the divider now that the document panel is also dark. */
-[data-theme="dark"] #highlights-sidebar {
+:is([data-theme="dark"], [data-theme="cosmic"]) #highlights-sidebar {
   border-left-color: var(--border-medium-dark);
 }
 

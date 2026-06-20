@@ -91,14 +91,15 @@
     if (localStorage.getItem('sidebar-collapsed') === 'true') {
       document.documentElement.classList.add('sidebar-collapsed');
     }
-    if (localStorage.getItem('nav-layout') === 'horizontal') {
+    {% if user.is_authenticated and user.nav_layout == 'horizontal' %}
       document.documentElement.setAttribute('data-nav', 'horizontal');
-    }
+    {% endif %}
     (function () {
       var setting = localStorage.getItem('theme') || 'auto';
-      var dark = setting === 'dark' || (setting === 'auto' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches);
-      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      var resolved = setting === 'auto'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : setting;
+      document.documentElement.setAttribute('data-theme', resolved);
     })();
   </script>
 </head>

@@ -14,7 +14,7 @@
 /* Dark mode — the document indicator badge should use the standard link green,
    not the lime badge palette (scoped to the file icon so the lime "Positive"
    citation badge keeps its green). */
-[data-theme="dark"] .app-badge.badge-lime:has(.icon-file-text) {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-lime:has(.icon-file-text) {
   border-color: var(--link);
   color: var(--link);
 }
@@ -23,7 +23,7 @@
    highlighter look) instead of a dark fill, on the slug labels and the assign-
    sources results. The --hl-line colour map lives in colors.css. Scoped to these
    containers so the generic .hl-* cell/row fills used elsewhere keep their fills. */
-[data-theme="dark"] :is(.highlight-card-slug, .highlight-slug, .assign-results) span[class^="hl-"] {
+:is([data-theme="dark"], [data-theme="cosmic"]) :is(.highlight-card-slug, .highlight-slug, .assign-results) span[class^="hl-"] {
   background: transparent !important;
   border-radius: 0;
   text-decoration: underline;
@@ -34,7 +34,7 @@
 }
 
 /* Detail-view swatch: solid fill in the same bright colour as the underline. */
-[data-theme="dark"] .highlight-detail-swatch {
+:is([data-theme="dark"], [data-theme="cosmic"]) .highlight-detail-swatch {
   background: var(--hl-line) !important;
 }
 

@@ -170,18 +170,18 @@
 
 /* Dark-mode overrides — direct selectors because the rules below use
    !important on raw palette values, which beats any --fc-* token override. */
-[data-theme="dark"] .fc-event,
-[data-theme="dark"] .fc-event.fc-daygrid-block-event,
-[data-theme="dark"] .fc-event.fc-daygrid-dot-event {
+:is([data-theme="dark"], [data-theme="cosmic"]) .fc-event,
+:is([data-theme="dark"], [data-theme="cosmic"]) .fc-event.fc-daygrid-block-event,
+:is([data-theme="dark"], [data-theme="cosmic"]) .fc-event.fc-daygrid-dot-event {
   background-color: var(--gb-dark2) !important;
   border-color: var(--gb-dark3) !important;
 }
 
-[data-theme="dark"] .fc-event.fc-event-no-matter {
+:is([data-theme="dark"], [data-theme="cosmic"]) .fc-event.fc-event-no-matter {
   background-color: var(--gb-dark) !important;
 }
 
-[data-theme="dark"] .fc .fc-day-today .fc-daygrid-day-number {
+:is([data-theme="dark"], [data-theme="cosmic"]) .fc .fc-day-today .fc-daygrid-day-number {
   background-color: var(--gb-bright-purple);
   color: var(--gb-dark);
 }

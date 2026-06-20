@@ -315,7 +315,7 @@
 
 /* Dark mode — the stone-200/stone-700 fill is a raw light palette value, so the
    avatar reads as a bright blob on the dark UI. Blend it into a soft dark chip. */
-[data-theme="dark"] .participant-badge {
+:is([data-theme="dark"], [data-theme="cosmic"]) .participant-badge {
   background: var(--background-control);
   color: var(--color-primary);
 }
@@ -457,14 +457,14 @@
 /* Dark mode — these LLM badges carry .app-badge, so the blanket outline rule in
    badges.css strips their hue; restore it as a coloured outline (.app-badge.X
    out-specifies the blanket [data-theme] .app-badge rule). */
-[data-theme="dark"] .app-badge.ai-llm-claude {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.ai-llm-claude {
   background: transparent;
   border-color: var(--label-purple-line);
   color: var(--label-purple-line);
 }
 
-[data-theme="dark"] .app-badge.ai-llm-gemini-flash,
-[data-theme="dark"] .app-badge.ai-llm-gemini-pro {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.ai-llm-gemini-flash,
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.ai-llm-gemini-pro {
   background: transparent;
   border-color: var(--label-green-line);
   color: var(--label-green-line);
@@ -810,7 +810,7 @@
 }
 
 /* Dark mode — --link is a bright aqua here, so flip the icon to dark for contrast. */
-[data-theme="dark"] .ai-send-btn {
+:is([data-theme="dark"], [data-theme="cosmic"]) .ai-send-btn {
   color: var(--gb-dark);
 }
 
@@ -1594,7 +1594,7 @@
 
 /* Dark mode — the "on" pill carries .app-badge, so restore its green as a
    coloured outline (the blanket badges.css rule would otherwise neutralise it). */
-[data-theme="dark"] .app-badge.ai-vet-citations-on {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.ai-vet-citations-on {
   background: transparent;
   border-color: var(--label-green-line);
   color: var(--label-green-line);
@@ -2018,7 +2018,7 @@
 /* Dark mode — highlighted text (==text==) drops the yellow fill (it reads muddy
    against the dark surface) and moves the colour onto a bright underline (the
    shared "line" yellow, fixed across themes) under otherwise-normal text. */
-[data-theme="dark"] .ai-markdown mark {
+:is([data-theme="dark"], [data-theme="cosmic"]) .ai-markdown mark {
   background: none;
   border-radius: 0;
   padding: 0;

@@ -1,35 +1,15 @@
 (function () {
-  var STORAGE_KEY = 'nav-layout';
-
-  function current() {
-    return localStorage.getItem(STORAGE_KEY) || 'vertical';
-  }
-
-  function apply(setting) {
+  // Navigation layout is a per-user preference, persisted server-side (the
+  // settings radios POST it via htmx) and rendered onto <html> pre-paint by the
+  // bootstrap script in base.html. This only handles the instant client-side
+  // switch when the user picks a layout, so the change is visible before the
+  // save round-trips. Desktop only — the horizontal CSS is gated above 768px,
+  // so small screens always get the sidebar regardless of the attribute.
+  window.applyNavLayout = function (setting) {
     if (setting === 'horizontal') {
       document.documentElement.setAttribute('data-nav', 'horizontal');
     } else {
       document.documentElement.removeAttribute('data-nav');
     }
-  }
-
-  window.setNavLayout = function (setting) {
-    localStorage.setItem(STORAGE_KEY, setting);
-    apply(setting);
   };
-
-  window.getNavLayoutSetting = current;
-
-  // Reflect the stored setting onto the settings-page radios. Runs on load and
-  // after every htmx swap, since the settings content arrives via a boosted
-  // swap where an inline script would not reliably re-run.
-  function syncRadios() {
-    var input = document.querySelector(
-      '.nav-options input[value="' + current() + '"]'
-    );
-    if (input) input.checked = true;
-  }
-
-  syncRadios();
-  document.body.addEventListener('htmx:afterSwap', syncRadios);
 })();

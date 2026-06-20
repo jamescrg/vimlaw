@@ -64,62 +64,62 @@ The hue moves from a fill into the border + text; the surface stays transparent.
 Covers both .app-badge.badge-* (badges.css) and .label-* (case/labels.css).
 color uses !important to beat the neutral a.app-badge link-colour rule above.
 ------------------------------------------------ */
-[data-theme="dark"] .app-badge {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge {
   background-color: transparent;
   border-color: var(--border-medium-dark);
   color: var(--color-darker);
 }
 
-[data-theme="dark"] .app-badge.badge-blue,
-[data-theme="dark"] .label-blue {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-blue,
+:is([data-theme="dark"], [data-theme="cosmic"]) .label-blue {
   background-color: transparent;
   border-color: var(--label-blue-line);
   color: var(--label-blue-line) !important;
 }
 
-[data-theme="dark"] .app-badge.badge-gray,
-[data-theme="dark"] .label-gray {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-gray,
+:is([data-theme="dark"], [data-theme="cosmic"]) .label-gray {
   background-color: transparent;
   border-color: var(--border-medium-dark);
   color: var(--label-gray-line) !important;
 }
 
-[data-theme="dark"] .app-badge.badge-green,
-[data-theme="dark"] .label-green {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-green,
+:is([data-theme="dark"], [data-theme="cosmic"]) .label-green {
   background-color: transparent;
   border-color: var(--label-green-line);
   color: var(--label-green-line) !important;
 }
 
-[data-theme="dark"] .app-badge.badge-lime {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-lime {
   background-color: transparent;
   border-color: var(--label-lime-line);
   color: var(--label-lime-line) !important;
 }
 
-[data-theme="dark"] .app-badge.badge-orange,
-[data-theme="dark"] .label-orange {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-orange,
+:is([data-theme="dark"], [data-theme="cosmic"]) .label-orange {
   background-color: transparent;
   border-color: var(--label-orange-line);
   color: var(--label-orange-line) !important;
 }
 
-[data-theme="dark"] .app-badge.badge-purple,
-[data-theme="dark"] .label-purple {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-purple,
+:is([data-theme="dark"], [data-theme="cosmic"]) .label-purple {
   background-color: transparent;
   border-color: var(--label-purple-line);
   color: var(--label-purple-line) !important;
 }
 
-[data-theme="dark"] .app-badge.badge-red,
-[data-theme="dark"] .label-red {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-red,
+:is([data-theme="dark"], [data-theme="cosmic"]) .label-red {
   background-color: transparent;
   border-color: var(--label-red-line);
   color: var(--label-red-line) !important;
 }
 
-[data-theme="dark"] .app-badge.badge-yellow,
-[data-theme="dark"] .label-yellow {
+:is([data-theme="dark"], [data-theme="cosmic"]) .app-badge.badge-yellow,
+:is([data-theme="dark"], [data-theme="cosmic"]) .label-yellow {
   background-color: transparent;
   border-color: var(--label-yellow-line);
   color: var(--label-yellow-line) !important;
