@@ -52,6 +52,65 @@
 }
 
 
+/* ==========================================================================
+   Activity chart
+   ========================================================================== */
+
+.activity-chart-panel {
+  margin-bottom: 1.5rem;
+}
+
+.activity-chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chart-toggle {
+  display: inline-flex;
+  gap: 0;
+}
+
+/* Segmented control following the matter detail mode-pills (matters.css): a
+   seamless group with shared borders, rounded only on the outer edges, and the
+   shared --selected-* convention for the active segment. */
+.chart-toggle button {
+  background: var(--background-control);
+  border: 1px solid var(--border-medium);
+  color: var(--color-muted);
+  cursor: pointer;
+  min-width: 4rem;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+}
+
+.chart-toggle button:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-right: none;
+}
+
+.chart-toggle button:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.chart-toggle button.toggle-active {
+  background: var(--selected-background);
+  border: 1px solid var(--selected-border);
+  color: var(--selected-color);
+}
+
+.chart-toggle button.toggle-active:first-child {
+  border-right: none;
+}
+
+/* >=1rem of breathing room below the chart and above the table. */
+.activity-chart-canvas-wrap {
+  position: relative;
+  height: 360px;
+  margin-bottom: 1rem;
+}
+
 .reports-filter-info {
   margin-top: 1.5rem;
 }
@@ -61,4 +120,17 @@
   background: var(--background-control);
   border-color: var(--border-medium);
   color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Dark mode — mirror the matter detail mode-pills: the unselected segment takes
+   the sidebar surface and the selected segment the active-tab surface, so the
+   chart toggle reads as part of the same navigation system.
+   ========================================================================== */
+:is([data-theme="dark"], [data-theme="cosmic"]) .chart-toggle button {
+  background: var(--background-sidebar);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"]) .chart-toggle button.toggle-active {
+  background: var(--background-sidebar-active);
 }

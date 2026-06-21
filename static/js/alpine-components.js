@@ -286,6 +286,38 @@ document.addEventListener('alpine:init', () => {
     }
   }));
 
+  /**
+   * Activity Report chart toggle
+   * Owns only the By User / By Matter and Hours / Fees UI state; the Chart.js
+   * instance itself is managed by activity-chart.js. Re-seeds from the chart
+   * module on init so the selection survives HTMX re-swaps of the report.
+   */
+  Alpine.data('activityChartToggle', () => ({
+    dimension: 'user',
+    metric: 'hours',
+
+    init() {
+      const last = window.AletheiaActivityChart &&
+        window.AletheiaActivityChart._stateFor('activity-chart');
+      if (last) {
+        this.dimension = last.dimension;
+        this.metric = last.metric;
+      }
+    },
+
+    setDimension(d) {
+      this.dimension = d;
+      window.AletheiaActivityChart &&
+        window.AletheiaActivityChart.update('activity-chart', { dimension: d });
+    },
+
+    setMetric(m) {
+      this.metric = m;
+      window.AletheiaActivityChart &&
+        window.AletheiaActivityChart.update('activity-chart', { metric: m });
+    },
+  }));
+
 });
 
 

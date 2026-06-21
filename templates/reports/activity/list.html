@@ -31,6 +31,34 @@
   </div>
 </div>
 {% if date_from or date_to %}
+  <div class="activity-chart-panel" x-data="activityChartToggle()">
+    <div class="activity-chart-controls">
+      <div class="chart-toggle" role="group" aria-label="Stack by">
+        <button type="button"
+                :class="{ 'toggle-active': dimension === 'user' }"
+                @click="setDimension('user')">By User</button>
+        <button type="button"
+                :class="{ 'toggle-active': dimension === 'matter' }"
+                @click="setDimension('matter')">By Matter</button>
+      </div>
+      <div class="chart-toggle" role="group" aria-label="Metric">
+        <button type="button"
+                :class="{ 'toggle-active': metric === 'hours' }"
+                @click="setMetric('hours')">Hours</button>
+        <button type="button"
+                :class="{ 'toggle-active': metric === 'fees' }"
+                @click="setMetric('fees')">Fees</button>
+      </div>
+    </div>
+    <div class="activity-chart-canvas-wrap">
+      <canvas id="activity-chart" data-chart-data="activity-chart-data"></canvas>
+    </div>
+  </div>
+  {{ chart_payload|json_script:"activity-chart-data" }}
+  <script>
+    window.AletheiaActivityChart &&
+      window.AletheiaActivityChart.render('activity-chart', 'activity-chart-data');
+  </script>
   <div class="table-container">
     <table class="table">
       <tr>
