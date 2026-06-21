@@ -5,7 +5,7 @@
 /* The table uses border-collapse: separate, so a row border won't render —
    the rule has to live on the cells. */
 .table-total td {
-  border-top: 2px solid var(--border-dark);
+  border-top: 1px solid var(--border-dark);
   padding-top: 1rem;
 }
 
