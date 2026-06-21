@@ -1,109 +1,171 @@
 {% load humanize %}
-<div class="toolbar">
+<div class="toolbar" x-data="donutToggle('wip-user-chart')">
   <div class="toolbar-left">
-    <h2>Unbilled WIP Report</h2>
+    <h2>WIP by user</h2>
+    <div class="chart-toggle" role="group" aria-label="Metric">
+      <button type="button"
+              :class="{ 'toggle-active': metric === 'gross' }"
+              @click="setMetric('gross')">Gross</button>
+      <button type="button"
+              :class="{ 'toggle-active': metric === 'net' }"
+              @click="setMetric('net')">Net</button>
+      <button type="button"
+              :class="{ 'toggle-active': metric === 'comp' }"
+              @click="setMetric('comp')">Comp</button>
+    </div>
   </div>
 </div>
-<div class="table-container">
-  <table class="table">
-    <tr>
-      <th>
-        Matter
-        <a href="?sort=matter_name&direction={% if current_sort == 'matter_name' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">
-          <i class="icon-chevrons-up-down"></i>
-        </a>
-      </th>
-      <th>
-        Client
-        <a href="?sort=client_name&direction={% if current_sort == 'client_name' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">
-          <i class="icon-chevrons-up-down"></i>
-        </a>
-      </th>
-      <th class="numeric">
-        Hours
-        <a href="?sort=unbilled_hours&direction={% if current_sort == 'unbilled_hours' and current_direction == 'desc' %}asc{% else %}desc{% endif %}">
-          <i class="icon-chevrons-up-down"></i>
-        </a>
-      </th>
-      <th class="numeric">
-        Fees
-        <a href="?sort=unbilled_fees&direction={% if current_sort == 'unbilled_fees' and current_direction == 'desc' %}asc{% else %}desc{% endif %}">
-          <i class="icon-chevrons-up-down"></i>
-        </a>
-      </th>
-      <th class="numeric">
-        Expenses
-        <a href="?sort=unbilled_expenses&direction={% if current_sort == 'unbilled_expenses' and current_direction == 'desc' %}asc{% else %}desc{% endif %}">
-          <i class="icon-chevrons-up-down"></i>
-        </a>
-      </th>
-      <th class="numeric">
-        Total WIP
-        <a href="?sort=total_wip&direction={% if current_sort == 'total_wip' and current_direction == 'desc' %}asc{% else %}desc{% endif %}">
-          <i class="icon-chevrons-up-down"></i>
-        </a>
-      </th>
-    </tr>
-    {% for row in wip_data %}
-      <tr>
-        <td>
-          <a href="{% url 'matters:detail' id=row.matter_id %}">
-            <strong>{{ row.matter_name }}</strong>
-          </a>
-        </td>
-        <td>{{ row.client_name }}</td>
-        <td class="numeric">
-          {% if row.unbilled_hours > 0 %}
-            {{ row.unbilled_hours|floatformat:1 }}h
-          {% else %}
-            -
-          {% endif %}
-        </td>
-        <td class="numeric">
-          {% if row.unbilled_fees > 0 %}
-            ${{ row.unbilled_fees|floatformat:2|intcomma }}
-          {% else %}
-            $0.00
-          {% endif %}
-        </td>
-        <td class="numeric">
-          {% if row.unbilled_expenses > 0 %}
-            ${{ row.unbilled_expenses|floatformat:2|intcomma }}
-          {% else %}
-            $0.00
-          {% endif %}
-        </td>
-        <td class="numeric">
-          {% if row.total_wip > 0 %}
-            ${{ row.total_wip|floatformat:2|intcomma }}
-          {% else %}
-            $0.00
-          {% endif %}
-        </td>
-      </tr>
-    {% empty %}
-      <tr>
-        <td colspan="6">No unbilled work in progress.</td>
-      </tr>
-    {% endfor %}
-    {% if wip_data %}
-      <tr class="table-total">
-        <td colspan="2">
-          <strong>Total</strong>
-        </td>
-        <td class="numeric">
-          <strong>{{ totals.unbilled_hours|floatformat:1 }}h</strong>
-        </td>
-        <td class="numeric">
-          <strong>${{ totals.unbilled_fees|floatformat:2|intcomma }}</strong>
-        </td>
-        <td class="numeric">
-          <strong>${{ totals.unbilled_expenses|floatformat:2|intcomma }}</strong>
-        </td>
-        <td class="numeric">
-          <strong>${{ totals.total_wip|floatformat:2|intcomma }}</strong>
-        </td>
-      </tr>
-    {% endif %}
-  </table>
+<div class="wip-section">
+  <div class="wip-donut">
+    <canvas id="wip-user-chart" data-donut-data="wip-user-data"></canvas>
+  </div>
+  <div class="table-container wip-table">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th class="numeric">Hours</th>
+          <th class="numeric">Gross</th>
+          <th class="numeric">Comp</th>
+          <th class="numeric">Net</th>
+          <th class="numeric">% of net</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in user_rows %}
+          <tr>
+            <td>
+              <strong>{{ row.label }}</strong>
+            </td>
+            <td class="numeric">{{ row.hours|floatformat:1 }}h</td>
+            <td class="numeric">${{ row.gross|floatformat:2|intcomma }}</td>
+            <td class="numeric">${{ row.comp|floatformat:2|intcomma }}</td>
+            <td class="numeric">
+              <strong>${{ row.net|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">{{ row.pct|floatformat:1 }}%</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="empty-entries">No unbilled work in progress.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      {% if user_rows %}
+        <tfoot>
+          <tr class="table-total">
+            <td>
+              <strong>Total</strong>
+            </td>
+            <td class="numeric">
+              <strong>{{ totals.hours|floatformat:1 }}h</strong>
+            </td>
+            <td class="numeric">
+              <strong>${{ totals.gross|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">
+              <strong>${{ totals.comp|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">
+              <strong>${{ totals.net|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">
+              <strong>100.0%</strong>
+            </td>
+          </tr>
+        </tfoot>
+      {% endif %}
+    </table>
+  </div>
 </div>
+{{ user_donut|json_script:"wip-user-data" }}
+<script>
+  window.AletheiaActivityChart &&
+    window.AletheiaActivityChart.renderDonut('wip-user-chart', 'wip-user-data', { metric: 'net' });
+</script>
+<div class="toolbar" x-data="donutToggle('wip-matter-chart')">
+  <div class="toolbar-left">
+    <h2>WIP by matter</h2>
+    <div class="chart-toggle" role="group" aria-label="Metric">
+      <button type="button"
+              :class="{ 'toggle-active': metric === 'gross' }"
+              @click="setMetric('gross')">Gross</button>
+      <button type="button"
+              :class="{ 'toggle-active': metric === 'net' }"
+              @click="setMetric('net')">Net</button>
+      <button type="button"
+              :class="{ 'toggle-active': metric === 'comp' }"
+              @click="setMetric('comp')">Comp</button>
+    </div>
+  </div>
+</div>
+<div class="wip-section">
+  <div class="wip-donut">
+    <canvas id="wip-matter-chart" data-donut-data="wip-matter-data"></canvas>
+  </div>
+  <div class="table-container wip-table">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Matter</th>
+          <th class="numeric">Hours</th>
+          <th class="numeric">Gross</th>
+          <th class="numeric">Comp</th>
+          <th class="numeric">Net</th>
+          <th class="numeric">% of net</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in matter_rows %}
+          <tr>
+            <td>
+              <a href="{% url 'matters:detail' id=row.matter_id %}">
+                <strong>{{ row.label }}</strong>
+              </a>
+            </td>
+            <td class="numeric">{{ row.hours|floatformat:1 }}h</td>
+            <td class="numeric">${{ row.gross|floatformat:2|intcomma }}</td>
+            <td class="numeric">${{ row.comp|floatformat:2|intcomma }}</td>
+            <td class="numeric">
+              <strong>${{ row.net|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">{{ row.pct|floatformat:1 }}%</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="empty-entries">No unbilled work in progress.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      {% if matter_rows %}
+        <tfoot>
+          <tr class="table-total">
+            <td>
+              <strong>Total</strong>
+            </td>
+            <td class="numeric">
+              <strong>{{ totals.hours|floatformat:1 }}h</strong>
+            </td>
+            <td class="numeric">
+              <strong>${{ totals.gross|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">
+              <strong>${{ totals.comp|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">
+              <strong>${{ totals.net|floatformat:2|intcomma }}</strong>
+            </td>
+            <td class="numeric">
+              <strong>100.0%</strong>
+            </td>
+          </tr>
+        </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+{{ matter_donut|json_script:"wip-matter-data" }}
+<script>
+  window.AletheiaActivityChart &&
+    window.AletheiaActivityChart.renderDonut('wip-matter-chart', 'wip-matter-data', { metric: 'net' });
+</script>

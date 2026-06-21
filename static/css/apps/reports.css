@@ -94,9 +94,18 @@
   text-align: center;
 }
 
+/* Segmented control: inner borders collapse and only the outer edges round, so
+   any middle buttons (e.g. Gross/Net/Comp) stay square with single dividers. */
+.toolbar .chart-toggle button:not(:last-child) {
+  border-right: none;
+}
+
+.toolbar .chart-toggle button:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
 .toolbar .chart-toggle button:first-child {
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  border-right: none;
 }
 
 .toolbar .chart-toggle button:last-child {
@@ -109,8 +118,29 @@
   color: var(--selected-color);
 }
 
-.toolbar .chart-toggle button.toggle-active:first-child {
+.toolbar .chart-toggle button.toggle-active:not(:last-child) {
   border-right: none;
+}
+
+/* WIP report: a donut beside its breakdown table, wrapping on narrow screens. */
+.wip-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.wip-donut {
+  position: relative;
+  flex: none;
+  width: 300px;
+  height: 280px;
+}
+
+.wip-section .wip-table {
+  flex: 1;
+  min-width: 20rem;
 }
 
 /* 1rem of breathing room below the chart and above the table. */

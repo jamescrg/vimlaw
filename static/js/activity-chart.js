@@ -100,6 +100,113 @@ window.AletheiaActivityChart = (function () {
     }));
   }
 
+  // Draws the selected metric's total in the centre of a doughnut.
+  const donutCenterPlugin = {
+    id: "donutCenter",
+    afterDatasetsDraw(chart) {
+      const opts = (chart.options.plugins && chart.options.plugins.donutCenter) || {};
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data || !meta.data.length) return;
+      const { ctx } = chart;
+      const total = (chart.data.datasets[0].data || []).reduce(
+        (a, v) => a + (Number(v) || 0),
+        0
+      );
+      const cx = (chart.chartArea.left + chart.chartArea.right) / 2;
+      const cy = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+      ctx.save();
+      ctx.fillStyle = opts.color || "#666";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const fam = (Chart.defaults.font && Chart.defaults.font.family) || "sans-serif";
+      ctx.font = "600 16px " + fam;
+      ctx.fillText("$" + Math.round(total).toLocaleString(), cx, cy);
+      if (opts.label) {
+        ctx.font = "12px " + fam;
+        ctx.fillStyle = opts.muted || opts.color || "#999";
+        ctx.fillText(opts.label, cx, cy + 18);
+      }
+      ctx.restore();
+    },
+  };
+
+  function renderDonut(canvasId, dataElId, opts) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === "undefined") return;
+    const payload = readPayload(dataElId);
+    if (!payload) return;
+
+    const prev = registry[canvasId] && registry[canvasId].state;
+    const state = Object.assign({ metric: "net" }, prev, opts);
+    registry[canvasId] = { dataElId, state, kind: "donut" };
+
+    const theme = currentTheme();
+    const themed = window.AletheiaChartPalette.axes(theme);
+    const palette = window.AletheiaChartPalette;
+
+    const values = payload[state.metric] || [];
+    const labels = payload.labels || [];
+    const total = values.reduce((a, v) => a + (Number(v) || 0), 0);
+
+    // Slice colours: palette for the named slices, grey for a trailing "Other".
+    const coloredCount = payload.hasOther ? Math.max(labels.length - 1, 1) : labels.length;
+    const colors = palette.make(coloredCount, theme);
+    const sliceColors = labels.map((_, i) =>
+      payload.hasOther && i === labels.length - 1 ? palette.neutral(theme) : colors[i]
+    );
+
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+
+    new Chart(canvas, {
+      type: "doughnut",
+      plugins: [donutCenterPlugin],
+      data: {
+        labels: labels,
+        datasets: [{ data: values, backgroundColor: sliceColors, borderWidth: 0 }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "62%",
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { color: themed.tick, boxWidth: 12, boxHeight: 12 },
+          },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                const v = Number(ctx.parsed) || 0;
+                const pct = total ? (v / total) * 100 : 0;
+                return (
+                  ctx.label +
+                  ": " +
+                  formatValue(v, "fees") +
+                  " (" +
+                  pct.toFixed(1) +
+                  "%)"
+                );
+              },
+            },
+          },
+          donutCenter: { color: themed.tick, muted: themed.grid, label: state.metricLabel },
+        },
+      },
+    });
+
+    startThemeObserver();
+  }
+
+  function updateDonut(canvasId, partialState) {
+    const cfg = registry[canvasId];
+    if (cfg) renderDonut(canvasId, cfg.dataElId, Object.assign({}, cfg.state, partialState));
+  }
+
+  function _donutStateFor(canvasId) {
+    return registry[canvasId] ? registry[canvasId].state : null;
+  }
+
   function render(canvasId, dataElId, opts) {
     const canvas = document.getElementById(canvasId);
     if (!canvas || typeof Chart === "undefined") return;
@@ -108,7 +215,7 @@ window.AletheiaActivityChart = (function () {
 
     const prev = registry[canvasId] && registry[canvasId].state;
     const state = Object.assign({ dimension: "user", metric: "fees" }, prev, opts);
-    registry[canvasId] = { dataElId, state };
+    registry[canvasId] = { dataElId, state, kind: "bar" };
 
     const theme = currentTheme();
     const themed = window.AletheiaChartPalette.axes(theme);
@@ -182,8 +289,12 @@ window.AletheiaActivityChart = (function () {
 
   function rerenderAll() {
     Object.keys(registry).forEach(function (id) {
-      if (document.getElementById(id)) {
-        render(id, registry[id].dataElId, registry[id].state);
+      if (!document.getElementById(id)) return;
+      const cfg = registry[id];
+      if (cfg.kind === "donut") {
+        renderDonut(id, cfg.dataElId, cfg.state);
+      } else {
+        render(id, cfg.dataElId, cfg.state);
       }
     });
   }
@@ -227,6 +338,9 @@ window.AletheiaActivityChart = (function () {
     document.querySelectorAll("canvas[data-chart-data]").forEach(function (c) {
       if (c.id) render(c.id, c.dataset.chartData);
     });
+    document.querySelectorAll("canvas[data-donut-data]").forEach(function (c) {
+      if (c.id) renderDonut(c.id, c.dataset.donutData);
+    });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", autoInit);
@@ -234,5 +348,5 @@ window.AletheiaActivityChart = (function () {
     autoInit();
   }
 
-  return { render, update, _stateFor };
+  return { render, update, _stateFor, renderDonut, updateDonut, _donutStateFor };
 })();

@@ -318,6 +318,29 @@ document.addEventListener('alpine:init', () => {
     },
   }));
 
+  /**
+   * WIP donut metric toggle (Gross / Net / Comp). Bound per donut canvas; the
+   * chart instance is managed by activity-chart.js. Re-seeds from the chart
+   * module on init so the selection survives HTMX re-swaps.
+   */
+  Alpine.data('donutToggle', (canvasId) => ({
+    metric: 'net',
+
+    init() {
+      const last = window.AletheiaActivityChart &&
+        window.AletheiaActivityChart._donutStateFor(canvasId);
+      if (last) {
+        this.metric = last.metric;
+      }
+    },
+
+    setMetric(m) {
+      this.metric = m;
+      window.AletheiaActivityChart &&
+        window.AletheiaActivityChart.updateDonut(canvasId, { metric: m });
+    },
+  }));
+
 });
 
 
