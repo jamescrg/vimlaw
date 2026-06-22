@@ -70,7 +70,9 @@ def add(request):
             folder.save()
             context = get_list_data(request)
             response = render(request, "folders/list.html", context)
-            response.status_code = 202  # This will trigger modal close
+            # The body swaps the refreshed list into #folders; the HX-Trigger
+            # (caught in alpine-components.js) closes the modal.
+            response["HX-Trigger"] = "closeModal"
             return response
     else:
         form = FolderForm()
@@ -93,7 +95,9 @@ def edit(request, folder_id):
             form.save()
             context = get_list_data(request)
             response = render(request, "folders/list.html", context)
-            response.status_code = 202  # This will trigger modal close
+            # The body swaps the refreshed list into #folders; the HX-Trigger
+            # (caught in alpine-components.js) closes the modal.
+            response["HX-Trigger"] = "closeModal"
             return response
     else:
         form = FolderForm(instance=folder)
