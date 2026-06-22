@@ -88,7 +88,17 @@
               {% if 'Invoice' in transaction.description %}
                 <div class="ledger-desc">
                   <a href="{% url 'invoicing:invoices-detail-index' transaction.id %}">{{ transaction.description }}</a>
-                  {% if transaction.is_deferred %}<span class="app-badge">Deferred</span>{% endif %}
+                  {% if transaction.invoice_status == 'PAID' %}
+                    <span class="app-badge badge-green">Paid</span>
+                  {% elif transaction.invoice_status == 'SENT' %}
+                    <span class="app-badge badge-blue">Sent</span>
+                  {% elif transaction.invoice_status == 'DEFERRED' %}
+                    <span class="app-badge badge-gray">Deferred</span>
+                  {% elif transaction.invoice_status == 'UNCOLLECTIBLE' %}
+                    <span class="app-badge badge-red">Uncollectible</span>
+                  {% elif transaction.invoice_status == 'VOID' %}
+                    <span class="app-badge badge-gray">Void</span>
+                  {% endif %}
                 </div>
               {% elif 'Payment' in transaction.description %}
                 <div class="dropdown" x-data="dropdown()">
@@ -141,7 +151,7 @@
               {% endif %}
             </td>
             {% if transaction.transaction_type == 'Charge' %}
-              <td class="numeric{% if not transaction.is_deferred %} urgent{% endif %}">
+              <td class="numeric{% if transaction.affects_balance and not transaction.is_deferred %} urgent{% endif %}">
                 ${{ transaction.amount|floatformat:2|intcomma }}
               </td>
             {% else %}

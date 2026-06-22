@@ -96,11 +96,12 @@ class Invoice(AuditMixin, models.Model):
         Calculate the amount still owed on this invoice after allocations.
 
         Hybrid approach for backward compatibility:
-        - If status is "VOID", return 0 (entries released, no balance)
+        - If status is "VOID" or "UNCOLLECTIBLE", return 0 (cancelled / written off
+          as bad debt — nothing collectible)
         - If status is "PAID" and no allocations exist, return 0 (legacy invoices)
         - Otherwise, calculate based on allocations (new allocation system)
         """
-        if self.status == "VOID":
+        if self.status in ("VOID", "UNCOLLECTIBLE"):
             return 0
 
         total = self.value["final_total"]

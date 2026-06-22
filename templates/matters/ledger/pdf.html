@@ -47,10 +47,12 @@
                   <td class="transaction-type">{{ transaction.transaction_type }}</td>
                   <td>
                     {{ transaction.description }}
-                    {% if transaction.is_deferred %}(Deferred){% endif %}
+                    {% if transaction.invoice_status and transaction.invoice_status != 'SENT' %}
+                      ({{ transaction.invoice_status|title }})
+                    {% endif %}
                   </td>
                   {% if transaction.transaction_type == 'Charge' %}
-                    <td class="money{% if not transaction.is_deferred %} urgent{% endif %}">
+                    <td class="money{% if transaction.affects_balance and not transaction.is_deferred %} urgent{% endif %}">
                       ${{ transaction.amount|floatformat:2|intcomma }}
                     </td>
                   {% else %}

@@ -42,7 +42,12 @@ def get_ledger_data(matter):
     # Add invoices to transactions (exclude DRAFT and APPROVED)
     if invoices:
         for invoice in invoices:
-            affects_balance = invoice.status not in ["DRAFT", "APPROVED", "VOID"]
+            affects_balance = invoice.status not in [
+                "DRAFT",
+                "APPROVED",
+                "VOID",
+                "UNCOLLECTIBLE",
+            ]
             is_deferred = invoice.status == "DEFERRED"
             invoice_dict = {
                 "id": invoice.id,

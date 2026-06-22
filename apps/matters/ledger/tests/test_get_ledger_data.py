@@ -217,6 +217,47 @@ class TestGetLedgerDataDeferredBreakout:
         assert charge["is_deferred"] is False
 
 
+class TestGetLedgerDataUncollectible:
+    def _uncollectible_invoice(self, user, matter):
+        invoice = Invoice.objects.create(
+            created_by=user,
+            matter=matter,
+            date_limit="2024-01-31",
+            date_issued="2024-01-01",
+            status="UNCOLLECTIBLE",
+        )
+        TimeEntry.objects.create(
+            user=user,
+            matter=matter,
+            date="2024-01-01",
+            actions="Written-off work",
+            hours=Decimal("2.0"),
+            rate=500,
+            comp=False,
+            entered=False,
+            invoice=invoice,
+        )
+        return invoice
+
+    def test_uncollectible_excluded_from_balance(self, user, matter):
+        """A written-off invoice contributes nothing to balance or currently owed."""
+        invoice = self._uncollectible_invoice(user, matter)
+        result = get_ledger_data(matter)
+
+        row = next(
+            t
+            for t in result["transactions"]
+            if t["description"] == f"Invoice {invoice.id}"
+        )
+        # Still visible in the ledger for the audit trail...
+        assert row["invoice_status"] == "UNCOLLECTIBLE"
+        # ...but it does not move any totals.
+        assert row["affects_balance"] is False
+        assert result["balance_due"] == 0
+        assert result["currently_owed"] == 0
+        assert result["deferred_total"] == 0
+
+
 class TestGetLedgerDataTotalCredits:
     def test_total_credits_with_no_credits(self, matter, sent_invoice):
         result = get_ledger_data(matter)
