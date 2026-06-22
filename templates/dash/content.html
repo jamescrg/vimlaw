@@ -7,41 +7,51 @@
     {% else %}
       <div class="toolbar">
         <div class="toolbar-left">
-          <h2>WIP by user</h2>
+          <h2>Unbilled Time</h2>
         </div>
       </div>
-      <div class="table-container wip-table">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th class="numeric">Hours</th>
-              <th class="numeric">Gross</th>
-              <th class="numeric">Comp</th>
-              <th class="numeric">Net</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in user_rows %}
+      <div class="wip-section">
+        <div class="wip-donut">
+          <canvas id="wip-self-chart" data-donut-data="wip-self-data"></canvas>
+        </div>
+        <div class="table-container wip-table">
+          <table class="table">
+            <thead>
               <tr>
-                <td>
-                  <strong>{{ row.label }}</strong>
-                </td>
-                <td class="numeric">{{ row.hours|floatformat:1 }}h</td>
-                <td class="numeric">${{ row.gross|floatformat:2|intcomma }}</td>
-                <td class="numeric">${{ row.comp|floatformat:2|intcomma }}</td>
-                <td class="numeric">
-                  <strong>${{ row.net|floatformat:2|intcomma }}</strong>
-                </td>
+                <th>User</th>
+                <th class="numeric">Hours</th>
+                <th class="numeric">Gross</th>
+                <th class="numeric">Comp</th>
+                <th class="numeric">Net</th>
               </tr>
-            {% empty %}
-              <tr>
-                <td colspan="5" class="empty-entries">No unbilled work in progress.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for row in user_rows %}
+                <tr>
+                  <td>
+                    <strong>{{ row.label }}</strong>
+                  </td>
+                  <td class="numeric">{{ row.hours|floatformat:1 }}h</td>
+                  <td class="numeric">${{ row.gross|floatformat:2|intcomma }}</td>
+                  <td class="numeric">${{ row.comp|floatformat:2|intcomma }}</td>
+                  <td class="numeric">
+                    <strong>${{ row.net|floatformat:2|intcomma }}</strong>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="5" class="empty-entries">No unbilled work in progress.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
+      {{ user_self_donut|json_script:"wip-self-data" }}
+      <script>
+        window.AletheiaActivityChart &&
+          window.AletheiaActivityChart.renderDonut('wip-self-chart', 'wip-self-data', { metric: 'net' });
+      </script>
     {% endif %}
   </div>
   {# Row 2: Upcoming events — full width, only when there are any in the window #}

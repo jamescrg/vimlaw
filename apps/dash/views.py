@@ -22,7 +22,7 @@ from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
 from apps.matters.models import Matter
-from apps.reports.wip.aggregation import wip_user_breakdown
+from apps.reports.wip.aggregation import wip_matter_donut, wip_user_breakdown
 from apps.trust.trust import get_confirmed_client_balance
 
 
@@ -49,15 +49,21 @@ def dash_index(request):
         status="Pending", date__gte=today, date__lte=window_end
     ).order_by("date", "start_time", "party")
 
-    # WIP by user — users with reporting access see the full all-users section
-    # (identical to the WIP report); everyone else sees only their own WIP.
-    wip_show_all = request.user.is_admin or request.user.perm_reports
+    # Reporting access sees the full all-users section (identical to the WIP
+    # report); everyone else sees only their own WIP. `?view=user` lets a
+    # privileged user preview the regular-user view.
+    wip_show_all = (request.user.is_admin or request.user.perm_reports) and (
+        request.GET.get("view") != "user"
+    )
+    wip_self_donut = None
     if wip_show_all:
         wip_user_rows, wip_user_donut, wip_totals = wip_user_breakdown()
     else:
         wip_user_rows, wip_user_donut, wip_totals = wip_user_breakdown(
             user=request.user
         )
+        # The user's own unbilled WIP by matter (top 5 + Other), shown as net.
+        wip_self_donut = wip_matter_donut(request.user, top_n=5)
 
     # Matters with low clearance (< $1000)
     # Use subqueries to calculate unbilled amounts
@@ -244,8 +250,10 @@ def dash_index(request):
         "app": "dash",
         "upcoming_events": upcoming_events,
         "wip_show_all": wip_show_all,
+        "wip_heading": "Unbilled Time",
         "user_rows": wip_user_rows,
         "user_donut": wip_user_donut,
+        "user_self_donut": wip_self_donut,
         "totals": wip_totals,
         "low_clearance_matters": low_clearance_matters,
         "balance_due_matters": balance_due_matters,

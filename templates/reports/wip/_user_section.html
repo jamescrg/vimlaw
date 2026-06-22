@@ -5,7 +5,7 @@ dashboard. Requires: user_rows, totals, user_donut.
 {% endcomment %}
 <div class="toolbar" x-data="donutToggle('wip-user-chart')">
   <div class="toolbar-left">
-    <h2>WIP by user</h2>
+    <h2>{{ wip_heading|default:"WIP by user" }}</h2>
     <div class="chart-toggle" role="group" aria-label="Metric">
       <button type="button"
               :class="{ 'toggle-active': metric === 'gross' }"

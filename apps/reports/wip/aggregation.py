@@ -92,7 +92,7 @@ def wip_user_breakdown(user=None):
     for r in user_rows:
         r["pct"] = (r["net"] / total_net * 100) if total_net else Decimal(0)
 
-    return user_rows, _donut(user_rows, cap=False), totals
+    return user_rows, _donut(user_rows), totals
 
 
 def build_wip_context(request):
@@ -129,16 +129,16 @@ def build_wip_context(request):
         "matter_rows": matter_rows,
         "totals": totals,
         "user_donut": user_donut,
-        "matter_donut": _donut(matter_rows, cap=True),
+        "matter_donut": _donut(matter_rows, top_n=TOP_MATTERS),
     }
 
 
-def _donut(rows, cap):
-    """Build a donut payload from rows. When `cap`, keep the top TOP_MATTERS by
+def _donut(rows, top_n=None):
+    """Build a donut payload from rows. When `top_n` is set, keep the top N by
     gross and fold the rest into a trailing neutral "Other" slice."""
     ranked = sorted(rows, key=lambda r: r["gross"], reverse=True)
-    has_other = cap and len(ranked) > TOP_MATTERS
-    head = ranked[:TOP_MATTERS] if cap else ranked
+    has_other = top_n is not None and len(ranked) > top_n
+    head = ranked[:top_n] if top_n is not None else ranked
 
     labels = [r["label"] for r in head]
     gross = [_money(r["gross"]) for r in head]
@@ -146,7 +146,7 @@ def _donut(rows, cap):
     comp = [_money(r["comp"]) for r in head]
 
     if has_other:
-        rest = ranked[TOP_MATTERS:]
+        rest = ranked[top_n:]
         labels.append("Other")
         gross.append(_money(sum((r["gross"] for r in rest), Decimal(0))))
         net.append(_money(sum((r["net"] for r in rest), Decimal(0))))
@@ -159,3 +159,17 @@ def _donut(rows, cap):
         "comp": comp,
         "hasOther": has_other,
     }
+
+
+def wip_matter_donut(user, top_n=5):
+    """Donut payload of `user`'s unbilled WIP grouped by matter (top_n + Other)."""
+    rows = [
+        _row(g["matter__name"] or "Unknown", g)
+        for g in (
+            _wip_base()
+            .filter(user=user)
+            .values("matter_id", "matter__name")
+            .annotate(hours_sum=Sum("hours"), gross=Sum(_FEE), comp=Sum(_COMP_FEE))
+        )
+    ]
+    return _donut(rows, top_n=top_n)
