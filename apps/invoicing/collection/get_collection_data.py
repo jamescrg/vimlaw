@@ -11,6 +11,7 @@ from django.db.models.functions import Coalesce
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
 from apps.activity.time.models import TimeEntry
+from apps.invoicing.applications.models import CreditApplication, PaymentApplication
 from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
@@ -99,6 +100,28 @@ def get_collection_data(request):
         .values("total")
     )
 
+    # Payments/credits already applied to this matter's DEFERRED invoices. The
+    # `- deferred` term below removes deferred invoices from what's owed; without
+    # adding these back, the payments applied to them would be double-counted and
+    # push the due figure negative.
+    paid_to_deferred_subquery = (
+        PaymentApplication.objects.filter(
+            invoice__matter=OuterRef("pk"), invoice__status="DEFERRED"
+        )
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
+        .values("total")
+    )
+
+    credits_to_deferred_subquery = (
+        CreditApplication.objects.filter(
+            invoice__matter=OuterRef("pk"), invoice__status="DEFERRED"
+        )
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
+        .values("total")
+    )
+
     # Annotate matters with billed, paid, deferred, credits, and due amounts
     matters = (
         Matter.objects.filter(billable=True)
@@ -123,16 +146,31 @@ def get_collection_data(request):
                 0,
                 output_field=DecimalField(),
             ),
+            paid_to_deferred=Coalesce(
+                Subquery(paid_to_deferred_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            credits_to_deferred=Coalesce(
+                Subquery(credits_to_deferred_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
             balance_due=ExpressionWrapper(
                 F("billed") - F("paid") - F("credits"),
                 output_field=DecimalField(),
             ),
             due_after_deferrals=ExpressionWrapper(
-                F("billed") - F("paid") - F("deferred") - F("credits"),
+                F("billed")
+                - F("paid")
+                - F("deferred")
+                - F("credits")
+                + F("paid_to_deferred")
+                + F("credits_to_deferred"),
                 output_field=DecimalField(),
             ),
         )
-        .filter(balance_due__gt=0)
+        .filter(due_after_deferrals__gt=0)
         .order_by("-due_after_deferrals")
     )
 

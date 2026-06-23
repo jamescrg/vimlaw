@@ -20,6 +20,7 @@ from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
 from apps.calendar.models import Event
 from apps.intakes.models import Intake
+from apps.invoicing.applications.models import CreditApplication, PaymentApplication
 from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
@@ -271,6 +272,26 @@ def dash_collections_context(request):
         .values("total")
     )
 
+    # Payments/credits applied to DEFERRED invoices, added back below so they are
+    # not double-counted against the (already deferral-netted) balance due.
+    paid_to_deferred_subquery = (
+        PaymentApplication.objects.filter(
+            invoice__matter=OuterRef("pk"), invoice__status="DEFERRED"
+        )
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
+        .values("total")
+    )
+
+    credits_to_deferred_subquery = (
+        CreditApplication.objects.filter(
+            invoice__matter=OuterRef("pk"), invoice__status="DEFERRED"
+        )
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
+        .values("total")
+    )
+
     # Annotate matters and filter for positive balance due
     balance_due_matters = list(
         filter_matters_for_user(Matter.objects.filter(billable=True), request.user)
@@ -295,8 +316,23 @@ def dash_collections_context(request):
                 0,
                 output_field=DecimalField(),
             ),
+            paid_to_deferred=Coalesce(
+                Subquery(paid_to_deferred_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
+            credits_to_deferred=Coalesce(
+                Subquery(credits_to_deferred_subquery, output_field=DecimalField()),
+                0,
+                output_field=DecimalField(),
+            ),
             balance_due=ExpressionWrapper(
-                F("billed") - F("paid") - F("deferred") - F("credits"),
+                F("billed")
+                - F("paid")
+                - F("deferred")
+                - F("credits")
+                + F("paid_to_deferred")
+                + F("credits_to_deferred"),
                 output_field=DecimalField(),
             ),
         )

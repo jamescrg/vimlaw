@@ -6,6 +6,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from apps.activity.time.models import TimeEntry
+from apps.invoicing.applications.models import PaymentApplication
 from apps.invoicing.collection.get_collection_data import get_collection_data
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
@@ -90,8 +91,7 @@ class TestGetCollectionData:
         result = get_collection_data(request)
         assert list(result["matters"]) == []
 
-    def test_deferred_affects_due_after_deferrals(self, user, matter):
-        """Deferred invoices reduce due_after_deferrals but not balance_due."""
+    def _deferred_invoice(self, user, matter, hours, rate):
         invoice = Invoice.objects.create(
             created_by=user,
             matter=matter,
@@ -104,21 +104,43 @@ class TestGetCollectionData:
             matter=matter,
             date="2024-01-01",
             actions="Deferred work",
-            hours=Decimal("2.0"),
-            rate=500,
+            hours=Decimal(hours),
+            rate=rate,
             comp=False,
             entered=False,
             invoice=invoice,
+        )
+        return invoice
+
+    def test_purely_deferred_matter_excluded(self, user, matter):
+        """A matter whose only billing is deferred owes nothing now -> excluded."""
+        self._deferred_invoice(user, matter, "2.0", 500)
+        request = self._make_request(user)
+        result = get_collection_data(request)
+        assert list(result["matters"]) == []
+
+    def test_payment_applied_to_deferred_not_double_counted(
+        self, user, matter, sent_invoice
+    ):
+        """A payment applied to a deferred invoice must not reduce the balance
+        owed on non-deferred invoices (regression: it previously went negative)."""
+        deferred = self._deferred_invoice(user, matter, "1.0", 500)  # $500 deferred
+        payment = Payment.objects.create(
+            matter=matter,
+            date="2024-12-15",
+            amount=Decimal("500.00"),
+            payment_method="WIRE",
+        )
+        PaymentApplication.objects.create(
+            payment=payment, invoice=deferred, amount_applied=Decimal("500.00")
         )
         request = self._make_request(user)
         result = get_collection_data(request)
         matters = list(result["matters"])
         assert len(matters) == 1
-        # Billed and balance_due include deferred
-        assert matters[0].billed == Decimal("1000.00")
-        assert matters[0].balance_due == Decimal("1000.00")
-        # But due_after_deferrals subtracts deferred amount
-        assert matters[0].due_after_deferrals == Decimal("0.00")
+        # billed = $1000 SENT + $500 deferred; the deferred payment is added back
+        # so due_after_deferrals reflects only the unpaid SENT invoice.
+        assert matters[0].due_after_deferrals == Decimal("1000.00")
 
     def test_total_due_after_deferrals(
         self, user, matter, sent_invoice, payment_partial
