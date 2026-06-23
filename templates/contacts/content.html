@@ -7,4 +7,12 @@
       {% include "contacts/contacts.html" %}
     {% endif %}
   </div>
+  {# Mobile: open the Clients & Folders drawer (see contacts-drawer.js) #}
+  <button type="button"
+          id="folders-fab"
+          class="folders-fab"
+          aria-label="Clients and folders">
+    <i class="icon-folder" aria-hidden="true"></i>
+  </button>
+  <div id="folders-overlay" class="folders-overlay"></div>
 {% endblock content %}
