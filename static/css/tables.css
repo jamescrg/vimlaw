@@ -256,9 +256,13 @@ tr.total td {
     position: relative;
   }
 
-  /* Default cell = muted meta chip. */
+  /* Default cell = muted meta chip. Transparent so the card's single
+     background (the tr — including any highlight fill) shows through uniformly,
+     rather than the global `td { background: var(--background-td) }` painting a
+     block behind each cell's text. */
   .card-table tbody td {
     align-items: center;
+    background: transparent;
     border: none;
     color: var(--color-muted);
     display: flex;
