@@ -29,4 +29,14 @@
   .task-notes-btn {
     opacity: 1;
   }
+
+  /* The matter column is card-hidden here (single matter), which on the main
+     tasks tab holds the card title — leaving the importance flag stranded on
+     its own row with empty space. Lead with the description and fold the flag
+     into the meta row (no longer pushed right by the shared margin-left:auto). */
+  #matterTasks .tasks-table td.description { order: 1; }
+  #matterTasks .tasks-table td.importance { order: 2; margin-left: 0; }
+  #matterTasks .tasks-table td.user { order: 3; }
+  #matterTasks .tasks-table td.date { order: 4; }
+  #matterTasks .tasks-table td.status { order: 5; }
 }

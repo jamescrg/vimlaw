@@ -146,15 +146,22 @@ Matter Switcher
   margin-right: 0.5rem;
 }
 
-/* Mobile: strip the matter title down to just the name. Hides the back arrow,
-   the Detail/Case mode pills (so Case is unreachable on phones — accepted for
-   now), the +Time/+Expense actions, and the edit/print tools. */
+/* Mobile: pare the matter title to the name + the +Time action. Hides the
+   Detail/Case mode pills (so Case is unreachable on phones — accepted for now)
+   and the edit/print tools; +Time stays, pushed to the far right. */
 @media (width <= 768px) {
-  .matter-toolbar .back-link,
   .matter-toolbar .mode-pills,
-  .matter-toolbar .accent-link,
   .matter-toolbar .toolbar-right {
     display: none;
+  }
+
+  /* Fill the bar and push +Time to the far right of the matter name. */
+  .matter-toolbar .toolbar-left {
+    flex: 1;
+  }
+
+  .matter-toolbar .accent-link {
+    margin-left: auto;
   }
 }
 
