@@ -72,18 +72,16 @@
         {% endif %}
       </div>
       <div class="modal-footer-center">
-        {% if not edit %}
-          <a class="button-link codes-reference-link"
-             href="#"
-             hx-get="{% url 'activity:codes-reference' %}"
-             hx-target="#codes-reference-container"
-             hx-swap="innerHTML">View Abbreviation Codes</a>
-        {% endif %}
+        <a class="button-link codes-reference-link"
+           href="#"
+           hx-get="{% url 'activity:codes-reference' %}"
+           hx-target="#codes-reference-container"
+           hx-swap="innerHTML">View Abbreviation Codes</a>
       </div>
       <div class="modal-footer-right">
         <button type="submit" form="time-entry-form" class="btn btn-success">Submit</button>
       </div>
-      {% if not edit %}<div id="codes-reference-container" class="codes-reference-container"></div>{% endif %}
+      <div id="codes-reference-container" class="codes-reference-container"></div>
     </div>
   </div>
 </div>
