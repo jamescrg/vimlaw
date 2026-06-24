@@ -1,3 +1,4 @@
+import functools
 import json
 import os
 from datetime import datetime, timedelta
@@ -13,6 +14,26 @@ logger = getLogger(__name__)
 
 CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
 CALENDAR_ID = os.environ.get("CALENDAR_ID")
+
+
+def best_effort(default):
+    """Calendar sync is a side effect — a failure (stale/invalid token, network,
+    API error) must never block the local save. Catch and log, returning
+    `default` so the caller proceeds. check_credentials() can return True for a
+    token that's actually expired/revoked, so the call still has to be guarded."""
+
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except Exception:
+                logger.exception("Google Calendar %s failed; continuing", fn.__name__)
+                return default
+
+        return wrapper
+
+    return decorator
 
 
 def check_credentials():
@@ -51,6 +72,7 @@ def build_service():
         return False
 
 
+@best_effort(default=None)
 def add_event(event):
     service = build_service()
 
@@ -170,6 +192,7 @@ def list_google_events(sync_token=None):
             return ([], None)
 
 
+@best_effort(default=False)
 def delete_event(event):
     service = build_service()
     result = None
@@ -199,6 +222,7 @@ def delete_event(event):
         return False
 
 
+@best_effort(default=False)
 def edit_event(event):
     service = build_service()
 
