@@ -52,6 +52,16 @@ class BluebookEllipsisExtension(Extension):
         )
 
 
+class NoIndentedCodeExtension(Extension):
+    """Disable Markdown's indented (4-space) code blocks. AI responses that echo
+    pasted, indented text — e.g. bulleted lists — were being turned into code
+    blocks (a jarring monospace panel). Fenced ``` blocks still render as code,
+    so real code is unaffected."""
+
+    def extendMarkdown(self, md):
+        md.parser.blockprocessors.deregister("code")
+
+
 def normalize_markdown(text):
     """
     Ensure blank lines before block elements so markdown parses correctly.
@@ -94,6 +104,7 @@ def render_markdown(text):
             "pymdownx.mark",
             "smarty",
             BluebookEllipsisExtension(),
+            NoIndentedCodeExtension(),
             NoteReferenceExtension(),
         ],
         extension_configs={
