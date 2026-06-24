@@ -687,18 +687,21 @@ tr > td.importance.complete .button-link {
     background: var(--past-due-bg);
   }
 
-  /* Dark/cosmic past-due: instead of a separate rail inside the card (the
-     desktop treatment) plus the card's own edge rail, recolour the card's
-     left edge rail to the past-due rose. Importance still reads from the
-     priority icon. The date keeps its rose underscore as a secondary cue. */
+  /* Dark/cosmic past-due: recolour the card's left edge rail to the past-due
+     rose and make it the ONLY past-due signal on mobile. Importance still
+     reads from the priority icon. */
   :is([data-theme="dark"], [data-theme="cosmic"]) .tasks-table tbody tr.past-due {
     border-left-color: var(--past-due-rail);
   }
 
-  /* Drop the inner description rail here — the card-edge rail is the single
-     past-due signal on mobile (desktop keeps the description rail). */
+  /* Drop the desktop treatments here so the card-edge rail stands alone: the
+     inner description rail and the rose underscore on the date. */
   :is([data-theme="dark"], [data-theme="cosmic"]) .tasks-table tbody tr.past-due td.description {
     box-shadow: none;
+  }
+
+  :is([data-theme="dark"], [data-theme="cosmic"]) .tasks-table tbody tr.past-due td.date .task-date-link {
+    text-decoration: none;
   }
 
   /* Cell-level highlight is redundant with the card bg / rail. */
