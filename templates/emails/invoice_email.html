@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ invoice.id }}</title>
+  </head>
+  <body style="margin: 0;
+               padding: 0;
+               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td>
+          <table role="presentation"
+                 width="100%"
+                 cellpadding="0"
+                 cellspacing="0"
+                 style="background-color: #fafaf9">
+            <!-- Header -->
+            <tr>
+              <td style="background-color: #eeeeec; color: #57534e; padding: 24px 32px">
+                <h1 style="margin: 0; font-size: 20px; font-weight: 600;">{{ firm_name|default:"Invoice" }}</h1>
+                <p style="margin: 4px 0 0; font-size: 14px; color: #78716c;">
+                  Invoice #{{ invoice.id }} &middot; {{ invoice.date_issued|date:"F j, Y" }}
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 24px 32px;">
+                <p style="margin: 0 0 16px; font-size: 14px; color: #57534e;">
+                  Dear {{ client_name|default:"Client" }},
+                </p>
+                {% if cover_message %}
+                  <p style="margin: 0 0 16px; font-size: 14px; color: #57534e; white-space: pre-line;">{{ cover_message }}</p>
+                {% else %}
+                  <p style="margin: 0 0 16px; font-size: 14px; color: #57534e;">
+                    Please find attached our invoice for {{ matter_name }}. The invoice
+                    detail is included as a PDF attachment.
+                  </p>
+                {% endif %}
+
+                <!-- Summary -->
+                <table role="presentation"
+                       width="100%"
+                       cellpadding="0"
+                       cellspacing="0"
+                       style="margin: 8px 0 20px; border: 1px solid #e7e5e4; border-radius: 6px;">
+                  <tr>
+                    <td style="padding: 12px 16px; font-size: 14px; color: #78716c;">Matter</td>
+                    <td style="padding: 12px 16px; font-size: 14px; color: #292524; text-align: right;">{{ matter_name }}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 16px; font-size: 14px; color: #78716c; border-top: 1px solid #e7e5e4;">Invoice</td>
+                    <td style="padding: 12px 16px; font-size: 14px; color: #292524; text-align: right; border-top: 1px solid #e7e5e4;">#{{ invoice.id }}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 16px; font-size: 15px; font-weight: 600; color: #292524; border-top: 1px solid #e7e5e4;">Amount Due</td>
+                    <td style="padding: 12px 16px; font-size: 15px; font-weight: 600; color: #292524; text-align: right; border-top: 1px solid #e7e5e4;">${{ amount_due|floatformat:2 }}</td>
+                  </tr>
+                </table>
+
+                {% if pay_url %}
+                  <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 0 20px;">
+                    <tr>
+                      <td style="background-color: #1d4ed8; border-radius: 6px;">
+                        <a href="{{ pay_url }}"
+                           style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none;">Pay now</a>
+                      </td>
+                    </tr>
+                  </table>
+                {% endif %}
+
+                <p style="margin: 0; font-size: 13px; color: #78716c;">
+                  If you have any questions about this invoice, please reply to this email.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

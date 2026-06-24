@@ -30,6 +30,9 @@ class Invoice(AuditMixin, models.Model):
     discount = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=INVOICE_STATUS, default="DRAFT")
     pdf_file = models.FileField(upload_to=invoice_upload_path, null=True, blank=True)
+    # Last time the invoice was successfully emailed to the client. NULL = never
+    # sent from the app; see InvoiceTransmission for the full send history.
+    date_sent = models.DateTimeField(null=True, blank=True)
     history = HistoricalRecords()
 
     def __str__(self):
@@ -196,3 +199,33 @@ class Invoice(AuditMixin, models.Model):
             "pre_discount_total": pre_discount_total,
             "final_total": final_total,
         }
+
+
+class InvoiceTransmission(AuditMixin, models.Model):
+    """One record per attempt to email an invoice to the client. Provides the
+    send/audit history; Invoice.date_sent mirrors the latest successful send."""
+
+    STATUS_CHOICES = (
+        ("sent", "Sent"),
+        ("failed", "Failed"),
+    )
+
+    invoice = models.ForeignKey(
+        Invoice, on_delete=models.CASCADE, related_name="transmissions"
+    )
+    sent_at = models.DateTimeField()
+    to_email = models.EmailField(max_length=255)
+    cc_email = models.EmailField(max_length=255, blank=True, default="")
+    sent_by = models.ForeignKey(
+        "accounts.CustomUser", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    error = models.TextField(blank=True, default="")
+
+    def __str__(self):
+        return f"Invoice #{self.invoice_id} {self.status} to {self.to_email}"
+
+    class Meta:
+        db_table = "app_invoicing_invoice_transmission"
+        ordering = ["-sent_at"]
+        indexes = [models.Index(fields=["invoice"])]

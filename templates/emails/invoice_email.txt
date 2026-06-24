@@ -1,0 +1,14 @@
+{{ firm_name|default:"Invoice" }}
+Invoice #{{ invoice.id }} - {{ invoice.date_issued|date:"F j, Y" }}
+
+Dear {{ client_name|default:"Client" }},
+
+{% if cover_message %}{{ cover_message }}{% else %}Please find attached our invoice for {{ matter_name }}. The invoice detail is included as a PDF attachment.{% endif %}
+
+Matter:      {{ matter_name }}
+Invoice:     #{{ invoice.id }}
+Amount Due:  ${{ amount_due|floatformat:2 }}
+{% if pay_url %}
+Pay online:  {{ pay_url }}
+{% endif %}
+If you have any questions about this invoice, please reply to this email.
