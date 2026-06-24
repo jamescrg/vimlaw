@@ -16,7 +16,7 @@ Time entry form
 /* Nudge the checkbox down so it lines up with the "Preview:" caption, and ease
    it back visually so it reads as a quiet, secondary control. */
 .actions-preview input[type="checkbox"] {
-  margin-top: 0.2rem;
+  margin-top: 0.4rem;
   opacity: 0.6;
 }
 
