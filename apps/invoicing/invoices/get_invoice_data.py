@@ -140,6 +140,13 @@ def get_annotated_invoice_queryset():
 def get_invoice_data(request):
     filter_data = request.session.get("invoices_filter", {})
 
+    # Default the tab to Sent invoices (outstanding receivables) when nothing is
+    # filtered yet, mirroring how the matters list defaults to Open. selected_status
+    # below is read straight from this status, so the Sent button lights up too.
+    # Not persisted: an empty filter always means this default view.
+    if not filter_data:
+        filter_data = {"status": "SENT"}
+
     # Get annotated queryset
     base_queryset = get_annotated_invoice_queryset().order_by("-created_at")
 
