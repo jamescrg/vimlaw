@@ -255,30 +255,14 @@
   gap: 1rem;
 }
 
-/* Mobile: buttons wrap on top */
+/* Mobile: the contact detail now shows a single action button per card
+   (Map / Call), so keep it inline to the right of its content — the base row
+   layout — instead of stacking it full-width above (which looked stranded). */
 @media (width <= 768px) {
-  .contact-card-content-with-copy {
-    flex-direction: column-reverse;
-  }
-
-  .contact-card-buttons {
-    justify-content: flex-start;
-    width: 100%;
-  }
-
-  .contact-phone-item {
+  /* Pin the header actions (cloud / edit) to the top-right so the status badge
+     sits under the name rather than floating beside the buttons. */
+  .contacts-detail .detail-header .toolbar {
     align-items: flex-start;
-    flex-direction: column-reverse;
-  }
-
-  .contact-phone-text {
-    width: 100%;
-  }
-
-  .contact-phone-buttons {
-    justify-content: flex-start;
-    margin-bottom: 0.5rem;
-    width: 100%;
   }
 }
 
@@ -483,7 +467,11 @@
     z-index: 90;
   }
 
+  /* margin:0 overrides the global .icon-folder right margin, which otherwise
+     pushes the glyph left of centre in the round button. */
   .folders-fab i {
+    color: inherit;
     font-size: 1.5rem;
+    margin: 0;
   }
 }
