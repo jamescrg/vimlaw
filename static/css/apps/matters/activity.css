@@ -42,11 +42,22 @@
 }
 
 
-/* Mobile — time entries as cards (.card-table base in tables.css). */
+/* Mobile — time entries as cards (.card-table base in tables.css).
+   Layout per card:
+     date ............ initials   (date left, initials far right)
+     description (full width)
+     hours .... rate .... fee      (spread across the row)
+   space-between spreads each wrapped row's items, so the date/initials row and
+   the hours/rate/fee row both get gaps; the full-width description is
+   unaffected. */
 @media (width <= 768px) {
-  .matter-activity td.actions { order: 1; }
-  .matter-activity td.date { order: 2; }
-  .matter-activity td.user { order: 3; }
+  .matter-activity tbody tr {
+    justify-content: space-between;
+  }
+
+  .matter-activity td.date { order: 1; }
+  .matter-activity td.user { order: 2; }
+  .matter-activity td.actions { order: 3; }
   .matter-activity td.hours { order: 4; }
   .matter-activity td.rate { order: 5; }
   .matter-activity td.fee { order: 6; }

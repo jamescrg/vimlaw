@@ -3,8 +3,3 @@
         hx-target="#htmx-modal-container"
         data-bs-toggle="modal"
         data-bs-target="#htmx-modal-container">+ Time</button>
-<button class="accent-link"
-        hx-get="/activity/expenses/add/{{ matter.id }}/{% if mode == 'case' %}case{% else %}matters{% endif %}"
-        hx-target="#htmx-modal-container"
-        data-bs-toggle="modal"
-        data-bs-target="#htmx-modal-container">+ Expense</button>
