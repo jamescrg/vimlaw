@@ -36,11 +36,9 @@ let abbreviationCodes = null;
 function initAbbreviationPreview() {
     const actionsTextarea = document.getElementById('id_actions');
     const previewContainer = document.getElementById('actions-preview');
-    const previewBody = document.getElementById('actions-preview-body');
     const previewText = document.getElementById('actions-preview-text');
-    const applyCheckbox = document.getElementById('id_apply_codes');
 
-    if (!actionsTextarea || !previewContainer || !previewBody || !previewText) {
+    if (!actionsTextarea || !previewContainer || !previewText) {
         return; // Elements not found, exit early
     }
 
@@ -68,32 +66,20 @@ function initAbbreviationPreview() {
             expandedText = expandedText.replaceAll(code, expansion);
         }
 
-        // The whole row (checkbox + preview) only appears when there's actually
-        // something to expand.
+        // Show the preview (and its checkbox) whenever there's something to
+        // expand. The checkbox only controls whether the expansion is applied
+        // on save (server-side) — it never hides the preview.
         const hasCodes = originalText.trim() && expandedText !== originalText;
-        if (!hasCodes) {
-            previewContainer.style.display = 'none';
-            return;
-        }
-        previewContainer.style.display = 'flex';
-
-        // The expanded text shows only when expansion is enabled; the checkbox
-        // stays visible either way so it can be toggled back on.
-        if (applyCheckbox && !applyCheckbox.checked) {
-            previewBody.style.display = 'none';
-        } else {
+        if (hasCodes) {
             previewText.textContent = expandedText;
-            previewBody.style.display = '';
+            previewContainer.style.display = 'flex';
+        } else {
+            previewContainer.style.display = 'none';
         }
     }
 
     // Add event listener for input changes
     actionsTextarea.addEventListener('input', updatePreview);
-
-    // Toggle the preview when the apply-codes checkbox changes
-    if (applyCheckbox) {
-        applyCheckbox.addEventListener('change', updatePreview);
-    }
 
     // Update preview on initial load (for edit mode)
     updatePreview();
