@@ -108,24 +108,37 @@ Matter List
 
 /* Mobile: explode the matter list into cards via the shared .card-table
    primitive (matter name = card title, work status = card description,
-   proceeding = meta). Unlike tasks/calendar, a matter row carries several
-   independent controls (open the matter, edit work status, the proceeding
-   menu), so the card is NOT a single stretched tap target. */
+   proceeding = meta). Tap anywhere on the card to open the matter; the inline
+   work-status edit and the proceeding menu are disabled here — do those from
+   the matter detail. */
 @media (width <= 768px) {
-  .matter-list tbody tr {
-    cursor: default;
-  }
-
-  /* Keep the matter-name link tappable (open the matter); the primitive
-     disables title links because it expects a stretched card link instead. */
+  /* Stretch the matter-name link over the whole card (the primitive disables
+     title links, expecting the stretch on card-desc instead). The absolutely
+     positioned ::after is laid out against the tr, so the title cell's
+     overflow:hidden doesn't clip it. */
   .matter-list td.card-title a {
     pointer-events: auto;
   }
 
-  /* Don't stretch the work-status link across the whole card — it stays a
-     normal inline link so work status remains editable on mobile. */
+  .matter-list td.card-title a::after {
+    content: "";
+    inset: 0;
+    position: absolute;
+  }
+
+  /* Work status is read-only on mobile (the stretched card link sits over it),
+     and the primitive's competing card-desc stretch is dropped. */
+  .matter-list td.card-desc a {
+    pointer-events: none;
+  }
+
   .matter-list td.card-desc > a:first-child::after {
     content: none;
+  }
+
+  /* Drop the proceeding menu so it isn't an interactive island over the card. */
+  .matter-list td.case-no .dropdown {
+    display: none;
   }
 }
 
