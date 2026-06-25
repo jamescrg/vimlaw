@@ -2,6 +2,7 @@
 <div class="activity-chart-canvas-wrap">
   <canvas id="aging-chart"
           data-chart-data="aging-chart-data"
+          data-chart-type="line"
           data-chart-dimension="aging"
           data-chart-metric-label="Outstanding ($)"></canvas>
 </div>
@@ -9,7 +10,7 @@
 <script>
   window.KosmosActivityChart &&
     window.KosmosActivityChart.render('aging-chart', 'aging-chart-data',
-      { dimension: 'aging', metric: 'fees', unit: '$', metricLabel: 'Outstanding ($)' });
+      { type: 'line', dimension: 'aging', metric: 'fees', unit: '$', metricLabel: 'Outstanding ($)' });
 </script>
 <div class="table-container">
   <table class="table">
