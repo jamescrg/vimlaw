@@ -29,12 +29,6 @@
           <li {% if subapp == "aging" %}class="active"{% endif %}>
             <a href="{% url 'reports:aging-index' %}">AR Aging</a>
           </li>
-          <li {% if subapp == "matters" %}class="active"{% endif %}>
-            <a href="{% url 'reports:matters-index' %}">Matter Summary</a>
-          </li>
-          <li {% if subapp == "trust" %}class="active"{% endif %}>
-            <a href="{% url 'reports:trust-index' %}">Trust Balances</a>
-          </li>
         </ul>
       </nav>
       <div class="detail-body">
