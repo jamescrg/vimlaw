@@ -25,6 +25,7 @@ from .views import (
     order_by,
     print,
     quick_search,
+    switcher,
     tab_content,
     update_work_status,
 )
@@ -40,6 +41,7 @@ urlpatterns = [
     path("matters/<int:id>/tab/<str:tab>/", tab_content, name="tab-content"),
     path("matters/add", add, name="add"),
     path("matters/<int:id>/edit", edit, name="edit"),
+    path("matters/<int:id>/switcher", switcher, name="switcher"),
     path("matters/<int:id>/delete", delete, name="delete"),
     path(
         "matters/edit-work-status/<int:matter_id>",

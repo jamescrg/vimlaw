@@ -3,6 +3,9 @@
 <div id="matter-switcher"
      class="matter-switcher dropdown"
      x-data="dropdown()"
+     hx-trigger="mattersChanged from:body"
+     hx-get="{% url 'matters:switcher' matter.id %}"
+     hx-swap="outerHTML"
      {% if oob %}hx-swap-oob="true"{% endif %}>
   <button type="button" x-ref="button" @click="toggle()" :aria-expanded="open">
     <h1>

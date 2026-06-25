@@ -375,22 +375,11 @@ def edit(request, id):
             matter = form.save(commit=False)
             matter.user_id = request.user.id
             matter.save()
-            # Refresh the matter name in the detail header out-of-band (the
-            # detail page doesn't listen for mattersChanged), close the modal,
-            # and refresh the matters list. On the list page there's no
-            # #matter-switcher, so the OOB swap is simply skipped there.
-            response = render(
-                request,
-                "matters/includes/switcher.html",
-                {"matter": matter, "oob": True},
-            )
-            response["HX-Trigger"] = "mattersChanged"
-            # Close the modal after the swap (not before): the modal's afterSwap
-            # handler re-opens it for any content response, so closing earlier
-            # leaves the backdrop behind. By then the modal is still open, so
-            # that re-open is a no-op and this close cleanly removes the backdrop.
-            response["HX-Trigger-After-Swap"] = "closeModal"
-            return response
+            # Clean 204 closes the modal (and clears its backdrop) via the
+            # standard path. mattersChanged refreshes the matters list and the
+            # self-refreshing matter switcher in the detail header (so the name
+            # updates) — no modal-targeted body, which is what left the backdrop.
+            return HttpResponse(status=204, headers={"HX-Trigger": "mattersChanged"})
 
     else:
         form = MatterForm(instance=matter)
@@ -411,6 +400,19 @@ def edit(request, id):
     }
 
     return render(request, "matters/form.html", context)
+
+
+@login_required
+def switcher(request, id):
+    """Return the matter-switcher partial (header name + open-matter dropdown).
+    The detail header's switcher re-fetches this on mattersChanged so the name
+    updates after an edit, without a modal-targeted response."""
+    matter = get_object_or_404(Matter, pk=id)
+    return render(
+        request,
+        "matters/includes/switcher.html",
+        {"matter": matter, "mode": "detail"},
+    )
 
 
 @login_required
