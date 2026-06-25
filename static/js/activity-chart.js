@@ -89,7 +89,15 @@ window.AletheiaActivityChart = (function () {
   };
 
   function buildDatasets(payload, state, theme) {
-    const series = (payload.series && payload.series[state.dimension]) || [];
+    let series = (payload.series && payload.series[state.dimension]) || [];
+    // The first full-page load runs autoInit() with the default dimension
+    // ('user'). If this payload doesn't key its series that way (e.g. the
+    // realization chart keys by 'segment'), fall back to the first available
+    // series so the bars still render before any HTMX swap re-runs render().
+    if (!series.length && payload.series) {
+      const keys = Object.keys(payload.series);
+      if (keys.length) series = payload.series[keys[0]] || [];
+    }
     const palette = window.AletheiaChartPalette;
     const isMatter = state.dimension === "matter";
     // A series is neutral (grey) if flagged, or the matter view's trailing "Other".
