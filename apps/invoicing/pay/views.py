@@ -18,6 +18,7 @@ import json
 from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
+from django.db import transaction
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
@@ -126,27 +127,35 @@ def pay_charge(request, token):
         )
 
     processor = get_processor()
-    config = processor.client_config(invoice)
-    if config.amount_cents <= 0:
-        return JsonResponse(
-            {"success": False, "error": "This invoice is already paid."}, status=400
-        )
-
+    # Serialize per-invoice: lock the row, re-check the balance, charge, record —
+    # all atomically. A rapid double-submit (or two tabs) then can't both charge,
+    # because the second waits for the lock and finds the invoice already paid.
     try:
-        result = processor.charge(
-            token=payment_token,
-            amount_cents=config.amount_cents,
-            reference=config.reference,
-            method=method,
-            idempotency_key=config.reference,
-        )
+        with transaction.atomic():
+            locked = Invoice.objects.select_for_update().get(pk=invoice.pk)
+            config = processor.client_config(locked)
+            if config.amount_cents <= 0:
+                already_paid = True
+            else:
+                already_paid = False
+                result = processor.charge(
+                    token=payment_token,
+                    amount_cents=config.amount_cents,
+                    reference=config.reference,
+                    method=method,
+                    idempotency_key=config.reference,
+                )
+                # Record + apply (provisional PAID for pending ACH); the
+                # settlement/return webhook later confirms or reverses it.
+                if result.accepted:
+                    record_payment(locked, result)
     except ChargeError as exc:
         return JsonResponse({"success": False, "error": str(exc)}, status=402)
 
-    # Record the payment + apply it to the invoice (provisional PAID for pending
-    # ACH). The settlement/return webhook later confirms or reverses it.
-    if result.accepted:
-        record_payment(invoice, result)
+    if already_paid:
+        return JsonResponse(
+            {"success": False, "error": "This invoice is already paid."}, status=400
+        )
 
     return JsonResponse(
         {

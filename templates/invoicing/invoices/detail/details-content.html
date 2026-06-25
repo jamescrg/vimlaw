@@ -38,3 +38,31 @@
     </table>
   {% endif %}
 </div>
+{% if invoice.applications.all or invoice.credit_applications.all %}
+  <div class="invoices-table-container">
+    <table class="invoices-detail-table">
+      <tr>
+        <th colspan="2">Payments applied</th>
+      </tr>
+      {% for app in invoice.applications.all %}
+        <tr>
+          <th>{{ app.payment.date|date:"Y-m-d" }} · {{ app.payment.method_display }}</th>
+          <td>
+            ${{ app.amount_applied|floatformat:2|intcomma }}
+            {% if app.payment.detail %}<div>{{ app.payment.detail }}</div>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      {% for capp in invoice.credit_applications.all %}
+        <tr>
+          <th>{{ capp.credit.date|date:"Y-m-d" }} · Credit</th>
+          <td>${{ capp.amount_applied|floatformat:2|intcomma }}</td>
+        </tr>
+      {% endfor %}
+      <tr>
+        <th>Amount remaining</th>
+        <td>${{ invoice.amount_remaining|floatformat:2|intcomma }}</td>
+      </tr>
+    </table>
+  </div>
+{% endif %}
