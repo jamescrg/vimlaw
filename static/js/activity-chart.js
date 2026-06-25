@@ -125,6 +125,37 @@ window.AletheiaActivityChart = (function () {
     }));
   }
 
+  // Line variant for single/low-count series (lighter than heavy bars). Each
+  // series is a smooth line over a faint area fill, with points outlined in the
+  // table-border colour to match the bars/donuts.
+  function buildLineDatasets(payload, state, theme) {
+    let series = (payload.series && payload.series[state.dimension]) || [];
+    if (!series.length && payload.series) {
+      const keys = Object.keys(payload.series);
+      if (keys.length) series = payload.series[keys[0]] || [];
+    }
+    const palette = window.AletheiaChartPalette;
+    const colors = palette.make(series.length || 1, theme);
+    return series.map((s, i) => {
+      const c = colors[i];
+      return {
+        label: s.label,
+        data: s[state.metric] || [],
+        borderColor: c,
+        // Faint area fill — make() returns oklch(...), so append an alpha.
+        backgroundColor: c.replace(/\)\s*$/, " / 0.12)"),
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: c,
+        pointBorderColor: palette.border(theme),
+        pointBorderWidth: 1,
+      };
+    });
+  }
+
   // Draws the selected metric's total in the centre of a doughnut.
   const donutCenterPlugin = {
     id: "donutCenter",
@@ -244,9 +275,13 @@ window.AletheiaActivityChart = (function () {
     if (!payload) return;
 
     const prev = registry[canvasId] && registry[canvasId].state;
-    const state = Object.assign({ dimension: "user", metric: "fees" }, prev, opts);
+    const state = Object.assign(
+      { dimension: "user", metric: "fees", type: "bar" }, prev, opts
+    );
     if (state.unit == null) state.unit = state.metric === "fees" ? "$" : "h";
     registry[canvasId] = { dataElId, state, kind: "bar" };
+    const isLine = state.type === "line";
+    const stacked = !isLine;
 
     const theme = currentTheme();
     const themed = window.AletheiaChartPalette.axes(theme);
@@ -256,11 +291,13 @@ window.AletheiaActivityChart = (function () {
     if (existing) existing.destroy();
 
     new Chart(canvas, {
-      type: "bar",
+      type: isLine ? "line" : "bar",
       plugins: [stackTotalsPlugin],
       data: {
         labels: payload.months,
-        datasets: buildDatasets(payload, state, theme),
+        datasets: isLine
+          ? buildLineDatasets(payload, state, theme)
+          : buildDatasets(payload, state, theme),
       },
       options: {
         responsive: true,
@@ -270,12 +307,12 @@ window.AletheiaActivityChart = (function () {
         layout: { padding: { top: 18 } },
         scales: {
           x: {
-            stacked: true,
+            stacked: stacked,
             grid: { display: false },
             ticks: { color: themed.tick },
           },
           y: {
-            stacked: true,
+            stacked: stacked,
             beginAtZero: true,
             grid: { color: themed.grid },
             ticks: {
@@ -373,6 +410,7 @@ window.AletheiaActivityChart = (function () {
       const o = {};
       if (c.dataset.chartDimension) o.dimension = c.dataset.chartDimension;
       if (c.dataset.chartMetric) o.metric = c.dataset.chartMetric;
+      if (c.dataset.chartType) o.type = c.dataset.chartType;
       if ("chartUnit" in c.dataset) o.unit = c.dataset.chartUnit;
       if (c.dataset.chartMetricLabel) o.metricLabel = c.dataset.chartMetricLabel;
       render(c.id, c.dataset.chartData, Object.keys(o).length ? o : undefined);

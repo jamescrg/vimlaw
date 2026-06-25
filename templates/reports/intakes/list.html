@@ -26,6 +26,7 @@
 <div class="activity-chart-canvas-wrap">
   <canvas id="intake-flow-chart"
           data-chart-data="intake-flow-data"
+          data-chart-type="line"
           data-chart-dimension="flow"
           data-chart-metric="count"
           data-chart-unit=""
@@ -35,7 +36,7 @@
 <script>
   window.AletheiaActivityChart &&
     window.AletheiaActivityChart.render('intake-flow-chart', 'intake-flow-data',
-      { dimension: 'flow', metric: 'count', unit: '', metricLabel: 'Intakes' });
+      { type: 'line', dimension: 'flow', metric: 'count', unit: '', metricLabel: 'Intakes' });
 </script>
 <!-- Outcomes + practice-area donuts -->
 <div class="intake-donut-row">
