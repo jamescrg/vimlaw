@@ -1,9 +1,16 @@
 {% load humanize %}
-<div class="toolbar">
-  <div class="toolbar-left">
-    <h2>AR Aging Report</h2>
-  </div>
+<div class="activity-chart-canvas-wrap">
+  <canvas id="aging-chart"
+          data-chart-data="aging-chart-data"
+          data-chart-dimension="aging"
+          data-chart-metric-label="Outstanding ($)"></canvas>
 </div>
+{{ aging_chart|json_script:"aging-chart-data" }}
+<script>
+  window.KosmosActivityChart &&
+    window.KosmosActivityChart.render('aging-chart', 'aging-chart-data',
+      { dimension: 'aging', metric: 'fees', unit: '$', metricLabel: 'Outstanding ($)' });
+</script>
 <div class="table-container">
   <table class="table">
     <tr>
@@ -69,7 +76,7 @@
               -
             {% endif %}
           </td>
-          <td class="numeric">
+          <td class="numeric aging-bucket-end">
             {% if inv.bucket == "days_over_120" %}
               ${{ inv.amount|floatformat:2|intcomma }}
             {% else %}

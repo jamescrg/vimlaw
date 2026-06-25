@@ -93,6 +93,28 @@ def _get_bucket(days_old):
         return "days_over_120"
 
 
+def _aging_chart(grand_totals):
+    """Bar payload: total outstanding $ in each aging bucket (oldest at right)."""
+    buckets = [
+        ("current", "Current"),
+        ("days_31_60", "31–60"),
+        ("days_61_90", "61–90"),
+        ("days_91_120", "91–120"),
+        ("days_over_120", "120+"),
+    ]
+    return {
+        "months": [label for _, label in buckets],
+        "series": {
+            "aging": [
+                {
+                    "label": "Outstanding",
+                    "fees": [float(round(grand_totals[k], 2)) for k, _ in buckets],
+                }
+            ]
+        },
+    }
+
+
 @login_required
 @staff_member_required
 def aging_index(request):
@@ -107,6 +129,7 @@ def aging_index(request):
         "grand_totals": grand_totals,
         "current_sort": sort_by,
         "current_direction": sort_direction,
+        "aging_chart": _aging_chart(grand_totals),
     }
     return render(request, "reports/aging/main.html", context)
 
@@ -125,5 +148,6 @@ def aging_list(request):
         "grand_totals": grand_totals,
         "current_sort": sort_by,
         "current_direction": sort_direction,
+        "aging_chart": _aging_chart(grand_totals),
     }
     return render(request, "reports/aging/list.html", context)

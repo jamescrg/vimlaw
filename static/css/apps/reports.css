@@ -206,6 +206,13 @@
   min-width: 28rem;
 }
 
+/* AR aging: the Total column is rowspanned across a client's invoices, so on the
+   2nd+ rows the 120+ cell becomes :last-child and tables.css strips its right
+   border. Restore it so the divider before Total stays continuous. */
+.aging-bucket-end {
+  border-right: solid 1px var(--border-medium) !important;
+}
+
 /* Intakes report: two distribution donuts side by side under the volume bar,
    wrapping on narrow screens. */
 .intake-donut-row {
