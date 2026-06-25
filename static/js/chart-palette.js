@@ -1,66 +1,75 @@
 /**
  * AletheiaChartPalette
  * ---------------------
- * Generates muted, theme-aware series colours for Chart.js so charts blend with
- * the project's monochrome + two-accent aesthetic instead of reading as a loud
- * rainbow. Colours are built in OKLCH at low, constant chroma, anchored on each
- * theme's accent hue (violet / gruvbox aqua / Nord frost); a gentle hue arc plus
- * a lightness ramp keeps adjacent stacked segments distinguishable. Chart.js v4
- * accepts oklch(...) strings directly as fill / grid / tick colours.
+ * Theme-aware *categorical* series colours for Chart.js. The earlier scheme was
+ * a single accent hue + lightness ramp, which left adjacent stacked segments too
+ * close to tell apart. This uses a distinct hue per series, drawn from each
+ * theme's own accent family so the charts stay on-palette across all three
+ * themes while reading as clearly multi-colour:
+ *   - light  : the project's Tailwind accent ramps (violet brand + complements)
+ *   - dark   : Gruvbox bright accents (the --gb-bright-* family)
+ *   - cosmic : Nord Aurora + Frost accents (--nord*)
  *
- * make(n, theme)  -> array of n oklch() strings
- * axes(theme)     -> { grid, tick } oklch() strings for scales / legend
+ * make(n, theme)  -> array of n colour strings (cycles only if n exceeds the set)
+ * neutral(theme)  -> muted grey for catch-all / residual ("Other" / WIP) series
+ * axes(theme)     -> { grid, tick } for scales / legend
+ *
+ * Chart.js v4 accepts oklch(...) and hex strings directly as fill colours.
  */
 window.AletheiaChartPalette = (function () {
-  const THEME = {
-    // otherL = lightness of the near-neutral "Other" bucket. In light it sits
-    // well above the series ramp so it recedes toward the page; in dark/cosmic
-    // it stays mid so it recedes toward the dark surface.
-    light: {
-      // Violet family anchored on the --violet ramp (hue ~293, the app's
-      // selection accent). Soft chroma so it reads as muted violet, not loud.
-      hue: 293, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
-      grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)",
-    },
-    dark: {
-      hue: 142, hueSpan: 80, chroma: 0.06, lMin: 0.52, lMax: 0.76, otherL: 0.52,
-      grid: "oklch(0.41 0.011 52)", tick: "oklch(0.69 0.035 76)",
-    },
-    cosmic: {
-      hue: 210, hueSpan: 90, chroma: 0.055, lMin: 0.55, lMax: 0.8, otherL: 0.55,
-      grid: "oklch(0.37 0.02 250)", tick: "oklch(0.78 0.03 250)",
-    },
+  // Ordered for maximum contrast between adjacent stacked segments. Values are
+  // the themes' own accent tokens (static/css/palette.css + colors.css) so the
+  // charts stay on-palette; charts here have < 8 series, so cycling is moot.
+  const CATEGORICAL = {
+    light: [
+      "oklch(60.6% 0.219 292.7deg)", // violet-500 (brand accent)
+      "oklch(76.9% 0.165 70.1deg)", // amber-500
+      "oklch(70.4% 0.123 182.5deg)", // teal-500
+      "oklch(64.5% 0.215 16.4deg)", // rose-500
+      "oklch(62.3% 0.188 259.8deg)", // blue-500
+      "oklch(72.3% 0.192 149.6deg)", // green-500
+      "oklch(66.7% 0.259 322.1deg)", // fuchsia-500
+      "oklch(60.9% 0.111 221.7deg)", // cyan-600
+    ],
+    dark: [
+      "oklch(0.756 0.108 138)", // gb-bright-aqua (signature)
+      "oklch(0.731 0.182 52)", // gb-bright-orange
+      "oklch(0.705 0.098 2)", // gb-bright-purple
+      "oklch(0.700 0.075 233)", // gb blue (nudged off aqua for separation)
+      "oklch(0.765 0.158 111)", // gb-bright-green
+      "oklch(0.660 0.217 30)", // gb-bright-red
+      "oklch(0.840 0.150 90)", // gb bright-yellow
+    ],
+    cosmic: [
+      "#88c0d0", // nord8  Frost cyan (signature)
+      "#d08770", // nord12 Aurora orange
+      "#b48ead", // nord15 Aurora purple
+      "#a3be8c", // nord14 Aurora green
+      "#81a1c1", // nord9  Frost blue
+      "#bf616a", // nord11 Aurora red
+      "#ebcb8b", // nord13 Aurora yellow
+      "#8fbcbb", // nord7  Frost teal
+    ],
   };
 
-  function params(theme) {
-    return THEME[theme] || THEME.light;
-  }
-
-  function make(n, theme, opts) {
-    const t = params(theme);
-    const otherLast = opts && opts.otherLast;
-    const colored = otherLast ? Math.max(n - 1, 1) : n;
+  function make(n, theme) {
+    const list = CATEGORICAL[theme] || CATEGORICAL.light;
     const out = [];
-    for (let i = 0; i < n; i++) {
-      // The trailing "Other" bucket reads as a light, near-neutral residual.
-      if (otherLast && i === n - 1) {
-        out.push(`oklch(${t.otherL.toFixed(3)} 0.012 ${t.hue.toFixed(1)})`);
-        continue;
-      }
-      const f = colored === 1 ? 0.5 : i / (colored - 1);
-      const hue = t.hue - t.hueSpan / 2 + f * t.hueSpan;
-      const l = t.lMin + f * (t.lMax - t.lMin);
-      out.push(`oklch(${l.toFixed(3)} ${t.chroma} ${hue.toFixed(1)})`);
-    }
+    for (let i = 0; i < n; i++) out.push(list[i % list.length]);
     return out;
   }
 
+  const AXES = {
+    light: { grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)" },
+    dark: { grid: "oklch(0.41 0.011 52)", tick: "oklch(0.69 0.035 76)" },
+    cosmic: { grid: "oklch(0.37 0.02 250)", tick: "oklch(0.78 0.03 250)" },
+  };
+
   function axes(theme) {
-    const t = params(theme);
-    return { grid: t.grid, tick: t.tick };
+    return AXES[theme] || AXES.light;
   }
 
-  // A muted grey for catch-all / residual series ("Other"), per theme.
+  // A muted grey for catch-all / residual series ("Other" / Unbilled WIP).
   const NEUTRAL = {
     light: "oklch(0.74 0.004 286)",
     dark: "oklch(0.60 0.006 70)",
