@@ -361,3 +361,46 @@ Value Inline Edit
   margin-right: 0.5rem;
   padding: 0.25rem 0.5rem;
 }
+
+/* ==========================================================================
+   Mobile (<=768px): pare the toolbar to Add + Filter and explode the intake
+   list into cards via the shared .card-table primitive (tables.css). Name is
+   the card title/link; status, practice area, date, phone, source become meta;
+   the importance flag is hidden (its urgency shows as the card's left rail).
+   ========================================================================== */
+@media (width <= 768px) {
+  /* Toolbar: only Add + Filter (quick-status buttons + count hidden; their
+     functions remain in the Filter modal). `.filter-tools` in the selector
+     outweighs the base `.toolbar button` display rule. */
+  .intakes-toolbar .filter-tools .quick-status,
+  .intakes-toolbar .toolbar-right {
+    display: none;
+  }
+
+  /* Card order: name, status, practice area, then date / phone / source. */
+  .intake-list td.intake-name {
+    order: 1;
+    display: block;
+    min-width: 0;
+  }
+  .intake-list td.intake-status { order: 2; }
+  .intake-list td.intake-practice-area { order: 3; }
+  .intake-list td.intake-date { order: 4; }
+  .intake-list td.intake-phone { order: 5; }
+  .intake-list td.intake-source { order: 6; }
+
+  /* The inline status / practice-area dropdowns are read-only on the card — the
+     stretched name link opens the detail, where those are edited. */
+  .intake-list td.intake-status,
+  .intake-list td.intake-practice-area {
+    pointer-events: none;
+  }
+
+  /* Left accent rail by importance (mirrors the desktop flag colours). */
+  .intake-list tbody tr.importance-7,
+  .intake-list tbody tr.importance-6 { border-left-color: var(--red-600); }
+  .intake-list tbody tr.importance-5 { border-left-color: var(--violet-600); }
+  .intake-list tbody tr.importance-3 { border-left-color: var(--slate-400); }
+  .intake-list tbody tr.importance-2 { border-left-color: var(--slate-500); }
+  .intake-list tbody tr.importance-1 { border-left-color: var(--slate-600); }
+}

@@ -1,6 +1,6 @@
 {% load phone_numbers %}
 {% block content %}
-  <div class="toolbar">
+  <div class="toolbar intakes-toolbar">
     <div class="toolbar-left">
       <div class="filter-tools">
         <button hx-get="/intakes/add"
@@ -16,16 +16,16 @@
           <i class="icon-list-filter with-text"></i>Filter
         </button>
         <button href="#"
-                class="{% if filter_label == "all" %} toggle-active {% endif %}"
+                class="quick-status {% if filter_label == "all" %}toggle-active{% endif %}"
                 hx-post="{% url 'intakes:quick-filter-all' %}">All</button>
         <button href="#"
-                class="{% if filter_label == "Open" %} toggle-active {% endif %}"
+                class="quick-status {% if filter_label == "Open" %}toggle-active{% endif %}"
                 hx-post="{% url 'intakes:quick-filter-status' 'Open' %}">Open</button>
         <button href="#"
-                class="{% if filter_label == "Pending" %} toggle-active {% endif %}"
+                class="quick-status {% if filter_label == "Pending" %}toggle-active{% endif %}"
                 hx-post="{% url 'intakes:quick-filter-status' 'Pending' %}">Pending</button>
         <button href="#"
-                class="{% if filter_label == "Accepted" %} toggle-active {% endif %}"
+                class="quick-status {% if filter_label == "Accepted" %}toggle-active{% endif %}"
                 hx-post="{% url 'intakes:quick-filter-status' 'Accepted' %}">Accepted</button>
       </div>
     </div>
@@ -34,7 +34,7 @@
     </div>
   </div>
   <div class="table-container">
-    <table class="table intake-list">
+    <table class="table intake-list card-table">
       <tr>
         <th class="intake-importance">
           <button class="btn-sort {% if current_order == 'importance' %}active{% endif %}"
@@ -64,9 +64,9 @@
       </tr>
       {% for intake in intakes %}
         <tr class="importance-{{ intake.importance }}">
-          <td class="intake-importance dropdown-cell importance">{% include "intakes/intake-importance.html" %}</td>
+          <td class="intake-importance dropdown-cell importance card-hide">{% include "intakes/intake-importance.html" %}</td>
           <td class="intake-date">{{ intake.date|date:"Y-m-d" }}</td>
-          <td class="intake-name">
+          <td class="intake-name card-desc">
             <a href={% url 'intakes:detail-index' id=intake.id %}>{{ intake.name }}</a>
             {% if intake.has_new_notes %}
               <a href="{% url 'intakes:detail-index' id=intake.id %}"><i class="icon-sticky-note note-badge-icon note-badge-new"></i></a>
