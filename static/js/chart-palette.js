@@ -81,7 +81,7 @@ window.AletheiaChartPalette = (function () {
 
   // A muted grey for catch-all / residual series ("Other" / Unbilled WIP).
   const NEUTRAL = {
-    light: "oklch(0.74 0.004 286)",
+    light: "oklch(94.7% 0 none)", // stone-150 — light grey to match the 150 pastels
     dark: "oklch(0.60 0.006 70)",
     cosmic: "oklch(0.62 0.006 250)",
   };
@@ -90,5 +90,17 @@ window.AletheiaChartPalette = (function () {
     return NEUTRAL[theme] || NEUTRAL.light;
   }
 
-  return { make, axes, neutral };
+  // Matches the table border token (--border-medium): stone-300 in light,
+  // gb-dark2 in dark, nord2 in cosmic. Used to outline donut slices.
+  const BORDER = {
+    light: "oklch(86.9% 0 none)",
+    dark: "oklch(0.411 0.011 52)",
+    cosmic: "#434c5e",
+  };
+
+  function border(theme) {
+    return BORDER[theme] || BORDER.light;
+  }
+
+  return { make, axes, neutral, border };
 })();

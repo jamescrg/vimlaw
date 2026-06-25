@@ -181,7 +181,8 @@ window.AletheiaActivityChart = (function () {
       plugins: [donutCenterPlugin],
       data: {
         labels: labels,
-        datasets: [{ data: values, backgroundColor: sliceColors, borderWidth: 0 }],
+        datasets: [{ data: values, backgroundColor: sliceColors,
+          borderColor: palette.border(theme), borderWidth: 2 }],
       },
       options: {
         responsive: true,
