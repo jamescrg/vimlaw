@@ -110,6 +110,15 @@
       margin-top: 0.15rem;
     }
 
+    .pay-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .pay-row .pay-field {
+      flex: 1;
+    }
+
     .pay-field {
       margin-bottom: 1rem;
     }
@@ -247,55 +256,78 @@
                 </button>
               </div>
               {% if dev_mode %}
-                <!-- DEV / FakeProcessor: choose a simulated outcome -->
                 <div class="pay-dev">
-                  <strong>Simulated payment (dev).</strong> No real charge occurs.
+                  <strong>Dev simulation — no real charge.</strong> Card ending
+                  <code>0002</code> declines. Bank account ending <code>0001</code>
+                  declines, <code>0002</code> returns later, <code>0003</code>
+                  NSF-fails; anything else succeeds.
                 </div>
+              {% endif %}
+              <!-- Card fields. Live: number + CVV are AffiniPay hosted fields
+                   (card data never hits us). Dev: plain inputs. SANDBOX-VERIFY. -->
+              <div x-show="method === 'card'">
                 <div class="pay-field">
-                  <label for="dev-outcome">Simulated outcome</label>
-                  <select id="dev-outcome" x-model="outcome">
-                    <option value="fake-ok">Success</option>
-                    <option value="fake-ach-return">ACH accepted, will return later</option>
-                    <option value="fake-ach-fail">ACH accepted, will fail (NSF)</option>
-                    <option value="fake-decline">Declined at submit</option>
-                  </select>
-                </div>
-              {% else %}
-                <!-- LIVE: AffiniPay hosted fields (card/bank data never hits us).
-                     SANDBOX-VERIFY: exercised once test deposit accounts exist. -->
-                <div x-show="method === 'card'">
-                  <div class="pay-field">
-                    <label>Card number</label>
+                  <label>Card number</label>
+                  {% if dev_mode %}
+                    <input type="text"
+                           inputmode="numeric"
+                           x-model="cardNumber"
+                           placeholder="4242 4242 4242 4242">
+                  {% else %}
                     <div id="hf-card-number"></div>
-                  </div>
-                  <div class="pay-field">
-                    <label>CVV</label>
-                    <div id="hf-card-cvv"></div>
-                  </div>
+                  {% endif %}
+                </div>
+                <div class="pay-row">
                   <div class="pay-field">
                     <label>Expiration</label>
                     <input type="text" x-model="exp" placeholder="MM / YYYY">
                   </div>
                   <div class="pay-field">
-                    <label>Billing ZIP</label>
-                    <input type="text" x-model="postalCode">
+                    <label>CVV</label>
+                    {% if dev_mode %}
+                      <input type="text" inputmode="numeric" x-model="cvv" placeholder="123">
+                    {% else %}
+                      <div id="hf-card-cvv"></div>
+                    {% endif %}
                   </div>
                 </div>
-                <div x-show="method === 'bank'">
-                  <div class="pay-field">
-                    <label>Routing number</label>
+                <div class="pay-field">
+                  <label>Billing ZIP</label>
+                  <input type="text"
+                         inputmode="numeric"
+                         x-model="postalCode"
+                         placeholder="78701">
+                </div>
+              </div>
+              <!-- Bank / eCheck fields. Live: routing + account are hosted fields. -->
+              <div x-show="method === 'bank'">
+                <div class="pay-field">
+                  <label>Routing number</label>
+                  {% if dev_mode %}
+                    <input type="text"
+                           inputmode="numeric"
+                           x-model="routingNumber"
+                           placeholder="123456789">
+                  {% else %}
                     <div id="hf-bank-routing"></div>
-                  </div>
-                  <div class="pay-field">
-                    <label>Account number</label>
-                    <div id="hf-bank-account"></div>
-                  </div>
-                  <div class="pay-field">
-                    <label>Account holder name</label>
-                    <input type="text" x-model="accountName">
-                  </div>
+                  {% endif %}
                 </div>
-              {% endif %}
+                <div class="pay-field">
+                  <label>Account number</label>
+                  {% if dev_mode %}
+                    <input type="text"
+                           inputmode="numeric"
+                           x-model="accountNumber"
+                           placeholder="000123456789">
+                  {% else %}
+                    <div id="hf-bank-account"></div>
+                  {% endif %}
+                </div>
+                <div class="pay-field">
+                  <label>Account holder name</label>
+                  <input type="text" x-model="accountName" placeholder="Jane Q. Client">
+                </div>
+              </div>
               <button type="button" class="pay-btn" :disabled="submitting" @click="pay()">
                 <span x-show="!submitting">Pay ${{ amount_due|floatformat:2|intcomma }}</span>
                 <span x-show="submitting">Processing…</span>
@@ -312,16 +344,43 @@
     function payForm(opts) {
       return {
         method: 'bank',          // eCheck encouraged by default
-        outcome: 'fake-ok',      // dev only
-        exp: '', postalCode: '', accountName: '',
+        // card
+        cardNumber: '', exp: '', cvv: '', postalCode: '',
+        // bank / eCheck
+        routingNumber: '', accountNumber: '', accountName: '',
         submitting: false, done: false, pending: false, status: '', error: '',
 
+        validate() {
+          if (this.method === 'card') {
+            if (!this.exp.trim() || !this.postalCode.trim()) return 'Please complete the card details.';
+            if (opts.dev && (!this.cardNumber.trim() || !this.cvv.trim())) return 'Please complete the card details.';
+          } else {
+            if (!this.accountName.trim()) return 'Please enter the account holder name.';
+            if (opts.dev && (!this.routingNumber.trim() || !this.accountNumber.trim())) return 'Please complete the bank details.';
+          }
+          return '';
+        },
+
+        // Dev only: map the entered card/account digits to a simulated outcome,
+        // mirroring how the processor's real test mode uses magic numbers.
+        fakeToken() {
+          if (this.method === 'card') {
+            return this.cardNumber.replace(/\D/g, '').endsWith('0002') ? 'fake-decline' : 'fake-ok';
+          }
+          const acct = this.accountNumber.replace(/\D/g, '');
+          if (acct.endsWith('0001')) return 'fake-decline';
+          if (acct.endsWith('0002')) return 'fake-ach-return';
+          if (acct.endsWith('0003')) return 'fake-ach-fail';
+          return 'fake-ok';
+        },
+
         async pay() {
-          this.error = '';
+          this.error = this.validate();
+          if (this.error) return;
           this.submitting = true;
           let tokenId;
           try {
-            tokenId = opts.dev ? this.outcome : await this.tokenize();
+            tokenId = opts.dev ? this.fakeToken() : await this.tokenize();
           } catch (e) {
             this.error = (e && e.message) || 'Could not read payment details.';
             this.submitting = false;
