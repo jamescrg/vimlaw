@@ -242,6 +242,10 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 SERVER_EMAIL = env("SERVER_EMAIL")
 DEFAULT_FROM_EMAIL = env("SERVER_EMAIL")
 ADMINS = env("ADMINS")
+# Address(es) BCC'd on every invoice email the app sends, so the firm retains a
+# faithful copy (cover message + attached PDF) of what each client received.
+# Comma-separated; leave empty to disable.
+INVOICE_SEND_BCC = env.list("INVOICE_SEND_BCC", default=[])
 
 # set cookies (sessions) to last for two months
 # default is two weeks, multiplying by four to get two months

@@ -82,6 +82,9 @@ def send_invoice(
             from_email=None,  # falls back to DEFAULT_FROM_EMAIL
             to=[to_email],
             cc=[cc_email] if cc_email else [],
+            # Firm archive copy (settings.INVOICE_SEND_BCC); the BCC'd mailbox
+            # retains the full email, cover message and PDF included.
+            bcc=settings.INVOICE_SEND_BCC or None,
         )
         email.attach_alternative(
             render_to_string("emails/invoice_email.html", context), "text/html"
