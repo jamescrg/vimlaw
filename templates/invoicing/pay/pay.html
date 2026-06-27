@@ -223,7 +223,7 @@
         {% if is_paid %}
           <div class="pay-alert ok">This invoice is paid in full. Thank you.</div>
         {% else %}
-          <div x-data='payForm({ chargeUrl: "{{ charge_url|escapejs }}", dev: {{ dev_mode|yesno:"true,false" }}, publicKey: "{{ config.public_key|escapejs }}" })'>
+          <div x-data='payForm({ chargeUrl: "{{ charge_url|escapejs }}", dev: {{ dev_mode|yesno:"true,false" }}, publicKey: "{{ config.public_key|escapejs }}", processor: "{{ config.processor|escapejs }}" })'>
             <!-- Result states -->
             <template x-if="done && !pending">
               <div class="pay-alert ok">Payment received. Thank you — a receipt will follow by email.</div>
@@ -238,23 +238,26 @@
               <template x-if="error">
                 <div class="pay-alert error" x-text="error"></div>
               </template>
-              <!-- Method selector: eCheck encouraged (default) -->
-              <div class="pay-methods" role="group" aria-label="Payment method">
-                <button type="button"
-                        class="pay-method"
-                        :aria-pressed="method === 'bank'"
-                        @click="method = 'bank'">
-                  <span class="pm-title">Bank (eCheck)</span>
-                  <span class="pm-note">Recommended · no processing fee</span>
-                </button>
-                <button type="button"
-                        class="pay-method"
-                        :aria-pressed="method === 'card'"
-                        @click="method = 'card'">
-                  <span class="pm-title">Card</span>
-                  <span class="pm-note">Credit or debit</span>
-                </button>
-              </div>
+              <!-- Method selector: eCheck encouraged (default). Stripe v1 is
+                   card-only, so the selector is hidden there. -->
+              {% if config.processor != 'stripe' %}
+                <div class="pay-methods" role="group" aria-label="Payment method">
+                  <button type="button"
+                          class="pay-method"
+                          :aria-pressed="method === 'bank'"
+                          @click="method = 'bank'">
+                    <span class="pm-title">Bank (eCheck)</span>
+                    <span class="pm-note">Recommended · no processing fee</span>
+                  </button>
+                  <button type="button"
+                          class="pay-method"
+                          :aria-pressed="method === 'card'"
+                          @click="method = 'card'">
+                    <span class="pm-title">Card</span>
+                    <span class="pm-note">Credit or debit</span>
+                  </button>
+                </div>
+              {% endif %}
               {% if dev_mode %}
                 <div class="pay-dev">
                   <strong>Dev simulation — no real charge.</strong> Card ending
@@ -263,87 +266,96 @@
                   NSF-fails; anything else succeeds.
                 </div>
               {% endif %}
-              <!-- Card fields. Live: number + CVV are AffiniPay hosted fields
-                   (card data never hits us). Dev: plain inputs. SANDBOX-VERIFY. -->
+              <!-- Card fields. Stripe: a single Stripe Element. AffiniPay: number
+                   + CVV are hosted-field iframes. Dev: plain inputs. -->
               <div x-show="method === 'card'">
-                <div class="pay-field">
-                  <label>Card number</label>
-                  {% if dev_mode %}
-                    <input type="text"
-                           inputmode="numeric"
-                           x-model="cardNumber"
-                           placeholder="4242 4242 4242 4242">
-                  {% else %}
-                    <div id="hf-card-number"></div>
-                  {% endif %}
-                </div>
-                <div class="pay-row">
+                {% if config.processor == 'stripe' %}
                   <div class="pay-field">
-                    <label>Expiration</label>
-                    <input type="text" x-model="exp" placeholder="MM / YYYY">
+                    <label>Card details</label>
+                    <div id="stripe-card"></div>
                   </div>
+                {% else %}
                   <div class="pay-field">
-                    <label>CVV</label>
+                    <label>Card number</label>
                     {% if dev_mode %}
-                      <input type="text" inputmode="numeric" x-model="cvv" placeholder="123">
+                      <input type="text"
+                             inputmode="numeric"
+                             x-model="cardNumber"
+                             placeholder="4242 4242 4242 4242">
                     {% else %}
-                      <div id="hf-card-cvv"></div>
+                      <div id="hf-card-number"></div>
                     {% endif %}
                   </div>
-                </div>
-                <div class="pay-field">
-                  <label>Billing ZIP</label>
-                  <input type="text"
-                         inputmode="numeric"
-                         x-model="postalCode"
-                         placeholder="78701">
-                </div>
-              </div>
-              <!-- Bank / eCheck fields. Live: routing + account are hosted fields. -->
-              <div x-show="method === 'bank'">
-                <div class="pay-field">
-                  <label>Routing number</label>
-                  {% if dev_mode %}
-                    <input type="text"
-                           inputmode="numeric"
-                           x-model="routingNumber"
-                           placeholder="123456789">
-                  {% else %}
-                    <div id="hf-bank-routing"></div>
-                  {% endif %}
-                </div>
-                <div class="pay-field">
-                  <label>Account number</label>
-                  {% if dev_mode %}
-                    <input type="text"
-                           inputmode="numeric"
-                           x-model="accountNumber"
-                           placeholder="000123456789">
-                  {% else %}
-                    <div id="hf-bank-account"></div>
-                  {% endif %}
-                </div>
-                <div class="pay-field">
-                  <label>Account holder name</label>
-                  <input type="text" x-model="accountName" placeholder="Jane Q. Client">
-                </div>
-                <div class="pay-row">
-                  <div class="pay-field">
-                    <label>Account type</label>
-                    <select x-model="accountType">
-                      <option value="checking">Checking</option>
-                      <option value="savings">Savings</option>
-                    </select>
+                  <div class="pay-row">
+                    <div class="pay-field">
+                      <label>Expiration</label>
+                      <input type="text" x-model="exp" placeholder="MM / YYYY">
+                    </div>
+                    <div class="pay-field">
+                      <label>CVV</label>
+                      {% if dev_mode %}
+                        <input type="text" inputmode="numeric" x-model="cvv" placeholder="123">
+                      {% else %}
+                        <div id="hf-card-cvv"></div>
+                      {% endif %}
+                    </div>
                   </div>
                   <div class="pay-field">
-                    <label>Account holder</label>
-                    <select x-model="holderType">
-                      <option value="individual">Individual</option>
-                      <option value="business">Business</option>
-                    </select>
+                    <label>Billing ZIP</label>
+                    <input type="text"
+                           inputmode="numeric"
+                           x-model="postalCode"
+                           placeholder="78701">
+                  </div>
+                {% endif %}
+              </div>
+              {% if config.processor != 'stripe' %}
+                <!-- Bank / eCheck fields. Live: routing + account are hosted fields. -->
+                <div x-show="method === 'bank'">
+                  <div class="pay-field">
+                    <label>Routing number</label>
+                    {% if dev_mode %}
+                      <input type="text"
+                             inputmode="numeric"
+                             x-model="routingNumber"
+                             placeholder="123456789">
+                    {% else %}
+                      <div id="hf-bank-routing"></div>
+                    {% endif %}
+                  </div>
+                  <div class="pay-field">
+                    <label>Account number</label>
+                    {% if dev_mode %}
+                      <input type="text"
+                             inputmode="numeric"
+                             x-model="accountNumber"
+                             placeholder="000123456789">
+                    {% else %}
+                      <div id="hf-bank-account"></div>
+                    {% endif %}
+                  </div>
+                  <div class="pay-field">
+                    <label>Account holder name</label>
+                    <input type="text" x-model="accountName" placeholder="Jane Q. Client">
+                  </div>
+                  <div class="pay-row">
+                    <div class="pay-field">
+                      <label>Account type</label>
+                      <select x-model="accountType">
+                        <option value="checking">Checking</option>
+                        <option value="savings">Savings</option>
+                      </select>
+                    </div>
+                    <div class="pay-field">
+                      <label>Account holder</label>
+                      <select x-model="holderType">
+                        <option value="individual">Individual</option>
+                        <option value="business">Business</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
+              {% endif %}
               <button type="button" class="pay-btn" :disabled="submitting" @click="pay()">
                 <span x-show="!submitting">Pay ${{ amount_due|floatformat:2|intcomma }}</span>
                 <span x-show="submitting">Processing…</span>
@@ -355,26 +367,39 @@
       </div>
     </div>
   </div>
-  {% if not dev_mode and not is_paid %}<script src="{{ config.hosted_fields_url }}"></script>{% endif %}
+  {% if not is_paid %}
+    {% if config.processor == 'stripe' %}
+      <script src="https://js.stripe.com/v3/"></script>
+    {% elif not dev_mode %}
+      <script src="{{ config.hosted_fields_url }}"></script>
+    {% endif %}
+  {% endif %}
   <script>
     function payForm(opts) {
       return {
-        method: 'bank',          // eCheck encouraged by default
+        method: opts.processor === 'stripe' ? 'card' : 'bank',  // Stripe v1: card-only
         // card
         cardNumber: '', exp: '', cvv: '', postalCode: '',
         // bank / eCheck
         routingNumber: '', accountNumber: '', accountName: '',
         accountType: 'checking', holderType: 'individual',
         submitting: false, done: false, pending: false, status: '', error: '',
-        // Live hosted-fields handles. AffiniPay requires SEPARATE
-        // initializeFields/getPaymentToken calls for card vs eCheck, so we keep
-        // one handle per method.
-        _cardFields: null, _bankFields: null,
+        // Live tokenization handles: AffiniPay hosted-fields (one per method) and
+        // the Stripe.js card Element.
+        _cardFields: null, _bankFields: null, _stripe: null, _stripeCard: null,
 
         // Mount AffiniPay hosted fields once, in live mode only. Dev mode uses
         // plain inputs + magic tokens, so this is skipped there.
         init() {
           if (opts.dev) return;
+          if (opts.processor === 'stripe') {
+            const Stripe = window.Stripe;
+            if (!Stripe) { this.error = 'Payment form failed to load. Please refresh.'; return; }
+            this._stripe = Stripe(opts.publicKey);
+            this._stripeCard = this._stripe.elements().create('card');
+            this._stripeCard.mount('#stripe-card');
+            return;
+          }
           const HF = window.AffiniPay && window.AffiniPay.HostedFields;
           if (!HF) { this.error = 'Payment form failed to load. Please refresh.'; return; }
           const noop = function () {};
@@ -395,6 +420,7 @@
         },
 
         validate() {
+          if (opts.processor === 'stripe') return '';  // the Stripe Element validates itself
           if (this.method === 'card') {
             if (!this.exp.trim() || !this.postalCode.trim()) return 'Please complete the card details.';
             if (opts.dev && (!this.cardNumber.trim() || !this.cvv.trim())) return 'Please complete the card details.';
@@ -450,11 +476,17 @@
           this.submitting = false;
         },
 
-        // LIVE tokenization via AffiniPay hosted fields. Card number/CVV and
-        // bank routing/account live in AffiniPay iframes; we only add the
-        // non-sensitive fields here. SANDBOX-VERIFY: the eCheck holder/account
-        // type mapping against a real test account.
+        // Tokenize the entered details into a one-time token the server charges.
+        // Stripe: a PaymentMethod id from the card Element. AffiniPay: a hosted-
+        // fields token (card number/CVV / bank routing+account live in iframes).
         async tokenize() {
+          if (opts.processor === 'stripe') {
+            const { paymentMethod, error } = await this._stripe.createPaymentMethod({
+              type: 'card', card: this._stripeCard,
+            });
+            if (error) throw new Error(error.message);
+            return paymentMethod.id;
+          }
           if (this.method === 'card') {
             const result = await this._cardFields.getPaymentToken({
               postal_code: this.postalCode,
