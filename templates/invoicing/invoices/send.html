@@ -40,8 +40,15 @@
                  autocomplete="off">
         </div>
         <div class="form-group">
-          <label for="invoice-send-message">Message</label>
-          <textarea id="invoice-send-message" name="message" rows="4">{{ default_message }}</textarea>
+          <label for="invoice-send-message">Message (optional)</label>
+          <textarea id="invoice-send-message"
+                    name="message"
+                    rows="4"
+                    placeholder="Enter a message to the client here. It is included in the email only.">{{ default_message }}</textarea>
+          <p class="text-muted">
+            To annotate the message on the invoice itself, add it to the invoice
+            before sending.
+          </p>
         </div>
         <p class="text-muted">The invoice PDF will be attached to the email.</p>
       </form>
