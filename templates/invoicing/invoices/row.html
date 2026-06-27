@@ -5,12 +5,32 @@
     <a href="{% url 'invoicing:invoices-detail-index' invoice.id %}">{{ invoice.id }}</a>
   </td>
   <td class="date">{{ invoice.date_issued|date:"Y-m-d" }}</td>
-  <td class="matter">
-    <a href="{% url 'matters:ledger' id=invoice.matter.id|default:0 %}">{{ invoice.matter.name }}</a>
+  <td class="matter dropdown-cell">
+    <div class="dropdown" x-data="dropdown()">
+      <button class="button-link"
+              type="button"
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">{{ invoice.matter.name }}</button>
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
+        <li>
+          <a class="dropdown-item"
+             href="{% url 'matters:ledger' id=invoice.matter.id|default:0 %}"><i class="icon-briefcase-business"></i> Go to matter</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="{% url 'invoicing:invoices-detail-index' invoice.id %}"><i class="icon-file-text"></i> View invoice detail</a>
+        </li>
+      </ul>
+    </div>
     {% if invoice.status == 'APPROVED' %}
       <button class="accent-link invoice-row-send"
               hx-get="{% url 'invoicing:invoices-send' pk=invoice.id %}"
-              hx-target="#htmx-modal-container">Send</button>
+              hx-target="#htmx-modal-container"
+              title="Send invoice"
+              aria-label="Send invoice">
+        <i class="icon-send-horizontal"></i>
+      </button>
     {% endif %}
   </td>
   <td class="status dropdown-cell">{% include "invoicing/invoices/status.html" %}</td>
