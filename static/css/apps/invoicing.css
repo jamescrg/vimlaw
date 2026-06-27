@@ -50,8 +50,15 @@ List View
   width: 3rem;
 }
 
+/* Halve the inner padding (download's right, send's left) so the two icons sit
+   closer together; the outer sides keep the standard 1rem. */
 .invoices .action-download {
   border-right: none;
+  padding-right: 0.5rem;
+}
+
+.invoices .action-send {
+  padding-left: 0.5rem;
 }
 
 /* Muted-gray icon buttons — the app's muted-icon convention (matches
