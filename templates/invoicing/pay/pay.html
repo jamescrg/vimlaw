@@ -226,7 +226,7 @@
           <div x-data='payForm({ chargeUrl: "{{ charge_url|escapejs }}", dev: {{ dev_mode|yesno:"true,false" }}, publicKey: "{{ config.public_key|escapejs }}", processor: "{{ config.processor|escapejs }}" })'>
             <!-- Result states -->
             <template x-if="done && !pending">
-              <div class="pay-alert ok">Payment received. Thank you — a receipt will follow by email.</div>
+              <div class="pay-alert ok">Payment received. Thank you.</div>
             </template>
             <template x-if="done && pending">
               <div class="pay-alert info">
