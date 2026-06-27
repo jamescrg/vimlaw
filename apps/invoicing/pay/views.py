@@ -85,10 +85,13 @@ def pay_page(request, token):
     processor = get_processor()
     config = processor.client_config(invoice)
     matter = invoice.matter
+    from apps.settings.models import Company
+
+    company = Company.objects.first()
     context = {
         "invoice": invoice,
         "matter_name": matter.name if matter else "",
-        "firm_name": getattr(settings, "FIRM_NAME", ""),
+        "firm_name": company.name if company else "",
         "amount_due": invoice.amount_remaining,
         "config": config,
         "is_paid": invoice.amount_remaining <= 0,
