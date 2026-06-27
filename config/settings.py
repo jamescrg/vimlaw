@@ -246,11 +246,9 @@ ADMINS = env("ADMINS")
 # faithful copy (cover message + attached PDF) of what each client received.
 # Comma-separated; leave empty to disable.
 INVOICE_SEND_BCC = env.list("INVOICE_SEND_BCC", default=[])
-# The invoicing administrator's email address. Shown in invoice emails as the
-# contact for questions, and used as their Reply-To so client replies reach a
-# monitored inbox (the From address is an unattended no-reply). Leave empty to
-# fall back to the From address.
-INVOICE_ADMIN_EMAIL = env("INVOICE_ADMIN_EMAIL", default="")
+# Note: the invoice email's Reply-To and the contact address shown in the body
+# come from the Company settings record's email (apps.settings.Company), not a
+# setting here — so the firm configures it in one place alongside its name.
 
 # set cookies (sessions) to last for two months
 # default is two weeks, multiplying by four to get two months

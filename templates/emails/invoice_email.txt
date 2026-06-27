@@ -11,4 +11,4 @@ Amount Due:  ${{ amount_due|floatformat:2|intcomma }}
 {% if pay_url %}
 Pay online:  {{ pay_url }}
 {% endif %}
-If you have any questions about this invoice, please reply to this email{% if invoice_admin_email %} or contact us at {{ invoice_admin_email }}{% endif %}.
+If you have any questions about this invoice, please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}.

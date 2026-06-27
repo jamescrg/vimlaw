@@ -115,8 +115,8 @@ def send_invoice(
             "amount_due": invoice.amount_remaining,
             "cover_message": cover,
             "firm_name": company.name if company else "",
+            "firm_email": company.email if company else "",
             "pay_url": payment_url(invoice, request),  # tokenized payment link
-            "invoice_admin_email": settings.INVOICE_ADMIN_EMAIL,
         }
         # Client-facing: identify by number, not matter name (which is internal
         # and subject to change).
@@ -133,10 +133,9 @@ def send_invoice(
             # Firm archive copy (settings.INVOICE_SEND_BCC); the BCC'd mailbox
             # retains the full email, cover message and PDF included.
             bcc=settings.INVOICE_SEND_BCC or None,
-            # Client replies go to the invoicing admin, not the unattended From.
-            reply_to=(
-                [settings.INVOICE_ADMIN_EMAIL] if settings.INVOICE_ADMIN_EMAIL else None
-            ),
+            # Client replies go to the firm's configured email (Company
+            # settings), not the unattended From address.
+            reply_to=[company.email] if company and company.email else None,
         )
         email.attach_alternative(
             render_to_string("emails/invoice_email.html", context), "text/html"
