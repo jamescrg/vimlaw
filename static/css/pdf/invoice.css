@@ -28,6 +28,16 @@ Header
   margin-bottom: 12pt;
 }
 
+/* The header is a wrapping flex row (general.css): the logo takes its own line,
+   then the address block (70%) and this info block sit side by side. Without a
+   width this block is sized to its widest line — a long quoted matter name —
+   and once that exceeds the remaining ~30% the flex row wraps it BELOW the
+   address. Pin the width so the matter name wraps inside the column instead. */
+.header-right {
+  overflow-wrap: break-word;
+  width: 30%;
+}
+
 /* ==========================================================================
 Content
 ========================================================================== */
