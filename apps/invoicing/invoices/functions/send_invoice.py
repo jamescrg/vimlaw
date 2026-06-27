@@ -16,6 +16,7 @@ from django.utils import timezone
 from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import InvoiceTransmission
 from apps.invoicing.pay.links import payment_url
+from apps.settings.models import Company
 
 
 class InvoiceSendError(Exception):
@@ -103,6 +104,9 @@ def send_invoice(
             store_invoice_pdf(invoice, request)
 
         cover = message if message is not None else (invoice.message or "")
+        # Firm branding comes from the Company settings record (same source as
+        # the PDF), not a hardcoded setting.
+        company = Company.objects.first()
         context = {
             "invoice": invoice,
             "matter_name": matter.name if matter else "",
@@ -110,7 +114,7 @@ def send_invoice(
             "client_name": client.name if client else "",
             "amount_due": invoice.amount_remaining,
             "cover_message": cover,
-            "firm_name": getattr(settings, "FIRM_NAME", ""),
+            "firm_name": company.name if company else "",
             "pay_url": payment_url(invoice, request),  # tokenized payment link
             "invoice_admin_email": settings.INVOICE_ADMIN_EMAIL,
         }
