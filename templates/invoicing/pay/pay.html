@@ -14,7 +14,7 @@
     .pay-card {
       background: #fafaf9;
       border: 1px solid #e7e5e4;
-      border-radius: 10px;
+      border-radius: 0.25rem;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     }
@@ -51,9 +51,17 @@
       margin-bottom: 1.5rem;
     }
 
+    /* Transparent cells over the gray, no vertical divider — overrides the app's
+       global td rule (background + border-right) to match the email summary. */
     .pay-summary td {
       padding: 0.75rem 1rem;
       font-size: 1rem;
+      background: transparent;
+      border: none;
+    }
+
+    .pay-summary tr+tr td {
+      border-top: 1px solid #e7e5e4;
     }
 
     .pay-summary .label {
@@ -63,12 +71,6 @@
     .pay-summary .value {
       text-align: right;
       color: #292524;
-    }
-
-    .pay-summary .total .label,
-    .pay-summary .total .value {
-      font-weight: 600;
-      font-size: 1.05rem;
     }
 
     .pay-methods {
@@ -204,10 +206,10 @@
       </div>
       <div class="pay-body">
         <table class="pay-summary" role="presentation">
-          {% if matter_name %}
+          {% if matter_number %}
             <tr>
               <td class="label">Matter</td>
-              <td class="value">{{ matter_name }}</td>
+              <td class="value">{{ matter_number }}</td>
             </tr>
           {% endif %}
           <tr>

@@ -90,7 +90,7 @@ def pay_page(request, token):
     company = Company.objects.first()
     context = {
         "invoice": invoice,
-        "matter_name": matter.name if matter else "",
+        "matter_number": matter.id if matter else "",
         "firm_name": company.name if company else "",
         "amount_due": invoice.amount_remaining,
         "config": config,
