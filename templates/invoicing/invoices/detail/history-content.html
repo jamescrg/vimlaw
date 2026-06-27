@@ -1,82 +1,84 @@
 {% load humanize %}
-<section class="history-section">
-  <h3 class="history-heading">Delivery history</h3>
-  <table class="history-table">
-    <thead>
-      <tr>
-        <th>Date &amp; time</th>
-        <th>Sender</th>
-        <th>Recipient</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in invoice.transmissions.all %}
+<div class="history-columns">
+  <section class="history-section">
+    <h2 class="history-heading">Delivery history</h2>
+    <table class="history-table">
+      <thead>
         <tr>
-          <td>{{ t.sent_at|date:"Y-m-d H:i" }}</td>
-          <td>
-            {% if t.sent_by %}
-              {{ t.sent_by.username }}
-            {% else %}
-              &mdash;
-            {% endif %}
-          </td>
-          <td>
-            {{ t.to_email }}
-            {% if t.cc_email %}
-              <br>
-              <span class="text-muted">cc {{ t.cc_email }}</span>
-            {% endif %}
-          </td>
-          <td>
-            {{ t.get_status_display }}
-            {% if t.status == 'failed' and t.error %}
-              <br>
-              <span class="text-muted">{{ t.error }}</span>
-            {% endif %}
-          </td>
+          <th>Date &amp; time</th>
+          <th>Sender</th>
+          <th>Recipient</th>
+          <th>Status</th>
         </tr>
-      {% empty %}
+      </thead>
+      <tbody>
+        {% for t in invoice.transmissions.all %}
+          <tr>
+            <td>{{ t.sent_at|date:"Y-m-d H:i" }}</td>
+            <td>
+              {% if t.sent_by %}
+                {{ t.sent_by.username }}
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+            <td>
+              {{ t.to_email }}
+              {% if t.cc_email %}
+                <br>
+                <span class="text-muted">cc {{ t.cc_email }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {{ t.get_status_display }}
+              {% if t.status == 'failed' and t.error %}
+                <br>
+                <span class="text-muted">{{ t.error }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4" class="empty-message">This invoice has not been sent yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section class="history-section">
+    <h2 class="history-heading">Payment history</h2>
+    <table class="invoices-detail-table">
+      {% for app in invoice.applications.all %}
         <tr>
-          <td colspan="4" class="empty-message">This invoice has not been sent yet.</td>
+          <th>{{ app.payment.date|date:"Y-m-d" }} &middot; {{ app.payment.method_display }}</th>
+          <td>
+            ${{ app.amount_applied|floatformat:2|intcomma }} applied
+            {% if app.payment.detail %}
+              <br>
+              <span class="text-muted">{{ app.payment.detail }}</span>
+            {% endif %}
+          </td>
         </tr>
       {% endfor %}
-    </tbody>
-  </table>
-</section>
-<section class="history-section">
-  <h3 class="history-heading">Payment history</h3>
-  <table class="invoices-detail-table">
-    {% for app in invoice.applications.all %}
+      {% for capp in invoice.credit_applications.all %}
+        <tr>
+          <th>{{ capp.credit.date|date:"Y-m-d" }} &middot; Credit</th>
+          <td>${{ capp.amount_applied|floatformat:2|intcomma }} applied</td>
+        </tr>
+      {% endfor %}
+      {% if not invoice.applications.all and not invoice.credit_applications.all %}
+        <tr>
+          <td colspan="2" class="empty-message">No payments recorded for this invoice yet.</td>
+        </tr>
+      {% endif %}
       <tr>
-        <th>{{ app.payment.date|date:"Y-m-d" }} &middot; {{ app.payment.method_display }}</th>
-        <td>
-          ${{ app.amount_applied|floatformat:2|intcomma }} applied
-          {% if app.payment.detail %}
-            <br>
-            <span class="text-muted">{{ app.payment.detail }}</span>
-          {% endif %}
-        </td>
+        <th>Invoice total</th>
+        <td>${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
       </tr>
-    {% endfor %}
-    {% for capp in invoice.credit_applications.all %}
       <tr>
-        <th>{{ capp.credit.date|date:"Y-m-d" }} &middot; Credit</th>
-        <td>${{ capp.amount_applied|floatformat:2|intcomma }} applied</td>
+        <th>Outstanding</th>
+        <td>${{ invoice.amount_remaining|floatformat:2|intcomma }}</td>
       </tr>
-    {% endfor %}
-    {% if not invoice.applications.all and not invoice.credit_applications.all %}
-      <tr>
-        <td colspan="2" class="empty-message">No payments recorded for this invoice yet.</td>
-      </tr>
-    {% endif %}
-    <tr>
-      <th>Invoice total</th>
-      <td>${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
-    </tr>
-    <tr>
-      <th>Outstanding</th>
-      <td>${{ invoice.amount_remaining|floatformat:2|intcomma }}</td>
-    </tr>
-  </table>
-</section>
+    </table>
+  </section>
+</div>

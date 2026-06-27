@@ -189,9 +189,21 @@ Detail View
   }
 }
 
-/* Invoice History tab: stacked Delivery / Payment sections with a gap between. */
-.history-section + .history-section {
-  margin-top: 2rem;
+/* Invoice History tab: Delivery and Payment tables side by side. */
+.history-columns {
+  align-items: flex-start;
+  display: flex;
+  gap: 2rem;
+}
+
+.history-columns .invoices-detail-table {
+  width: auto;
+}
+
+@media (width <= 768px) {
+  .history-columns {
+    flex-direction: column;
+  }
 }
 
 .history-heading {
