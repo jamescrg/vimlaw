@@ -1,7 +1,7 @@
 {% extends "base-minimal.html" %}
 {% load humanize %}
 {% block title %}
-  Pay Invoice #{{ invoice.id }}
+  Pay Invoice {{ invoice.id }}
 {% endblock title %}
 {% block content %}
   <style>
@@ -12,7 +12,7 @@
     }
 
     .pay-card {
-      background: #ffffff;
+      background: #fafaf9;
       border: 1px solid #e7e5e4;
       border-radius: 10px;
       overflow: hidden;
@@ -200,7 +200,7 @@
     <div class="pay-card">
       <div class="pay-head">
         <h1>{{ firm_name|default:"Pay Invoice" }}</h1>
-        <p>Invoice #{{ invoice.id }} &middot; {{ invoice.date_issued|date:"F j, Y" }}</p>
+        <p>Invoice {{ invoice.id }} &middot; {{ invoice.date_issued|date:"F j, Y" }}</p>
       </div>
       <div class="pay-body">
         <table class="pay-summary" role="presentation">
@@ -212,7 +212,7 @@
           {% endif %}
           <tr>
             <td class="label">Invoice</td>
-            <td class="value">#{{ invoice.id }}</td>
+            <td class="value">{{ invoice.id }}</td>
           </tr>
           <tr class="total">
             <td class="label">Amount Due</td>
