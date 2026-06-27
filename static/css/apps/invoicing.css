@@ -47,6 +47,7 @@ List View
 .invoices .action-download,
 .invoices .action-send {
   text-align: center;
+  width: 3rem;
 }
 
 .invoices .action-download {
