@@ -24,6 +24,10 @@
           </button>
           <a type="button"
              href="#"
+             class="btn-icon {% if not current_status %}toggle-active{% endif %}"
+             hx-post="{% url 'invoicing:requests-filter-status' 'all' %}">All</a>
+          <a type="button"
+             href="#"
              class="btn-icon {% if current_status == 'SENT' %}toggle-active{% endif %}"
              hx-post="{% url 'invoicing:requests-filter-status' 'SENT' %}">Sent</a>
           <a type="button"
