@@ -11,7 +11,10 @@
         <ul class="dropdown-menu" x-ref="menu" x-show="open">
           <li>
             <a class="dropdown-item"
-               hx-confirm="Cancel this payment request?"
+               hx-confirm="This deactivates the pay link sent to the client."
+               data-confirm-title="Cancel Payment Request"
+               data-confirm-text="Cancel Request"
+               data-cancel-text="Back"
                href="#!"
                hx-post="{% url 'invoicing:requests-cancel' payment_request.id %}"
                hx-target="#request-{{ payment_request.id }}"
