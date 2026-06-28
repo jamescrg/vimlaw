@@ -1,0 +1,14 @@
+{% load humanize %}{{ firm_name|default:"Payment request" }}
+Outstanding balance
+
+Dear {{ client_name|default:"Client" }},
+
+{% if cover_message %}{{ cover_message }}{% else %}Attached is the current statement for Matter {{ matter_number }}, showing your account activity and balance. You can pay your full balance securely online using the link below.{% endif %}
+
+If you have any questions, please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}.
+
+Matter:       {{ matter_number }}
+Balance Due:  ${{ amount_due|floatformat:2|intcomma }}
+{% if pay_url %}
+Pay online:   {{ pay_url }}
+{% endif %}

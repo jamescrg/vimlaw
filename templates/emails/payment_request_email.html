@@ -1,0 +1,170 @@
+{% load humanize invoicing_extras %}<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment request</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+      /* Authored as a normal stylesheet; premailer inlines this onto the elements
+         at send time (see utils.mail.render_inlined). Keep colours/structure in
+         sync with the pay page and invoice email. */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #e2e8f0;
+        color: #57534e;
+        font-family: 'Noto Serif', Georgia, 'Times New Roman', serif;
+      }
+
+      /* Page: a lighter slate gradient than the pay page (solid #e2e8f0 fallback). */
+      .page {
+        background-color: #e2e8f0;
+        background-image: linear-gradient(180deg, #e2e8f0 0%, #f1f5f9 70%, #f1f5f9 100%);
+      }
+
+      /* A little space above the card so it sits off the top of the message. */
+      .wrap-cell {
+        padding: 32px 16px 48px;
+      }
+
+      /* Card: slate-50 panel with the pay page's soft shadow. */
+      .card {
+        width: 100%;
+        max-width: 480px;
+        background-color: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+      }
+
+      .card-head {
+        padding: 24px 24px 16px;
+      }
+
+      .firm-name {
+        margin: 0;
+        font-size: 26px;
+        font-weight: normal;
+        color: #292524;
+      }
+
+      .firm-suffix {
+        font-size: 0.5em;
+      }
+
+      .meta {
+        margin: 8px 0 0;
+        font-size: 15px;
+        color: #78716c;
+      }
+
+      .card-body {
+        padding: 0 24px 24px;
+      }
+
+      .para {
+        margin: 0 0 16px;
+        font-size: 15px;
+        color: #57534e;
+      }
+
+      .para a {
+        color: #475569;
+      }
+
+      .summary {
+        margin: 8px 0 20px;
+        border: 1px solid #cbd5e1;
+        border-radius: 3px;
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      .summary td {
+        padding: 12px 16px;
+        font-size: 15px;
+      }
+
+      .summary tr + tr td {
+        border-top: 1px solid #cbd5e1;
+      }
+
+      .summary .label {
+        color: #78716c;
+      }
+
+      .summary .value {
+        color: #292524;
+        text-align: right;
+      }
+
+      /* Slate button, matching the pay page .btn-primary. */
+      .btn {
+        background-color: #cbd5e1;
+        border-radius: 8px;
+      }
+
+      .btn a {
+        display: inline-block;
+        padding: 10px 22px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #57534e;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td class="wrap-cell" align="center">
+          <table role="presentation" class="card" width="480" cellpadding="0" cellspacing="0">
+            <tr>
+              <td class="card-head">
+                <h1 class="firm-name">{{ firm_name|default:"Payment request"|firm_entity }}</h1>
+                <p class="meta">Outstanding balance</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="card-body">
+                <p class="para">Dear {{ client_name|default:"Client" }},</p>
+                {% if cover_message %}
+                  <p class="para" style="white-space: pre-line;">{{ cover_message }}</p>
+                {% else %}
+                  <p class="para">
+                    Attached is the current statement for Matter {{ matter_number }},
+                    showing your account activity and balance. You can pay your full
+                    balance securely online using the button below.
+                  </p>
+                {% endif %}
+                <p class="para">
+                  If you have any questions, please reply to this email{% if firm_email %} or contact us at <a href="mailto:{{ firm_email }}">{{ firm_email }}</a>{% endif %}.
+                </p>
+                <table role="presentation" class="summary" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td class="label">Matter</td>
+                    <td class="value">{{ matter_number }}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">Balance Due</td>
+                    <td class="value">${{ amount_due|floatformat:2|intcomma }}</td>
+                  </tr>
+                </table>
+                {% if pay_url %}
+                  <table role="presentation" class="btn" cellpadding="0" cellspacing="0" style="margin: 4px 0 0;">
+                    <tr>
+                      <td>
+                        <a href="{{ pay_url }}">Pay now</a>
+                      </td>
+                    </tr>
+                  </table>
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

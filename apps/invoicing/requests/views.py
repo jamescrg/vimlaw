@@ -1,14 +1,20 @@
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from apps.invoicing.pay.balance import matter_balance_cents
 from apps.invoicing.requests.forms import PaymentRequestForm
 from apps.invoicing.requests.models import PaymentRequest
+from apps.invoicing.requests.send import (
+    PaymentRequestSendError,
+    send_payment_request,
+)
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
+from utils.toasts import toast_success
 
 
 def _requests_context(request):
@@ -54,8 +60,23 @@ def requests_new(request):
         else:
             payment_request.amount_requested = Decimal(balance_cents) / 100
             payment_request.status = "SENT"
-            payment_request.save()
-            return HttpResponse(status=204, headers={"HX-Trigger": "requestsChanged"})
+            # Persist + send together: if the email fails, roll back so we never
+            # leave an unsent request behind.
+            try:
+                with transaction.atomic():
+                    payment_request.save()
+                    send_payment_request(payment_request, request=request)
+            except PaymentRequestSendError as exc:
+                form.add_error(None, str(exc))
+            else:
+                response = HttpResponse(
+                    status=204, headers={"HX-Trigger": "requestsChanged"}
+                )
+                toast_success(
+                    response,
+                    f"Payment request sent to {payment_request.recipient_email}.",
+                )
+                return response
 
     return render(request, "invoicing/requests/form.html", {"form": form})
 
