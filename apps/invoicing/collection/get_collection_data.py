@@ -12,9 +12,7 @@ from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
 from apps.activity.time.models import TimeEntry
 from apps.invoicing.applications.models import CreditApplication, PaymentApplication
-from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
-from apps.invoicing.payments.models import Payment
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
 
@@ -84,19 +82,21 @@ def get_collection_data(request):
         .values("total")
     )
 
-    # Subquery to get total paid for a matter
+    # Total paid toward a matter. Payments are client-scoped now, so "paid for
+    # this matter" is the sum of PaymentApplications to the matter's invoices —
+    # unapplied funds are a client-level credit, not a matter payment.
     paid_subquery = (
-        Payment.objects.filter(matter=OuterRef("pk"))
-        .values("matter")
-        .annotate(total=Sum("amount"))
+        PaymentApplication.objects.filter(invoice__matter=OuterRef("pk"))
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
         .values("total")
     )
 
-    # Subquery to get total credits for a matter
+    # Total credits applied toward a matter (same applications-based reasoning).
     credits_subquery = (
-        Credit.objects.filter(matter=OuterRef("pk"))
-        .values("matter")
-        .annotate(total=Sum("amount"))
+        CreditApplication.objects.filter(invoice__matter=OuterRef("pk"))
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
         .values("total")
     )
 

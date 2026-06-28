@@ -15,7 +15,7 @@ def get_credits_data(request):
         filter = CreditsFilter(filter_data)
         credits = filter.qs
     else:
-        credits = Credit.objects.all().select_related("matter").order_by("-date", "-id")
+        credits = Credit.objects.all().select_related("client").order_by("-date", "-id")
 
     # Applied / Unapplied is computed from CreditApplication sums (amount vs the
     # amount applied), not a stored column, so annotate and filter on it here.

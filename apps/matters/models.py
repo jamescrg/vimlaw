@@ -122,8 +122,8 @@ class Matter(AuditMixin, models.Model):
         from apps.activity.expenses.models import ExpenseEntry
         from apps.activity.flat_fees.models import FlatFeeEntry
         from apps.activity.time.models import TimeEntry
+        from apps.invoicing.applications.models import PaymentApplication
         from apps.invoicing.invoices.models import Invoice
-        from apps.invoicing.payments.models import Payment
 
         # Helper to build fee/expense aggregation dict
         def aggregate_fees(queryset):
@@ -272,10 +272,12 @@ class Matter(AuditMixin, models.Model):
             - invoice_discount
         )
 
+        # Payments are client-scoped; the amount paid toward THIS matter is the
+        # sum of PaymentApplications to the matter's invoices (applied funds only).
         payment_sum = (
-            Payment.objects.filter(matter=self).aggregate(models.Sum("amount"))[
-                "amount__sum"
-            ]
+            PaymentApplication.objects.filter(invoice__matter=self).aggregate(
+                models.Sum("amount_applied")
+            )["amount_applied__sum"]
             or 0
         )
 

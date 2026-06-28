@@ -22,9 +22,7 @@ from apps.activity.time.models import TimeEntry
 from apps.calendar.models import Event
 from apps.intakes.models import Intake
 from apps.invoicing.applications.models import CreditApplication, PaymentApplication
-from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
-from apps.invoicing.payments.models import Payment
 from apps.matters.models import Matter
 from apps.reports.wip.aggregation import (
     WIP_PERIODS,
@@ -257,19 +255,20 @@ def dash_collections_context(request):
         .values("total")
     )
 
-    # Subquery for total payments
+    # Total payments toward a matter — applications-based, since payments are now
+    # client-scoped (sum of PaymentApplications to the matter's invoices).
     paid_subquery = (
-        Payment.objects.filter(matter=OuterRef("pk"))
-        .values("matter")
-        .annotate(total=Sum("amount"))
+        PaymentApplication.objects.filter(invoice__matter=OuterRef("pk"))
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
         .values("total")
     )
 
-    # Subquery for total credits
+    # Total credits toward a matter (same applications-based reasoning).
     credits_subquery = (
-        Credit.objects.filter(matter=OuterRef("pk"))
-        .values("matter")
-        .annotate(total=Sum("amount"))
+        CreditApplication.objects.filter(invoice__matter=OuterRef("pk"))
+        .values("invoice__matter")
+        .annotate(total=Sum("amount_applied"))
         .values("total")
     )
 

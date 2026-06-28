@@ -7,8 +7,8 @@ from django.shortcuts import render
 
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
+from apps.invoicing.applications.models import PaymentApplication
 from apps.invoicing.invoices.models import Invoice
-from apps.invoicing.payments.models import Payment
 from apps.management.filter_manager import FilterManager
 from apps.matters.models import Matter
 
@@ -82,15 +82,18 @@ def _get_matter_data(status_filter="Open", sort_by="matter_name", sort_direction
         row["matter__id"]: row["unbilled_expenses"] for row in unbilled_expense_agg
     }
 
-    # Bulk aggregation: payments per matter
+    # Bulk aggregation: payments applied per matter (applications-based, since
+    # payments are client-scoped — unapplied funds are a client-level credit).
     payment_agg = (
-        Payment.objects.filter(matter__in=matters)
-        .values("matter__id")
+        PaymentApplication.objects.filter(invoice__matter__in=matters)
+        .values("invoice__matter")
         .annotate(
-            total_payments=Coalesce(Sum("amount"), ZERO, output_field=DECIMAL),
+            total_payments=Coalesce(Sum("amount_applied"), ZERO, output_field=DECIMAL),
         )
     )
-    payment_lookup = {row["matter__id"]: row["total_payments"] for row in payment_agg}
+    payment_lookup = {
+        row["invoice__matter"]: row["total_payments"] for row in payment_agg
+    }
 
     # Bulk aggregation: invoiced amounts per matter (SENT + PAID invoices)
     invoice_time_agg = (

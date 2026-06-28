@@ -1,8 +1,9 @@
 from operator import itemgetter
 
-from apps.invoicing.credits.models import Credit
+from django.db.models import Sum
+
+from apps.invoicing.applications.models import CreditApplication, PaymentApplication
 from apps.invoicing.invoices.models import Invoice
-from apps.invoicing.payments.models import Payment
 
 
 def get_ledger_data(matter):
@@ -36,8 +37,22 @@ def get_ledger_data(matter):
         .order_by("date_issued")
         or None
     )
-    payments = Payment.objects.filter(matter=matter).order_by("date") or None
-    credits = Credit.objects.filter(matter=matter).order_by("date") or None
+    # Payments/credits on a matter's ledger are the amounts APPLIED to this
+    # matter's invoices (payments are client-scoped now — unapplied funds are a
+    # client-level credit, not part of this matter's ledger). One row per
+    # payment/credit, carrying the total it applied here.
+    payment_rows = list(
+        PaymentApplication.objects.filter(invoice__matter=matter)
+        .values("payment_id", "payment__date", "payment__payment_method")
+        .annotate(applied=Sum("amount_applied"))
+        .order_by("payment__date")
+    )
+    credit_rows = list(
+        CreditApplication.objects.filter(invoice__matter=matter)
+        .values("credit_id", "credit__date", "credit__detail")
+        .annotate(applied=Sum("amount_applied"))
+        .order_by("credit__date")
+    )
 
     # Add invoices to transactions (exclude DRAFT and APPROVED)
     if invoices:
@@ -68,29 +83,29 @@ def get_ledger_data(matter):
             else:
                 currently_owed += invoice.amount_remaining
 
-    if payments:
-        for payment in payments:
-            payment_dict = {
-                "id": payment.id,
-                "date": payment.date,
+    for row in payment_rows:
+        transactions.append(
+            {
+                "id": row["payment_id"],
+                "date": row["payment__date"],
                 "transaction_type": "Credit",
-                "description": f"Payment by {payment.payment_method.lower()}",
-                "amount": payment.amount,
+                "description": f"Payment by {row['payment__payment_method'].lower()}",
+                "amount": row["applied"],
                 "affects_balance": True,  # Payments always affect balance
             }
-            transactions.append(payment_dict)
+        )
 
-    if credits:
-        for credit in credits:
-            credit_dict = {
-                "id": credit.id,
-                "date": credit.date,
+    for row in credit_rows:
+        transactions.append(
+            {
+                "id": row["credit_id"],
+                "date": row["credit__date"],
                 "transaction_type": "Credit",
-                "description": credit.detail,
-                "amount": credit.amount,
+                "description": row["credit__detail"],
+                "amount": row["applied"],
                 "affects_balance": True,  # Credits always affect balance
             }
-            transactions.append(credit_dict)
+        )
 
     if transactions:
         transactions = sorted(transactions, key=itemgetter("transaction_type"))
@@ -108,8 +123,8 @@ def get_ledger_data(matter):
                     balance -= transaction["amount"]
             transaction["balance"] = balance
 
-    # Calculate total credits
-    total_credits = sum(c.amount for c in credits) if credits else 0
+    # Calculate total credits (applied to this matter's invoices)
+    total_credits = sum(row["applied"] for row in credit_rows)
 
     return {
         "transactions": transactions,

@@ -76,7 +76,7 @@ def clients_index(request):
         total_invoices = sum(invoice.value["final_total"] for invoice in invoices)
 
         # Get total payments for this client's matters with optional date filtering
-        payments = Payment.objects.filter(matter__client=client)
+        payments = Payment.objects.filter(client=client)
         if date_from_obj:
             payments = payments.filter(date__gte=date_from_obj)
         if date_to_obj:
@@ -176,7 +176,7 @@ def clients_list(request):
         total_invoices = sum(invoice.value["final_total"] for invoice in invoices)
 
         # Get total payments for this client's matters with optional date filtering
-        payments = Payment.objects.filter(matter__client=client)
+        payments = Payment.objects.filter(client=client)
         if date_from_obj:
             payments = payments.filter(date__gte=date_from_obj)
         if date_to_obj:

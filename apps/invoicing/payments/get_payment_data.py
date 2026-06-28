@@ -16,7 +16,7 @@ def get_payment_data(request):
         payments = filter.qs
     else:
         payments = (
-            Payment.objects.all().select_related("matter").order_by("-date", "-id")
+            Payment.objects.all().select_related("client").order_by("-date", "-id")
         )
 
     # Applied / Unapplied is computed from PaymentApplication sums (amount vs the
