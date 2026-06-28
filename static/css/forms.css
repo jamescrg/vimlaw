@@ -297,6 +297,27 @@ button {
   height: 2.25rem;
 }
 
+/* Checkbox + label as a left-aligned inline row. The full-width input rule above
+   doesn't target checkboxes; this keeps the box and its label together on the
+   left rather than stretched/centered. */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+/* Several related checkboxes stacked tightly (rather than a full grid gap). */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 /* Mobile: single column for all form-compact layouts */
 .col2,
 .col3,

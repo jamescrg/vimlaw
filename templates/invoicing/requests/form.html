@@ -64,12 +64,18 @@
                     placeholder="Enter a message to the client."
                     @input="count = $event.target.value.length">{{ message }}</textarea>
         </div>
-        <div class="form-group">
+        <div class="form-group checkbox-group">
           <label class="checkbox-label">
             <input type="checkbox"
                    name="attach_statement"
                    {% if attach_statement %}checked{% endif %}>
             Attach matter statement
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox"
+                   name="attach_invoices"
+                   {% if attach_invoices %}checked{% endif %}>
+            Attach unpaid invoices
           </label>
         </div>
       </form>

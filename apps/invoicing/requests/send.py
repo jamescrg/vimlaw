@@ -10,6 +10,8 @@ from django.core.validators import validate_email
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
+from apps.invoicing.pay.balance import matter_open_invoices
 from apps.invoicing.pay.links import request_pay_url
 from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.settings.models import Company
@@ -44,14 +46,17 @@ def send_payment_request(
     cc=None,
     message=None,
     attach_statement=True,
+    attach_invoices=False,
     request=None,
 ):
-    """Email the request's pay link, optionally with the matter ledger statement.
+    """Email the request's pay link, optionally with attachments.
 
     to / cc: comma-delimited address strings; `to` defaults to the request's
     stored recipient(s). message: optional cover note. attach_statement: attach
-    the matter ledger statement PDF (and mention it in the body). Returns True;
-    raises PaymentRequestSendError on a bad/empty address list or send failure.
+    the matter ledger statement PDF (and mention it in the body).
+    attach_invoices: attach a PDF copy of each of the matter's unpaid invoices.
+    Returns True; raises PaymentRequestSendError on a bad/empty address list or
+    send failure.
     """
     matter = payment_request.matter
     client = matter.client if matter else None
@@ -113,6 +118,13 @@ def send_payment_request(
                     email.attach(filename, f.read(), "application/pdf")
             finally:
                 os.unlink(pdf_tmp.name)
+        # Optionally attach a PDF copy of each unpaid invoice.
+        if attach_invoices:
+            for inv in matter_open_invoices(matter):
+                if not inv.pdf_file:
+                    store_invoice_pdf(inv, request)
+                with inv.pdf_file.open("rb") as f:
+                    email.attach(f"Invoice {inv.id}.pdf", f.read(), "application/pdf")
         email.send()
     except PaymentRequestSendError:
         raise

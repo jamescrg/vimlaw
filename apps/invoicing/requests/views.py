@@ -108,6 +108,7 @@ def requests_new(request):
         message = request.POST.get("message", "")
         amount_raw = (request.POST.get("amount") or "").strip()
         attach_statement = "attach_statement" in request.POST
+        attach_invoices = "attach_invoices" in request.POST
         matter = _open_matters().filter(pk=matter_id).first() if matter_id else None
 
         error = ""
@@ -149,6 +150,7 @@ def requests_new(request):
                         cc=cc,
                         message=message,
                         attach_statement=attach_statement,
+                        attach_invoices=attach_invoices,
                         request=request,
                     )
             except PaymentRequestSendError as exc:
@@ -168,6 +170,7 @@ def requests_new(request):
             "message": message,
             "amount": amount_raw,
             "attach_statement": attach_statement,
+            "attach_invoices": attach_invoices,
             "error": error,
         }
         return render(request, "invoicing/requests/form.html", context)
@@ -180,6 +183,7 @@ def requests_new(request):
         "message": "",
         "amount": "",
         "attach_statement": True,
+        "attach_invoices": False,
         "error": "",
     }
     return render(request, "invoicing/requests/form.html", context)
@@ -229,6 +233,7 @@ def requests_resend(request, pk):
         cc = (request.POST.get("cc") or "").strip()
         message = request.POST.get("message", "")
         attach_statement = "attach_statement" in request.POST
+        attach_invoices = "attach_invoices" in request.POST
         error = ""
         try:
             send_payment_request(
@@ -237,6 +242,7 @@ def requests_resend(request, pk):
                 cc=cc,
                 message=message,
                 attach_statement=attach_statement,
+                attach_invoices=attach_invoices,
                 request=request,
             )
         except PaymentRequestSendError as exc:
@@ -253,6 +259,7 @@ def requests_resend(request, pk):
             "cc": cc,
             "message": message,
             "attach_statement": attach_statement,
+            "attach_invoices": attach_invoices,
             "error": error,
         }
         return render(request, "invoicing/requests/resend.html", context)
@@ -263,6 +270,7 @@ def requests_resend(request, pk):
         "cc": "",
         "message": "",
         "attach_statement": True,
+        "attach_invoices": False,
         "error": "",
     }
     return render(request, "invoicing/requests/resend.html", context)
