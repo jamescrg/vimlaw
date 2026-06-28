@@ -70,6 +70,7 @@ from apps.invoicing.requests.views import (
     requests_list,
     requests_matter_fields,
     requests_new,
+    requests_resend,
 )
 from apps.invoicing.unbilled.views import (
     unbilled_bulk_create_invoices,
@@ -304,6 +305,11 @@ urlpatterns = [
         "invoicing/requests-cancel/<int:pk>/",
         requests_cancel,
         name="requests-cancel",
+    ),
+    path(
+        "invoicing/requests-resend/<int:pk>/",
+        requests_resend,
+        name="requests-resend",
     ),
     path("invoicing/requests-filter/", requests_filter, name="requests-filter"),
     path(

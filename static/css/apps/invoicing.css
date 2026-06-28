@@ -81,7 +81,7 @@ and the amount is right-aligned.
 ========================================================================== */
 
 .requests {
-  min-width: 66rem;
+  min-width: 69rem;
 }
 
 .requests .id {
@@ -107,6 +107,21 @@ and the amount is right-aligned.
 
 .requests .status {
   width: 8rem;
+}
+
+/* Resend column — icon sized to its cell, muted-icon button (same convention as
+   .invoices .action-send). Empty for paid/canceled requests. */
+.requests .action-send {
+  text-align: center;
+  width: 3rem;
+}
+
+.requests .action-send .button-link {
+  color: var(--color-muted-more);
+}
+
+.requests .action-send .button-link:hover {
+  color: var(--color-primary);
 }
 
 /* ==========================================================================

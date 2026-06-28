@@ -50,12 +50,15 @@
           <th class="status">Status</th>
           <th class="recipient">Recipient</th>
           <th class="amount">Amount</th>
+          <th class="action-send">
+            <i class="icon-send-horizontal"></i>
+          </th>
         </tr>
         {% for payment_request in objects %}
           {% include "invoicing/requests/row.html" %}
         {% empty %}
           <tr>
-            <td colspan="6" class="empty-message">No payment requests found.</td>
+            <td colspan="7" class="empty-message">No payment requests found.</td>
           </tr>
         {% endfor %}
       </table>

@@ -217,3 +217,52 @@ def requests_cancel(request, pk):
     return render(
         request, "invoicing/requests/row.html", {"payment_request": payment_request}
     )
+
+
+@login_required
+def requests_resend(request, pk):
+    """Resend an existing request's email (same link/amount). GET renders the
+    modal pre-filled with the stored recipient; POST re-sends."""
+    payment_request = get_object_or_404(PaymentRequest, pk=pk)
+    if request.method == "POST":
+        to = (request.POST.get("to") or "").strip()
+        cc = (request.POST.get("cc") or "").strip()
+        message = request.POST.get("message", "")
+        attach_statement = "attach_statement" in request.POST
+        error = ""
+        try:
+            send_payment_request(
+                payment_request,
+                to=to,
+                cc=cc,
+                message=message,
+                attach_statement=attach_statement,
+                request=request,
+            )
+        except PaymentRequestSendError as exc:
+            error = str(exc)
+        if not error:
+            response = HttpResponse(
+                status=204, headers={"HX-Trigger": "requestsChanged"}
+            )
+            toast_success(response, f"Payment request resent to {to}.")
+            return response
+        context = {
+            "payment_request": payment_request,
+            "to": to,
+            "cc": cc,
+            "message": message,
+            "attach_statement": attach_statement,
+            "error": error,
+        }
+        return render(request, "invoicing/requests/resend.html", context)
+
+    context = {
+        "payment_request": payment_request,
+        "to": payment_request.recipient_email,
+        "cc": "",
+        "message": "",
+        "attach_statement": True,
+        "error": "",
+    }
+    return render(request, "invoicing/requests/resend.html", context)
