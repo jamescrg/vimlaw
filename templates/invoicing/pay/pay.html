@@ -261,8 +261,19 @@
           const HF = window.AffiniPay && window.AffiniPay.HostedFields;
           if (!HF) { this.error = 'Payment form failed to load. Please refresh.'; return; }
           const noop = function () {};
+          // Style the in-iframe inputs to match the page's plain inputs. The
+          // iframe is cross-origin and can't load the page's Noto Serif webfont,
+          // so fall back to a web-safe serif. (AffiniPay: global input.css.)
+          const hfInput = {
+            css: {
+              'font-size': '16px',
+              'font-family': "Georgia, 'Times New Roman', serif",
+              'color': '#57534e',
+            },
+          };
           this._cardFields = HF.initializeFields({
             publicKey: opts.publicKey,
+            input: hfInput,
             fields: [
               { selector: '#hf-card-number', input: { type: 'credit_card_number' } },
               { selector: '#hf-card-cvv', input: { type: 'cvv' } },
@@ -270,6 +281,7 @@
           }, noop);
           this._bankFields = HF.initializeFields({
             publicKey: opts.publicKey,
+            input: hfInput,
             fields: [
               { selector: '#hf-bank-routing', input: { type: 'routing_number' } },
               { selector: '#hf-bank-account', input: { type: 'bank_account_number' } },
