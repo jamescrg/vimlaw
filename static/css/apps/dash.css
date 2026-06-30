@@ -53,10 +53,18 @@
   margin: 0;
 }
 
+/* Single non-wrapping row of fixed-width cards, left-justified. A few cards sit
+   to the left with empty space on the right; when the content area is narrower
+   than the full set (e.g. the sidebar is expanded), the row scrolls horizontally
+   instead of wrapping a card onto a second line. overflow-x keeps the scroll
+   inside this container, so it never widens the page (on phones the cards stack
+   vertically — see the media query below). padding-bottom gives the scrollbar +
+   hover shadow room. */
 .event-cards-grid {
-  display: grid;
+  display: flex;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
 }
 
 .event-card {
@@ -67,6 +75,10 @@
   box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
   cursor: pointer;
   display: flex;
+  /* Fixed 16rem width — don't grow or shrink. A few cards stay left-justified
+     with empty space to the right; too many to fit make the row scroll (rather
+     than wrapping or squeezing the cards). */
+  flex: 0 0 16rem;
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.75rem;
@@ -286,6 +298,16 @@
 }
 
 @media (width <= 768px) {
+  /* Stack the event cards vertically on phones (no horizontal scroll) — the
+     dashboard is already a single column at this width. Grid 1fr makes each
+     card full-width; the desktop fixed-width flex sizing doesn't apply here. */
+  .event-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
   /* Drop the period dropdown on mobile so it doesn't compete for space with
      the By User / By Matter toggle. The .chart-toggle group is left intact. */
   #dash-wip .toolbar-right .dropdown {
