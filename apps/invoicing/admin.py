@@ -74,15 +74,17 @@ class CreditApplicationAdmin(SimpleHistoryAdmin):
 class PaymentRequestAdmin(SimpleHistoryAdmin):
     list_display = [
         "id",
+        "account",
         "matter",
+        "client",
         "amount_requested",
         "recipient_email",
         "status",
         "created_at",
         "created_by",
     ]
-    list_filter = ["status", "matter"]
-    search_fields = ["matter__name", "recipient_email"]
+    list_filter = ["account", "status"]
+    search_fields = ["matter__name", "client__name", "recipient_email"]
     ordering = ["-created_at"]
 
 

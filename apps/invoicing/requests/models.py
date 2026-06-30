@@ -1,9 +1,15 @@
-"""A payment request: an outgoing ask for a matter's full open balance.
+"""A payment request: an outgoing ask for money, paid via a tokenized link.
 
-Distinct from a Payment, which only exists once money moves. A request is created
-(status SENT) when the firm emails a client a catch-up balance link; it flips to
-PAID when that link is paid (see apps.invoicing.pay), recording the resulting
-Payment. The signed pay-link token carries this row's ``uuid`` (never its pk).
+Two kinds, distinguished by ``account``:
+- **operating** — pay a matter's open balance (or a firm-set partial); the link
+  records a Payment applied to the matter's invoices → operating account.
+- **trust** — deposit a firm-set retainer for a client; the link records a trust
+  ledger Deposit → trust account, no invoice application.
+
+A request is created (status SENT) when the firm emails the client a pay link;
+it flips to PAID when paid (see apps.invoicing.pay), recording the resulting
+Payment (operating) or trust Transaction (trust). The signed token carries the
+row's ``uuid``.
 """
 
 import uuid
@@ -21,23 +27,46 @@ STATUS_CHOICES = (
     ("CANCELED", "Canceled"),
 )
 
+ACCOUNT_CHOICES = (
+    ("operating", "Operating"),
+    ("trust", "Trust"),
+)
+
 
 class PaymentRequest(AuditMixin, models.Model):
     uuid = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True, db_index=True
     )
+    # Destination + anchor. Operating → a matter's invoice payment; trust → a
+    # client's retainer deposit.
+    account = models.CharField(
+        max_length=10, choices=ACCOUNT_CHOICES, default="operating"
+    )
     matter = models.ForeignKey(
-        Matter, on_delete=models.CASCADE, related_name="payment_requests"
+        Matter,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="payment_requests",
+    )
+    client = models.ForeignKey(
+        "contacts.Contact",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="trust_requests",
     )
     amount_requested = models.DecimalField(max_digits=10, decimal_places=2)
-    # One or more recipients, comma-joined (the "To" line; matches how the
-    # invoice transmission log stores addresses).
+    # One or more recipients, comma-joined (the "To" line).
     recipient_email = models.CharField(max_length=255)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="SENT")
-    # Set when this request's link is paid; SET_NULL keeps the request's record
-    # even if the payment row is later removed.
+    # Fulfillment link (set when the pay link is used): an operating request
+    # links its Payment, a trust request links its trust Transaction.
     payment = models.ForeignKey(
-        Payment,
+        Payment, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    trust_transaction = models.ForeignKey(
+        "trust.Transaction",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -46,7 +75,16 @@ class PaymentRequest(AuditMixin, models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"Payment request #{self.id} - {self.matter}"
+        return f"Payment request #{self.id} - {self.target}"
+
+    @property
+    def is_trust(self):
+        return self.account == "trust"
+
+    @property
+    def target(self):
+        """The matter (operating) or client (trust) this request is for."""
+        return self.client if self.is_trust else self.matter
 
     class Meta:
         db_table = "app_invoicing_payment_request"
@@ -54,4 +92,6 @@ class PaymentRequest(AuditMixin, models.Model):
         indexes = [
             models.Index(fields=["status"]),
             models.Index(fields=["matter"]),
+            models.Index(fields=["client"]),
+            models.Index(fields=["account"]),
         ]
