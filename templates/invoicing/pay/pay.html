@@ -117,11 +117,11 @@
                   </div>
                 {% else %}
                   <div class="pay-field">
-                    <label>Name on card</label>
-                    <input type="text" x-model="cardName" placeholder="Jane Q. Client">
+                    <label>Name on Card</label>
+                    <input type="text" x-model="cardName">
                   </div>
                   <div class="pay-field">
-                    <label>Card number</label>
+                    <label>Card Number</label>
                     {% if dev_mode %}
                       <input type="text"
                              inputmode="numeric"
@@ -147,10 +147,7 @@
                   </div>
                   <div class="pay-field">
                     <label>Billing ZIP</label>
-                    <input type="text"
-                           inputmode="numeric"
-                           x-model="postalCode"
-                           placeholder="78701">
+                    <input type="text" inputmode="numeric" x-model="postalCode">
                   </div>
                 {% endif %}
               </div>

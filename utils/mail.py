@@ -1,18 +1,28 @@
 """Email rendering helpers."""
 
+import re
 from email.utils import formataddr, parseaddr
 
 from django.conf import settings
 from django.template.loader import render_to_string
 from premailer import transform
 
+# Trailing legal-entity designation to drop from the sender display name (a
+# comma/space separator is required so e.g. "...Spa" isn't mistaken for one).
+# Mirrors the firm_entity template filter's list.
+_FIRM_SUFFIX_RE = re.compile(
+    r"[\s,]+(?:P\.?L\.?L\.?C\.?|P\.?L\.?C\.?|L\.?L\.?C\.?|L\.?L\.?P\.?|"
+    r"L\.?P\.?A\.?|P\.?C\.?|P\.?A\.?|Chartered)\s*$",
+    re.IGNORECASE,
+)
+
 
 def firm_from_email(company):
-    """From header that shows the firm as sender: the firm name as display name
-    in front of the no-reply address — e.g. '"Craig Legal, LLC" <noreply@…>'.
-    Replies still route to the firm via Reply-To. Falls back to DEFAULT_FROM_EMAIL
-    (None) when there's no firm name."""
-    name = getattr(company, "name", "") or ""
+    """From header that shows the firm as sender: the firm name (sans entity
+    suffix) as display name in front of the no-reply address — e.g.
+    '"Craig Legal" <no-reply@…>'. Replies still route to the firm via Reply-To.
+    Falls back to DEFAULT_FROM_EMAIL (None) when there's no firm name."""
+    name = _FIRM_SUFFIX_RE.sub("", getattr(company, "name", "") or "").strip()
     address = parseaddr(settings.DEFAULT_FROM_EMAIL or "")[1]
     return formataddr((name, address)) if name and address else None
 
