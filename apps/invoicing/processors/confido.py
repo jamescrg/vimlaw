@@ -63,6 +63,7 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 from decimal import Decimal
 
 import requests
@@ -85,6 +86,8 @@ from .base import (
     WebhookEvent,
     WebhookVerificationError,
 )
+
+logger = logging.getLogger(__name__)
 
 _TIMEOUT = 30  # seconds
 
@@ -210,10 +213,17 @@ class ConfidoProcessor(PaymentProcessor):
         idempotency_key=None,
         metadata=None,
         trust=False,
+        client=None,
+        matter=None,
     ) -> ChargeResult:
         """Complete the payment session the client submitted against. ``token``
         is the public session token (``paymentSessionToken``) — the deposit
-        account was already fixed when the session was created."""
+        account was already fixed when the session was created.
+
+        ``client``/``matter`` are optional descriptor dicts (external_id, name,
+        email, phone). When present, the paying client and its matter are synced
+        into Confido and attached to the transaction — best-effort: a sync
+        failure never blocks the charge."""
         # PaymentSessionMethod enum is ACH | CREDIT | DEBIT. We can't distinguish
         # credit from debit before the charge, so cards go in as CREDIT; Confido
         # records the actual brand/type on the resulting Transaction.
@@ -226,6 +236,16 @@ class ConfidoProcessor(PaymentProcessor):
         payer_email = (metadata or {}).get("payer_email")
         if payer_email:
             session_input["payerEmail"] = payer_email
+
+        # Attach (creating if needed) the client + matter — never blocking.
+        client_id, matter_id = self._resolve_client_matter(client, matter)
+        if client_id:
+            session_input["clientId"] = client_id
+        if matter_id:
+            session_input["matterId"] = matter_id
+        payer_name = (client or {}).get("name")
+        if payer_name:
+            session_input["payerName"] = payer_name
 
         query = """
         mutation PaymentSessionComplete($input: PaymentSessionCompleteInput!) {
@@ -249,7 +269,7 @@ class ConfidoProcessor(PaymentProcessor):
 
     def fetch_transaction(self, transaction_id) -> ChargeResult:
         query = """
-        query Transaction($id: ID!) {
+        query Transaction($id: String!) {
           transaction(id: $id) {
             id status_v2 amountProcessed paymentMethod
           }
@@ -344,6 +364,86 @@ class ConfidoProcessor(PaymentProcessor):
                 "Payment session could not be created.", code="session", raw=data
             )
         return token
+
+    # --- client / matter sync (best-effort; never blocks a charge) -------
+    @staticmethod
+    def _ext(kind, raw):
+        """Namespace our record id into a Confido externalId. A bare id (e.g. a
+        matter id ``1053``) can collide with another firm's externalId in
+        Confido's shared space — the lookup then returns "access denied", which we
+        treat as uncertain and skip, so the record never syncs. An app-specific
+        prefix keeps ours distinct."""
+        return f"kosmos-{kind}-{raw}"
+
+    def _resolve_client_matter(self, client, matter):
+        """Return (client_id, matter_id) — either may be None. Syncs the client
+        (and its matter under it) into Confido, keyed on our external ids so it's
+        idempotent across repeat payments. Any failure yields None rather than
+        raising, so a client/matter hiccup can never block the payment."""
+        try:
+            client_id = self._ensure_client(client)
+            matter_id = (
+                self._ensure_matter(matter, client_id) if client_id and matter else None
+            )
+            return client_id, matter_id
+        except Exception:  # noqa: BLE001 — attaching is optional; never block.
+            logger.warning("Confido client/matter sync failed", exc_info=True)
+            return None, None
+
+    def _lookup_external(self, kind, external_id):
+        """Look up a client/matter by our external id. Returns (id_or_None,
+        definitely_absent) — definitely_absent is True only when Confido reports
+        'could not find', so we create only when we're sure it doesn't exist (a
+        network/other error must not spawn a duplicate)."""
+        query = "query Q($e: String!) { %s(externalId: $e) { id } }" % kind
+        try:
+            data = self._graphql(query, {"e": external_id}, f"{kind} lookup")
+            return (data.get(kind) or {}).get("id"), False
+        except ChargeError as exc:
+            return None, "could not find" in str(exc).lower()
+
+    def _ensure_client(self, client):
+        if not client:
+            return None
+        raw = (client.get("external_id") or "").strip()
+        name = (client.get("name") or "").strip()
+        if not raw or not name:
+            return None
+        external_id = self._ext("client", raw)
+        found, absent = self._lookup_external("client", external_id)
+        if found:
+            return found
+        if not absent:
+            return None
+        add_input = {"clientName": name, "externalId": external_id}
+        for src, dest in (("email", "email"), ("phone", "phone")):
+            value = (client.get(src) or "").strip()
+            if value:
+                add_input[dest] = value
+        query = (
+            "mutation A($input: AddClientInput!) { addClient(input: $input) { id } }"
+        )
+        data = self._graphql(query, {"input": add_input}, "add client")
+        return (data.get("addClient") or {}).get("id")
+
+    def _ensure_matter(self, matter, client_id):
+        raw = (matter.get("external_id") or "").strip()
+        name = (matter.get("name") or "").strip()
+        if not raw or not name:
+            return None
+        external_id = self._ext("matter", raw)
+        found, absent = self._lookup_external("matter", external_id)
+        if found:
+            return found
+        if not absent:
+            return None
+        add_input = {"clientId": client_id, "name": name, "externalId": external_id}
+        query = (
+            "mutation M($input: MatterCreateInput!) "
+            "{ matterCreate(input: $input) { matter { id } } }"
+        )
+        data = self._graphql(query, {"input": add_input}, "create matter")
+        return ((data.get("matterCreate") or {}).get("matter") or {}).get("id")
 
     def _graphql(self, query, variables, error_prefix) -> dict:
         """POST a GraphQL operation and return its ``data`` object. Raises

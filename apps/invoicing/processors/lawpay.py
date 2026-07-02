@@ -144,6 +144,8 @@ class LawPayProcessor(PaymentProcessor):
         idempotency_key=None,
         metadata=None,
         trust=False,
+        client=None,
+        matter=None,
     ) -> ChargeResult:
         payload = {
             "amount": int(amount_cents),

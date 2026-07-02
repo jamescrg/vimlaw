@@ -95,6 +95,8 @@ class FakeProcessor(PaymentProcessor):
         idempotency_key=None,
         metadata=None,
         trust=False,
+        client=None,
+        matter=None,
     ) -> ChargeResult:
         if token == _DECLINE_TOKEN:
             raise ChargeError(

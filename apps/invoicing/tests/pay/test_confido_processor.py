@@ -217,6 +217,98 @@ def test_charge_network_error_raises():
     assert ei.value.code == "network"
 
 
+# --- client / matter sync --------------------------------------------------
+def _router(handlers, seen):
+    """Dispatch requests.post by a substring of the GraphQL query."""
+
+    def post(url, headers=None, json=None, timeout=None):
+        q = json["query"]
+        seen.append(json["variables"])
+        for sub, payload in handlers:
+            if sub in q:
+                if isinstance(payload, Exception):
+                    raise payload
+                return _Resp(payload)
+        return _Resp({"errors": [{"message": f"unmatched: {q[:40]}"}]})
+
+    return post
+
+
+_COMPLETE_OK = {
+    "data": {
+        "paymentSessionComplete": {
+            "status": "COMPLETED",
+            "transactions": [
+                {
+                    "id": "txn",
+                    "status_v2": "PENDING",
+                    "amountProcessed": 5000,
+                    "paymentMethod": "CREDIT",
+                }
+            ],
+        }
+    }
+}
+
+
+def test_charge_syncs_and_attaches_client_and_matter():
+    seen = []
+    handlers = [
+        ("client(externalId", {"errors": [{"message": "Could not find Client"}]}),
+        ("addClient", {"data": {"addClient": {"id": "cl_1"}}}),
+        ("matter(externalId", {"errors": [{"message": "Could not find Matter"}]}),
+        ("matterCreate", {"data": {"matterCreate": {"matter": {"id": "mt_1"}}}}),
+        ("paymentSessionComplete", _COMPLETE_OK),
+    ]
+    with patch(
+        "apps.invoicing.processors.confido.requests.post",
+        side_effect=_router(handlers, seen),
+    ):
+        r = proc().charge(
+            token="pay",
+            amount_cents=5000,
+            reference="Invoice 1",
+            method="card",
+            client={"external_id": "c1", "name": "Acme LLC", "email": "a@e.com"},
+            matter={"external_id": "m1", "name": "Acme v. Roe"},
+        )
+    assert r.status == SUCCEEDED
+    complete = next(
+        v["input"] for v in seen if "paymentSessionToken" in v.get("input", {})
+    )
+    assert complete["clientId"] == "cl_1"
+    assert complete["matterId"] == "mt_1"
+    assert complete["payerName"] == "Acme LLC"
+
+
+def test_client_sync_failure_never_blocks_the_charge():
+    import requests
+
+    seen = []
+    handlers = [
+        # A non-"could not find" lookup failure is treated as uncertain: we
+        # neither create nor attach, and the charge must still go through.
+        ("client(externalId", requests.RequestException("confido down")),
+        ("paymentSessionComplete", _COMPLETE_OK),
+    ]
+    with patch(
+        "apps.invoicing.processors.confido.requests.post",
+        side_effect=_router(handlers, seen),
+    ):
+        r = proc().charge(
+            token="pay",
+            amount_cents=5000,
+            reference="r",
+            method="card",
+            client={"external_id": "c1", "name": "Acme LLC"},
+        )
+    assert r.status == SUCCEEDED
+    complete = next(
+        v["input"] for v in seen if "paymentSessionToken" in v.get("input", {})
+    )
+    assert "clientId" not in complete and "matterId" not in complete
+
+
 # --- fetch / refund --------------------------------------------------------
 def test_fetch_transaction_maps_status():
     resp = _Resp(

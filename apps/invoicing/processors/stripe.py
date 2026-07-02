@@ -116,6 +116,8 @@ class StripeProcessor(PaymentProcessor):
         idempotency_key=None,
         metadata=None,
         trust=False,
+        client=None,
+        matter=None,
     ) -> ChargeResult:
         params = {
             "amount": int(amount_cents),

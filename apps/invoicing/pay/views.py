@@ -120,6 +120,29 @@ def _client_email(matter):
     return (getattr(client, "email", "") or "").strip()
 
 
+def _client_info(client):
+    """Descriptor a processor can use to sync/attach the paying client to its
+    records (Confido). Keyed on our contact id via external_id."""
+    if client is None:
+        return None
+    return {
+        "external_id": str(client.id),
+        "name": (getattr(client, "name", "") or "").strip(),
+        "email": (getattr(client, "email", "") or "").strip(),
+        "phone": (getattr(client, "phone1", "") or "").strip(),
+    }
+
+
+def _matter_info(matter):
+    """Descriptor for the matter, keyed on our matter id via external_id."""
+    if matter is None:
+        return None
+    return {
+        "external_id": str(matter.id),
+        "name": (getattr(matter, "name", "") or "").strip(),
+    }
+
+
 def _client_ip(request):
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
     if forwarded:
@@ -238,6 +261,7 @@ def pay_charge(request, token):
                 already_paid = True
             else:
                 already_paid = False
+                matter = locked.matter
                 result = processor.charge(
                     token=payment_token,
                     amount_cents=amount_cents,
@@ -248,7 +272,9 @@ def pay_charge(request, token):
                     # rejects if the key is reused. The row lock + already-paid
                     # check above is the real double-charge guard.
                     idempotency_key=f"{reference}:{payment_token}",
-                    metadata={"payer_email": _client_email(locked.matter)},
+                    metadata={"payer_email": _client_email(matter)},
+                    client=_client_info(matter.client if matter else None),
+                    matter=_matter_info(matter),
                 )
                 # Record + apply (provisional PAID for pending ACH); the
                 # settlement/return webhook later confirms or reverses it.
@@ -412,9 +438,12 @@ def balance_charge(request, token):
                 if req.is_trust:
                     reference = f"Trust deposit · Client {req.client_id}"
                     payer_email = (getattr(req.client, "email", "") or "").strip()
+                    client_desc, matter_desc = _client_info(req.client), None
                 else:
                     reference = f"Account balance · Matter {req.matter_id}"
                     payer_email = _client_email(req.matter)
+                    client_desc = _client_info(getattr(req.matter, "client", None))
+                    matter_desc = _matter_info(req.matter)
                 result = processor.charge(
                     token=payment_token,
                     amount_cents=charge_cents,
@@ -423,6 +452,8 @@ def balance_charge(request, token):
                     method=method,
                     trust=req.is_trust,
                     metadata={"payer_email": payer_email},
+                    client=client_desc,
+                    matter=matter_desc,
                 )
                 if result.accepted:
                     if req.is_trust:

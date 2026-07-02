@@ -131,9 +131,13 @@ class PaymentProcessor(ABC):
         idempotency_key: str | None = None,
         metadata: dict | None = None,
         trust: bool = False,
+        client: dict | None = None,
+        matter: dict | None = None,
     ) -> ChargeResult:
         """Charge a one-time `token` for `amount_cents`. Raises `ChargeError`
-        on decline/failure."""
+        on decline/failure. `client`/`matter` are optional descriptor dicts a
+        processor may use to attach the payer to its records (ignored by those
+        that don't)."""
 
     @abstractmethod
     def fetch_transaction(self, transaction_id: str) -> ChargeResult:
