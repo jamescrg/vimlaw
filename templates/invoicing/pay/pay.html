@@ -88,8 +88,8 @@
             </template>
             <template x-if="done && pending">
               <div class="pay-alert info">
-                Payment submitted. Bank (eCheck) payments take 1–2 business days to
-                clear; we'll email you once it settles.
+                Payment successful. Bank (eCheck) payments take 1–2 business days
+                to clear.
               </div>
             </template>
             <div x-show="!done">
@@ -192,20 +192,20 @@
                     <!-- Confido hosted fields: routing, account and holder name
                          are each iframes with these exact container ids. -->
                     <div class="pay-field">
-                      <label>Routing number</label>
+                      <label>Routing Number</label>
                       <div id="routing-number"></div>
                     </div>
                     <div class="pay-field">
-                      <label>Account number</label>
+                      <label>Account Number</label>
                       <div id="account-number"></div>
                     </div>
                     <div class="pay-field">
-                      <label>Account holder name</label>
+                      <label>Account Holder Name</label>
                       <div id="account-holder-name"></div>
                     </div>
                   {% else %}
                     <div class="pay-field">
-                      <label>Routing number</label>
+                      <label>Routing Number</label>
                       {% if dev_mode %}
                         <input type="text"
                                inputmode="numeric"
@@ -216,7 +216,7 @@
                       {% endif %}
                     </div>
                     <div class="pay-field">
-                      <label>Account number</label>
+                      <label>Account Number</label>
                       {% if dev_mode %}
                         <input type="text"
                                inputmode="numeric"
@@ -227,7 +227,7 @@
                       {% endif %}
                     </div>
                     <div class="pay-field">
-                      <label>Account holder name</label>
+                      <label>Account Holder Name</label>
                       <input type="text" x-model="accountName" placeholder="Jane Q. Client">
                     </div>
                     <div class="pay-row">
@@ -303,11 +303,12 @@
                 });
               });
             }
-            // The SDK styles the input *inside* each iframe. It needs an explicit
-            // height/width or the iframe collapses; keep the font in sync with the
-            // page's plain inputs.
+            // Styles the input *inside* each iframe (font/colour to match the
+            // page's plain inputs). The box + single-line height come from pay.css
+            // (the #card-number/#routing-number/… rules), same as AffiniPay — so
+            // no height here, or the input would fight the iframe clamp.
             const fieldStyle = {
-              border: 'none', color: '#57534e', height: '38px', width: '100%',
+              border: 'none', color: '#57534e', width: '100%',
               'font-size': '16px', 'font-family': opts.iframeFont,
             };
             this._confidoReady = CF.init({
