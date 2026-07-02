@@ -1,30 +1,83 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from apps.settings.company.forms import CompanyForm
+from apps.settings.company.forms import (
+    CompanyBillingForm,
+    CompanyForm,
+    CompanyResearchForm,
+)
 from apps.settings.models import Company
+from utils.toasts import toast_success
 
 
 @login_required
 def company_index(request):
+    """Company settings page: Company Info + Billing + Research subsections.
+
+    The Company Info form posts here; Billing and Research post to their own
+    endpoints. Each subsection re-renders on save and fires a success toast.
+    """
     company = Company.objects.first()
-    message = None
 
     if request.method == "POST":
         form = CompanyForm(request.POST, request.FILES, instance=company)
-        if form.is_valid():
+        saved = form.is_valid()
+        if saved:
             company = form.save()
-            message = "Company updated successfully"
             form = CompanyForm(instance=company)
-        return render(
+        response = render(
             request,
             "settings/company/form.html",
-            {"form": form, "company": company, "message": message},
+            {"form": form, "company": company},
         )
+        if saved:
+            toast_success(response, "Company details updated")
+        return response
 
-    form = CompanyForm(instance=company)
     return render(
         request,
         "settings/company/index.html",
-        {"subapp": "company", "form": form, "company": company},
+        {
+            "subapp": "company",
+            "form": CompanyForm(instance=company),
+            "billing_form": CompanyBillingForm(instance=company),
+            "research_form": CompanyResearchForm(instance=company),
+            "company": company,
+        },
     )
+
+
+@login_required
+def company_billing(request):
+    company = Company.objects.first()
+    form = CompanyBillingForm(request.POST or None, instance=company)
+    saved = request.method == "POST" and form.is_valid()
+    if saved:
+        company = form.save()
+        form = CompanyBillingForm(instance=company)
+    response = render(
+        request,
+        "settings/company/billing.html",
+        {"billing_form": form, "company": company},
+    )
+    if saved:
+        toast_success(response, "Payment appearance updated")
+    return response
+
+
+@login_required
+def company_research(request):
+    company = Company.objects.first()
+    form = CompanyResearchForm(request.POST or None, instance=company)
+    saved = request.method == "POST" and form.is_valid()
+    if saved:
+        company = form.save()
+        form = CompanyResearchForm(instance=company)
+    response = render(
+        request,
+        "settings/company/research.html",
+        {"research_form": form, "company": company},
+    )
+    if saved:
+        toast_success(response, "Research settings updated")
+    return response

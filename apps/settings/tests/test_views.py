@@ -195,7 +195,7 @@ def test_company_create(client):
     }
     response = client.post("/settings/company/", data)
     assert response.status_code == 200
-    assert "success" in response.content.decode().lower()
+    assert "success" in response.headers.get("HX-Toast", "").lower()
     assert Company.objects.count() == 1
     company = Company.objects.first()
     assert company.name == "Test Law Firm"
@@ -212,7 +212,7 @@ def test_company_update(client):
     }
     response = client.post("/settings/company/", data)
     assert response.status_code == 200
-    assert "success" in response.content.decode().lower()
+    assert "success" in response.headers.get("HX-Toast", "").lower()
     assert Company.objects.count() == 1
     company = Company.objects.first()
     assert company.name == "Updated Firm"

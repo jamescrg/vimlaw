@@ -22,7 +22,6 @@ class CompanyForm(forms.ModelForm):
             "email",
             "invoice_bcc",
             "logo",
-            "jurisdiction",
         ]
         widgets = {
             "logo": forms.ClearableFileInput(attrs={"accept": ".png,.jpg,.jpeg,.svg"}),
@@ -46,7 +45,6 @@ class CompanyForm(forms.ModelForm):
             "phone",
             "email",
             "invoice_bcc",
-            "jurisdiction",
         ]
         for field_name in text_fields:
             self.fields[field_name].widget.attrs["autocomplete"] = "off"
@@ -78,3 +76,27 @@ class CompanyForm(forms.ModelForm):
             raise ValidationError("Logo must be under 2 MB.")
 
         return logo
+
+
+class CompanyBillingForm(forms.ModelForm):
+    """Billing subsection: look of the client payment page + payment emails."""
+
+    class Meta:
+        model = Company
+        fields = ["payment_font", "payment_background"]
+        widgets = {
+            "payment_font": forms.RadioSelect,
+            "payment_background": forms.RadioSelect,
+        }
+        labels = {
+            "payment_font": "Font",
+            "payment_background": "Background",
+        }
+
+
+class CompanyResearchForm(forms.ModelForm):
+    """Research subsection (e.g. default jurisdiction for legal research)."""
+
+    class Meta:
+        model = Company
+        fields = ["jurisdiction"]
