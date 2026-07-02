@@ -40,10 +40,14 @@
   <td class="method">{{ payment.method_display }}</td>
   <td class="detail">
     {% if payment.processor_status == "pending" %}
-      <span class="app-badge badge-yellow badge-float-right"
-            title="Awaiting bank (eCheck/ACH) settlement — provisional until it clears">Pending</span>
+      <div class="badge-flag-row">
+        <span>{{ payment.detail|default:"" }}</span>
+        <span class="app-badge badge-yellow"
+              title="Awaiting bank (eCheck/ACH) settlement — provisional until it clears">Pending</span>
+      </div>
+    {% else %}
+      {{ payment.detail|default:"" }}
     {% endif %}
-    {{ payment.detail|default:"" }}
   </td>
   <td class="amount">${{ payment.amount|floatformat:2|intcomma }}</td>
   <td class="amount">${{ payment.amount_unapplied|floatformat:2|intcomma }}</td>

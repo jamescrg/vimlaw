@@ -14,10 +14,6 @@
       {{ invoice.status_display }}
       {% if view == 'detail' %}<small><i class="icon-chevron-down"></i></small>{% endif %}
     </button>
-    {% if view == 'detail' and invoice.status == 'PAID' and invoice.has_pending_payment %}
-      <span class="app-badge badge-yellow"
-            title="An eCheck/ACH payment is still clearing — provisional until it settles">Pending settlement</span>
-    {% endif %}
     <ul class="dropdown-menu"
         x-ref="menu"
         x-show="open"

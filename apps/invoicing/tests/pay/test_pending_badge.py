@@ -49,18 +49,33 @@ def test_payments_row_badge(sent_invoice, matter):
     assert "badge-yellow" not in html2
 
 
-def test_invoice_detail_status_badge(sent_invoice, matter):
+def test_invoice_payment_history_badge(sent_invoice, matter):
+    """The badge lives on the specific pending payment in the invoice's Payment
+    history (not next to the status)."""
     _apply_pending(matter, sent_invoice)
-    sent_invoice.refresh_from_db()  # auto-PAID after full application
     html = render_to_string(
+        "invoicing/invoices/detail/history-content.html", {"invoice": sent_invoice}
+    )
+    assert "Pending settlement" in html
+    # ...and the status display no longer carries it.
+    status = render_to_string(
         "invoicing/invoices/status.html",
         {"invoice": sent_invoice, "view": "detail"},
     )
-    assert "Pending settlement" in html
-    # A non-detail view must NOT show the badge (and the guard short-circuits so
-    # the has_pending_payment query never runs on list rows).
-    html_list = render_to_string(
-        "invoicing/invoices/status.html",
-        {"invoice": sent_invoice, "view": "list"},
+    assert "Pending settlement" not in status
+
+
+def test_invoices_list_annotates_and_badges_pending(sent_invoice, matter):
+    """The list annotates a pending flag (no N+1) and floats a badge in the
+    matter cell."""
+    from apps.invoicing.invoices.get_invoice_data import (
+        get_annotated_invoice_queryset,
     )
-    assert "Pending settlement" not in html_list
+
+    _apply_pending(matter, sent_invoice)
+    inv = get_annotated_invoice_queryset().get(id=sent_invoice.id)
+    assert inv.annotated_has_pending_payment is True
+    html = render_to_string(
+        "invoicing/invoices/row.html", {"invoice": inv, "view": "list"}
+    )
+    assert "badge-flag-row" in html and ">Pending</span>" in html

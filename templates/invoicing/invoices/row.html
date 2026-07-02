@@ -6,22 +6,28 @@
   </td>
   <td class="date">{{ invoice.date_issued|date:"Y-m-d" }}</td>
   <td class="matter dropdown-cell">
-    <div class="dropdown" x-data="dropdown()">
-      <button class="button-link"
-              type="button"
-              x-ref="button"
-              @click="toggle()"
-              :aria-expanded="open">{{ invoice.matter.name }}</button>
-      <ul class="dropdown-menu" x-ref="menu" x-show="open">
-        <li>
-          <a class="dropdown-item"
-             href="{% url 'matters:ledger' id=invoice.matter.id|default:0 %}"><i class="icon-briefcase-business"></i> Go to Matter</a>
-        </li>
-        <li>
-          <a class="dropdown-item"
-             href="{% url 'invoicing:invoices-detail-index' invoice.id %}"><i class="icon-file-text"></i> View Invoice</a>
-        </li>
-      </ul>
+    <div class="badge-flag-row">
+      <div class="dropdown" x-data="dropdown()">
+        <button class="button-link"
+                type="button"
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open">{{ invoice.matter.name }}</button>
+        <ul class="dropdown-menu" x-ref="menu" x-show="open">
+          <li>
+            <a class="dropdown-item"
+               href="{% url 'matters:ledger' id=invoice.matter.id|default:0 %}"><i class="icon-briefcase-business"></i> Go to Matter</a>
+          </li>
+          <li>
+            <a class="dropdown-item"
+               href="{% url 'invoicing:invoices-detail-index' invoice.id %}"><i class="icon-file-text"></i> View Invoice</a>
+          </li>
+        </ul>
+      </div>
+      {% if invoice.annotated_has_pending_payment %}
+        <span class="app-badge badge-yellow"
+              title="An eCheck/ACH payment is still clearing — provisional until it settles">Pending</span>
+      {% endif %}
     </div>
   </td>
   <td class="status dropdown-cell">{% include "invoicing/invoices/status.html" %}</td>

@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db.models import (
     Case,
     DecimalField,
+    Exists,
     F,
     OuterRef,
     Subquery,
@@ -106,6 +107,13 @@ def get_annotated_invoice_queryset():
             ),
             annotated_credits=Coalesce(
                 Subquery(credit_subquery), Decimal("0"), output_field=DecimalField()
+            ),
+            # True while an applied online payment is still awaiting settlement
+            # (provisional PAID). Annotated to avoid an N+1 across the list.
+            annotated_has_pending_payment=Exists(
+                PaymentApplication.objects.filter(
+                    invoice=OuterRef("pk"), payment__processor_status="pending"
+                )
             ),
         )
         .annotate(

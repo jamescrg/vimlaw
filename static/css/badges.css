@@ -58,12 +58,20 @@ Badge size variants
   padding: 0.375rem 0.625rem;
 }
 
-/* A status badge pinned to the top-right of a table cell; the cell's text flows
-   to its left and wraps underneath it (e.g. a pending online payment on the
-   Payments tab). */
-.badge-float-right {
-  float: right;
-  margin: 0 0 0.25rem 0.5rem;
+/* Cell content on the left, a status flag on the right, on one line (mirrors the
+   ledger's .ledger-desc). The flag stays in normal flow — NOT floated — so it
+   never pushes up the table-row height; the left item shrinks/wraps while the
+   flag keeps its size. */
+.badge-flag-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.badge-flag-row > :first-child {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ------------------------------------------------

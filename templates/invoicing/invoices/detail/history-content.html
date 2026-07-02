@@ -50,7 +50,13 @@
     <table class="invoices-detail-table">
       {% for app in invoice.applications.all %}
         <tr>
-          <th>{{ app.payment.date|date:"Y-m-d" }} &middot; {{ app.payment.method_display }}</th>
+          <th>
+            {{ app.payment.date|date:"Y-m-d" }} &middot; {{ app.payment.method_display }}
+            {% if app.payment.processor_status == "pending" %}
+              <span class="app-badge badge-yellow"
+                    title="Awaiting bank (eCheck/ACH) settlement — provisional until it clears">Pending settlement</span>
+            {% endif %}
+          </th>
           <td>
             ${{ app.amount_applied|floatformat:2|intcomma }} applied
             {% if app.payment.detail %}
