@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice {{ invoice.id }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="{{ email_font_link }}" rel="stylesheet">
+    {# djlint:off — Django {{ }} tags in the CSS below; djlint's formatter breaks them. #}
     <style>
       /* Authored as a normal stylesheet; premailer inlines this onto the elements
          at send time (see utils.mail.render_inlined). Keep colours/structure in
@@ -12,15 +13,15 @@
       body {
         margin: 0;
         padding: 0;
-        background-color: #e2e8f0;
+        background-color: {{ email_bg_solid }};
         color: #57534e;
-        font-family: 'Noto Serif', Georgia, 'Times New Roman', serif;
+        font-family: {{ email_font_family|safe }};
       }
 
-      /* Page: a lighter slate gradient than the pay page (solid #e2e8f0 fallback). */
+      /* Page: a lighter gradient than the pay page (firm-configurable; solid fallback). */
       .page {
-        background-color: #e2e8f0;
-        background-image: linear-gradient(180deg, #e2e8f0 0%, #f1f5f9 70%, #f1f5f9 100%);
+        background-color: {{ email_bg_solid }};
+        background-image: {{ email_bg_gradient|safe }};
       }
 
       /* A little space above the card so it sits off the top of the message. */
@@ -114,6 +115,7 @@
         text-decoration: none;
       }
     </style>
+    {# djlint:on #}
   </head>
   <body>
     <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">

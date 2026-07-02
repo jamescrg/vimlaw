@@ -15,7 +15,7 @@ from apps.invoicing.pay.balance import matter_open_invoices
 from apps.invoicing.pay.links import request_pay_url
 from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.settings.models import Company
-from utils.mail import firm_from_email, render_inlined
+from utils.mail import firm_from_email, payment_email_style, render_inlined
 
 
 class PaymentRequestSendError(Exception):
@@ -95,6 +95,7 @@ def send_payment_request(
         "attach_statement": attach_statement,
         "attach_invoices": attach_invoices,
         "is_trust": is_trust,
+        **payment_email_style(company),
     }
     firm = company.name if company else ""
     subject = f"{firm} - " if firm else ""

@@ -16,7 +16,7 @@ from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import InvoiceTransmission
 from apps.invoicing.pay.links import payment_url
 from apps.settings.models import Company
-from utils.mail import firm_from_email, render_inlined
+from utils.mail import firm_from_email, payment_email_style, render_inlined
 
 
 class InvoiceSendError(Exception):
@@ -118,6 +118,7 @@ def send_invoice(
             "firm_name": company.name if company else "",
             "firm_email": company.email if company else "",
             "pay_url": payment_url(invoice, request),  # tokenized payment link
+            **payment_email_style(company),
         }
         # Client-facing: lead with the firm name, then identify by number (not
         # matter name, which is internal and subject to change). Plain hyphens.
