@@ -368,6 +368,24 @@ LAWPAY_API_BASE = env("LAWPAY_API_BASE", default="https://api.8am.com")
 STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+# Confido Legal (Gravity Legal) credentials. GraphQL API, authed with the firm
+# secret token via the `x-api-key` header. BOTH bank-account ids are required —
+# Confido has no auto-default, so a charge must name the operating (invoices) or
+# trust (deposits) account; discover the ids with the `bankAccountsList` query or
+# the portal. Webhooks are HMAC-SHA512 signed. Use the sandbox endpoint + js host
+# with a sandbox key; switch both to `api.gravity-legal.com` / `js.gravity-legal.com`
+# with a live key.
+CONFIDO_API_KEY = env("CONFIDO_API_KEY", default="")
+CONFIDO_API_BASE = env(
+    "CONFIDO_API_BASE", default="https://api.sandbox.gravity-legal.com/v2"
+)
+CONFIDO_WEBHOOK_SECRET = env("CONFIDO_WEBHOOK_SECRET", default="")
+CONFIDO_OPERATING_BANK_ACCOUNT_ID = env("CONFIDO_OPERATING_BANK_ACCOUNT_ID", default="")
+CONFIDO_TRUST_BANK_ACCOUNT_ID = env("CONFIDO_TRUST_BANK_ACCOUNT_ID", default="")
+CONFIDO_HOSTED_FIELDS_URL = env(
+    "CONFIDO_HOSTED_FIELDS_URL",
+    default="https://js.sandbox.gravity-legal.com/hosted-fields.js",
+)
 # How long a tokenized public payment link stays valid (seconds). Default 90
 # days; staff can resend an invoice to mint a fresh link.
 INVOICE_PAY_LINK_MAX_AGE = env.int(

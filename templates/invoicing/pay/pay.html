@@ -10,9 +10,26 @@
 {% block content %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet" />
+  <link href="{{ pay_font_link }}" rel="stylesheet" />
   <link rel="stylesheet" href="{% static_v 'css/pay.css' %}" />
+  {# djlint:off #}
+  <style>
+    /* Firm-configurable font + background (Settings -> Company -> Billing).
+       Values are server-controlled style strings, so |safe is correct here.
+       Wrapped in djlint:off so its formatter leaves the template tags alone. */
+    :root {
+      --pay-font: {{ pay_font_family|safe }};
+      --pay-gradient: {{ pay_gradient|safe }};
+      --pay-gradient-dark: {{ pay_gradient_dark|safe }};
+      --pay-card: {{ pay_card }};
+      --pay-card-dark: {{ pay_card_dark }};
+      --pay-border: {{ pay_border }};
+      --pay-border-dark: {{ pay_border_dark }};
+      --pay-btn: {{ pay_btn }};
+      --pay-btn-dark: {{ pay_btn_dark }};
+    }
+</style>
+  {# djlint:on #}
   <div class="pay-wrap">
     <div class="pay-card">
       <div class="pay-head">
@@ -64,7 +81,7 @@
             Thank you.
           </div>
         {% else %}
-          <div x-data='payForm({ chargeUrl: "{{ charge_url|escapejs }}", dev: {{ dev_mode|yesno:"true,false" }}, publicKey: "{{ config.public_key|escapejs }}", processor: "{{ config.processor|escapejs }}", echeck: {{ config.echeck|yesno:"true,false" }} })'>
+          <div x-data='payForm({ chargeUrl: "{{ charge_url|escapejs }}", dev: {{ dev_mode|yesno:"true,false" }}, publicKey: "{{ config.public_key|escapejs }}", processor: "{{ config.processor|escapejs }}", echeck: {{ config.echeck|yesno:"true,false" }}, iframeFont: "{{ pay_iframe_font|escapejs }}", stripeFont: "{{ pay_font_family|escapejs }}", stripeFontUrl: "{{ pay_stripe_font_url|escapejs }}" })'>
             <!-- Result states -->
             <template x-if="done && !pending">
               <div class="pay-alert ok">Payment received. Thank you.</div>
@@ -115,6 +132,23 @@
                     <label>Card details</label>
                     <div id="stripe-card"></div>
                   </div>
+                {% elif config.processor == 'confido' %}
+                  <!-- Confido hosted fields: number, expiration and CVV are each
+                       iframes with these exact container ids. -->
+                  <div class="pay-field">
+                    <label>Card Number</label>
+                    <div id="card-number"></div>
+                  </div>
+                  <div class="pay-row">
+                    <div class="pay-field">
+                      <label>Expiration</label>
+                      <div id="card-exp"></div>
+                    </div>
+                    <div class="pay-field">
+                      <label>CVV</label>
+                      <div id="card-cvv"></div>
+                    </div>
+                  </div>
                 {% else %}
                   <div class="pay-field">
                     <label>Name on Card</label>
@@ -154,48 +188,65 @@
               {% if config.echeck %}
                 <!-- Bank / eCheck fields. Live: routing + account are hosted fields. -->
                 <div x-show="method === 'bank'">
-                  <div class="pay-field">
-                    <label>Routing number</label>
-                    {% if dev_mode %}
-                      <input type="text"
-                             inputmode="numeric"
-                             x-model="routingNumber"
-                             placeholder="123456789">
-                    {% else %}
-                      <div id="hf-bank-routing"></div>
-                    {% endif %}
-                  </div>
-                  <div class="pay-field">
-                    <label>Account number</label>
-                    {% if dev_mode %}
-                      <input type="text"
-                             inputmode="numeric"
-                             x-model="accountNumber"
-                             placeholder="000123456789">
-                    {% else %}
-                      <div id="hf-bank-account"></div>
-                    {% endif %}
-                  </div>
-                  <div class="pay-field">
-                    <label>Account holder name</label>
-                    <input type="text" x-model="accountName" placeholder="Jane Q. Client">
-                  </div>
-                  <div class="pay-row">
+                  {% if config.processor == 'confido' %}
+                    <!-- Confido hosted fields: routing, account and holder name
+                         are each iframes with these exact container ids. -->
                     <div class="pay-field">
-                      <label>Account type</label>
-                      <select x-model="accountType">
-                        <option value="checking">Checking</option>
-                        <option value="savings">Savings</option>
-                      </select>
+                      <label>Routing number</label>
+                      <div id="routing-number"></div>
                     </div>
                     <div class="pay-field">
-                      <label>Account holder</label>
-                      <select x-model="holderType">
-                        <option value="individual">Individual</option>
-                        <option value="business">Business</option>
-                      </select>
+                      <label>Account number</label>
+                      <div id="account-number"></div>
                     </div>
-                  </div>
+                    <div class="pay-field">
+                      <label>Account holder name</label>
+                      <div id="account-holder-name"></div>
+                    </div>
+                  {% else %}
+                    <div class="pay-field">
+                      <label>Routing number</label>
+                      {% if dev_mode %}
+                        <input type="text"
+                               inputmode="numeric"
+                               x-model="routingNumber"
+                               placeholder="123456789">
+                      {% else %}
+                        <div id="hf-bank-routing"></div>
+                      {% endif %}
+                    </div>
+                    <div class="pay-field">
+                      <label>Account number</label>
+                      {% if dev_mode %}
+                        <input type="text"
+                               inputmode="numeric"
+                               x-model="accountNumber"
+                               placeholder="000123456789">
+                      {% else %}
+                        <div id="hf-bank-account"></div>
+                      {% endif %}
+                    </div>
+                    <div class="pay-field">
+                      <label>Account holder name</label>
+                      <input type="text" x-model="accountName" placeholder="Jane Q. Client">
+                    </div>
+                    <div class="pay-row">
+                      <div class="pay-field">
+                        <label>Account type</label>
+                        <select x-model="accountType">
+                          <option value="checking">Checking</option>
+                          <option value="savings">Savings</option>
+                        </select>
+                      </div>
+                      <div class="pay-field">
+                        <label>Account holder</label>
+                        <select x-model="holderType">
+                          <option value="individual">Individual</option>
+                          <option value="business">Business</option>
+                        </select>
+                      </div>
+                    </div>
+                  {% endif %}
                 </div>
               {% endif %}
               <button type="button" class="pay-btn" :disabled="submitting" @click="pay()">
@@ -225,31 +276,81 @@
         routingNumber: '', accountNumber: '', accountName: '',
         accountType: 'checking', holderType: 'individual',
         submitting: false, done: false, pending: false, status: '', error: '',
-        // Live tokenization handles: AffiniPay hosted-fields (one per method) and
-        // the Stripe.js card Element.
+        // Live tokenization handles: AffiniPay hosted-fields (one per method),
+        // the Stripe.js card Element, and the Confido hosted-fields singleton.
         _cardFields: null, _bankFields: null, _stripe: null, _stripeCard: null,
+        _confido: null, _confidoReady: null,
 
         // Mount AffiniPay hosted fields once, in live mode only. Dev mode uses
         // plain inputs + magic tokens, so this is skipped there.
         init() {
           if (opts.dev) return;
+          if (opts.processor === 'confido') {
+            // Confido's flow is inverted: the server already created the payment
+            // session (its token is opts.publicKey); we mount the iframed fields
+            // against it, and submitFields() (in tokenize) posts the sensitive
+            // data straight to Confido.
+            const CF = window.gravityLegal || window.confidoHostedFields;
+            if (!CF) { this.error = 'Payment form failed to load. Please refresh.'; return; }
+            this._confido = CF;
+            // Surface real per-field load/validation errors to the console
+            // (the iframe otherwise only shows a generic "error loading field").
+            if (CF.addChangeListener) {
+              CF.addChangeListener((e) => {
+                const fields = (e && e.state && e.state.fields) || {};
+                Object.keys(fields).forEach((k) => {
+                  if (fields[k] && fields[k].error) console.warn('Confido field error:', k, fields[k].error);
+                });
+              });
+            }
+            // The SDK styles the input *inside* each iframe. It needs an explicit
+            // height/width or the iframe collapses; keep the font in sync with the
+            // page's plain inputs.
+            const fieldStyle = {
+              border: 'none', color: '#57534e', height: '38px', width: '100%',
+              'font-size': '16px', 'font-family': opts.iframeFont,
+            };
+            this._confidoReady = CF.init({
+              paymentToken: opts.publicKey,
+              activeForm: this.method === 'bank' ? 'ach' : 'card',
+              fields: {
+                cardNumber: { containerId: 'card-number', style: fieldStyle },
+                cardExpirationDate: { containerId: 'card-exp', style: fieldStyle },
+                cardSecurityCode: { containerId: 'card-cvv', style: fieldStyle },
+                accountNumber: { containerId: 'account-number', style: fieldStyle },
+                routingNumber: { containerId: 'routing-number', style: fieldStyle },
+                accountHolderName: { containerId: 'account-holder-name', style: fieldStyle },
+              },
+            });
+            // Load the required field set when the user switches card <-> eCheck.
+            // Defer to $nextTick so the newly-selected form's containers are
+            // visible (x-show applied) before the SDK mounts their iframes — a
+            // field mounted into a display:none container errors ("error loading
+            // field").
+            this.$watch('method', (m) => {
+              this.$nextTick(() => {
+                this._confido.setActiveForm(m === 'bank' ? 'ach' : 'card');
+              });
+            });
+            return;
+          }
           if (opts.processor === 'stripe') {
             const Stripe = window.Stripe;
             if (!Stripe) { this.error = 'Payment form failed to load. Please refresh.'; return; }
             this._stripe = Stripe(opts.publicKey);
-            // Load Noto Serif into the Element's iframe. Flip the in-iframe text
+            // Load the firm's configured webfont into the Element's iframe. Flip the in-iframe text
             // colours for dark mode here — the iframe can't see the page's
             // @media (prefers-color-scheme) rules.
             const dark = window.matchMedia
               && window.matchMedia('(prefers-color-scheme: dark)').matches;
             const elements = this._stripe.elements({
-              fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500&display=swap' }],
+              fonts: [{ cssSrc: opts.stripeFontUrl }],
             });
             this._stripeCard = elements.create('card', {
               style: {
                 base: {
                   color: dark ? '#f1f5f9' : '#57534e',
-                  fontFamily: '"Noto Serif", serif',
+                  fontFamily: opts.stripeFont,
                   fontSize: '16px',
                   iconColor: dark ? '#94a3b8' : '#78716c',
                   '::placeholder': { color: dark ? '#94a3b8' : '#78716c' },
@@ -263,12 +364,12 @@
           if (!HF) { this.error = 'Payment form failed to load. Please refresh.'; return; }
           const noop = function () {};
           // Style the in-iframe inputs to match the page's plain inputs. The
-          // iframe is cross-origin and can't load the page's Noto Serif webfont,
+          // iframe is cross-origin and can't load the page's webfont,
           // so fall back to a web-safe serif. (AffiniPay: global input.css.)
           const hfInput = {
             css: {
               'font-size': '16px',
-              'font-family': "Georgia, 'Times New Roman', serif",
+              'font-family': opts.iframeFont,
               'color': '#57534e',
             },
           };
@@ -293,7 +394,8 @@
         },
 
         validate() {
-          if (opts.processor === 'stripe') return '';  // the Stripe Element validates itself
+          // Hosted-field processors validate inside their own iframes.
+          if (opts.processor === 'stripe' || opts.processor === 'confido') return '';
           if (this.method === 'card') {
             if (!this.cardName.trim()) return 'Please enter the name on the card.';
             if (!this.exp.trim() || !this.postalCode.trim()) return 'Please complete the card details.';
@@ -354,6 +456,14 @@
         // Stripe: a PaymentMethod id from the card Element. AffiniPay: a hosted-
         // fields token (card number/CVV / bank routing+account live in iframes).
         async tokenize() {
+          if (opts.processor === 'confido') {
+            // No client-returned token: submitFields() sends the iframed data to
+            // Confido, and the server completes the session we were rendered
+            // with. So the "token" we hand back is that session token.
+            await this._confidoReady;
+            await this._confido.submitFields();
+            return opts.publicKey;
+          }
           if (opts.processor === 'stripe') {
             const { paymentMethod, error } = await this._stripe.createPaymentMethod({
               type: 'card', card: this._stripeCard,

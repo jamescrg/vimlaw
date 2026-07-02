@@ -40,6 +40,86 @@ from apps.invoicing.requests.models import PaymentRequest
 from utils.signing import read_payment_token, read_request_token
 
 
+def _to_cents(amount):
+    return int((Decimal(str(amount)) * 100).to_integral_value())
+
+
+# Firm-configurable payment-page look (Settings → Payments, on Company). Kept in
+# data, not hardcoded, so each firm running this open-source app picks its own.
+# Full per-theme palette (page gradient + card/border/button), light + dark. The
+# "blue" theme is the firm's original slate look (they refer to slate as "blue");
+# "gray" is a neutral gray. The whole card — not just the background — swaps, so
+# each theme reads as one coherent palette.
+_PAY_PALETTES = {
+    "blue": {  # slate
+        "gradient": "#f1f5f9 linear-gradient(180deg, #cbd5e1 0%, #f1f5f9 70%, #f1f5f9 100%) fixed",
+        "gradient_dark": "#0f172a linear-gradient(180deg, #1e293b 0%, #0f172a 70%, #0f172a 100%) fixed",
+        "card": "#f8fafc",
+        "card_dark": "#1e293b",
+        "border": "#cbd5e1",
+        "border_dark": "#334155",
+        "btn": "#cbd5e1",
+        "btn_dark": "#475569",
+    },
+    "gray": {  # neutral
+        "gradient": "#f5f5f5 linear-gradient(180deg, #d4d4d4 0%, #f5f5f5 70%, #f5f5f5 100%) fixed",
+        "gradient_dark": "#0a0a0a linear-gradient(180deg, #262626 0%, #0a0a0a 70%, #0a0a0a 100%) fixed",
+        "card": "#fafafa",
+        "card_dark": "#171717",
+        "border": "#e5e5e5",
+        "border_dark": "#262626",
+        "btn": "#e5e5e5",
+        "btn_dark": "#404040",
+    },
+}
+
+
+def _pay_style(company):
+    """Resolve the payment-page style strings from the firm's Company settings."""
+    font = getattr(company, "payment_font", "serif") or "serif"
+    background = getattr(company, "payment_background", "gray") or "gray"
+    sans = font == "sans"
+    palette = _PAY_PALETTES.get(background, _PAY_PALETTES["gray"])
+    family = "Noto Sans" if sans else "Noto Serif"
+    generic = "sans-serif" if sans else "serif"
+    return {
+        "pay_font": font,
+        "pay_background": background,
+        # CSS font-family value for the page (var --pay-font).
+        "pay_font_family": f'"{family}", {generic}',
+        # Google Fonts stylesheet for the page + Stripe Element iframe.
+        "pay_font_link": (
+            f"https://fonts.googleapis.com/css2?family={family.replace(' ', '+')}"
+            ":ital,wght@0,100..900;1,100..900&display=swap"
+        ),
+        "pay_stripe_font_url": (
+            f"https://fonts.googleapis.com/css2?family={family.replace(' ', '+')}"
+            ":wght@400;500&display=swap"
+        ),
+        # Web-safe fallback for cross-origin hosted-field iframes (they can't load
+        # the page webfont).
+        "pay_iframe_font": (
+            "Arial, 'Helvetica Neue', sans-serif"
+            if sans
+            else "Georgia, 'Times New Roman', serif"
+        ),
+        "pay_gradient": palette["gradient"],
+        "pay_gradient_dark": palette["gradient_dark"],
+        "pay_card": palette["card"],
+        "pay_card_dark": palette["card_dark"],
+        "pay_border": palette["border"],
+        "pay_border_dark": palette["border_dark"],
+        "pay_btn": palette["btn"],
+        "pay_btn_dark": palette["btn_dark"],
+    }
+
+
+def _client_email(matter):
+    """Best-effort payer email for a matter's client (for processor receipts)."""
+    client = getattr(matter, "client", None)
+    return (getattr(client, "email", "") or "").strip()
+
+
 def _client_ip(request):
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
     if forwarded:
@@ -109,6 +189,7 @@ def pay_page(request, token):
         # real hosted-fields SDK so the whole flow is testable without LawPay.
         "dev_mode": config.processor == "fake",
         "charge_url": request.build_absolute_uri(request.path.rstrip("/") + "/charge/"),
+        **_pay_style(company),
     }
     return render(request, "invoicing/pay/pay.html", context)
 
@@ -146,21 +227,28 @@ def pay_charge(request, token):
     try:
         with transaction.atomic():
             locked = Invoice.objects.select_for_update().get(pk=invoice.pk)
-            config = processor.client_config(locked)
-            if config.amount_cents <= 0:
+            # Compute the charge amount/reference directly from the locked row
+            # rather than via client_config() — for session-based processors
+            # (Confido) client_config() mints a new payment session, so calling
+            # it here would orphan one. The client already holds the session it
+            # was rendered with (passed back as `payment_token`).
+            amount_cents = _to_cents(locked.amount_remaining)
+            reference = f"Invoice {locked.id}"
+            if amount_cents <= 0:
                 already_paid = True
             else:
                 already_paid = False
                 result = processor.charge(
                     token=payment_token,
-                    amount_cents=config.amount_cents,
-                    reference=config.reference,
+                    amount_cents=amount_cents,
+                    reference=reference,
                     method=method,
                     # Scope idempotency to the one-time token, not the invoice:
                     # a retry uses a fresh token (different params), which Stripe
                     # rejects if the key is reused. The row lock + already-paid
                     # check above is the real double-charge guard.
-                    idempotency_key=f"{config.reference}:{payment_token}",
+                    idempotency_key=f"{reference}:{payment_token}",
+                    metadata={"payer_email": _client_email(locked.matter)},
                 )
                 # Record + apply (provisional PAID for pending ACH); the
                 # settlement/return webhook later confirms or reverses it.
@@ -242,6 +330,7 @@ def balance_pay_page(request, token):
         config = processor.client_config_for(
             amount_cents=charge_cents,
             reference=f"Trust deposit · Client {client.id}",
+            trust=True,
         )
         page_title, subtitle, amount_label = "Trust Deposit", "Trust deposit", "Deposit"
         matter_number, summary_label, summary_value = "", "Client", client.name
@@ -274,6 +363,7 @@ def balance_pay_page(request, token):
         "is_paid": pay_request.status == "PAID" or charge_cents <= 0,
         "dev_mode": config.processor == "fake",
         "charge_url": request.build_absolute_uri(request.path.rstrip("/") + "/charge/"),
+        **_pay_style(company),
     }
     return render(request, "invoicing/pay/pay.html", context)
 
@@ -321,8 +411,10 @@ def balance_charge(request, token):
                 already_paid = False
                 if req.is_trust:
                     reference = f"Trust deposit · Client {req.client_id}"
+                    payer_email = (getattr(req.client, "email", "") or "").strip()
                 else:
                     reference = f"Account balance · Matter {req.matter_id}"
+                    payer_email = _client_email(req.matter)
                 result = processor.charge(
                     token=payment_token,
                     amount_cents=charge_cents,
@@ -330,6 +422,7 @@ def balance_charge(request, token):
                     idempotency_key=f"request:{req.id}:{payment_token}",
                     method=method,
                     trust=req.is_trust,
+                    metadata={"payer_email": payer_email},
                 )
                 if result.accepted:
                     if req.is_trust:
@@ -367,8 +460,13 @@ def processor_webhook(request, processor):
         return HttpResponse(status=429)
 
     body = request.body.decode("utf-8", "replace")
-    # Stripe signs its webhooks; pass the header through for verification.
-    signature = request.headers.get("Stripe-Signature", "")
+    # Signed-webhook processors pass their signature header through for
+    # verification: Stripe uses `Stripe-Signature`, Confido uses `X-Signature`
+    # (HMAC-SHA512 of the raw body). Only one is set per delivery. LawPay doesn't
+    # sign and re-fetches instead, so an empty signature is fine there.
+    signature = request.headers.get("Stripe-Signature", "") or request.headers.get(
+        "X-Signature", ""
+    )
     try:
         from django_q.tasks import async_task
 

@@ -73,7 +73,9 @@ class FakeProcessor(PaymentProcessor):
             amount_cents=amount_cents, reference=f"Invoice {invoice.id}"
         )
 
-    def client_config_for(self, *, amount_cents, reference) -> ClientConfig:
+    def client_config_for(
+        self, *, amount_cents, reference, trust=False
+    ) -> ClientConfig:
         return ClientConfig(
             processor=self.name,
             public_key="fake_public_key",

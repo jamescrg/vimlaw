@@ -32,4 +32,11 @@ def get_processor(name: str | None = None) -> PaymentProcessor:
 
         return StripeProcessor()
 
+    if name == "confido":
+        # Imported lazily so the package needn't import `requests` unless the
+        # Confido processor is actually selected.
+        from .confido import ConfidoProcessor
+
+        return ConfidoProcessor()
+
     raise ProcessorConfigError(f"Unknown PAYMENT_PROCESSOR: {name!r}")
