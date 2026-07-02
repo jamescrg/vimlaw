@@ -99,6 +99,13 @@ class Invoice(AuditMixin, models.Model):
         return dict(INVOICE_STATUS).get(self.status)
 
     @property
+    def has_pending_payment(self):
+        """True if an applied online payment is still awaiting settlement
+        (eCheck/ACH). While true, a PAID status is provisional — the payment can
+        still be returned, which reverts the invoice to unpaid."""
+        return self.applications.filter(payment__processor_status="pending").exists()
+
+    @property
     def amount_remaining(self):
         """
         Calculate the amount still owed on this invoice after allocations.

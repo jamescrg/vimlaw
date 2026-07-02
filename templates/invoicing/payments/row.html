@@ -38,7 +38,13 @@
     <a href="{% url 'matters:ledger' id=payment.matter.id %}">{{ payment.matter.name }}</a>
   </td>
   <td class="method">{{ payment.method_display }}</td>
-  <td>{{ payment.detail|default:"" }}</td>
+  <td class="detail">
+    {% if payment.processor_status == "pending" %}
+      <span class="app-badge badge-yellow badge-float-right"
+            title="Awaiting bank (eCheck/ACH) settlement — provisional until it clears">Pending</span>
+    {% endif %}
+    {{ payment.detail|default:"" }}
+  </td>
   <td class="amount">${{ payment.amount|floatformat:2|intcomma }}</td>
   <td class="amount">${{ payment.amount_unapplied|floatformat:2|intcomma }}</td>
 </tr>

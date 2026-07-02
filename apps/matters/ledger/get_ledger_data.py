@@ -77,6 +77,8 @@ def get_ledger_data(matter):
                 "description": f"Payment by {payment.payment_method.lower()}",
                 "amount": payment.amount,
                 "affects_balance": True,  # Payments always affect balance
+                # Provisional until an online (ACH) payment settles.
+                "processor_status": payment.processor_status,
             }
             transactions.append(payment_dict)
 
