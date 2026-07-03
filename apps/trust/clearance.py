@@ -1,27 +1,43 @@
-"""Per-client trust clearance for the Account Summary table.
+"""Trust clearance — the single authority for the whole app.
 
-Clearance is the confirmed trust balance that is *free of current obligations*:
+A client's trust is one pooled balance that ALL their matters draw on, so
+clearance is inherently **client-level**:
 
-    clearance(client) = confirmed trust balance
+    clearance(client) = PENDING trust balance
                       − currently owed across the client's non-deferred invoices
-                      − unbilled net fees/expenses on the client's non-deferred-fee matters
+                      − unbilled net fees/expenses on the client's
+                        non-deferred-fee matters
 
-This is the client-level aggregate of the per-matter figure in
-``apps.matters.ledger.get_ledger_data.compute_trust_clearance`` — a client's trust
-is a single pooled balance that all their matters draw on, so it nets against the
-sum of all their obligations. It intentionally differs from the matter ledger
-tab's per-matter clearance (different scope).
+**Pending, not confirmed:** firms customarily work against provisional deposits
+in the expectation they'll clear (the lost opportunity of waiting outweighs the
+small chance of a loss). A **matter's** trust clearance is simply its client's —
+the pool is shared — so per-matter callers use ``client_trust_clearance``.
 
-``attach_client_clearance`` sets ``contact["clearance"]`` (a ``Decimal``) on each
-summary row dict using bulk queries (a handful total, not one per client), so the
-whole summary can be computed and sorted before pagination.
+Entry points:
+- ``client_trust_clearances(ids)`` → ``{client_id: Decimal}`` in a handful of
+  bulk queries (for the Account Summary and the dashboard's matter list);
+- ``client_trust_clearance(id)`` → the single-client figure (matter ledger,
+  matter detail, the time-entry form);
+- ``attach_client_clearance(rows)`` → sets ``row["clearance"]`` on Summary dicts.
 """
 
 from collections import defaultdict
 from decimal import Decimal
 
-from django.db.models import DecimalField, F, OuterRef, Subquery, Sum
+from django.db.models import (
+    Case,
+    DecimalField,
+    F,
+    OuterRef,
+    Subquery,
+    Sum,
+    Value,
+    When,
+)
 from django.db.models.functions import Coalesce
+
+_DEC = DecimalField(max_digits=14, decimal_places=2)
+_ZERO = Decimal("0")
 
 
 def _coalesced_sum(queryset, group_field, expr):
@@ -30,25 +46,46 @@ def _coalesced_sum(queryset, group_field, expr):
     ``queryset`` is already filtered to ``<group_field>=OuterRef("pk")``; grouping
     by that field yields a single row (the sum for the outer object).
     """
-    dec = DecimalField(max_digits=14, decimal_places=2)
     return Coalesce(
         Subquery(
             queryset.values(group_field)
-            .annotate(total=Sum(expr, output_field=dec))
+            .annotate(total=Sum(expr, output_field=_DEC))
             .values("total"),
-            output_field=dec,
+            output_field=_DEC,
         ),
         0,
-        output_field=dec,
+        output_field=_DEC,
     )
 
 
-def attach_client_clearance(contacts):
-    """Set ``contact["clearance"]`` (Decimal) on each Account Summary row dict.
+def _pending_balance_by_client(client_ids):
+    """``{client_id: pending trust balance}`` — deposits minus withdrawals across
+    ALL confirmation states (the bulk form of trust.get_pending_client_balance)."""
+    from apps.trust.models import Transaction
 
-    Each dict already carries ``id`` and ``confirmed_client_balance`` from the
-    trust balance passes. Returns the same list.
-    """
+    rows = (
+        Transaction.objects.filter(contact_id__in=client_ids)
+        .values("contact_id")
+        .annotate(
+            bal=Sum(
+                Case(
+                    When(type="Deposit", then=F("amount")),
+                    When(type="Withdrawal", then=-F("amount")),
+                    default=Value(_ZERO),
+                    output_field=_DEC,
+                ),
+                output_field=_DEC,
+            )
+        )
+    )
+    return {r["contact_id"]: (r["bal"] or _ZERO) for r in rows}
+
+
+def _owed_by_client(client_ids):
+    """``{client_id: currently owed}`` across the client's DISPLAYED, non-deferred
+    invoices. Reproduces Invoice.amount_remaining (which has Python-only branches
+    for VOID/UNCOLLECTIBLE and legacy PAID-without-allocations), so we bulk-
+    annotate the components and finish the arithmetic in Python."""
     from apps.activity.expenses.models import ExpenseEntry
     from apps.activity.flat_fees.models import FlatFeeEntry
     from apps.activity.time.models import TimeEntry
@@ -57,20 +94,8 @@ def attach_client_clearance(contacts):
         PaymentApplication,
     )
     from apps.invoicing.invoices.models import Invoice
-    from apps.matters.models import Matter
-
-    client_ids = [c["id"] for c in contacts]
-    if not client_ids:
-        return contacts
 
     fee = F("hours") * F("rate")  # time-entry fee = hours × rate
-    zero = Decimal("0")
-
-    # --- currently owed per client -----------------------------------------
-    # Reproduce Invoice.amount_remaining over the client's DISPLAYED, non-deferred
-    # invoices (mirrors get_ledger_data's currently_owed). amount_remaining has
-    # Python-only branches (VOID/UNCOLLECTIBLE and legacy PAID-without-allocations
-    # → 0), so we bulk-annotate the components and finish the arithmetic in Python.
     invoices = (
         Invoice.objects.filter(matter__client_id__in=client_ids)
         .exclude(status__in=["DRAFT", "APPROVED"])
@@ -118,23 +143,32 @@ def attach_client_clearance(contacts):
         if status == "DEFERRED":
             continue  # deferred recovery claim, not currently owed
         if status in ("VOID", "UNCOLLECTIBLE"):
-            remaining = zero
+            remaining = _ZERO
         else:
             final_total = (
                 inv["net_fees"]
                 + inv["net_exp"]
                 + inv["net_flat"]
-                - (inv["discount"] or zero)
+                - (inv["discount"] or _ZERO)
             )
             if status == "PAID" and inv["pay"] == 0 and inv["cred"] == 0:
-                remaining = zero  # legacy PAID without allocations
+                remaining = _ZERO  # legacy PAID without allocations
             else:
                 remaining = final_total - inv["pay"] - inv["cred"]
         owed[inv["matter__client_id"]] += remaining
+    return owed
 
-    # --- unbilled net fees/expenses per client -----------------------------
-    # Sum of Matter.value["unbilled"]["net_fees_and_expenses"] over the client's
-    # non-deferred-fee matters (deferred-fee matters accrue but aren't collectible).
+
+def _unbilled_by_client(client_ids):
+    """``{client_id: unbilled net fees/expenses}`` — sum of each non-deferred-fee
+    matter's unbilled net work (deferred-fee matters accrue but aren't
+    collectible, so they must not drag clearance down)."""
+    from apps.activity.expenses.models import ExpenseEntry
+    from apps.activity.flat_fees.models import FlatFeeEntry
+    from apps.activity.time.models import TimeEntry
+    from apps.matters.models import Matter
+
+    fee = F("hours") * F("rate")
     matters = (
         Matter.objects.filter(client_id__in=client_ids, deferred_fees=False)
         .annotate(
@@ -165,10 +199,37 @@ def attach_client_clearance(contacts):
     unbilled = defaultdict(Decimal)
     for m in matters:
         unbilled[m["client_id"]] += m["net_fees"] + m["net_exp"] + m["net_flat"]
+    return unbilled
 
+
+def client_trust_clearances(client_ids):
+    """``{client_id: Decimal}`` trust clearance — see the module docstring. Bulk:
+    a handful of queries total, not one per client."""
+    client_ids = list(client_ids)
+    if not client_ids:
+        return {}
+    balance = _pending_balance_by_client(client_ids)
+    owed = _owed_by_client(client_ids)
+    unbilled = _unbilled_by_client(client_ids)
+    return {
+        cid: balance.get(cid, _ZERO) - owed.get(cid, _ZERO) - unbilled.get(cid, _ZERO)
+        for cid in client_ids
+    }
+
+
+def client_trust_clearance(client_id):
+    """A single client's trust clearance (Decimal). A matter's clearance is its
+    client's — the pooled trust is shared — so per-matter callers pass
+    ``matter.client_id`` here. Returns 0 for a matter with no client."""
+    if client_id is None:
+        return _ZERO
+    return client_trust_clearances([client_id]).get(client_id, _ZERO)
+
+
+def attach_client_clearance(contacts):
+    """Set ``contact["clearance"]`` (Decimal) on each Account Summary row dict,
+    from the one authoritative calculation. Returns the same list."""
+    clearances = client_trust_clearances([c["id"] for c in contacts])
     for c in contacts:
-        confirmed = c.get("confirmed_client_balance") or zero
-        c["clearance"] = (
-            confirmed - owed.get(c["id"], zero) - unbilled.get(c["id"], zero)
-        )
+        c["clearance"] = clearances.get(c["id"], _ZERO)
     return contacts

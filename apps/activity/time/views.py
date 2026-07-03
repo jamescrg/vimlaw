@@ -592,19 +592,12 @@ def set_rate(request, matter_id):
 
 
 def _trust_clearance(matter):
-    """Trust funds remaining for a matter, using the same deferred-aware helper
-    as the matter ledger's "Trust Clearance" figure so the two can't diverge
-    (it skips unbilled fees on deferred-fee matters). Local imports avoid a
-    circular import with the matters app."""
-    from apps.matters.ledger.get_ledger_data import (
-        compute_trust_clearance,
-        get_ledger_data,
-    )
-    from apps.trust.trust import get_confirmed_client_balance
+    """Trust funds free of obligations for a matter — which is simply its client's
+    trust clearance (the pooled trust is shared across the client's matters), from
+    the single authority in the trust app. Local import avoids a circular import."""
+    from apps.trust.clearance import client_trust_clearance
 
-    balance = get_confirmed_client_balance(matter.client.id) if matter.client else 0
-    ledger = get_ledger_data(matter)
-    return compute_trust_clearance(matter, balance, ledger["currently_owed"])
+    return client_trust_clearance(matter.client_id)
 
 
 @login_required

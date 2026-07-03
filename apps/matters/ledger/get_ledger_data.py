@@ -121,18 +121,3 @@ def get_ledger_data(matter):
         "has_deferred": bool(deferred_total),
         "total_credits": total_credits,
     }
-
-
-def compute_trust_clearance(matter, client_trust_balance, currently_owed):
-    """Trust funds free of current obligations: the confirmed client trust
-    balance, less what's currently owed and less unbilled work.
-
-    On a deferred-fee matter the unbilled fees accrue but are not currently
-    collectible (the retainer is waived), so they must not drag clearance down —
-    mirroring how ``currently_owed`` already excludes DEFERRED invoices. Shared
-    by the matter ledger and the time-entry form so the figure can't diverge.
-    """
-    clearance = float(client_trust_balance) - float(currently_owed)
-    if not matter.deferred_fees:
-        clearance -= float(matter.value["unbilled"]["net_fees_and_expenses"])
-    return clearance

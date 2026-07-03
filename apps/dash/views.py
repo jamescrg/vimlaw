@@ -33,7 +33,8 @@ from apps.reports.wip.aggregation import (
     wip_user_breakdown,
     wip_user_matters,
 )
-from apps.trust.trust import get_confirmed_client_balance
+from apps.trust.clearance import client_trust_clearances
+from apps.trust.trust import get_pending_client_balance
 
 
 def dash_events_context(request):
@@ -179,32 +180,34 @@ def dash_collections_context(request):
         .exclude(Q(deferred_fees=True) | Q(has_deferred=True))
     )
 
-    # Convert to list and calculate clearance
+    # Clearance is the client-level, pending-based figure from the trust app (the
+    # single authority) — a matter's clearance is its client's. Bulk-compute once
+    # for all the clients on this list.
     low_clearance_matters = []
-    client_trust_balances = {}
+    client_ids = {m.client_id for m in matters_with_unbilled if m.client_id}
+    clearances = client_trust_clearances(client_ids)
+    trust_balances = {}
 
     for matter in matters_with_unbilled:
-        # Get trust balance for this matter's client (cached by client)
-        if matter.client:
-            if matter.client.id not in client_trust_balances:
-                try:
-                    client_trust_balances[matter.client.id] = (
-                        get_confirmed_client_balance(matter.client.id)
-                    )
-                except Exception:
-                    client_trust_balances[matter.client.id] = 0
+        if not matter.client_id:
+            continue
+        # Only alarm on matters whose client actually HOLDS trust — a low
+        # clearance means the trust is running low, not that the matter is simply
+        # unfunded. (Cached per client.)
+        if matter.client_id not in trust_balances:
+            try:
+                trust_balances[matter.client_id] = get_pending_client_balance(
+                    matter.client_id
+                )
+            except Exception:
+                trust_balances[matter.client_id] = 0
+        if trust_balances[matter.client_id] <= 0:
+            continue
 
-            trust_balance = client_trust_balances[matter.client.id]
-            total_activity = matter.unbilled_fees + matter.unbilled_expenses
-
-            # Calculate clearance (only if there's a trust balance)
-            if trust_balance > 0:
-                clearance = trust_balance - total_activity
-                if clearance < 1000:
-                    matter.clearance = clearance
-                    matter.trust_balance = trust_balance
-                    matter.total_activity = total_activity
-                    low_clearance_matters.append(matter)
+        clearance = clearances.get(matter.client_id, 0)
+        if clearance < 1000:
+            matter.clearance = clearance
+            low_clearance_matters.append(matter)
 
     # Sort by clearance ascending (lowest first)
     low_clearance_matters.sort(key=lambda m: m.clearance)

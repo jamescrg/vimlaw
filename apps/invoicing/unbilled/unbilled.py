@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from django.db.models import DateField, DecimalField, F, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
@@ -10,6 +11,7 @@ from apps.invoicing.invoices.models import Invoice
 from apps.management.pagination import CustomPaginator
 from apps.management.selection import all_visible_selected, get_selected_ids
 from apps.matters.models import Matter
+from apps.trust.clearance import client_trust_clearances
 from apps.trust.trust import get_confirmed_client_balance
 
 
@@ -143,6 +145,12 @@ def get_unbilled_data(request):
             except Exception:
                 client_trust_balances[matter.client.id] = 0
 
+    # Trust clearance is the client-level, pending-based figure from the trust app
+    # (the single authority) — a matter's clearance is its client's. Bulk once.
+    clearances = client_trust_clearances(
+        [m.client_id for m in matters_list if m.client_id]
+    )
+
     # Add calculated fields to each matter
     total_hours = 0
     total_fees = 0
@@ -155,6 +163,11 @@ def get_unbilled_data(request):
         # Get trust balance for this matter's client
         matter.trust_balance = (
             client_trust_balances.get(matter.client.id, 0) if matter.client else 0
+        )
+        matter.clearance = (
+            clearances.get(matter.client_id, Decimal("0"))
+            if matter.client_id
+            else Decimal("0")
         )
 
         # Calculate total activity (fees + flat fees + expenses)
