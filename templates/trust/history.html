@@ -4,15 +4,35 @@
     <div class="toolbar">
       <div class="toolbar-left">
         <div class="filter-tools">
-          <button type="button"
-                  class="btn-icon"
-                  hx-get="{% url 'trust:add' %}"
-                  hx-target="#htmx-modal-container"
-                  hx-trigger="click"
-                  data-bs-toggle="modal"
-                  data-bs-target="#htmx-modal-container">
-            <i class="icon-plus"></i>
-          </button>
+          <div class="dropdown" x-data="dropdown()">
+            <button type="button"
+                    class="btn-icon"
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">
+              <i class="icon-plus"></i>
+            </button>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open">
+              <li>
+                <a class="dropdown-item"
+                   href="#"
+                   hx-get="{% url 'trust:add' %}"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container">Add Transaction</a>
+              </li>
+              <li>
+                <a class="dropdown-item"
+                   href="#"
+                   hx-get="{% url 'invoicing:requests-new-trust' %}?next=requests"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click"
+                   data-bs-toggle="modal"
+                   data-bs-target="#htmx-modal-container">Request Deposit</a>
+              </li>
+            </ul>
+          </div>
           <a class="{% if page == "summary" %}toggle-active{% endif %}"
              href="{% url 'trust:index' %}">Summary</a>
           <a class="{% if page == "history" %}toggle-active{% endif %}"

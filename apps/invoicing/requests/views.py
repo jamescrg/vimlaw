@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
 from apps.contacts.models import Contact
 from apps.invoicing.pay.balance import matter_balance_cents
@@ -220,7 +221,14 @@ def _trust_clients():
 @login_required
 def requests_new_trust(request):
     """Create + send a trust deposit request for a client (firm-set amount,
-    deposited to the trust account)."""
+    deposited to the trust account).
+
+    When opened from the trust tab (``?next=requests``) a successful send
+    redirects the user to the Requests tab, so it's clear they created a *request*
+    (not a posted trust transaction); from the Requests tab it stays put and
+    refreshes the list.
+    """
+    next_tab = request.POST.get("next") or request.GET.get("next") or ""
     if request.method == "POST":
         client_id = request.POST.get("client") or ""
         to = (request.POST.get("to") or "").strip()
@@ -261,6 +269,13 @@ def requests_new_trust(request):
             except PaymentRequestSendError as exc:
                 error = str(exc)
             else:
+                # From the trust tab: send the user to the Requests tab (the new
+                # request lands there). From the Requests tab: stay + refresh.
+                if next_tab == "requests":
+                    return HttpResponse(
+                        status=204,
+                        headers={"HX-Redirect": reverse("invoicing:requests-index")},
+                    )
                 response = HttpResponse(
                     status=204, headers={"HX-Trigger": "requestsChanged"}
                 )
@@ -275,6 +290,7 @@ def requests_new_trust(request):
             "message": message,
             "amount": amount_raw,
             "error": error,
+            "next": next_tab,
         }
         return render(request, "invoicing/requests/trust_form.html", context)
 
@@ -286,6 +302,7 @@ def requests_new_trust(request):
         "message": "",
         "amount": "",
         "error": "",
+        "next": next_tab,
     }
     return render(request, "invoicing/requests/trust_form.html", context)
 

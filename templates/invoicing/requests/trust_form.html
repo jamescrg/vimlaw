@@ -18,6 +18,7 @@
             hx-disinherit="hx-indicator hx-disabled-elt"
             class="form-compact">
         {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         <div class="form-group">
           <label for="trust-client">Client</label>
           <select id="trust-client"
