@@ -34,6 +34,7 @@
           <th class="date">Date</th>
           <th class="client">Client</th>
           <th class="note">Description</th>
+          <th class="method">Method</th>
           <th class="amount">Withdrawal</th>
           <th class="amount">Deposit</th>
           <th class="check">C</th>
@@ -52,6 +53,7 @@
                  data-bs-toggle="modal"
                  data-bs-target="#htmx-modal-container">{{ transaction.description }}</a>
             </td>
+            <td class="method">{{ transaction.get_method_display }}</td>
             <td class="amount urgent">
               {% if transaction.type == 'Withdrawal' %}
                 $
@@ -76,7 +78,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="7" class="empty-message">No trust transactions found.</td>
+            <td colspan="8" class="empty-message">No trust transactions found.</td>
           </tr>
         {% endfor %}
       </table>

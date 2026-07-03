@@ -23,6 +23,12 @@
         {% csrf_token %}
         {{ form }}
       </form>
+      {% if transaction.processor %}
+        <div class="txn-meta">
+          <span class="txn-meta-label">Transaction ID</span>
+          <code class="txn-meta-id">{{ transaction.processor_txn_id|default:"—" }}</code>
+        </div>
+      {% endif %}
     </div>
     <div class="modal-footer">
       {% if edit %}

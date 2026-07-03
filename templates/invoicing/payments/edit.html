@@ -18,9 +18,9 @@
         {{ form }}
       </form>
       {% if payment.processor %}
-        <div class="payment-txn-meta">
-          <span class="payment-txn-label">Transaction ID</span>
-          <code class="payment-txn-id">{{ payment.processor_txn_id|default:"—" }}</code>
+        <div class="txn-meta">
+          <span class="txn-meta-label">Transaction ID</span>
+          <code class="txn-meta-id">{{ payment.processor_txn_id|default:"—" }}</code>
         </div>
       {% endif %}
     </div>

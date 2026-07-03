@@ -538,20 +538,22 @@ Credits
   text-align: right;
 }
 
-/* Read-only processor reference (txn id) below the payment edit form. */
-.payment-txn-meta {
+/* Read-only processor reference (txn id) shown below an edit form — reused by
+   the payment edit modal and the trust-transaction edit form. Globally loaded
+   (base.html), so it works outside the invoicing pages too. */
+.txn-meta {
   border-top: 1px solid var(--border-medium);
   margin-top: 1rem;
   padding-top: 0.75rem;
 }
 
-.payment-txn-label {
+.txn-meta-label {
   color: var(--text-muted);
   display: block;
   margin-bottom: 0.25rem;
 }
 
-.payment-txn-id {
+.txn-meta-id {
   display: block;
   overflow-wrap: anywhere;
   /* One click selects the whole id for easy copy into Confido. */

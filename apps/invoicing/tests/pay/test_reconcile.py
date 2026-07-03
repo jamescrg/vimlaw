@@ -263,3 +263,20 @@ class TestTrustReconciliation:
         reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
         assert Transaction.objects.filter(pk=deposit.pk).exists()
         assert len(mailoutbox) == 0
+
+
+class TestTrustDepositRecording:
+    def test_records_card_method(self, contact):
+        dep, _ = _charge_and_record_trust(contact, token="fake-ok", method=CARD)
+        assert dep.method == "Card"
+
+    def test_records_ach_method(self, contact):
+        dep, _ = _charge_and_record_trust(contact, token="fake-ok", method=BANK)
+        assert dep.method == "ACH"
+
+    def test_description_omits_txn_id(self, contact):
+        """The txn id lives on the record (surfaced on the edit form), not baked
+        into the ledger description."""
+        dep, result = _charge_and_record_trust(contact, token="fake-ok", method=CARD)
+        assert result.transaction_id not in dep.description
+        assert dep.processor_txn_id == result.transaction_id

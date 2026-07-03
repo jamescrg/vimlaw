@@ -83,7 +83,7 @@ Summary and History
   border-collapse: separate;
   border-radius: var(--radius-md);
   border-spacing: 0;
-  min-width: 79rem;
+  min-width: 86rem;
   width: 100%;
 }
 
@@ -136,6 +136,10 @@ Summary and History
 .trust-transactions .description,
 .trust-transactions .note {
   min-width: 18rem;
+}
+
+.trust-transactions .method {
+  width: 7rem;
 }
 
 .trust-transactions .amount {

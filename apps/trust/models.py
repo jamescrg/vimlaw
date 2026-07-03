@@ -6,9 +6,23 @@ from utils.models import AuditMixin
 
 
 class Transaction(AuditMixin, models.Model):
+    METHOD_CHOICES = [
+        ("ACH", "ACH"),
+        ("Card", "Card"),
+        ("Wire", "Wire"),
+        ("Transfer", "Transfer"),
+        ("Check", "Check"),
+    ]
+
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE, null=True)
     date = models.DateField(null=True)
     type = models.CharField(max_length=10, null=True)
+    # How the funds moved. Online deposits set this automatically (card/ACH);
+    # manual entries — checks, wires — pick it on the form. Blank on historical
+    # rows created before the field existed.
+    method = models.CharField(
+        max_length=10, choices=METHOD_CHOICES, blank=True, default=""
+    )
     description = models.CharField(max_length=255, null=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2, null=True)
     entered = models.BooleanField(default=False)
