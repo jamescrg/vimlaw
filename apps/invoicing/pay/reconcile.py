@@ -66,7 +66,7 @@ def _apply_event(event):
         processor=event.processor, processor_txn_id=event.transaction_id
     ).first()
     if deposit is not None:
-        _settle_or_reverse(deposit, event, _reverse_deposit)
+        _apply_to_deposit(deposit, event)
 
 
 def _settle_or_reverse(row, event, reverse):
@@ -79,6 +79,26 @@ def _settle_or_reverse(row, event, reverse):
     else:
         row.processor_status = event.status
         row.save(update_fields=["processor_status"])
+
+
+def _apply_to_deposit(deposit, event):
+    """A trust deposit's settlement/return. Like the payment path, but also flips
+    `confirmed` once the funds have actually deposited into the trust bank account
+    (`event.settled`) — so the confirmed balance tracks the bank. For a card that's
+    its later deposit, not the capture; the confirm can therefore land while the
+    normalized status is unchanged (still 'succeeded')."""
+    if event.status in REVERSED_STATUSES:
+        _reverse_deposit(deposit, event)
+        return
+    changed = []
+    if deposit.processor_status != event.status:
+        deposit.processor_status = event.status
+        changed.append("processor_status")
+    if event.settled and not deposit.confirmed:
+        deposit.confirmed = True
+        changed.append("confirmed")
+    if changed:
+        deposit.save(update_fields=changed)
 
 
 def _reverse_payment(payment, event):

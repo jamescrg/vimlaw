@@ -55,8 +55,13 @@ def _charge_and_record_trust(contact, *, token, method):
     return deposit, result
 
 
-def _webhook_body(txn_id, status):
-    return json.dumps({"transaction_id": txn_id, "status": status})
+def _webhook_body(txn_id, status=None, settled=False):
+    body = {"transaction_id": txn_id}
+    if status is not None:
+        body["status"] = status
+    if settled:
+        body["settled"] = True
+    return json.dumps(body)
 
 
 # ---------------------------------------------------------------------------
@@ -202,20 +207,47 @@ class TestNonReversingAndIdempotent:
 # reconcile_webhook — trust deposits (a trust.Transaction, not a Payment)
 # ---------------------------------------------------------------------------
 class TestTrustReconciliation:
-    def test_settle_updates_status_without_removing(self, contact, mailoutbox):
+    def test_ach_settlement_confirms_deposit(self, contact, mailoutbox):
         deposit, result = _charge_and_record_trust(
             contact, token="fake-ok", method=BANK
         )
         assert deposit.processor_status == "pending"
+        assert deposit.confirmed is False
 
-        reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
+        # ACH settles = deposited into the bank (status succeeded + settled).
+        reconcile_webhook(
+            "fake", _webhook_body(result.transaction_id, "succeeded", settled=True)
+        )
 
         deposit.refresh_from_db()
         assert deposit.processor_status == "succeeded"
-        # Still present and still UNCONFIRMED — the firm confirms manually; no email.
-        assert deposit.confirmed is False
+        assert deposit.confirmed is True  # tracks the bank
         assert Transaction.objects.filter(pk=deposit.pk).exists()
         assert len(mailoutbox) == 0
+
+    def test_card_deposit_confirms_even_though_status_unchanged(self, contact):
+        """A card records already 'succeeded' (captured) but unconfirmed; its later
+        bank deposit confirms it even though the normalized status doesn't move."""
+        deposit, result = _charge_and_record_trust(
+            contact, token="fake-ok", method=CARD
+        )
+        assert deposit.processor_status == "succeeded"
+        assert deposit.confirmed is False
+
+        reconcile_webhook("fake", _webhook_body(result.transaction_id, settled=True))
+
+        deposit.refresh_from_db()
+        assert deposit.confirmed is True
+
+    def test_status_change_without_deposit_does_not_confirm(self, contact):
+        deposit, result = _charge_and_record_trust(
+            contact, token="fake-ok", method=BANK
+        )
+        # A status advance that isn't a bank deposit (no `settled`) must not confirm.
+        reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
+        deposit.refresh_from_db()
+        assert deposit.processor_status == "succeeded"
+        assert deposit.confirmed is False
 
     def test_returned_unconfirmed_deposit_is_dropped_and_emails(
         self, contact, settings, mailoutbox
@@ -258,9 +290,11 @@ class TestTrustReconciliation:
         deposit, result = _charge_and_record_trust(
             contact, token="fake-ok", method=BANK
         )
-        reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
-        # Same status re-delivered — nothing changes, no email.
-        reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
+        body = _webhook_body(result.transaction_id, "succeeded", settled=True)
+        reconcile_webhook("fake", body)
+        reconcile_webhook("fake", body)  # re-delivered — nothing changes, no email
+        deposit.refresh_from_db()
+        assert deposit.confirmed is True
         assert Transaction.objects.filter(pk=deposit.pk).exists()
         assert len(mailoutbox) == 0
 

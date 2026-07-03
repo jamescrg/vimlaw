@@ -61,6 +61,11 @@ class ChargeResult:
     amount_cents: int
     method: str  # CARD or BANK
     raw: dict = field(default_factory=dict)
+    # True once the funds have deposited into the merchant bank account (the
+    # processor's terminal "in the bank" state — Confido DEPOSITED). Distinct from
+    # status == SUCCEEDED, which for a card only means captured/secured. Drives the
+    # trust "confirmed" flag so the confirmed balance tracks the actual bank.
+    settled: bool = False
 
     @property
     def accepted(self) -> bool:
@@ -85,6 +90,8 @@ class WebhookEvent:
     status: str  # one of the normalized statuses above
     amount_cents: int | None = None
     raw: dict = field(default_factory=dict)
+    # True once the funds have deposited into the bank (see ChargeResult.settled).
+    settled: bool = False
 
 
 # --- Exceptions ----------------------------------------------------------

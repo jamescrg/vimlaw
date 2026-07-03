@@ -130,6 +130,9 @@ class FakeProcessor(PaymentProcessor):
             "reference": reference,
             "idempotency_key": idempotency_key,
             "metadata": metadata or {},
+            # Deposited into the bank yet? Advanced by a webhook body `settled:true`
+            # (or simulate_deposit) — mirrors the processor's DEPOSITED state.
+            "settled": False,
         }
         return self._result(txn_id)
 
@@ -163,6 +166,8 @@ class FakeProcessor(PaymentProcessor):
         requested = payload.get("status")
         if requested:
             _TRANSACTIONS[txn_id]["status"] = requested
+        if payload.get("settled"):
+            _TRANSACTIONS[txn_id]["settled"] = True
 
         return self._event(txn_id)
 
@@ -208,6 +213,7 @@ class FakeProcessor(PaymentProcessor):
             amount_cents=txn["amount_cents"],
             method=txn["method"],
             raw=dict(txn),
+            settled=txn.get("settled", False),
         )
 
     def _event(self, transaction_id) -> WebhookEvent:
@@ -219,4 +225,5 @@ class FakeProcessor(PaymentProcessor):
             status=txn["status"],
             amount_cents=txn["amount_cents"],
             raw=dict(txn),
+            settled=txn.get("settled", False),
         )

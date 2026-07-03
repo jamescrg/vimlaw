@@ -51,8 +51,10 @@ def request_charge_cents(payment_request) -> int:
 
 def record_trust_deposit(client, result):
     """Record an accepted charge as a trust-ledger Deposit for the client.
-    Idempotent on the processor transaction id. Created UNCONFIRMED — the firm
-    confirms it in the trust workflow once it clears the trust account."""
+    Idempotent on the processor transaction id. `confirmed` tracks the bank: set
+    only once the charge has actually deposited (``result.settled``) — normally
+    False at charge time (a card is merely captured, an ACH still in flight), then
+    flipped True by the settlement webhook (see ``reconcile``)."""
     existing = Transaction.objects.filter(
         processor=result.processor, processor_txn_id=result.transaction_id
     ).first()
@@ -66,7 +68,7 @@ def record_trust_deposit(client, result):
         method="Card" if result.method == CARD else "ACH",
         description=f"Online trust deposit · {result.processor}",
         amount=amount,
-        confirmed=False,
+        confirmed=result.settled,
         entered=False,
         processor=result.processor,
         processor_txn_id=result.transaction_id,

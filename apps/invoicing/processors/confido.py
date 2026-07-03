@@ -317,6 +317,7 @@ class ConfidoProcessor(PaymentProcessor):
             status=confirmed.status,
             amount_cents=confirmed.amount_cents,
             raw=event,
+            settled=confirmed.settled,
         )
 
     def refund(
@@ -537,6 +538,9 @@ class ConfidoProcessor(PaymentProcessor):
             amount_cents=int(txn.get("amountProcessed") or 0),
             method=method,
             raw=txn,
+            # DEPOSITED is Confido's "in the bank" terminal state (for a card this
+            # is its later payout, not the capture the status already reflects).
+            settled=(txn.get("status_v2") or "").upper() == "DEPOSITED",
         )
 
     @staticmethod
