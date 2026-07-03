@@ -272,6 +272,13 @@ def requests_new_trust(request):
                 # From the trust tab: send the user to the Requests tab (the new
                 # request lands there). From the Requests tab: stay + refresh.
                 if next_tab == "requests":
+                    # Force the Sent filter first — a new request is SENT, and the
+                    # user's filter may have been on Paid/Canceled where it
+                    # wouldn't show. Preserve any other filter keys.
+                    filter_data = dict(request.session.get("requests_filter", {}))
+                    filter_data["status"] = "SENT"
+                    request.session["requests_filter"] = filter_data
+                    request.session.modified = True
                     return HttpResponse(
                         status=204,
                         headers={"HX-Redirect": reverse("invoicing:requests-index")},
