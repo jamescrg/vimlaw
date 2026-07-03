@@ -2,7 +2,6 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from apps.settings.company.forms import (
-    CompanyBillingForm,
     CompanyForm,
     CompanyResearchForm,
 )
@@ -12,10 +11,10 @@ from utils.toasts import toast_success
 
 @login_required
 def company_index(request):
-    """Company settings page: Company Info + Billing + Research subsections.
+    """Company settings page: Company Info + Research subsections.
 
-    The Company Info form posts here; Billing and Research post to their own
-    endpoints. Each subsection re-renders on save and fires a success toast.
+    The Company Info form posts here; Research posts to its own endpoint. Each
+    subsection re-renders on save and fires a success toast.
     """
     company = Company.objects.first()
 
@@ -40,29 +39,10 @@ def company_index(request):
         {
             "subapp": "company",
             "form": CompanyForm(instance=company),
-            "billing_form": CompanyBillingForm(instance=company),
             "research_form": CompanyResearchForm(instance=company),
             "company": company,
         },
     )
-
-
-@login_required
-def company_billing(request):
-    company = Company.objects.first()
-    form = CompanyBillingForm(request.POST or None, instance=company)
-    saved = request.method == "POST" and form.is_valid()
-    if saved:
-        company = form.save()
-        form = CompanyBillingForm(instance=company)
-    response = render(
-        request,
-        "settings/company/billing.html",
-        {"billing_form": form, "company": company},
-    )
-    if saved:
-        toast_success(response, "Payment appearance updated")
-    return response
 
 
 @login_required

@@ -27,43 +27,6 @@ def firm_from_email(company):
     return formataddr((name, address)) if name and address else None
 
 
-def payment_email_style(company):
-    """Font + background for the payment emails, from the firm's Company settings
-    (Settings → Payments). Mirrors the pay page but with the emails' lighter
-    gradient and no dark variant (mail clients are unreliable there). Merge the
-    returned dict into the email template context.
-    """
-    font = getattr(company, "payment_font", "serif") or "serif"
-    background = getattr(company, "payment_background", "gray") or "gray"
-    sans = font == "sans"
-    family = "Noto Sans" if sans else "Noto Serif"
-    fallback = (
-        "Arial, 'Helvetica Neue', sans-serif"
-        if sans
-        else "Georgia, 'Times New Roman', serif"
-    )
-    gradients = {
-        "gray": (
-            "#e5e5e5",
-            "linear-gradient(180deg, #e5e5e5 0%, #f5f5f5 70%, #f5f5f5 100%)",
-        ),
-        "blue": (  # slate (the firm's original look)
-            "#e2e8f0",
-            "linear-gradient(180deg, #e2e8f0 0%, #f1f5f9 70%, #f1f5f9 100%)",
-        ),
-    }
-    solid, gradient = gradients.get(background, gradients["gray"])
-    return {
-        "email_font_family": f'"{family}", {fallback}',
-        "email_font_link": (
-            f"https://fonts.googleapis.com/css2?family={family.replace(' ', '+')}"
-            ":ital,wght@0,100..900;1,100..900&display=swap"
-        ),
-        "email_bg_solid": solid,
-        "email_bg_gradient": gradient,
-    }
-
-
 def render_inlined(template_name, context):
     """Render an HTML email template and inline its ``<style>`` CSS onto the
     elements (premailer). Mail clients strip external stylesheets and only

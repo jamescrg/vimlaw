@@ -44,76 +44,6 @@ def _to_cents(amount):
     return int((Decimal(str(amount)) * 100).to_integral_value())
 
 
-# Firm-configurable payment-page look (Settings → Payments, on Company). Kept in
-# data, not hardcoded, so each firm running this open-source app picks its own.
-# Full per-theme palette (page gradient + card/border/button), light + dark. The
-# "blue" theme is the firm's original slate look (they refer to slate as "blue");
-# "gray" is a neutral gray. The whole card — not just the background — swaps, so
-# each theme reads as one coherent palette.
-_PAY_PALETTES = {
-    "blue": {  # slate
-        "gradient": "#f1f5f9 linear-gradient(180deg, #cbd5e1 0%, #f1f5f9 70%, #f1f5f9 100%) fixed",
-        "gradient_dark": "#0f172a linear-gradient(180deg, #1e293b 0%, #0f172a 70%, #0f172a 100%) fixed",
-        "card": "#f8fafc",
-        "card_dark": "#1e293b",
-        "border": "#cbd5e1",
-        "border_dark": "#334155",
-        "btn": "#cbd5e1",
-        "btn_dark": "#475569",
-    },
-    "gray": {  # neutral
-        "gradient": "#f5f5f5 linear-gradient(180deg, #d4d4d4 0%, #f5f5f5 70%, #f5f5f5 100%) fixed",
-        "gradient_dark": "#0a0a0a linear-gradient(180deg, #262626 0%, #0a0a0a 70%, #0a0a0a 100%) fixed",
-        "card": "#fafafa",
-        "card_dark": "#171717",
-        "border": "#e5e5e5",
-        "border_dark": "#262626",
-        "btn": "#e5e5e5",
-        "btn_dark": "#404040",
-    },
-}
-
-
-def _pay_style(company):
-    """Resolve the payment-page style strings from the firm's Company settings."""
-    font = getattr(company, "payment_font", "serif") or "serif"
-    background = getattr(company, "payment_background", "gray") or "gray"
-    sans = font == "sans"
-    palette = _PAY_PALETTES.get(background, _PAY_PALETTES["gray"])
-    family = "Noto Sans" if sans else "Noto Serif"
-    generic = "sans-serif" if sans else "serif"
-    return {
-        "pay_font": font,
-        "pay_background": background,
-        # CSS font-family value for the page (var --pay-font).
-        "pay_font_family": f'"{family}", {generic}',
-        # Google Fonts stylesheet for the page + Stripe Element iframe.
-        "pay_font_link": (
-            f"https://fonts.googleapis.com/css2?family={family.replace(' ', '+')}"
-            ":ital,wght@0,100..900;1,100..900&display=swap"
-        ),
-        "pay_stripe_font_url": (
-            f"https://fonts.googleapis.com/css2?family={family.replace(' ', '+')}"
-            ":wght@400;500&display=swap"
-        ),
-        # Web-safe fallback for cross-origin hosted-field iframes (they can't load
-        # the page webfont).
-        "pay_iframe_font": (
-            "Arial, 'Helvetica Neue', sans-serif"
-            if sans
-            else "Georgia, 'Times New Roman', serif"
-        ),
-        "pay_gradient": palette["gradient"],
-        "pay_gradient_dark": palette["gradient_dark"],
-        "pay_card": palette["card"],
-        "pay_card_dark": palette["card_dark"],
-        "pay_border": palette["border"],
-        "pay_border_dark": palette["border_dark"],
-        "pay_btn": palette["btn"],
-        "pay_btn_dark": palette["btn_dark"],
-    }
-
-
 def _client_email(matter):
     """Best-effort payer email for a matter's client (for processor receipts)."""
     client = getattr(matter, "client", None)
@@ -212,7 +142,6 @@ def pay_page(request, token):
         # real hosted-fields SDK so the whole flow is testable without LawPay.
         "dev_mode": config.processor == "fake",
         "charge_url": request.build_absolute_uri(request.path.rstrip("/") + "/charge/"),
-        **_pay_style(company),
     }
     return render(request, "invoicing/pay/pay.html", context)
 
@@ -389,7 +318,6 @@ def balance_pay_page(request, token):
         "is_paid": pay_request.status == "PAID" or charge_cents <= 0,
         "dev_mode": config.processor == "fake",
         "charge_url": request.build_absolute_uri(request.path.rstrip("/") + "/charge/"),
-        **_pay_style(company),
     }
     return render(request, "invoicing/pay/pay.html", context)
 

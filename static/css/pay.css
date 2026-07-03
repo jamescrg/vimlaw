@@ -1,28 +1,50 @@
-/* Public invoice pay page. The font + background gradient are firm-configurable
-   (Settings → Payments; stored on Company) and injected as CSS variables by
-   templates/invoicing/pay/pay.html. The values below are the defaults (serif +
-   gray) so this stylesheet also renders correctly on its own. Has a
-   prefers-color-scheme dark variant. */
+/* Public invoice pay page. One fixed look — gray background, white card, Noto
+   Sans — expressed entirely through tokens so the generic dark variant (for
+   clients whose OS is in dark mode) is just a token swap in the
+   prefers-color-scheme block below. The input fields stay white with dark text
+   in both modes: the hosted-field SDKs render cross-origin <iframe>s that can't
+   see these rules, so their in-iframe text colour is fixed in JS to suit a
+   white field. */
 
 :root {
-  --pay-font: 'Noto Serif', serif;
-  --pay-gradient: #f5f5f5 linear-gradient(180deg, #d4d4d4 0%, #f5f5f5 70%, #f5f5f5 100%) fixed;
-  --pay-gradient-dark: #0a0a0a linear-gradient(180deg, #262626 0%, #0a0a0a 70%, #0a0a0a 100%) fixed;
-  --pay-card: #fafafa;
-  --pay-card-dark: #171717;
-  --pay-border: #e5e5e5;
-  --pay-border-dark: #262626;
-  --pay-btn: #e5e5e5;
-  --pay-btn-dark: #404040;
+  --pay-font: 'Noto Sans', sans-serif;
+  --pay-bg: #f3f4f6 linear-gradient(180deg, #e5e7eb 0%, #f3f4f6 70%, #f3f4f6 100%) fixed;
+  --pay-card: #ffffff;
+  --pay-border: #e5e7eb;
+  --pay-text: #374151;
+  --pay-heading: #111827;
+  --pay-muted: #6b7280;
+  --pay-btn: #e5e7eb;
+  --pay-btn-text: #374151;
+  --pay-panel: #ffffff;
+  /* Fields: white with dark text in both light and dark mode (see file note). */
+  --pay-field-bg: #ffffff;
+  --pay-field-border: #d1d5db;
+  --pay-field-text: #374151;
+}
+
+/* Generic dark theme — a token swap, no structural rules. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pay-bg: #0a0a0a linear-gradient(180deg, #171717 0%, #0a0a0a 70%, #0a0a0a 100%) fixed;
+    --pay-card: #171717;
+    --pay-border: #262626;
+    --pay-text: #d4d4d4;
+    --pay-heading: #f5f5f5;
+    --pay-muted: #a3a3a3;
+    --pay-btn: #404040;
+    --pay-btn-text: #f5f5f5;
+    --pay-panel: #0a0a0a;
+  }
 }
 
 /* Scoped to .minimal-layout (the public shell's body class) so the pay page's
    background + font win over the app theme loaded by base-minimal.html. */
 body.minimal-layout {
-  background: var(--pay-gradient);
+  background: var(--pay-bg);
   min-height: 100vh;
   font-family: var(--pay-font);
-  color: #57534e;
+  color: var(--pay-text);
 }
 
 .pay-wrap {
@@ -33,7 +55,7 @@ body.minimal-layout {
   padding: 3rem 1rem;
 }
 
-/* Card sitting on the gradient; palette per theme (var --pay-card/--pay-border). */
+/* White card sitting on the gray background. */
 .pay-card {
   background: var(--pay-card);
   border: 1px solid var(--pay-border);
@@ -50,7 +72,7 @@ body.minimal-layout {
   margin: 0;
   font-size: 1.7rem;
   font-weight: normal;
-  color: #292524;
+  color: var(--pay-heading);
 }
 
 .pay-head h1 .firm-suffix {
@@ -60,7 +82,7 @@ body.minimal-layout {
 .pay-head p {
   margin: 0.5rem 0 0;
   font-size: 1rem;
-  color: #78716c;
+  color: var(--pay-muted);
 }
 
 .pay-body {
@@ -90,12 +112,12 @@ body.minimal-layout {
 }
 
 .pay-summary .label {
-  color: #78716c;
+  color: var(--pay-muted);
 }
 
 .pay-summary .value {
   text-align: right;
-  color: #292524;
+  color: var(--pay-heading);
 }
 
 .pay-methods {
@@ -107,29 +129,30 @@ body.minimal-layout {
 .pay-method {
   flex: 1;
   padding: 0.75rem;
-  border: 1px solid #d6d3d1;
+  border: 1px solid var(--pay-field-border);
   border-radius: 3px;
-  background: #ffffff;
+  background: var(--pay-field-bg);
   cursor: pointer;
   text-align: left;
   font: inherit;
+  color: var(--pay-field-text);
 }
 
 .pay-method[aria-pressed="true"] {
-  border-color: #64748b;
-  box-shadow: inset 0 0 0 1px #64748b;
+  border-color: var(--pay-muted);
+  box-shadow: inset 0 0 0 1px var(--pay-muted);
 }
 
 .pay-method .pm-title {
   display: block;
   font-weight: 600;
-  color: #292524;
+  color: #111827;
 }
 
 .pay-method .pm-note {
   display: block;
   font-size: 1rem;
-  color: #78716c;
+  color: #6b7280;
   margin-top: 0.25rem;
 }
 
@@ -149,20 +172,21 @@ body.minimal-layout {
 .pay-field label {
   display: block;
   font-size: 1rem;
-  color: #57534e;
+  color: var(--pay-text);
   margin-bottom: 0.5rem;
 }
 
-/* Inputs match the website's forms.css. */
+/* Inputs match the website's forms.css. Always white with dark text so the
+   plain inputs line up with the (necessarily white) hosted-field iframes. */
 .pay-field input,
 .pay-field select {
   width: 100%;
   padding: 0.6rem;
   font-family: var(--pay-font);
   font-size: 1rem;
-  color: #57534e;
-  background: #ffffff;
-  border: 1px solid #d6d3d1;
+  color: var(--pay-field-text);
+  background: var(--pay-field-bg);
+  border: 1px solid var(--pay-field-border);
   border-radius: 3px;
   outline: none;
   box-sizing: border-box;
@@ -172,8 +196,8 @@ body.minimal-layout {
    font are set in JS (init). */
 #stripe-card {
   padding: 0.7rem;
-  background: #ffffff;
-  border: 1px solid #d6d3d1;
+  background: var(--pay-field-bg);
+  border: 1px solid var(--pay-field-border);
   border-radius: 3px;
 }
 
@@ -192,8 +216,8 @@ body.minimal-layout {
 #account-number,
 #account-holder-name {
   padding: 0.55rem 0.6rem;
-  background: #ffffff;
-  border: 1px solid #d6d3d1;
+  background: var(--pay-field-bg);
+  border: 1px solid var(--pay-field-border);
   border-radius: 3px;
   box-sizing: border-box;
 }
@@ -215,13 +239,13 @@ body.minimal-layout {
   border: 0;
 }
 
-/* Slate button, matching the website's .btn-primary. */
+/* Button, matching the website's .btn-primary. */
 .pay-btn {
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.6rem 1.3rem;
   background: var(--pay-btn);
-  color: #57534e;
+  color: var(--pay-btn-text);
   border: 1px solid var(--pay-btn);
   border-radius: 0.5rem;
   font-family: var(--pay-font);
@@ -235,15 +259,15 @@ body.minimal-layout {
   cursor: default;
 }
 
-/* Typed messages: a white panel with a coloured left accent rail. */
+/* Typed messages: a panel with a coloured left accent rail. */
 .pay-alert {
   padding: 0.75rem 1rem;
   border-radius: 3px;
   font-size: 1rem;
   margin-bottom: 1rem;
-  color: #57534e;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  color: var(--pay-text);
+  background: var(--pay-panel);
+  border: 1px solid var(--pay-border);
   border-left: 4px solid #94a3b8;
 }
 
@@ -256,7 +280,7 @@ body.minimal-layout {
 }
 
 .pay-alert.info {
-  border-left-color: #64748b;
+  border-left-color: #6b7280;
 }
 
 .pay-dev {
@@ -266,95 +290,4 @@ body.minimal-layout {
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
   color: #57534e;
-}
-
-/* Dark mode: the same slate/stone theme inverted, for clients whose OS is in
-   dark mode. The Stripe Element's in-iframe text colour is flipped in JS
-   (init), since the iframe can't see these rules. */
-@media (prefers-color-scheme: dark) {
-  body.minimal-layout {
-    background: var(--pay-gradient-dark);
-    color: #d4d4d4;
-  }
-
-  .pay-card {
-    background: var(--pay-card-dark);
-    border-color: var(--pay-border-dark);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  }
-
-  .pay-head h1 {
-    color: #f1f5f9;
-  }
-
-  .pay-head p {
-    color: #94a3b8;
-  }
-
-  .pay-summary {
-    border-color: var(--pay-border-dark);
-  }
-
-  .pay-summary tr+tr td {
-    border-top-color: var(--pay-border-dark);
-  }
-
-  .pay-summary .label {
-    color: #94a3b8;
-  }
-
-  .pay-summary .value {
-    color: #f1f5f9;
-  }
-
-  .pay-method {
-    background: #0f172a;
-    border-color: #475569;
-  }
-
-  .pay-method[aria-pressed="true"] {
-    border-color: #94a3b8;
-    box-shadow: inset 0 0 0 1px #94a3b8;
-  }
-
-  .pay-method .pm-title {
-    color: #f1f5f9;
-  }
-
-  .pay-method .pm-note {
-    color: #94a3b8;
-  }
-
-  .pay-field label {
-    color: #cbd5e1;
-  }
-
-  .pay-field input,
-  .pay-field select {
-    color: #f1f5f9;
-    background: #0f172a;
-    border-color: #475569;
-  }
-
-  #stripe-card {
-    background: #0f172a;
-    border-color: #475569;
-  }
-
-  .pay-btn {
-    background: var(--pay-btn-dark);
-    color: #f1f5f9;
-    border-color: var(--pay-btn-dark);
-  }
-
-  .pay-alert {
-    color: #cbd5e1;
-    background: #0f172a;
-    border-color: #334155;
-  }
-
-  .pay-dev {
-    background: #1e293b;
-    color: #cbd5e1;
-  }
 }

@@ -10,26 +10,9 @@
 {% block content %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="{{ pay_font_link }}" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet" />
   <link rel="stylesheet" href="{% static_v 'css/pay.css' %}" />
-  {# djlint:off #}
-  <style>
-    /* Firm-configurable font + background (Settings -> Company -> Billing).
-       Values are server-controlled style strings, so |safe is correct here.
-       Wrapped in djlint:off so its formatter leaves the template tags alone. */
-    :root {
-      --pay-font: {{ pay_font_family|safe }};
-      --pay-gradient: {{ pay_gradient|safe }};
-      --pay-gradient-dark: {{ pay_gradient_dark|safe }};
-      --pay-card: {{ pay_card }};
-      --pay-card-dark: {{ pay_card_dark }};
-      --pay-border: {{ pay_border }};
-      --pay-border-dark: {{ pay_border_dark }};
-      --pay-btn: {{ pay_btn }};
-      --pay-btn-dark: {{ pay_btn_dark }};
-    }
-</style>
-  {# djlint:on #}
   <div class="pay-wrap">
     <div class="pay-card">
       <div class="pay-head">
@@ -81,7 +64,7 @@
             Thank you.
           </div>
         {% else %}
-          <div x-data='payForm({ chargeUrl: "{{ charge_url|escapejs }}", dev: {{ dev_mode|yesno:"true,false" }}, publicKey: "{{ config.public_key|escapejs }}", processor: "{{ config.processor|escapejs }}", echeck: {{ config.echeck|yesno:"true,false" }}, iframeFont: "{{ pay_iframe_font|escapejs }}", stripeFont: "{{ pay_font_family|escapejs }}", stripeFontUrl: "{{ pay_stripe_font_url|escapejs }}" })'>
+          <div x-data='payForm({ chargeUrl: "{{ charge_url|escapejs }}", dev: {{ dev_mode|yesno:"true,false" }}, publicKey: "{{ config.public_key|escapejs }}", processor: "{{ config.processor|escapejs }}", echeck: {{ config.echeck|yesno:"true,false" }}, iframeFont: "Arial, &#39;Helvetica Neue&#39;, sans-serif", stripeFont: "&#39;Noto Sans&#39;, sans-serif", stripeFontUrl: "https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500&display=swap" })'>
             <!-- Result states -->
             <template x-if="done && !pending">
               <div class="pay-alert ok">Payment received. Thank you.</div>
@@ -308,7 +291,7 @@
             // (the #card-number/#routing-number/… rules), same as AffiniPay — so
             // no height here, or the input would fight the iframe clamp.
             const fieldStyle = {
-              border: 'none', color: '#57534e', width: '100%',
+              border: 'none', color: '#374151', width: '100%',
               'font-size': '16px', 'font-family': opts.iframeFont,
             };
             this._confidoReady = CF.init({
@@ -339,22 +322,21 @@
             const Stripe = window.Stripe;
             if (!Stripe) { this.error = 'Payment form failed to load. Please refresh.'; return; }
             this._stripe = Stripe(opts.publicKey);
-            // Load the firm's configured webfont into the Element's iframe. Flip the in-iframe text
-            // colours for dark mode here — the iframe can't see the page's
-            // @media (prefers-color-scheme) rules.
-            const dark = window.matchMedia
-              && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // Load Noto Sans into the Element's iframe. The field stays white in
+            // both light and dark mode (the iframe can't see the page's
+            // @media (prefers-color-scheme) rules), so the in-iframe text colour
+            // is fixed dark to suit a white field.
             const elements = this._stripe.elements({
               fonts: [{ cssSrc: opts.stripeFontUrl }],
             });
             this._stripeCard = elements.create('card', {
               style: {
                 base: {
-                  color: dark ? '#f1f5f9' : '#57534e',
+                  color: '#374151',
                   fontFamily: opts.stripeFont,
                   fontSize: '16px',
-                  iconColor: dark ? '#94a3b8' : '#78716c',
-                  '::placeholder': { color: dark ? '#94a3b8' : '#78716c' },
+                  iconColor: '#6b7280',
+                  '::placeholder': { color: '#6b7280' },
                 },
               },
             });
@@ -371,7 +353,7 @@
             css: {
               'font-size': '16px',
               'font-family': opts.iframeFont,
-              'color': '#57534e',
+              'color': '#374151',
             },
           };
           this._cardFields = HF.initializeFields({

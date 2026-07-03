@@ -37,11 +37,6 @@ urlpatterns = [
     # Company
     path("settings/company/", company_urls.company_index, name="company-index"),
     path(
-        "settings/company/billing/",
-        company_urls.company_billing,
-        name="company-billing",
-    ),
-    path(
         "settings/company/research/",
         company_urls.company_research,
         name="company-research",

@@ -78,22 +78,6 @@ class CompanyForm(forms.ModelForm):
         return logo
 
 
-class CompanyBillingForm(forms.ModelForm):
-    """Billing subsection: look of the client payment page + payment emails."""
-
-    class Meta:
-        model = Company
-        fields = ["payment_font", "payment_background"]
-        widgets = {
-            "payment_font": forms.RadioSelect,
-            "payment_background": forms.RadioSelect,
-        }
-        labels = {
-            "payment_font": "Font",
-            "payment_background": "Background",
-        }
-
-
 class CompanyResearchForm(forms.ModelForm):
     """Research subsection (e.g. default jurisdiction for legal research)."""
 

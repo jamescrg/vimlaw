@@ -4,24 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment request</title>
-    <link href="{{ email_font_link }}" rel="stylesheet">
-    {# djlint:off — Django {{ }} tags in the CSS below; djlint's formatter breaks them. #}
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <style>
       /* Authored as a normal stylesheet; premailer inlines this onto the elements
-         at send time (see utils.mail.render_inlined). Keep colours/structure in
-         sync with the pay page and invoice email. */
+         at send time (see utils.mail.render_inlined). One fixed look — gray
+         background, white card, Noto Sans — kept in sync with the pay page and
+         invoice email. */
       body {
         margin: 0;
         padding: 0;
-        background-color: {{ email_bg_solid }};
-        color: #57534e;
-        font-family: {{ email_font_family|safe }};
+        background-color: #f3f4f6;
+        color: #374151;
+        font-family: "Noto Sans", Arial, "Helvetica Neue", sans-serif;
       }
 
-      /* Page: a lighter gradient than the pay page (firm-configurable; solid fallback). */
+      /* Page: a lighter gradient than the pay page (solid fallback). */
       .page {
-        background-color: {{ email_bg_solid }};
-        background-image: {{ email_bg_gradient|safe }};
+        background-color: #f3f4f6;
+        background-image: linear-gradient(180deg, #e5e7eb 0%, #f3f4f6 70%, #f3f4f6 100%);
       }
 
       /* A little space above the card so it sits off the top of the message. */
@@ -29,14 +29,14 @@
         padding: 32px 16px 48px;
       }
 
-      /* Card: slate-50 panel with the pay page's soft shadow. */
+      /* White card with the pay page's soft shadow. */
       .card {
         width: 100%;
         max-width: 480px;
-        background-color: #f8fafc;
-        border: 1px solid #cbd5e1;
+        background-color: #ffffff;
+        border: 1px solid #e5e7eb;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
 
       .card-head {
@@ -47,7 +47,7 @@
         margin: 0;
         font-size: 26px;
         font-weight: normal;
-        color: #292524;
+        color: #111827;
       }
 
       .firm-suffix {
@@ -57,7 +57,7 @@
       .meta {
         margin: 8px 0 0;
         font-size: 15px;
-        color: #78716c;
+        color: #6b7280;
       }
 
       .card-body {
@@ -67,16 +67,16 @@
       .para {
         margin: 0 0 16px;
         font-size: 15px;
-        color: #57534e;
+        color: #374151;
       }
 
       .para a {
-        color: #475569;
+        color: #4b5563;
       }
 
       .summary {
         margin: 16px 0 28px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #e5e7eb;
         border-radius: 3px;
         border-collapse: separate;
         border-spacing: 0;
@@ -88,21 +88,21 @@
       }
 
       .summary tr + tr td {
-        border-top: 1px solid #cbd5e1;
+        border-top: 1px solid #e5e7eb;
       }
 
       .summary .label {
-        color: #78716c;
+        color: #6b7280;
       }
 
       .summary .value {
-        color: #292524;
+        color: #111827;
         text-align: right;
       }
 
-      /* Slate button, matching the pay page .btn-primary. */
+      /* Button, matching the pay page .pay-btn. */
       .btn {
-        background-color: #cbd5e1;
+        background-color: #e5e7eb;
         border-radius: 8px;
       }
 
@@ -111,11 +111,10 @@
         padding: 10px 22px;
         font-size: 15px;
         font-weight: 500;
-        color: #57534e;
+        color: #374151;
         text-decoration: none;
       }
     </style>
-    {# djlint:on #}
   </head>
   <body>
     <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
