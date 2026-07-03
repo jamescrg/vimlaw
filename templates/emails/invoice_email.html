@@ -33,7 +33,7 @@
         width: 100%;
         max-width: 480px;
         background-color: #ffffff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #d1d5db;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
@@ -49,14 +49,10 @@
         color: #111827;
       }
 
-      .firm-suffix {
-        font-size: 0.5em;
-      }
-
       .meta {
         margin: 8px 0 0;
         font-size: 15px;
-        color: #6b7280;
+        color: #4b5563;
       }
 
       .card-body {
@@ -75,7 +71,7 @@
 
       .summary {
         margin: 8px 0 20px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #d1d5db;
         border-radius: 3px;
         border-collapse: separate;
         border-spacing: 0;
@@ -87,11 +83,11 @@
       }
 
       .summary tr + tr td {
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid #d1d5db;
       }
 
       .summary .label {
-        color: #6b7280;
+        color: #4b5563;
       }
 
       .summary .value {
@@ -99,10 +95,10 @@
         text-align: right;
       }
 
-      /* Button, matching the pay page .pay-btn. Solid gray with white text so it
+      /* Button, matching the pay page .pay-btn. Slate with white text so it
          stands out on the white card. */
       .btn {
-        background-color: #9ca3af;
+        background-color: #475569;
         border-radius: 8px;
       }
 
@@ -136,7 +132,7 @@
           <table role="presentation" class="card" width="480" cellpadding="0" cellspacing="0">
             <tr>
               <td class="card-head">
-                <h1 class="firm-name">{{ firm_name|default:"Invoice"|firm_entity }}</h1>
+                <h1 class="firm-name">{{ firm_name|default:"Invoice"|firm_strip }}</h1>
                 <p class="meta">Invoice {{ invoice.id }} &middot; {{ invoice.date_issued|date:"F j, Y" }}</p>
               </td>
             </tr>

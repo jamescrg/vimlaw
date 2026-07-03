@@ -16,7 +16,7 @@
   <div class="pay-wrap">
     <div class="pay-card">
       <div class="pay-head">
-        <h1>{{ firm_name|default:"Pay Invoice"|firm_entity }}</h1>
+        <h1>{{ firm_name|default:"Pay Invoice"|firm_strip }}</h1>
         <p>
           {% if invoice %}
             Invoice {{ invoice.id }} &middot; {{ invoice.date_issued|date:"F j, Y" }}
@@ -322,10 +322,8 @@
             const Stripe = window.Stripe;
             if (!Stripe) { this.error = 'Payment form failed to load. Please refresh.'; return; }
             this._stripe = Stripe(opts.publicKey);
-            // Load Noto Sans into the Element's iframe. The field stays white in
-            // both light and dark mode (the iframe can't see the page's
-            // @media (prefers-color-scheme) rules), so the in-iframe text colour
-            // is fixed dark to suit a white field.
+            // Load Noto Sans into the Element's iframe. The field stays light
+            // (white) in both themes, so the in-iframe text colour is fixed dark.
             const elements = this._stripe.elements({
               fonts: [{ cssSrc: opts.stripeFontUrl }],
             });

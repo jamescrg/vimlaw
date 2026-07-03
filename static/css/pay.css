@@ -1,19 +1,19 @@
 /* Public invoice pay page. One fixed look — gray background, white card, Noto
    Sans — expressed entirely through tokens so the generic dark variant (for
    clients whose OS is in dark mode) is just a token swap in the
-   prefers-color-scheme block below. The input fields stay white with dark text
-   in both modes: the hosted-field SDKs render cross-origin <iframe>s that can't
-   see these rules, so their in-iframe text colour is fixed in JS to suit a
-   white field. */
+   prefers-color-scheme block below. Input fields stay light (white, dark text)
+   in both themes: the hosted-field SDKs render cross-origin <iframe>s we can't
+   reach, and Confido's API exposes no placeholder styling, so a dark field would
+   show a white placeholder band. Their in-iframe text colour is fixed in JS. */
 
 :root {
   --pay-font: 'Noto Sans', sans-serif;
   --pay-bg: #f3f4f6 linear-gradient(180deg, #e5e7eb 0%, #f3f4f6 70%, #f3f4f6 100%) fixed;
   --pay-card: #ffffff;
-  --pay-border: #e5e7eb;
+  --pay-border: #d1d5db;
   --pay-text: #374151;
   --pay-heading: #111827;
-  --pay-muted: #6b7280;
+  --pay-muted: #4b5563;
   --pay-btn: oklch(44.6% 0.043 257.281);
   --pay-btn-text: #ffffff;
   --pay-panel: #ffffff;
@@ -23,18 +23,23 @@
   --pay-field-text: #374151;
 }
 
-/* Generic dark theme — a token swap, no structural rules. */
+/* Generic dark theme — a token swap, no structural rules. Soft mid-dark surfaces
+   (not near-black) for a lower-contrast feel, with borders lifted well above the
+   surfaces so they read. The input fields stay LIGHT in both themes on purpose:
+   Confido's hosted-field iframes render their (unstylable, cross-origin)
+   placeholder for a light field, so a dark field shows a white placeholder band.
+   Field tokens are therefore not flipped here. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --pay-bg: #0a0a0a linear-gradient(180deg, #171717 0%, #0a0a0a 70%, #0a0a0a 100%) fixed;
-    --pay-card: #171717;
-    --pay-border: #262626;
-    --pay-text: #d4d4d4;
-    --pay-heading: #f5f5f5;
-    --pay-muted: #a3a3a3;
-    --pay-btn: #525252;
+    --pay-bg: #232323 linear-gradient(180deg, #2b2b2b 0%, #232323 70%, #232323 100%) fixed;
+    --pay-card: #303030;
+    --pay-border: #525252;
+    --pay-text: #e6e6e6;
+    --pay-heading: #fafafa;
+    --pay-muted: #b0b0b0;
+    --pay-btn: #5c5c5c;
     --pay-btn-text: #f5f5f5;
-    --pay-panel: #0a0a0a;
+    --pay-panel: #2a2a2a;
   }
 }
 
@@ -73,10 +78,6 @@ body.minimal-layout {
   font-size: 1.7rem;
   font-weight: normal;
   color: var(--pay-heading);
-}
-
-.pay-head h1 .firm-suffix {
-  font-size: 0.7em;
 }
 
 .pay-head p {
@@ -126,16 +127,18 @@ body.minimal-layout {
   margin-bottom: 1.25rem;
 }
 
+/* The method toggle isn't an input (no iframe), so it follows the surface
+   tokens and goes dark with the theme — unlike the light input fields. */
 .pay-method {
   flex: 1;
   padding: 0.75rem;
-  border: 1px solid var(--pay-field-border);
+  border: 1px solid var(--pay-border);
   border-radius: 3px;
-  background: var(--pay-field-bg);
+  background: var(--pay-panel);
   cursor: pointer;
   text-align: left;
   font: inherit;
-  color: var(--pay-field-text);
+  color: var(--pay-text);
 }
 
 .pay-method[aria-pressed="true"] {
@@ -146,13 +149,13 @@ body.minimal-layout {
 .pay-method .pm-title {
   display: block;
   font-weight: 600;
-  color: #111827;
+  color: var(--pay-heading);
 }
 
 .pay-method .pm-note {
   display: block;
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--pay-muted);
   margin-top: 0.25rem;
 }
 
@@ -176,8 +179,7 @@ body.minimal-layout {
   margin-bottom: 0.5rem;
 }
 
-/* Inputs match the website's forms.css. Always white with dark text so the
-   plain inputs line up with the (necessarily white) hosted-field iframes. */
+/* Inputs match the website's forms.css. Light in both themes (see file note). */
 .pay-field input,
 .pay-field select {
   width: 100%;
@@ -190,6 +192,11 @@ body.minimal-layout {
   border-radius: 3px;
   outline: none;
   box-sizing: border-box;
+}
+
+.pay-field input::placeholder {
+  color: #6b7280;
+  opacity: 1;
 }
 
 /* The Stripe Element gets the same field box; its in-iframe text colour and
