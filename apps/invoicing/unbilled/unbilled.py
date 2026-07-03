@@ -12,7 +12,7 @@ from apps.management.pagination import CustomPaginator
 from apps.management.selection import all_visible_selected, get_selected_ids
 from apps.matters.models import Matter
 from apps.trust.clearance import client_trust_clearances
-from apps.trust.trust import get_confirmed_client_balance
+from apps.trust.trust import get_pending_client_balance
 
 
 def get_unbilled_data(request):
@@ -139,7 +139,7 @@ def get_unbilled_data(request):
     for matter in matters_list:
         if matter.client and matter.client.id not in client_trust_balances:
             try:
-                client_trust_balances[matter.client.id] = get_confirmed_client_balance(
+                client_trust_balances[matter.client.id] = get_pending_client_balance(
                     matter.client.id
                 )
             except Exception:

@@ -40,7 +40,7 @@
         <td class="numeric">${{ total_cost|floatformat:2|intcomma }}</td>
       </tr>
       <tr>
-        <th>Client Trust Balance</th>
+        <th>Client Trust Balance (pending)</th>
         <td class="numeric">
           {% if matter.client %}
             <a href="{% url 'trust:client-index' id=matter.client.id %}">${{ client_trust_balance|floatformat:2|intcomma }}</a>

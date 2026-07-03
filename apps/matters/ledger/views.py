@@ -11,7 +11,7 @@ from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
 from apps.trust.clearance import client_trust_clearance
-from apps.trust.trust import get_confirmed_client_balance
+from apps.trust.trust import get_pending_client_balance
 
 
 def _check_financial_perm(request):
@@ -32,7 +32,7 @@ def ledger_index(request, id):
     # Get client trust balance
     client_trust_balance = 0
     if matter.client:
-        client_trust_balance = get_confirmed_client_balance(matter.client.id)
+        client_trust_balance = get_pending_client_balance(matter.client.id)
 
     total_cost = (
         matter.value["invoices"]["payment_sum"]
@@ -64,7 +64,7 @@ def ledger_list(request, id):
     # Get client trust balance
     client_trust_balance = 0
     if matter.client:
-        client_trust_balance = get_confirmed_client_balance(matter.client.id)
+        client_trust_balance = get_pending_client_balance(matter.client.id)
 
     context = {
         "app": "matters",

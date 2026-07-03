@@ -277,7 +277,7 @@ def _get_detail_tab_data(request, matter, tab):
     from apps.matters.rates.models import Rate
     from apps.matters.tasks.views import get_matter_tasks_data
     from apps.trust.clearance import client_trust_clearance
-    from apps.trust.trust import get_confirmed_client_balance
+    from apps.trust.trust import get_pending_client_balance
 
     # Block financial tabs for users without perm_financial
     if (
@@ -346,7 +346,7 @@ def _get_detail_tab_data(request, matter, tab):
         ledger_data = get_ledger_data(matter)
         client_trust_balance = 0
         if matter.client:
-            client_trust_balance = get_confirmed_client_balance(matter.client.id)
+            client_trust_balance = get_pending_client_balance(matter.client.id)
 
         total_cost = (
             matter.value["invoices"]["payment_sum"]
