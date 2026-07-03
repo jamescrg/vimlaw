@@ -1,35 +1,35 @@
 {% load humanize %}
 <div class="history-columns">
   <section class="history-section">
-    <h2 class="history-heading">Delivery history</h2>
-    <table class="history-table">
+    <h2 class="history-heading">Delivery History</h2>
+    <table class="history-table history-delivery">
       <thead>
         <tr>
-          <th>Date &amp; time</th>
-          <th>Sender</th>
-          <th>Recipient</th>
-          <th>Status</th>
+          <th class="date">Date</th>
+          <th class="sender">Sender</th>
+          <th class="recipient">Recipient</th>
+          <th class="status">Status</th>
         </tr>
       </thead>
       <tbody>
         {% for t in invoice.transmissions.all %}
           <tr>
-            <td>{{ t.sent_at|date:"Y-m-d H:i" }}</td>
-            <td>
+            <td class="date">{{ t.sent_at|date:"Y-m-d H:i" }}</td>
+            <td class="sender">
               {% if t.sent_by %}
                 {{ t.sent_by.username }}
               {% else %}
                 &mdash;
               {% endif %}
             </td>
-            <td>
+            <td class="recipient">
               {{ t.to_email }}
               {% if t.cc_email %}
                 <br>
                 <span class="text-muted">cc {{ t.cc_email }}</span>
               {% endif %}
             </td>
-            <td>
+            <td class="status">
               {{ t.get_status_display }}
               {% if t.status == 'failed' and t.error %}
                 <br>
@@ -46,7 +46,7 @@
     </table>
   </section>
   <section class="history-section">
-    <h2 class="history-heading">Payment history</h2>
+    <h2 class="history-heading">Payment History</h2>
     <table class="history-table history-payments">
       <thead>
         <tr>
