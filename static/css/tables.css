@@ -42,6 +42,13 @@ th,
   white-space: nowrap;
 }
 
+/* A text-center class must win on a header too — the rule above otherwise forces
+   every .table th left, so a centred column (e.g. an icon action column) would
+   have a left header over centred cells. */
+.table > :not(caption) > * > th.text-center {
+  text-align: center;
+}
+
 /* Sideways tables (row headers) - no background on th */
 .totals-table th,
 .ledger-totals th {

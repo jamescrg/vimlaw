@@ -86,6 +86,17 @@ class PaymentRequest(AuditMixin, models.Model):
         """The matter (operating) or client (trust) this request is for."""
         return self.client if self.is_trust else self.matter
 
+    @property
+    def settlement_pending(self):
+        """A paid request whose linked payment is still provisional — an ACH/eCheck
+        that hasn't settled yet. Card and trust deposits settle immediately, so a
+        paid request that isn't pending is treated as settled."""
+        return bool(
+            self.status == "PAID"
+            and self.payment_id
+            and self.payment.processor_status == "pending"
+        )
+
     class Meta:
         db_table = "app_invoicing_payment_request"
         ordering = ["-created_at"]

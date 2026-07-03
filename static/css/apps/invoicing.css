@@ -81,7 +81,7 @@ and the amount is right-aligned.
 ========================================================================== */
 
 .requests {
-  min-width: 76rem;
+  min-width: 77.5rem;
 }
 
 .requests .id {
@@ -92,10 +92,20 @@ and the amount is right-aligned.
   width: 9.5rem;
 }
 
+/* Fixed 16rem; long matter/client names truncate rather than widen the column
+   (the .matter-name wrapper does the clamping so it works in an auto table). */
 .requests .matter {
-  min-width: 18rem;
+  width: 16rem;
 }
 
+.requests .matter-name {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The flexible column — absorbs the table's remaining width. */
 .requests .recipient {
   min-width: 16rem;
 }
@@ -106,11 +116,11 @@ and the amount is right-aligned.
 }
 
 .requests .account {
-  width: 7rem;
+  width: 7.5rem;
 }
 
 .requests .status {
-  width: 8rem;
+  width: 11rem;
 }
 
 /* Resend column — icon sized to its cell, muted-icon button (same convention as
@@ -457,6 +467,26 @@ Credits
 
 .payment-info-table td:last-child {
   text-align: right;
+}
+
+/* Read-only processor reference (txn id) below the payment edit form. */
+.payment-txn-meta {
+  border-top: 1px solid var(--border-medium);
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+}
+
+.payment-txn-label {
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.payment-txn-id {
+  display: block;
+  overflow-wrap: anywhere;
+  /* One click selects the whole id for easy copy into Confido. */
+  user-select: all;
 }
 
 .application-table {

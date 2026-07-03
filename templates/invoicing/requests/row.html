@@ -27,16 +27,28 @@
     {% endif %}
   </td>
   <td class="date">{{ payment_request.created_at|date:"Y-m-d" }}</td>
+  <td class="account">{{ payment_request.get_account_display }}</td>
   <td class="matter">
-    {% if payment_request.is_trust %}
-      {{ payment_request.client.name }}
+    <div class="matter-name">
+      {% if payment_request.is_trust %}
+        {{ payment_request.client.name }}
+      {% else %}
+        <a href="{% url 'matters:ledger' id=payment_request.matter.id %}">{{ payment_request.matter.name }}</a>
+      {% endif %}
+    </div>
+  </td>
+  <td class="recipient">{{ payment_request.recipient_email }}</td>
+  <td class="status">
+    {% if payment_request.settlement_pending %}
+      <div class="badge-flag-row">
+        <span>{{ payment_request.get_status_display }}</span>
+        <span class="app-badge badge-yellow"
+              title="Bank (eCheck/ACH) payment still clearing — provisional until it settles">Pending</span>
+      </div>
     {% else %}
-      <a href="{% url 'matters:ledger' id=payment_request.matter.id %}">{{ payment_request.matter.name }}</a>
+      {{ payment_request.get_status_display }}
     {% endif %}
   </td>
-  <td class="account">{{ payment_request.get_account_display }}</td>
-  <td class="status">{{ payment_request.get_status_display }}</td>
-  <td class="recipient">{{ payment_request.recipient_email }}</td>
   <td class="amount">${{ payment_request.amount_requested|floatformat:2|intcomma }}</td>
   <td class="action-send">
     {% if payment_request.status == "SENT" %}

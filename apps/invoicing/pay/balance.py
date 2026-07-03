@@ -90,7 +90,7 @@ def record_matter_balance_payment(matter, result):
         date=timezone.localdate(),
         amount=amount,
         payment_method=method,
-        detail=f"Online payment · {result.processor} {result.transaction_id}",
+        detail=f"Online payment · {result.processor}",
         processor=result.processor,
         processor_txn_id=result.transaction_id,
         processor_status=result.status,
