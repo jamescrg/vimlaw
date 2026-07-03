@@ -2,6 +2,12 @@
 Detail View
 ========================================================================== */
 
+/* Align the title with the matter-detail h1, which sits inside a switcher
+   button padded 0.75rem on the left; the bare invoice h1 has no such offset. */
+#invoice-detail .detail-header .toolbar-left h1 {
+  margin-left: 0.75rem;
+}
+
 /* Extra breathing room between the invoice title and its status dropdown */
 #invoice-detail .detail-header .toolbar-left h1 + .filter-tools {
   margin-left: 0.75rem;
@@ -295,6 +301,13 @@ Detail View
   border-bottom: none;
 }
 
+/* Empty placeholder rows: restore the project's empty-message convention (1.5rem,
+   centred) that the .history-table td rule above otherwise overrides. */
+.history-table td.empty-message {
+  padding: 1.5rem;
+  text-align: center;
+}
+
 /* Payment-history variant: columnar (date/method/description/amount) with the
    description as the roomy column and amounts right-aligned. */
 .history-payments {
@@ -320,7 +333,13 @@ Detail View
   min-width: 14rem;
 }
 
-/* Delivery-history variant: fixed 12rem date, recipient the flex column. */
+/* Delivery-history variant: fixed 12rem date, recipient the flex column.
+   table-layout: fixed so the sender/status widths are honoured exactly — in an
+   auto table the width:100% recipient squeezes them down to their content. */
+.history-delivery {
+  table-layout: fixed;
+}
+
 .history-delivery .date {
   white-space: nowrap;
   width: 12rem;
