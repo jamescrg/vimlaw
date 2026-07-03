@@ -46,4 +46,8 @@ def render_inlined(template_name, context):
         allow_network=False,
         disable_validation=True,  # don't let cssutils drop modern CSS (gradients)
         cssutils_logging_level="CRITICAL",
+        # Keep `!important` so the dark-mode @media button override (which stays in
+        # the <style> tag — media queries can't be inlined) still beats the inlined
+        # light-mode value in clients that honour prefers-color-scheme.
+        strip_important=False,
     )

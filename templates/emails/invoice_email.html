@@ -99,9 +99,10 @@
         text-align: right;
       }
 
-      /* Button, matching the pay page .pay-btn. */
+      /* Button, matching the pay page .pay-btn. Solid gray with white text so it
+         stands out on the white card. */
       .btn {
-        background-color: #e5e7eb;
+        background-color: #9ca3af;
         border-radius: 8px;
       }
 
@@ -110,8 +111,21 @@
         padding: 10px 22px;
         font-size: 15px;
         font-weight: 500;
-        color: #374151;
+        color: #ffffff;
         text-decoration: none;
+      }
+
+      /* In a dark-mode client (Apple Mail honours this; others auto-invert),
+         lighten the button so it still reads against a darkened card. Needs
+         !important to beat premailer's inlined light-mode values. */
+      @media (prefers-color-scheme: dark) {
+        .btn {
+          background-color: #525252 !important;
+        }
+
+        .btn a {
+          color: #f5f5f5 !important;
+        }
       }
     </style>
   </head>

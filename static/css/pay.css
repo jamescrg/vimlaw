@@ -14,8 +14,8 @@
   --pay-text: #374151;
   --pay-heading: #111827;
   --pay-muted: #6b7280;
-  --pay-btn: #e5e7eb;
-  --pay-btn-text: #374151;
+  --pay-btn: oklch(44.6% 0.043 257.281);
+  --pay-btn-text: #ffffff;
   --pay-panel: #ffffff;
   /* Fields: white with dark text in both light and dark mode (see file note). */
   --pay-field-bg: #ffffff;
@@ -32,7 +32,7 @@
     --pay-text: #d4d4d4;
     --pay-heading: #f5f5f5;
     --pay-muted: #a3a3a3;
-    --pay-btn: #404040;
+    --pay-btn: #525252;
     --pay-btn-text: #f5f5f5;
     --pay-panel: #0a0a0a;
   }
