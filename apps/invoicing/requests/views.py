@@ -25,7 +25,7 @@ _NON_FILTER_KEYS = ("status", "order_by", "csrfmiddlewaretoken")
 def _requests_context(request):
     filter_data = request.session.get("requests_filter", {})
     base = PaymentRequest.objects.select_related(
-        "matter", "client", "payment"
+        "matter", "client", "payment", "trust_transaction"
     ).order_by("-created_at")
     requests = (
         PaymentRequestFilter(filter_data, queryset=base).qs if filter_data else base
