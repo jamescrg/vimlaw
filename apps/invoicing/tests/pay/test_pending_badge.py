@@ -56,13 +56,13 @@ def test_invoice_payment_history_badge(sent_invoice, matter):
     html = render_to_string(
         "invoicing/invoices/detail/history-content.html", {"invoice": sent_invoice}
     )
-    assert "Pending settlement" in html
+    assert "badge-yellow" in html and ">Pending</span>" in html
     # ...and the status display no longer carries it.
     status = render_to_string(
         "invoicing/invoices/status.html",
         {"invoice": sent_invoice, "view": "detail"},
     )
-    assert "Pending settlement" not in status
+    assert "badge-yellow" not in status
 
 
 def test_invoices_list_annotates_and_badges_pending(sent_invoice, matter):

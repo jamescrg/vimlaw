@@ -47,44 +47,60 @@
   </section>
   <section class="history-section">
     <h2 class="history-heading">Payment history</h2>
-    <table class="invoices-detail-table">
-      {% for app in invoice.applications.all %}
+    <table class="history-table history-payments">
+      <thead>
         <tr>
-          <th>
-            {{ app.payment.date|date:"Y-m-d" }} &middot; {{ app.payment.method_display }}
-            {% if app.payment.processor_status == "pending" %}
-              <span class="app-badge badge-yellow"
-                    title="Awaiting bank (eCheck/ACH) settlement — provisional until it clears">Pending settlement</span>
-            {% endif %}
-          </th>
-          <td>
-            ${{ app.amount_applied|floatformat:2|intcomma }} applied
-            {% if app.payment.detail %}
-              <br>
-              <span class="text-muted">{{ app.payment.detail }}</span>
-            {% endif %}
-          </td>
+          <th class="date">Date</th>
+          <th class="method">Method</th>
+          <th class="description">Description</th>
+          <th class="amount">Amount</th>
         </tr>
-      {% endfor %}
-      {% for capp in invoice.credit_applications.all %}
-        <tr>
-          <th>{{ capp.credit.date|date:"Y-m-d" }} &middot; Credit</th>
-          <td>${{ capp.amount_applied|floatformat:2|intcomma }} applied</td>
-        </tr>
-      {% endfor %}
-      {% if not invoice.applications.all and not invoice.credit_applications.all %}
-        <tr>
-          <td colspan="2" class="empty-message">No payments recorded for this invoice yet.</td>
-        </tr>
-      {% endif %}
-      <tr>
-        <th>Invoice total</th>
-        <td>${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
-      </tr>
-      <tr>
-        <th>Outstanding</th>
-        <td>${{ invoice.amount_remaining|floatformat:2|intcomma }}</td>
-      </tr>
+      </thead>
+      <tbody>
+        {% for app in invoice.applications.all %}
+          <tr>
+            <td class="date">{{ app.payment.date|date:"Y-m-d" }}</td>
+            <td class="method">{{ app.payment.method_display }}</td>
+            <td class="description">
+              {% if app.payment.processor_status == "pending" %}
+                <div class="badge-flag-row">
+                  <span>{{ app.payment.detail|default:"" }}</span>
+                  <span class="app-badge badge-yellow"
+                        title="Awaiting bank (eCheck/ACH) settlement — provisional until it clears">Pending</span>
+                </div>
+              {% else %}
+                {{ app.payment.detail|default:"" }}
+              {% endif %}
+            </td>
+            <td class="amount">${{ app.amount_applied|floatformat:2|intcomma }}</td>
+          </tr>
+        {% endfor %}
+        {% for capp in invoice.credit_applications.all %}
+          <tr>
+            <td class="date">{{ capp.credit.date|date:"Y-m-d" }}</td>
+            <td class="method">Credit</td>
+            <td class="description">{{ capp.credit.detail|default:"" }}</td>
+            <td class="amount">${{ capp.amount_applied|floatformat:2|intcomma }}</td>
+          </tr>
+        {% endfor %}
+        {% if not invoice.applications.all and not invoice.credit_applications.all %}
+          <tr>
+            <td colspan="4" class="empty-message">No payments recorded for this invoice yet.</td>
+          </tr>
+        {% endif %}
+      </tbody>
     </table>
+    <div class="totals-table history-totals">
+      <table>
+        <tr>
+          <td>Invoice total</td>
+          <td class="numeric">${{ invoice.value.final_total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr class="total">
+          <th>Outstanding</th>
+          <td class="numeric">${{ invoice.amount_remaining|floatformat:2|intcomma }}</td>
+        </tr>
+      </table>
+    </div>
   </section>
 </div>

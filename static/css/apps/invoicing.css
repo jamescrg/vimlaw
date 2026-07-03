@@ -297,6 +297,33 @@ Detail View
   border-bottom: none;
 }
 
+/* Payment-history variant: columnar (date/method/description/amount) with the
+   description as the roomy column and amounts right-aligned. */
+.history-payments td.date,
+.history-payments th.date,
+.history-payments td.method,
+.history-payments th.method,
+.history-payments td.amount,
+.history-payments th.amount {
+  white-space: nowrap;
+}
+
+.history-payments td.amount,
+.history-payments th.amount {
+  text-align: right;
+}
+
+.history-payments .description {
+  min-width: 14rem;
+}
+
+/* A modest totals box under the payment history (the shared .totals-table is
+   sized for full-width invoice summaries). */
+.history-totals table {
+  margin: 1rem 0 0;
+  min-width: 16rem;
+}
+
 /* ==========================================================================
 Quick Payments
 ========================================================================== */
