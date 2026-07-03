@@ -1,14 +1,20 @@
-"""Reconcile processor webhook events against recorded payments.
+"""Reconcile processor webhook events against recorded charges.
 
 Runs out-of-band (via Django-Q `async_task`, or inline as a fallback). The
 processor's `verify_and_parse_webhook` does NOT trust the posted body — it
 re-fetches the transaction from the API and reports the authoritative status —
 so this module acts on a confirmed `WebhookEvent`.
 
-The critical case is ACH: a charge that looked accepted can **return** or
-**fail** days later. We then unapply the payment (reverting the invoice to
-unpaid via the existing `PaymentApplication.delete()` hook), drop the phantom
-payment, and email staff.
+An event settles or reverses whichever row carries its processor txn id: an
+operating `Payment` (applied to invoices) or a trust-ledger deposit
+`Transaction`. The critical case is ACH: a charge that looked accepted can
+**return** or **fail** days later —
+  - operating: unapply the payment (reverting the invoice to unpaid via the
+    existing `PaymentApplication.delete()` hook) and drop the phantom payment;
+  - trust: drop the still-unconfirmed deposit (its simple_history row keeps the
+    audit trail), or — if the firm already confirmed it — flag it for manual
+    reconciliation rather than silently mutating the confirmed ledger.
+Either way, staff are emailed.
 """
 
 import logging
@@ -19,6 +25,7 @@ from django.core.mail import mail_admins
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
 from apps.invoicing.processors import REVERSED_STATUSES, PaymentError, get_processor
+from apps.trust.models import Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -46,23 +53,36 @@ def reconcile_webhook(processor_name, body, signature=""):
 
 
 def _apply_event(event):
+    """Route the event to the row it settles/reverses — an operating Payment or a
+    trust deposit Transaction (both carry the processor txn id). An id we never
+    recorded (or already reversed) is a safe no-op."""
     payment = Payment.objects.filter(
         processor=event.processor, processor_txn_id=event.transaction_id
     ).first()
-    if payment is None:
-        return  # not a charge we recorded (or already reversed) — nothing to do
-    if payment.processor_status == event.status:
+    if payment is not None:
+        _settle_or_reverse(payment, event, _reverse_payment)
+        return
+    deposit = Transaction.objects.filter(
+        processor=event.processor, processor_txn_id=event.transaction_id
+    ).first()
+    if deposit is not None:
+        _settle_or_reverse(deposit, event, _reverse_deposit)
+
+
+def _settle_or_reverse(row, event, reverse):
+    """Shared dispatch for a Payment or a trust Transaction: an idempotent status
+    update on settle, delegate to `reverse` on a return/failure/void."""
+    if row.processor_status == event.status:
         return  # idempotent: webhook re-delivery, already in this state
-
     if event.status in REVERSED_STATUSES:
-        _reverse(payment, event)
+        reverse(row, event)
     else:
-        payment.processor_status = event.status
-        payment.save(update_fields=["processor_status"])
+        row.processor_status = event.status
+        row.save(update_fields=["processor_status"])
 
 
-def _reverse(payment, event):
-    """An accepted charge fell through (ACH return / NSF / void)."""
+def _reverse_payment(payment, event):
+    """An accepted operating charge fell through (ACH return / NSF / void)."""
     invoice_ids = list(payment.applications.values_list("invoice_id", flat=True))
     # Delete each application individually so PaymentApplication.delete() runs
     # (records history; a cascade delete would skip the hook).
@@ -100,4 +120,48 @@ def _reverse(payment, event):
         event.transaction_id,
         event.status,
         invoice_ids,
+    )
+
+
+def _reverse_deposit(deposit, event):
+    """An accepted trust deposit fell through (ACH return / NSF / void).
+
+    An unconfirmed deposit never counted as cleared funds, so drop it (its
+    simple_history row keeps the audit trail) — mirroring the phantom-payment
+    removal. A deposit the firm already CONFIRMED is a trust shortfall: don't
+    silently mutate the confirmed ledger — flag its status and leave it for staff
+    to reconcile by hand. Either way, email staff."""
+    contact = deposit.contact
+    description = deposit.description
+    amount = deposit.amount
+    if deposit.confirmed:
+        deposit.processor_status = event.status
+        deposit.save(update_fields=["processor_status"])
+        outcome = (
+            "This deposit was already CONFIRMED, so the confirmed trust balance "
+            "may now be short — reconcile it by hand."
+        )
+    else:
+        deposit.delete()
+        outcome = (
+            "It was unconfirmed and has been removed from the client's pending "
+            "trust balance."
+        )
+
+    mail_admins(
+        subject=f"Trust deposit {event.status}: {event.transaction_id}",
+        message=(
+            f"A previously-accepted online trust deposit has {event.status}.\n\n"
+            f"Client: {contact}\n"
+            f"{description}\n"
+            f"Amount: ${amount}\n\n"
+            f"{outcome} Please follow up with the client."
+        ),
+        fail_silently=True,
+    )
+    logger.warning(
+        "Reversed online trust deposit %s (%s) for contact %s",
+        event.transaction_id,
+        event.status,
+        getattr(contact, "id", None),
     )

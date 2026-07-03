@@ -48,6 +48,14 @@ def practice_area():
 
 
 @pytest.fixture
+def contact(user):
+    """A client contact, for trust-deposit tests."""
+    from apps.contacts.models import Contact
+
+    return Contact.objects.create(user=user, name="Trust Client Co")
+
+
+@pytest.fixture
 def matter(practice_area):
     return Matter.objects.create(
         name="Pay Test Matter",

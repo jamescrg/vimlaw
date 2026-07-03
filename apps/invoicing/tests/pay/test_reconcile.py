@@ -16,10 +16,12 @@ import pytest
 
 from apps.invoicing.applications.models import PaymentApplication
 from apps.invoicing.invoices.models import Invoice
+from apps.invoicing.pay.balance import record_trust_deposit
 from apps.invoicing.pay.reconcile import reconcile_webhook
 from apps.invoicing.pay.recording import record_payment
 from apps.invoicing.payments.models import Payment
 from apps.invoicing.processors import BANK, CARD, get_processor
+from apps.trust.models import Transaction
 
 pytestmark = pytest.mark.django_db
 
@@ -37,6 +39,20 @@ def _charge_and_record(invoice, *, token, method):
     )
     payment = record_payment(invoice, result)
     return payment, result
+
+
+def _charge_and_record_trust(contact, *, token, method):
+    """Charge via the fake processor and record the result as a trust-ledger
+    Deposit for ``contact``. Returns (deposit, result)."""
+    processor = get_processor()
+    result = processor.charge(
+        token=token,
+        amount_cents=25000,
+        reference="Trust deposit · test",
+        method=method,
+    )
+    deposit = record_trust_deposit(contact, result)
+    return deposit, result
 
 
 def _webhook_body(txn_id, status):
@@ -179,4 +195,71 @@ class TestNonReversingAndIdempotent:
 
     def test_unknown_processor_is_ignored(self, mailoutbox):
         reconcile_webhook("nope", _webhook_body("whatever", "returned"))
+        assert len(mailoutbox) == 0
+
+
+# ---------------------------------------------------------------------------
+# reconcile_webhook — trust deposits (a trust.Transaction, not a Payment)
+# ---------------------------------------------------------------------------
+class TestTrustReconciliation:
+    def test_settle_updates_status_without_removing(self, contact, mailoutbox):
+        deposit, result = _charge_and_record_trust(
+            contact, token="fake-ok", method=BANK
+        )
+        assert deposit.processor_status == "pending"
+
+        reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
+
+        deposit.refresh_from_db()
+        assert deposit.processor_status == "succeeded"
+        # Still present and still UNCONFIRMED — the firm confirms manually; no email.
+        assert deposit.confirmed is False
+        assert Transaction.objects.filter(pk=deposit.pk).exists()
+        assert len(mailoutbox) == 0
+
+    def test_returned_unconfirmed_deposit_is_dropped_and_emails(
+        self, contact, settings, mailoutbox
+    ):
+        settings.ADMINS = [("Admin", "admin@example.test")]
+        deposit, result = _charge_and_record_trust(
+            contact, token="fake-ach-return", method=BANK
+        )
+        assert deposit.confirmed is False
+
+        reconcile_webhook("fake", _webhook_body(result.transaction_id, "returned"))
+
+        # Provisional deposit removed from the client's pending trust balance.
+        assert not Transaction.objects.filter(pk=deposit.pk).exists()
+        assert len(mailoutbox) == 1
+        assert "trust deposit" in mailoutbox[0].subject.lower()
+        assert result.transaction_id in mailoutbox[0].subject
+
+    def test_returned_confirmed_deposit_is_flagged_not_deleted(
+        self, contact, settings, mailoutbox
+    ):
+        """A return after the firm confirmed the deposit is a trust shortfall: we
+        don't silently mutate the confirmed ledger — flag it for manual handling."""
+        settings.ADMINS = [("Admin", "admin@example.test")]
+        deposit, result = _charge_and_record_trust(
+            contact, token="fake-ach-return", method=BANK
+        )
+        deposit.confirmed = True
+        deposit.save(update_fields=["confirmed"])
+
+        reconcile_webhook("fake", _webhook_body(result.transaction_id, "returned"))
+
+        deposit.refresh_from_db()
+        assert deposit.processor_status == "returned"  # flagged, not deleted
+        assert deposit.confirmed is True
+        assert len(mailoutbox) == 1
+        assert "short" in mailoutbox[0].body.lower()
+
+    def test_idempotent_redelivery_is_noop(self, contact, mailoutbox):
+        deposit, result = _charge_and_record_trust(
+            contact, token="fake-ok", method=BANK
+        )
+        reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
+        # Same status re-delivered — nothing changes, no email.
+        reconcile_webhook("fake", _webhook_body(result.transaction_id, "succeeded"))
+        assert Transaction.objects.filter(pk=deposit.pk).exists()
         assert len(mailoutbox) == 0
