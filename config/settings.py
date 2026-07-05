@@ -6,8 +6,6 @@ from pathlib import Path
 import environ
 from django.forms.renderers import TemplatesSetting
 
-from utils.prepare_path import prepare_path
-
 
 def parse_admins(value):
     try:
@@ -240,7 +238,7 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 SERVER_EMAIL = env("SERVER_EMAIL")
-DEFAULT_FROM_EMAIL = env("SERVER_EMAIL")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=SERVER_EMAIL)
 ADMINS = env("ADMINS")
 # Address(es) BCC'd on every invoice email the app sends, so the firm retains a
 # faithful copy (cover message + attached PDF) of what each client received.
@@ -266,42 +264,32 @@ if ENV == "dev":
     SESSION_FILE_PATH = os.path.join(BASE_DIR, ".dev-sessions")
     os.makedirs(SESSION_FILE_PATH, exist_ok=True)
 
-prepare_path(f"{BASE_DIR}/logs/debug.log")
+# Logging — standardized across all apps; logs live in <app>/logs/
+(BASE_DIR / "logs").mkdir(exist_ok=True)
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "timestamped": {
-            "format": "{asctime} {levelname} {name} {message}",
-            "style": "{",
-        },
-        "simple": {
-            "format": "[{levelname}] {name}: {message}",
+        "verbose": {
+            "format": "{asctime} [{levelname}] {name}: {message}",
             "style": "{",
         },
     },
     "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
         "file": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": BASE_DIR / "logs/debug.log",
-            "maxBytes": 5 * 1024 * 1024,  # 5 MB
-            "backupCount": 3,  # Keep 3 old files
-            "formatter": "timestamped",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "django.log",
+            "formatter": "verbose",
         },
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-        },
+        "null": {"class": "logging.NullHandler"},
     },
+    "root": {"handlers": ["console", "file"], "level": "WARNING"},
     "loggers": {
-        "": {
-            "level": "DEBUG",
-            "handlers": ["file"],
-            "propagate": True,
-        },
+        # Bot-driven bad Host headers are benign; drop them instead of dumping a
+        # full traceback per hit (this was chf's 117 MB error-log flood).
+        "django.security.DisallowedHost": {"handlers": ["null"], "propagate": False},
     },
 }
 

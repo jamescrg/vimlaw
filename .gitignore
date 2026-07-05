@@ -29,3 +29,7 @@ CLAUDE.md
 
 # dev-only on-disk sessions (survive the nightly prod DB import)
 .dev-sessions/
+
+# app logs (keep dir, ignore log files)
+logs/*
+!logs/.gitkeep
