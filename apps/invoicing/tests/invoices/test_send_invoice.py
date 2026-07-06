@@ -63,9 +63,9 @@ def test_send_invoice_uses_billing_email(invoice, mailoutbox, settings, tmp_path
     assert send_invoice(invoice, to="client@example.com") is True
     assert len(mailoutbox) == 1
     msg = mailoutbox[0]
-    # Sent from the configured billing sender, with the firm as display name.
-    assert "billing-sender@example.com" in msg.from_email
-    assert "Craig Legal" in msg.from_email
+    # Sent from the configured billing sender, named "<Firm> Billing" to match
+    # the Reply-To (so inboxes don't truncate a bare firm name).
+    assert msg.from_email == "Craig Legal Billing <billing-sender@example.com>"
     # Reply-To carries a "<Firm> Billing" display name over the billing address.
     assert msg.reply_to == ["Craig Legal Billing <billing@example.com>"]
     assert "billing@example.com" in msg.body

@@ -17,20 +17,26 @@ _FIRM_SUFFIX_RE = re.compile(
 )
 
 
+def _billing_display_name(company):
+    """Display name for billing email headers: '<Firm> Billing' with the entity
+    suffix (", LLC" etc.) dropped, or just 'Billing' when the firm has no name.
+    Shared by From and Reply-To so they read identically in the client's inbox."""
+    firm = _FIRM_SUFFIX_RE.sub("", getattr(company, "name", "") or "").strip()
+    return f"{firm} Billing" if firm else "Billing"
+
+
 def billing_from_email(company):
-    """From header for client-facing billing email: the firm name (sans entity
-    suffix) as display name in front of BILLING_FROM_EMAIL — e.g.
-    '"Craig Legal" <billing@…>'. Replies route to the firm's billing address via
-    Reply-To. Returns the bare address when there's no firm name, and None when
+    """From header for client-facing billing email: '<Firm> Billing' as display
+    name in front of BILLING_FROM_EMAIL — e.g. '"Craig Legal Billing" <billing@…>'.
+    Replies route to the firm's billing address via Reply-To. Returns None when
     no address is configured (so the caller falls back to DEFAULT_FROM_EMAIL)."""
-    name = _FIRM_SUFFIX_RE.sub("", getattr(company, "name", "") or "").strip()
     address = parseaddr(settings.BILLING_FROM_EMAIL or "")[1]
-    return formataddr((name, address)) if address else None
+    return formataddr((_billing_display_name(company), address)) if address else None
 
 
 def billing_reply_to(company):
     """Reply-To for client-facing billing email: the firm's billing address
-    carrying a '<Firm> Billing' display name — e.g.
+    carrying the same '<Firm> Billing' display name — e.g.
     '"Craig Legal Billing" <billing@…>' — so a client's reply captures a sensible
     contact name in their inbox. Address is Firm.billing_email, falling back to
     the firm email. Returns None when no address is configured."""
@@ -39,9 +45,7 @@ def billing_reply_to(company):
         address = (company.billing_email or company.email or "").strip()
     if not address:
         return None
-    firm = _FIRM_SUFFIX_RE.sub("", getattr(company, "name", "") or "").strip()
-    name = f"{firm} Billing" if firm else "Billing"
-    return formataddr((name, address))
+    return formataddr((_billing_display_name(company), address))
 
 
 def render_inlined(template_name, context):
