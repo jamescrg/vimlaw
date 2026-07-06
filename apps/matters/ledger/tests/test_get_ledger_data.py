@@ -217,6 +217,27 @@ class TestGetLedgerDataDeferredBreakout:
         assert charge["is_deferred"] is False
 
 
+class TestGetLedgerDataPaymentLabels:
+    def test_payment_method_capitalization(self, matter):
+        Payment.objects.create(
+            matter=matter,
+            date="2024-03-01",
+            amount=Decimal("100.00"),
+            payment_method="ACH",
+        )
+        Payment.objects.create(
+            matter=matter,
+            date="2024-03-02",
+            amount=Decimal("50.00"),
+            payment_method="CARD",
+        )
+        descriptions = [
+            t["description"] for t in get_ledger_data(matter)["transactions"]
+        ]
+        assert "Payment by ACH" in descriptions
+        assert "Payment by Card" in descriptions
+
+
 class TestGetLedgerDataUncollectible:
     def _uncollectible_invoice(self, user, matter):
         invoice = Invoice.objects.create(

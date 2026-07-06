@@ -4,6 +4,16 @@ from apps.invoicing.credits.models import Credit
 from apps.invoicing.invoices.models import Invoice
 from apps.invoicing.payments.models import Payment
 
+# Ledger-friendly labels for the payment method (e.g. "Payment by ACH" /
+# "Payment by Card") — acronyms stay uppercased, the rest title-cased.
+_PAYMENT_METHOD_LABELS = {
+    "CARD": "Card",
+    "ACH": "ACH",
+    "CHECK": "Check",
+    "TRUST": "Trust",
+    "WIRE": "Wire",
+}
+
 
 def get_ledger_data(matter):
     """Build the matter ledger.
@@ -74,7 +84,12 @@ def get_ledger_data(matter):
                 "id": payment.id,
                 "date": payment.date,
                 "transaction_type": "Credit",
-                "description": f"Payment by {payment.payment_method.lower()}",
+                "description": (
+                    "Payment by "
+                    + _PAYMENT_METHOD_LABELS.get(
+                        payment.payment_method, payment.payment_method.title()
+                    )
+                ),
                 "amount": payment.amount,
                 "affects_balance": True,  # Payments always affect balance
                 # Provisional until an online (ACH) payment settles.
