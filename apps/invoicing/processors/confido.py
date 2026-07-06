@@ -177,6 +177,24 @@ class ConfidoProcessor(PaymentProcessor):
             raise ProcessorConfigError(f"{which} is not configured.")
         return account_id
 
+    def list_bank_accounts(self) -> list:
+        """Read-only: the firm's deposit accounts. Confirms the API key
+        authenticates and reveals the operating/trust ids (for pre-flight and
+        `manage.py confido_check`)."""
+        query = (
+            "query { bankAccountsList { bankAccounts "
+            "{ id nickname category isDefault isFeeAccount } } }"
+        )
+        data = self._graphql(query, {}, "List bank accounts")
+        return (data.get("bankAccountsList") or {}).get("bankAccounts") or []
+
+    def mint_preflight_session(self, *, trust=False) -> str:
+        """Read-only-ish pre-flight: mint a throwaway payment session for the
+        given destination account and return its public token. No money moves —
+        an uncompleted session just expires. Proves the firm is provisioned to
+        accept payments (this is where "No Emergepay Auth Token" would surface)."""
+        return self._create_session(trust=trust)
+
     # --- contract --------------------------------------------------------
     def client_config(self, invoice) -> ClientConfig:
         return self.client_config_for(
