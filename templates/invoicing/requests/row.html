@@ -31,7 +31,7 @@
   <td class="matter">
     <div class="matter-name">
       {% if payment_request.is_trust %}
-        {{ payment_request.client.name }}
+        <a href="{% url 'trust:client-index' id=payment_request.client.id %}">{{ payment_request.client.name }}</a>
       {% else %}
         <a href="{% url 'matters:ledger' id=payment_request.matter.id %}">{{ payment_request.matter.name }}</a>
       {% endif %}
