@@ -15,7 +15,7 @@ from apps.invoicing.pay.balance import matter_open_invoices
 from apps.invoicing.pay.links import request_pay_url
 from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.settings.models import Firm
-from utils.mail import billing_from_email, render_inlined
+from utils.mail import billing_from_email, billing_reply_to, render_inlined
 
 
 class PaymentRequestSendError(Exception):
@@ -110,7 +110,8 @@ def send_payment_request(
             to=to_list,
             cc=cc_list or None,
             bcc=bcc_list or None,
-            reply_to=[company.email] if company and company.email else None,
+            # "<Firm> Billing" <billing addr> so replies capture a named contact.
+            reply_to=([r] if (r := billing_reply_to(company)) else None),
         )
         email.attach_alternative(
             render_inlined("emails/payment_request_email.html", context), "text/html"

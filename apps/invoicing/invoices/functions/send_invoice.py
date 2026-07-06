@@ -16,7 +16,7 @@ from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import InvoiceTransmission
 from apps.invoicing.pay.links import payment_url
 from apps.settings.models import Firm
-from utils.mail import billing_from_email, render_inlined
+from utils.mail import billing_from_email, billing_reply_to, render_inlined
 
 
 class InvoiceSendError(Exception):
@@ -143,8 +143,8 @@ def send_invoice(
             # the full email, cover message and PDF included.
             bcc=bcc_list or None,
             # Client replies go to the firm's billing email (Firm settings),
-            # not the unattended From address.
-            reply_to=[billing_email] if billing_email else None,
+            # labeled "<Firm> Billing", not the unattended From address.
+            reply_to=[billing_reply_to(company)] if billing_email else None,
         )
         email.attach_alternative(
             render_inlined("emails/invoice_email.html", context), "text/html"
