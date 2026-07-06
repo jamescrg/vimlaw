@@ -13,7 +13,7 @@ from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
 from apps.activity.time.models import TimeEntry
 from apps.invoicing.invoices.models import Invoice
-from apps.settings.models import Company
+from apps.settings.models import Firm
 from apps.trust.trust import get_confirmed_client_balance
 
 
@@ -91,7 +91,7 @@ def generate_invoice(
         "expenses": expenses,
         "flat_fee_entries": flat_fee_entries,
         "confirmed_balance": confirmed_balance,
-        "company": Company.objects.first(),
+        "company": Firm.objects.first(),
     }
 
     html_string = render_to_string("invoicing/invoices/invoice.html", context)

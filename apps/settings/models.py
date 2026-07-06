@@ -3,7 +3,7 @@ from django.db import models
 from utils.models import AuditMixin
 
 
-class Company(AuditMixin):
+class Firm(AuditMixin):
     name = models.CharField(max_length=255)
     address_line_1 = models.CharField(max_length=255, blank=True)
     address_line_2 = models.CharField(max_length=255, blank=True)
@@ -12,6 +12,7 @@ class Company(AuditMixin):
     zip_code = models.CharField(max_length=20, blank=True)
     phone = models.CharField(max_length=30, blank=True)
     email = models.EmailField(blank=True)
+    billing_email = models.EmailField(blank=True)
     invoice_bcc = models.CharField(
         max_length=500,
         blank=True,
@@ -22,7 +23,7 @@ class Company(AuditMixin):
     jurisdiction = models.CharField(max_length=100, blank=True)
 
     class Meta:
-        verbose_name_plural = "companies"
+        verbose_name_plural = "firms"
 
     def __str__(self):
         return self.name

@@ -9,7 +9,7 @@ from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
 from apps.activity.time.models import TimeEntry
 from apps.matters.models import Matter
-from apps.settings.models import Company
+from apps.settings.models import Firm
 
 
 def generate_activity_report(
@@ -61,7 +61,7 @@ def generate_activity_report(
         "net_flat_fees": net_flat_fees,
         "matter_total": matter_total,
         "current_date": date.today(),
-        "company": Company.objects.first(),
+        "company": Firm.objects.first(),
     }
 
     html_string = render_to_string("matters/activity-report.html", context)

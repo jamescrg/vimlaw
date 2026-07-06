@@ -14,7 +14,7 @@ from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.pay.balance import matter_open_invoices
 from apps.invoicing.pay.links import request_pay_url
 from apps.matters.ledger.generate_ledger import generate_ledger
-from apps.settings.models import Company
+from apps.settings.models import Firm
 from utils.mail import firm_from_email, render_inlined
 
 
@@ -77,7 +77,7 @@ def send_payment_request(
             f"Invalid email address(es): {', '.join(invalid)}"
         )
 
-    company = Company.objects.first()
+    company = Firm.objects.first()
     bcc_list = (
         [a.strip() for a in (company.invoice_bcc or "").split(",") if a.strip()]
         if company

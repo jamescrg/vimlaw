@@ -1,9 +1,8 @@
 from django.urls import path
 
-# Import all from company.views as company_urls
 import apps.settings.appearance.views as appearance_urls
-import apps.settings.company.views as company_urls
 import apps.settings.contacts.views as contact_urls
+import apps.settings.firm.views as firm_urls
 import apps.settings.integrations.views as integration_urls
 import apps.settings.matters.views as matter_urls
 import apps.settings.notifications.views as notification_urls
@@ -34,12 +33,17 @@ urlpatterns = [
         integration_urls.google_logout,
         name="google-logout",
     ),
-    # Company
-    path("settings/company/", company_urls.company_index, name="company-index"),
+    # Firm
+    path("settings/firm/", firm_urls.firm_index, name="firm-index"),
     path(
-        "settings/company/research/",
-        company_urls.company_research,
-        name="company-research",
+        "settings/firm/logo/upload/",
+        firm_urls.firm_upload_logo,
+        name="firm-upload-logo",
+    ),
+    path(
+        "settings/firm/logo/remove/",
+        firm_urls.firm_remove_logo,
+        name="firm-remove-logo",
     ),
     # Users
     path("settings/users/", user_urls.users_index, name="users-index"),

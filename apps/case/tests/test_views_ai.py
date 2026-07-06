@@ -1,7 +1,7 @@
 import pytest
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.settings.models import Company
+from apps.settings.models import Firm
 
 pytestmark = pytest.mark.django_db
 
@@ -29,7 +29,7 @@ class TestAICreatePrompt:
         response = client_with_matter.get(f"/case/{matter_id}/ai/create-prompt/")
         content = response.content.decode()
         assert user.email in content
-        company = Company.objects.first()
+        company = Firm.objects.first()
         assert company.name in content
 
     def test_create_prompt_contains_date(self, client_with_matter):
@@ -75,7 +75,7 @@ class TestAICreatePrompt:
         assert "is a paralegal supporting an attorney" in content
 
     def test_create_prompt_uses_company_jurisdiction(self, client_with_matter, matter):
-        company = Company.objects.first()
+        company = Firm.objects.first()
         company.jurisdiction = "Georgia"
         company.save()
         matter.jurisdiction = ""
@@ -88,7 +88,7 @@ class TestAICreatePrompt:
     def test_create_prompt_matter_jurisdiction_overrides_company(
         self, client_with_matter, matter
     ):
-        company = Company.objects.first()
+        company = Firm.objects.first()
         company.jurisdiction = "Georgia"
         company.save()
         matter.jurisdiction = "Florida"
@@ -101,7 +101,7 @@ class TestAICreatePrompt:
     def test_create_prompt_falls_back_to_us_common_law(
         self, client_with_matter, matter
     ):
-        company = Company.objects.first()
+        company = Firm.objects.first()
         company.jurisdiction = ""
         company.save()
         matter.jurisdiction = ""

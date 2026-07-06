@@ -8,7 +8,7 @@ from apps.contacts.models import Contact
 from apps.folders.models import Folder
 from apps.matters.models import Matter, PracticeArea
 from apps.matters.proceedings.models import Proceeding
-from apps.settings.models import Company
+from apps.settings.models import Firm
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def client(user):
 
 @pytest.fixture(autouse=True)
 def company(db):
-    return Company.objects.create(name="Test Firm LLC")
+    return Firm.objects.create(name="Test Firm LLC")
 
 
 @pytest.fixture

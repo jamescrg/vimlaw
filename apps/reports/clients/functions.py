@@ -8,7 +8,7 @@ from weasyprint import HTML
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
 from apps.contacts.models import Contact
-from apps.settings.models import Company
+from apps.settings.models import Firm
 
 
 def generate_client_statement_pdf(
@@ -149,7 +149,7 @@ def generate_client_statement_pdf(
         "date_from": date_from,
         "date_to": date_to,
         "current_date": datetime.now().date(),
-        "company": Company.objects.first(),
+        "company": Firm.objects.first(),
     }
 
     html_string = render_to_string("reports/clients/statement_pdf.html", context)

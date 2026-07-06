@@ -1,0 +1,35 @@
+<div class="form-responsive form-spacious firm-form firm-logo-block">
+  <label for="id_logo">Logo</label>
+  <div id="firm-logo" class="firm-logo-field">{% include "settings/firm/logo.html" %}</div>
+</div>
+{% comment %}
+  Two things keep browsers from offering to "save this address": (1) this is not
+  a <form> — it posts via htmx from the button (hx-include gathers the fields),
+  so no submit event fires; and (2) each field carries a non-address autocomplete
+  token (see FirmForm) so browsers never classify the group as an address, which
+  is what stops Firefox capturing on navigation too.
+{% endcomment %}
+<div id="firm-details"
+     class="form-responsive form-spacious firm-form"
+     autocomplete="off"
+     hx-on:keydown="if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); document.getElementById('firm-save').click() }">
+  {% for field in form %}
+    {{ field.label_tag }}
+    <div>
+      {{ field }}
+      {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <br />
+  <div class="flex-center-space">
+    <div>
+      <button id="firm-save"
+              type="button"
+              class="btn btn-success"
+              hx-post="{% url 'settings:firm-index' %}"
+              hx-target="#firm-info"
+              hx-include="#firm-details">Save Firm Details</button>
+    </div>
+  </div>
+</div>

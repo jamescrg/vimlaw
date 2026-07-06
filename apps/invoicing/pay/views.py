@@ -128,9 +128,9 @@ def pay_page(request, token):
     processor = get_processor()
     config = processor.client_config(invoice)
     matter = invoice.matter
-    from apps.settings.models import Company
+    from apps.settings.models import Firm
 
-    company = Company.objects.first()
+    company = Firm.objects.first()
     context = {
         "invoice": invoice,
         "matter_number": matter.id if matter else "",
@@ -277,9 +277,9 @@ def balance_pay_page(request, token):
 
     processor = get_processor()
     charge_cents = request_charge_cents(pay_request)
-    from apps.settings.models import Company
+    from apps.settings.models import Firm
 
-    company = Company.objects.first()
+    company = Firm.objects.first()
     if pay_request.is_trust:
         client = pay_request.client
         config = processor.client_config_for(

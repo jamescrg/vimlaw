@@ -8,7 +8,7 @@ from weasyprint import HTML
 from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
-from apps.settings.models import Company
+from apps.settings.models import Firm
 from apps.trust.trust import get_confirmed_client_balance
 
 
@@ -36,7 +36,7 @@ def generate_ledger(matter_id, request):
         "proceeding": proceeding,
         "current_date": current_date,
         "client_trust_balance": client_trust_balance,
-        "company": Company.objects.first(),
+        "company": Firm.objects.first(),
     } | ledger_data
 
     html_string = render_to_string("matters/ledger/pdf.html", context)

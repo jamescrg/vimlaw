@@ -37,7 +37,7 @@ from apps.matters.models import Relationship
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
 from apps.notes.models import Note
-from apps.settings.models import Company
+from apps.settings.models import Firm
 from apps.tasks.models import Task
 
 from .models import Conversation
@@ -464,7 +464,7 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     sections["settlement"] = format_settlement(matter)
 
     # Build the full system prompt
-    company = Company.objects.first()
+    company = Firm.objects.first()
 
     request_info = ""
     if user:
@@ -474,7 +474,7 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
             role_description = (
                 f"{user.get_full_name()} is a paralegal supporting an attorney"
             )
-        company = Company.objects.first()
+        company = Firm.objects.first()
         request_info = REQUEST_INFO_TEMPLATE.format(
             request_date=date.today().strftime("%B %d, %Y"),
             user_name=user.get_full_name(),
@@ -537,7 +537,7 @@ def assemble_matter_context_with_selection(
     always_items = collect_context_items(matter, current_conversation=conversation)
 
     # Build request info and legal prompt
-    company = Company.objects.first()
+    company = Firm.objects.first()
     request_info = ""
     if user:
         if user.is_attorney:
@@ -546,7 +546,7 @@ def assemble_matter_context_with_selection(
             role_description = (
                 f"{user.get_full_name()} is a paralegal supporting an attorney"
             )
-        company = Company.objects.first()
+        company = Firm.objects.first()
         request_info = REQUEST_INFO_TEMPLATE.format(
             request_date=date.today().strftime("%B %d, %Y"),
             user_name=user.get_full_name(),

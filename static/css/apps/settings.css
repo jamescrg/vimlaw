@@ -63,33 +63,70 @@ Profile Form
 }
 
 /* ==========================================================================
-Company Form
+Firm Form
 ========================================================================== */
 
-.company-form #id_name,
-.company-form #id_address_line_1,
-.company-form #id_address_line_2,
-.company-form #id_city,
-.company-form #id_state,
-.company-form #id_zip_code,
-.company-form #id_phone,
-.company-form #id_email {
-  max-width: 18.75rem;
+.firm-form #id_name,
+.firm-form #id_address_line_1,
+.firm-form #id_address_line_2,
+.firm-form #id_city,
+.firm-form #id_state,
+.firm-form #id_zip_code,
+.firm-form #id_phone,
+.firm-form #id_email,
+.firm-form #id_billing_email,
+.firm-form #id_invoice_bcc,
+.firm-form #id_jurisdiction {
+  max-width: 23.5rem;
   width: 100%;
 }
 
-.company-form #id_logo {
-  margin-top: 1rem;
-  max-width: 18.75rem;
+/* BCC is a textarea; keep it the same width as the inputs and let the row
+   count (not the global textarea height) drive its height. */
+.firm-form #id_invoice_bcc {
+  height: auto;
+}
+
+/* Field captions (help text) read larger here than the app-wide default, and
+   wrap at the input's right edge rather than running the full column width. */
+.firm-form .help-text {
+  font-size: 1rem;
+  max-width: 23.5rem;
+}
+
+/* Separate the standalone logo block from the details form below it. */
+.firm-logo-block {
+  margin-bottom: 0.5rem;
+}
+
+/* Logo field: when a logo exists, the image sits beside a delete icon;
+   otherwise the file chooser is shown in its place. */
+.firm-logo-field {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.firm-logo-row {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.firm-logo-row .btn-icon {
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.firm-form #id_logo {
+  max-width: 23.5rem;
   padding: 0;
   width: 100%;
 }
 
-.company-logo-preview {
-  margin-bottom: 1.5rem;
-}
-
-.company-logo-preview img {
+.firm-logo-preview img {
   border-radius: var(--radius-sm);
   height: auto;
   max-height: 6rem;

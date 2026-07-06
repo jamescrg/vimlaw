@@ -15,7 +15,7 @@ from django.utils import timezone
 from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import InvoiceTransmission
 from apps.invoicing.pay.links import payment_url
-from apps.settings.models import Company
+from apps.settings.models import Firm
 from utils.mail import firm_from_email, render_inlined
 
 
@@ -104,9 +104,9 @@ def send_invoice(
             store_invoice_pdf(invoice, request)
 
         cover = message if message is not None else (invoice.message or "")
-        # Firm branding comes from the Company settings record (same source as
+        # Firm branding comes from the Firm settings record (same source as
         # the PDF), not a hardcoded setting.
-        company = Company.objects.first()
+        company = Firm.objects.first()
         bcc_list = _parse_recipients(company.invoice_bcc) if company else []
         context = {
             "invoice": invoice,
@@ -133,10 +133,10 @@ def send_invoice(
             from_email=firm_from_email(company),  # "<Firm>" <no-reply addr>
             to=to_list,
             cc=cc_list,
-            # Firm archive copy (Company.invoice_bcc); the BCC'd mailbox retains
+            # Firm archive copy (Firm.invoice_bcc); the BCC'd mailbox retains
             # the full email, cover message and PDF included.
             bcc=bcc_list or None,
-            # Client replies go to the firm's configured email (Company
+            # Client replies go to the firm's configured email (Firm
             # settings), not the unattended From address.
             reply_to=[company.email] if company and company.email else None,
         )

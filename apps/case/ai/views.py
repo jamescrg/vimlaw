@@ -26,7 +26,7 @@ from apps.management.selection import (
     toggle_id,
 )
 from apps.matters.models import Matter
-from apps.settings.models import Company
+from apps.settings.models import Firm
 
 from .context import (
     assemble_matter_context,
@@ -969,7 +969,7 @@ def create_prompt(request, matter_id):
     matter, _ = get_matter_from_url(request, matter_id)
 
     # Load ai-prompt.md content with jurisdiction substitution
-    company = Company.objects.first()
+    company = Firm.objects.first()
     jurisdiction = (
         matter.jurisdiction
         or (company.jurisdiction if company else "")
@@ -1034,7 +1034,7 @@ def create_prompt(request, matter_id):
 
     # Build the prompt text with proper markdown formatting
 
-    company = Company.objects.first()
+    company = Firm.objects.first()
 
     company_name = company.name if company else ""
     prompt_text = f"""## Request Date
@@ -1093,7 +1093,7 @@ def context_preview(request, matter_id):
     matter, _ = get_matter_from_url(request, matter_id)
 
     # Resolve jurisdiction
-    company = Company.objects.first()
+    company = Firm.objects.first()
     jurisdiction = (
         matter.jurisdiction
         or (company.jurisdiction if company else "")

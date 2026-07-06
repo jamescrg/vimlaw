@@ -1,0 +1,21 @@
+{% if firm.logo %}
+  <div class="firm-logo-row">
+    <div class="firm-logo-preview">
+      {# djlint:off H006 #}
+      <img src="{{ firm.logo.url }}" alt="{{ firm.name }} logo" />
+      {# djlint:on #}
+    </div>
+    <button type="button"
+            class="btn-icon"
+            aria-label="Remove logo"
+            hx-post="{% url 'settings:firm-remove-logo' %}"
+            hx-target="#firm-logo"
+            hx-confirm="Remove the firm logo?">
+      <i class="icon-circle-x"></i>
+    </button>
+  </div>
+{% else %}
+  {{ logo_form.logo }}
+  {% if logo_form.logo.help_text %}<div class="help-text">{{ logo_form.logo.help_text }}</div>{% endif %}
+  {{ logo_form.logo.errors }}
+{% endif %}

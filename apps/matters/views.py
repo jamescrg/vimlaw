@@ -180,10 +180,10 @@ def detail(request, id):
 
 def _matter_info_context(matter):
     """Shared context for the Info tab (full page + HTMX partial). The firm's
-    default jurisdiction (Company.jurisdiction) is shown when the matter has none."""
-    from apps.settings.models import Company
+    default jurisdiction (Firm.jurisdiction) is shown when the matter has none."""
+    from apps.settings.models import Firm
 
-    company = Company.objects.first()
+    company = Firm.objects.first()
     return {
         "primary_proceeding": matter.primary_proceeding,
         "company_jurisdiction": company.jurisdiction if company else "",

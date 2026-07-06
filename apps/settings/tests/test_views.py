@@ -166,23 +166,23 @@ def test_password_change_mismatch(client, user):
 
 
 # -----------------------------------------------------
-# Company management tests
+# Firm management tests
 # -----------------------------------------------------
-def test_company_index(client):
-    response = client.get("/settings/company/")
+def test_firm_index(client):
+    response = client.get("/settings/firm/")
     assert response.status_code == 200
-    assertTemplateUsed(response, "settings/company/index.html")
+    assertTemplateUsed(response, "settings/firm/index.html")
 
 
-def test_company_index_has_form(client):
-    response = client.get("/settings/company/")
+def test_firm_index_has_form(client):
+    response = client.get("/settings/firm/")
     assert response.status_code == 200
-    assertTemplateUsed(response, "settings/company/form.html")
+    assertTemplateUsed(response, "settings/firm/form.html")
     assert "id_name" in response.content.decode()
 
 
-def test_company_create(client):
-    from apps.settings.models import Company
+def test_firm_create(client):
+    from apps.settings.models import Firm
 
     data = {
         "name": "Test Law Firm",
@@ -193,47 +193,47 @@ def test_company_create(client):
         "phone": "406-555-1234",
         "email": "info@testfirm.com",
     }
-    response = client.post("/settings/company/", data)
+    response = client.post("/settings/firm/", data)
     assert response.status_code == 200
     assert "success" in response.headers.get("HX-Toast", "").lower()
-    assert Company.objects.count() == 1
-    company = Company.objects.first()
+    assert Firm.objects.count() == 1
+    company = Firm.objects.first()
     assert company.name == "Test Law Firm"
     assert company.city == "Anytown"
 
 
-def test_company_update(client):
-    from apps.settings.models import Company
+def test_firm_update(client):
+    from apps.settings.models import Firm
 
-    Company.objects.create(name="Original Firm", city="Missoula")
+    Firm.objects.create(name="Original Firm", city="Missoula")
     data = {
         "name": "Updated Firm",
         "city": "Helena",
     }
-    response = client.post("/settings/company/", data)
+    response = client.post("/settings/firm/", data)
     assert response.status_code == 200
     assert "success" in response.headers.get("HX-Toast", "").lower()
-    assert Company.objects.count() == 1
-    company = Company.objects.first()
+    assert Firm.objects.count() == 1
+    company = Firm.objects.first()
     assert company.name == "Updated Firm"
     assert company.city == "Helena"
 
 
-def test_company_post_returns_partial(client):
+def test_firm_post_returns_partial(client):
     """POST should return only the form partial, not the full page layout."""
     data = {"name": "Test Firm"}
-    response = client.post("/settings/company/", data)
+    response = client.post("/settings/firm/", data)
     content = response.content.decode()
     assert "section-nav" not in content
     assert "<nav" not in content
-    assert "Company Info" in content
+    assert "Save Firm Details" in content
 
 
-def test_company_form_prepopulated(client):
-    from apps.settings.models import Company
+def test_firm_form_prepopulated(client):
+    from apps.settings.models import Firm
 
-    Company.objects.create(name="My Firm", phone="555-0000")
-    response = client.get("/settings/company/")
+    Firm.objects.create(name="My Firm", phone="555-0000")
+    response = client.get("/settings/firm/")
     assert response.status_code == 200
     content = response.content.decode()
     assert "My Firm" in content
