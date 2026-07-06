@@ -1,16 +1,20 @@
 /* ==========================================================================
-   THEMING CONVENTION (light + dark + cosmic)
+   THEMING CONVENTION (light + ocean + dark + cosmic)
    --------------------------------------------------------------------------
    Theming is token-first. `:root` below defines every semantic token in its
    LIGHT value; the dark block further down RE-DEFINES those same tokens with
    dark (gb-*) values. Component CSS consumes var(--token) and stays
    theme-agnostic — it flips automatically when the tokens change.
 
-   THREE themes: light, dark (Gruvbox), and cosmic (Nord). Cosmic IS the dark
-   theme structurally — it shares the dark token block and every dark
-   structural rule, and only repoints the --gb-* ramp from Gruvbox to Nord (see
-   the [data-theme="cosmic"] block after the dark block). So any "dark" rule is
+   FOUR themes: two light — light (Matcha) and ocean (DigitalOcean-inspired) —
+   and two dark — dark (Gruvbox) and cosmic (Nord). Cosmic IS the dark theme
+   structurally — it shares the dark token block and every dark structural
+   rule, and only repoints the --gb-* ramp from Gruvbox to Nord (see the
+   [data-theme="cosmic"] block after the dark block). So any "dark" rule is
    scoped to BOTH: `:is([data-theme="dark"], [data-theme="cosmic"])`.
+   Ocean is light structurally: it inherits every :root default and its block
+   below only repoints colour tokens (lighter true-gray surfaces, DO-blue
+   buttons, steel links, slate accent); dark structural rules never apply.
 
    RULE OF THUMB:
    1. If dark only needs a different *value*, add/repoint a token here. Do NOT
@@ -185,6 +189,69 @@
   --hl-red: var(--red-100);
   --hl-yellow: var(--yellow-100);
 
+}
+
+/* ==========================================================================
+   Ocean — DigitalOcean-inspired light theme.
+
+   The second LIGHT theme: brighter and more mainstream than Matcha, on the
+   same true-gray stone ramp shifted lighter (white table cells on a
+   near-white canvas). Accents: DO-blue primary buttons, dark steel
+   (slate-blue) links, deep-navy headings, and a slate accent wherever Matcha
+   uses violet (selection wash, accent icons). Structurally it IS the light
+   theme — it inherits every :root token and only repoints colours. Tokens
+   defined as var(--other-token) in :root (e.g. --color-nav, --label-gray,
+   --task-highlight-bg) resolve per element and follow automatically — only
+   tokens that point at different palette slots appear here. Dark structural
+   rules are scoped to dark/cosmic and never apply.
+   ========================================================================== */
+[data-theme="ocean"] {
+  color-scheme: light;
+
+  /* Typography & Text */
+  --color-darker: var(--do-navy);
+
+  /* Links — steel: darker and desaturated, slate rather than action blue */
+  --link: var(--do-steel);
+  --link-hover: var(--do-steel-bright);
+
+  /* Backgrounds — Matcha's ladder shifted about two steps lighter: white
+     table cells float on a near-white canvas under lighter chrome. */
+  --background-nav: var(--stone-200);
+  --background-body: var(--stone-50);
+  --background-subnav: var(--stone-150);
+  --background-subnav-contrast: var(--stone-200);
+  --background-section: var(--stone-100);
+  --background-td: var(--stone-25);
+  --background-medium-light: var(--stone-50);
+  --background-light: var(--stone-25);
+  --ai-frame: var(--stone-200);
+  --ai-surface: var(--stone-25);
+  --ai-raised: var(--stone-50);
+
+  /* Sidebar */
+  --background-sidebar: var(--stone-100);
+  --background-sidebar-hover: var(--stone-150);
+  --background-sidebar-active: var(--stone-200);
+
+  /* Buttons — the one loud DO-brand note */
+  --button-primary-background: var(--do-blue);
+  --button-primary-color: var(--stone-25);
+  --btn-success-bg: var(--emerald-100);
+
+  /* Forms & Inputs */
+  --input-background: var(--stone-25);
+
+  /* Selection & Active States — slate wash instead of Matcha's violet */
+  --selected-background: var(--slate-150);
+
+  /* Status & Feedback — emerald (DO green family) instead of lime */
+  --success: var(--emerald-700);
+  --true: var(--emerald-700);
+
+  /* Icons — the violet accent goes slate */
+  --icon-violet: var(--slate-700);
+  --icon-violet-muted: var(--slate-500);
 }
 
 /* ==========================================================================
