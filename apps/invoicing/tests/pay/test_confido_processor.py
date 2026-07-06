@@ -273,6 +273,14 @@ def test_charge_syncs_and_attaches_client_and_matter():
             matter={"external_id": "m1", "name": "Acme v. Roe"},
         )
     assert r.status == SUCCEEDED
+    # The created matter's name carries our id (Confido needs unique matter
+    # names), appended after the name so its list still sorts alphabetically.
+    matter_create = next(
+        v["input"]
+        for v in seen
+        if v.get("input", {}).get("externalId", "").startswith("kosmos-matter-")
+    )
+    assert matter_create["name"] == "Acme v. Roe #m1"
     complete = next(
         v["input"] for v in seen if "paymentSessionToken" in v.get("input", {})
     )

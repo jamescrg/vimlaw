@@ -438,7 +438,17 @@ class ConfidoProcessor(PaymentProcessor):
             return found
         if not absent:
             return None
-        add_input = {"clientId": client_id, "name": name, "externalId": external_id}
+        # Confido requires matter names to be unique (clients may share a name,
+        # matters may not) — a create that collides on name links to the existing
+        # matter, which may belong to a different client ("matterId does not match
+        # client"). Append our matter id to guarantee a distinct name; placed
+        # after the name so Confido's matter list still sorts alphabetically.
+        display_name = f"{name} #{raw}"
+        add_input = {
+            "clientId": client_id,
+            "name": display_name,
+            "externalId": external_id,
+        }
         query = (
             "mutation M($input: MatterCreateInput!) "
             "{ matterCreate(input: $input) { matter { id } } }"
