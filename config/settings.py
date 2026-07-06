@@ -239,6 +239,9 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 SERVER_EMAIL = env("SERVER_EMAIL")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=SERVER_EMAIL)
+# From address for client-facing billing email (invoice transmissions and
+# payment requests). Falls back to DEFAULT_FROM_EMAIL when unset.
+BILLING_FROM_EMAIL = env("BILLING_FROM_EMAIL", default=DEFAULT_FROM_EMAIL)
 ADMINS = env("ADMINS")
 # Address(es) BCC'd on every invoice email the app sends, so the firm retains a
 # faithful copy (cover message + attached PDF) of what each client received.

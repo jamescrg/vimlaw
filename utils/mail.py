@@ -17,14 +17,15 @@ _FIRM_SUFFIX_RE = re.compile(
 )
 
 
-def firm_from_email(company):
-    """From header that shows the firm as sender: the firm name (sans entity
-    suffix) as display name in front of the no-reply address — e.g.
-    '"Craig Legal" <no-reply@…>'. Replies still route to the firm via Reply-To.
-    Falls back to DEFAULT_FROM_EMAIL (None) when there's no firm name."""
+def billing_from_email(company):
+    """From header for client-facing billing email: the firm name (sans entity
+    suffix) as display name in front of BILLING_FROM_EMAIL — e.g.
+    '"Craig Legal" <billing@…>'. Replies route to the firm's billing address via
+    Reply-To. Returns the bare address when there's no firm name, and None when
+    no address is configured (so the caller falls back to DEFAULT_FROM_EMAIL)."""
     name = _FIRM_SUFFIX_RE.sub("", getattr(company, "name", "") or "").strip()
-    address = parseaddr(settings.DEFAULT_FROM_EMAIL or "")[1]
-    return formataddr((name, address)) if name and address else None
+    address = parseaddr(settings.BILLING_FROM_EMAIL or "")[1]
+    return formataddr((name, address)) if address else None
 
 
 def render_inlined(template_name, context):

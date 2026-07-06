@@ -16,7 +16,7 @@ from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import InvoiceTransmission
 from apps.invoicing.pay.links import payment_url
 from apps.settings.models import Firm
-from utils.mail import firm_from_email, render_inlined
+from utils.mail import billing_from_email, render_inlined
 
 
 class InvoiceSendError(Exception):
@@ -108,6 +108,12 @@ def send_invoice(
         # the PDF), not a hardcoded setting.
         company = Firm.objects.first()
         bcc_list = _parse_recipients(company.invoice_bcc) if company else []
+        # Billing correspondence (client replies + the "contact us" address in
+        # the email body) goes to the firm's billing email, falling back to the
+        # general firm email when no billing address is configured.
+        billing_email = ""
+        if company:
+            billing_email = company.billing_email or company.email
         context = {
             "invoice": invoice,
             "matter_name": matter.name if matter else "",
@@ -116,7 +122,7 @@ def send_invoice(
             "amount_due": invoice.amount_remaining,
             "cover_message": cover,
             "firm_name": company.name if company else "",
-            "firm_email": company.email if company else "",
+            "billing_email": billing_email,
             "pay_url": payment_url(invoice, request),  # tokenized payment link
         }
         # Client-facing: lead with the firm name, then identify by number (not
@@ -130,15 +136,15 @@ def send_invoice(
         email = EmailMultiAlternatives(
             subject=subject,
             body=render_to_string("emails/invoice_email.txt", context),
-            from_email=firm_from_email(company),  # "<Firm>" <no-reply addr>
+            from_email=billing_from_email(company),  # "<Firm>" <billing addr>
             to=to_list,
             cc=cc_list,
             # Firm archive copy (Firm.invoice_bcc); the BCC'd mailbox retains
             # the full email, cover message and PDF included.
             bcc=bcc_list or None,
-            # Client replies go to the firm's configured email (Firm
-            # settings), not the unattended From address.
-            reply_to=[company.email] if company and company.email else None,
+            # Client replies go to the firm's billing email (Firm settings),
+            # not the unattended From address.
+            reply_to=[billing_email] if billing_email else None,
         )
         email.attach_alternative(
             render_inlined("emails/invoice_email.html", context), "text/html"

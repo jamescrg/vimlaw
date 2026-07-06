@@ -15,7 +15,7 @@ from apps.invoicing.pay.balance import matter_open_invoices
 from apps.invoicing.pay.links import request_pay_url
 from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.settings.models import Firm
-from utils.mail import firm_from_email, render_inlined
+from utils.mail import billing_from_email, render_inlined
 
 
 class PaymentRequestSendError(Exception):
@@ -106,7 +106,7 @@ def send_payment_request(
         email = EmailMultiAlternatives(
             subject=subject,
             body=render_to_string("emails/payment_request_email.txt", context),
-            from_email=firm_from_email(company),  # "<Firm>" <no-reply addr>
+            from_email=billing_from_email(company),  # "<Firm>" <billing addr>
             to=to_list,
             cc=cc_list or None,
             bcc=bcc_list or None,
