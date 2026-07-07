@@ -24,11 +24,11 @@ window.KosmosChartPalette = (function () {
       hue: 293, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
       grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)",
     },
-    ocean: {
-      // Slate family anchored on the steel-link hue (--do-steel, ~257) — the
-      // theme's accent is slate, not violet or saturated blue, so chroma sits
-      // lower than light's. Axes stay true gray to match the stone surfaces.
-      hue: 257, hueSpan: 42, chroma: 0.05, lMin: 0.6, lMax: 0.82, otherL: 0.88,
+    sky: {
+      // Blue family anchored on the theme's blue accent (the --blue ramp,
+      // hue ~259), same muted-chroma treatment as light's violet. Axes stay
+      // true gray to match the stone surfaces.
+      hue: 259, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
       grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)",
     },
     dark: {
@@ -74,7 +74,7 @@ window.KosmosChartPalette = (function () {
   // it reads the same. Dark/cosmic keep a mid-grey visible on the dark surface.
   const NEUTRAL = {
     light: "oklch(88.5% 0 none)",
-    ocean: "oklch(88.5% 0 none)",
+    sky: "oklch(88.5% 0 none)",
     dark: "oklch(0.60 0.006 70)",
     cosmic: "oklch(0.62 0.006 250)",
   };
@@ -88,7 +88,7 @@ window.KosmosChartPalette = (function () {
   // 'Other' grey. Outlines donut slices and bar segments.
   const BORDER = {
     light: "oklch(83.5% 0 none)",
-    ocean: "oklch(83.5% 0 none)",
+    sky: "oklch(83.5% 0 none)",
     dark: "oklch(0.482 0.018 61)",
     cosmic: "#4c566a",
   };

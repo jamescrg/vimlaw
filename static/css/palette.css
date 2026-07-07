@@ -333,12 +333,4 @@
   --nord13: #ebcb8b;         /* Aurora — yellow */
   --nord14: #a3be8c;         /* Aurora — green */
   --nord15: #b48ead;         /* Aurora — purple */
-
-  /* DigitalOcean-inspired accents — drive the "ocean" light theme. Its grays
-     come from the stone ramp (true gray, no blue cast); links use a darker,
-     desaturated steel blue rather than the loud action blue. */
-  --do-blue: #0069ff;                        /* primary action blue (buttons) */
-  --do-navy: #031b4e;                        /* deep navy headings / darkest text */
-  --do-steel: oklch(42% 0.065 257deg);       /* links — dark slate-blue */
-  --do-steel-bright: oklch(53% 0.08 257deg); /* link hover — lifted a step */
 }
