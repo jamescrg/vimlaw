@@ -32,7 +32,7 @@
 
 th,
 .table > :not(caption) > * > th {
-  background: var(--background-control);
+  background: var(--background-th);
   border-bottom: solid 1px var(--border-medium);
   border-right: solid 1px var(--border-medium);
   font-weight: 500;

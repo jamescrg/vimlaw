@@ -75,6 +75,11 @@
   --background-subnav-contrast: var(--stone-225);
   --background-control: var(--stone-200);
   --background-section: var(--stone-150);
+
+  /* Table headers follow the control surface by default; themes that want
+     lighter headers without touching the many other control-surface consumers
+     (toolbars, buttons, chips) repoint this alone. */
+  --background-th: var(--background-control);
   --background-td: var(--stone-125);
   --background-medium-light: var(--stone-75);
   --background-light: var(--stone-50);
@@ -222,6 +227,10 @@
   --background-subnav: var(--stone-150);
   --background-subnav-contrast: var(--stone-200);
   --background-section: var(--stone-100);
+
+  /* Headers lift well off the control surface — between the subnav and the
+     section fill, so they don't weigh down the white cells below. */
+  --background-th: var(--stone-125);
   --background-td: var(--stone-25);
   --background-medium-light: var(--stone-50);
   --background-light: var(--stone-25);
@@ -243,7 +252,7 @@
   --input-background: var(--stone-25);
 
   /* Selection & Active States — slate wash instead of Matcha's violet */
-  --selected-background: var(--slate-150);
+  --selected-background: var(--slate-200);
 
   /* Status & Feedback — emerald (DO green family) instead of lime */
   --success: var(--emerald-700);
