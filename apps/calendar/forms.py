@@ -49,9 +49,8 @@ class EventForm(forms.ModelForm):
             ),
             "party": forms.Select(choices=PARTIES),
             "status": forms.Select(choices=STATUSES),
-            "location": forms.Textarea(
+            "location": forms.TextInput(
                 attrs={
-                    "rows": 4,
                     "class": "span3",
                     "placeholder": "Zoom link & passcode, or courthouse address & courtroom",
                 }

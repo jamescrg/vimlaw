@@ -430,6 +430,7 @@ def _parse_google_event(google_event):
     Extracts: date, start_time, end_time, description, event_type, location
     Note: matter, party, status, user_id cannot be determined from Google data
     """
+    from apps.calendar.models import Event
     from apps.matters.models import Matter
 
     event_data = {}
@@ -467,11 +468,14 @@ def _parse_google_event(google_event):
         event_data["end_time"] = end_dt.time()
 
     # Parse location: a bare meeting-type value maps to event_type (legacy
-    # data), anything else is treated as a free-text location.
+    # data), anything else is treated as a free-text location. Google's
+    # location is unbounded; truncate to our column limit so a long value
+    # can't fail the whole sync run.
     location = google_event.get("location", "")
     if location in ["Zoom", "Virtual", "Phone", "In-person"]:
         event_data["event_type"] = location
     elif location:
-        event_data["location"] = location
+        max_length = Event._meta.get_field("location").max_length
+        event_data["location"] = location[:max_length]
 
     return event_data

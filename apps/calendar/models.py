@@ -33,7 +33,10 @@ class Event(AuditMixin, models.Model):
     event_type = models.CharField(
         max_length=50, choices=EVENT_TYPE_CHOICES, blank=True, null=True
     )
-    location = models.TextField(blank=True, null=True)
+    # CharField (not TextField) on purpose: location is a short pointer — a
+    # meeting link or "courthouse & courtroom" — not a notes field. 150 still
+    # fits a Zoom URL + passcode.
+    location = models.CharField(max_length=150, blank=True, null=True)
     status = models.CharField(max_length=50, blank=True, null=True)
     google_id = models.CharField(max_length=255, blank=True, null=True)
     # When this event was last successfully pushed to Google Calendar. NULL means
