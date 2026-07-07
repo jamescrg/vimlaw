@@ -1,5 +1,5 @@
 {% load humanize %}{{ firm_name|default:"Payment request" }}
-Outstanding balance
+{% if is_trust %}Request for Trust Deposit{% else %}Outstanding balance{% endif %}
 
 Dear Client,
 
@@ -12,7 +12,7 @@ You will find attached courtesy copies of all invoices not yet paid in full.
 {% endif %}
 If you have any questions, please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}.
 
-Matter:           {{ matter_number }}
+{% if is_trust %}Client:           {{ client_name }}{% else %}Matter:           {{ matter_number }}{% endif %}
 Amount Requested: ${{ amount_due|floatformat:2|intcomma }}
 {% if pay_url %}
 Pay online:   {{ pay_url }}

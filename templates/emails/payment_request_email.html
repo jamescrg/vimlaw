@@ -134,7 +134,9 @@
             <tr>
               <td class="card-head">
                 <h1 class="firm-name">{{ firm_name|default:"Payment request"|firm_strip }}</h1>
-                <p class="meta">Outstanding balance</p>
+                <p class="meta">
+                  {% if is_trust %}Request for Trust Deposit{% else %}Outstanding balance{% endif %}
+                </p>
               </td>
             </tr>
             <tr>
@@ -157,9 +159,10 @@
                   If you have any questions, please reply to this email{% if firm_email %} or contact us at <a href="mailto:{{ firm_email }}">{{ firm_email }}</a>{% endif %}.
                 </p>
                 <table role="presentation" class="summary" width="100%" cellpadding="0" cellspacing="0">
+                  {# Trust requests are client-level (no matter) — show who the deposit is for. #}
                   <tr>
-                    <td class="label">Matter</td>
-                    <td class="value">{{ matter_number }}</td>
+                    <td class="label">{% if is_trust %}Client{% else %}Matter{% endif %}</td>
+                    <td class="value">{% if is_trust %}{{ client_name }}{% else %}{{ matter_number }}{% endif %}</td>
                   </tr>
                   <tr>
                     <td class="label">Amount Requested</td>
