@@ -220,17 +220,16 @@
   --link: var(--do-steel);
   --link-hover: var(--do-steel-bright);
 
-  /* Backgrounds — Matcha's ladder shifted about two steps lighter: white
-     table cells float on a near-white canvas under lighter chrome. */
+  /* Backgrounds — Matcha's ladder shifted lighter still: white body and
+     table cells under one shared stone-100 tier for the chrome surfaces
+     (subnav / section / control / table headers). */
   --background-nav: var(--stone-200);
-  --background-body: var(--stone-50);
-  --background-subnav: var(--stone-150);
+  --background-body: var(--stone-25);
+  --background-subnav: var(--stone-100);
   --background-subnav-contrast: var(--stone-200);
   --background-section: var(--stone-100);
-
-  /* Headers lift well off the control surface — between the subnav and the
-     section fill, so they don't weigh down the white cells below. */
-  --background-th: var(--stone-125);
+  --background-th: var(--stone-100);
+  --background-control: var(--stone-100);
   --background-td: var(--stone-25);
   --background-medium-light: var(--stone-50);
   --background-light: var(--stone-25);
@@ -253,6 +252,7 @@
 
   /* Selection & Active States — slate wash instead of Matcha's violet */
   --selected-background: var(--slate-200);
+  --selected-color: var(--do-steel);
 
   /* Status & Feedback — emerald (DO green family) instead of lime */
   --success: var(--emerald-700);
