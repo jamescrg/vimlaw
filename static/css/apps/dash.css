@@ -81,6 +81,11 @@
   flex: 0 0 16rem;
   flex-direction: column;
   gap: 0.4rem;
+
+  /* Without this, min-width:auto lets a long nowrap child (location / matter)
+     force the card past its fixed basis instead of ellipsizing. Also guards
+     the mobile 1fr grid, where grid items have the same auto minimum. */
+  min-width: 0;
   padding: 0.75rem;
 }
 
@@ -126,6 +131,10 @@
   color: var(--color-primary);
   font-weight: 500;
   margin: 0;
+
+  /* Long unbreakable runs (URLs pasted as descriptions) wrap instead of
+     overflowing the fixed-width card. */
+  overflow-wrap: anywhere;
 }
 
 .event-card-meta {
