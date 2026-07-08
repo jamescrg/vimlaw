@@ -22,22 +22,22 @@ Time entry form
 
 /* Trust funds remaining for the selected matter. Hidden until JS fills it in
    (no matter selected = nothing to show); shown as a flex row by the JS. */
-.trust-clearance {
+.trust-available {
   align-items: baseline;
   display: none;
   gap: 0.4rem;
 }
 
-.trust-clearance-label {
+.trust-available-label {
   color: var(--color-muted);
 }
 
-.trust-clearance-value {
+.trust-available-value {
   font-weight: 600;
 }
 
 /* Over-extended: billing/owed exceeds trust on hand. */
-.trust-clearance-value.is-negative {
+.trust-available-value.is-negative {
   color: var(--error);
 }
 

@@ -463,10 +463,6 @@ Credits
  Unbilled
 ========================================================================== */
 
-.clearance-negative {
-  color: var(--urgent);
-}
-
 .unbilled-list {
   min-width: 70rem;
 }

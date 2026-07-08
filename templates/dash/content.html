@@ -12,7 +12,7 @@
        hx-trigger="eventsChanged from:body"
        hx-get="{% url 'dash:events-section' %}"
        hx-target="this">{% include "dash/events_section.html" %}</div>
-  {# Row 3: Collections — past due | low clearance, admins only #}
+  {# Row 3: Collections — past due | low trust available, admins only #}
   {% if show_collections %}
     <div class="dash-row">
       <div class="events-header">
@@ -64,24 +64,24 @@
             <thead>
               <tr>
                 <th colspan="2">
-                  Low Clearance (Pending)
+                  Low Trust Available (Pending)
                   <a href="{% url 'invoicing:unbilled-index' %}" class="btn-ghost"><i class="icon-arrow-up-right"></i></a>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {% if low_clearance_matters %}
-                {% for matter in low_clearance_matters %}
-                  <tr {% if matter.clearance < 0 %}class="hl-yellow"{% endif %}>
+              {% if low_trust_available_matters %}
+                {% for matter in low_trust_available_matters %}
+                  <tr {% if matter.trust_available < 0 %}class="hl-yellow"{% endif %}>
                     <td>
                       <a href="{% url 'matters:ledger' id=matter.id %}">{{ matter.name }}</a>
                     </td>
-                    <td class="numeric">${{ matter.clearance|floatformat:2|intcomma }}</td>
+                    <td class="numeric">${{ matter.trust_available|floatformat:2|intcomma }}</td>
                   </tr>
                 {% endfor %}
               {% else %}
                 <tr>
-                  <td colspan="2" class="empty-message">No low clearance matters</td>
+                  <td colspan="2" class="empty-message">No matters with low trust available</td>
                 </tr>
               {% endif %}
             </tbody>

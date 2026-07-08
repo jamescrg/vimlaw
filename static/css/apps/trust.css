@@ -46,7 +46,7 @@ Summary
 }
 
 /* Over-extended: obligations exceed the client's trust on hand. */
-.trust-summary .clearance.is-negative {
+.trust-summary .trust-available.is-negative {
   color: var(--error);
 }
 

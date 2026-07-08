@@ -44,7 +44,7 @@ class TimeEntryForm(forms.ModelForm):
         widgets = {
             "matter": forms.Select(
                 attrs={
-                    "onchange": "updateRate(); updateTrustClearance()",
+                    "onchange": "updateRate(); updateTrustAvailable()",
                     "tabindex": "1",
                 }
             ),

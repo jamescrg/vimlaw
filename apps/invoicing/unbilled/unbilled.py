@@ -11,7 +11,7 @@ from apps.invoicing.invoices.models import Invoice
 from apps.management.pagination import CustomPaginator
 from apps.management.selection import all_visible_selected, get_selected_ids
 from apps.matters.models import Matter
-from apps.trust.clearance import client_trust_clearances
+from apps.trust.available import trust_available_by_client
 from apps.trust.trust import get_pending_client_balance
 
 
@@ -145,9 +145,9 @@ def get_unbilled_data(request):
             except Exception:
                 client_trust_balances[matter.client.id] = 0
 
-    # Trust clearance is the client-level, pending-based figure from the trust app
-    # (the single authority) — a matter's clearance is its client's. Bulk once.
-    clearances = client_trust_clearances(
+    # Trust available is the client-level, pending-based figure from the trust app
+    # (the single authority) — a matter's trust available is its client's. Bulk once.
+    available_by_client = trust_available_by_client(
         [m.client_id for m in matters_list if m.client_id]
     )
 
@@ -164,8 +164,8 @@ def get_unbilled_data(request):
         matter.trust_balance = (
             client_trust_balances.get(matter.client.id, 0) if matter.client else 0
         )
-        matter.clearance = (
-            clearances.get(matter.client_id, Decimal("0"))
+        matter.trust_available = (
+            available_by_client.get(matter.client_id, Decimal("0"))
             if matter.client_id
             else Decimal("0")
         )

@@ -276,7 +276,7 @@ def _get_detail_tab_data(request, matter, tab):
     from apps.matters.ledger.get_ledger_data import get_ledger_data
     from apps.matters.rates.models import Rate
     from apps.matters.tasks.views import get_matter_tasks_data
-    from apps.trust.clearance import client_trust_clearance
+    from apps.trust.available import client_trust_available
     from apps.trust.trust import get_pending_client_balance
 
     # Block financial tabs for users without perm_financial
@@ -354,15 +354,15 @@ def _get_detail_tab_data(request, matter, tab):
             + matter.value["unbilled"]["net_fees_and_expenses"]
         )
 
-        # A matter's clearance IS its client's (pooled trust) — the single
+        # A matter's trust available IS its client's (pooled trust) — the single
         # authoritative, pending-based figure from the trust app.
-        trust_clearance = client_trust_clearance(matter.client_id)
+        trust_available = client_trust_available(matter.client_id)
 
         return {
             "tab_template": "matters/ledger/list.html",
             "client_trust_balance": client_trust_balance,
             "total_cost": total_cost,
-            "trust_clearance": trust_clearance,
+            "trust_available": trust_available,
             **ledger_data,
         }
 

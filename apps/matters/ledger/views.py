@@ -10,7 +10,7 @@ from apps.accounts.access import matter_access_required
 from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.matters.ledger.get_ledger_data import get_ledger_data
 from apps.matters.models import Matter
-from apps.trust.clearance import client_trust_clearance
+from apps.trust.available import client_trust_available
 from apps.trust.trust import get_pending_client_balance
 
 
@@ -45,7 +45,7 @@ def ledger_index(request, id):
         "subapp": "ledger",
         "matter": matter,
         "client_trust_balance": client_trust_balance,
-        "trust_clearance": client_trust_clearance(matter.client_id),
+        "trust_available": client_trust_available(matter.client_id),
         "total_cost": total_cost,
     } | ledger_data
 
@@ -71,7 +71,7 @@ def ledger_list(request, id):
         "subapp": "ledger",
         "matter": matter,
         "client_trust_balance": client_trust_balance,
-        "trust_clearance": client_trust_clearance(matter.client_id),
+        "trust_available": client_trust_available(matter.client_id),
     } | ledger_data
 
     return render(request, "matters/ledger/list.html", context)

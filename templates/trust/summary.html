@@ -66,9 +66,9 @@
           </button>
         </th>
         <th class="numeric">
-          Pending Clearance
-          <button class="btn-sort {% if current_order == 'clearance' %}active{% endif %}"
-                  hx-post="{% url 'trust:order-by' 'clearance' %}">
+          Available (Pending)
+          <button class="btn-sort {% if current_order == 'trust_available' %}active{% endif %}"
+                  hx-post="{% url 'trust:order-by' 'trust_available' %}">
             <i class="icon-chevrons-up-down"></i>
           </button>
         </th>
@@ -84,8 +84,8 @@
               ${{ contact.pending_client_balance|intcomma }}
             </td>
             <td class="numeric">${{ contact.confirmed_client_balance|intcomma }}</td>
-            <td class="numeric clearance{% if contact.clearance < 0 %} is-negative{% endif %}">
-              ${{ contact.clearance|intcomma }}
+            <td class="numeric trust-available{% if contact.trust_available < 0 %} is-negative{% endif %}">
+              ${{ contact.trust_available|intcomma }}
             </td>
           </tr>
         {% endfor %}
@@ -96,7 +96,7 @@
           <td></td>
           <td class="numeric">${{ pending_account_balance|intcomma }}</td>
           <td class="numeric">${{ confirmed_account_balance|intcomma }}</td>
-          <td class="numeric">${{ total_clearance|intcomma }}</td>
+          <td class="numeric">${{ total_trust_available|intcomma }}</td>
         </tr>
       {% endif %}
     </table>

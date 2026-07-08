@@ -33,7 +33,7 @@ from apps.reports.wip.aggregation import (
     wip_user_breakdown,
     wip_user_matters,
 )
-from apps.trust.clearance import client_trust_clearances
+from apps.trust.available import trust_available_by_client
 from apps.trust.trust import get_pending_client_balance
 
 
@@ -117,16 +117,16 @@ def set_wip_period(request, period):
 
 
 def dash_collections_context(request):
-    """Past-due and low-clearance matters for the admin-only Collections section.
+    """Past-due and low-available matters for the admin-only Collections section.
     Skipped (and the section hidden) for non-admins."""
     if not request.user.is_admin:
         return {
             "show_collections": False,
             "balance_due_matters": [],
-            "low_clearance_matters": [],
+            "low_trust_available_matters": [],
         }
 
-    # Matters with low clearance (< $1000)
+    # Matters with low available (< $1000)
     # Use subqueries to calculate unbilled amounts
     unbilled_fees_subquery = (
         TimeEntry.objects.filter(
@@ -174,25 +174,25 @@ def dash_collections_context(request):
         )
         .filter(Q(unbilled_fees__gt=0) | Q(unbilled_expenses__gt=0))
         # Matters on a deferred-fee arrangement have waived/irrelevant retainers,
-        # so the low-clearance alarm does not apply to them. Driven by the
+        # so the low-available alarm does not apply to them. Driven by the
         # matter-level flag (consistent before a matter is ever invoiced); the
         # DEFERRED-invoice check is a backstop for any matter not yet flagged.
         .exclude(Q(deferred_fees=True) | Q(has_deferred=True))
     )
 
-    # Clearance is the client-level, pending-based figure from the trust app (the
-    # single authority) — a matter's clearance is its client's. Bulk-compute once
+    # Trust available is the client-level, pending-based figure from the trust app (the
+    # single authority) — a matter's available is its client's. Bulk-compute once
     # for all the clients on this list.
-    low_clearance_matters = []
+    low_trust_available_matters = []
     client_ids = {m.client_id for m in matters_with_unbilled if m.client_id}
-    clearances = client_trust_clearances(client_ids)
+    available_by_client = trust_available_by_client(client_ids)
     trust_balances = {}
 
     for matter in matters_with_unbilled:
         if not matter.client_id:
             continue
         # Only alarm on matters whose client actually HOLDS trust — a low
-        # clearance means the trust is running low, not that the matter is simply
+        # available means the trust is running low, not that the matter is simply
         # unfunded. (Cached per client.)
         if matter.client_id not in trust_balances:
             try:
@@ -204,14 +204,14 @@ def dash_collections_context(request):
         if trust_balances[matter.client_id] <= 0:
             continue
 
-        clearance = clearances.get(matter.client_id, 0)
-        if clearance < 1000:
-            matter.clearance = clearance
-            low_clearance_matters.append(matter)
+        available = available_by_client.get(matter.client_id, 0)
+        if available < 1000:
+            matter.trust_available = available
+            low_trust_available_matters.append(matter)
 
-    # Sort by clearance ascending (lowest first)
-    low_clearance_matters.sort(key=lambda m: m.clearance)
-    low_clearance_matters = low_clearance_matters[:10]
+    # Sort by available ascending (lowest first)
+    low_trust_available_matters.sort(key=lambda m: m.trust_available)
+    low_trust_available_matters = low_trust_available_matters[:10]
 
     # Matters with outstanding balance due (excluding deferred)
     # Use subqueries to calculate at database level (avoid N+1)
@@ -358,7 +358,7 @@ def dash_collections_context(request):
         "show_collections": True,
         "balance_due_matters": balance_due_matters,
         "total_balance_due": total_balance_due,
-        "low_clearance_matters": low_clearance_matters,
+        "low_trust_available_matters": low_trust_available_matters,
     }
 
 

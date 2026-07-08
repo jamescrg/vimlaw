@@ -26,15 +26,15 @@ function updateRate(){
 }
 
 
-function updateTrustClearance(){
+function updateTrustAvailable(){
     /**
      * Show how much trust money remains for the selected matter, so the
      * attorney is aware while billing. Mirrors updateRate(): fires on matter
      * change and on form load.
      */
     var matterElement = document.getElementById("id_matter");
-    var row = document.getElementById("trust-clearance");
-    var value = document.getElementById("trust-clearance-value");
+    var row = document.getElementById("trust-available");
+    var value = document.getElementById("trust-available-value");
     if (!matterElement || !row || !value) {
         return;
     }
@@ -45,7 +45,7 @@ function updateTrustClearance(){
         return;
     }
 
-    fetch(`/activity/time/trust-clearance/${matterId}`)
+    fetch(`/activity/time/trust-available/${matterId}`)
         .then(response => response.json())
         .then(data => {
             value.textContent = data.display;
@@ -53,7 +53,7 @@ function updateTrustClearance(){
             row.style.display = "flex";
         })
         .catch(error => {
-            console.error('Error fetching trust clearance:', error);
+            console.error('Error fetching trust available:', error);
             row.style.display = "none";
         });
 }
@@ -126,6 +126,6 @@ document.body.addEventListener('htmx:afterSettle', function(event) {
     // Check if the time entry form was loaded
     if (document.getElementById('time-entry-form')) {
         initAbbreviationPreview();
-        updateTrustClearance();
+        updateTrustAvailable();
     }
 });

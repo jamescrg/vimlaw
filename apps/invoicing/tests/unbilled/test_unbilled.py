@@ -132,14 +132,14 @@ class TestGetUnbilledData:
         # $600 fees + $150 expenses = $750
         assert matters[0].total_activity == Decimal("750.00")
 
-    def test_clearance_with_no_trust_balance(self, user, matter, unbilled_time):
-        """Client-level, pending trust clearance (the single authority): with no
-        trust and $600 of unbilled work, clearance is −$600 (pooled balance −
+    def test_trust_available_with_no_trust_balance(self, user, matter, unbilled_time):
+        """Client-level, pending trust available (the single authority): with no
+        trust and $600 of unbilled work, trust available is −$600 (pooled balance −
         owed − unbilled), not 0."""
         request = self._make_request(user)
         result = get_unbilled_data(request)
         matters = list(result["matters"])
-        assert matters[0].clearance == Decimal("-600.00")
+        assert matters[0].trust_available == Decimal("-600.00")
 
     def test_matter_with_only_expenses(self, user, matter, unbilled_expense):
         """Matters with only unbilled expenses (no time) are included."""

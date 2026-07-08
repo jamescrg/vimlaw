@@ -591,30 +591,30 @@ def set_rate(request, matter_id):
     return HttpResponse(rate_value)
 
 
-def _trust_clearance(matter):
+def _trust_available(matter):
     """Trust funds free of obligations for a matter — which is simply its client's
-    trust clearance (the pooled trust is shared across the client's matters), from
+    trust available (the pooled trust is shared across the client's matters), from
     the single authority in the trust app. Local import avoids a circular import."""
-    from apps.trust.clearance import client_trust_clearance
+    from apps.trust.available import client_trust_available
 
-    return client_trust_clearance(matter.client_id)
+    return client_trust_available(matter.client_id)
 
 
 @login_required
-def trust_clearance(request, matter_id):
+def trust_available(request, matter_id):
     """AJAX endpoint: trust funds remaining for a matter, shown on the time entry
     form so the attorney sees how much is left in trust while billing."""
     try:
         matter = Matter.objects.get(pk=matter_id)
-        clearance = _trust_clearance(matter)
+        available = _trust_available(matter)
     except Matter.DoesNotExist:
-        clearance = 0
+        available = 0
 
-    sign = "-" if clearance < 0 else ""
+    sign = "-" if available < 0 else ""
     return JsonResponse(
         {
-            "display": "{}${:,.2f}".format(sign, abs(clearance)),
-            "negative": clearance < 0,
+            "display": "{}${:,.2f}".format(sign, abs(available)),
+            "negative": available < 0,
         }
     )
 

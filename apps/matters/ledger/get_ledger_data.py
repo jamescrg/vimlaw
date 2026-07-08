@@ -22,13 +22,13 @@ def get_ledger_data(matter):
 
     Deferred-fee arrangements (invoices manually marked ``DEFERRED``) are also
     broken out so the ledger can distinguish the accumulated recovery claim from
-    what the client owes right now, and so trust clearance is not dragged down by
+    what the client owes right now, and so trust available is not dragged down by
     fees the client is not currently obligated to pay:
 
     - ``deferred_total``   -- net recovery claim: sum of ``amount_remaining`` over
       ``DEFERRED`` invoices (i.e. after the client's payments/credits applied to them).
     - ``currently_owed``   -- sum of ``amount_remaining`` over non-deferred displayed
-      invoices: what the client owes now. Used for the trust-clearance figure.
+      invoices: what the client owes now. Used for the trust-available figure.
     - ``has_deferred``     -- whether this matter has any deferred recovery claim.
 
     When payments/credits are fully applied to invoices,

@@ -13,7 +13,7 @@
   font-size: 1.45rem;
 }
 
-/* Two equal columns (Past Due | Low Clearance), stacking on narrow screens. */
+/* Two equal columns (Past Due | Low Trust Available), stacking on narrow screens. */
 .dash-split {
   display: flex;
   flex-wrap: wrap;

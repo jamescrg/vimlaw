@@ -1,8 +1,8 @@
-"""The single trust-clearance authority (apps.trust.clearance).
+"""The single trust-available authority (apps.trust.available).
 
-Clearance is client-level: a client's pooled trust minus ALL their matters'
+Trust available is client-level: a client's pooled trust minus ALL their matters'
 obligations, computed on the PENDING balance (unconfirmed deposits count). A
-matter's clearance is simply its client's.
+matter's available is simply its client's.
 """
 
 from decimal import Decimal
@@ -11,7 +11,7 @@ import pytest
 
 from apps.activity.time.models import TimeEntry
 from apps.matters.models import Matter, PracticeArea
-from apps.trust.clearance import client_trust_clearance, client_trust_clearances
+from apps.trust.available import client_trust_available, trust_available_by_client
 from apps.trust.models import Transaction
 
 pytestmark = pytest.mark.django_db
@@ -40,7 +40,7 @@ def _unbilled_time(user, matter, hours, rate):
     )
 
 
-def test_clearance_pools_all_matters_and_uses_pending(user, contact):
+def test_available_pools_all_matters_and_uses_pending(user, contact):
     # An UNCONFIRMED $1000 deposit — only counts if we use the pending balance.
     Transaction.objects.create(
         contact=contact,
@@ -56,9 +56,9 @@ def test_clearance_pools_all_matters_and_uses_pending(user, contact):
 
     # Pooled: 1000 (pending) − 0 owed − 500 unbilled across BOTH matters. A
     # per-matter view would wrongly show 800 / 700; a confirmed-only view -500.
-    assert client_trust_clearance(contact.id) == Decimal("500.00")
-    assert client_trust_clearances([contact.id])[contact.id] == Decimal("500.00")
+    assert client_trust_available(contact.id) == Decimal("500.00")
+    assert trust_available_by_client([contact.id])[contact.id] == Decimal("500.00")
 
 
 def test_no_client_is_zero():
-    assert client_trust_clearance(None) == Decimal("0")
+    assert client_trust_available(None) == Decimal("0")

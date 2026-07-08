@@ -31,7 +31,7 @@ def client_contact(admin_user):
 
 
 @pytest.fixture
-def low_clearance_matter(admin_user, client_contact):
+def low_trust_available_matter(admin_user, client_contact):
     """An open, billable matter with unbilled time exceeding its small trust balance."""
     practice_area = PracticeArea.objects.create(name="General", is_active=True)
     matter = Matter.objects.create(
@@ -53,7 +53,7 @@ def low_clearance_matter(admin_user, client_contact):
         comp=False,
         entered=False,
     )
-    # A small confirmed retainer ($500) -> clearance 500 - 1000 = -500 (< $1000).
+    # A small confirmed retainer ($500) -> trust available 500 - 1000 = -500 (< $1000).
     Transaction.objects.create(
         contact=client_contact,
         date="2024-05-01",
@@ -70,35 +70,37 @@ def _context(admin_user):
     return dash_collections_context(request)
 
 
-class TestLowClearanceDeferredExclusion:
-    def test_matter_appears_without_deferral(self, admin_user, low_clearance_matter):
+class TestLowTrustAvailableDeferredExclusion:
+    def test_matter_appears_without_deferral(
+        self, admin_user, low_trust_available_matter
+    ):
         context = _context(admin_user)
-        ids = [m.id for m in context["low_clearance_matters"]]
-        assert low_clearance_matter.id in ids
+        ids = [m.id for m in context["low_trust_available_matters"]]
+        assert low_trust_available_matter.id in ids
 
     def test_matter_excluded_with_deferred_invoice(
-        self, admin_user, low_clearance_matter
+        self, admin_user, low_trust_available_matter
     ):
         Invoice.objects.create(
             created_by=admin_user,
-            matter=low_clearance_matter,
+            matter=low_trust_available_matter,
             date_limit="2024-06-30",
             date_issued="2024-06-01",
             status="DEFERRED",
         )
         context = _context(admin_user)
-        ids = [m.id for m in context["low_clearance_matters"]]
-        assert low_clearance_matter.id not in ids
+        ids = [m.id for m in context["low_trust_available_matters"]]
+        assert low_trust_available_matter.id not in ids
 
     def test_matter_excluded_with_deferred_fees_flag(
-        self, admin_user, low_clearance_matter
+        self, admin_user, low_trust_available_matter
     ):
         """A deferred-fee matter is excluded even before it has any invoice."""
-        low_clearance_matter.deferred_fees = True
-        low_clearance_matter.save()
+        low_trust_available_matter.deferred_fees = True
+        low_trust_available_matter.save()
         context = _context(admin_user)
-        ids = [m.id for m in context["low_clearance_matters"]]
-        assert low_clearance_matter.id not in ids
+        ids = [m.id for m in context["low_trust_available_matters"]]
+        assert low_trust_available_matter.id not in ids
 
 
 class TestBalanceDueDeferredDoubleCount:

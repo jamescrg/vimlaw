@@ -1,24 +1,26 @@
-"""Trust clearance — the single authority for the whole app.
+"""Trust available — the single authority for the whole app.
 
 A client's trust is one pooled balance that ALL their matters draw on, so
-clearance is inherently **client-level**:
+trust available is inherently **client-level**:
 
-    clearance(client) = PENDING trust balance
-                      − currently owed across the client's non-deferred invoices
-                      − unbilled net fees/expenses on the client's
-                        non-deferred-fee matters
+    trust_available(client) = PENDING trust balance
+                            − currently owed across the client's non-deferred
+                              invoices
+                            − unbilled net fees/expenses on the client's
+                              non-deferred-fee matters
 
 **Pending, not confirmed:** firms customarily work against provisional deposits
 in the expectation they'll clear (the lost opportunity of waiting outweighs the
-small chance of a loss). A **matter's** trust clearance is simply its client's —
-the pool is shared — so per-matter callers use ``client_trust_clearance``.
+small chance of a loss). A **matter's** trust available is simply its client's —
+the pool is shared — so per-matter callers use ``client_trust_available``.
 
 Entry points:
-- ``client_trust_clearances(ids)`` → ``{client_id: Decimal}`` in a handful of
+- ``trust_available_by_client(ids)`` → ``{client_id: Decimal}`` in a handful of
   bulk queries (for the Account Summary and the dashboard's matter list);
-- ``client_trust_clearance(id)`` → the single-client figure (matter ledger,
+- ``client_trust_available(id)`` → the single-client figure (matter ledger,
   matter detail, the time-entry form);
-- ``attach_client_clearance(rows)`` → sets ``row["clearance"]`` on Summary dicts.
+- ``attach_client_trust_available(rows)`` → sets ``row["trust_available"]`` on
+  Summary dicts.
 """
 
 from collections import defaultdict
@@ -162,7 +164,7 @@ def _owed_by_client(client_ids):
 def _unbilled_by_client(client_ids):
     """``{client_id: unbilled net fees/expenses}`` — sum of each non-deferred-fee
     matter's unbilled net work (deferred-fee matters accrue but aren't
-    collectible, so they must not drag clearance down)."""
+    collectible, so they must not drag trust available down)."""
     from apps.activity.expenses.models import ExpenseEntry
     from apps.activity.flat_fees.models import FlatFeeEntry
     from apps.activity.time.models import TimeEntry
@@ -202,8 +204,8 @@ def _unbilled_by_client(client_ids):
     return unbilled
 
 
-def client_trust_clearances(client_ids):
-    """``{client_id: Decimal}`` trust clearance — see the module docstring. Bulk:
+def trust_available_by_client(client_ids):
+    """``{client_id: Decimal}`` trust available — see the module docstring. Bulk:
     a handful of queries total, not one per client."""
     client_ids = list(client_ids)
     if not client_ids:
@@ -217,19 +219,19 @@ def client_trust_clearances(client_ids):
     }
 
 
-def client_trust_clearance(client_id):
-    """A single client's trust clearance (Decimal). A matter's clearance is its
-    client's — the pooled trust is shared — so per-matter callers pass
+def client_trust_available(client_id):
+    """A single client's trust available (Decimal). A matter's trust available
+    is its client's — the pooled trust is shared — so per-matter callers pass
     ``matter.client_id`` here. Returns 0 for a matter with no client."""
     if client_id is None:
         return _ZERO
-    return client_trust_clearances([client_id]).get(client_id, _ZERO)
+    return trust_available_by_client([client_id]).get(client_id, _ZERO)
 
 
-def attach_client_clearance(contacts):
-    """Set ``contact["clearance"]`` (Decimal) on each Account Summary row dict,
-    from the one authoritative calculation. Returns the same list."""
-    clearances = client_trust_clearances([c["id"] for c in contacts])
+def attach_client_trust_available(contacts):
+    """Set ``contact["trust_available"]`` (Decimal) on each Account Summary row
+    dict, from the one authoritative calculation. Returns the same list."""
+    available_by_client = trust_available_by_client([c["id"] for c in contacts])
     for c in contacts:
-        c["clearance"] = clearances.get(c["id"], _ZERO)
+        c["trust_available"] = available_by_client.get(c["id"], _ZERO)
     return contacts
