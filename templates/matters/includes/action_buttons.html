@@ -3,16 +3,6 @@
         hx-target="#htmx-modal-container"
         data-bs-toggle="modal"
         data-bs-target="#htmx-modal-container">+ Time</button>
-{% if mode == 'detail' %}
-  <button type="button"
-          class="matter-edit"
-          aria-label="Edit matter"
-          title="Edit matter"
-          hx-get="{% url 'matters:edit' id=matter.id %}"
-          hx-target="#htmx-modal-container">
-    <i class="icon-square-pen"></i>
-  </button>
-{% endif %}
 <button class="accent-link expense-action"
         hx-get="/activity/expenses/add/{{ matter.id }}/{% if mode == 'case' %}case{% else %}matters{% endif %}"
         hx-target="#htmx-modal-container"

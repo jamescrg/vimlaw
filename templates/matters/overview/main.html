@@ -4,7 +4,17 @@
     <div class="overview-main-col">
       <table class="overview-table overview-main">
         <tr>
-          <th class="overview-table-head" colspan="2">Matter Detail</th>
+          <th class="overview-table-head" colspan="2">
+            Matter Detail
+            <button type="button"
+                    class="btn-icon overview-edit"
+                    aria-label="Edit matter details"
+                    title="Edit matter details"
+                    hx-get="{% url 'matters:edit' id=matter.id %}"
+                    hx-target="#htmx-modal-container">
+              <i class="icon-square-pen"></i>
+            </button>
+          </th>
         </tr>
         <tr>
           <th>Work Status</th>
@@ -80,17 +90,6 @@
           </tr>
         {% endif %}
       </table>
-      <div class="matter-subtab-add overview-edit">
-        <button type="button"
-                class="btn-icon"
-                hx-get="{% url 'matters:edit' id=matter.id %}"
-                hx-target="#htmx-modal-container"
-                hx-trigger="click"
-                data-bs-toggle="modal"
-                data-bs-target="#htmx-modal-container">
-          <i class="icon-square-pen with-text"></i> Edit Matter Details
-        </button>
-      </div>
     </div>
     <div class="overview-side-col">
       {% if show_financial %}
