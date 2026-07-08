@@ -228,10 +228,32 @@ def client_trust_available(client_id):
     return trust_available_by_client([client_id]).get(client_id, _ZERO)
 
 
+def trust_available_severity(available, balance):
+    """Severity band for displaying a trust-available figure: "danger" in
+    deficit; "warning" once the cushion falls under 25% of the client's trust
+    on hand (relative to the retainer's size — a $2,000 retainer warns at
+    $500, a $5,000 one at $1,250); "ok" otherwise; "none" when no trust is
+    held (there is no retainer to run low)."""
+    if available < 0:
+        return "danger"
+    if balance > 0:
+        if available < balance * Decimal("0.25"):
+            return "warning"
+        return "ok"
+    return "none"
+
+
 def attach_client_trust_available(contacts):
-    """Set ``contact["trust_available"]`` (Decimal) on each Account Summary row
-    dict, from the one authoritative calculation. Returns the same list."""
+    """Set ``contact["trust_available"]`` (Decimal) and
+    ``contact["trust_available_severity"]`` on each Account Summary row dict,
+    from the one authoritative calculation. Severity reads the row's
+    ``pending_client_balance``, so attach after the balances. Returns the
+    same list."""
     available_by_client = trust_available_by_client([c["id"] for c in contacts])
     for c in contacts:
-        c["trust_available"] = available_by_client.get(c["id"], _ZERO)
+        available = available_by_client.get(c["id"], _ZERO)
+        c["trust_available"] = available
+        c["trust_available_severity"] = trust_available_severity(
+            available, c.get("pending_client_balance", _ZERO)
+        )
     return contacts

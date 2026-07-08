@@ -474,6 +474,25 @@ Matter Overview tab
   width: 10rem;
 }
 
+/* Trust Available severity — deficit red, amber when the cushion is under
+   25% of the client's trust on hand, healthy green; no class when the client
+   holds no trust. Shared by the Overview financials and the ledger totals;
+   status tokens, so every theme reads. */
+.overview-financial td.trust-ok,
+.ledger-totals td.trust-ok {
+  color: var(--success);
+}
+
+.overview-financial td.trust-warning,
+.ledger-totals td.trust-warning {
+  color: var(--icon-yellow);
+}
+
+.overview-financial td.trust-danger,
+.ledger-totals td.trust-danger {
+  color: var(--urgent);
+}
+
 /* Recent Actions: fixed layout caps the table at its column's width — long
    narrative runs wrap (overflow-wrap inherits into the cells) instead of
    pushing the page wider. Widths sit on the cols because fixed layout reads

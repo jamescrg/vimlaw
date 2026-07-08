@@ -45,9 +45,15 @@ Summary
   width: 13rem;
 }
 
-/* Over-extended: obligations exceed the client's trust on hand. */
-.trust-summary .trust-available.is-negative {
-  color: var(--error);
+/* Available severity — exception-only in the table: amber under a 25%
+   cushion, red in deficit. Healthy rows keep ordinary ink (a column of green
+   would drown the exceptions), unlike the Overview/Ledger single figures. */
+.trust-summary .trust-available.trust-warning {
+  color: var(--icon-yellow);
+}
+
+.trust-summary .trust-available.trust-danger {
+  color: var(--urgent);
 }
 
 /* ==========================================================================

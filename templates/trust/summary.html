@@ -84,7 +84,7 @@
               ${{ contact.pending_client_balance|intcomma }}
             </td>
             <td class="numeric">${{ contact.confirmed_client_balance|intcomma }}</td>
-            <td class="numeric trust-available{% if contact.trust_available < 0 %} is-negative{% endif %}">
+            <td class="numeric trust-available trust-{{ contact.trust_available_severity }}">
               ${{ contact.trust_available|intcomma }}
             </td>
           </tr>

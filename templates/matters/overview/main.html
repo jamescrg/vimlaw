@@ -105,7 +105,7 @@
           </tr>
           <tr>
             <td>Trust Available</td>
-            <td class="numeric">${{ trust_available|floatformat:2|intcomma }}</td>
+            <td class="numeric trust-{{ trust_available_severity }}">${{ trust_available|floatformat:2|intcomma }}</td>
           </tr>
         </table>
       {% endif %}

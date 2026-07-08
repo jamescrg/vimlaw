@@ -214,8 +214,18 @@ def _matter_overview_context(request, matter):
         "tomorrow": today + timedelta(days=1),
     }
     if show_financial:
+        from apps.trust.available import trust_available_severity
+        from apps.trust.trust import get_pending_client_balance
+
         context["balance_due"] = get_ledger_data(matter)["balance_due"]
-        context["trust_available"] = client_trust_available(matter.client_id)
+        trust_available = client_trust_available(matter.client_id)
+        trust_balance = (
+            get_pending_client_balance(matter.client.id) if matter.client else 0
+        )
+        context["trust_available"] = trust_available
+        context["trust_available_severity"] = trust_available_severity(
+            trust_available, trust_balance
+        )
     return context
 
 
@@ -441,6 +451,8 @@ def _get_detail_tab_data(request, matter, tab):
 
         # A matter's trust available IS its client's (pooled trust) — the single
         # authoritative, pending-based figure from the trust app.
+        from apps.trust.available import trust_available_severity
+
         trust_available = client_trust_available(matter.client_id)
 
         return {
@@ -448,6 +460,9 @@ def _get_detail_tab_data(request, matter, tab):
             "client_trust_balance": client_trust_balance,
             "total_cost": total_cost,
             "trust_available": trust_available,
+            "trust_available_severity": trust_available_severity(
+                trust_available, client_trust_balance
+            ),
             **ledger_data,
         }
 
