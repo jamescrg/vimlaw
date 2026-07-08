@@ -173,10 +173,6 @@ Matter Switcher
   margin-right: 1.25rem;
 }
 
-.matter-toolbar a.matter-step-next {
-  margin-left: auto;
-}
-
 /* Mobile: pare the matter title to the name + the +Time action. Hides the
    Detail/Case mode pills (so Case is unreachable on phones — accepted for now),
    the +Expense action, and the edit/print tools; +Time stays, pushed to the far
@@ -184,6 +180,7 @@ Matter Switcher
 @media (width <= 768px) {
   .matter-toolbar .mode-pills,
   .matter-toolbar .expense-action,
+  .matter-toolbar .matter-edit,
   .matter-toolbar .toolbar-right {
     display: none;
   }
@@ -380,78 +377,108 @@ Contacts tab — parties table
 }
 
 /* ==========================================================================
-Matter Info tab
+Matter Overview tab
 ========================================================================== */
 
-/* Two tables at the top: matter properties (60%) beside the primary proceeding
-   (40%), mirroring the Ledger's side-by-side totals tables. No wrapper padding —
-   the tables sit flush inside .detail-body's own padding. */
-.info-tables {
+/* Two equal columns: matter properties beside the financial snapshot and
+   recent actions. No wrapper padding — the tables sit flush inside
+   .detail-body's own padding. */
+.overview-tables {
   align-items: flex-start;
   display: flex;
   gap: 1.25rem;
 }
 
-.info-table {
+.overview-table {
   border: solid 1px var(--border-medium);
   border-collapse: separate;
   border-radius: var(--radius-md);
   border-spacing: 0;
+  width: 100%;
 }
 
-/* Left column: the properties table (60%) with the Edit button beneath it, so the
-   button's right edge tracks the table's right border whether or not the
-   proceeding table is present. */
-.info-main-col {
+/* Left column: the properties table with the Edit button beneath it. */
+.overview-main-col {
   display: flex;
-  flex: 6;
+  flex: 1;
   flex-direction: column;
   min-width: 0;
 }
 
-.info-main-col .info-table {
-  width: 100%;
-}
-
-/* Right-align the Edit button to the properties table's right edge. */
-.info-edit {
+/* Right column: the financial snapshot above the recent-actions table. */
+.overview-side-col {
   display: flex;
-  justify-content: flex-end;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
 }
 
-.info-table.info-proceeding {
-  flex: 4;
+/* The Edit button sits flush with the properties table's left edge. */
+.overview-edit {
+  display: flex;
+  justify-content: flex-start;
 }
 
-.info-table th,
-.info-table td {
+.overview-table th,
+.overview-table td {
   border-bottom: solid 1px var(--border-medium);
   padding: 0.5rem 1rem;
   text-align: left;
   vertical-align: top;
 }
 
-.info-table tr:last-child th,
-.info-table tr:last-child td {
+.overview-table tr:last-child th,
+.overview-table tr:last-child td {
   border-bottom: none;
 }
 
 /* Label column: shrink to its content so the value column takes the rest. */
-.info-table th {
+.overview-table th {
   color: var(--color-muted);
   font-weight: 600;
   white-space: nowrap;
   width: 1%;
 }
 
-/* Full-width section-title row (e.g. "Primary Proceeding"). */
-.info-table th.info-table-head {
+/* Full-width section-title row (e.g. "Matter Detail"). */
+.overview-table th.overview-table-head {
   color: var(--color-primary);
   width: auto;
 }
 
-.info-empty {
+/* Financials: plain-td label column; the numeric value column matches the
+   ledger totals' 10rem so the two tabs' figures line up visually. (The
+   text-align re-assert beats .overview-table td's left alignment, which
+   otherwise outweighs the shared .numeric class.) */
+.overview-financial td.numeric {
+  text-align: right;
+  width: 10rem;
+}
+
+/* Recent Actions: fixed layout caps the table at its column's width — long
+   narrative runs wrap (overflow-wrap inherits into the cells) instead of
+   pushing the page wider. */
+.overview-actions {
+  overflow-wrap: anywhere;
+  table-layout: fixed;
+}
+
+.overview-actions .overview-action-date {
+  width: 7.5rem;
+}
+
+.overview-actions .overview-action-user {
+  width: 4rem;
+}
+
+.overview-empty {
   color: var(--color-muted);
+}
+
+/* Upcoming-events row (dash-style cards) below the two table columns. */
+.overview-events {
+  margin-top: 1.25rem;
 }
 
 /* ==========================================================================

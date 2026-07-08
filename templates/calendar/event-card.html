@@ -1,0 +1,45 @@
+{# One upcoming-event card (dash events row + matter overview). Context:
+   event, today, tomorrow; pass show_matter=True to add the matter link
+   (omitted on matter pages, where the matter is implicit). #}
+<div class="event-card{% if event.date == today %} is-today{% elif event.date == tomorrow %} is-tomorrow{% endif %}"
+     hx-get="{% url 'calendar:edit' id=event.id %}"
+     hx-target="#htmx-modal-container"
+     hx-trigger="click">
+  <div class="event-card-when">
+    {% if event.date == today %}
+      Today
+    {% elif event.date == tomorrow %}
+      Tomorrow
+    {% else %}
+      {{ event.date|date:"D, M j" }}
+    {% endif %}
+    ·
+    {% if event.start_time %}
+      {{ event.start_time|time:"g:i A" }}
+    {% else %}
+      All day
+    {% endif %}
+  </div>
+  {% if show_matter and event.matter %}
+    <a class="event-card-matter"
+       href="{% url 'matters:events-index' id=event.matter.id %}"
+       onclick="event.stopPropagation()">{{ event.matter.name }}</a>
+  {% endif %}
+  <p class="event-card-title">{{ event.description }}</p>
+  <div class="event-card-meta">
+    {% if event.event_type %}
+      <span class="event-card-type">
+        {% if event.event_type == "Phone" %}
+          <i class="icon-phone"></i>
+        {% elif event.event_type == "In-person" %}
+          <i class="icon-map-pin"></i>
+        {% else %}
+          <i class="icon-video"></i>
+        {% endif %}
+        {{ event.event_type }}
+      </span>
+    {% endif %}
+    {% if event.party %}<span>{{ event.party }}</span>{% endif %}
+    {% if event.location %}<span class="event-card-location">{{ event.location }}</span>{% endif %}
+  </div>
+</div>

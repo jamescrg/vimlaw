@@ -6,7 +6,7 @@
     {% endif %}
     {% if adjacent.prev %}
       <a class="matter-step matter-step-prev"
-         href="{% url 'matters:info-index' id=adjacent.prev.id %}"
+         href="{% url 'matters:overview-index' id=adjacent.prev.id %}"
          title="{{ adjacent.prev.name }}"
          aria-label="Previous matter"><i class="icon-chevron-left"></i></a>
     {% endif %}
@@ -17,7 +17,7 @@
     </div>
     {% if adjacent.next %}
       <a class="matter-step matter-step-next"
-         href="{% url 'matters:info-index' id=adjacent.next.id %}"
+         href="{% url 'matters:overview-index' id=adjacent.next.id %}"
          title="{{ adjacent.next.name }}"
          aria-label="Next matter"><i class="icon-chevron-right"></i></a>
     {% endif %}

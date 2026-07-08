@@ -1,14 +1,22 @@
-<div class="matter-info">
-  <div class="info-tables">
-    <div class="info-main-col">
-      <table class="info-table info-main">
+{% load humanize %}
+<div class="matter-overview">
+  <div class="overview-tables">
+    <div class="overview-main-col">
+      <table class="overview-table overview-main">
+        <tr>
+          <th class="overview-table-head" colspan="2">Matter Detail</th>
+        </tr>
+        <tr>
+          <th>Work Status</th>
+          <td id="overview-work-status">{% include "matters/overview/work-status.html" %}</td>
+        </tr>
         <tr>
           <th>Client</th>
           <td>
             {% if matter.client %}
               <a href="{% url 'contacts:select' contact_id=matter.client.id %}">{{ matter.client.name }}</a>
             {% else %}
-              <span class="info-empty">None</span>
+              <span class="overview-empty">None</span>
             {% endif %}
           </td>
         </tr>
@@ -30,10 +38,6 @@
             <td>{{ matter.date_end|date:"Y-m-d" }}</td>
           </tr>
         {% endif %}
-        <tr>
-          <th>Work Status</th>
-          <td id="info-work-status">{% include "matters/info/work-status.html" %}</td>
-        </tr>
         {% if matter.description %}
           <tr>
             <th>Description</th>
@@ -76,7 +80,7 @@
           </tr>
         {% endif %}
       </table>
-      <div class="matter-subtab-add info-edit">
+      <div class="matter-subtab-add overview-edit">
         <button type="button"
                 class="btn-icon"
                 hx-get="{% url 'matters:edit' id=matter.id %}"
@@ -84,28 +88,60 @@
                 hx-trigger="click"
                 data-bs-toggle="modal"
                 data-bs-target="#htmx-modal-container">
-          <i class="icon-square-pen with-text"></i> Edit Matter
+          <i class="icon-square-pen with-text"></i> Edit Matter Details
         </button>
       </div>
     </div>
-    {% if primary_proceeding %}
-      <table class="info-table info-proceeding">
+    <div class="overview-side-col">
+      {% if show_financial %}
+        <table class="overview-table overview-financial">
+          <tr>
+            <th class="overview-table-head" colspan="2">Financials</th>
+          </tr>
+          <tr>
+            <td>Balance Due</td>
+            <td class="numeric">${{ balance_due|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td>Work in Progress</td>
+            <td class="numeric">${{ matter.value.unbilled.net_fees_and_expenses|floatformat:2|intcomma }}</td>
+          </tr>
+          <tr>
+            <td>Trust Available</td>
+            <td class="numeric">${{ trust_available|floatformat:2|intcomma }}</td>
+          </tr>
+        </table>
+      {% endif %}
+      <table class="overview-table overview-actions">
         <tr>
-          <th class="info-table-head" colspan="2">Primary Proceeding</th>
+          <th class="overview-table-head" colspan="3">Recent Actions</th>
         </tr>
-        <tr>
-          <th>Forum</th>
-          <td>{{ primary_proceeding.forum|default:"—" }}</td>
-        </tr>
-        <tr>
-          <th>Case No.</th>
-          <td>{{ primary_proceeding.case_number|default:"—" }}</td>
-        </tr>
-        <tr>
-          <th>Filed</th>
-          <td>{{ primary_proceeding.date_filed|date:"Y-m-d"|default:"—" }}</td>
-        </tr>
+        {% for entry in recent_actions %}
+          <tr>
+            <td class="overview-action-date">{{ entry.date|date:"Y-m-d" }}</td>
+            <td class="overview-action-user">{{ entry.user.initials }}</td>
+            <td>{{ entry.actions }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3">
+              <span class="overview-empty">No time entries</span>
+            </td>
+          </tr>
+        {% endfor %}
       </table>
-    {% endif %}
+    </div>
   </div>
+  {% if upcoming_events %}
+    <div class="overview-events">
+      <div class="events-header">
+        <h2>Upcoming Events</h2>
+      </div>
+      <div class="event-cards-grid">
+        {% for event in upcoming_events %}
+          {% include "calendar/event-card.html" %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
 </div>

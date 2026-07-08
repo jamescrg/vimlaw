@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
@@ -17,7 +17,7 @@ from apps.matters.settlement.models import SettlementEntry
 
 # Valid detail tabs for the matter detail view
 VALID_DETAIL_TABS = [
-    "info",
+    "overview",
     "contacts",
     "rates",
     "activity",
@@ -178,48 +178,74 @@ def detail(request, id):
     return redirect(f"/matters/{id}/{tab}")
 
 
-def _matter_info_context(matter):
-    """Shared context for the Info tab (full page + HTMX partial). The firm's
-    default jurisdiction (Firm.jurisdiction) is shown when the matter has none."""
+def _matter_overview_context(request, matter):
+    """Shared context for the Overview tab (full page + HTMX partial). The
+    firm's default jurisdiction (Firm.jurisdiction) is shown when the matter
+    has none; recent_actions feeds the Recent Actions table (the latest time
+    entries, newest first). The financial snapshot reuses the Ledger tab's
+    authorities (get_ledger_data / the trust app) and, like that tab, is
+    reserved for admin/perm_financial users."""
+    from apps.activity.time.models import TimeEntry
+    from apps.matters.ledger.get_ledger_data import get_ledger_data
     from apps.settings.models import Firm
+    from apps.trust.available import client_trust_available
 
     company = Firm.objects.first()
-    return {
-        "primary_proceeding": matter.primary_proceeding,
+    show_financial = request.user.is_admin or request.user.perm_financial
+    today = date.today()
+    context = {
         "company_jurisdiction": company.jurisdiction if company else "",
+        "show_financial": show_financial,
+        "recent_actions": (
+            TimeEntry.objects.filter(matter=matter)
+            .select_related("user")
+            .order_by("-date", "-id")[:5]
+        ),
+        # Dash-style upcoming-events cards, scoped to this matter.
+        "upcoming_events": (
+            Event.objects.filter(
+                matter=matter, status="Pending", date__gte=today
+            ).order_by("date", "start_time", "party")[:7]
+        ),
+        "today": today,
+        "tomorrow": today + timedelta(days=1),
     }
+    if show_financial:
+        context["balance_due"] = get_ledger_data(matter)["balance_due"]
+        context["trust_available"] = client_trust_available(matter.client_id)
+    return context
 
 
 @login_required
 @matter_access_required
-def info_index(request, id):
-    """Full-page render of the matter Info tab (matter properties + client)."""
+def overview_index(request, id):
+    """Full-page render of the matter Overview tab (matter properties + client)."""
     matter = get_object_or_404(Matter, pk=id)
     context = {
         "app": "matters",
-        "subapp": "info",
+        "subapp": "overview",
         "matter": matter,
-        **_matter_info_context(matter),
+        **_matter_overview_context(request, matter),
     }
-    return render(request, "matters/info/list.html", context)
+    return render(request, "matters/overview/list.html", context)
 
 
 @login_required
 @matter_access_required
-def info_work_status_edit(request, matter_id):
-    """Inline work-status editor for the Info tab (swaps the cell to an input)."""
+def overview_work_status_edit(request, matter_id):
+    """Inline work-status editor for the Overview tab (swaps the cell to an input)."""
     matter = get_object_or_404(Matter, pk=matter_id)
-    return render(request, "matters/info/work-status-edit.html", {"matter": matter})
+    return render(request, "matters/overview/work-status-edit.html", {"matter": matter})
 
 
 @login_required
 @matter_access_required
-def info_work_status_update(request, id):
+def overview_work_status_update(request, id):
     """Save the inline work-status edit and swap the cell back to the display."""
     matter = get_object_or_404(Matter, pk=id)
     matter.work_status = request.POST.get("work_status", "")
     matter.save()
-    return render(request, "matters/info/work-status.html", {"matter": matter})
+    return render(request, "matters/overview/work-status.html", {"matter": matter})
 
 
 @login_required
@@ -290,10 +316,10 @@ def _get_detail_tab_data(request, matter, tab):
             "forbidden": True,
         }
 
-    if tab == "info":
+    if tab == "overview":
         return {
-            "tab_template": "matters/info/main.html",
-            **_matter_info_context(matter),
+            "tab_template": "matters/overview/main.html",
+            **_matter_overview_context(request, matter),
         }
 
     if tab == "contacts":
