@@ -79,4 +79,5 @@ def test_modal_apply_preserves_dropdown_state(client, matter):
     post = _session_for(client, "matter_tasks_filter")
     # Merge preserves the prior importance selection.
     assert str(post.get("importance")) == "7"
-    assert post.get("status") == "Complete"
+    # Status has been multi-valued since the multi-select status filter.
+    assert post.get("status") == ["Complete"]
