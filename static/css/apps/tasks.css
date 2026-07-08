@@ -174,39 +174,6 @@ tr > td.importance.complete .button-link {
   padding-right: 0.5rem;
 }
 
-/* User stepper group — chevrons flanking the user dropdown walk the user
-   cycle (All Users → each active user, wrapping at the ends). The three
-   segments read as one control: inner corners squared, adjoining borders
-   collapsed. */
-.tasks-toolbar .user-step-group {
-  align-items: stretch;
-  display: inline-flex;
-}
-
-.tasks-toolbar .user-step-group .user-step {
-  color: var(--color-muted);
-  padding: 0.5rem;
-}
-
-.tasks-toolbar .user-step-group .user-step:first-child {
-  border-bottom-right-radius: 0;
-  border-top-right-radius: 0;
-}
-
-/* Fixed width so the group doesn't resize as stepping changes the name; long
-   usernames ellipsize via the shared .select-btn > span rule (interface.css). */
-.tasks-toolbar .user-step-group .filter-dropdown-button {
-  border-radius: 0;
-  margin-left: -1px;
-  width: 9rem;
-}
-
-.tasks-toolbar .user-step-group .user-step:last-child {
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
-  margin-left: -1px;
-}
-
 /* Mobile: lay the toolbar out as a tidy 2-column grid — Add | Filter on the top
    row, the date | user dropdowns below, and the list/board toggle on its own
    row. (The default flex `wrap-reverse` dropped Add awkwardly beneath the

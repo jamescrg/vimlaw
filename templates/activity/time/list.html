@@ -149,40 +149,58 @@
           </li>
         </ul>
       </div>
-      <div class="dropdown" x-data="dropdown()">
+      <div class="user-step-group">
         <button type="button"
-                id="time-user-filter"
-                class="select-btn filter-dropdown-button {% if selected_user %}toggle-active{% endif %}"
-                x-ref="button"
-                @click="toggle()"
-                :aria-expanded="open">
-          <span><i class="icon-{% if selected_user %}user{% else %}users{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
-          <small>
-            <i class="icon-chevron-down"></i>
-          </small>
+                class="user-step"
+                aria-label="Previous user"
+                title="Previous user"
+                hx-post="{% url 'activity:time-filter-user' user_prev_id %}"
+                hx-swap="none">
+          <i class="icon-chevron-left"></i>
         </button>
-        <ul class="dropdown-menu"
-            x-ref="menu"
-            x-show="open"
-            hx-target="#time-user-filter"
-            hx-swap="outerHTML">
-          <li>
-            <a class="dropdown-item"
-               href="#"
-               hx-post="{% url 'activity:time-filter-user' 0 %}"
-               hx-target="#time-table"
-               hx-swap="outerHTML"><i class="icon-users"></i> All Users</a>
-          </li>
-          {% for user in users %}
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  id="time-user-filter"
+                  class="select-btn filter-dropdown-button {% if selected_user %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            <span><i class="icon-{% if selected_user %}user{% else %}users{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
+            <small>
+              <i class="icon-chevron-down"></i>
+            </small>
+          </button>
+          <ul class="dropdown-menu"
+              x-ref="menu"
+              x-show="open"
+              hx-target="#time-user-filter"
+              hx-swap="outerHTML">
             <li>
-              <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
+              <a class="dropdown-item"
                  href="#"
-                 hx-post="{% url 'activity:time-filter-user' user.id %}"
+                 hx-post="{% url 'activity:time-filter-user' 0 %}"
                  hx-target="#time-table"
-                 hx-swap="outerHTML"><i class="icon-user"></i> {{ user.username|title }}</a>
+                 hx-swap="outerHTML"><i class="icon-users"></i> All Users</a>
             </li>
-          {% endfor %}
-        </ul>
+            {% for user in users %}
+              <li>
+                <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
+                   href="#"
+                   hx-post="{% url 'activity:time-filter-user' user.id %}"
+                   hx-target="#time-table"
+                   hx-swap="outerHTML"><i class="icon-user"></i> {{ user.username|title }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <button type="button"
+                class="user-step"
+                aria-label="Next user"
+                title="Next user"
+                hx-post="{% url 'activity:time-filter-user' user_next_id %}"
+                hx-swap="none">
+          <i class="icon-chevron-right"></i>
+        </button>
       </div>
     </div>
   {% endif %}
