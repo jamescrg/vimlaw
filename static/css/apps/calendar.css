@@ -310,7 +310,9 @@
 }
 
 .fc .fc-day-today .fc-daygrid-day-number {
-  background-color: var(--violet-200);
+  /* The theme's selection accent (violet in Matcha, blue in Sky); dark and
+     cosmic override with their bright purple below. */
+  background-color: var(--selected-background);
   border-radius: 50%;
   font-weight: 600;
   height: 1.75rem;

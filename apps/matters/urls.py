@@ -274,6 +274,11 @@ urlpatterns = [
     path("matters/<int:id>/events/", events.events_index, name="events-index"),
     path("matters/<int:id>/events/list/", events.events_list, name="events"),
     path(
+        "matters/<int:id>/events/view/<str:mode>",
+        events.events_view_mode,
+        name="events-view-mode",
+    ),
+    path(
         "matters/<int:id>/events/filter-status/",
         events.events_filter_status,
         {"status": ""},

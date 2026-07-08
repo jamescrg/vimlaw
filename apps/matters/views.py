@@ -393,9 +393,16 @@ def _get_detail_tab_data(request, matter, tab):
         }
 
     elif tab == "events":
+        from apps.matters.events.views import _calendar_context, _view_mode
+
+        view_mode = _view_mode(request)
+        if view_mode == "calendar":
+            event_context = _calendar_context(request, matter)
+        else:
+            event_context = get_event_data(request, matter) | {"view_mode": view_mode}
         return {
-            "tab_template": "matters/events/list.html",
-            **get_event_data(request, matter),
+            "tab_template": "matters/events/tab.html",
+            **event_context,
         }
 
     elif tab == "tasks":

@@ -587,10 +587,14 @@ def events_calendar(request):
 
 
 @login_required
-def events_api(request):
+def events_api(request, matter_id=None):
     """
     JSON API for FullCalendar event feed.
     Exception to HTMX HTML-only rule: calendar requires JSON.
+
+    With matter_id (the matter detail Events tab), the feed is scoped to that
+    matter and honours the tab's own per-matter status filter instead of the
+    global events filter.
     """
     start_param = request.GET.get("start")
     end_param = request.GET.get("end")
@@ -606,10 +610,17 @@ def events_api(request):
     else:
         end_date = date.today() + timedelta(days=60)
 
-    # Apply existing filter from session
-    events_filter_data = request.session.get("events_filter", {})
-    filter_instance = EventFilter(events_filter_data, queryset=Event.objects.all())
-    events = filter_instance.qs.filter(date__gte=start_date, date__lte=end_date)
+    if matter_id:
+        events = Event.objects.filter(matter_id=matter_id)
+        status = request.session.get(f"matter_events_filter_{matter_id}", "Pending")
+        if status:
+            events = events.filter(status=status)
+    else:
+        # Apply existing filter from session
+        events_filter_data = request.session.get("events_filter", {})
+        filter_instance = EventFilter(events_filter_data, queryset=Event.objects.all())
+        events = filter_instance.qs
+    events = events.filter(date__gte=start_date, date__lte=end_date)
 
     # Convert to FullCalendar format
     calendar_events = []

@@ -1,0 +1,11 @@
+{% load humanize %}
+<div id="matterEvents"
+     hx-trigger="matterEventChanged from:body, eventsViewChanged from:body"
+     hx-get="{% url 'matters:events' matter.id %}"
+     hx-target="this">
+  {% if view_mode == "calendar" %}
+    {% include "matters/events/calendar.html" %}
+  {% else %}
+    {% include "matters/events/list.html" %}
+  {% endif %}
+</div>

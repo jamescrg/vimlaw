@@ -3,9 +3,16 @@
  * Alpine.js component for calendar initialization and interaction
  */
 
-// Reinitialize Alpine on HTMX swaps for the events container
+// Containers that can host the calendar: the main Events tab and the matter
+// detail Events tab.
+const CALENDAR_CONTAINER_IDS = ["events", "matterEvents"];
+
+// Reinitialize Alpine on HTMX swaps for the events containers
 document.body.addEventListener("htmx:afterSwap", (event) => {
-  if (event.detail.target.id === "events" && typeof Alpine !== "undefined") {
+  if (
+    CALENDAR_CONTAINER_IDS.includes(event.detail.target.id) &&
+    typeof Alpine !== "undefined"
+  ) {
     // Small delay to ensure DOM is ready
     setTimeout(() => {
       Alpine.initTree(event.detail.target);
@@ -24,14 +31,14 @@ document.body.addEventListener("eventsViewChanged", () => {
 // Allow requests from buttons/links (status changes, etc.) through
 document.body.addEventListener("htmx:beforeRequest", (event) => {
   const target = event.detail.target;
-  if (target && target.id === "events") {
+  if (target && CALENDAR_CONTAINER_IDS.includes(target.id)) {
     const calendarContainer = document.getElementById("fullcalendar-container");
     if (calendarContainer && calendarContainer._x_dataStack) {
       const elt = event.detail.elt;
 
-      // If the request originates from the #events div itself (auto-refresh),
+      // If the request originates from the container div itself (auto-refresh),
       // block it and refetch calendar events instead - unless it's a view switch
-      if (elt.id === "events") {
+      if (elt.id === target.id) {
         if (viewSwitchPending) {
           viewSwitchPending = false;
           return; // Allow view mode switch through
@@ -50,8 +57,17 @@ document.body.addEventListener("htmx:beforeRequest", (event) => {
 });
 
 document.addEventListener("alpine:init", () => {
-  Alpine.data("eventsCalendar", () => ({
+  // opts lets the matter detail Events tab reuse the component with its own
+  // matter-scoped feed and matter-preselecting add/edit modals:
+  //   apiUrl     — event feed (default: the global /events/api/)
+  //   addUrl     — add-event modal endpoint (default: /events/add)
+  //   editOrigin — origin suffix for the edit modal, so saves fire the right
+  //                HX-Trigger (e.g. "matters" → matterEventChanged)
+  Alpine.data("eventsCalendar", (opts = {}) => ({
     calendar: null,
+    apiUrl: opts.apiUrl || "/events/api/",
+    addUrl: opts.addUrl || "/events/add",
+    editOrigin: opts.editOrigin || "",
 
     initCalendar() {
       // On mobile the FullCalendar grid is unusable, so render the card list
@@ -86,7 +102,7 @@ document.addEventListener("alpine:init", () => {
 
         // Event source - JSON API
         events: {
-          url: "/events/api/",
+          url: this.apiUrl,
           method: "GET",
           failure: function () {
             console.error("Failed to load events");
@@ -122,6 +138,9 @@ document.addEventListener("alpine:init", () => {
       document.body.addEventListener("eventsChanged", () => {
         this.calendar.refetchEvents();
       });
+      document.body.addEventListener("matterEventChanged", () => {
+        this.calendar.refetchEvents();
+      });
     },
 
     handleEventClick(info) {
@@ -131,7 +150,9 @@ document.addEventListener("alpine:init", () => {
 
       // Open the edit modal using HTMX
       const eventId = info.event.id;
-      htmx.ajax("GET", `/events/${eventId}/edit`, {
+      const editUrl =
+        `/events/${eventId}/edit` + (this.editOrigin ? `/${this.editOrigin}` : "");
+      htmx.ajax("GET", editUrl, {
         target: "#htmx-modal-container",
         swap: "innerHTML",
       }).then(() => {
@@ -173,7 +194,7 @@ document.addEventListener("alpine:init", () => {
 
     handleDateClick(info) {
       // Open add modal with pre-filled date
-      htmx.ajax("GET", `/events/add?date=${info.dateStr}`, {
+      htmx.ajax("GET", `${this.addUrl}?date=${info.dateStr}`, {
         target: "#htmx-modal-container",
         swap: "innerHTML",
       }).then(() => {

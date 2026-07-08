@@ -29,6 +29,7 @@ urlpatterns = [
     path("events/list/", events_list, name="list"),
     path("events/calendar/", events_calendar, name="calendar"),
     path("events/api/", events_api, name="api"),
+    path("events/api/matter/<int:matter_id>", events_api, name="api-matter"),
     path("events/<int:id>/quick-update", events_quick_update, name="quick-update"),
     path("events/view/<str:mode>", events_view_mode, name="view-mode"),
     path("events/select", events_select, name="select"),
