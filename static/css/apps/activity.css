@@ -21,8 +21,10 @@ Time entry form
 }
 
 /* Trust funds remaining for the selected matter. Hidden until JS fills it in
-   (no matter selected = nothing to show); shown as a flex row by the JS. */
-.trust-available {
+   (no matter selected = nothing to show); shown as a flex row by the JS.
+   The -row suffix matters: a bare .trust-available would also match (and
+   hide) the trust summary table's Available cells. */
+.trust-available-row {
   align-items: baseline;
   display: none;
   gap: 0.4rem;
