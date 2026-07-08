@@ -1,0 +1,11 @@
+<input class="edit-matter-work-status-input"
+       type="text"
+       name="description"
+       maxlength="255"
+       hx-post="{% url 'matters:overview-description-update' id=matter.id %}"
+       hx-target="#overview-description"
+       hx-swap="innerHTML"
+       hx-trigger="change, blur, keyup[key=='Enter']"
+       onfocus="moveFocusToEnd(this)"
+       autofocus
+       value="{{ matter.description|default:'' }}" />

@@ -1,0 +1,17 @@
+<div class="dropdown" x-data="dropdown()">
+  <button class="button-link"
+          type="button"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ matter.practice_area|default:"—" }}</button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    {% for pa in practice_areas %}
+      <li>
+        <a class="dropdown-item {% if pa == matter.practice_area %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'matters:overview-practice-area-update' matter.id pa.id %}"
+           hx-target="#overview-practice-area">{{ pa.name }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

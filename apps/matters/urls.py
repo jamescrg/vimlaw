@@ -31,7 +31,11 @@ from .views import (
     mode_content,
     open_matters_json,
     order_by,
+    overview_description_edit,
+    overview_description_update,
     overview_index,
+    overview_practice_area_update,
+    overview_status_update,
     overview_work_status_edit,
     overview_work_status_update,
     quick_search,
@@ -81,7 +85,7 @@ urlpatterns = [
         update_work_status,
         name="update-work-status",
     ),
-    # Info
+    # Overview
     path("matters/<int:id>/overview", overview_index, name="overview-index"),
     path(
         "matters/<int:matter_id>/overview/work-status/edit",
@@ -92,6 +96,26 @@ urlpatterns = [
         "matters/<int:id>/overview/work-status/update",
         overview_work_status_update,
         name="overview-work-status-update",
+    ),
+    path(
+        "matters/<int:id>/overview/status/<str:status>",
+        overview_status_update,
+        name="overview-status-update",
+    ),
+    path(
+        "matters/<int:id>/overview/practice-area/<int:practice_area_id>",
+        overview_practice_area_update,
+        name="overview-practice-area-update",
+    ),
+    path(
+        "matters/<int:matter_id>/overview/description/edit",
+        overview_description_edit,
+        name="overview-description-edit",
+    ),
+    path(
+        "matters/<int:id>/overview/description/update",
+        overview_description_update,
+        name="overview-description-update",
     ),
     # Contacts
     path("matters/<int:id>/contacts", contacts.index, name="contacts"),

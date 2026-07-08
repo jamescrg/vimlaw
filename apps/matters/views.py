@@ -187,6 +187,7 @@ def _matter_overview_context(request, matter):
     reserved for admin/perm_financial users."""
     from apps.activity.time.models import TimeEntry
     from apps.matters.ledger.get_ledger_data import get_ledger_data
+    from apps.matters.models import PracticeArea
     from apps.settings.models import Firm
     from apps.trust.available import client_trust_available
 
@@ -196,6 +197,8 @@ def _matter_overview_context(request, matter):
     context = {
         "company_jurisdiction": company.jurisdiction if company else "",
         "show_financial": show_financial,
+        # Options for the inline practice-area dropdown.
+        "practice_areas": PracticeArea.objects.order_by("name"),
         "recent_actions": (
             TimeEntry.objects.filter(matter=matter)
             .select_related("user")
@@ -228,6 +231,55 @@ def overview_index(request, id):
         **_matter_overview_context(request, matter),
     }
     return render(request, "matters/overview/list.html", context)
+
+
+@login_required
+@matter_access_required
+def overview_status_update(request, id, status):
+    """Save a Status dropdown pick and re-render the cell. Also fires
+    mattersChanged: Open/Closed flips change the open-matters switcher and
+    stepper lists."""
+    matter = get_object_or_404(Matter, pk=id)
+    if status in dict(MatterForm.Meta.STATUSES):
+        matter.status = status
+        matter.save()
+    response = render(request, "matters/overview/status.html", {"matter": matter})
+    response["HX-Trigger"] = "mattersChanged"
+    return response
+
+
+@login_required
+@matter_access_required
+def overview_practice_area_update(request, id, practice_area_id):
+    """Save a Practice Area dropdown pick and re-render the cell."""
+    from apps.matters.models import PracticeArea
+
+    matter = get_object_or_404(Matter, pk=id)
+    matter.practice_area = get_object_or_404(PracticeArea, pk=practice_area_id)
+    matter.save()
+    return render(
+        request,
+        "matters/overview/practice-area.html",
+        {"matter": matter, "practice_areas": PracticeArea.objects.order_by("name")},
+    )
+
+
+@login_required
+@matter_access_required
+def overview_description_edit(request, matter_id):
+    """Inline description editor for the Overview tab (swaps the cell to an input)."""
+    matter = get_object_or_404(Matter, pk=matter_id)
+    return render(request, "matters/overview/description-edit.html", {"matter": matter})
+
+
+@login_required
+@matter_access_required
+def overview_description_update(request, id):
+    """Save the inline description edit and swap the cell back to the display."""
+    matter = get_object_or_404(Matter, pk=id)
+    matter.description = request.POST.get("description", "")
+    matter.save()
+    return render(request, "matters/overview/description.html", {"matter": matter})
 
 
 @login_required

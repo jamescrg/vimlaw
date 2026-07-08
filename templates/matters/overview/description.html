@@ -1,0 +1,5 @@
+<a class="button-link"
+   href="#"
+   hx-get="{% url 'matters:overview-description-edit' matter_id=matter.id %}"
+   hx-target="#overview-description"
+   hx-swap="innerHTML">{{ matter.description|default:"—" }}</a>

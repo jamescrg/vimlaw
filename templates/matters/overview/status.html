@@ -1,0 +1,33 @@
+<div class="dropdown" x-data="dropdown()">
+  <button class="button-link"
+          type="button"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ matter.status|default:"—" }}</button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    <li>
+      <a class="dropdown-item {% if matter.status == 'Pending' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'matters:overview-status-update' id=matter.id status='Pending' %}"
+         hx-target="#overview-status">Pending</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if matter.status == 'Open' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'matters:overview-status-update' id=matter.id status='Open' %}"
+         hx-target="#overview-status">Open</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if matter.status == 'Complete' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'matters:overview-status-update' id=matter.id status='Complete' %}"
+         hx-target="#overview-status">Complete</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if matter.status == 'Closed' %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'matters:overview-status-update' id=matter.id status='Closed' %}"
+         hx-target="#overview-status">Closed</a>
+    </li>
+  </ul>
+</div>

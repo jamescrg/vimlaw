@@ -17,6 +17,10 @@
           </th>
         </tr>
         <tr>
+          <th>Status</th>
+          <td id="overview-status">{% include "matters/overview/status.html" %}</td>
+        </tr>
+        <tr>
           <th>Work Status</th>
           <td id="overview-work-status">{% include "matters/overview/work-status.html" %}</td>
         </tr>
@@ -31,12 +35,8 @@
           </td>
         </tr>
         <tr>
-          <th>Status</th>
-          <td>{{ matter.status|default:"—" }}</td>
-        </tr>
-        <tr>
           <th>Practice Area</th>
-          <td>{{ matter.practice_area|default:"—" }}</td>
+          <td id="overview-practice-area">{% include "matters/overview/practice-area.html" %}</td>
         </tr>
         <tr>
           <th>Open Date</th>
@@ -48,12 +48,10 @@
             <td>{{ matter.date_end|date:"Y-m-d" }}</td>
           </tr>
         {% endif %}
-        {% if matter.description %}
-          <tr>
-            <th>Description</th>
-            <td>{{ matter.description }}</td>
-          </tr>
-        {% endif %}
+        <tr>
+          <th>Description</th>
+          <td id="overview-description">{% include "matters/overview/description.html" %}</td>
+        </tr>
         <tr>
           <th>Jurisdiction</th>
           <td>

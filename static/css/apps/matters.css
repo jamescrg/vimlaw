@@ -439,6 +439,13 @@ Matter Overview tab
   vertical-align: top;
 }
 
+/* Matter Detail labels: a roomier fixed column (~50% wider than the
+   shrink-to-content default) so the values don't crowd the labels. The
+   doubled class outweighs the 1% shrink-to-content label default below. */
+.overview-table.overview-main th {
+  width: 12rem;
+}
+
 .overview-table tr:last-child th,
 .overview-table tr:last-child td {
   border-bottom: none;
