@@ -1,9 +1,25 @@
+{% load matter_tags %}
 <div class="detail-header">
   <div class="toolbar matter-toolbar">
+    {% if mode == 'detail' %}
+      {% get_adjacent_open_matters matter as adjacent %}
+    {% endif %}
+    {% if adjacent.prev %}
+      <a class="matter-step"
+         href="{% url 'matters:info-index' id=adjacent.prev.id %}"
+         title="{{ adjacent.prev.name }}"
+         aria-label="Previous matter"><i class="icon-chevron-left"></i></a>
+    {% endif %}
     <div class="toolbar-left">
       {% include "matters/includes/switcher.html" %}
       {% include "matters/includes/mode-pills.html" %}
       {% include "matters/includes/action_buttons.html" %}
     </div>
+    {% if adjacent.next %}
+      <a class="matter-step matter-step-next"
+         href="{% url 'matters:info-index' id=adjacent.next.id %}"
+         title="{{ adjacent.next.name }}"
+         aria-label="Next matter"><i class="icon-chevron-right"></i></a>
+    {% endif %}
   </div>
 </div>

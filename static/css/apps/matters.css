@@ -153,6 +153,21 @@ Matter Switcher
   margin-right: 0.5rem;
 }
 
+/* Prev/next steppers — bare, muted chevrons at the toolbar's ends that walk
+   the open-matters list (wrapping at the ends) and land on the Info tab. */
+.matter-toolbar .matter-step {
+  color: var(--color-muted-more);
+  padding: 0.25rem;
+}
+
+.matter-toolbar .matter-step:hover {
+  color: var(--color-primary);
+}
+
+.matter-toolbar .matter-step-next {
+  margin-left: auto;
+}
+
 /* Mobile: pare the matter title to the name + the +Time action. Hides the
    Detail/Case mode pills (so Case is unreachable on phones — accepted for now),
    the +Expense action, and the edit/print tools; +Time stays, pushed to the far
