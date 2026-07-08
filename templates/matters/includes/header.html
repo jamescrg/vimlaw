@@ -5,7 +5,7 @@
       {% get_adjacent_open_matters matter as adjacent %}
     {% endif %}
     {% if adjacent.prev %}
-      <a class="matter-step"
+      <a class="matter-step matter-step-prev"
          href="{% url 'matters:info-index' id=adjacent.prev.id %}"
          title="{{ adjacent.prev.name }}"
          aria-label="Previous matter"><i class="icon-chevron-left"></i></a>

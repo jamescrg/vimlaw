@@ -154,17 +154,26 @@ Matter Switcher
 }
 
 /* Prev/next steppers — bare, muted chevrons at the toolbar's ends that walk
-   the open-matters list (wrapping at the ends) and land on the Info tab. */
-.matter-toolbar .matter-step {
+   the open-matters list (wrapping at the ends) and land on the Info tab.
+   `a.matter-step` matches the specificity of the generic `.toolbar a` button
+   skin (toolbar.css) so this later rule strips its fill and border. */
+.matter-toolbar a.matter-step {
+  background: none;
+  border: none;
   color: var(--color-muted-more);
+  font-size: 1.25rem;
   padding: 0.25rem;
 }
 
-.matter-toolbar .matter-step:hover {
+.matter-toolbar a.matter-step:hover {
   color: var(--color-primary);
 }
 
-.matter-toolbar .matter-step-next {
+.matter-toolbar a.matter-step-prev {
+  margin-right: 1.25rem;
+}
+
+.matter-toolbar a.matter-step-next {
   margin-left: auto;
 }
 
@@ -218,7 +227,7 @@ Matter Switcher
 .matter-switcher .icon-chevron-down {
   color: var(--color-muted);
   font-size: 0.75em;
-  margin-left: 0.75rem;
+  /* margin-left: 0.25rem; */
 }
 
 .matter-switcher .dropdown-menu {
