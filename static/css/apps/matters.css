@@ -469,18 +469,25 @@ Matter Overview tab
 
 /* Recent Actions: fixed layout caps the table at its column's width — long
    narrative runs wrap (overflow-wrap inherits into the cells) instead of
-   pushing the page wider. */
+   pushing the page wider. Widths sit on the cols because fixed layout reads
+   the first row, and this table's first row is the colspan heading (cell
+   widths there would be ignored, leaving equal thirds). Same 7.5/4rem as the
+   activity table's date/user columns. */
 .overview-actions {
   overflow-wrap: anywhere;
   table-layout: fixed;
 }
 
-.overview-actions .overview-action-date {
+.overview-actions .col-date {
   width: 7.5rem;
 }
 
-.overview-actions .overview-action-user {
+.overview-actions .col-user {
   width: 4rem;
+}
+
+.overview-actions .overview-action-date {
+  white-space: nowrap;
 }
 
 .overview-empty {

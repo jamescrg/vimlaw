@@ -112,6 +112,12 @@
         </table>
       {% endif %}
       <table class="overview-table overview-actions">
+        {# Fixed layout reads widths from the first row — here the colspan heading — so the cols carry them. #}
+        <colgroup>
+          <col class="col-date">
+          <col class="col-user">
+          <col>
+        </colgroup>
         <tr>
           <th class="overview-table-head" colspan="3">Recent Actions</th>
         </tr>
@@ -133,9 +139,6 @@
   </div>
   {% if upcoming_events %}
     <div class="overview-events">
-      <div class="events-header">
-        <h2>Upcoming Events</h2>
-      </div>
       <div class="event-cards-grid">
         {% for event in upcoming_events %}
           {% include "calendar/event-card.html" %}
