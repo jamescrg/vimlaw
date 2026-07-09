@@ -267,7 +267,7 @@ Detail View
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 56rem;
+  max-width: 70rem;
 }
 
 .history-columns .history-table {
@@ -345,9 +345,9 @@ Detail View
   width: 12rem;
 }
 
-/* Invoice vs Reminder */
+/* Invoice / Reminder / Payment Request — sized for the longest label. */
 .history-delivery .kind {
-  width: 6.5rem;
+  width: 12rem;
 }
 
 .history-delivery .sender,
@@ -357,6 +357,14 @@ Detail View
 
 .history-delivery .recipient {
   width: 100%;
+}
+
+/* One line, to + cc together; overflow ellipsizes (the full list is in the
+   cell's title attribute). Works because the table is table-layout: fixed. */
+.history-delivery td.recipient {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* A modest totals box under the payment history (the shared .totals-table is

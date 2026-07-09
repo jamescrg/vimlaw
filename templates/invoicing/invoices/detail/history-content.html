@@ -8,7 +8,7 @@
           <th class="date">Date</th>
           <th class="kind">Type</th>
           <th class="sender">Sender</th>
-          <th class="recipient">Recipient</th>
+          <th class="recipient">Recipients</th>
           <th class="status">Status</th>
         </tr>
       </thead>
@@ -24,12 +24,10 @@
                 &mdash;
               {% endif %}
             </td>
-            <td class="recipient">
+            <td class="recipient"
+                title="{{ t.to_email }}{% if t.cc_email %} (cc {{ t.cc_email }}){% endif %}">
               {{ t.to_email }}
-              {% if t.cc_email %}
-                <br>
-                <span class="text-muted">cc {{ t.cc_email }}</span>
-              {% endif %}
+              {% if t.cc_email %}<span class="text-muted">(cc {{ t.cc_email }})</span>{% endif %}
             </td>
             <td class="status">
               {{ t.get_status_display }}
