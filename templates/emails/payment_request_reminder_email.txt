@@ -7,9 +7,9 @@ Dear Client,
 
 {% endif %}This is a friendly reminder that {% if days_since %}it has been {{ days_since }} day{{ days_since|pluralize }} since you were sent{% else %}you were previously sent{% endif %} {% if is_trust %}a request for a trust deposit.{% else %}a payment request for your outstanding balance. Per the terms of your attorney-client agreement, payment of invoices is due upon receipt.{% endif %}
 
-{% if is_trust %}Prompt replenishment of your trust retainer helps to assure that we can continue our work as efficiently as possible for your benefit. If you need additional time for any reason, please let us know.{% else %}Prompt payment of invoices helps to assure that we can continue our work as efficiently as possible for your benefit. If you need additional time to make payment for any reason, please let us know.{% endif %}
+{% if not is_trust %}Prompt payment of invoices helps to assure that we can continue our work as efficiently as possible for your benefit. If you need additional time to make payment for any reason, please let us know.
 
-If you have questions please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}.
+{% endif %}If you have questions please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}.
 
 Client:           {{ client_name }}
 Amount Requested: ${{ amount_due|floatformat:2|intcomma }}

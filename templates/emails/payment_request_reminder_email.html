@@ -164,17 +164,13 @@
                     attorney-client agreement, payment of invoices is due upon receipt.
                   {% endif %}
                 </p>
-                <p class="para">
-                  {% if is_trust %}
-                    Prompt replenishment of your trust retainer helps to assure that we can
-                    continue our work as efficiently as possible for your benefit. If you
-                    need additional time for any reason, please let us know.
-                  {% else %}
+                {% if not is_trust %}
+                  <p class="para">
                     Prompt payment of invoices helps to assure that we can continue our work
                     as efficiently as possible for your benefit. If you need additional time
                     to make payment for any reason, please let us know.
-                  {% endif %}
-                </p>
+                  </p>
+                {% endif %}
                 <p class="para">
                   If you have questions please reply to this email{% if firm_email %} or contact us at <a href="mailto:{{ firm_email }}">{{ firm_email }}</a>{% endif %}.
                 </p>

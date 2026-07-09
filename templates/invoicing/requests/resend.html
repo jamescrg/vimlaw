@@ -26,17 +26,6 @@
     </div>
     <div class="modal-body">
       {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
-      {% if reminder %}
-        <p class="detail-text">
-          The email politely notes that
-          {% if days_since %}it has been {{ days_since }} day{{ days_since|pluralize }} since{% endif %}
-          {% if payment_request.is_trust %}
-            the request was sent. It includes the same pay link.
-          {% else %}
-            the request was sent, and that payment is due upon receipt under the attorney-client agreement. It includes the same pay link.
-          {% endif %}
-        </p>
-      {% endif %}
       <form id="resend-form"
             hx-post="{% if reminder %}{% url 'invoicing:requests-send-reminder' payment_request.id %}{% else %}{% url 'invoicing:requests-resend' payment_request.id %}{% endif %}"
             hx-target="#htmx-modal-container"
