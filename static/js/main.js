@@ -684,19 +684,6 @@ document.addEventListener('keydown', function(event) {
     }
   }
 
-  // u / Shift+U — cycle the user filter (next / previous) on any page that
-  // exposes one. The container declares its endpoints via data attributes;
-  // a 204 + HX-Trigger refreshes the list.
-  if (event.key === 'u' || event.key === 'U') {
-    const host = document.querySelector('[data-cycle-next-url]');
-    if (host) {
-      event.preventDefault();
-      const url = event.key === 'U' ? host.dataset.cyclePrevUrl : host.dataset.cycleNextUrl;
-      if (url) htmx.ajax('POST', url, { source: host });
-      return;
-    }
-  }
-
   // Bare keys (no leader prefix) — only on matter/case pages
   const matterId = getMatterId();
   if (!matterId) return;
@@ -710,7 +697,7 @@ document.addEventListener('keydown', function(event) {
 
 // Re-focus the quick-add input ONLY after a quick-add submission, so tasks can
 // be typed back-to-back. The list re-renders on lots of events (status changes,
-// the u/U user cycle, etc.) — we must not steal focus on those, or the page
+// the [ / ] user cycle, etc.) — we must not steal focus on those, or the page
 // would be stuck in "insert mode" and bare-key shortcuts wouldn't work. So we
 // flag the submission and consume it on the next swap. Tasks otherwise lands in
 // command mode; press i to focus the quick-add, Esc to leave it.
@@ -917,9 +904,11 @@ document.addEventListener('keydown', function(event) {
 
 // ==========================================================================
 //  Stepper shortcuts — [ / ] cycle the page's stepper
-//  On the Tasks and Activity toolbars that's the user stepper; on a matter
-//  detail page it's the prev/next matter chevrons in the header. The user
-//  stepper wins when both are present. Ignored while typing or in a modal.
+//  On pages with a user cycle (Tasks / Time / Expenses / Flat Fees declare
+//  data-cycle-*-url endpoints; a 204 + HX-Trigger refreshes the list) the
+//  brackets walk the user filter. Otherwise, on a matter detail page, they
+//  click the header's prev/next matter chevrons. Ignored while typing or in
+//  a modal.
 // ==========================================================================
 
 document.addEventListener('keydown', function(event) {
@@ -932,10 +921,16 @@ document.addEventListener('keydown', function(event) {
   if (modal && modal.childElementCount > 0) return;
 
   const prev = event.key === '[';
-  const userLabel = prev ? 'Previous user' : 'Next user';
-  const step =
-    document.querySelector(`.user-step-group .user-step[aria-label="${userLabel}"]`) ||
-    document.querySelector(prev ? '.matter-step-prev' : '.matter-step-next');
+  const host = document.querySelector('[data-cycle-next-url]');
+  if (host) {
+    const url = prev ? host.dataset.cyclePrevUrl : host.dataset.cycleNextUrl;
+    if (url) {
+      event.preventDefault();
+      htmx.ajax('POST', url, { source: host });
+    }
+    return;
+  }
+  const step = document.querySelector(prev ? '.matter-step-prev' : '.matter-step-next');
   if (!step) return;
   event.preventDefault();
   step.click();
