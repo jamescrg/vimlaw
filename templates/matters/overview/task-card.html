@@ -1,0 +1,40 @@
+{% comment %}
+One due-task card for the overview timeline — an .event-card sibling styled by
+the same dash rules, marked by the list-check icon and a Task chip. Context:
+task, matter, today, tomorrow. Click opens the matter tasks edit modal.
+{% endcomment %}
+<div class="event-card task-card{% if task.date_due < today %} past-due{% elif task.date_due == today %} is-today{% elif task.date_due == tomorrow %} is-tomorrow{% endif %}"
+     hx-get="{% url 'matters:tasks-edit' matter.id task.id %}"
+     hx-target="#htmx-modal-container"
+     hx-trigger="click">
+  <div class="event-card-when">
+    <i class="icon-list-check with-text"></i>
+    Due
+    {% if task.date_due == today %}
+      Today
+    {% elif task.date_due == tomorrow %}
+      Tomorrow
+    {% else %}
+      {{ task.date_due|date:"D, M j" }}
+    {% endif %}
+  </div>
+  <p class="event-card-title">{{ task.description }}</p>
+  <div class="event-card-meta">
+    <span class="event-card-type">
+      {% if task.importance == 7 %}
+        <i class="icon-chevrons-up importance-7"></i>
+      {% elif task.importance == 6 or task.importance == 5 %}
+        <i class="icon-chevron-up importance-{{ task.importance }}"></i>
+      {% elif task.importance == 3 or task.importance == 2 %}
+        <i class="icon-chevron-down importance-{{ task.importance }}"></i>
+      {% elif task.importance == 1 %}
+        <i class="icon-chevrons-down importance-1"></i>
+      {% else %}
+        <i class="icon-equal"></i>
+      {% endif %}
+      Task
+    </span>
+    {% if task.user %}<span>{{ task.user.username|title }}</span>{% endif %}
+    {% if task.status and task.status != "Pending" %}<span>{{ task.status }}</span>{% endif %}
+  </div>
+</div>

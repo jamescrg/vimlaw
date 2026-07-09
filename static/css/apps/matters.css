@@ -388,9 +388,10 @@ Matter Overview tab
 
 /* Two equal columns: matter properties beside the financial snapshot and
    recent actions. No wrapper padding — the tables sit flush inside
-   .detail-body's own padding. */
+   .detail-body's own padding. Children keep the default align-items: stretch,
+   so both columns run the full height of the taller one — the side column
+   relies on that to pin its bottom border level (see .overview-side-col). */
 .overview-tables {
-  align-items: flex-start;
   display: flex;
   gap: 1.25rem;
 }
@@ -411,29 +412,18 @@ Matter Overview tab
   min-width: 0;
 }
 
-/* Right column: the financial snapshot fused to the recent-actions table
-   below it — one card, so the column doesn't run a stray ledge past the
-   bottom of the Matter Detail table. */
+/* Right column: the financial snapshot above the recent-actions table.
+   space-between pins Recent Actions' bottom border level with the Matter
+   Detail table's bottom (the column stretches to match it), putting the
+   slack in the gap between the tables; gap is the floor for the sparse
+   case where this column is naturally the taller one. */
 .overview-side-col {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0;
+  gap: 1.25rem;
+  justify-content: space-between;
   min-width: 0;
-}
-
-/* The fuse: square the adjoining corners and collapse the doubled border.
-   Scoped to adjacency — without Financials (no perm_financial), Recent
-   Actions stands alone and keeps its full rounding. */
-.overview-side-col .overview-financial {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.overview-financial + .overview-actions {
-  border-top: none;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
 }
 
 /* Icon-only edit button riding the Matter Detail heading row, pinned right. */

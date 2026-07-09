@@ -73,14 +73,14 @@
         </tr>
         <tr>
           <th>Billable</th>
-          <td>{{ matter.billable|yesno:"Yes,No" }}</td>
+          <td>
+            {% if matter.deferred_fees %}
+              {{ matter.billable|yesno:"Yes,No" }}, Deferred Fees
+            {% else %}
+              {{ matter.billable|yesno:"Yes,No" }}
+            {% endif %}
+          </td>
         </tr>
-        {% if matter.deferred_fees %}
-          <tr>
-            <th>Deferred Fees</th>
-            <td>Yes</td>
-          </tr>
-        {% endif %}
         {% if matter.client_reference_id %}
           <tr>
             <th>Reference No.</th>
@@ -135,11 +135,15 @@
       </table>
     </div>
   </div>
-  {% if upcoming_events %}
+  {% if timeline %}
     <div class="overview-events">
       <div class="event-cards-grid">
-        {% for event in upcoming_events %}
-          {% include "calendar/event-card.html" %}
+        {% for item in timeline %}
+          {% if item.kind == "event" %}
+            {% include "calendar/event-card.html" with event=item.event %}
+          {% else %}
+            {% include "matters/overview/task-card.html" with task=item.task %}
+          {% endif %}
         {% endfor %}
       </div>
     </div>
