@@ -133,7 +133,9 @@ def pay_page(request, token):
     company = Firm.objects.first()
     context = {
         "invoice": invoice,
-        "matter_number": matter.id if matter else "",
+        # The summary leads with the client's name (the payer), not the
+        # internal matter number.
+        "client_name": matter.client.name if matter and matter.client else "",
         "firm_name": company.name if company else "",
         "amount_due": invoice.amount_remaining,
         "config": config,
@@ -288,7 +290,8 @@ def balance_pay_page(request, token):
             trust=True,
         )
         page_title, subtitle, amount_label = "Trust Deposit", "Trust deposit", "Deposit"
-        matter_number, summary_label, summary_value = "", "Client", client.name
+        # The trust summary row already IS the client — no separate top row.
+        client_name, summary_label, summary_value = "", "Client", client.name
     else:
         matter = pay_request.matter
         open_invoices = matter_open_invoices(matter)
@@ -298,8 +301,8 @@ def balance_pay_page(request, token):
             "Account balance",
             "Amount Due",
         )
-        matter_number, summary_label, summary_value = (
-            matter.id,
+        client_name, summary_label, summary_value = (
+            matter.client.name if matter.client else "",
             "Open invoices",
             len(open_invoices),
         )
@@ -309,7 +312,7 @@ def balance_pay_page(request, token):
         "page_title": page_title,
         "subtitle": subtitle,
         "amount_label": amount_label,
-        "matter_number": matter_number,
+        "client_name": client_name,
         "summary_label": summary_label,
         "summary_value": summary_value,
         "firm_name": company.name if company else "",

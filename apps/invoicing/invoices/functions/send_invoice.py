@@ -128,13 +128,11 @@ def send_invoice(
             "billing_email": billing_email,
             "pay_url": payment_url(invoice, request),  # tokenized payment link
         }
-        # Client-facing: lead with the firm name, then identify by number (not
-        # matter name, which is internal and subject to change). Plain hyphens.
+        # Client-facing: lead with the firm name, then the invoice number —
+        # matter identifiers are internal and stay out of client emails.
         firm = company.name if company else ""
         subject = f"{firm} - " if firm else ""
         subject += f"Invoice {invoice.id}"
-        if matter:
-            subject += f" - Matter {matter.id}"
 
         email = EmailMultiAlternatives(
             subject=subject,
@@ -266,8 +264,6 @@ def send_reminder(
         firm = company.name if company else ""
         subject = f"{firm} - " if firm else ""
         subject += f"Payment Reminder - Invoice {invoice.id}"
-        if matter:
-            subject += f" - Matter {matter.id}"
 
         email = EmailMultiAlternatives(
             subject=subject,

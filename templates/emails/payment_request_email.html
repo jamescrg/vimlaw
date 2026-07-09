@@ -159,10 +159,9 @@
                   If you have any questions, please reply to this email{% if firm_email %} or contact us at <a href="mailto:{{ firm_email }}">{{ firm_email }}</a>{% endif %}.
                 </p>
                 <table role="presentation" class="summary" width="100%" cellpadding="0" cellspacing="0">
-                  {# Trust requests are client-level (no matter) — show who the deposit is for. #}
                   <tr>
-                    <td class="label">{% if is_trust %}Client{% else %}Matter{% endif %}</td>
-                    <td class="value">{% if is_trust %}{{ client_name }}{% else %}{{ matter_number }}{% endif %}</td>
+                    <td class="label">Client</td>
+                    <td class="value">{{ client_name }}</td>
                   </tr>
                   <tr>
                     <td class="label">Amount Requested</td>
