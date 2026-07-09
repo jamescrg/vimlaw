@@ -1,0 +1,8 @@
+{% extends "matters/detail.html" %}
+{% comment %}
+Full-page render of any detail tab (deep link, refresh, prev/next matter).
+The view supplies subapp + tab_template; tab-body.html picks the wrapper.
+{% endcomment %}
+{% block subcontent %}
+  {% include "matters/includes/tab-body.html" %}
+{% endblock subcontent %}

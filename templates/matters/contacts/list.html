@@ -1,7 +1,0 @@
-{% extends "matters/detail.html" %}
-{% block subcontent %}
-  <div id="contacts"
-       hx-trigger="contactsReload from:body"
-       hx-get="{% url 'matters:contacts-list' id=matter.id %}"
-       hx-target="this">{% include "matters/contacts/contact-table.html" %}</div>
-{% endblock subcontent %}

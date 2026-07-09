@@ -31,6 +31,7 @@ from .views import (
     mode_content,
     open_matters_json,
     order_by,
+    overview_content,
     overview_description_edit,
     overview_description_update,
     overview_index,
@@ -87,6 +88,11 @@ urlpatterns = [
     ),
     # Overview
     path("matters/<int:id>/overview", overview_index, name="overview-index"),
+    path(
+        "matters/<int:id>/overview/content",
+        overview_content,
+        name="overview-content",
+    ),
     path(
         "matters/<int:matter_id>/overview/work-status/edit",
         overview_work_status_edit,

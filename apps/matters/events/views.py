@@ -39,9 +39,10 @@ def events_index(request, id):
         "app": "matters",
         "subapp": "events",
         "matter": matter,
+        "tab_template": "matters/events/tab.html",
     } | event_data
 
-    return render(request, "matters/events/main.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required

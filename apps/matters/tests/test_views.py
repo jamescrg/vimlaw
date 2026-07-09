@@ -19,7 +19,7 @@ def test_detail(client, matter):
     response = client.get(f"/matters/{matter.id}")
     assert response.status_code == 302
     response = client.get(f"/matters/{matter.id}/contacts")
-    assertTemplateUsed(response, "matters/contacts/list.html")
+    assertTemplateUsed(response, "matters/contacts/contact-table.html")
     assert response.context["matter"] == matter
 
 

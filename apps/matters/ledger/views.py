@@ -45,6 +45,7 @@ def ledger_index(request, id):
         "app": "matters",
         "subapp": "ledger",
         "matter": matter,
+        "tab_template": "matters/ledger/list.html",
         "client_trust_balance": client_trust_balance,
         "trust_available": trust_available,
         "trust_available_severity": trust_available_severity(
@@ -53,7 +54,7 @@ def ledger_index(request, id):
         "total_cost": total_cost,
     } | ledger_data
 
-    return render(request, "matters/ledger/main.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required

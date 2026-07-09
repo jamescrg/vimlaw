@@ -20,10 +20,11 @@ def rate_index(request, id):
         "app": "matters",
         "subapp": "rates",
         "matter": matter,
+        "tab_template": "matters/rates/list.html",
         "rates": rates,
     }
 
-    return render(request, "matters/rates/main.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required

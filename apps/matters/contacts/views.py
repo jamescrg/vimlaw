@@ -171,10 +171,11 @@ def index(request, id):
         "app": "matters",
         "subapp": "contacts",
         "matter": matter,
+        "tab_template": "matters/contacts/contact-table.html",
         **contact_data,
     }
 
-    return render(request, "matters/contacts/list.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required

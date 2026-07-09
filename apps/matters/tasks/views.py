@@ -230,9 +230,10 @@ def tasks_index(request, id):
         "app": "matters",
         "subapp": "tasks",
         "matter": matter,
+        "tab_template": "matters/tasks/list.html",
     } | task_data
 
-    return render(request, "matters/tasks/main.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required

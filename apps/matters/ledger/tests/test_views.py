@@ -10,7 +10,7 @@ class TestLedgerIndex:
         url = reverse("matters:ledger", args=[matter.id])
         response = client.get(url)
         assert response.status_code == 200
-        assertTemplateUsed(response, "matters/ledger/main.html")
+        assertTemplateUsed(response, "matters/ledger/list.html")
         assert response.context["matter"] == matter
         assert "transactions" in response.context
         assert "balance_due" in response.context

@@ -33,13 +33,14 @@ def proceeding_index(request, id):
         "app": "matters",
         "subapp": "proceedings",
         "matter": matter,
+        "tab_template": "matters/proceedings/list.html",
         "proceeding": proceeding,
         "proceedings": proceedings,
         "client_trust_balance": client_trust_balance,
         "balance_due": balance_due,
     }
 
-    return render(request, "matters/proceedings/main.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required

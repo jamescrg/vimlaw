@@ -1,0 +1,53 @@
+{% comment %}
+The detail-tab body: one self-refreshing wrapper per tab, keyed to that tab's
+change event. Shared by every path that renders a tab — full page
+(tab-page.html), HTMX tab switch (detail-tab-content.html), and mode switch
+(detail-content.html) — so a tab's wrapper is defined exactly once.
+Requires subapp and tab_template in context.
+{% endcomment %}
+{% if subapp == "overview" %}
+  <div id="matterOverview"
+       hx-trigger="mattersChanged from:body"
+       hx-get="{% url 'matters:overview-content' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "contacts" %}
+  <div id="contacts"
+       hx-trigger="contactsReload from:body"
+       hx-get="{% url 'matters:contacts-list' id=matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "rates" %}
+  <div id="rates"
+       hx-trigger="matterRateChanged from:body"
+       hx-get="{% url 'matters:rates' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "activity" %}
+  <div id="matterActivity"
+       hx-trigger="matterActivityChanged from:body, timeChanged from:body"
+       hx-get="{% url 'matters:activity' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "events" %}
+  {# events/tab.html carries its own #matterEvents wrapper (it also listens for eventsViewChanged) — wrapping here would nest duplicate ids and listeners. #}
+  {% include tab_template %}
+{% elif subapp == "tasks" %}
+  <div id="matterTasks"
+       hx-trigger="tasksListChanged from:body"
+       hx-get="{% url 'matters:tasks-list' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "proceedings" %}
+  <div id="proceedings"
+       hx-trigger="matterProceedingChanged from:body"
+       hx-get="{% url 'matters:proceedings' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "settlement" %}
+  <div id="settlement"
+       hx-trigger="matterSettlementChanged from:body"
+       hx-get="{% url 'matters:settlement' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "ledger" %}
+  <div id="ledger"
+       hx-trigger="matterLedgerChanged from:body"
+       hx-get="{% url 'matters:ledger-list' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
+{% else %}
+  {% include tab_template %}
+{% endif %}

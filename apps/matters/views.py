@@ -238,9 +238,23 @@ def overview_index(request, id):
         "app": "matters",
         "subapp": "overview",
         "matter": matter,
+        "tab_template": "matters/overview/main.html",
         **_matter_overview_context(request, matter),
     }
-    return render(request, "matters/overview/list.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
+
+
+@login_required
+@matter_access_required
+def overview_content(request, id):
+    """Overview tab fragment: the wrapper div re-fetches this on mattersChanged
+    so the Matter Detail table reflects an edit-matter save immediately."""
+    matter = get_object_or_404(Matter, pk=id)
+    context = {
+        "matter": matter,
+        **_matter_overview_context(request, matter),
+    }
+    return render(request, "matters/overview/main.html", context)
 
 
 @login_required

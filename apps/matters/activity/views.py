@@ -92,9 +92,10 @@ def activity_index(request, id):
     context = {
         "app": "matters",
         "subapp": "activity",
+        "tab_template": "matters/activity/list.html",
         **get_matter_activity_data(request, matter),
     }
-    return render(request, "matters/activity/main.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required

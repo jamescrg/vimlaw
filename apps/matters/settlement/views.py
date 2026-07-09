@@ -21,10 +21,11 @@ def settlement_index(request, id):
         "app": "matters",
         "subapp": "settlement",
         "matter": matter,
+        "tab_template": "matters/settlement/list.html",
         "entries": entries,
     }
 
-    return render(request, "matters/settlement/main.html", context)
+    return render(request, "matters/includes/tab-page.html", context)
 
 
 @login_required
