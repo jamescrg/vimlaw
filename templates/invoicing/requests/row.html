@@ -39,27 +39,58 @@
   </td>
   <td class="recipient">{{ payment_request.recipient_email }}</td>
   <td class="status">
-    {% if payment_request.settlement_pending %}
-      <div class="badge-flag-row">
-        <span>{{ payment_request.get_status_display }}</span>
+    <div class="badge-flag-row">
+      <span>{{ payment_request.get_status_display }}</span>
+      {# Only meaningful beside "Sent" — elsewhere a send tally is a non sequitur. #}
+      {% if payment_request.status == 'SENT' and payment_request.annotated_send_count %}
+        <span class="app-badge badge-gray"
+              title="Emailed {{ payment_request.annotated_send_count }} time{{ payment_request.annotated_send_count|pluralize }} — last {{ payment_request.annotated_last_sent_at|date:'Y-m-d' }}">×{{ payment_request.annotated_send_count }}</span>
+      {% endif %}
+      {% if payment_request.settlement_pending %}
         <span class="app-badge badge-yellow"
               title="Bank (eCheck/ACH) payment still clearing — provisional until it settles">Pending</span>
-      </div>
-    {% else %}
-      {{ payment_request.get_status_display }}
-    {% endif %}
+      {% endif %}
+    </div>
   </td>
   <td class="amount">${{ payment_request.amount_requested|floatformat:2|intcomma }}</td>
-  <td class="action-send">
+  <td class="action-send dropdown-cell">
     {% if payment_request.status == "SENT" %}
-      <button class="button-link"
-              type="button"
-              hx-get="{% url 'invoicing:requests-resend' payment_request.id %}"
-              hx-target="#htmx-modal-container"
-              title="Resend request"
-              aria-label="Resend request">
-        <i class="icon-send-horizontal"></i>
-      </button>
+      {% if payment_request.annotated_send_count %}
+        <div class="dropdown" x-data="dropdown()">
+          <button class="button-link"
+                  type="button"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open"
+                  title="Send options"
+                  aria-label="Send options">
+            <i class="icon-send-horizontal"></i>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-get="{% url 'invoicing:requests-resend' payment_request.id %}"
+                 hx-target="#htmx-modal-container"><i class="icon-send-horizontal"></i> Resend Request</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-get="{% url 'invoicing:requests-send-reminder' payment_request.id %}"
+                 hx-target="#htmx-modal-container"><i class="icon-bell-ring"></i> Send Reminder</a>
+            </li>
+          </ul>
+        </div>
+      {% else %}
+        <button class="button-link"
+                type="button"
+                hx-get="{% url 'invoicing:requests-resend' payment_request.id %}"
+                hx-target="#htmx-modal-container"
+                title="Resend request"
+                aria-label="Resend request">
+          <i class="icon-send-horizontal"></i>
+        </button>
+      {% endif %}
     {% endif %}
   </td>
 </tr>

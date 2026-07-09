@@ -2,13 +2,21 @@
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">
-        Resend
-        {% if payment_request.is_trust %}
-          Trust Deposit
+        {% if reminder %}
+          {% if payment_request.is_trust %}
+            Trust Deposit Reminder
+          {% else %}
+            Payment Reminder
+          {% endif %}
         {% else %}
-          Payment
+          Resend
+          {% if payment_request.is_trust %}
+            Trust Deposit
+          {% else %}
+            Payment
+          {% endif %}
+          Request
         {% endif %}
-        Request
       </h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
@@ -18,8 +26,19 @@
     </div>
     <div class="modal-body">
       {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+      {% if reminder %}
+        <p class="detail-text">
+          The email politely notes that
+          {% if days_since %}it has been {{ days_since }} day{{ days_since|pluralize }} since{% endif %}
+          {% if payment_request.is_trust %}
+            the request was sent. It includes the same pay link.
+          {% else %}
+            the request was sent, and that payment is due upon receipt under the attorney-client agreement. It includes the same pay link.
+          {% endif %}
+        </p>
+      {% endif %}
       <form id="resend-form"
-            hx-post="{% url 'invoicing:requests-resend' payment_request.id %}"
+            hx-post="{% if reminder %}{% url 'invoicing:requests-send-reminder' payment_request.id %}{% else %}{% url 'invoicing:requests-resend' payment_request.id %}{% endif %}"
             hx-target="#htmx-modal-container"
             hx-indicator="#resend-submit"
             hx-disabled-elt="#resend-submit"
@@ -51,7 +70,7 @@
                     placeholder="Enter a message to the client."
                     @input="count = $event.target.value.length">{{ message }}</textarea>
         </div>
-        {% if not payment_request.is_trust %}
+        {% if not payment_request.is_trust and not reminder %}
           <div class="checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox"
@@ -77,7 +96,13 @@
               form="resend-form"
               id="resend-submit"
               class="btn btn-success btn-busy">
-        <span class="btn-busy-idle">Resend</span>
+        <span class="btn-busy-idle">
+          {% if reminder %}
+            Send Reminder
+          {% else %}
+            Resend
+          {% endif %}
+        </span>
         <span class="btn-busy-loading"><span class="btn-spinner"></span> Sending…</span>
       </button>
     </div>

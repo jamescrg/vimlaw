@@ -74,6 +74,7 @@ from apps.invoicing.requests.views import (
     requests_new,
     requests_new_trust,
     requests_resend,
+    requests_send_reminder,
 )
 from apps.invoicing.unbilled.views import (
     unbilled_bulk_create_invoices,
@@ -328,6 +329,11 @@ urlpatterns = [
         "invoicing/requests-resend/<int:pk>/",
         requests_resend,
         name="requests-resend",
+    ),
+    path(
+        "invoicing/requests-send-reminder/<int:pk>/",
+        requests_send_reminder,
+        name="requests-send-reminder",
     ),
     path("invoicing/requests-filter/", requests_filter, name="requests-filter"),
     path(

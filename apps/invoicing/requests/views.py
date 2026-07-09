@@ -2,6 +2,8 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Count, OuterRef, Subquery
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -9,10 +11,12 @@ from django.urls import reverse
 from apps.contacts.models import Contact
 from apps.invoicing.pay.balance import matter_balance_cents
 from apps.invoicing.requests.filters import PaymentRequestFilter
-from apps.invoicing.requests.models import PaymentRequest
+from apps.invoicing.requests.models import PaymentRequest, PaymentRequestTransmission
 from apps.invoicing.requests.send import (
     PaymentRequestSendError,
+    days_since_requested,
     send_payment_request,
+    send_request_reminder,
 )
 from apps.management.pagination import CustomPaginator
 from apps.matters.models import Matter
@@ -25,9 +29,33 @@ _NON_FILTER_KEYS = ("status", "order_by", "csrfmiddlewaretoken")
 
 def _requests_context(request):
     filter_data = request.session.get("requests_filter", {})
-    base = PaymentRequest.objects.select_related(
-        "matter", "client", "payment", "trust_transaction"
-    ).order_by("-created_at")
+    base = (
+        PaymentRequest.objects.select_related(
+            "matter", "client", "payment", "trust_transaction"
+        )
+        .annotate(
+            # Successful transmissions (sends and reminders) — the ×N badge.
+            annotated_send_count=Coalesce(
+                Subquery(
+                    PaymentRequestTransmission.objects.filter(
+                        payment_request=OuterRef("pk"), status="sent"
+                    )
+                    .values("payment_request")
+                    .annotate(n=Count("pk"))
+                    .values("n")
+                ),
+                0,
+            ),
+            annotated_last_sent_at=Subquery(
+                PaymentRequestTransmission.objects.filter(
+                    payment_request=OuterRef("pk"), status="sent"
+                )
+                .order_by("-sent_at")
+                .values("sent_at")[:1]
+            ),
+        )
+        .order_by("-created_at")
+    )
     requests = (
         PaymentRequestFilter(filter_data, queryset=base).qs if filter_data else base
     )
@@ -153,6 +181,7 @@ def requests_new(request):
                         message=message,
                         attach_statement=attach_statement,
                         attach_invoices=attach_invoices,
+                        sent_by=request.user,
                         request=request,
                     )
             except PaymentRequestSendError as exc:
@@ -264,7 +293,12 @@ def requests_new_trust(request):
                 with transaction.atomic():
                     payment_request.save()
                     send_payment_request(
-                        payment_request, to=to, cc=cc, message=message, request=request
+                        payment_request,
+                        to=to,
+                        cc=cc,
+                        message=message,
+                        sent_by=request.user,
+                        request=request,
                     )
             except PaymentRequestSendError as exc:
                 error = str(exc)
@@ -357,6 +391,7 @@ def requests_resend(request, pk):
                 message=message,
                 attach_statement=attach_statement,
                 attach_invoices=attach_invoices,
+                sent_by=request.user,
                 request=request,
             )
         except PaymentRequestSendError as exc:
@@ -390,6 +425,62 @@ def requests_resend(request, pk):
         "message": "",
         "attach_statement": True,
         "attach_invoices": True,
+        "error": "",
+    }
+    return render(request, "invoicing/requests/resend.html", context)
+
+
+@login_required
+def requests_send_reminder(request, pk):
+    """Email a reminder for an already-sent request. GET renders the modal
+    (shared with resend); POST sends and returns 204 or re-renders with an
+    error."""
+    payment_request = get_object_or_404(PaymentRequest, pk=pk)
+    if request.method == "POST":
+        to = (request.POST.get("to") or "").strip()
+        cc = (request.POST.get("cc") or "").strip()
+        message = request.POST.get("message", "")
+        error = ""
+        try:
+            send_request_reminder(
+                payment_request,
+                to=to,
+                cc=cc,
+                message=message,
+                sent_by=request.user,
+                request=request,
+            )
+        except PaymentRequestSendError as exc:
+            error = str(exc)
+        if not error:
+            response = HttpResponse(
+                status=204, headers={"HX-Trigger": "requestsChanged"}
+            )
+            label = (
+                "Trust deposit reminder"
+                if payment_request.is_trust
+                else "Payment reminder"
+            )
+            toast_success(response, f"{label} sent to {to}.")
+            return response
+        context = {
+            "payment_request": payment_request,
+            "reminder": True,
+            "days_since": days_since_requested(payment_request),
+            "to": to,
+            "cc": cc,
+            "message": message,
+            "error": error,
+        }
+        return render(request, "invoicing/requests/resend.html", context)
+
+    context = {
+        "payment_request": payment_request,
+        "reminder": True,
+        "days_since": days_since_requested(payment_request),
+        "to": payment_request.recipient_email,
+        "cc": "",
+        "message": "",
         "error": "",
     }
     return render(request, "invoicing/requests/resend.html", context)

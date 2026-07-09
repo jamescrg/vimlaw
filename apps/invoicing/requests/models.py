@@ -107,3 +107,44 @@ class PaymentRequest(AuditMixin, models.Model):
             models.Index(fields=["client"]),
             models.Index(fields=["account"]),
         ]
+
+
+class PaymentRequestTransmission(AuditMixin, models.Model):
+    """One record per attempt to email a payment request (initial send, resend,
+    or reminder). Mirrors InvoiceTransmission and powers the requests list's
+    ×N send badge."""
+
+    STATUS_CHOICES = (
+        ("sent", "Sent"),
+        ("failed", "Failed"),
+    )
+    KIND_CHOICES = (
+        ("request", "Request"),
+        ("reminder", "Reminder"),
+    )
+
+    payment_request = models.ForeignKey(
+        PaymentRequest, on_delete=models.CASCADE, related_name="transmissions"
+    )
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default="request")
+    sent_at = models.DateTimeField()
+    # May hold several comma-separated addresses, so CharField rather than
+    # EmailField (which validates a single address).
+    to_email = models.CharField(max_length=500)
+    cc_email = models.CharField(max_length=500, blank=True, default="")
+    sent_by = models.ForeignKey(
+        "accounts.CustomUser", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    error = models.TextField(blank=True, default="")
+
+    def __str__(self):
+        return (
+            f"Request #{self.payment_request_id} {self.kind} "
+            f"{self.status} to {self.to_email}"
+        )
+
+    class Meta:
+        db_table = "app_invoicing_payment_request_transmission"
+        ordering = ["-sent_at"]
+        indexes = [models.Index(fields=["payment_request"])]

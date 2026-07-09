@@ -182,11 +182,11 @@ def send_invoice(
 
 
 def days_since_sent(invoice):
-    """Whole days since the invoice was last actually emailed (the latest
-    successful invoice-kind transmission, falling back to date_sent).
+    """Whole days since the invoice PDF was last actually delivered — a direct
+    send or a payment request that attached it (falling back to date_sent).
     Reminders don't reset the clock. None when it was never emailed."""
     last = (
-        invoice.transmissions.filter(kind="invoice", status="sent")
+        invoice.transmissions.filter(kind__in=["invoice", "request"], status="sent")
         .order_by("-sent_at")
         .values_list("sent_at", flat=True)
         .first()

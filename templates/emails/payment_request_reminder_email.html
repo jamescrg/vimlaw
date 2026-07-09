@@ -1,0 +1,207 @@
+{% load humanize invoicing_extras %}<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if is_trust %}Trust Deposit Reminder{% else %}Payment Reminder{% endif %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+      /* Authored as a normal stylesheet; premailer inlines this onto the elements
+         at send time (see utils.mail.render_inlined). One fixed look — gray
+         background, white card, Noto Sans — kept in sync with the pay page and
+         invoice email. */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f3f4f6;
+        color: #374151;
+        font-family: "Noto Sans", Arial, "Helvetica Neue", sans-serif;
+      }
+
+      /* Page: a lighter gradient than the pay page (solid fallback). */
+      .page {
+        background-color: #f3f4f6;
+        background-image: linear-gradient(180deg, #e5e7eb 0%, #f3f4f6 70%, #f3f4f6 100%);
+      }
+
+      /* A little space above the card so it sits off the top of the message. */
+      .wrap-cell {
+        padding: 32px 16px 48px;
+      }
+
+      /* White card with the pay page's soft shadow. */
+      .card {
+        width: 100%;
+        max-width: 480px;
+        background-color: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-head {
+        padding: 24px 24px 16px;
+      }
+
+      .firm-name {
+        margin: 0;
+        font-size: 26px;
+        font-weight: normal;
+        color: #111827;
+      }
+
+      .meta {
+        margin: 8px 0 0;
+        font-size: 15px;
+        color: #4b5563;
+      }
+
+      .card-body {
+        padding: 0 24px 24px;
+      }
+
+      /* Justified text; hyphenation softens the word-gaps where the client
+         supports it (Apple Mail/WebKit — Gmail and Outlook ignore it). */
+      .para {
+        margin: 0 0 16px;
+        font-size: 15px;
+        color: #374151;
+        text-align: justify;
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      }
+
+      .para a {
+        color: #4b5563;
+      }
+
+      .summary {
+        margin: 16px 0 28px;
+        border: 1px solid #d1d5db;
+        border-radius: 3px;
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      .summary td {
+        padding: 12px 16px;
+        font-size: 15px;
+      }
+
+      .summary tr + tr td {
+        border-top: 1px solid #d1d5db;
+      }
+
+      .summary .label {
+        color: #4b5563;
+      }
+
+      .summary .value {
+        color: #111827;
+        text-align: right;
+      }
+
+      /* Button, matching the pay page .pay-btn. Slate with white text so it
+         stands out on the white card. */
+      .btn {
+        background-color: #475569;
+        border-radius: 8px;
+      }
+
+      .btn a {
+        display: inline-block;
+        padding: 10px 22px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #ffffff;
+        text-decoration: none;
+      }
+
+      /* In a dark-mode client (Apple Mail honours this; others auto-invert),
+         lighten the button so it still reads against a darkened card. Needs
+         !important to beat premailer's inlined light-mode values. */
+      @media (prefers-color-scheme: dark) {
+        .btn {
+          background-color: #525252 !important;
+        }
+
+        .btn a {
+          color: #f5f5f5 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td class="wrap-cell" align="center">
+          <table role="presentation" class="card" width="480" cellpadding="0" cellspacing="0">
+            <tr>
+              <td class="card-head">
+                <h1 class="firm-name">{{ firm_name|default:"Payment request"|firm_strip }}</h1>
+                <p class="meta">
+                  {% if is_trust %}Trust Deposit Reminder{% else %}Payment Reminder{% endif %}
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td class="card-body">
+                <p class="para">Dear Client,</p>
+                {% if cover_message %}
+                  <p class="para" style="white-space: pre-line;">{{ cover_message }}</p>
+                {% endif %}
+                <p class="para">
+                  This is a friendly reminder that
+                  {% if days_since %}
+                    it has been {{ days_since }} day{{ days_since|pluralize }} since you were sent
+                  {% else %}
+                    you were previously sent
+                  {% endif %}
+                  {% if is_trust %}
+                    a request for a trust deposit.
+                  {% else %}
+                    a payment request for your outstanding balance. Per the terms of your
+                    attorney-client agreement, payment of invoices is due upon receipt.
+                  {% endif %}
+                </p>
+                <p class="para">
+                  {% if is_trust %}
+                    Prompt replenishment of your trust retainer helps to assure that we can
+                    continue our work as efficiently as possible for your benefit. If you
+                    need additional time for any reason, please let us know.
+                  {% else %}
+                    Prompt payment of invoices helps to assure that we can continue our work
+                    as efficiently as possible for your benefit. If you need additional time
+                    to make payment for any reason, please let us know.
+                  {% endif %}
+                </p>
+                <p class="para">
+                  If you have questions please reply to this email{% if firm_email %} or contact us at <a href="mailto:{{ firm_email }}">{{ firm_email }}</a>{% endif %}.
+                </p>
+                <table role="presentation" class="summary" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td class="label">Client</td>
+                    <td class="value">{{ client_name }}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">Amount Requested</td>
+                    <td class="value">${{ amount_due|floatformat:2|intcomma }}</td>
+                  </tr>
+                </table>
+                {% if pay_url %}
+                  <table role="presentation" class="btn" cellpadding="0" cellspacing="0" style="margin: 4px 0 0;">
+                    <tr>
+                      <td>
+                        <a href="{{ pay_url }}">Pay now</a>
+                      </td>
+                    </tr>
+                  </table>
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
