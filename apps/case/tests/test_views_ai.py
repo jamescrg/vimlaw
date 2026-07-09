@@ -54,9 +54,12 @@ class TestAICreatePrompt:
         response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
         assert response.status_code == 200
         content = response.content.decode()
-        assert "is an attorney" in content
+        assert "Title: Attorney" in content
+        # Roster anchors every firm name to an authoritative title
+        assert "## Firm Team" in content
 
-    def test_create_prompt_paralegal_role(self, client_with_matter, user, matter):
+    def test_create_prompt_staff_fallback(self, client_with_matter, user, matter):
+        """No explicit title + not an attorney falls back to Staff."""
         user.is_attorney = False
         user.first_name = "Jane"
         user.last_name = "Doe"
@@ -72,7 +75,28 @@ class TestAICreatePrompt:
         response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
         assert response.status_code == 200
         content = response.content.decode()
-        assert "is a paralegal supporting an attorney" in content
+        assert "Title: Staff" in content
+
+    def test_create_prompt_explicit_title(self, client_with_matter, user, matter):
+        """An explicit title beats the attorney-flag fallback."""
+        user.is_attorney = False
+        user.title = "Office Manager"
+        user.first_name = "Jane"
+        user.last_name = "Doe"
+        user.save()
+        # Re-login and re-set matter selection
+        client_with_matter.login(username="testuser", password="testpass123")
+        client_with_matter.get("/dash/")
+        session = client_with_matter.session
+        session["documents_selected_matter"] = matter.id
+        session["last_viewed_matter"] = matter.id
+        session.save()
+        client_with_matter.matter = matter
+        response = client_with_matter.get(f"/case/{matter.id}/ai/create-prompt/")
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Title: Office Manager" in content
+        assert "Jane Doe — Office Manager" in content
 
     def test_create_prompt_uses_company_jurisdiction(self, client_with_matter, matter):
         company = Firm.objects.first()

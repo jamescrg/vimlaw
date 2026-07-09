@@ -26,6 +26,10 @@ class CustomUser(AbstractUser):
         max_length=20, choices=NAV_LAYOUT_OPTIONS, default="vertical"
     )
     is_attorney = models.BooleanField(default=True)
+    # Free-text job title ("Attorney", "Paralegal", "Office Manager", ...).
+    # Shown in the users table and fed to the AI context so the model never
+    # has to guess anyone's role. Blank falls back to the attorney flag.
+    title = models.CharField(max_length=100, blank=True, default="")
     last_dash_check = models.DateField(null=True, blank=True)
     digest_enabled = models.BooleanField(default=False)
     digest_include_weekends = models.BooleanField(default=False)
@@ -57,6 +61,12 @@ class CustomUser(AbstractUser):
     @property
     def role_display(self):
         return dict(ROLE_OPTIONS)[self.role]
+
+    @property
+    def title_display(self):
+        """Job title for display and AI context; the attorney flag is the
+        fallback when no explicit title has been set."""
+        return self.title or ("Attorney" if self.is_attorney else "Staff")
 
 
 class EmailVerificationCode(models.Model):

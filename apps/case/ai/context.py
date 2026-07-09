@@ -30,6 +30,7 @@ from pathlib import Path
 
 from django.conf import settings
 
+from apps.accounts.models import CustomUser
 from apps.activity.time.models import TimeEntry
 from apps.calendar.models import Event
 from apps.case.models import CaseLaw, Document, Fact, Highlight
@@ -339,9 +340,44 @@ REQUEST_INFO_TEMPLATE = """## Request Date
 
 - Name: {user_name}
 - Email: {user_email}
-- Role: {role_description}
+- Title: {role_title}
 - Law Firm: {firm_name}
+
+## Firm Team
+
+Firm personnel and their titles. These are authoritative — when any of these
+names appears in the matter record (time entries, notes, correspondence), use
+the title listed here; do not infer anyone's role:
+
+{team_lines}
 """
+
+
+def build_request_info(user):
+    """The Requesting Party + Firm Team sections of the system prompt.
+
+    The roster anchors every firm name the model may meet in the matter
+    record to an authoritative title, so it never guesses a colleague's
+    role. Titles come from CustomUser.title, falling back to the attorney
+    flag (see title_display)."""
+    if not user:
+        return ""
+    company = Firm.objects.first()
+    team_lines = "\n".join(
+        f"- {u.full_name} — {u.title_display}"
+        for u in CustomUser.objects.filter(is_active=True).order_by(
+            "first_name", "username"
+        )
+    )
+    return REQUEST_INFO_TEMPLATE.format(
+        request_date=date.today().strftime("%B %d, %Y"),
+        user_name=user.get_full_name(),
+        user_email=user.email,
+        role_title=user.title_display,
+        firm_name=company.name if company else "",
+        team_lines=team_lines,
+    )
+
 
 MATTER_CONTEXT_TEMPLATE = """
 ## Current Matter: {matter_name}
@@ -466,22 +502,7 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     # Build the full system prompt
     company = Firm.objects.first()
 
-    request_info = ""
-    if user:
-        if user.is_attorney:
-            role_description = f"{user.get_full_name()} is an attorney"
-        else:
-            role_description = (
-                f"{user.get_full_name()} is a paralegal supporting an attorney"
-            )
-        company = Firm.objects.first()
-        request_info = REQUEST_INFO_TEMPLATE.format(
-            request_date=date.today().strftime("%B %d, %Y"),
-            user_name=user.get_full_name(),
-            user_email=user.email,
-            role_description=role_description,
-            firm_name=company.name if company else "",
-        )
+    request_info = build_request_info(user)
 
     jurisdiction = (
         matter.jurisdiction
@@ -538,22 +559,7 @@ def assemble_matter_context_with_selection(
 
     # Build request info and legal prompt
     company = Firm.objects.first()
-    request_info = ""
-    if user:
-        if user.is_attorney:
-            role_description = f"{user.get_full_name()} is an attorney"
-        else:
-            role_description = (
-                f"{user.get_full_name()} is a paralegal supporting an attorney"
-            )
-        company = Firm.objects.first()
-        request_info = REQUEST_INFO_TEMPLATE.format(
-            request_date=date.today().strftime("%B %d, %Y"),
-            user_name=user.get_full_name(),
-            user_email=user.email,
-            role_description=role_description,
-            firm_name=company.name if company else "",
-        )
+    request_info = build_request_info(user)
 
     jurisdiction = (
         matter.jurisdiction
