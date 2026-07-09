@@ -411,13 +411,29 @@ Matter Overview tab
   min-width: 0;
 }
 
-/* Right column: the financial snapshot above the recent-actions table. */
+/* Right column: the financial snapshot fused to the recent-actions table
+   below it — one card, so the column doesn't run a stray ledge past the
+   bottom of the Matter Detail table. */
 .overview-side-col {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0;
   min-width: 0;
+}
+
+/* The fuse: square the adjoining corners and collapse the doubled border.
+   Scoped to adjacency — without Financials (no perm_financial), Recent
+   Actions stands alone and keeps its full rounding. */
+.overview-side-col .overview-financial {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.overview-financial + .overview-actions {
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 /* Icon-only edit button riding the Matter Detail heading row, pinned right. */

@@ -914,3 +914,29 @@ const searchNav = {
 document.addEventListener('keydown', function(event) {
   if (searchNav.handleKeydown(event)) return;
 }, true);
+
+// ==========================================================================
+//  Stepper shortcuts — [ / ] cycle the page's stepper
+//  On the Tasks and Activity toolbars that's the user stepper; on a matter
+//  detail page it's the prev/next matter chevrons in the header. The user
+//  stepper wins when both are present. Ignored while typing or in a modal.
+// ==========================================================================
+
+document.addEventListener('keydown', function(event) {
+  if (event.key !== '[' && event.key !== ']') return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' ||
+                 active.tagName === 'SELECT' || active.isContentEditable)) return;
+  const modal = document.getElementById('htmx-modal-container');
+  if (modal && modal.childElementCount > 0) return;
+
+  const prev = event.key === '[';
+  const userLabel = prev ? 'Previous user' : 'Next user';
+  const step =
+    document.querySelector(`.user-step-group .user-step[aria-label="${userLabel}"]`) ||
+    document.querySelector(prev ? '.matter-step-prev' : '.matter-step-next');
+  if (!step) return;
+  event.preventDefault();
+  step.click();
+});

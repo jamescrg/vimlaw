@@ -199,10 +199,11 @@ def _matter_overview_context(request, matter):
         "show_financial": show_financial,
         # Options for the inline practice-area dropdown.
         "practice_areas": PracticeArea.objects.order_by("name"),
+        # Six rows lines the fused side column up with the Matter Detail table.
         "recent_actions": (
             TimeEntry.objects.filter(matter=matter)
             .select_related("user")
-            .order_by("-date", "-id")[:5]
+            .order_by("-date", "-id")[:6]
         ),
         # Dash-style upcoming-events cards, scoped to this matter.
         "upcoming_events": (
