@@ -14,6 +14,7 @@ class UserForm(forms.ModelForm):
             "last_name",
             "role",
             "is_attorney",
+            "title",
             "initials",
             "user_rate",
             "is_active",

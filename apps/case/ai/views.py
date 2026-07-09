@@ -5,7 +5,6 @@ Views for AI chat within case analysis.
 import logging
 import threading
 import time
-from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
@@ -30,6 +29,7 @@ from apps.settings.models import Firm
 
 from .context import (
     assemble_matter_context,
+    build_request_info,
     load_legal_prompt,
 )
 from .filters import ConversationFilter
@@ -977,15 +977,6 @@ def create_prompt(request, matter_id):
     )
     legal_guidelines = load_legal_prompt(jurisdiction=jurisdiction)
 
-    # Determine user role description
-    user = request.user
-    if user.is_attorney:
-        role_description = f"{user.get_full_name()} is an attorney"
-    else:
-        role_description = (
-            f"{user.get_full_name()} is a paralegal supporting an attorney"
-        )
-
     # Build case timeline from facts
     facts = Fact.objects.filter(matter=matter).order_by("date", "id")
     timeline_lines = []
@@ -1032,22 +1023,10 @@ def create_prompt(request, matter_id):
             "as identified by an attorney:\n\n" + "\n\n".join(highlight_lines)
         )
 
-    # Build the prompt text with proper markdown formatting
-
-    company = Firm.objects.first()
-
-    company_name = company.name if company else ""
-    prompt_text = f"""## Request Date
-
-{date.today().strftime("%B %d, %Y")}
-
-## Requesting Party
-
-- Name: {user.get_full_name()}
-- Email: {user.email}
-- Role: {role_description}
-- Law Firm: {company_name}
-
+    # Build the prompt text with proper markdown formatting. The header
+    # (request date, requesting party, firm team roster) is the same block
+    # the chat system prompt uses — one source of truth for who's who.
+    prompt_text = f"""{build_request_info(request.user)}
 ## General Guidelines for Responding
 
 {legal_guidelines}{timeline_section}{highlights_section}"""

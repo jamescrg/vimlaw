@@ -173,7 +173,7 @@
             </ul>
           </div>
         </td>
-        <td>{{ user.is_attorney|yesno:"Attorney,Staff" }}</td>
+        <td>{{ user.title_display }}</td>
         <td>${{ user.user_rate }}</td>
         <td>
           {% if user.is_active %}
