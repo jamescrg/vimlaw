@@ -70,7 +70,6 @@
 .event-card {
   background: var(--background-body);
   border: solid 1px var(--border-medium);
-  border-left: 3px solid var(--border-medium);
   border-radius: var(--radius-md);
   box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
   cursor: pointer;
@@ -95,7 +94,8 @@
 
 /* Due status — light mode tints the whole card (like the kanban past-due
    cards); dark mode uses a left rail instead, per the light-fill / dark-rail
-   convention. Today = red, tomorrow = yellow. */
+   convention. The rail — and the 3px left border that carries it — is
+   dark-only; light cards keep the plain uniform 1px border. */
 /* Due today / due in the next day or two both read as "soon" — yellow tint. */
 .event-card.is-today {
   background: var(--hl-yellow);
@@ -103,6 +103,10 @@
 
 .event-card.is-tomorrow {
   background: var(--hl-yellow);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"]) .event-card {
+  border-left: 3px solid var(--border-medium);
 }
 
 :is([data-theme="dark"], [data-theme="cosmic"]) .event-card.is-today {
@@ -113,6 +117,18 @@
 :is([data-theme="dark"], [data-theme="cosmic"]) .event-card.is-tomorrow {
   background: var(--background-body);
   border-left-color: var(--yellow-400);
+}
+
+/* A task past its due date — the kanban's past-due treatment: fill in light,
+   rose rail in dark. After is-today/is-tomorrow so past-due wins if a card
+   somehow carries both. */
+.event-card.past-due {
+  background: var(--past-due-bg);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"]) .event-card.past-due {
+  background: var(--background-body);
+  border-left-color: var(--past-due-rail);
 }
 
 .event-card-when {
