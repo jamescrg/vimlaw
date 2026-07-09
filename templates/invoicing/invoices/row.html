@@ -34,8 +34,9 @@
     <div class="badge-flag-row">
       {% include "invoicing/invoices/status.html" %}
       {# Only meaningful beside "Sent" — on Paid/Deferred/etc. a send tally reads as a non sequitur. #}
-      {% if invoice.status == 'SENT' and invoice.annotated_send_count %}
-        <a class="app-badge badge-gray"
+      {# ×1 is implied by the Sent status itself; the tally only adds information from ×2. #}
+      {% if invoice.status == 'SENT' and invoice.annotated_send_count >= 2 %}
+        <a class="app-badge app-badge-round badge-gray"
            href="{% url 'invoicing:invoice-history-index' invoice.id %}"
            title="Emailed {{ invoice.annotated_send_count }} time{{ invoice.annotated_send_count|pluralize }} — last {{ invoice.annotated_last_sent_at|date:'Y-m-d' }}. View history.">×{{ invoice.annotated_send_count }}</a>
       {% endif %}

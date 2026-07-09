@@ -58,6 +58,19 @@ Badge size variants
   padding: 0.375rem 0.625rem;
 }
 
+/* Round variant: a circle for short content (the ×N send tallies). The pill
+   radius keeps it a capsule — not an ellipse — if the content ever outgrows
+   the fixed diameter (×10 and up). */
+.app-badge-round {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  height: 1.5rem;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 0 0.25rem;
+}
+
 /* Cell content on the left, a status flag on the right, on one line (mirrors the
    ledger's .ledger-desc). The flag stays in normal flow — NOT floated — so it
    never pushes up the table-row height; the left item shrinks/wraps while the

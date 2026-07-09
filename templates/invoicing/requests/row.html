@@ -42,8 +42,9 @@
     <div class="badge-flag-row">
       <span>{{ payment_request.get_status_display }}</span>
       {# Only meaningful beside "Sent" — elsewhere a send tally is a non sequitur. #}
-      {% if payment_request.status == 'SENT' and payment_request.annotated_send_count %}
-        <span class="app-badge badge-gray"
+      {# ×1 is implied by the Sent status itself; the tally only adds information from ×2. #}
+      {% if payment_request.status == 'SENT' and payment_request.annotated_send_count >= 2 %}
+        <span class="app-badge app-badge-round badge-gray"
               title="Emailed {{ payment_request.annotated_send_count }} time{{ payment_request.annotated_send_count|pluralize }} — last {{ payment_request.annotated_last_sent_at|date:'Y-m-d' }}">×{{ payment_request.annotated_send_count }}</span>
       {% endif %}
       {% if payment_request.settlement_pending %}
