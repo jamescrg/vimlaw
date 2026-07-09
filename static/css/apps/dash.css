@@ -98,11 +98,11 @@
    dark-only; light cards keep the plain uniform 1px border. */
 /* Due today / due in the next day or two both read as "soon" — yellow tint. */
 .event-card.is-today {
-  background: var(--hl-yellow);
+  background: var(--due-soon-bg);
 }
 
 .event-card.is-tomorrow {
-  background: var(--hl-yellow);
+  background: var(--due-soon-bg);
 }
 
 :is([data-theme="dark"], [data-theme="cosmic"]) .event-card {
