@@ -345,6 +345,11 @@ Detail View
   width: 12rem;
 }
 
+/* Invoice vs Reminder */
+.history-delivery .kind {
+  width: 6.5rem;
+}
+
 .history-delivery .sender,
 .history-delivery .status {
   width: 8rem;

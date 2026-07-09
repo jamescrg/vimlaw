@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.db.models import (
     Case,
+    Count,
     DecimalField,
     Exists,
     F,
@@ -18,7 +19,11 @@ from apps.activity.flat_fees.models import FlatFeeEntry
 from apps.activity.time.models import TimeEntry
 from apps.invoicing.applications.models import CreditApplication, PaymentApplication
 from apps.invoicing.invoices.filters import InvoiceFilter
-from apps.invoicing.invoices.models import INVOICE_STATUS, Invoice
+from apps.invoicing.invoices.models import (
+    INVOICE_STATUS,
+    Invoice,
+    InvoiceTransmission,
+)
 from apps.management.pagination import CustomPaginator
 
 
@@ -114,6 +119,27 @@ def get_annotated_invoice_queryset():
                 PaymentApplication.objects.filter(
                     invoice=OuterRef("pk"), payment__processor_status="pending"
                 )
+            ),
+            # Successful email transmissions (invoice sends and reminders
+            # alike) — the status cell's ×N chip. Its absence beside SENT
+            # means the status was set by hand, never actually emailed.
+            annotated_send_count=Coalesce(
+                Subquery(
+                    InvoiceTransmission.objects.filter(
+                        invoice=OuterRef("pk"), status="sent"
+                    )
+                    .values("invoice")
+                    .annotate(n=Count("pk"))
+                    .values("n")
+                ),
+                0,
+            ),
+            annotated_last_sent_at=Subquery(
+                InvoiceTransmission.objects.filter(
+                    invoice=OuterRef("pk"), status="sent"
+                )
+                .order_by("-sent_at")
+                .values("sent_at")[:1]
             ),
         )
         .annotate(

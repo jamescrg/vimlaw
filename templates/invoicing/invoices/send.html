@@ -2,12 +2,13 @@
   <div class="modal-content">
     <div class="modal-header">
       <h1 class="modal-title">
-        {% if invoice.date_sent %}
-          Resend
+        {% if reminder %}
+          Payment Reminder — Invoice #{{ invoice.id }}
+        {% elif invoice.date_sent %}
+          Resend Invoice #{{ invoice.id }}
         {% else %}
-          Send
+          Send Invoice #{{ invoice.id }}
         {% endif %}
-        Invoice #{{ invoice.id }}
       </h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
@@ -18,7 +19,7 @@
     <div class="modal-body">
       {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
       <form id="invoice-send-form"
-            hx-post="{% url 'invoicing:invoices-send' pk=invoice.id %}"
+            hx-post="{% if reminder %}{% url 'invoicing:invoices-send-reminder' pk=invoice.id %}{% else %}{% url 'invoicing:invoices-send' pk=invoice.id %}{% endif %}"
             hx-target="#htmx-modal-container"
             hx-indicator="#invoice-send-submit"
             hx-disabled-elt="#invoice-send-submit"
@@ -55,7 +56,7 @@
                     name="message"
                     rows="4"
                     maxlength="500"
-                    placeholder="Enter a message to the client.{% if not invoice.date_sent %} To annotate the invoice itself, add it to the invoice before sending.{% endif %}"
+                    placeholder="{% if reminder %}Optional note, shown above the reminder text.{% else %}Enter a message to the client.{% if not invoice.date_sent %} To annotate the invoice itself, add it to the invoice before sending.{% endif %}{% endif %}"
                     @input="count = $event.target.value.length">{{ default_message }}</textarea>
         </div>
       </form>
@@ -69,7 +70,9 @@
               id="invoice-send-submit"
               class="btn btn-success btn-busy">
         <span class="btn-busy-idle">
-          {% if invoice.date_sent %}
+          {% if reminder %}
+            Send Reminder
+          {% elif invoice.date_sent %}
             Resend
           {% else %}
             Send
@@ -77,11 +80,7 @@
         </span>
         <span class="btn-busy-loading">
           <span class="btn-spinner"></span>
-          {% if invoice.date_sent %}
-            Resend
-          {% else %}
-            Sending…
-          {% endif %}
+          Sending…
         </span>
       </button>
     </div>

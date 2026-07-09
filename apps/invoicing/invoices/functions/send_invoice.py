@@ -42,9 +42,12 @@ def _invalid_addresses(addresses):
     return invalid
 
 
-def _log(invoice, *, to_email, cc_email, sent_by, status, error="", when=None):
+def _log(
+    invoice, *, to_email, cc_email, sent_by, status, error="", when=None, kind="invoice"
+):
     InvoiceTransmission.objects.create(
         invoice=invoice,
+        kind=kind,
         sent_at=when or timezone.now(),
         to_email=to_email or "",
         cc_email=cc_email or "",
@@ -174,5 +177,131 @@ def send_invoice(
         sent_by=sent_by,
         status="sent",
         when=now,
+    )
+    return True
+
+
+def days_since_sent(invoice):
+    """Whole days since the invoice was last actually emailed (the latest
+    successful invoice-kind transmission, falling back to date_sent).
+    Reminders don't reset the clock. None when it was never emailed."""
+    last = (
+        invoice.transmissions.filter(kind="invoice", status="sent")
+        .order_by("-sent_at")
+        .values_list("sent_at", flat=True)
+        .first()
+    ) or invoice.date_sent
+    if not last:
+        return None
+    return max((timezone.now() - last).days, 0)
+
+
+def send_reminder(
+    invoice, *, to=None, cc=None, message=None, sent_by=None, request=None
+):
+    """Email a payment reminder for an already-sent invoice. Returns True.
+
+    The reminder notes how many days ago the invoice went out, that payment is
+    due upon receipt under the attorney-client agreement, and that
+    accommodations are available on request. It attaches a courtesy copy of
+    the invoice PDF and logs a 'reminder'-kind transmission; the invoice's
+    status, date_sent, and ×N send tally are untouched.
+    """
+    matter = invoice.matter
+    client = matter.client if matter else None
+    to_list = _parse_recipients(to)
+    if not to_list and client and client.email:
+        to_list = [client.email.strip()]
+    cc_list = _parse_recipients(cc)
+    to_joined = ", ".join(to_list)
+    cc_joined = ", ".join(cc_list)
+
+    if not to_list:
+        _log(
+            invoice,
+            to_email="",
+            cc_email=cc_joined,
+            sent_by=sent_by,
+            status="failed",
+            error="No client email address on file.",
+            kind="reminder",
+        )
+        raise InvoiceSendError("This matter's client has no email address on file.")
+
+    invalid = _invalid_addresses(to_list + cc_list)
+    if invalid:
+        error = f"Invalid email address(es): {', '.join(invalid)}"
+        _log(
+            invoice,
+            to_email=to_joined,
+            cc_email=cc_joined,
+            sent_by=sent_by,
+            status="failed",
+            error=error,
+            kind="reminder",
+        )
+        raise InvoiceSendError(error)
+
+    try:
+        if not invoice.pdf_file:
+            store_invoice_pdf(invoice, request)
+
+        company = Firm.objects.first()
+        bcc_list = _parse_recipients(company.invoice_bcc) if company else []
+        billing_email = ""
+        if company:
+            billing_email = company.billing_email or company.email
+        context = {
+            "invoice": invoice,
+            "matter_name": matter.name if matter else "",
+            "matter_number": matter.id if matter else "",
+            "client_name": client.name if client else "",
+            "amount_due": invoice.amount_remaining,
+            "cover_message": message or "",
+            "days_since": days_since_sent(invoice),
+            "firm_name": company.name if company else "",
+            "billing_email": billing_email,
+            "pay_url": payment_url(invoice, request),
+        }
+        firm = company.name if company else ""
+        subject = f"{firm} - " if firm else ""
+        subject += f"Payment Reminder - Invoice {invoice.id}"
+        if matter:
+            subject += f" - Matter {matter.id}"
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=render_to_string("emails/invoice_reminder_email.txt", context),
+            from_email=billing_from_email(company),
+            to=to_list,
+            cc=cc_list,
+            bcc=bcc_list or None,
+            reply_to=[billing_reply_to(company)] if billing_email else None,
+        )
+        email.attach_alternative(
+            render_inlined("emails/invoice_reminder_email.html", context), "text/html"
+        )
+        with invoice.pdf_file.open("rb") as f:
+            email.attach(f"invoice_{invoice.id}.pdf", f.read(), "application/pdf")
+        email.send()
+    except Exception as exc:
+        _log(
+            invoice,
+            to_email=to_joined,
+            cc_email=cc_joined,
+            sent_by=sent_by,
+            status="failed",
+            error=str(exc),
+            kind="reminder",
+        )
+        raise InvoiceSendError(f"Could not send the reminder: {exc}") from exc
+
+    _log(
+        invoice,
+        to_email=to_joined,
+        cc_email=cc_joined,
+        sent_by=sent_by,
+        status="sent",
+        kind="reminder",
     )
     return True

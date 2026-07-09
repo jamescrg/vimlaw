@@ -40,7 +40,12 @@ from .filters import InvoiceFilter
 from .forms import EditInvoiceForm, InvoiceForm
 from .functions import generate_invoice
 from .functions.generate_invoice import store_invoice_pdf
-from .functions.send_invoice import InvoiceSendError, send_invoice
+from .functions.send_invoice import (
+    InvoiceSendError,
+    days_since_sent,
+    send_invoice,
+    send_reminder,
+)
 from .models import Invoice
 
 
@@ -872,6 +877,61 @@ def invoices_send(request, pk):
         "default_to": client.email if client else "",
         "default_cc": "",
         "default_message": invoice.message or "",
+        "error": "",
+    }
+    return render(request, "invoicing/invoices/send.html", context)
+
+
+@login_required
+def invoices_send_reminder(request, pk):
+    """Email a payment reminder for an already-sent invoice. GET renders the
+    modal (shared with send/resend); POST sends and returns 204 (closes the
+    modal, refreshes the list/detail) or re-renders the modal with an error."""
+    invoice = get_object_or_404(Invoice, pk=pk)
+    client = invoice.matter.client if invoice.matter else None
+
+    if request.method == "POST":
+        to = (request.POST.get("to") or "").strip()
+        cc = (request.POST.get("cc") or "").strip()
+        message = request.POST.get("message", "")
+        recipient = to or (client.email if client else "")
+        try:
+            send_reminder(
+                invoice,
+                to=to or None,
+                cc=cc or None,
+                message=message,
+                sent_by=request.user,
+                request=request,
+            )
+        except InvoiceSendError as exc:
+            context = {
+                "invoice": invoice,
+                "reminder": True,
+                "days_since": days_since_sent(invoice),
+                "default_to": to,
+                "default_cc": cc,
+                "default_message": message,
+                "error": str(exc),
+            }
+            return render(request, "invoicing/invoices/send.html", context)
+
+        response = HttpResponse(
+            status=204,
+            headers={"HX-Trigger": "invoiceDetailChanged, invoicesChanged"},
+        )
+        toast_success(
+            response, f"Reminder for invoice #{invoice.id} sent to {recipient}."
+        )
+        return response
+
+    context = {
+        "invoice": invoice,
+        "reminder": True,
+        "days_since": days_since_sent(invoice),
+        "default_to": client.email if client else "",
+        "default_cc": "",
+        "default_message": "",
         "error": "",
     }
     return render(request, "invoicing/invoices/send.html", context)

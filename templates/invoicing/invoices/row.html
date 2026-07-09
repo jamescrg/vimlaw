@@ -30,7 +30,17 @@
       {% endif %}
     </div>
   </td>
-  <td class="status dropdown-cell">{% include "invoicing/invoices/status.html" %}</td>
+  <td class="status dropdown-cell">
+    <div class="badge-flag-row">
+      {% include "invoicing/invoices/status.html" %}
+      {# Only meaningful beside "Sent" — on Paid/Deferred/etc. a send tally reads as a non sequitur. #}
+      {% if invoice.status == 'SENT' and invoice.annotated_send_count %}
+        <a class="app-badge badge-gray"
+           href="{% url 'invoicing:invoice-history-index' invoice.id %}"
+           title="Emailed {{ invoice.annotated_send_count }} time{{ invoice.annotated_send_count|pluralize }} — last {{ invoice.annotated_last_sent_at|date:'Y-m-d' }}. View history.">×{{ invoice.annotated_send_count }}</a>
+      {% endif %}
+    </div>
+  </td>
   <td class="amount">${{ invoice.annotated_net_fees|floatformat:2|intcomma }}</td>
   <td class="amount">${{ invoice.annotated_net_expenses|floatformat:2|intcomma }}</td>
   <td class="amount amount-total">${{ invoice.annotated_final_total|floatformat:2|intcomma }}</td>
@@ -67,20 +77,50 @@
       </ul>
     </div>
   </td>
-  <td class="action-send">
+  <td class="action-send dropdown-cell">
     {% comment %}
       Send for approved; resend only for invoices actually sent through the app
-      (date_sent set) — not ones merely marked SENT (imported/legacy).
+      (date_sent set) — not ones merely marked SENT (imported/legacy). Once at
+      least one send is logged, the button becomes a dropdown offering a
+      resend or a payment reminder.
     {% endcomment %}
     {% if invoice.status == 'APPROVED' or invoice.status == 'SENT' and invoice.date_sent %}
-      <button class="button-link"
-              type="button"
-              hx-get="{% url 'invoicing:invoices-send' pk=invoice.id %}"
-              hx-target="#htmx-modal-container"
-              title="{% if invoice.status == 'SENT' %}Resend invoice{% else %}Send invoice{% endif %}"
-              aria-label="{% if invoice.status == 'SENT' %}Resend invoice{% else %}Send invoice{% endif %}">
-        <i class="icon-send-horizontal"></i>
-      </button>
+      {% if invoice.annotated_send_count %}
+        <div class="dropdown" x-data="dropdown()">
+          <button class="button-link"
+                  type="button"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open"
+                  title="Send options"
+                  aria-label="Send options">
+            <i class="icon-send-horizontal"></i>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-get="{% url 'invoicing:invoices-send' pk=invoice.id %}"
+                 hx-target="#htmx-modal-container"><i class="icon-send-horizontal"></i> Resend Invoice</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-get="{% url 'invoicing:invoices-send-reminder' pk=invoice.id %}"
+                 hx-target="#htmx-modal-container"><i class="icon-bell-ring"></i> Send Reminder</a>
+            </li>
+          </ul>
+        </div>
+      {% else %}
+        <button class="button-link"
+                type="button"
+                hx-get="{% url 'invoicing:invoices-send' pk=invoice.id %}"
+                hx-target="#htmx-modal-container"
+                title="{% if invoice.status == 'SENT' %}Resend invoice{% else %}Send invoice{% endif %}"
+                aria-label="{% if invoice.status == 'SENT' %}Resend invoice{% else %}Send invoice{% endif %}">
+          <i class="icon-send-horizontal"></i>
+        </button>
+      {% endif %}
     {% endif %}
   </td>
 </tr>

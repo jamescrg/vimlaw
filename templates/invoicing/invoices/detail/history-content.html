@@ -6,6 +6,7 @@
       <thead>
         <tr>
           <th class="date">Date</th>
+          <th class="kind">Type</th>
           <th class="sender">Sender</th>
           <th class="recipient">Recipient</th>
           <th class="status">Status</th>
@@ -15,6 +16,7 @@
         {% for t in invoice.transmissions.all %}
           <tr>
             <td class="date">{{ t.sent_at|date:"Y-m-d H:i" }}</td>
+            <td class="kind">{{ t.get_kind_display }}</td>
             <td class="sender">
               {% if t.sent_by %}
                 {{ t.sent_by.username }}
@@ -39,7 +41,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="4" class="empty-message">This invoice has not been sent yet.</td>
+            <td colspan="5" class="empty-message">This invoice has not been sent yet.</td>
           </tr>
         {% endfor %}
       </tbody>

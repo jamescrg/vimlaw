@@ -43,6 +43,7 @@ from apps.invoicing.invoices.views import (
     invoices_pdf,
     invoices_pdf_download,
     invoices_send,
+    invoices_send_reminder,
     invoices_void,
     invoices_void_confirm,
     order_by_invoices,
@@ -179,6 +180,11 @@ urlpatterns = [
         "invoicing/invoices/<int:pk>/send/",
         invoices_send,
         name="invoices-send",
+    ),
+    path(
+        "invoicing/invoices/<int:pk>/send-reminder/",
+        invoices_send_reminder,
+        name="invoices-send-reminder",
     ),
     path(
         "invoicing/invoices-detail/<int:pk>/details-index/",

@@ -221,10 +221,18 @@ class InvoiceTransmission(AuditMixin, models.Model):
         ("sent", "Sent"),
         ("failed", "Failed"),
     )
+    KIND_CHOICES = (
+        ("invoice", "Invoice"),
+        ("reminder", "Reminder"),
+    )
 
     invoice = models.ForeignKey(
         Invoice, on_delete=models.CASCADE, related_name="transmissions"
     )
+    # What was emailed: the invoice itself, or a payment reminder about it.
+    # Both count toward the list's ×N send tally, but only invoice-kind sends
+    # reset the reminder email's "days since sent" clock.
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default="invoice")
     sent_at = models.DateTimeField()
     # May hold several comma-separated addresses, so CharField rather than
     # EmailField (which validates a single address).
