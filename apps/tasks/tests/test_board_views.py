@@ -82,11 +82,13 @@ def test_view_mode_rejects_unknown(client):
 
 
 @pytest.mark.django_db
-def test_cycle_user_walks_all_then_users_and_wraps(client, user):
+def test_cycle_user_skips_all_users_like_the_stepper(client, user):
     second = CustomUser.objects.create(
         username="Zara", email="zara@example.com", user_rate=100
     )
-    # Stops cycle All -> Ollie (the `user` fixture) -> Zara -> All, by username.
+    # Mirrors the toolbar stepper (adjacent_user_ids): Ollie (the `user`
+    # fixture) <-> Zara, wrapping, with NO All Users stop; from All Users
+    # the cycle is entered at the first/last user.
     resp = client.post("/tasks/cycle-user/next/")
     assert resp.status_code == 204
     assert resp.headers.get("HX-Trigger") == "tasksListChanged"
@@ -96,10 +98,10 @@ def test_cycle_user_walks_all_then_users_and_wraps(client, user):
     assert client.session["tasks_filter"]["user"] == second.id  # -> next user
 
     client.post("/tasks/cycle-user/next/")
-    assert "user" not in client.session["tasks_filter"]  # last user -> All
+    assert client.session["tasks_filter"]["user"] == user.id  # wraps, skipping All
 
     client.post("/tasks/cycle-user/prev/")
-    assert client.session["tasks_filter"]["user"] == second.id  # All -> wraps back
+    assert client.session["tasks_filter"]["user"] == second.id  # wraps back
 
 
 @pytest.mark.django_db
