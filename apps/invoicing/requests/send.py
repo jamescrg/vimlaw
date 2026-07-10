@@ -24,6 +24,7 @@ from utils.mail import (
     attach_firm_logo,
     billing_from_email,
     billing_reply_to,
+    firm_postal_address,
     render_inlined,
 )
 
@@ -184,10 +185,14 @@ def send_payment_request(
         "document_links": document_links,
         "is_trust": is_trust,
         "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
+        "firm_address": firm_postal_address(company),
     }
     firm = company.name if company else ""
     subject = f"{firm} - " if firm else ""
-    subject += "Trust Deposit Request" if is_trust else "Payment Request"
+    # Operating subject names the topic, not the ask — "Payment Request" is
+    # verbatim phishing-template vocabulary that spam filters pattern-match.
+    # The body still opens with the honest request; trust keeps its own label.
+    subject += "Trust Deposit Request" if is_trust else "Account Balance"
 
     try:
         email = EmailMultiAlternatives(
@@ -314,6 +319,7 @@ def send_request_reminder(
         "pay_url": request_pay_url(payment_request, request),
         "is_trust": is_trust,
         "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
+        "firm_address": firm_postal_address(company),
     }
     firm = company.name if company else ""
     subject = f"{firm} - " if firm else ""

@@ -13,3 +13,7 @@ Amount Due:  ${{ amount_due|floatformat:2|intcomma }}
 {% if pay_url %}
 Pay online:  {{ pay_url }}
 {% endif %}
+{% if firm_address %}
+--
+{{ firm_name }} · {{ firm_address }}
+{% endif %}

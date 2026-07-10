@@ -15,3 +15,7 @@ Pay online:   {{ pay_url }}
 {% for d in document_links %}
 {{ d.label }}: {{ d.url }}
 {% endfor %}
+{% if firm_address %}
+--
+{{ firm_name }} · {{ firm_address }}
+{% endif %}

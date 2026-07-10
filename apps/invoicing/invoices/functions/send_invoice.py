@@ -21,6 +21,7 @@ from utils.mail import (
     attach_firm_logo,
     billing_from_email,
     billing_reply_to,
+    firm_postal_address,
     render_inlined,
 )
 
@@ -145,6 +146,7 @@ def send_invoice(
             "pay_url": payment_url(invoice, request),  # tokenized payment link
             "attach_pdf": attach_pdf,
             "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
+            "firm_address": firm_postal_address(company),
         }
         # Client-facing: lead with the firm name, then the invoice number —
         # matter identifiers are internal and stay out of client emails.
@@ -293,6 +295,7 @@ def send_reminder(
             "pay_url": payment_url(invoice, request),
             "attach_pdf": attach_pdf,
             "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
+            "firm_address": firm_postal_address(company),
         }
         firm = company.name if company else ""
         subject = f"{firm} - " if firm else ""

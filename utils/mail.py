@@ -54,6 +54,25 @@ def billing_reply_to(company):
     return formataddr((_billing_display_name(company), address))
 
 
+def firm_postal_address(company):
+    """One-line postal address for email footers — a legitimacy signal spam
+    filters explicitly weight on commercial/transactional mail. Empty string
+    when the firm has no address configured (the footer is omitted)."""
+    if not company:
+        return ""
+    city_line = " ".join(
+        part
+        for part in (
+            f"{company.city}," if company.city else "",
+            company.state or "",
+            company.zip_code or "",
+        )
+        if part
+    )
+    parts = (company.address_line_1, company.address_line_2, city_line)
+    return " · ".join(p.strip() for p in parts if p and p.strip())
+
+
 def attach_firm_logo(email, company):
     """CID-embed the firm logo so the HTML alternative can render it inline.
 

@@ -124,6 +124,15 @@
         text-decoration: none;
       }
 
+      /* Postal-address footer below the card — muted small print; a physical
+         address is a legitimacy signal spam filters look for. */
+      .email-footer {
+        padding: 16px 8px 0;
+        font-size: 13px;
+        color: #6b7280;
+        text-align: center;
+      }
+
       /* In a dark-mode client (Apple Mail honours this; others auto-invert),
          lighten the button so it still reads against a darkened card. Needs
          !important to beat premailer's inlined light-mode values. */
@@ -209,6 +218,9 @@
               </td>
             </tr>
           </table>
+          {% if firm_address %}
+            <div class="email-footer">{{ firm_name }} &middot; {{ firm_address }}</div>
+          {% endif %}
         </td>
       </tr>
     </table>
