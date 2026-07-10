@@ -63,15 +63,15 @@
           <div class="checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox"
-                     name="attach_statement"
-                     {% if attach_statement %}checked{% endif %}>
-              Attach matter statement
+                     name="include_statement"
+                     {% if include_statement %}checked{% endif %}>
+              Include statement link
             </label>
             <label class="checkbox-label">
               <input type="checkbox"
-                     name="attach_invoices"
-                     {% if attach_invoices %}checked{% endif %}>
-              Attach unpaid invoices
+                     name="include_invoices"
+                     {% if include_invoices %}checked{% endif %}>
+              Include invoice links
             </label>
           </div>
         {% endif %}

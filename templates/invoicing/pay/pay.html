@@ -16,7 +16,15 @@
   <div class="pay-wrap">
     <div class="pay-card">
       <div class="pay-head">
-        <h1>{{ firm_name|default:"Pay Invoice"|firm_strip }}</h1>
+        {% if logo_url %}
+          <img class="pay-logo"
+               src="{{ logo_url }}"
+               alt="{{ firm_name|firm_strip }}"
+               width="240"
+               height="auto">
+        {% else %}
+          <h1>{{ firm_name|default:"Pay Invoice"|firm_strip }}</h1>
+        {% endif %}
         <p>
           {% if invoice %}
             Invoice {{ invoice.id }} &middot; {{ invoice.date_issued|date:"F j, Y" }}
@@ -33,26 +41,23 @@
               <td class="value">{{ client_name }}</td>
             </tr>
           {% endif %}
-          <tr>
-            <td class="label">
-              {% if invoice %}
-                Invoice
-              {% else %}
-                {{ summary_label }}
-              {% endif %}
-            </td>
-            <td class="value">
-              {% if invoice %}
-                {{ invoice.id }}
-              {% else %}
-                {{ summary_value }}
-              {% endif %}
-            </td>
-          </tr>
+          {% if not invoice %}
+            <tr>
+              <td class="label">{{ summary_label }}</td>
+              <td class="value">{{ summary_value }}</td>
+            </tr>
+          {% endif %}
           <tr>
             <td class="label">{{ amount_label|default:"Amount Due" }}</td>
             <td class="value">${{ amount_due|floatformat:2|intcomma }}</td>
           </tr>
+          {% for d in downloads %}
+            <tr>
+              <td class="download-cell" colspan="2">
+                <a class="pay-download" href="{{ d.url }}">{{ d.label }}</a>
+              </td>
+            </tr>
+          {% endfor %}
         </table>
         {% if is_paid %}
           <div class="pay-alert ok">

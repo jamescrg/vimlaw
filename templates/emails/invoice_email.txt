@@ -3,7 +3,7 @@ Invoice {{ invoice.id }} - {{ invoice.date_issued|date:"F j, Y" }}
 
 Dear Client,
 
-{% if cover_message %}{{ cover_message }}{% else %}Please find attached your invoice. The invoice details are included in the PDF attachment.{% endif %}
+{% if cover_message %}{{ cover_message }}{% else %}{% if attach_pdf %}Please find attached your invoice. The invoice details are included in the PDF attachment.{% else %}Your invoice is ready. You can view, download, and pay it securely at the link below.{% endif %}{% endif %}
 
 If you have any questions about this invoice, please reply to this email{% if billing_email %} or contact us at {{ billing_email }}{% endif %}.
 
@@ -12,4 +12,8 @@ Invoice:     {{ invoice.id }}
 Amount Due:  ${{ amount_due|floatformat:2|intcomma }}
 {% if pay_url %}
 Pay online:  {{ pay_url }}
+{% endif %}
+{% if firm_address %}
+--
+{{ firm_name }} · {{ firm_address }}
 {% endif %}

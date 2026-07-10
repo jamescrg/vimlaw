@@ -5,7 +5,7 @@ Dear Client,
 
 {% if cover_message %}{{ cover_message }}
 
-{% endif %}This is a friendly reminder that {% if days_since %}it has been {{ days_since }} day{{ days_since|pluralize }} since you were sent{% else %}you were previously sent{% endif %} the attached invoice. Per the terms of your attorney-client agreement, payment of invoices is due upon receipt.
+{% endif %}This is a friendly reminder that {% if days_since %}it has been {{ days_since }} day{{ days_since|pluralize }} since you were sent{% else %}you were previously sent{% endif %} {% if attach_pdf %}the attached invoice{% else %}invoice {{ invoice.id }}, which you can view and download at the link below{% endif %}. Per the terms of your attorney-client agreement, payment of invoices is due upon receipt.
 
 Prompt payment of invoices helps to assure that we can continue our work as efficiently as possible for your benefit. If you need additional time to make payment for any reason, please let us know.
 
@@ -16,4 +16,8 @@ Invoice:     {{ invoice.id }}
 Amount Due:  ${{ amount_due|floatformat:2|intcomma }}
 {% if pay_url %}
 Pay online:  {{ pay_url }}
+{% endif %}
+{% if firm_address %}
+--
+{{ firm_name }} · {{ firm_address }}
 {% endif %}

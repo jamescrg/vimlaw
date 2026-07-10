@@ -1,8 +1,8 @@
-"""Send a payment request: email the catch-up pay link + the matter ledger
-statement to the client. Mirrors apps.invoicing.invoices.functions.send_invoice.
+"""Send a payment request: email the catch-up pay link (plus optional
+tokenized document-download links) to the client. Mirrors
+apps.invoicing.invoices.functions.send_invoice. Documents are never attached —
+the links serve the PDFs passwordlessly behind the request's signed token.
 """
-
-import os
 
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
@@ -10,14 +10,23 @@ from django.core.validators import validate_email
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import InvoiceTransmission
 from apps.invoicing.pay.balance import matter_open_invoices
-from apps.invoicing.pay.links import request_pay_url
+from apps.invoicing.pay.links import (
+    request_invoice_pdf_url,
+    request_pay_url,
+    request_statement_pdf_url,
+)
 from apps.invoicing.requests.models import PaymentRequestTransmission
-from apps.matters.ledger.generate_ledger import generate_ledger
 from apps.settings.models import Firm
-from utils.mail import billing_from_email, billing_reply_to, render_inlined
+from utils.mail import (
+    FIRM_LOGO_CID,
+    attach_firm_logo,
+    billing_from_email,
+    billing_reply_to,
+    firm_postal_address,
+    render_inlined,
+)
 
 
 class PaymentRequestSendError(Exception):
@@ -85,19 +94,20 @@ def send_payment_request(
     to=None,
     cc=None,
     message=None,
-    attach_statement=True,
-    attach_invoices=False,
+    include_statement=False,
+    include_invoices=False,
     sent_by=None,
     request=None,
 ):
-    """Email the request's pay link, optionally with attachments.
+    """Email the request's pay link, optionally with document-download links.
 
     to / cc: comma-delimited address strings; `to` defaults to the request's
-    stored recipient(s). message: optional cover note. attach_statement: attach
-    the matter ledger statement PDF (and mention it in the body).
-    attach_invoices: attach a PDF copy of each of the matter's unpaid invoices —
-    each attached invoice also gets a request-kind InvoiceTransmission, so its
-    ×N send tally and history reflect the delivery.
+    stored recipient(s). message: optional cover note. include_statement: add
+    a tokenized download link for the matter ledger statement.
+    include_invoices: add a download link per unpaid invoice — each linked
+    invoice also gets a request-kind InvoiceTransmission, so its ×N send tally
+    and history reflect that the client was given access to it. Nothing is
+    ever attached; the links serve the PDFs behind the request's signed token.
     Returns True; raises PaymentRequestSendError on a bad/empty address list or
     send failure. Every attempt is logged as a PaymentRequestTransmission.
     """
@@ -106,7 +116,7 @@ def send_payment_request(
     client = payment_request.client if is_trust else (matter.client if matter else None)
     if is_trust:
         # Trust requests are client-level with no matter → no statement/invoices.
-        attach_statement = attach_invoices = False
+        include_statement = include_invoices = False
 
     to_list = _parse_recipients(to) or _parse_recipients(
         payment_request.recipient_email
@@ -143,6 +153,26 @@ def send_payment_request(
         if company
         else []
     )
+    # Tokenized download links for the selected documents (same endpoints the
+    # balance pay page offers).
+    document_links = []
+    linked_invoices = []
+    if include_statement:
+        document_links.append(
+            {
+                "label": "View and Download Matter Statement (PDF)",
+                "url": request_statement_pdf_url(payment_request, request),
+            }
+        )
+    if include_invoices:
+        for inv in matter_open_invoices(matter):
+            linked_invoices.append(inv)
+            document_links.append(
+                {
+                    "label": f"View and Download Invoice {inv.id} (PDF)",
+                    "url": request_invoice_pdf_url(payment_request, inv.id, request),
+                }
+            )
     context = {
         "matter_name": matter.name if matter else "",
         "matter_number": matter.id if matter else "",
@@ -152,13 +182,17 @@ def send_payment_request(
         "firm_name": company.name if company else "",
         "firm_email": company.email if company else "",
         "pay_url": request_pay_url(payment_request, request),
-        "attach_statement": attach_statement,
-        "attach_invoices": attach_invoices,
+        "document_links": document_links,
         "is_trust": is_trust,
+        "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
+        "firm_address": firm_postal_address(company),
     }
     firm = company.name if company else ""
     subject = f"{firm} - " if firm else ""
-    subject += "Trust Deposit Request" if is_trust else "Payment Request"
+    # Operating subject names the topic, not the ask — "Payment Request" is
+    # verbatim phishing-template vocabulary that spam filters pattern-match.
+    # The body still opens with the honest request; trust keeps its own label.
+    subject += "Trust Deposit Request" if is_trust else "Account Balance"
 
     try:
         email = EmailMultiAlternatives(
@@ -174,24 +208,8 @@ def send_payment_request(
         email.attach_alternative(
             render_inlined("emails/payment_request_email.html", context), "text/html"
         )
-        # Optionally attach the matter ledger statement (account activity + balance).
-        if attach_statement:
-            pdf_tmp = generate_ledger(matter.id, request)
-            filename = f"Matter Ledger {matter.id} {timezone.localdate():%Y-%m-%d}.pdf"
-            try:
-                with open(pdf_tmp.name, "rb") as f:
-                    email.attach(filename, f.read(), "application/pdf")
-            finally:
-                os.unlink(pdf_tmp.name)
-        # Optionally attach a PDF copy of each unpaid invoice.
-        attached_invoices = []
-        if attach_invoices:
-            for inv in matter_open_invoices(matter):
-                if not inv.pdf_file:
-                    store_invoice_pdf(inv, request)
-                with inv.pdf_file.open("rb") as f:
-                    email.attach(f"Invoice {inv.id}.pdf", f.read(), "application/pdf")
-                attached_invoices.append(inv)
+        if context["logo_cid"]:
+            attach_firm_logo(email, company)
         email.send()
     except PaymentRequestSendError:
         raise
@@ -217,11 +235,11 @@ def send_payment_request(
         status="sent",
         when=now,
     )
-    # Each invoice that rode along was delivered to the client — log a
-    # request-kind transmission (with request provenance) so its ×N tally and
-    # history reflect it, and so later reminders know which invoices this
-    # request concerns.
-    for inv in attached_invoices:
+    # Each invoice the client was given a download link to was delivered —
+    # log a request-kind transmission (with request provenance) so its ×N
+    # tally and history reflect it, and so later reminders know which
+    # invoices this request concerns.
+    for inv in linked_invoices:
         InvoiceTransmission.objects.create(
             invoice=inv,
             kind="request",
@@ -300,6 +318,8 @@ def send_request_reminder(
         "firm_email": company.email if company else "",
         "pay_url": request_pay_url(payment_request, request),
         "is_trust": is_trust,
+        "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
+        "firm_address": firm_postal_address(company),
     }
     firm = company.name if company else ""
     subject = f"{firm} - " if firm else ""
@@ -319,6 +339,8 @@ def send_request_reminder(
             render_inlined("emails/payment_request_reminder_email.html", context),
             "text/html",
         )
+        if context["logo_cid"]:
+            attach_firm_logo(email, company)
         email.send()
     except Exception as exc:
         _log(

@@ -137,8 +137,8 @@ def requests_new(request):
         cc = (request.POST.get("cc") or "").strip()
         message = request.POST.get("message", "")
         amount_raw = (request.POST.get("amount") or "").strip()
-        attach_statement = "attach_statement" in request.POST
-        attach_invoices = "attach_invoices" in request.POST
+        include_statement = "include_statement" in request.POST
+        include_invoices = "include_invoices" in request.POST
         matter = _open_matters().filter(pk=matter_id).first() if matter_id else None
 
         error = ""
@@ -179,8 +179,8 @@ def requests_new(request):
                         to=to,
                         cc=cc,
                         message=message,
-                        attach_statement=attach_statement,
-                        attach_invoices=attach_invoices,
+                        include_statement=include_statement,
+                        include_invoices=include_invoices,
                         sent_by=request.user,
                         request=request,
                     )
@@ -200,8 +200,8 @@ def requests_new(request):
             "cc": cc,
             "message": message,
             "amount": amount_raw,
-            "attach_statement": attach_statement,
-            "attach_invoices": attach_invoices,
+            "include_statement": include_statement,
+            "include_invoices": include_invoices,
             "error": error,
         }
         return render(request, "invoicing/requests/form.html", context)
@@ -213,8 +213,12 @@ def requests_new(request):
         "cc": "",
         "message": "",
         "amount": "",
-        "attach_statement": True,
-        "attach_invoices": True,
+        # Off by default: the statement and invoices are downloadable at the
+        # pay link, and attachment-free email clears spam filters more
+        # reliably. The checkboxes stay for clients whose AP intake wants
+        # the PDFs in the email itself.
+        "include_statement": False,
+        "include_invoices": False,
         "error": "",
     }
     return render(request, "invoicing/requests/form.html", context)
@@ -380,8 +384,8 @@ def requests_resend(request, pk):
         to = (request.POST.get("to") or "").strip()
         cc = (request.POST.get("cc") or "").strip()
         message = request.POST.get("message", "")
-        attach_statement = "attach_statement" in request.POST
-        attach_invoices = "attach_invoices" in request.POST
+        include_statement = "include_statement" in request.POST
+        include_invoices = "include_invoices" in request.POST
         error = ""
         try:
             send_payment_request(
@@ -389,8 +393,8 @@ def requests_resend(request, pk):
                 to=to,
                 cc=cc,
                 message=message,
-                attach_statement=attach_statement,
-                attach_invoices=attach_invoices,
+                include_statement=include_statement,
+                include_invoices=include_invoices,
                 sent_by=request.user,
                 request=request,
             )
@@ -412,8 +416,8 @@ def requests_resend(request, pk):
             "to": to,
             "cc": cc,
             "message": message,
-            "attach_statement": attach_statement,
-            "attach_invoices": attach_invoices,
+            "include_statement": include_statement,
+            "include_invoices": include_invoices,
             "error": error,
         }
         return render(request, "invoicing/requests/resend.html", context)
@@ -423,8 +427,9 @@ def requests_resend(request, pk):
         "to": payment_request.recipient_email,
         "cc": "",
         "message": "",
-        "attach_statement": True,
-        "attach_invoices": True,
+        # Off by default — downloadable at the pay link (see requests_add).
+        "include_statement": False,
+        "include_invoices": False,
         "error": "",
     }
     return render(request, "invoicing/requests/resend.html", context)

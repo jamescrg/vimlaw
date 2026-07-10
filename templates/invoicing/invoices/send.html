@@ -59,6 +59,15 @@
                     placeholder="{% if reminder %}Optional note, shown above the reminder text.{% else %}Enter a message to the client.{% if not invoice.date_sent %} To annotate the invoice itself, add it to the invoice before sending.{% endif %}{% endif %}"
                     @input="count = $event.target.value.length">{{ default_message }}</textarea>
         </div>
+        {# Off by default: the PDF is always downloadable at the pay link, and attachment-free email clears spam filters more reliably. #}
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox"
+                   name="attach_pdf"
+                   {% if attach_pdf %}checked{% endif %}>
+            Attach invoice PDF (always available at the pay link)
+          </label>
+        </div>
       </form>
     </div>
     <div class="modal-footer">
