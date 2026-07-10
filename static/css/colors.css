@@ -89,6 +89,10 @@
   --ai-surface: var(--stone-50);
   --ai-raised: var(--stone-100);
   --past-due-bg: var(--yellow-50);
+  /* Due today/tomorrow card wash (dash + overview timeline) — same soft
+     yellow-50 family as the past-due surfaces, NOT the stronger --hl-yellow
+     text highlight. Dark themes drop the wash for a rail, so no dark value. */
+  --due-soon-bg: var(--yellow-50);
   --task-highlight-bg: var(--selected-background);
 
   /* Warning toast — a soft yellow wash in light mode so it reads against the
