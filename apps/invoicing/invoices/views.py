@@ -843,6 +843,7 @@ def invoices_send(request, pk):
         to = (request.POST.get("to") or "").strip()
         cc = (request.POST.get("cc") or "").strip()
         message = request.POST.get("message", "")
+        attach_pdf = "attach_pdf" in request.POST
         recipient = to or (client.email if client else "")
         try:
             send_invoice(
@@ -850,6 +851,7 @@ def invoices_send(request, pk):
                 to=to or None,
                 cc=cc or None,
                 message=message,
+                attach_pdf=attach_pdf,
                 sent_by=request.user,
                 request=request,
             )
@@ -859,6 +861,7 @@ def invoices_send(request, pk):
                 "default_to": to,
                 "default_cc": cc,
                 "default_message": message,
+                "attach_pdf": attach_pdf,
                 "error": str(exc),
             }
             return render(request, "invoicing/invoices/send.html", context)
@@ -901,6 +904,7 @@ def invoices_send_reminder(request, pk):
                 to=to or None,
                 cc=cc or None,
                 message=message,
+                attach_pdf="attach_pdf" in request.POST,
                 sent_by=request.user,
                 request=request,
             )

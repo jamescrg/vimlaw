@@ -43,6 +43,14 @@
         padding: 24px 24px 16px;
       }
 
+      /* CID-embedded logo replaces the firm-name text when the firm has one;
+         the alt text (firm name) covers blocked-image clients. */
+      .firm-logo {
+        display: block;
+        height: auto;
+        max-width: 220px;
+      }
+
       .firm-name {
         margin: 0;
         font-size: 26px;
@@ -96,6 +104,23 @@
         text-align: right;
       }
 
+      /* Tokenized document-download links — bold green, matching the pay
+         page's download rows. */
+      .doc-links {
+        margin: -8px 0 16px;
+      }
+
+      .doc-link-cell {
+        padding: 0 0 10px;
+      }
+
+      .doc-link {
+        color: #15803d;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: underline;
+      }
+
       /* Button, matching the pay page .pay-btn. Slate with white text so it
          stands out on the white card. */
       .btn {
@@ -133,7 +158,11 @@
           <table role="presentation" class="card" width="480" cellpadding="0" cellspacing="0">
             <tr>
               <td class="card-head">
-                <h1 class="firm-name">{{ firm_name|default:"Payment request"|firm_strip }}</h1>
+                {% if logo_cid %}
+                  <img class="firm-logo" src="cid:{{ logo_cid }}" alt="{{ firm_name|firm_strip }}" width="220">
+                {% else %}
+                  <h1 class="firm-name">{{ firm_name|default:"Payment request"|firm_strip }}</h1>
+                {% endif %}
                 <p class="meta">
                   {% if is_trust %}Request for Trust Deposit{% else %}Outstanding balance{% endif %}
                 </p>
@@ -149,12 +178,6 @@
                     {% if is_trust %}We are requesting a trust deposit in the amount below.{% else %}We are respectfully requesting payment of the amount below.{% endif %}
                   </p>
                 {% endif %}
-                {% if attach_statement %}
-                  <p class="para">You will find attached to this email a PDF file containing a comprehensive matter statement.</p>
-                {% endif %}
-                {% if attach_invoices %}
-                  <p class="para">You will find attached courtesy copies of all invoices that have not yet been paid in full.</p>
-                {% endif %}
                 <p class="para">
                   If you have any questions, please reply to this email{% if firm_email %} or contact us at <a href="mailto:{{ firm_email }}">{{ firm_email }}</a>{% endif %}.
                 </p>
@@ -168,6 +191,17 @@
                     <td class="value">${{ amount_due|floatformat:2|intcomma }}</td>
                   </tr>
                 </table>
+                {% if document_links %}
+                  <table role="presentation" class="doc-links" width="100%" cellpadding="0" cellspacing="0">
+                    {% for d in document_links %}
+                      <tr>
+                        <td class="doc-link-cell">
+                          <a class="doc-link" href="{{ d.url }}">{{ d.label }}</a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </table>
+                {% endif %}
                 {% if pay_url %}
                   <table role="presentation" class="btn" cellpadding="0" cellspacing="0" style="margin: 4px 0 0;">
                     <tr>

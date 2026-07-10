@@ -42,6 +42,14 @@
         padding: 24px 24px 16px;
       }
 
+      /* CID-embedded logo replaces the firm-name text when the firm has one;
+         the alt text (firm name) covers blocked-image clients. */
+      .firm-logo {
+        display: block;
+        height: auto;
+        max-width: 220px;
+      }
+
       .firm-name {
         margin: 0;
         font-size: 26px;
@@ -137,7 +145,11 @@
           <table role="presentation" class="card" width="480" cellpadding="0" cellspacing="0">
             <tr>
               <td class="card-head">
-                <h1 class="firm-name">{{ firm_name|default:"Payment Reminder"|firm_strip }}</h1>
+                {% if logo_cid %}
+                  <img class="firm-logo" src="cid:{{ logo_cid }}" alt="{{ firm_name|firm_strip }}" width="220">
+                {% else %}
+                  <h1 class="firm-name">{{ firm_name|default:"Payment Reminder"|firm_strip }}</h1>
+                {% endif %}
                 <p class="meta">Payment Reminder &middot; Invoice {{ invoice.id }}</p>
               </td>
             </tr>
@@ -154,8 +166,14 @@
                   {% else %}
                     you were previously sent
                   {% endif %}
-                  the attached invoice. Per the terms of your attorney-client agreement,
-                  payment of invoices is due upon receipt.
+                  {% if attach_pdf %}
+                    the attached invoice. Per the terms of your attorney-client agreement,
+                    payment of invoices is due upon receipt.
+                  {% else %}
+                    invoice {{ invoice.id }}, which you can view and download at the link
+                    below. Per the terms of your attorney-client agreement, payment of
+                    invoices is due upon receipt.
+                  {% endif %}
                 </p>
                 <p class="para">
                   Prompt payment of invoices helps to assure that we can continue our work

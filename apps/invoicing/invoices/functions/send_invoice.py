@@ -16,7 +16,13 @@ from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import InvoiceTransmission
 from apps.invoicing.pay.links import payment_url
 from apps.settings.models import Firm
-from utils.mail import billing_from_email, billing_reply_to, render_inlined
+from utils.mail import (
+    FIRM_LOGO_CID,
+    attach_firm_logo,
+    billing_from_email,
+    billing_reply_to,
+    render_inlined,
+)
 
 
 class InvoiceSendError(Exception):
@@ -58,13 +64,23 @@ def _log(
 
 
 def send_invoice(
-    invoice, *, to=None, cc=None, message=None, sent_by=None, request=None
+    invoice,
+    *,
+    to=None,
+    cc=None,
+    message=None,
+    attach_pdf=False,
+    sent_by=None,
+    request=None,
 ):
     """Send `invoice` to the client. Returns True on success.
 
     to / cc: override recipient(s); each may be a comma-separated list of
     addresses. The default recipient is the matter client's email.
     message: cover-note override; defaults to the invoice's own `message`.
+    attach_pdf: also attach the invoice PDF. Off by default — the PDF is
+    always downloadable behind the tokenized pay link, and attachment-free
+    email clears spam filters more reliably.
     """
     matter = invoice.matter
     client = matter.client if matter else None
@@ -103,7 +119,7 @@ def send_invoice(
         # The PDF is (re)generated on every create / edit / approve, so the
         # stored file is already current — generate here only if it is somehow
         # missing, rather than paying the WeasyPrint cost on every send.
-        if not invoice.pdf_file:
+        if attach_pdf and not invoice.pdf_file:
             store_invoice_pdf(invoice, request)
 
         cover = message if message is not None else (invoice.message or "")
@@ -127,6 +143,8 @@ def send_invoice(
             "firm_name": company.name if company else "",
             "billing_email": billing_email,
             "pay_url": payment_url(invoice, request),  # tokenized payment link
+            "attach_pdf": attach_pdf,
+            "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
         }
         # Client-facing: lead with the firm name, then the invoice number —
         # matter identifiers are internal and stay out of client emails.
@@ -150,8 +168,13 @@ def send_invoice(
         email.attach_alternative(
             render_inlined("emails/invoice_email.html", context), "text/html"
         )
-        with invoice.pdf_file.open("rb") as f:
-            email.attach(f"invoice_{invoice.id}.pdf", f.read(), "application/pdf")
+        if attach_pdf:
+            with invoice.pdf_file.open("rb") as f:
+                email.attach(f"invoice_{invoice.id}.pdf", f.read(), "application/pdf")
+        # After the PDF: with a document attached the root must stay mixed
+        # (attach_firm_logo only switches to related when attachments is empty).
+        if context["logo_cid"]:
+            attach_firm_logo(email, company)
         email.send()
     except Exception as exc:
         _log(
@@ -195,15 +218,23 @@ def days_since_sent(invoice):
 
 
 def send_reminder(
-    invoice, *, to=None, cc=None, message=None, sent_by=None, request=None
+    invoice,
+    *,
+    to=None,
+    cc=None,
+    message=None,
+    attach_pdf=False,
+    sent_by=None,
+    request=None,
 ):
     """Email a payment reminder for an already-sent invoice. Returns True.
 
     The reminder notes how many days ago the invoice went out, that payment is
     due upon receipt under the attorney-client agreement, and that
-    accommodations are available on request. It attaches a courtesy copy of
-    the invoice PDF and logs a 'reminder'-kind transmission; the invoice's
-    status, date_sent, and ×N send tally are untouched.
+    accommodations are available on request. attach_pdf optionally attaches a
+    courtesy copy of the invoice PDF (off by default — it's downloadable at
+    the pay link). Logs a 'reminder'-kind transmission; the invoice's status,
+    date_sent, and ×N send tally are untouched.
     """
     matter = invoice.matter
     client = matter.client if matter else None
@@ -241,7 +272,7 @@ def send_reminder(
         raise InvoiceSendError(error)
 
     try:
-        if not invoice.pdf_file:
+        if attach_pdf and not invoice.pdf_file:
             store_invoice_pdf(invoice, request)
 
         company = Firm.objects.first()
@@ -260,6 +291,8 @@ def send_reminder(
             "firm_name": company.name if company else "",
             "billing_email": billing_email,
             "pay_url": payment_url(invoice, request),
+            "attach_pdf": attach_pdf,
+            "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
         }
         firm = company.name if company else ""
         subject = f"{firm} - " if firm else ""
@@ -277,8 +310,13 @@ def send_reminder(
         email.attach_alternative(
             render_inlined("emails/invoice_reminder_email.html", context), "text/html"
         )
-        with invoice.pdf_file.open("rb") as f:
-            email.attach(f"invoice_{invoice.id}.pdf", f.read(), "application/pdf")
+        if attach_pdf:
+            with invoice.pdf_file.open("rb") as f:
+                email.attach(f"invoice_{invoice.id}.pdf", f.read(), "application/pdf")
+        # After the PDF: with a document attached the root must stay mixed
+        # (attach_firm_logo only switches to related when attachments is empty).
+        if context["logo_cid"]:
+            attach_firm_logo(email, company)
         email.send()
     except Exception as exc:
         _log(

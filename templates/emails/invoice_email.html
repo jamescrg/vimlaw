@@ -42,6 +42,14 @@
         padding: 24px 24px 16px;
       }
 
+      /* CID-embedded logo replaces the firm-name text when the firm has one;
+         the alt text (firm name) covers blocked-image clients. */
+      .firm-logo {
+        display: block;
+        height: auto;
+        max-width: 220px;
+      }
+
       .firm-name {
         margin: 0;
         font-size: 26px;
@@ -132,7 +140,11 @@
           <table role="presentation" class="card" width="480" cellpadding="0" cellspacing="0">
             <tr>
               <td class="card-head">
-                <h1 class="firm-name">{{ firm_name|default:"Invoice"|firm_strip }}</h1>
+                {% if logo_cid %}
+                  <img class="firm-logo" src="cid:{{ logo_cid }}" alt="{{ firm_name|firm_strip }}" width="220">
+                {% else %}
+                  <h1 class="firm-name">{{ firm_name|default:"Invoice"|firm_strip }}</h1>
+                {% endif %}
                 <p class="meta">Invoice {{ invoice.id }} &middot; {{ invoice.date_issued|date:"F j, Y" }}</p>
               </td>
             </tr>
@@ -141,10 +153,15 @@
                 <p class="para">Dear Client,</p>
                 {% if cover_message %}
                   <p class="para" style="white-space: pre-line;">{{ cover_message }}</p>
-                {% else %}
+                {% elif attach_pdf %}
                   <p class="para">
                     Please find attached your invoice.
                     The invoice details are included in the PDF attachment.
+                  </p>
+                {% else %}
+                  <p class="para">
+                    Your invoice is ready. You can view, download, and pay it
+                    securely at the link below.
                   </p>
                 {% endif %}
                 <p class="para">

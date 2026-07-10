@@ -4,12 +4,7 @@
 Dear Client,
 
 {% if cover_message %}{{ cover_message }}{% else %}{% if is_trust %}We are requesting a trust deposit in the amount below.{% else %}We are respectfully requesting payment of the amount below.{% endif %}{% endif %}
-{% if attach_statement %}
-You will find attached a comprehensive matter statement.
-{% endif %}
-{% if attach_invoices %}
-You will find attached courtesy copies of all invoices not yet paid in full.
-{% endif %}
+
 If you have any questions, please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}.
 
 Client:           {{ client_name }}
@@ -17,3 +12,6 @@ Amount Requested: ${{ amount_due|floatformat:2|intcomma }}
 {% if pay_url %}
 Pay online:   {{ pay_url }}
 {% endif %}
+{% for d in document_links %}
+{{ d.label }}: {{ d.url }}
+{% endfor %}

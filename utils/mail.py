@@ -1,11 +1,17 @@
 """Email rendering helpers."""
 
+import os
 import re
+from email.mime.image import MIMEImage
 from email.utils import formataddr, parseaddr
 
 from django.conf import settings
 from django.template.loader import render_to_string
 from premailer import transform
+
+# Content-ID under which attach_firm_logo embeds the logo; templates reference
+# it as src="cid:firm-logo" via the logo_cid context value.
+FIRM_LOGO_CID = "firm-logo"
 
 # Trailing legal-entity designation to drop from the sender display name (a
 # comma/space separator is required so e.g. "...Spa" isn't mistaken for one).
@@ -46,6 +52,38 @@ def billing_reply_to(company):
     if not address:
         return None
     return formataddr((_billing_display_name(company), address))
+
+
+def attach_firm_logo(email, company):
+    """CID-embed the firm logo so the HTML alternative can render it inline.
+
+    Media URLs are signed and expire (object storage), so hot-linking
+    company.logo.url in an email would break once archived; embedding the
+    bytes with a Content-ID keeps the logo rendering forever. The image is
+    marked inline (multipart/related when there are no real attachments), so
+    spam filters don't score it as a document attachment. Returns True when
+    a logo was attached; failures (missing file) are silently skipped — the
+    templates fall back to the firm-name text via the img alt/conditional.
+    """
+    logo = getattr(company, "logo", None)
+    if not logo:
+        return False
+    try:
+        with logo.open("rb") as f:
+            image = MIMEImage(f.read())
+    except (OSError, ValueError):
+        return False
+    image.add_header("Content-ID", f"<{FIRM_LOGO_CID}>")
+    image.add_header(
+        "Content-Disposition", "inline", filename=os.path.basename(logo.name)
+    )
+    if not email.attachments:
+        # No document attachments: a related root renders cleanest. With a
+        # PDF attached the root must stay mixed; clients resolve the cid
+        # reference either way.
+        email.mixed_subtype = "related"
+    email.attach(image)
+    return True
 
 
 def render_inlined(template_name, context):
