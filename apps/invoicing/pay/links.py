@@ -34,3 +34,24 @@ def request_pay_path(payment_request) -> str:
 def request_pay_url(payment_request, request=None) -> str:
     """Absolute PaymentRequest payment URL (see payment_url)."""
     return _absolute(request_pay_path(payment_request), request)
+
+
+def request_statement_pdf_url(payment_request, request=None) -> str:
+    """Absolute tokenized matter-statement download URL (for request emails)."""
+    path = reverse(
+        "pay:balance-statement-pdf",
+        kwargs={"token": make_request_token(payment_request)},
+    )
+    return _absolute(path, request)
+
+
+def request_invoice_pdf_url(payment_request, invoice_id, request=None) -> str:
+    """Absolute tokenized invoice-PDF download URL (for request emails)."""
+    path = reverse(
+        "pay:balance-invoice-pdf",
+        kwargs={
+            "token": make_request_token(payment_request),
+            "invoice_id": invoice_id,
+        },
+    )
+    return _absolute(path, request)

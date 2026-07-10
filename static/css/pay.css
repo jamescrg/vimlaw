@@ -16,6 +16,9 @@
   --pay-muted: #4b5563;
   --pay-btn: oklch(44.6% 0.043 257.281);
   --pay-btn-text: #ffffff;
+  /* Document download links — green so they read as a positive action
+     distinct from the muted labels (Tailwind green-700 / green-400). */
+  --pay-download: #15803d;
   --pay-panel: #ffffff;
   /* Fields: white with dark text in both light and dark mode (see file note). */
   --pay-field-bg: #ffffff;
@@ -39,6 +42,7 @@
     --pay-muted: #b0b0b0;
     --pay-btn: #5c5c5c;
     --pay-btn-text: #f5f5f5;
+    --pay-download: #4ade80;
     --pay-panel: #2a2a2a;
   }
 }
@@ -80,6 +84,13 @@ body.minimal-layout {
   color: var(--pay-heading);
 }
 
+/* Firm logo replaces the name heading when one is configured. */
+.pay-head .pay-logo {
+  display: block;
+  height: auto;
+  max-width: 15rem;
+}
+
 .pay-head p {
   margin: 0.5rem 0 0;
   font-size: 1rem;
@@ -119,6 +130,20 @@ body.minimal-layout {
 .pay-summary .value {
   text-align: right;
   color: var(--pay-heading);
+}
+
+/* Document download rows in the summary table — bold green links so viewing
+   the invoice reads as a first-class action alongside paying it. */
+.pay-download {
+  color: var(--pay-download);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.pay-download:hover {
+  filter: brightness(1.15);
 }
 
 .pay-methods {

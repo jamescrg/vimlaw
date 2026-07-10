@@ -14,6 +14,7 @@ On a successful charge the payment is recorded and applied to the invoice (see
 """
 
 import json
+import os
 from dataclasses import replace
 from decimal import Decimal
 
@@ -21,8 +22,9 @@ from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
 from django.db import transaction
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -112,6 +114,48 @@ def _unavailable(request, reason, *, status):
     )
 
 
+def _unavailable_for(request, exc):
+    """Map a _resolve_* Http404 onto the friendly 'link unavailable' page."""
+    if str(exc) == "expired":
+        return _unavailable(
+            request,
+            "This link has expired. Please contact us for a new one.",
+            status=410,
+        )
+    return _unavailable(request, "This link is invalid.", status=404)
+
+
+def _invoice_pdf_response(invoice, request):
+    """Stream an invoice's PDF as a download, generating it if missing."""
+    if not invoice.pdf_file:
+        from apps.invoicing.invoices.functions.generate_invoice import (
+            store_invoice_pdf,
+        )
+
+        store_invoice_pdf(invoice, request)
+    return FileResponse(
+        invoice.pdf_file.open("rb"),
+        as_attachment=True,
+        filename=f"Invoice {invoice.id}.pdf",
+        content_type="application/pdf",
+    )
+
+
+def pay_invoice_pdf(request, token):
+    """Invoice PDF behind the same signed token as its pay page — the
+    passwordless download that replaces emailing the PDF as an attachment."""
+    if _rate_limited(request, "pay-pdf", limit=30, window=300):
+        return HttpResponse("Too many requests. Please wait a moment.", status=429)
+    try:
+        invoice = _resolve_invoice(token)
+    except Http404 as exc:
+        return _unavailable_for(request, exc)
+    # Voiding revokes the document too — the firm sends a corrected invoice.
+    if invoice.status == "VOID":
+        return _unavailable(request, "This invoice is no longer available.", status=410)
+    return _invoice_pdf_response(invoice, request)
+
+
 def pay_page(request, token):
     try:
         invoice = _resolve_invoice(token)
@@ -137,6 +181,8 @@ def pay_page(request, token):
         # internal matter number.
         "client_name": matter.client.name if matter and matter.client else "",
         "firm_name": company.name if company else "",
+        # Signed media URL, minted per render — fine for a page, never email.
+        "logo_url": company.logo.url if company and company.logo else "",
         "amount_due": invoice.amount_remaining,
         "config": config,
         "is_paid": invoice.amount_remaining <= 0,
@@ -144,6 +190,13 @@ def pay_page(request, token):
         # real hosted-fields SDK so the whole flow is testable without LawPay.
         "dev_mode": config.processor == "fake",
         "charge_url": request.build_absolute_uri(request.path.rstrip("/") + "/charge/"),
+        # Passwordless document access — same token, no attachment needed.
+        "downloads": [
+            {
+                "label": f"View and Download Invoice {invoice.id} (PDF)",
+                "url": reverse("pay:invoice-pdf", kwargs={"token": token}),
+            }
+        ],
     }
     return render(request, "invoicing/pay/pay.html", context)
 
@@ -243,6 +296,60 @@ def _resolve_request(token):
     return get_object_or_404(PaymentRequest, uuid=req_uuid)
 
 
+def balance_statement_pdf(request, token):
+    """Matter ledger statement PDF behind the request token (non-trust only)."""
+    if _rate_limited(request, "pay-pdf", limit=30, window=300):
+        return HttpResponse("Too many requests. Please wait a moment.", status=429)
+    try:
+        pay_request = _resolve_request(token)
+    except Http404 as exc:
+        return _unavailable_for(request, exc)
+    # Canceling a request revokes its document links along with its pay page.
+    if pay_request.status == "CANCELED":
+        return _unavailable(
+            request, "This payment request is no longer active.", status=410
+        )
+    if pay_request.is_trust or not pay_request.matter:
+        raise Http404
+    from apps.matters.ledger.generate_ledger import generate_ledger
+
+    matter = pay_request.matter
+    tmp = generate_ledger(matter.id, request)
+    try:
+        with open(tmp.name, "rb") as f:
+            pdf = f.read()
+    finally:
+        os.unlink(tmp.name)
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="Matter Statement {matter.id}.pdf"'
+    )
+    return response
+
+
+def balance_invoice_pdf(request, token, invoice_id):
+    """One of the request matter's invoices, downloadable via the request
+    token. Scoped to the matter — the token holder is that matter's client."""
+    if _rate_limited(request, "pay-pdf", limit=30, window=300):
+        return HttpResponse("Too many requests. Please wait a moment.", status=429)
+    try:
+        pay_request = _resolve_request(token)
+    except Http404 as exc:
+        return _unavailable_for(request, exc)
+    # Canceling a request revokes its document links along with its pay page.
+    if pay_request.status == "CANCELED":
+        return _unavailable(
+            request, "This payment request is no longer active.", status=410
+        )
+    if pay_request.is_trust or not pay_request.matter:
+        raise Http404
+    invoice = get_object_or_404(Invoice, pk=invoice_id, matter=pay_request.matter)
+    # A voided invoice's document is revoked here too (see pay_invoice_pdf).
+    if invoice.status == "VOID":
+        return _unavailable(request, "This invoice is no longer available.", status=410)
+    return _invoice_pdf_response(invoice, request)
+
+
 def _balance_config(processor, open_invoices, balance_cents, matter):
     """ClientConfig for a matter balance: reuse the processor's per-invoice config
     (for its publishable key + methods) and override the amount + reference."""
@@ -306,6 +413,26 @@ def balance_pay_page(request, token):
             "Open invoices",
             len(open_invoices),
         )
+    # Passwordless document access (non-trust): the matter statement plus a
+    # PDF of each open invoice — replaces emailing them as attachments.
+    downloads = []
+    if not pay_request.is_trust:
+        downloads.append(
+            {
+                "label": "View and Download Matter Statement (PDF)",
+                "url": reverse("pay:balance-statement-pdf", kwargs={"token": token}),
+            }
+        )
+        downloads.extend(
+            {
+                "label": f"View and Download Invoice {inv.id} (PDF)",
+                "url": reverse(
+                    "pay:balance-invoice-pdf",
+                    kwargs={"token": token, "invoice_id": inv.id},
+                ),
+            }
+            for inv in open_invoices
+        )
     context = {
         # No single invoice — the page renders in 'balance mode'.
         "invoice": None,
@@ -316,11 +443,14 @@ def balance_pay_page(request, token):
         "summary_label": summary_label,
         "summary_value": summary_value,
         "firm_name": company.name if company else "",
+        # Signed media URL, minted per render — fine for a page, never email.
+        "logo_url": company.logo.url if company and company.logo else "",
         "amount_due": Decimal(charge_cents) / 100,
         "config": config,
         "is_paid": pay_request.status == "PAID" or charge_cents <= 0,
         "dev_mode": config.processor == "fake",
         "charge_url": request.build_absolute_uri(request.path.rstrip("/") + "/charge/"),
+        "downloads": downloads,
     }
     return render(request, "invoicing/pay/pay.html", context)
 
