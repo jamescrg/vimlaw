@@ -32,9 +32,14 @@ Header
   width: 100%;
 }
 
+/* Constrain uploaded logos by height (the invoice header's natural
+   invariant) and let width follow the logo's own aspect; max-width
+   still guards very wide marks. WeasyPrint honors physical units. */
 .company-logo {
   height: auto;
+  max-height: 0.4in;
   max-width: 12.5rem;
+  width: auto;
 }
 
 .header {

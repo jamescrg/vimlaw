@@ -1,11 +1,11 @@
 {% load phone_numbers %}
 {% if company.logo %}
   <div class="header-logo">
+    {# djlint:off H006 — no dimension attributes on purpose: .company-logo scales by max-height with the logo's own aspect; fixed attrs fought it. #}
     <img class="company-logo"
-         width="200"
-         height="auto"
          alt="{{ company.name }}"
          src="{{ company.logo.url }}" />
+    {# djlint:on #}
   </div>
 {% endif %}
 <div class="header-left">
