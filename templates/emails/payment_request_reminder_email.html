@@ -48,7 +48,7 @@
       .firm-logo {
         display: block;
         height: auto;
-        max-width: 220px;
+        max-width: 150px;
       }
 
       .firm-name {
@@ -59,7 +59,7 @@
       }
 
       .meta {
-        margin: 8px 0 0;
+        margin: 16px 0 0;
         font-size: 15px;
         color: #4b5563;
       }
@@ -156,7 +156,7 @@
             <tr>
               <td class="card-head">
                 {% if logo_cid %}
-                  <img class="firm-logo" src="cid:{{ logo_cid }}" alt="{{ firm_name|firm_strip }}" width="220">
+                  <img class="firm-logo" src="cid:{{ logo_cid }}" alt="{{ firm_name|firm_strip }}" width="150">
                 {% else %}
                   <h1 class="firm-name">{{ firm_name|default:"Payment request"|firm_strip }}</h1>
                 {% endif %}
