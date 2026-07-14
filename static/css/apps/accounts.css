@@ -46,7 +46,7 @@ body {
   margin-bottom: 0.25rem;
 }
 
-/* Brand monogram: the Lucide atom mark, stacked above the wordmark and matching
+/* Brand monogram: the Lucide orbit mark, stacked above the wordmark and matching
    the favicon. Decorative — the title text is the accessible name.
    (Auth pages don't load the Lucide font, so use the SVG as a background.) */
 .auth-title::before {
