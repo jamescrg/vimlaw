@@ -238,7 +238,7 @@
 }
 
 /* Centered brand: absolutely centered so the leading hamburger doesn't push it
-   off-centre. Mirrors the sidebar brand (icon-atom mark + Kosmos wordmark). */
+   off-centre. Mirrors the sidebar brand (icon-orbit mark + Kosmos wordmark). */
 .mobile-topbar-brand {
   align-items: center;
   color: var(--link);
