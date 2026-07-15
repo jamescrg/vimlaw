@@ -415,21 +415,20 @@ Matter Overview tab
   width: 100%;
 }
 
-/* Left column (40%): Matter Detail table with the Financials table stacked
-   beneath it. flex 2 against the side column's 3 gives the 40/60 split —
-   both have flex-basis 0, so the grow ratio divides the row minus the gap. */
+/* Left column (~35%): Matter Detail table with the Financials table stacked
+   beneath it. A fixed 35% basis; the side column takes the rest (less gap). */
 .overview-main-col {
   display: flex;
-  flex: 2;
+  flex: 0 0 35%;
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
 }
 
-/* Right column (60%): Events, Tasks, and Recent Actions tables stacked. */
+/* Right column (~65%): Events, Tasks, and Recent Actions tables stacked. */
 .overview-side-col {
   display: flex;
-  flex: 3;
+  flex: 1;
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
@@ -458,7 +457,7 @@ Matter Overview tab
    shrink-to-content default) so the values don't crowd the labels. The
    doubled class outweighs the 1% shrink-to-content label default below. */
 .overview-table.overview-main th {
-  width: 12rem;
+  width: 9rem;
 }
 
 /* The global `td` rule (tables.css) forces white-space: nowrap + ellipsis on
