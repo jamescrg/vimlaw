@@ -372,18 +372,6 @@
   outline: none;
 }
 
-/* Trust Tab */
-.contact-trust-section .btn-outline-primary {
-  border-color: var(--border-medium);
-  color: var(--color-darker);
-}
-
-.contact-trust-section .btn-outline-primary:hover {
-  background-color: var(--color-darker);
-  border-color: var(--color-darker);
-  color: white;
-}
-
 .intake-description {
   color: var(--color-primary);
 }
