@@ -153,10 +153,18 @@ Matter Switcher
   margin-right: 0.5rem;
 }
 
-/* Prev/next steppers — bare, muted chevrons at the toolbar's ends that walk
-   the open-matters list (wrapping at the ends) and land on the Info tab.
-   `a.matter-step` matches the specificity of the generic `.toolbar a` button
-   skin (toolbar.css) so this later rule strips its fill and border. */
+/* Pack the toolbar left (override .toolbar's space-between) so the two steppers
+   bookend the title + action cluster with equal gaps, free space trailing on
+   the right — rather than the forward stepper flying out to the far edge. */
+.matter-toolbar {
+  justify-content: flex-start;
+}
+
+/* Prev/next steppers — bare, muted chevrons that flank the title + action
+   cluster and walk the open-matters list (wrapping at the ends), landing on
+   the Info tab. `a.matter-step` matches the specificity of the generic
+   `.toolbar a` button skin (toolbar.css) so this later rule strips its fill
+   and border. */
 .matter-toolbar a.matter-step {
   background: none;
   border: none;
@@ -169,15 +177,14 @@ Matter Switcher
   color: var(--color-primary);
 }
 
+/* Equal gaps: the back stepper sits one gap left of the title, the forward
+   stepper one gap right of the last action (+Expense). */
 .matter-toolbar a.matter-step-prev {
   margin-right: 1.25rem;
 }
 
-/* The forward stepper's auto margin absorbs the toolbar's free space, keeping
-   the title + action cluster left-justified (the .toolbar space-between would
-   otherwise center it between the two steppers). */
 .matter-toolbar a.matter-step-next {
-  margin-left: auto;
+  margin-left: 1.25rem;
 }
 
 /* Mobile: pare the matter title to the name + the +Time action. Hides the
