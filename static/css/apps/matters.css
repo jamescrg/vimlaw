@@ -150,41 +150,45 @@ Matter Switcher
 
 /* A touch more breathing room to the right of the matter switcher. */
 .matter-toolbar .toolbar-left > .matter-switcher {
-  margin-right: 0.5rem;
+  margin-right: 1rem;
 }
 
-/* Pack the toolbar left (override .toolbar's space-between) so the two steppers
-   bookend the title + action cluster with equal gaps, free space trailing on
-   the right — rather than the forward stepper flying out to the far edge. */
+/* Pack the toolbar left (override .toolbar's space-between): the stepper group
+   sits first, the title + actions follow, free space trails on the right. */
 .matter-toolbar {
   justify-content: flex-start;
 }
 
-/* Prev/next steppers — bare, muted chevrons that flank the title + action
-   cluster and walk the open-matters list (wrapping at the ends), landing on
-   the Info tab. `a.matter-step` matches the specificity of the generic
-   `.toolbar a` button skin (toolbar.css) so this later rule strips its fill
-   and border. */
+/* Prev/next as one segmented navigator, left of the title — a muted pill with
+   a hairline divider between the two chevrons. Grouped and left-anchored so
+   both buttons stay put (the title grows to their right) and read as a single
+   control, walking the open-matters list (wrapping at the ends). */
+.matter-step-group {
+  display: inline-flex;
+  margin-right: 1.25rem;
+  overflow: hidden;
+}
+
+/* `a.matter-step` matches the specificity of the generic `.toolbar a` button
+   skin (toolbar.css) so this later rule strips its fill and border. */
 .matter-toolbar a.matter-step {
+  align-items: center;
   background: none;
   border: none;
   color: var(--color-muted-more);
+  display: inline-flex;
   font-size: 1.25rem;
-  padding: 0.25rem;
+  padding: 0.25rem 0.5rem;
 }
 
 .matter-toolbar a.matter-step:hover {
+  background: var(--background-control);
   color: var(--color-primary);
 }
 
-/* Equal gaps: the back stepper sits one gap left of the title, the forward
-   stepper one gap right of the last action (+Expense). */
-.matter-toolbar a.matter-step-prev {
-  margin-right: 1.25rem;
-}
-
-.matter-toolbar a.matter-step-next {
-  margin-left: 2.5rem;
+/* Hairline divider between the two segments. */
+.matter-step-group .matter-step-prev {
+  border-right: 1px solid var(--border-medium);
 }
 
 /* Mobile: pare the matter title to the name + the +Time action. Hides the
