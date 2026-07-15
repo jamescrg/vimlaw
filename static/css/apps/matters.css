@@ -534,7 +534,10 @@ Matter Overview tab
   width: 7.5rem;
 }
 
-.overview-actions .col-user {
+/* Shared 4rem initials column — keeps the Tasks and Recent Actions tables'
+   date + user columns aligned where they stack in the right column. */
+.overview-actions .col-user,
+.overview-tasks-table .col-user {
   width: 4rem;
 }
 
