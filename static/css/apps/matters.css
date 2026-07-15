@@ -461,11 +461,16 @@ Matter Overview tab
   width: 12rem;
 }
 
-/* Matter Detail value cells wrap long content (work status, description, ...)
-   within the column instead of forcing the auto-layout column wider.
-   overflow-wrap: anywhere lets the intrinsic width shrink so text reflows. */
-.overview-main td {
+/* The global `td` rule (tables.css) forces white-space: nowrap + ellipsis on
+   every cell. Re-enable wrapping for the overview text cells — Matter Detail
+   values and the events/tasks/actions description column (.overview-cell-text)
+   — so long content reflows instead of truncating. overflow-wrap: anywhere
+   also breaks unbreakable runs. The date / user / priority columns keep their
+   own nowrap. */
+.overview-main td,
+.overview-cell-text {
   overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .overview-table tr:last-child th,
