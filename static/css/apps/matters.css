@@ -571,9 +571,14 @@ Matter Overview tab
   text-align: center;
 }
 
-/* Overdue task rows — the due date reads urgent. */
-.overview-task-overdue .overview-cell-date {
-  color: var(--urgent);
+/* Overdue task rows get the past-due yellow wash (light); dark swaps the fill
+   for the rose rail, per the app's light-fill / dark-rail convention. */
+.overview-task-overdue td {
+  background: var(--past-due-bg);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"]) .overview-task-overdue td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--past-due-rail);
 }
 
 /* ==========================================================================
