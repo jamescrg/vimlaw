@@ -120,7 +120,7 @@
         {% for event in events %}
           <tr>
             <td class="overview-cell-date">{{ event.date|date:"Y-m-d" }}</td>
-            <td>
+            <td class="overview-cell-text">
               <a href="#"
                  class="overview-link"
                  hx-get="{% url 'calendar:edit-origin' id=event.id origin='matters' %}"
@@ -148,7 +148,7 @@
         {% for task in tasks %}
           <tr {% if task.date_due and task.date_due < today %}class="overview-task-overdue"{% endif %}>
             <td class="overview-cell-date">{{ task.date_due|date:"Y-m-d"|default:"—" }}</td>
-            <td>
+            <td class="overview-cell-text">
               <a href="#"
                  class="overview-link"
                  hx-get="{% url 'matters:tasks-edit' matter.id task.id %}"
@@ -192,7 +192,7 @@
           <tr>
             <td class="overview-action-date">{{ entry.date|date:"Y-m-d" }}</td>
             <td class="overview-action-user">{{ entry.user.initials }}</td>
-            <td>
+            <td class="overview-cell-text">
               <a href="#"
                  class="overview-link"
                  hx-get="{% url 'activity:time-edit' id=entry.id %}"

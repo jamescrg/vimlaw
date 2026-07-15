@@ -416,11 +416,10 @@ Matter Overview tab
 }
 
 /* Left column (40%): Matter Detail table with the Financials table stacked
-   beneath it. flex 2 against the side column's 3 gives the 40/60 split —
-   both have flex-basis 0, so the grow ratio divides the row minus the gap. */
+   beneath it. A fixed 40% basis; the side column takes the rest (less gap). */
 .overview-main-col {
   display: flex;
-  flex: 2;
+  flex: 0 0 40%;
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
@@ -429,7 +428,7 @@ Matter Overview tab
 /* Right column (60%): Events, Tasks, and Recent Actions tables stacked. */
 .overview-side-col {
   display: flex;
-  flex: 3;
+  flex: 1;
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
@@ -458,14 +457,19 @@ Matter Overview tab
    shrink-to-content default) so the values don't crowd the labels. The
    doubled class outweighs the 1% shrink-to-content label default below. */
 .overview-table.overview-main th {
-  width: 12rem;
+  width: 10rem;
 }
 
-/* Matter Detail value cells wrap long content (work status, description, ...)
-   within the column instead of forcing the auto-layout column wider.
-   overflow-wrap: anywhere lets the intrinsic width shrink so text reflows. */
-.overview-main td {
+/* The global `td` rule (tables.css) forces white-space: nowrap + ellipsis on
+   every cell. Re-enable wrapping for the overview text cells — Matter Detail
+   values and the events/tasks/actions description column (.overview-cell-text)
+   — so long content reflows instead of truncating. overflow-wrap: anywhere
+   also breaks unbreakable runs. The date / user / priority columns keep their
+   own nowrap. */
+.overview-main td,
+.overview-cell-text {
   overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .overview-table tr:last-child th,
@@ -571,9 +575,14 @@ Matter Overview tab
   text-align: center;
 }
 
-/* Overdue task rows — the due date reads urgent. */
-.overview-task-overdue .overview-cell-date {
-  color: var(--urgent);
+/* Overdue task rows get the past-due yellow wash (light); dark swaps the fill
+   for the rose rail, per the app's light-fill / dark-rail convention. */
+.overview-task-overdue td {
+  background: var(--past-due-bg);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"]) .overview-task-overdue td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--past-due-rail);
 }
 
 /* ==========================================================================
