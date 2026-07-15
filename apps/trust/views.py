@@ -1,3 +1,4 @@
+import csv
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
@@ -56,6 +57,50 @@ def order_by(request, order):
         new_order = order
     request.session["trust_order"] = new_order
     return HttpResponse(status=204, headers={"HX-Trigger": "trustChanged"})
+
+
+@login_required
+def history_csv(request):
+    """Download the entire trust ledger as CSV for reconciliation against the
+    bank record. Rows are oldest-first, and withdrawals are signed negative
+    (matching a bank statement) so the Amount column sums to the net account
+    movement; the Type column is kept for readability. Always the full ledger,
+    regardless of the on-screen interval filter."""
+    transactions = Transaction.objects.select_related("contact").order_by("date", "id")
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = (
+        f'attachment; filename="trust-ledger-{date.today():%Y-%m-%d}.csv"'
+    )
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "Client ID",
+            "Date",
+            "Client Name",
+            "Description",
+            "Method",
+            "Amount",
+            "Type",
+            "Confirmed",
+        ]
+    )
+    for t in transactions:
+        amount = t.amount or 0
+        signed = -amount if t.type == "Withdrawal" else amount
+        writer.writerow(
+            [
+                t.contact_id or "",
+                t.date.isoformat() if t.date else "",
+                t.contact.name if t.contact else "",
+                t.description or "",
+                t.get_method_display(),
+                f"{signed:.2f}",
+                t.type or "",
+                "Yes" if t.confirmed else "No",
+            ]
+        )
+    return response
 
 
 @login_required

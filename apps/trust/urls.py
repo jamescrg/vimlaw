@@ -7,6 +7,7 @@ from apps.trust.views import (
     delete,
     edit,
     history,
+    history_csv,
     history_index,
     order_by,
     toggle_confirmed,
@@ -21,6 +22,7 @@ urlpatterns = [
     path("invoicing/trust/", trust_index, name="index"),
     path("invoicing/trust/list/", trust_list, name="trust"),
     path("invoicing/trust/order-by/<str:order>/", order_by, name="order-by"),
+    path("invoicing/trust/history/export.csv", history_csv, name="history-csv"),
     path(
         "invoicing/trust/history/<str:interval>/", history_index, name="history-index"
     ),
