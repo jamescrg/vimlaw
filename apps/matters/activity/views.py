@@ -114,17 +114,15 @@ def activity_list(request, id):
 @matter_access_required
 def activity_sort(request, id):
     """Toggle sorting between newest-first and oldest-first."""
-    matter = get_object_or_404(Matter, pk=id)
+    get_object_or_404(Matter, pk=id)
 
     current_order = request.session.get("matter_activity_sort", "-id")
     request.session["matter_activity_sort"] = "id" if current_order == "-id" else "-id"
 
-    context = {
-        "app": "matters",
-        "subapp": "activity",
-        **get_matter_activity_data(request, matter),
-    }
-    return render(request, "matters/activity/list.html", context)
+    # Same pattern as the other toolbar actions: a 204 + trigger, so the
+    # #matterActivity wrapper re-fetches the whole tab (toolbar + table).
+    # Rendering list.html into #matterActivityTable nested a duplicate toolbar.
+    return selection_response(MATTER_ACTIVITY_TRIGGER)
 
 
 @login_required
