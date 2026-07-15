@@ -12,11 +12,11 @@
     {% if env == 'dev' %}
       <link rel="icon"
             type="image/svg+xml"
-            href="{% static 'images/kosmos-mark-dev.svg' %}" />
+            href="{% static_v 'images/kosmos-mark-dev.svg' %}" />
     {% else %}
       <link rel="icon"
             type="image/svg+xml"
-            href="{% static 'images/kosmos-mark.svg' %}" />
+            href="{% static_v 'images/kosmos-mark.svg' %}" />
     {% endif %}
   {% endblock favicon %}
   <!-- set viewport for mobile devices -->

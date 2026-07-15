@@ -1,5 +1,5 @@
 {% extends "base-minimal.html" %}
-{% load static %}
+{% load static cache_buster %}
 {% load markdown_extras %}
 {% block title %}
   AI Prompt - {{ matter.name }}
@@ -7,7 +7,7 @@
 {% block favicon %}
   <link rel="icon"
         type="image/svg+xml"
-        href="{% static 'images/ai-favicon.svg' %}" />
+        href="{% static_v 'images/ai-favicon.svg' %}" />
 {% endblock favicon %}
 {% block content %}
   <div class="ai-prompt-page standalone">
