@@ -55,8 +55,8 @@
           <th class="client">Client</th>
           <th class="note">Description</th>
           <th class="method">Method</th>
-          <th class="amount">Withdrawal</th>
           <th class="amount">Deposit</th>
+          <th class="amount">Withdrawal</th>
           <th class="check">C</th>
         </tr>
         {% for transaction in transactions %}
@@ -74,14 +74,14 @@
                  data-bs-target="#htmx-modal-container">{{ transaction.description }}</a>
             </td>
             <td class="method">{{ transaction.get_method_display }}</td>
-            <td class="amount urgent">
-              {% if transaction.type == 'Withdrawal' %}
+            <td class="amount">
+              {% if transaction.type == 'Deposit' %}
                 $
                 {{ transaction.amount|intcomma }}
               {% endif %}
             </td>
-            <td class="amount">
-              {% if transaction.type == 'Deposit' %}
+            <td class="amount urgent">
+              {% if transaction.type == 'Withdrawal' %}
                 $
                 {{ transaction.amount|intcomma }}
               {% endif %}
