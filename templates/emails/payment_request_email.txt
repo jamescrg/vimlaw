@@ -5,7 +5,7 @@ Dear Client,
 
 {% if cover_message %}{{ cover_message }}{% else %}{% if is_trust %}We are requesting a trust deposit in the amount below.{% else %}We are respectfully requesting payment of the amount below.{% endif %}{% endif %}
 
-If you have any questions, please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}.
+If you have any questions, please reply to this email{% if billing_email %} or contact us at {{ billing_email }}{% endif %}.
 
 Client:           {{ client_name }}
 Amount Requested: ${{ amount_due|floatformat:2|intcomma }}

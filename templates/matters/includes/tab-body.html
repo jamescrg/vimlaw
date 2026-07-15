@@ -6,8 +6,13 @@ change event. Shared by every path that renders a tab — full page
 Requires subapp and tab_template in context.
 {% endcomment %}
 {% if subapp == "overview" %}
+  {% comment %}
+  Refetch on matter edits AND on event/task/time changes, so the overview's
+  Events / Tasks / Recent Actions tables stay live when items are edited from
+  their inline modals.
+  {% endcomment %}
   <div id="matterOverview"
-       hx-trigger="mattersChanged from:body"
+       hx-trigger="mattersChanged from:body, matterEventChanged from:body, tasksListChanged from:body, timeChanged from:body"
        hx-get="{% url 'matters:overview-content' matter.id %}"
        hx-target="this">{% include tab_template %}</div>
 {% elif subapp == "contacts" %}
