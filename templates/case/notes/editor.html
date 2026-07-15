@@ -8,11 +8,11 @@
   {% if env == 'dev' %}
     <link rel="icon"
           type="image/svg+xml"
-          href="{% static 'images/notes-favicon-dev.svg' %}" />
+          href="{% static_v 'images/notes-favicon-dev.svg' %}" />
   {% else %}
     <link rel="icon"
           type="image/svg+xml"
-          href="{% static 'images/notes-favicon.svg' %}" />
+          href="{% static_v 'images/notes-favicon.svg' %}" />
   {% endif %}
 {% endblock favicon %}
 {% block content %}
