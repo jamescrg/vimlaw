@@ -180,7 +180,9 @@ def send_payment_request(
         "amount_due": payment_request.amount_requested,
         "cover_message": message or "",
         "firm_name": company.name if company else "",
-        "firm_email": company.email if company else "",
+        # Client-facing contact prompt: the firm's billing address (falling
+        # back to the general firm email), matching the invoice emails.
+        "billing_email": (company.billing_email or company.email) if company else "",
         "pay_url": request_pay_url(payment_request, request),
         "document_links": document_links,
         "is_trust": is_trust,
@@ -315,7 +317,9 @@ def send_request_reminder(
         "cover_message": message or "",
         "days_since": days_since_requested(payment_request),
         "firm_name": company.name if company else "",
-        "firm_email": company.email if company else "",
+        # Client-facing contact prompt: the firm's billing address (falling
+        # back to the general firm email), matching the invoice emails.
+        "billing_email": (company.billing_email or company.email) if company else "",
         "pay_url": request_pay_url(payment_request, request),
         "is_trust": is_trust,
         "logo_cid": FIRM_LOGO_CID if company and company.logo else "",
