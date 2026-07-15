@@ -39,6 +39,10 @@
           <td id="overview-practice-area">{% include "matters/overview/practice-area.html" %}</td>
         </tr>
         <tr>
+          <th>Description</th>
+          <td id="overview-description">{% include "matters/overview/description.html" %}</td>
+        </tr>
+        <tr>
           <th>Open Date</th>
           <td>{{ matter.date_start|date:"Y-m-d"|default:"—" }}</td>
         </tr>
@@ -48,10 +52,6 @@
             <td>{{ matter.date_end|date:"Y-m-d" }}</td>
           </tr>
         {% endif %}
-        <tr>
-          <th>Description</th>
-          <td id="overview-description">{% include "matters/overview/description.html" %}</td>
-        </tr>
         <tr>
           <th>Jurisdiction</th>
           <td>
@@ -121,7 +121,10 @@
           <tr>
             <td class="overview-cell-date">{{ event.date|date:"Y-m-d" }}</td>
             <td>
-              {{ event.description }}
+              <a href="#"
+                 class="overview-link"
+                 hx-get="{% url 'calendar:edit-origin' id=event.id origin='matters' %}"
+                 hx-target="#htmx-modal-container">{{ event.description }}</a>
               {% if event.party %}<span class="overview-cell-meta">· {{ event.party }}</span>{% endif %}
             </td>
           </tr>
@@ -145,7 +148,12 @@
         {% for task in tasks %}
           <tr {% if task.date_due and task.date_due < today %}class="overview-task-overdue"{% endif %}>
             <td class="overview-cell-date">{{ task.date_due|date:"Y-m-d"|default:"—" }}</td>
-            <td>{{ task.description }}</td>
+            <td>
+              <a href="#"
+                 class="overview-link"
+                 hx-get="{% url 'matters:tasks-edit' matter.id task.id %}"
+                 hx-target="#htmx-modal-container">{{ task.description }}</a>
+            </td>
             <td class="overview-task-priority">
               {% if task.importance == 7 %}
                 <i class="icon-chevrons-up importance-7" title="Highest priority"></i>
@@ -184,7 +192,12 @@
           <tr>
             <td class="overview-action-date">{{ entry.date|date:"Y-m-d" }}</td>
             <td class="overview-action-user">{{ entry.user.initials }}</td>
-            <td>{{ entry.actions }}</td>
+            <td>
+              <a href="#"
+                 class="overview-link"
+                 hx-get="{% url 'activity:time-edit' id=entry.id %}"
+                 hx-target="#htmx-modal-container">{{ entry.actions }}</a>
+            </td>
           </tr>
         {% empty %}
           <tr>

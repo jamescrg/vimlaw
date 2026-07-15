@@ -457,6 +457,28 @@ Matter Overview tab
   width: 12rem;
 }
 
+/* Matter Detail value cells wrap long content (work status, description, ...)
+   within the column instead of forcing the auto-layout column wider.
+   overflow-wrap: anywhere lets the intrinsic width shrink so text reflows. */
+.overview-main td {
+  overflow-wrap: anywhere;
+}
+
+/* Clickable description text in the Events / Tasks / Recent Actions tables —
+   opens the item's edit modal. Reads as body text; underlines on hover. */
+.overview-link,
+.overview-link:hover {
+  color: inherit;
+}
+
+.overview-link {
+  cursor: pointer;
+}
+
+.overview-link:hover {
+  text-decoration: underline;
+}
+
 .overview-table tr:last-child th,
 .overview-table tr:last-child td {
   border-bottom: none;
