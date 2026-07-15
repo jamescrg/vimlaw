@@ -415,17 +415,17 @@ Matter Overview tab
   width: 100%;
 }
 
-/* Left column (~35%): Matter Detail table with the Financials table stacked
-   beneath it. A fixed 35% basis; the side column takes the rest (less gap). */
+/* Left column (40%): Matter Detail table with the Financials table stacked
+   beneath it. A fixed 40% basis; the side column takes the rest (less gap). */
 .overview-main-col {
   display: flex;
-  flex: 0 0 35%;
+  flex: 0 0 40%;
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
 }
 
-/* Right column (~65%): Events, Tasks, and Recent Actions tables stacked. */
+/* Right column (60%): Events, Tasks, and Recent Actions tables stacked. */
 .overview-side-col {
   display: flex;
   flex: 1;
@@ -457,7 +457,7 @@ Matter Overview tab
    shrink-to-content default) so the values don't crowd the labels. The
    doubled class outweighs the 1% shrink-to-content label default below. */
 .overview-table.overview-main th {
-  width: 9rem;
+  width: 10rem;
 }
 
 /* The global `td` rule (tables.css) forces white-space: nowrap + ellipsis on
