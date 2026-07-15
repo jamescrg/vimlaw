@@ -45,7 +45,12 @@
              href="{% url 'trust:history-index' interval='all' %}">All</a>
         </div>
       </div>
-      <div class="toolbar-right"></div>
+      <div class="toolbar-right">
+        <a href="{% url 'trust:history-csv' %}"
+           title="Download the entire trust ledger as CSV">
+          <i class="icon-download"></i> Download CSV
+        </a>
+      </div>
     </div>
     <div class="table-container">
       <table class="trust-transactions">
