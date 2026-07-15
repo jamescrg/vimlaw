@@ -139,15 +139,19 @@
       <table class="overview-table overview-tasks-table">
         <colgroup>
           <col class="col-date">
+          <col class="col-user">
           <col>
           <col class="col-priority">
         </colgroup>
         <tr>
-          <th class="overview-table-head" colspan="3">Tasks</th>
+          <th class="overview-table-head" colspan="4">Tasks</th>
         </tr>
         {% for task in tasks %}
           <tr {% if task.date_due and task.date_due < today %}class="overview-task-overdue"{% endif %}>
             <td class="overview-cell-date">{{ task.date_due|date:"Y-m-d"|default:"—" }}</td>
+            <td class="overview-cell-user">
+              {% if task.user %}{{ task.user.initials }}{% endif %}
+            </td>
             <td class="overview-cell-text">
               <a href="#"
                  class="overview-link"
@@ -172,7 +176,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="3">
+            <td colspan="4">
               <span class="overview-empty">No open tasks</span>
             </td>
           </tr>
