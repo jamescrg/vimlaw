@@ -1,4 +1,4 @@
-from datetime import date, time, timedelta
+from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
@@ -181,12 +181,13 @@ def detail(request, id):
 def _matter_overview_context(request, matter):
     """Shared context for the Overview tab (full page + HTMX partial). The
     firm's default jurisdiction (Firm.jurisdiction) is shown when the matter
-    has none; recent_actions feeds the Recent Actions table (the latest time
-    entries, newest first); timeline blends upcoming events and dated active
-    tasks (past-due included) into one chronological card row. The financial
-    snapshot reuses the
-    Ledger tab's authorities (get_ledger_data / the trust app) and, like that
-    tab, is reserved for admin/perm_financial users."""
+    has none. The right column stacks three tables: events (upcoming, pending),
+    tasks (all non-complete, by due date then priority), and recent_actions
+    (the latest time entries). The financial snapshot reuses the Ledger tab's
+    authorities (get_ledger_data / the trust app) and, like that tab, is
+    reserved for admin/perm_financial users."""
+    from django.db.models import F
+
     from apps.activity.time.models import TimeEntry
     from apps.matters.ledger.get_ledger_data import get_ledger_data
     from apps.matters.models import PracticeArea
@@ -199,56 +200,33 @@ def _matter_overview_context(request, matter):
     show_financial = request.user.is_admin or request.user.perm_financial
     today = date.today()
 
-    # Blended timeline: upcoming events and dated active tasks — including
-    # past-due ones, which sort to the left edge — one card row in
-    # chronological order. Untimed items (all-day events, tasks) sort to the
-    # end of their day, after the timed events.
-    upcoming_events = Event.objects.filter(
+    # Upcoming events for the Events table (this matter's calendar, pending,
+    # today forward), chronological.
+    events = Event.objects.filter(
         matter=matter, status="Pending", date__gte=today
-    ).order_by("date", "start_time", "party")[:10]
-    due_tasks = (
-        Task.objects.filter(
-            matter=matter, status__in=ACTIVE_STATUSES, date_due__isnull=False
-        )
+    ).order_by("date", "start_time", "party")
+
+    # Every non-complete task, ordered by due date (undated last) then
+    # priority — feeds the Tasks table.
+    tasks = (
+        Task.objects.filter(matter=matter, status__in=ACTIVE_STATUSES)
         .select_related("user")
-        .order_by("date_due", "-importance")[:10]
+        .order_by(F("date_due").asc(nulls_last=True), "-importance")
     )
-    timeline = sorted(
-        [
-            *(
-                {
-                    "kind": "event",
-                    "event": e,
-                    "when": (e.date, e.start_time or time.max),
-                }
-                for e in upcoming_events
-            ),
-            *(
-                {"kind": "task", "task": t, "when": (t.date_due, time.max)}
-                for t in due_tasks
-            ),
-        ],
-        key=lambda item: item["when"],
-    )[:10]
 
     context = {
         "company_jurisdiction": company.jurisdiction if company else "",
         "show_financial": show_financial,
         # Options for the inline practice-area dropdown.
         "practice_areas": PracticeArea.objects.order_by("name"),
-        # Capped so the side column runs a bit SHORT of the Matter Detail
-        # table — space-between then stretches the gap between Financials
-        # and Recent Actions to pin the bottom borders level. One more row
-        # would make this column the taller one and reopen the ledge.
+        "events": events,
+        "tasks": tasks,
         "recent_actions": (
             TimeEntry.objects.filter(matter=matter)
             .select_related("user")
-            .order_by("-date", "-id")[:4]
+            .order_by("-date", "-id")[:5]
         ),
-        # Dash-style cards (events + tasks), scoped to this matter.
-        "timeline": timeline,
         "today": today,
-        "tomorrow": today + timedelta(days=1),
     }
     if show_financial:
         from apps.trust.available import trust_available_severity

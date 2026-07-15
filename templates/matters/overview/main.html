@@ -88,8 +88,6 @@
           </tr>
         {% endif %}
       </table>
-    </div>
-    <div class="overview-side-col">
       {% if show_financial %}
         <table class="overview-table overview-financial">
           <tr>
@@ -109,6 +107,69 @@
           </tr>
         </table>
       {% endif %}
+    </div>
+    <div class="overview-side-col">
+      <table class="overview-table overview-events-table">
+        <colgroup>
+          <col class="col-date">
+          <col>
+        </colgroup>
+        <tr>
+          <th class="overview-table-head" colspan="2">Events</th>
+        </tr>
+        {% for event in events %}
+          <tr>
+            <td class="overview-cell-date">{{ event.date|date:"Y-m-d" }}</td>
+            <td>
+              {{ event.description }}
+              {% if event.party %}<span class="overview-cell-meta">· {{ event.party }}</span>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="2">
+              <span class="overview-empty">No upcoming events</span>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+      <table class="overview-table overview-tasks-table">
+        <colgroup>
+          <col class="col-date">
+          <col>
+          <col class="col-priority">
+        </colgroup>
+        <tr>
+          <th class="overview-table-head" colspan="3">Tasks</th>
+        </tr>
+        {% for task in tasks %}
+          <tr {% if task.date_due and task.date_due < today %}class="overview-task-overdue"{% endif %}>
+            <td class="overview-cell-date">{{ task.date_due|date:"Y-m-d"|default:"—" }}</td>
+            <td>{{ task.description }}</td>
+            <td class="overview-task-priority">
+              {% if task.importance == 7 %}
+                <i class="icon-chevrons-up importance-7" title="Highest priority"></i>
+              {% elif task.importance == 6 or task.importance == 5 %}
+                <i class="icon-chevron-up importance-{{ task.importance }}"
+                   title="High priority"></i>
+              {% elif task.importance == 3 or task.importance == 2 %}
+                <i class="icon-chevron-down importance-{{ task.importance }}"
+                   title="Low priority"></i>
+              {% elif task.importance == 1 %}
+                <i class="icon-chevrons-down importance-1" title="Lowest priority"></i>
+              {% else %}
+                <i class="icon-equal" title="Normal priority"></i>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3">
+              <span class="overview-empty">No open tasks</span>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
       <table class="overview-table overview-actions">
         {# Fixed layout reads widths from the first row — here the colspan heading — so the cols carry them. #}
         <colgroup>
@@ -135,17 +196,4 @@
       </table>
     </div>
   </div>
-  {% if timeline %}
-    <div class="overview-events">
-      <div class="event-cards-grid">
-        {% for item in timeline %}
-          {% if item.kind == "event" %}
-            {% include "calendar/event-card.html" with event=item.event %}
-          {% else %}
-            {% include "matters/overview/task-card.html" with task=item.task %}
-          {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
 </div>

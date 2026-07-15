@@ -411,25 +411,23 @@ Matter Overview tab
   width: 100%;
 }
 
-/* Left column: the properties table with the Edit button beneath it. */
+/* Left column (40%): Matter Detail table with the Financials table stacked
+   beneath it. flex 2 against the side column's 3 gives the 40/60 split —
+   both have flex-basis 0, so the grow ratio divides the row minus the gap. */
 .overview-main-col {
   display: flex;
-  flex: 1;
+  flex: 2;
   flex-direction: column;
+  gap: 1.25rem;
   min-width: 0;
 }
 
-/* Right column: the financial snapshot above the recent-actions table.
-   space-between pins Recent Actions' bottom border level with the Matter
-   Detail table's bottom (the column stretches to match it), putting the
-   slack in the gap between the tables; gap is the floor for the sparse
-   case where this column is naturally the taller one. */
+/* Right column (60%): Events, Tasks, and Recent Actions tables stacked. */
 .overview-side-col {
   display: flex;
-  flex: 1;
+  flex: 3;
   flex-direction: column;
   gap: 1.25rem;
-  justify-content: space-between;
   min-width: 0;
 }
 
@@ -533,9 +531,38 @@ Matter Overview tab
   color: var(--color-muted);
 }
 
-/* Upcoming-events row (dash-style cards) below the two table columns. */
-.overview-events {
-  margin-top: 1.25rem;
+/* Events / Tasks tables: fixed layout so the fixed date column and (tasks) the
+   narrow priority column hold their widths while long descriptions wrap. */
+.overview-events-table,
+.overview-tasks-table {
+  overflow-wrap: anywhere;
+  table-layout: fixed;
+}
+
+.overview-events-table .col-date,
+.overview-tasks-table .col-date {
+  width: 7.5rem;
+}
+
+.overview-tasks-table .col-priority {
+  width: 3rem;
+}
+
+.overview-cell-date {
+  white-space: nowrap;
+}
+
+.overview-cell-meta {
+  color: var(--color-muted);
+}
+
+.overview-task-priority {
+  text-align: center;
+}
+
+/* Overdue task rows — the due date reads urgent. */
+.overview-task-overdue .overview-cell-date {
+  color: var(--urgent);
 }
 
 /* ==========================================================================
