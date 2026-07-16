@@ -699,7 +699,7 @@ Matter Overview tab
 
 .matter-activity th.category,
 .matter-activity td.category {
-  width: 15rem;
+  width: 13rem;
 }
 
 .matter-activity th.amount,
@@ -797,10 +797,10 @@ Matter Overview tab
 
 /* Long category names ellipse instead of stretching the Category column
    (the picker button is the cell's content, so the cap lives on it:
-   15rem column minus the 1rem cell padding each side). */
+   13rem column minus the 1rem cell padding each side). */
 .matter-activity td.category .button-link {
   display: inline-block;
-  max-width: 13rem;
+  max-width: 11rem;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: top;
