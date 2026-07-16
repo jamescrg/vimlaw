@@ -79,46 +79,46 @@
    variant signals its purpose through border + text colour instead, and
    fills with its accent on hover for affordance.
    ========================================================================== */
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-primary,
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-primary:focus {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-primary,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-primary:focus {
   background: var(--background-control);
   border-color: var(--link);
   color: var(--link);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-primary:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-primary:hover {
   background: var(--link);
   border-color: var(--link);
   color: var(--gb-dark);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-primary:disabled {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-primary:disabled {
   background: var(--background-control);
   border-color: var(--background-control);
   color: var(--color-muted-more);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-secondary,
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-secondary:focus,
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-secondary:active {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-secondary,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-secondary:focus,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-secondary:active {
   background: var(--background-control);
   border-color: var(--border-medium-dark);
   color: var(--color-darker);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-secondary:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-secondary:hover {
   background: var(--background-subnav-contrast);
   border-color: var(--border-dark);
   color: var(--color-darker);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-danger {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-danger {
   background: var(--background-control);
   border-color: var(--gb-bright-red);
   color: var(--gb-bright-red);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-danger:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-danger:hover {
   background: var(--gb-bright-red);
   border-color: var(--gb-bright-red);
   color: var(--gb-dark);
@@ -126,21 +126,21 @@
 
 /* Success/submit reads as the brand action — track the link green (gb-bright-aqua),
    not the limier --success token used for checkmarks/true indicators. */
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-success {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-success {
   background: var(--background-control);
   border-color: var(--link);
   color: var(--link);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-success:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-success:hover {
   background: var(--link);
   border-color: var(--link);
   color: var(--gb-dark);
 }
 
 /* Icons inherit the button's semantic colour (base already does this for success). */
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-primary i,
-:is([data-theme="dark"], [data-theme="cosmic"]) .btn-danger i {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-primary i,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .btn-danger i {
   color: inherit;
 }
 

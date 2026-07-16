@@ -1,20 +1,23 @@
 /* ==========================================================================
-   THEMING CONVENTION (light + sky + dark + cosmic)
+   THEMING CONVENTION (light + kosmos + dark + cosmic + kosmos-dark)
    --------------------------------------------------------------------------
    Theming is token-first. `:root` below defines every semantic token in its
    LIGHT value; the dark block further down RE-DEFINES those same tokens with
    dark (gb-*) values. Component CSS consumes var(--token) and stays
    theme-agnostic — it flips automatically when the tokens change.
 
-   FOUR themes: two light — light (Matcha) and sky — and two dark — dark
-   (Gruvbox) and cosmic (Nord). Cosmic IS the dark theme
-   structurally — it shares the dark token block and every dark structural
-   rule, and only repoints the --gb-* ramp from Gruvbox to Nord (see the
-   [data-theme="cosmic"] block after the dark block). So any "dark" rule is
-   scoped to BOTH: `:is([data-theme="dark"], [data-theme="cosmic"])`.
-   Sky is light structurally: it inherits every :root default and its block
-   below only repoints colour tokens (lighter true-gray surfaces, blue
-   accents); dark structural rules never apply.
+   FIVE themes: two light — light (Matcha) and kosmos (the Kosmos brand's
+   conventional stone; blue links, violet emphasis) — and three dark —
+   dark (Gruvbox), cosmic (Nord), and kosmos-dark (the brand's stone night;
+   blue links, amber non-text accent). Cosmic and kosmos-dark ARE the dark
+   theme structurally — they share the dark token block and every dark
+   structural rule, and only repoint the --gb-* ramp (Nord and the warm
+   stone dark ramp respectively; see the blocks after the dark block). So
+   any "dark" rule is scoped to ALL THREE:
+   `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"])`.
+   Kosmos is light structurally: it inherits every :root default and its
+   block below only repoints colour tokens (lighter stone surfaces, blue
+   links); dark structural rules never apply.
 
    RULE OF THUMB:
    1. If dark only needs a different *value*, add/repoint a token here. Do NOT
@@ -22,8 +25,8 @@
    2. Only when dark needs a structurally *different rule* (e.g. filled vs
       outline buttons, accent rail vs fill — where the colour moves to a
       different property) add a
-      `:is([data-theme="dark"], [data-theme="cosmic"]) .component` block,
-      co-located at the bottom of that component's own CSS file under a
+      `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .component`
+      block, co-located at the bottom of that component's own CSS file under a
       "Dark mode —" comment. Keep the colour decision in a token, the
       structural rule in the component. Do not start a monolithic dark.css.
    ========================================================================== */
@@ -201,70 +204,70 @@
 }
 
 /* ==========================================================================
-   Sky — the second LIGHT theme.
+   Kosmos — the second LIGHT theme, on the Kosmos brand system.
 
-   Brighter and more mainstream than Matcha, on the same true-gray stone ramp
-   shifted lighter (white body and table cells under a single stone-100
-   chrome tier). The accent is blue wherever Matcha uses lime or violet:
-   blue links and primary buttons, navy-blue headings, blue selection.
+   The brand's conventional system (2026-07-16): the stone ladder shifted a
+   tier lighter than Matcha (stone-50 body under a single stone-100 chrome
+   tier), blue links and primary buttons, and Matcha's violet kept as the
+   emphasis accent (selection wash, accent icons) so links and emphasis
+   stay distinct hues. Add stays green; the wordmark and badge draw in a
+   deep blue a step below the links. Gold stays inside the mark artwork.
    Structurally it IS the light theme — it inherits every :root token and
    only repoints colours. Tokens defined as var(--other-token) in :root
-   (e.g. --color-nav, --label-gray, --task-highlight-bg) resolve per element
-   and follow automatically — only tokens that point at different palette
-   slots appear here. Dark structural rules are scoped to dark/cosmic and
-   never apply.
+   (e.g. --background-th, --label-gray, --task-highlight-bg,
+   --button-primary-background) resolve per element and follow automatically
+   — only tokens that point at different palette slots appear here. Dark
+   structural rules are scoped to dark/cosmic/kosmos-dark and never apply.
    ========================================================================== */
-[data-theme="sky"] {
+[data-theme="kosmos"] {
   color-scheme: light;
 
-  /* Typography & Text */
-  --color-darker: var(--blue-900);
+  /* Typography & Text — one step darker than Matcha's primary, per the
+     brand's stone-700 body text */
+  --color-primary: var(--stone-700);
 
-  /* Links — dark desaturated blue rather than Matcha's lime */
-  --link: var(--blue-900);
-  --link-hover: var(--blue-700);
+  /* Links — conventional blue, darkening on hover; primary buttons and
+     --add would follow --link, so both are pinned below */
+  --link: var(--blue-700);
+  --link-hover: var(--blue-800);
 
-  /* Backgrounds — Matcha's ladder shifted lighter still: white body and
-     table cells under one shared stone-100 tier for the chrome surfaces
-     (subnav / section / control / table headers). */
+  /* Brand mark — the wordmark/badge ink draws directly on the light
+     ground (no tile), so it needs weight: deep blue, a step below --link.
+     (No consumer until style/brand-marks lands; harmless standalone.) */
+  --mark-fg: var(--blue-800);
+
+  /* Backgrounds — the stone ladder, one tier lighter than Matcha: stone-50
+     body and table cells under one shared stone-100 tier for the chrome
+     surfaces (subnav / section / control / table headers) */
   --background-nav: var(--stone-200);
-  --background-body: var(--stone-25);
+  --background-body: var(--stone-50);
   --background-subnav: var(--stone-100);
   --background-subnav-contrast: var(--stone-200);
   --background-section: var(--stone-100);
   --background-th: var(--stone-100);
   --background-control: var(--stone-100);
-  --background-td: var(--stone-25);
-  --background-medium-light: var(--stone-50);
+  --background-td: var(--stone-50);
+  --background-medium-light: var(--stone-75);
   --background-light: var(--stone-25);
   --ai-frame: var(--stone-200);
   --ai-surface: var(--stone-25);
-  --ai-raised: var(--stone-50);
+  --ai-raised: var(--stone-75);
 
   /* Sidebar */
   --background-sidebar: var(--stone-100);
   --background-sidebar-hover: var(--stone-150);
   --background-sidebar-active: var(--stone-200);
 
-  /* Buttons — solid dark blue, a step below the link colour */
+  /* Buttons — solid blue with near-white label */
   --button-primary-background: var(--blue-700);
   --button-primary-color: var(--stone-25);
-  --btn-success-bg: var(--emerald-100);
 
   /* Forms & Inputs */
   --input-background: var(--stone-25);
 
-  /* Selection & Active States — blue wash instead of Matcha's violet */
-  --selected-background: var(--blue-100);
-  --selected-color: var(--blue-800);
-
-  /* Status & Feedback — emerald instead of lime */
-  --success: var(--emerald-700);
-  --true: var(--emerald-700);
-
-  /* Icons — the violet accent goes blue */
-  --icon-violet: var(--blue-700);
-  --icon-violet-muted: var(--blue-500);
+  /* Selection and the accent icon slots inherit Matcha's violet emphasis.
+     Add is pinned green (:root points it at --link, which is blue here). */
+  --add: var(--lime-700);
 }
 
 /* ==========================================================================
@@ -284,22 +287,22 @@
 /* Dark mode — bright "line" colour per highlight class, for contexts that show
    the colour as an accent (underline / rail / swatch) rather than a muddy dark
    fill. Harmless on the generic .hl-* fills, which ignore it. */
-:is([data-theme="dark"], [data-theme="cosmic"]) .hl-yellow { --hl-line: var(--yellow-400); }
-:is([data-theme="dark"], [data-theme="cosmic"]) .hl-red    { --hl-line: var(--red-400); }
-:is([data-theme="dark"], [data-theme="cosmic"]) .hl-orange { --hl-line: var(--orange-400); }
-:is([data-theme="dark"], [data-theme="cosmic"]) .hl-green  { --hl-line: var(--lime-400); }
-:is([data-theme="dark"], [data-theme="cosmic"]) .hl-blue   { --hl-line: var(--blue-400); }
-:is([data-theme="dark"], [data-theme="cosmic"]) :is(.hl-violet, .hl-purple) { --hl-line: var(--violet-400); }
-:is([data-theme="dark"], [data-theme="cosmic"]) :is(.hl-slate, .hl-gray) { --hl-line: var(--slate-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .hl-yellow { --hl-line: var(--yellow-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .hl-red    { --hl-line: var(--red-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .hl-orange { --hl-line: var(--orange-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .hl-green  { --hl-line: var(--lime-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .hl-blue   { --hl-line: var(--blue-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) :is(.hl-violet, .hl-purple) { --hl-line: var(--violet-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) :is(.hl-slate, .hl-gray) { --hl-line: var(--slate-400); }
 
 /* Dark mode — any table row flagged with a highlight colour shows it as a bright
    left rail on the first cell, never a full-row fill (dark fills go muddy and
    dominate). Covers facts/timeline, calendar & event rows, dash totals, etc. */
-:is([data-theme="dark"], [data-theme="cosmic"]) tr[class*="hl-"],
-:is([data-theme="dark"], [data-theme="cosmic"]) tr[class*="hl-"] > td {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) tr[class*="hl-"],
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) tr[class*="hl-"] > td {
   background: transparent !important;
 }
-:is([data-theme="dark"], [data-theme="cosmic"]) tr[class*="hl-"] > td:first-child {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) tr[class*="hl-"] > td:first-child {
   box-shadow: inset 3px 0 0 0 var(--hl-line);
 }
 
@@ -330,14 +333,14 @@
 }
 
 /* ==========================================================================
-   Dark theme — Hojicha-inspired warm palette
+   Dark theme — Gruvbox, a Hojicha-inspired warm palette
    Deepest base is neutral; surface lifts, text, and borders carry warmth
    (low-chroma tan/brown hues, 48–82°). Accent green shifts from cool lime
    to a softer yellow-green (~138°) for the Gruvbox-aqua feel.
    The bootstrap script in base.html resolves "auto" to either "light" or
    "dark" before paint, so CSS only handles the two concrete states.
    ========================================================================== */
-:is([data-theme="dark"], [data-theme="cosmic"]) {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) {
   /* Native form controls (radios, checkboxes) + scrollbars render dark */
   color-scheme: dark;
 
@@ -493,7 +496,7 @@
    Cosmic — the dark theme, on the Nord palette.
 
    Cosmic IS the dark theme structurally: it shares the entire token mapping
-   above and every co-located `:is([data-theme="dark"], [data-theme="cosmic"])`
+   above and every co-located `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"])`
    rule. The ONLY thing it changes is the underlying ramp — the --gb-* tokens
    are repointed from Gruvbox to Nord. Because the semantic tokens above resolve
    var(--gb-*) per element, swapping the ramp re-skins the whole UI to Nord.
@@ -525,4 +528,51 @@
   --gb-bright-orange: var(--nord12);
   --gb-bright-green:  var(--nord14);
   --gb-bright-purple: var(--nord15);
+}
+
+/* ==========================================================================
+   Kosmos dark — the brand's conventional night, sharing the dark structure.
+
+   Like cosmic, kosmos-dark IS the dark theme structurally: it shares the
+   entire token mapping above and every co-located
+   `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"])`
+   rule, and only repoints the --gb-* ramp — here to Tailwind stone's warm
+   dark end (--kosmos-stone-* in palette.css; the achromatic --stone-* ramp
+   has no dark steps). Links are conventional blue; the mark's amber is the
+   non-text accent (accent icons, the "recently changed" rail). Add stays
+   green. Gruvbox's warm status reds/oranges/greens are inherited unchanged.
+   ========================================================================== */
+[data-theme="kosmos-dark"] {
+  /* Stone night — stone-900 base, lifting through the interpolated steps */
+  --gb-dark:      var(--kosmos-stone-900);
+  --gb-dark-soft: var(--kosmos-stone-850);
+  --gb-dark1:     var(--kosmos-stone-800);
+  --gb-dark2:     var(--kosmos-stone-750);
+  --gb-dark3:     var(--kosmos-stone-700);
+  --gb-dark4:     var(--kosmos-stone-600);
+
+  /* Stone text ramp */
+  --gb-light:  var(--kosmos-stone-100);
+  --gb-light3: var(--kosmos-stone-200);
+  --gb-light4: var(--kosmos-stone-300);
+  --gb-gray:   var(--kosmos-stone-400);
+
+  /* Brand mark — the artwork keeps its own night and warmlight */
+  --mark-bg: #221d17;
+  --mark-fg: #ece4d6;
+
+  /* Links — conventional blue for dark grounds (was the Gruvbox aqua
+     family). Hover lightens a step; the faded step is the solid blue that
+     fills primary buttons under near-white text. */
+  --gb-bright-aqua: var(--blue-300);
+  --gb-aqua:        var(--blue-200);
+  --gb-faded-aqua:  var(--blue-700);
+
+  /* The sun — amber is the non-text accent on the night (accent icons,
+     the "recently changed" rail); selection text follows it. Add stays
+     green. */
+  --gb-bright-purple: var(--kosmos-amber);
+  --icon-violet-muted: var(--kosmos-gold);
+  --task-highlight-rail: var(--kosmos-amber);
+  --add: var(--gb-bright-green);
 }

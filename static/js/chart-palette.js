@@ -4,7 +4,7 @@
  * Generates muted, theme-aware series colours for Chart.js so charts blend with
  * the project's monochrome + two-accent aesthetic instead of reading as a loud
  * rainbow. Colours are built in OKLCH at low, constant chroma, anchored on each
- * theme's accent hue (violet / gruvbox aqua / Nord frost); a gentle hue arc plus
+ * theme's accent hue (violet / gruvbox aqua / Nord frost / Kosmos amber); a gentle hue arc plus
  * a lightness ramp keeps adjacent stacked segments distinguishable. Chart.js v4
  * accepts oklch(...) strings directly as fill / grid / tick colours.
  *
@@ -24,11 +24,10 @@ window.KosmosChartPalette = (function () {
       hue: 293, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
       grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)",
     },
-    sky: {
-      // Blue family anchored on the theme's blue accent (the --blue ramp,
-      // hue ~259), same muted-chroma treatment as light's violet. Axes stay
-      // true gray to match the stone surfaces.
-      hue: 259, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
+    kosmos: {
+      // Same muted violet family as Matcha (violet is the emphasis accent
+      // here too); neutral stone axes.
+      hue: 293, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
       grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)",
     },
     dark: {
@@ -38,6 +37,12 @@ window.KosmosChartPalette = (function () {
     cosmic: {
       hue: 210, hueSpan: 90, chroma: 0.055, lMin: 0.55, lMax: 0.8, otherL: 0.55,
       grid: "oklch(0.37 0.02 250)", tick: "oklch(0.78 0.03 250)",
+    },
+    "kosmos-dark": {
+      // Warm arc around the brand amber (hue ~77): sienna through gold to
+      // olive, low chroma so it reads as embers on the night, not neon.
+      hue: 77, hueSpan: 80, chroma: 0.06, lMin: 0.52, lMax: 0.76, otherL: 0.52,
+      grid: "#37322e", tick: "#a8a29e",
     },
   };
 
@@ -74,9 +79,10 @@ window.KosmosChartPalette = (function () {
   // it reads the same. Dark/cosmic keep a mid-grey visible on the dark surface.
   const NEUTRAL = {
     light: "oklch(88.5% 0 none)",
-    sky: "oklch(88.5% 0 none)",
+    kosmos: "oklch(88.5% 0 none)",
     dark: "oklch(0.60 0.006 70)",
     cosmic: "oklch(0.62 0.006 250)",
+    "kosmos-dark": "#57534e",
   };
 
   function neutral(theme) {
@@ -88,9 +94,10 @@ window.KosmosChartPalette = (function () {
   // 'Other' grey. Outlines donut slices and bar segments.
   const BORDER = {
     light: "oklch(83.5% 0 none)",
-    sky: "oklch(83.5% 0 none)",
+    kosmos: "oklch(83.5% 0 none)",
     dark: "oklch(0.482 0.018 61)",
     cosmic: "#4c566a",
+    "kosmos-dark": "#44403c",
   };
 
   function border(theme) {

@@ -32,8 +32,8 @@ i.importance-5 {
   color: var(--violet-600);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) tr.importance-5 > td.importance .button-link,
-:is([data-theme="dark"], [data-theme="cosmic"]) i.importance-5 {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) tr.importance-5 > td.importance .button-link,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) i.importance-5 {
   color: var(--violet-400);
 }
 
@@ -432,81 +432,81 @@ tr > td.importance.complete .button-link {
 /* Dark-mode overrides — flatpickr's CDN CSS hardcodes light-palette
    colors for day numbers, weekday labels, month nav, and faded-day
    states, none of which adapt to the dark canvas. */
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-calendar {
   background: var(--gb-dark1);
   border: 1px solid var(--gb-dark2);
   box-shadow: 0 3px 13px rgb(0 0 0 / 40%);
   color: var(--color-primary);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowTop::before,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowTop::after,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowBottom::before,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-calendar.arrowBottom::after {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-calendar.arrowTop::before,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-calendar.arrowTop::after,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-calendar.arrowBottom::before,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-calendar.arrowBottom::after {
   border-bottom-color: var(--gb-dark2);
   border-top-color: var(--gb-dark2);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-months,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-current-month,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-current-month input.cur-year,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-monthDropdown-months {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-months,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-current-month,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-current-month input.cur-year,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-monthDropdown-months {
   background: transparent;
   color: var(--color-primary);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
   background: var(--gb-dark1);
   color: var(--color-primary);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-weekday {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-weekday {
   color: var(--color-muted);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day {
   color: var(--color-primary);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day:hover {
   background: var(--gb-dark2);
   border-color: var(--gb-dark3);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.prevMonthDay,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.nextMonthDay {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day.prevMonthDay,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day.nextMonthDay {
   color: var(--color-muted-more);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.flatpickr-disabled,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.flatpickr-disabled:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day.flatpickr-disabled,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day.flatpickr-disabled:hover {
   color: var(--gb-dark4);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.today:not(.selected) {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day.today:not(.selected) {
   border-color: var(--gb-bright-purple);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-day.today:not(.selected):hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-day.today:not(.selected):hover {
   background: var(--gb-dark2);
   border-color: var(--gb-bright-purple);
   color: var(--color-primary);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-prev-month,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-next-month {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-prev-month,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-next-month {
   color: var(--color-primary);
   fill: var(--color-primary);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-prev-month:hover,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-next-month:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-prev-month:hover,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-next-month:hover {
   color: var(--gb-bright-aqua);
   fill: var(--gb-bright-aqua);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-prev-month svg,
-:is([data-theme="dark"], [data-theme="cosmic"]) .flatpickr-next-month svg {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-prev-month svg,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .flatpickr-next-month svg {
   fill: currentColor;
 }
 
@@ -631,22 +631,22 @@ tr > td.importance.complete .button-link {
   to   { box-shadow: inset 3px 0 0 0 transparent; }
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .past-due td.description {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .past-due td.description {
   box-shadow: inset 3px 0 0 0 var(--past-due-rail);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .past-due td.date .task-date-link {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .past-due td.date .task-date-link {
   text-decoration: underline;
   text-decoration-color: var(--past-due-rail);
   text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .task-new-highlight td {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .task-new-highlight td {
   animation: none;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .task-new-highlight td:first-child {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .task-new-highlight td:first-child {
   animation: task-rail-fade 2s ease-out;
 }
 
@@ -684,17 +684,17 @@ tr > td.importance.complete .button-link {
   /* Dark/cosmic past-due: recolour the card's left edge rail to the past-due
      rose and make it the ONLY past-due signal on mobile. Importance still
      reads from the priority icon. */
-  :is([data-theme="dark"], [data-theme="cosmic"]) .tasks-table tbody tr.past-due {
+  :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .tasks-table tbody tr.past-due {
     border-left-color: var(--past-due-rail);
   }
 
   /* Drop the desktop treatments here so the card-edge rail stands alone: the
      inner description rail and the rose underscore on the date. */
-  :is([data-theme="dark"], [data-theme="cosmic"]) .tasks-table tbody tr.past-due td.description {
+  :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .tasks-table tbody tr.past-due td.description {
     box-shadow: none;
   }
 
-  :is([data-theme="dark"], [data-theme="cosmic"]) .tasks-table tbody tr.past-due td.date .task-date-link {
+  :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .tasks-table tbody tr.past-due td.date .task-date-link {
     text-decoration: none;
   }
 
@@ -1057,10 +1057,10 @@ body.kanban-bulk-dragging .kanban-card.sortable-fallback {
 /* Dark mode — board. Match the table's dark importance hue on the priority
    icon, and signal past-due with a rose ring instead of a fill (the fill
    resolves to the card background in dark, so it would be invisible). */
-:is([data-theme="dark"], [data-theme="cosmic"]) .kanban-card.importance-5 .kanban-card-priority .button-link {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .kanban-card.importance-5 .kanban-card-priority .button-link {
   color: var(--violet-400);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .kanban-card.past-due {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .kanban-card.past-due {
   border-color: var(--past-due-rail);
 }

@@ -2,6 +2,11 @@
   var STORAGE_KEY = 'theme';
   var media = window.matchMedia('(prefers-color-scheme: dark)');
 
+  // Legacy: the retired "sky" theme maps to light (Matcha).
+  if (localStorage.getItem(STORAGE_KEY) === 'sky') {
+    localStorage.setItem(STORAGE_KEY, 'light');
+  }
+
   function resolve(setting) {
     if (setting === 'auto') {
       return media.matches ? 'dark' : 'light';
