@@ -23,27 +23,80 @@ def make_entry(user, matter, **kwargs):
 
 
 class TestFeeClaimReport:
-    def test_sections_math_and_order(
+    def test_sections_net_math_and_order(
         self, user, matter, category, category_2, unclaimed_category
     ):
-        # category (position 0): one billed + one comp entry.
+        from apps.activity.expenses.models import ExpenseEntry
+
+        # category (position 0): one billed + one comp entry (listed, not
+        # counted), plus a categorized expense.
         make_entry(user, matter, hours=2.0, rate=300, category=category)
         make_entry(user, matter, hours=1.0, rate=300, comp=True, category=category)
+        ExpenseEntry.objects.create(
+            user=user,
+            matter=matter,
+            date="2020-01-07",
+            description="Filing fee",
+            amount=50,
+            activity_category=category,
+        )
         # category_2 (position 1): one entry.
         make_entry(user, matter, hours=0.5, rate=200, category=category_2)
-        # Unclaimed and uncategorized entries stay out entirely.
+        # Unclaimed category entries stay out by default.
         make_entry(user, matter, hours=9.0, rate=999, category=unclaimed_category)
-        make_entry(user, matter, hours=8.0, rate=999)
 
         context = build_fee_claim_context(matter)
         sections = context["sections"]
 
-        assert [s["category"] for s in sections] == [category, category_2]
-        assert sections[0]["gross"] == 900
-        assert sections[0]["comp"] == 300
-        assert sections[0]["net"] == 600
-        assert sections[1]["net"] == 100
-        assert context["claim_total"] == 700
+        assert [s["title"] for s in sections] == [category.name, category_2.name]
+        # Comp entry is listed but excluded from the net.
+        assert len(sections[0]["entries"]) == 2
+        assert sections[0]["fees_net"] == 600
+        assert sections[0]["expenses_net"] == 50
+        assert sections[1]["fees_net"] == 100
+        assert context["has_unclaimed"] is False
+        assert context["grand_totals"] == {"fees": 700, "expenses": 50}
+
+    def test_uncategorized_follows_matter_switch(self, user, matter, category):
+        make_entry(user, matter, hours=1.0, rate=100, category=category)
+        make_entry(user, matter, hours=1.0, rate=50)  # uncategorized
+
+        # Default: uncategorized is claimed → gets a section.
+        context = build_fee_claim_context(matter)
+        assert [s["title"] for s in context["sections"]] == [
+            category.name,
+            "Uncategorized",
+        ]
+        assert context["sections"][1]["claimed"] is True
+
+        # Switched off: uncategorized is unclaimed → only with include_unclaimed.
+        matter.uncategorized_claimed = False
+        matter.save()
+        context = build_fee_claim_context(matter)
+        assert [s["title"] for s in context["sections"]] == [category.name]
+
+        context = build_fee_claim_context(matter, include_unclaimed=True)
+        assert [s["title"] for s in context["sections"]] == [
+            category.name,
+            "Uncategorized",
+        ]
+        assert context["sections"][1]["claimed"] is False
+        assert context["has_unclaimed"] is True
+        assert context["claimed_totals"] == {"fees": 100, "expenses": 0}
+        assert context["unclaimed_totals"] == {"fees": 50, "expenses": 0}
+        assert context["grand_totals"] == {"fees": 150, "expenses": 0}
+
+    def test_include_unclaimed_categories(
+        self, user, matter, category, unclaimed_category
+    ):
+        make_entry(user, matter, hours=1.0, rate=100, category=category)
+        make_entry(user, matter, hours=1.0, rate=200, category=unclaimed_category)
+
+        context = build_fee_claim_context(matter, include_unclaimed=True)
+        titles = [s["title"] for s in context["sections"]]
+        assert unclaimed_category.name in titles
+        assert context["claimed_totals"]["fees"] == 100
+        assert context["unclaimed_totals"]["fees"] == 200
 
     def test_foreign_matter_entries_excluded(
         self, user, matter, other_matter, category
@@ -54,19 +107,27 @@ class TestFeeClaimReport:
         context = build_fee_claim_context(matter)
         assert context["sections"] == []
 
-    def test_empty_claimed_categories_skipped(self, matter, category):
+    def test_empty_categories_skipped(self, matter, category):
         context = build_fee_claim_context(matter)
         assert context["sections"] == []
-        assert context["claim_total"] == 0
+        assert context["grand_totals"] == {"fees": 0, "expenses": 0}
 
-    def test_pdf_view(self, client, user, matter, category):
+    def test_pdf_view_with_options(self, client, user, matter, category):
         make_entry(user, matter, category=category)
         response = client.get(
-            reverse("matters:fee-claim-report", kwargs={"id": matter.id})
+            reverse("matters:fee-claim-report", kwargs={"id": matter.id}),
+            {"include_unclaimed": "on"},
         )
         assert response.status_code == 200
         assert response["Content-Type"] == "application/pdf"
         assert response.content[:4] == b"%PDF"
+
+    def test_options_modal_loads(self, client, matter):
+        response = client.get(
+            reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
+        )
+        assert response.status_code == 200
+        assert b"include_unclaimed" in response.content
 
 
 class TestMatterCategoryFilter:

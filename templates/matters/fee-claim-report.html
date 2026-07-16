@@ -33,59 +33,114 @@
       </div>
       {% for section in sections %}
         <div class="section">
-          <h3>{{ section.category.name }}</h3>
-          <table class="table">
-            <tr>
-              <th class="text-left hl-gray">Date</th>
-              <th class="text-left hl-gray">Description</th>
-              <th class="text-right hl-gray">Hours</th>
-              <th class="text-right hl-gray">Rate</th>
-              <th class="money hl-gray">Total</th>
-            </tr>
-            {% for entry in section.entries %}
+          <h3>
+            {{ section.title }}
+            {% if not section.claimed %}(not claimed){% endif %}
+          </h3>
+          {% if section.entries %}
+            <table class="table">
               <tr>
-                <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
-                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} ({{ entry.user.initials }})</td>
-                <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
-                <td class="text-right {% if entry.comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
-                <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
+                <th class="text-left hl-gray">Date</th>
+                <th class="text-left hl-gray">Description</th>
+                <th class="text-right hl-gray">Hours</th>
+                <th class="text-right hl-gray">Rate</th>
+                <th class="money hl-gray">Total</th>
               </tr>
-            {% endfor %}
-            {% if section.comp %}
+              {% for entry in section.entries %}
+                <tr>
+                  <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                  <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} ({{ entry.user.initials }})</td>
+                  <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
+                  <td class="text-right {% if entry.comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
+                  <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
+                </tr>
+              {% endfor %}
               <tr>
-                <td colspan="4">{{ section.category.name }}</td>
-                <td class="money">${{ section.gross|floatformat:2|intcomma }}</td>
+                <td colspan="4">{{ section.title }} Fees</td>
+                <td class="money">${{ section.fees_net|floatformat:2|intcomma }}</td>
               </tr>
+            </table>
+          {% endif %}
+          {% if section.expenses %}
+            <table class="table">
               <tr>
-                <td colspan="4">Less Comp Time</td>
-                <td class="money">- ${{ section.comp|floatformat:2|intcomma }}</td>
+                <th class="date hl-gray">Date</th>
+                <th class="hl-gray">Description</th>
+                <th class="money hl-gray">Amount</th>
               </tr>
-            {% endif %}
-            <tr>
-              <td colspan="4">Total {{ section.category.name }}</td>
-              <td class="money">${{ section.net|floatformat:2|intcomma }}</td>
-            </tr>
-          </table>
+              {% for expense in section.expenses %}
+                <tr>
+                  <td class="date{% if expense.comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
+                  <td class="{% if expense.comp %} comp{% endif %}">
+                    {% if expense.category %}{{ expense.category }} -{% endif %}
+                    {{ expense.description }}
+                  </td>
+                  <td class="money{% if expense.comp %} comp{% endif %}">${{ expense.amount|floatformat:2|intcomma }}</td>
+                </tr>
+              {% endfor %}
+              <tr>
+                <td colspan="2">{{ section.title }} Expenses</td>
+                <td class="money">${{ section.expenses_net|floatformat:2|intcomma }}</td>
+              </tr>
+            </table>
+          {% endif %}
         </div>
       {% empty %}
         <div class="section">
-          <p>No claimed fee categories with time entries on this matter.</p>
+          <p>No fee categories with entries on this matter.</p>
         </div>
       {% endfor %}
       {% if sections %}
         <div class="section">
-          <h3>Fee Claim Total</h3>
+          <h3>Summary</h3>
           <table class="table invoice-totals">
+            <tr>
+              <th class="text-left hl-gray">Category</th>
+              <th class="text-left hl-gray">Claimed</th>
+              <th class="money hl-gray">Fees</th>
+              <th class="money hl-gray">Expenses</th>
+            </tr>
             {% for section in sections %}
               <tr>
-                <td>{{ section.category.name }}</td>
-                <td class="money">${{ section.net|floatformat:2|intcomma }}</td>
+                <td>{{ section.title }}</td>
+                <td>
+                  {% if section.claimed %}
+                    Yes
+                  {% else %}
+                    No
+                  {% endif %}
+                </td>
+                <td class="money">${{ section.fees_net|floatformat:2|intcomma }}</td>
+                <td class="money">${{ section.expenses_net|floatformat:2|intcomma }}</td>
               </tr>
             {% endfor %}
-            <tr>
-              <td class="total hl-yellow">Fee Claim Total</td>
-              <td class="money total hl-yellow">${{ claim_total|floatformat:2|intcomma }}</td>
-            </tr>
+            {% if has_unclaimed %}
+              <tr>
+                <td class="total hl-yellow">Total Claimed</td>
+                <td class="hl-yellow"></td>
+                <td class="money total hl-yellow">${{ claimed_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total hl-yellow">${{ claimed_totals.expenses|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td>Total Unclaimed</td>
+                <td></td>
+                <td class="money">${{ unclaimed_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money">${{ unclaimed_totals.expenses|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td class="total">Total</td>
+                <td></td>
+                <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="total hl-yellow">Total</td>
+                <td class="hl-yellow"></td>
+                <td class="money total hl-yellow">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total hl-yellow">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endif %}
           </table>
         </div>
       {% endif %}

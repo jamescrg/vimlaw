@@ -127,3 +127,15 @@ def categories_reorder(request, id):
         )
 
     return JsonResponse({"success": True})
+
+
+@login_required
+@require_POST
+def toggle_claimed(request, category_id):
+    """Flip a category's claimed flag from the categories table. Always safe:
+    entries live in exactly one category, so no double-counting can result."""
+    category = get_object_or_404(ActivityCategory, pk=category_id)
+    category.claimed = not category.claimed
+    category.save()
+
+    return HttpResponse(status=204, headers={"HX-Trigger": TRIGGER})

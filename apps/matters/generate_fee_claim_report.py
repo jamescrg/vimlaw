@@ -5,71 +5,99 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.template.loader import render_to_string
 from weasyprint import HTML
 
-from apps.activity.models import ActivityCategory
+from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
 from apps.matters.models import Matter
 from apps.settings.models import Firm
 
 
-def build_fee_claim_context(matter: Matter) -> dict:
+def build_fee_claim_context(matter: Matter, include_unclaimed: bool = False) -> dict:
     """
-    Assemble the fee claim data for a matter: one section per claimed
-    category in position order, each with its time entries and
-    gross / comp / net subtotals, plus the claim grand total. Each entry
-    has exactly one category, so no entry can appear in two sections.
-    """
+    Assemble the fee claim data for a matter, mirroring the Categories view:
+    one section per category in drag order, each listing its time entries and
+    expenses, plus a summary table and claimed/unclaimed/grand totals.
 
-    categories = ActivityCategory.objects.filter(matter=matter, claimed=True).order_by(
-        "position", "name"
-    )
+    Comp entries are listed (struck through) but every total is NET — the
+    claim operates on the restriction that comped work can't be claimed.
+    Unclaimed categories appear only when include_unclaimed is set; the
+    uncategorized bucket counts as claimed or unclaimed per the matter's
+    switch. Each entry has exactly one category, so nothing double-counts.
+    """
 
     sections = []
-    claim_gross = 0
-    claim_comp = 0
 
-    for category in categories:
-        # Double filter (matter AND category) so a category left behind on
-        # an entry that was later moved to another matter can never leak in.
-        entries = TimeEntry.objects.filter(matter=matter, category=category).order_by(
-            "date", "id"
-        )
-        if not entries:
-            continue
-
-        gross = sum(entry.fee for entry in entries)
-        comp = sum(entry.fee for entry in entries if entry.comp)
+    def add_section(title, claimed, time_entries, expenses):
+        if not time_entries and not expenses:
+            return
         sections.append(
             {
-                "category": category,
-                "entries": entries,
-                "gross": gross,
-                "comp": comp,
-                "net": gross - comp,
+                "title": title,
+                "claimed": claimed,
+                "entries": time_entries,
+                "expenses": expenses,
+                "fees_net": sum(e.fee for e in time_entries if not e.comp),
+                "expenses_net": sum(x.amount for x in expenses if not x.comp),
             }
         )
-        claim_gross += gross
-        claim_comp += comp
+
+    for category in matter.activity_categories.all():  # position order
+        if not category.claimed and not include_unclaimed:
+            continue
+        # Matter guard: a category left on an entry that later moved to
+        # another matter can never leak into this matter's claim.
+        add_section(
+            category.name,
+            category.claimed,
+            list(category.time_entries.filter(matter=matter).order_by("date", "id")),
+            list(category.expense_entries.filter(matter=matter).order_by("date", "id")),
+        )
+
+    if matter.uncategorized_claimed or include_unclaimed:
+        add_section(
+            "Uncategorized",
+            matter.uncategorized_claimed,
+            list(
+                TimeEntry.objects.filter(matter=matter, category__isnull=True).order_by(
+                    "date", "id"
+                )
+            ),
+            list(
+                ExpenseEntry.objects.filter(
+                    matter=matter, activity_category__isnull=True
+                ).order_by("date", "id")
+            ),
+        )
+
+    def rollup(rows):
+        return {
+            "fees": sum(s["fees_net"] for s in rows),
+            "expenses": sum(s["expenses_net"] for s in rows),
+        }
+
+    claimed_sections = [s for s in sections if s["claimed"]]
+    unclaimed_sections = [s for s in sections if not s["claimed"]]
 
     return {
         "matter": matter,
         "sections": sections,
-        "claim_gross": claim_gross,
-        "claim_comp": claim_comp,
-        "claim_total": claim_gross - claim_comp,
+        "claimed_totals": rollup(claimed_sections),
+        "unclaimed_totals": rollup(unclaimed_sections),
+        "grand_totals": rollup(sections),
+        "has_unclaimed": bool(unclaimed_sections),
         "current_date": date.today(),
         "company": Firm.objects.first(),
     }
 
 
 def generate_fee_claim_report(
-    matter: Matter, request: WSGIRequest
+    matter: Matter, request: WSGIRequest, include_unclaimed: bool = False
 ) -> NamedTemporaryFile:
     """
     Generate the fee claim report PDF — the exhibit to an attorney affidavit
     on a fee motion.
     """
 
-    context = build_fee_claim_context(matter)
+    context = build_fee_claim_context(matter, include_unclaimed)
 
     html_string = render_to_string("matters/fee-claim-report.html", context)
     base_url = request.build_absolute_uri("/").rstrip("/")

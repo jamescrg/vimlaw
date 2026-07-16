@@ -10,7 +10,8 @@ Report section order). Included by matters/activity/list.html.
       <tr>
         <th>Category</th>
         <th class="status-col center-data">Claimed</th>
-        <th class="numeric">Time</th>
+        <th class="center-data entries-col">Entries</th>
+        <th class="numeric">Fees</th>
         <th class="numeric">Comp</th>
         <th class="numeric">Net</th>
         <th class="numeric">Expenses</th>
@@ -46,10 +47,23 @@ Report section order). Included by matters/activity/list.html.
             </div>
           </td>
           <td class="status-col center-data">
-            {% if row.category.claimed %}
-              <i class="icon-circle-check true-bool"
-                 title="A fee category on this matter's Fee Claim Report"></i>
-            {% endif %}
+            <button class="btn-check"
+                    hx-post="{% url 'matters:categories-toggle-claimed' row.category.id %}"
+                    hx-swap="none"
+                    title="{% if row.category.claimed %}Claimed — a section of the Fee Claim Report. Click to unclaim.{% else %}Not claimed. Click to include in the Fee Claim Report.{% endif %}">
+              {% if row.category.claimed %}
+                <i class="icon-circle-check true-bool"></i>
+              {% else %}
+                <i class="icon-circle"></i>
+              {% endif %}
+            </button>
+          </td>
+          <td class="center-data entries-col">
+            <a href="#"
+               title="View these entries in the Time list"
+               hx-post="{% url 'matters:activity-filter-category' matter.id %}"
+               hx-vals='{"category": "{{ row.category.id }}", "view": "time"}'
+               hx-swap="none">{{ row.entry_count }}</a>
           </td>
           <td class="numeric">${{ row.time_gross|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ row.time_comp|floatformat:2|intcomma }}</td>
@@ -58,7 +72,7 @@ Report section order). Included by matters/activity/list.html.
         </tr>
       {% empty %}
         <tr>
-          <td colspan="6" class="empty-message">
+          <td colspan="7" class="empty-message">
             No categories for this matter yet. Claimed categories become the sections of the Fee Claim Report &mdash; drag rows to set their order.
           </td>
         </tr>
@@ -68,21 +82,51 @@ Report section order). Included by matters/activity/list.html.
       <tfoot>
         <tr class="categories-uncategorized">
           <td>Uncategorized</td>
-          <td class="status-col"></td>
+          <td class="status-col center-data">
+            <button class="btn-check"
+                    hx-post="{% url 'matters:activity-uncategorized-claimed' matter.id %}"
+                    hx-swap="none"
+                    title="{% if uncategorized_claimed %}Uncategorized time counts as claimed in the totals. Click to count it as unclaimed.{% else %}Uncategorized time counts as unclaimed in the totals. Click to count it as claimed.{% endif %}">
+              {% if uncategorized_claimed %}
+                <i class="icon-circle-check true-bool"></i>
+              {% else %}
+                <i class="icon-circle"></i>
+              {% endif %}
+            </button>
+          </td>
+          <td class="center-data entries-col">
+            <a href="#"
+               title="View uncategorized entries in the Time list"
+               hx-post="{% url 'matters:activity-filter-category' matter.id %}"
+               hx-vals='{"category": "none", "view": "time"}'
+               hx-swap="none">{{ uncategorized.entry_count }}</a>
+          </td>
           <td class="numeric">${{ uncategorized.time_gross|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ uncategorized.time_comp|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ uncategorized.time_net|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ uncategorized.expenses|floatformat:2|intcomma }}</td>
         </tr>
-        <tr class="total">
-          <td>Total</td>
-          <td class="status-col"></td>
-          <td class="numeric">${{ category_totals.time_gross|floatformat:2|intcomma }}</td>
-          <td class="numeric">${{ category_totals.time_comp|floatformat:2|intcomma }}</td>
-          <td class="numeric">${{ category_totals.time_net|floatformat:2|intcomma }}</td>
-          <td class="numeric">${{ category_totals.expenses|floatformat:2|intcomma }}</td>
-        </tr>
       </tfoot>
     {% endif %}
   </table>
 </div>
+{% if category_rows %}
+  <div class="flex-start-space">
+    <div class="totals-table categories-totals">
+      <table>
+        <tr>
+          <td>Claimed Time</td>
+          <td class="numeric">${{ category_totals.claimed_net|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>Unclaimed Time</td>
+          <td class="numeric">${{ category_totals.unclaimed_net|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr class="total">
+          <th>Total Time</th>
+          <td class="numeric">${{ category_totals.time_net|floatformat:2|intcomma }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+{% endif %}

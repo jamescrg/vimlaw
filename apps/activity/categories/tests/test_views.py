@@ -244,3 +244,76 @@ class TestBulkSetCategory:
         )
         time_entry.refresh_from_db()
         assert time_entry.category is None
+
+
+class TestClaimedToggles:
+    def test_toggle_category_claimed(self, client, category):
+        url = reverse(
+            "matters:categories-toggle-claimed",
+            kwargs={"category_id": category.id},
+        )
+        response = client.post(url)
+        assert response.status_code == 204
+        category.refresh_from_db()
+        assert category.claimed is False  # fixture starts claimed
+
+        client.post(url)
+        category.refresh_from_db()
+        assert category.claimed is True
+
+    def test_uncategorized_claimed_stored_on_matter(self, client, matter):
+        assert matter.uncategorized_claimed is True  # model default
+
+        url = reverse(
+            "matters:activity-uncategorized-claimed", kwargs={"id": matter.id}
+        )
+        response = client.post(url)
+        assert response.status_code == 204
+        matter.refresh_from_db()
+        assert matter.uncategorized_claimed is False
+
+        client.post(url)
+        matter.refresh_from_db()
+        assert matter.uncategorized_claimed is True
+
+
+class TestCategoryTotalsRollup:
+    def test_claimed_unclaimed_totals(
+        self, user, matter, category, unclaimed_category, time_entry
+    ):
+        from apps.activity.time.models import TimeEntry
+        from apps.matters.activity.views import get_category_totals
+
+        time_entry.category = category  # claimed: 0.2h × $300 = $60
+        time_entry.save()
+        TimeEntry.objects.create(
+            user=user,
+            matter=matter,
+            date="2020-01-08",
+            actions="Unclaimed work",
+            hours=1.0,
+            rate=200,
+            category=unclaimed_category,  # $200
+        )
+        TimeEntry.objects.create(
+            user=user,
+            matter=matter,
+            date="2020-01-09",
+            actions="Uncoded work",
+            hours=1.0,
+            rate=100,  # $100 uncategorized
+        )
+
+        totals = get_category_totals(matter, uncategorized_claimed=True)[
+            "category_totals"
+        ]
+        assert totals["claimed_net"] == 160
+        assert totals["unclaimed_net"] == 200
+        assert totals["time_net"] == 360
+
+        totals = get_category_totals(matter, uncategorized_claimed=False)[
+            "category_totals"
+        ]
+        assert totals["claimed_net"] == 60
+        assert totals["unclaimed_net"] == 300
+        assert totals["time_net"] == 360

@@ -699,16 +699,40 @@ Matter Overview tab
   margin-left: 0.25rem;
 }
 
-/* The categories sub-view table: category + claimed + four .numeric money
-   columns. A tighter, centered Claimed column; the category column takes
-   the slack. */
+/* The categories sub-view table: fixed-width claimed + money columns; the
+   category column is the sole unsized one, so it absorbs the slack. Numeric
+   width follows the house per-table convention (cf. .wip-table .numeric). */
 .categories-table .status-col {
   text-align: center;
-  width: 5rem;
+  width: 6.5rem;
+}
+
+.categories-table th.numeric,
+.categories-table td.numeric {
+  width: 9rem;
+}
+
+/* Entry counts are short — a tight, centered column. */
+.categories-table th.entries-col,
+.categories-table td.entries-col {
+  text-align: center;
+  width: 5.5rem;
 }
 
 /* Footer rows (uncategorized + total) — data, not draggable category rows.
    A heavier rule separates them from the sortable category list. */
 .categories-uncategorized td {
   border-top: 2px solid var(--border-medium);
+}
+
+/* Fee claim options modal: checkbox + label as one inline row, with the
+   explanatory note spaced off it. */
+.fee-claim-option {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+#fee-claim-form .text-muted {
+  margin-top: 1rem;
 }

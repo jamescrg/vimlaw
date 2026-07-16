@@ -1,0 +1,45 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Fee Claim Report</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      {% comment %}
+      Plain GET form (not HTMX): the endpoint responds with a PDF attachment,
+      which the browser downloads while the page stays put.
+      {% endcomment %}
+      <form id="fee-claim-form"
+            method="get"
+            action="{% url 'matters:fee-claim-report' matter.id %}"
+            class="form-compact">
+        <label class="fee-claim-option">
+          <input type="checkbox" name="include_unclaimed">
+          Include unclaimed categories as separate sections
+        </label>
+        <p class="text-muted">
+          Sections follow the Categories view: each category lists its time
+          entries and expenses. Comp entries are shown struck through, and all
+          totals are net &mdash; comped work is never claimed. Uncategorized
+          entries count as
+          {% if matter.uncategorized_claimed %}
+            claimed
+          {% else %}
+            unclaimed
+          {% endif %}
+          (set in the Categories view).
+        </p>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit" form="fee-claim-form" class="btn btn-success">Download PDF</button>
+    </div>
+  </div>
+</div>

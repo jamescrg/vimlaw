@@ -48,11 +48,12 @@ def _apply_category_filter(queryset, value, field="category"):
     return queryset
 
 
-def get_category_totals(matter):
+def get_category_totals(matter, uncategorized_claimed=True):
     """Per-category time (gross/comp/net fees) and net expense totals for the
-    categories sub-view, plus an uncategorized bucket. Summed in Python like
-    the fee claim report — per-matter volumes are small and two reverse-FK
-    aggregates in one queryset would multiply join rows."""
+    categories sub-view, plus an uncategorized bucket and claimed/unclaimed/
+    total rollups (uncategorized counts per the user's preference). Summed in
+    Python like the fee claim report — per-matter volumes are small and two
+    reverse-FK aggregates in one queryset would multiply join rows."""
 
     def time_totals(entries):
         gross = sum(e.fee for e in entries)
@@ -68,10 +69,12 @@ def get_category_totals(matter):
     for category in matter.activity_categories.all():
         # Matter guard mirrors the fee claim report: a category left on an
         # entry that moved matters doesn't count here.
-        gross, comp, net = time_totals(category.time_entries.filter(matter=matter))
+        entries = list(category.time_entries.filter(matter=matter))
+        gross, comp, net = time_totals(entries)
         rows.append(
             {
                 "category": category,
+                "entry_count": len(entries),
                 "time_gross": gross,
                 "time_comp": comp,
                 "time_net": net,
@@ -81,10 +84,10 @@ def get_category_totals(matter):
             }
         )
 
-    gross, comp, net = time_totals(
-        TimeEntry.objects.filter(matter=matter, category__isnull=True)
-    )
+    entries = list(TimeEntry.objects.filter(matter=matter, category__isnull=True))
+    gross, comp, net = time_totals(entries)
     uncategorized = {
+        "entry_count": len(entries),
         "time_gross": gross,
         "time_comp": comp,
         "time_net": net,
@@ -93,16 +96,22 @@ def get_category_totals(matter):
         ),
     }
 
-    all_rows = rows + [uncategorized]
-    totals = {
-        key: sum(row[key] for row in all_rows)
-        for key in ("time_gross", "time_comp", "time_net", "expenses")
-    }
+    claimed_net = sum(r["time_net"] for r in rows if r["category"].claimed)
+    unclaimed_net = sum(r["time_net"] for r in rows if not r["category"].claimed)
+    if uncategorized_claimed:
+        claimed_net += uncategorized["time_net"]
+    else:
+        unclaimed_net += uncategorized["time_net"]
 
     return {
         "category_rows": rows,
         "uncategorized": uncategorized,
-        "category_totals": totals,
+        "uncategorized_claimed": uncategorized_claimed,
+        "category_totals": {
+            "claimed_net": claimed_net,
+            "unclaimed_net": unclaimed_net,
+            "time_net": claimed_net + unclaimed_net,
+        },
     }
 
 
@@ -129,7 +138,7 @@ def get_matter_activity_data(request, matter):
         return {
             "matter": matter,
             "activity_view": "categories",
-            **get_category_totals(matter),
+            **get_category_totals(matter, matter.uncategorized_claimed),
             **filter_context,
         }
 
@@ -222,10 +231,29 @@ def activity_list(request, id):
 @login_required
 @matter_access_required
 @require_POST
+def activity_toggle_uncategorized_claimed(request, id):
+    """Flip whether uncategorized time counts as claimed in the totals.
+    Stored on the matter so the whole team sees the same rollup."""
+    matter = get_object_or_404(Matter, pk=id)
+    matter.uncategorized_claimed = not matter.uncategorized_claimed
+    matter.save()
+    return selection_response(MATTER_ACTIVITY_TRIGGER)
+
+
+@login_required
+@matter_access_required
+@require_POST
 def activity_filter_category(request, id):
-    """Filter the tab to one category ("" = all, "none" = uncategorized)."""
+    """Filter the tab to one category ("" = all, "none" = uncategorized).
+    Optionally jumps to a sub-view at the same time — the categories table's
+    entry counts link to the filtered Time list this way."""
     get_object_or_404(Matter, pk=id)
     request.session[f"matter_activity_category_{id}"] = request.POST.get("category", "")
+
+    view = request.POST.get("view", "")
+    if view in ("time", "expenses"):
+        request.session["matter_activity_view"] = view
+
     return selection_response(MATTER_ACTIVITY_TRIGGER)
 
 
@@ -264,9 +292,18 @@ def activity_report(request, id):
 
 @login_required
 @matter_access_required
+def fee_claim_report_modal(request, id):
+    """Options modal shown before generating the fee claim report."""
+    matter = get_object_or_404(Matter, pk=id)
+    return render(request, "matters/fee-claim-modal.html", {"matter": matter})
+
+
+@login_required
+@matter_access_required
 def fee_claim_report(request, id):
     matter = get_object_or_404(Matter, pk=id)
-    file = generate_fee_claim_report(matter, request)
+    include_unclaimed = request.GET.get("include_unclaimed") == "on"
+    file = generate_fee_claim_report(matter, request, include_unclaimed)
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 

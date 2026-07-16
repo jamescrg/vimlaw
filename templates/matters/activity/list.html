@@ -171,7 +171,9 @@
   <a href="{% url 'activity:time-filter-matter' matter.id %}">
     <i class="icon-file-symlink"></i> View in Activity Tab</a>
   {% if has_claimed_categories %}
-    <a href="{% url 'matters:fee-claim-report' matter.id %}"><i class="icon-scale"></i> Fee Claim Report</a>
+    <a href="#"
+       hx-get="{% url 'matters:fee-claim-report-modal' matter.id %}"
+       hx-target="#htmx-modal-container"><i class="icon-scale"></i> Fee Claim Report</a>
   {% endif %}
 </div>
 </div>

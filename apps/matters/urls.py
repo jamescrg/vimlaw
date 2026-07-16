@@ -251,6 +251,11 @@ urlpatterns = [
         activity.activity_filter_category,
         name="activity-filter-category",
     ),
+    path(
+        "matters/<int:id>/activity/uncategorized-claimed",
+        activity.activity_toggle_uncategorized_claimed,
+        name="activity-uncategorized-claimed",
+    ),
     # Activity selection and bulk actions
     path(
         "matters/<int:matter_id>/activity/<int:entry_id>/toggle-select",
@@ -303,6 +308,11 @@ urlpatterns = [
         "matters/categories/<int:category_id>/delete",
         categories.delete_category,
         name="categories-delete",
+    ),
+    path(
+        "matters/categories/<int:category_id>/toggle-claimed",
+        categories.toggle_claimed,
+        name="categories-toggle-claimed",
     ),
     # events
     path("matters/<int:id>/events/", events.events_index, name="events-index"),
@@ -559,5 +569,10 @@ urlpatterns = [
         "matters/<int:id>/fee-claim-report/",
         activity.fee_claim_report,
         name="fee-claim-report",
+    ),
+    path(
+        "matters/<int:id>/fee-claim-report/options/",
+        activity.fee_claim_report_modal,
+        name="fee-claim-report-modal",
     ),
 ]
