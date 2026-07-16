@@ -684,24 +684,42 @@ Matter Overview tab
 }
 
 /* ==========================================================================
- Activity category coding (badge + picker dropdown on entry rows)
+ Activity category coding (Category column on entry rows)
 ========================================================================== */
 
-/* Uncoded rows show a ghost tag (buttons.css .btn-ghost: invisible until
-   the row is hovered) that opens the category picker. Keep the dropdown
-   usable while open even if the pointer drifts off the row. */
-.category-badge-empty[aria-expanded="true"] {
-  opacity: 1;
+/* Categories behave like folders, so the column shows the plain name with a
+   picker dropdown; uncoded rows get a muted Categorize button instead. */
+.matter-activity .date {
+  width: 7.5rem;
 }
 
-.category-badge {
-  display: inline-block;
-  margin-left: 0.25rem;
+.matter-activity .user {
+  width: 4rem;
 }
 
-/* The categories sub-view table: fixed-width claimed + money columns; the
-   category column is the sole unsized one, so it absorbs the slack. Numeric
-   width follows the house per-table convention (cf. .wip-table .numeric). */
+.matter-activity th.category,
+.matter-activity td.category {
+  width: 15rem;
+}
+
+.matter-activity th.amount,
+.matter-activity td.amount {
+  width: 10rem;
+}
+
+.category-cell-empty,
+.category-cell-empty:hover {
+  color: var(--color-muted-more);
+}
+
+/* The categories sub-view table: fixed-width claimed + money columns; under
+   table-layout: fixed the category column is the sole auto column, so it
+   absorbs the slack while the sized columns render at exactly their widths —
+   which is what lets the totals grid below line up with them. */
+.categories-table {
+  table-layout: fixed;
+}
+
 .categories-table .status-col {
   text-align: center;
   width: 6.5rem;
@@ -709,7 +727,7 @@ Matter Overview tab
 
 .categories-table th.numeric,
 .categories-table td.numeric {
-  width: 9rem;
+  width: 10rem;
 }
 
 /* Entry counts are short — a tight, centered column. */
@@ -735,4 +753,36 @@ Matter Overview tab
 
 #fee-claim-form .text-muted {
   margin-top: 1rem;
+}
+
+/* Category column header carries the add button, tucked to the right. */
+.category-header-cell {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Long category names ellipse instead of stretching the Category column
+   (the picker button is the cell's content, so the cap lives on it:
+   15rem column minus the 1rem cell padding each side). */
+.matter-activity td.category .button-link {
+  display: inline-block;
+  max-width: 13rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+/* Same for the categories table's name cell — the flex row needs min-width
+   0 before its child can shrink enough to truncate. */
+.categories-table .name-cell-content .dropdown {
+  min-width: 0;
+}
+
+.categories-table .name-cell-content .button-link {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

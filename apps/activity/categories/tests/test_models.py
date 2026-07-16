@@ -10,9 +10,6 @@ class TestActivityCategory:
     def test_str(self, category):
         assert str(category) == "General"
 
-    def test_default_color(self, matter):
-        assert ActivityCategory.objects.create(name="X", matter=matter).color == "gray"
-
     def test_unique_name_per_matter(self, matter, category):
         with pytest.raises(IntegrityError):
             with transaction.atomic():

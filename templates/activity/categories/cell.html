@@ -1,23 +1,23 @@
 {% comment %}
-Per-row category picker: the current category badge (or a muted Categorize
-affordance) opens a dropdown of the entry's matter's categories plus None.
+The Category column cell: the entry's category name with a dropdown to
+switch it (folders, not labels — one category per entry), mirroring the
+tasks table's user dropdown. Uncategorized entries show a muted Categorize
+button that opens the same picker.
 Context: object, object_type ("time"/"expense"), category (current or None).
 {% endcomment %}
-<span class="category-badge dropdown" x-data="dropdown()">
-  {% if category %}
-    <a href="#"
-       class="app-badge label-{{ category.color }}"
-       x-ref="button"
-       @click.prevent="toggle()"
-       :aria-expanded="open"><i class="icon-tag"></i>{{ category.name }}</a>
-  {% else %}
-    <a href="#"
-       class="category-badge-empty btn-ghost"
-       title="Set category"
-       x-ref="button"
-       @click.prevent="toggle()"
-       :aria-expanded="open"><i class="icon-tag"></i></a>
-  {% endif %}
+<div class="dropdown" x-data="dropdown()">
+  <button class="button-link{% if not category %} category-cell-empty{% endif %}"
+          type="button"
+          {% if not category %}title="Set category"{% endif %}
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    {% if category %}
+      {{ category.name }}
+    {% else %}
+      <i class="icon-book-plus"></i>
+    {% endif %}
+  </button>
   <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
     {% for choice in object.matter.activity_categories.all %}
       <li>
@@ -25,9 +25,7 @@ Context: object, object_type ("time"/"expense"), category (current or None).
            href="#"
            hx-post="{% url 'activity:set-category' object_type object.id %}"
            hx-vals='{"category_id": "{{ choice.id }}"}'
-           hx-swap="none">
-          <span class="app-badge label-{{ choice.color }}">{{ choice.name }}</span>
-        </a>
+           hx-swap="none">{{ choice.name }}</a>
       </li>
     {% empty %}
       <li>
@@ -44,4 +42,4 @@ Context: object, object_type ("time"/"expense"), category (current or None).
       </li>
     {% endif %}
   </ul>
-</span>
+</div>

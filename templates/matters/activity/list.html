@@ -73,9 +73,7 @@
                      href="#"
                      hx-post="{% url 'matters:activity-bulk-set-category' matter.id %}"
                      hx-vals='{"category_id": "{{ category.id }}"}'
-                     hx-swap="none">
-                    <span class="app-badge label-{{ category.color }}">{{ category.name }}</span>
-                  </a>
+                     hx-swap="none">{{ category.name }}</a>
                 </li>
               {% empty %}
                 <li>
@@ -108,15 +106,7 @@
                     hx-post="{% url 'matters:activity-view' matter.id 'categories' %}"
                     hx-swap="none">Categories</button>
           </div>
-          {% if activity_view == 'categories' %}
-            <button type="button"
-                    class="btn-icon"
-                    hx-get="{% url 'matters:categories-add' matter.id %}"
-                    hx-target="#htmx-modal-container"
-                    title="Add category">
-              <i class="icon-plus"></i>
-            </button>
-          {% else %}
+          {% if activity_view != 'categories' %}
             <div class="dropdown" x-data="dropdown()">
               <button type="button"
                       class="btn-icon {% if category_filter %}toggle-active{% endif %}"
@@ -148,9 +138,7 @@
                    href="#"
                    hx-post="{% url 'matters:activity-filter-category' matter.id %}"
                    hx-vals='{"category": "{{ category.id }}"}'
-                   hx-swap="none">
-                  <span class="app-badge label-{{ category.color }}">{{ category.name }}</span>
-                </a>
+                   hx-swap="none">{{ category.name }}</a>
               </li>
             {% endfor %}
             <li>
@@ -218,6 +206,7 @@
             </th>
             <th class="user">User</th>
             <th class="actions">Actions</th>
+            <th class="category">Category</th>
             <th class="numeric hours">Hours</th>
             <th class="numeric rate">Rate</th>
             <th class="numeric fee">Fee</th>
@@ -228,7 +217,7 @@
             <tr id="time-{{ entry.id }}">{% include "matters/activity/table-row.html" %}</tr>
           {% empty %}
             <tr>
-              <td colspan="7" class="empty-message">No time entries found for this matter.</td>
+              <td colspan="8" class="empty-message">No time entries found for this matter.</td>
             </tr>
           {% endfor %}
         </tbody>

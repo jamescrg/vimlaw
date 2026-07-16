@@ -60,7 +60,7 @@ class TestAddCategory:
     def test_add_appends_to_sequence(self, client, matter, category):
         response = client.post(
             reverse("matters:categories-add", kwargs={"id": matter.id}),
-            {"name": "Discovery", "color": "blue", "claimed": "True"},
+            {"name": "Discovery", "claimed": "True"},
         )
         assert response.status_code == 204
         created = ActivityCategory.objects.get(name="Discovery")
@@ -71,7 +71,7 @@ class TestAddCategory:
     def test_duplicate_name_rejected(self, client, matter, category):
         response = client.post(
             reverse("matters:categories-add", kwargs={"id": matter.id}),
-            {"name": "General", "color": "blue", "claimed": "False"},
+            {"name": "General", "claimed": "False"},
         )
         assert response.status_code == 200  # re-rendered form with errors
         assert ActivityCategory.objects.filter(name="General").count() == 1
@@ -87,12 +87,11 @@ class TestEditCategory:
     def test_edit_post(self, client, category):
         response = client.post(
             reverse("matters:categories-edit", kwargs={"category_id": category.id}),
-            {"name": "Updated", "color": "purple", "claimed": "False"},
+            {"name": "Updated", "claimed": "False"},
         )
         assert response.status_code == 204
         category.refresh_from_db()
         assert category.name == "Updated"
-        assert category.color == "purple"
         assert category.claimed is False
 
 
@@ -304,16 +303,47 @@ class TestCategoryTotalsRollup:
             rate=100,  # $100 uncategorized
         )
 
+        from apps.activity.expenses.models import ExpenseEntry
+
+        ExpenseEntry.objects.create(
+            user=user,
+            matter=matter,
+            date="2020-01-10",
+            description="Claimed expense",
+            amount=40,
+            activity_category=category,
+        )
+        ExpenseEntry.objects.create(
+            user=user,
+            matter=matter,
+            date="2020-01-11",
+            description="Uncoded expense",
+            amount=10,
+        )
+
         totals = get_category_totals(matter, uncategorized_claimed=True)[
             "category_totals"
         ]
-        assert totals["claimed_net"] == 160
-        assert totals["unclaimed_net"] == 200
-        assert totals["time_net"] == 360
+        assert totals["claimed"] == {
+            "time_gross": 160,
+            "time_comp": 0,
+            "time_net": 160,
+            "expenses": 50,
+            "total": 210,
+        }
+        assert totals["unclaimed"]["time_net"] == 200
+        assert totals["unclaimed"]["total"] == 200
+        assert totals["all"] == {
+            "time_gross": 360,
+            "time_comp": 0,
+            "time_net": 360,
+            "expenses": 50,
+            "total": 410,
+        }
 
         totals = get_category_totals(matter, uncategorized_claimed=False)[
             "category_totals"
         ]
-        assert totals["claimed_net"] == 60
-        assert totals["unclaimed_net"] == 300
-        assert totals["time_net"] == 360
+        assert totals["claimed"]["total"] == 100
+        assert totals["unclaimed"]["total"] == 310
+        assert totals["all"]["total"] == 410

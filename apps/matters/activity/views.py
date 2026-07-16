@@ -71,6 +71,7 @@ def get_category_totals(matter, uncategorized_claimed=True):
         # entry that moved matters doesn't count here.
         entries = list(category.time_entries.filter(matter=matter))
         gross, comp, net = time_totals(entries)
+        expenses = expense_total(category.expense_entries.filter(matter=matter))
         rows.append(
             {
                 "category": category,
@@ -78,39 +79,45 @@ def get_category_totals(matter, uncategorized_claimed=True):
                 "time_gross": gross,
                 "time_comp": comp,
                 "time_net": net,
-                "expenses": expense_total(
-                    category.expense_entries.filter(matter=matter)
-                ),
+                "expenses": expenses,
+                "total": net + expenses,
             }
         )
 
     entries = list(TimeEntry.objects.filter(matter=matter, category__isnull=True))
     gross, comp, net = time_totals(entries)
+    expenses = expense_total(
+        ExpenseEntry.objects.filter(matter=matter, activity_category__isnull=True)
+    )
     uncategorized = {
         "entry_count": len(entries),
         "time_gross": gross,
         "time_comp": comp,
         "time_net": net,
-        "expenses": expense_total(
-            ExpenseEntry.objects.filter(matter=matter, activity_category__isnull=True)
-        ),
+        "expenses": expenses,
+        "total": net + expenses,
     }
 
-    claimed_net = sum(r["time_net"] for r in rows if r["category"].claimed)
-    unclaimed_net = sum(r["time_net"] for r in rows if not r["category"].claimed)
-    if uncategorized_claimed:
-        claimed_net += uncategorized["time_net"]
-    else:
-        unclaimed_net += uncategorized["time_net"]
+    claimed_rows = [r for r in rows if r["category"].claimed]
+    unclaimed_rows = [r for r in rows if not r["category"].claimed]
+    (claimed_rows if uncategorized_claimed else unclaimed_rows).append(uncategorized)
+
+    def bucket(bucket_rows):
+        keys = ("time_gross", "time_comp", "time_net", "expenses", "total")
+        return {key: sum(r[key] for r in bucket_rows) for key in keys}
+
+    claimed = bucket(claimed_rows)
+    unclaimed = bucket(unclaimed_rows)
+    all_activity = {key: claimed[key] + unclaimed[key] for key in claimed}
 
     return {
         "category_rows": rows,
         "uncategorized": uncategorized,
         "uncategorized_claimed": uncategorized_claimed,
         "category_totals": {
-            "claimed_net": claimed_net,
-            "unclaimed_net": unclaimed_net,
-            "time_net": claimed_net + unclaimed_net,
+            "claimed": claimed,
+            "unclaimed": unclaimed,
+            "all": all_activity,
         },
     }
 

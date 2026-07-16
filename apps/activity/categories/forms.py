@@ -14,10 +14,9 @@ class ActivityCategoriesForm(forms.ModelForm):
 
     class Meta:
         model = ActivityCategory
-        fields = ["name", "color", "claimed"]
+        fields = ["name", "claimed"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "span2"}),
-            "color": forms.Select(attrs={"class": "span1"}),
             "claimed": forms.Select(
                 choices=[("False", "No"), ("True", "Yes")],
                 attrs={"class": "span1"},

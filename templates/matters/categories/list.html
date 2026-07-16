@@ -8,13 +8,25 @@ Report section order). Included by matters/activity/list.html.
   <table class="table settings-table groups-table categories-table">
     <thead>
       <tr>
-        <th>Category</th>
+        <th>
+          <div class="category-header-cell">
+            Category
+            <button type="button"
+                    class="btn-check"
+                    hx-get="{% url 'matters:categories-add' matter.id %}"
+                    hx-target="#htmx-modal-container"
+                    title="Add category">
+              <i class="icon-plus"></i>
+            </button>
+          </div>
+        </th>
         <th class="status-col center-data">Claimed</th>
         <th class="center-data entries-col">Entries</th>
         <th class="numeric">Fees</th>
         <th class="numeric">Comp</th>
         <th class="numeric">Net</th>
         <th class="numeric">Expenses</th>
+        <th class="numeric">Total</th>
       </tr>
     </thead>
     <tbody id="categories-sortable"
@@ -25,11 +37,11 @@ Report section order). Included by matters/activity/list.html.
             <div class="name-cell-content">
               <i class="icon-grip-vertical drag-handle"></i>
               <div class="dropdown" x-data="dropdown()">
-                <a href="#"
-                   class="app-badge label-{{ row.category.color }}"
-                   x-ref="button"
-                   @click.prevent="toggle()"
-                   :aria-expanded="open">{{ row.category.name }}</a>
+                <button class="button-link"
+                        type="button"
+                        x-ref="button"
+                        @click="toggle()"
+                        :aria-expanded="open">{{ row.category.name }}</button>
                 <ul class="dropdown-menu" x-ref="menu" x-show="open">
                   <li>
                     <a class="dropdown-item"
@@ -69,10 +81,11 @@ Report section order). Included by matters/activity/list.html.
           <td class="numeric">${{ row.time_comp|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ row.time_net|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ row.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.total|floatformat:2|intcomma }}</td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="7" class="empty-message">
+          <td colspan="8" class="empty-message">
             No categories for this matter yet. Claimed categories become the sections of the Fee Claim Report &mdash; drag rows to set their order.
           </td>
         </tr>
@@ -105,28 +118,39 @@ Report section order). Included by matters/activity/list.html.
           <td class="numeric">${{ uncategorized.time_comp|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ uncategorized.time_net|floatformat:2|intcomma }}</td>
           <td class="numeric">${{ uncategorized.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr class="categories-break">
+          <td>Total Claimed</td>
+          <td class="status-col"></td>
+          <td class="entries-col"></td>
+          <td class="numeric">${{ category_totals.claimed.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>Total Unclaimed</td>
+          <td class="status-col"></td>
+          <td class="entries-col"></td>
+          <td class="numeric">${{ category_totals.unclaimed.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr class="total">
+          <td>All Activity</td>
+          <td class="status-col"></td>
+          <td class="entries-col"></td>
+          <td class="numeric">${{ category_totals.all.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.total|floatformat:2|intcomma }}</td>
         </tr>
       </tfoot>
     {% endif %}
   </table>
 </div>
-{% if category_rows %}
-  <div class="flex-start-space">
-    <div class="totals-table categories-totals">
-      <table>
-        <tr>
-          <td>Claimed Time</td>
-          <td class="numeric">${{ category_totals.claimed_net|floatformat:2|intcomma }}</td>
-        </tr>
-        <tr>
-          <td>Unclaimed Time</td>
-          <td class="numeric">${{ category_totals.unclaimed_net|floatformat:2|intcomma }}</td>
-        </tr>
-        <tr class="total">
-          <th>Total Time</th>
-          <td class="numeric">${{ category_totals.time_net|floatformat:2|intcomma }}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-{% endif %}

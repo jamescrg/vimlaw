@@ -3,16 +3,6 @@ from simple_history.models import HistoricalRecords
 
 from utils.models import AuditMixin
 
-COLOR_CHOICES = [
-    ("blue", "Blue"),
-    ("gray", "Gray"),
-    ("green", "Green"),
-    ("orange", "Orange"),
-    ("purple", "Purple"),
-    ("red", "Red"),
-    ("yellow", "Yellow"),
-]
-
 
 class ActivityCategory(AuditMixin, models.Model):
     """A matter's coding buckets for activity — like accounting transaction
@@ -24,7 +14,6 @@ class ActivityCategory(AuditMixin, models.Model):
     """
 
     name = models.CharField(max_length=100)
-    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default="gray")
     matter = models.ForeignKey(
         "matters.Matter",
         on_delete=models.CASCADE,

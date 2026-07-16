@@ -58,21 +58,21 @@ def other_matter(practice_area):
 @pytest.fixture
 def category(matter):
     return ActivityCategory.objects.create(
-        name="General", color="green", matter=matter, claimed=True, position=0
+        name="General", matter=matter, claimed=True, position=0
     )
 
 
 @pytest.fixture
 def category_2(matter):
     return ActivityCategory.objects.create(
-        name="Counterclaim", color="red", matter=matter, claimed=True, position=1
+        name="Counterclaim", matter=matter, claimed=True, position=1
     )
 
 
 @pytest.fixture
 def unclaimed_category(matter):
     return ActivityCategory.objects.create(
-        name="Housekeeping", color="gray", matter=matter, claimed=False, position=2
+        name="Housekeeping", matter=matter, claimed=False, position=2
     )
 
 

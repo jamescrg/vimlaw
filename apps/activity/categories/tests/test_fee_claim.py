@@ -127,16 +127,18 @@ class TestFeeClaimReport:
             reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
         )
         assert response.status_code == 200
-        # Defaults to including unclaimed (the matter field's default).
-        assert b'name="include_unclaimed" checked' in response.content
+        # Defaults to including unclaimed (the matter field's default). The
+        # checkbox is the modal's only "checked" attribute.
+        assert b"include_unclaimed" in response.content
+        assert b"checked" in response.content
 
         matter.report_include_unclaimed = False
         matter.save()
         response = client.get(
             reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
         )
-        assert b'name="include_unclaimed" checked' not in response.content
         assert b"include_unclaimed" in response.content
+        assert b"checked" not in response.content
 
     def test_generating_persists_option_to_matter(self, client, user, matter, category):
         make_entry(user, matter, category=category)
