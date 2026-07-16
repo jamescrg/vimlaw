@@ -337,11 +337,11 @@ Mode Pills (Detail/Case toggle)
 /* Dark mode — mirror the sidebar's own surfaces: the unselected pill takes the
    nav (sidebar) background, the selected pill takes the active-tab background,
    so the segmented toggle reads as part of the same navigation system. */
-:is([data-theme="dark"], [data-theme="cosmic"]) .toolbar .mode-pill {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .toolbar .mode-pill {
   background: var(--background-sidebar);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .toolbar .mode-pill.active {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .toolbar .mode-pill.active {
   background: var(--background-sidebar-active);
 }
 
@@ -584,7 +584,7 @@ Matter Overview tab
   background: var(--past-due-bg);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"]) .overview-task-overdue td:first-child {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .overview-task-overdue td:first-child {
   box-shadow: inset 3px 0 0 0 var(--past-due-rail);
 }
 
