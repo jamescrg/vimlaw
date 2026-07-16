@@ -49,6 +49,14 @@ class Matter(AuditMixin, models.Model):
     # currently collectible, and the retainer is waived. Drives the low-trust-available
     # exclusion regardless of whether the matter has been invoiced yet.
     deferred_fees = models.BooleanField(default=False)
+    # Whether uncategorized time counts toward the claimed total in the
+    # activity Categories view. Matter-level so the whole team sees the same
+    # rollup (the attorney sets it, the paralegal's view reflects it).
+    uncategorized_claimed = models.BooleanField(default=True)
+    # Default for the Activity by Category report's "include unclaimed
+    # categories" option; the options modal reads it and generating the
+    # report saves the choice back, so the setting follows the matter.
+    report_include_unclaimed = models.BooleanField(default=True)
     members = models.ManyToManyField(
         "accounts.CustomUser",
         related_name="assigned_matters",

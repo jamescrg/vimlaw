@@ -19,9 +19,9 @@
        data-bs-toggle="modal"
        data-bs-target="#htmx-modal-container">{{ entry.actions }}</a>
   {% endif %}
-  {% for label in entry.labels.all %}
-    {% include "activity/labels/badge.html" with object_type="time" object=entry view="matter" %}
-  {% endfor %}
+</td>
+<td class="category">
+  {% include "activity/categories/cell.html" with object_type="time" object=entry category=entry.category %}
 </td>
 <td class="hours numeric">{{ entry.hours|floatformat:1 }}</td>
 <td class="rate numeric">

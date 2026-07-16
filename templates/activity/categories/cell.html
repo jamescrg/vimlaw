@@ -1,0 +1,45 @@
+{% comment %}
+The Category column cell: the entry's category name with a dropdown to
+switch it (folders, not labels — one category per entry), mirroring the
+tasks table's user dropdown. Uncategorized entries show a muted Categorize
+button that opens the same picker.
+Context: object, object_type ("time"/"expense"), category (current or None).
+{% endcomment %}
+<div class="dropdown" x-data="dropdown()">
+  <button class="button-link{% if not category %} category-cell-empty{% endif %}"
+          type="button"
+          {% if not category %}title="Set category"{% endif %}
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">
+    {% if category %}
+      {{ category.name }}
+    {% else %}
+      <i class="icon-book-plus"></i>
+    {% endif %}
+  </button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    {% for choice in object.matter.activity_categories.all %}
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'activity:set-category' object_type object.id %}"
+           hx-vals='{"category_id": "{{ choice.id }}"}'
+           hx-swap="none">{{ choice.name }}</a>
+      </li>
+    {% empty %}
+      <li>
+        <span class="dropdown-item text-muted">No categories on this matter</span>
+      </li>
+    {% endfor %}
+    {% if category %}
+      <li>
+        <a class="dropdown-item urgent"
+           href="#"
+           hx-post="{% url 'activity:set-category' object_type object.id %}"
+           hx-vals='{"category_id": ""}'
+           hx-swap="none"><i class="icon-x"></i> None</a>
+      </li>
+    {% endif %}
+  </ul>
+</div>

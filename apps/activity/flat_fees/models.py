@@ -2,7 +2,6 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
-from apps.activity.models import ActivityLabel
 from apps.invoicing.invoices.models import Invoice
 from apps.matters.models import Matter
 from utils.models import AuditMixin
@@ -18,9 +17,6 @@ class FlatFeeEntry(AuditMixin, models.Model):
     entered = models.BooleanField(default=False)
     invoice = models.ForeignKey(
         Invoice, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    labels = models.ManyToManyField(
-        ActivityLabel, related_name="flat_fee_entries", blank=True
     )
     history = HistoricalRecords()
 

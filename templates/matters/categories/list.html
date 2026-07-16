@@ -1,0 +1,162 @@
+{% load humanize %}
+{% comment %}
+The Categories sub-view of the matter Activity tab: the matter's coding
+buckets with per-category fee totals, drag-ordered (row order = Fee Claim
+Report section order). Included by matters/activity/list.html.
+{% endcomment %}
+<div class="table-container">
+  <table class="table settings-table groups-table categories-table">
+    <thead>
+      <tr>
+        <th>
+          <div class="category-header-cell">
+            Category
+            <button type="button"
+                    class="btn-check"
+                    hx-get="{% url 'matters:categories-add' matter.id %}"
+                    hx-target="#htmx-modal-container"
+                    title="Add category">
+              <i class="icon-plus"></i>
+            </button>
+          </div>
+        </th>
+        <th class="status-col center-data">Claimed</th>
+        <th class="center-data entries-col">Entries</th>
+        <th class="numeric">Fees</th>
+        <th class="numeric">Comp</th>
+        <th class="numeric">Net</th>
+        <th class="numeric">Expenses</th>
+        <th class="numeric">Total</th>
+      </tr>
+    </thead>
+    <tbody id="categories-sortable"
+           data-reorder-url="{% url 'matters:categories-reorder' matter.id %}">
+      {% for row in category_rows %}
+        <tr data-category-id="{{ row.category.id }}">
+          <td class="dropdown-cell">
+            <div class="name-cell-content">
+              <i class="icon-grip-vertical drag-handle"></i>
+              <div class="dropdown" x-data="dropdown()">
+                <button class="button-link"
+                        type="button"
+                        x-ref="button"
+                        @click="toggle()"
+                        :aria-expanded="open">{{ row.category.name }}</button>
+                <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                  <li>
+                    <a class="dropdown-item"
+                       hx-get="{% url 'matters:categories-edit' row.category.id %}"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item"
+                       hx-post="{% url 'matters:categories-delete' row.category.id %}"
+                       hx-confirm="Delete &ldquo;{{ row.category.name }}&rdquo;? Entries coded to it become uncategorized."><i class="icon-trash-2"></i> Delete</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </td>
+          <td class="status-col center-data">
+            <button class="btn-check"
+                    hx-post="{% url 'matters:categories-toggle-claimed' row.category.id %}"
+                    hx-swap="none"
+                    title="{% if row.category.claimed %}Claimed — a section of the Fee Claim Report. Click to unclaim.{% else %}Not claimed. Click to include in the Fee Claim Report.{% endif %}">
+              {% if row.category.claimed %}
+                <i class="icon-circle-check true-bool"></i>
+              {% else %}
+                <i class="icon-circle"></i>
+              {% endif %}
+            </button>
+          </td>
+          <td class="center-data entries-col">
+            <a href="#"
+               title="View these entries in the Time list"
+               hx-post="{% url 'matters:activity-filter-category' matter.id %}"
+               hx-vals='{"category": "{{ row.category.id }}", "view": "time"}'
+               hx-swap="none">{{ row.entry_count }}</a>
+          </td>
+          <td class="numeric">${{ row.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.total|floatformat:2|intcomma }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="8" class="empty-message">
+            No categories for this matter yet. Claimed categories become the sections of the Fee Claim Report &mdash; drag rows to set their order.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    {% if category_rows %}
+      <tfoot>
+        <tr class="categories-uncategorized">
+          <td>
+            <div class="name-cell-content">
+              <i class="icon-square-dashed drag-placeholder"
+                 title="Uncategorized entries can't be reordered"></i>
+              Uncategorized
+            </div>
+          </td>
+          <td class="status-col center-data">
+            <button class="btn-check"
+                    hx-post="{% url 'matters:activity-uncategorized-claimed' matter.id %}"
+                    hx-swap="none"
+                    title="{% if uncategorized_claimed %}Uncategorized time counts as claimed in the totals. Click to count it as unclaimed.{% else %}Uncategorized time counts as unclaimed in the totals. Click to count it as claimed.{% endif %}">
+              {% if uncategorized_claimed %}
+                <i class="icon-circle-check true-bool"></i>
+              {% else %}
+                <i class="icon-circle"></i>
+              {% endif %}
+            </button>
+          </td>
+          <td class="center-data entries-col">
+            <a href="#"
+               title="View uncategorized entries in the Time list"
+               hx-post="{% url 'matters:activity-filter-category' matter.id %}"
+               hx-vals='{"category": "none", "view": "time"}'
+               hx-swap="none">{{ uncategorized.entry_count }}</a>
+          </td>
+          <td class="numeric">${{ uncategorized.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>All Activity</td>
+          <td class="status-col"></td>
+          <td class="entries-col"></td>
+          <td class="numeric">${{ category_totals.all.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.all.total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+          <td>Unclaimed Activity</td>
+          <td class="status-col"></td>
+          <td class="entries-col"></td>
+          <td class="numeric">${{ category_totals.unclaimed.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.unclaimed.total|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr class="total">
+          <td>Claimed Activity</td>
+          <td class="status-col"></td>
+          <td class="entries-col"></td>
+          <td class="numeric">${{ category_totals.claimed.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.expenses|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.claimed.total|floatformat:2|intcomma }}</td>
+        </tr>
+      </tfoot>
+    {% endif %}
+  </table>
+</div>

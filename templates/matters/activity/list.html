@@ -57,111 +57,208 @@
               </li>
             </ul>
           </div>
-          <button type="button"
-                  class="btn-icon"
-                  hx-get="{% url 'matters:activity-bulk-apply-labels' matter.id %}"
-                  hx-target="#htmx-modal-container">
-            <i class="icon-tag with-text"></i> Labels
-          </button>
+          <div class="dropdown" x-data="dropdown()">
+            <button type="button"
+                    class="btn-icon"
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">
+              <span><i class="icon-tag with-text"></i> Category</span>
+              <small><i class="icon-chevron-down"></i></small>
+            </button>
+            <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+              {% for category in categories %}
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-post="{% url 'matters:activity-bulk-set-category' matter.id %}"
+                     hx-vals='{"category_id": "{{ category.id }}"}'
+                     hx-swap="none">{{ category.name }}</a>
+                </li>
+              {% empty %}
+                <li>
+                  <span class="dropdown-item text-muted">No categories on this matter</span>
+                </li>
+              {% endfor %}
+              <li>
+                <a class="dropdown-item urgent"
+                   href="#"
+                   hx-post="{% url 'matters:activity-bulk-set-category' matter.id %}"
+                   hx-vals='{"category_id": ""}'
+                   hx-swap="none"><i class="icon-x"></i> None</a>
+              </li>
+            </ul>
+          </div>
         </div>
       {% else %}
         <div class="filter-tools">
           <div class="mode-pills">
             <button type="button"
-                    class="mode-pill {% if activity_view != 'expenses' %}active{% endif %}"
+                    class="mode-pill {% if activity_view == 'time' %}active{% endif %}"
                     hx-post="{% url 'matters:activity-view' matter.id 'time' %}"
                     hx-swap="none">Time</button>
             <button type="button"
                     class="mode-pill {% if activity_view == 'expenses' %}active{% endif %}"
                     hx-post="{% url 'matters:activity-view' matter.id 'expenses' %}"
                     hx-swap="none">Expenses</button>
+            <button type="button"
+                    class="mode-pill {% if activity_view == 'categories' %}active{% endif %}"
+                    hx-post="{% url 'matters:activity-view' matter.id 'categories' %}"
+                    hx-swap="none">Categories</button>
           </div>
+          {% if activity_view != 'categories' %}
+            <div class="dropdown" x-data="dropdown()">
+              <button type="button"
+                      class="btn-icon {% if category_filter %}toggle-active{% endif %}"
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open">
+              <span><i class="icon-tag with-text"></i>
+              {% if category_filter == 'none' %}
+                Uncategorized
+              {% elif selected_category %}
+                {{ selected_category.name }}
+              {% else %}
+                All Categories
+              {% endif %}
+            </span>
+            <small><i class="icon-chevron-down"></i></small>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'matters:activity-filter-category' matter.id %}"
+                 hx-vals='{"category": ""}'
+                 hx-swap="none">All Categories</a>
+            </li>
+            {% for category in categories %}
+              <li>
+                <a class="dropdown-item"
+                   href="#"
+                   hx-post="{% url 'matters:activity-filter-category' matter.id %}"
+                   hx-vals='{"category": "{{ category.id }}"}'
+                   hx-swap="none">{{ category.name }}</a>
+              </li>
+            {% endfor %}
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'matters:activity-filter-category' matter.id %}"
+                 hx-vals='{"category": "none"}'
+                 hx-swap="none">Uncategorized</a>
+            </li>
+          </ul>
         </div>
       {% endif %}
     </div>
-    <div class="toolbar-right">
-      <a href="{% url 'activity:time-filter-matter' matter.id %}">
-        <i class="icon-file-symlink"></i> View in Activity Tab</a>
-      <a href="{% url 'matters:activity-report' matter.id %}"><i class="icon-file"></i> Activity Report</a>
-    </div>
+  {% endif %}
+</div>
+<div class="toolbar-right">
+  <div class="dropdown" x-data="dropdown()">
+    <a href="#"
+       class="dropdown-match-width"
+       x-ref="button"
+       @click.prevent="toggle()"
+       :aria-expanded="open"><i class="icon-file"></i> Activity Report <small><i class="icon-chevron-down"></i></small></a>
+    <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+      <li>
+        <a class="dropdown-item"
+           href="{% url 'matters:activity-report' matter.id %}">
+          <i class="icon-file"></i> All Activity</a>
+      </li>
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'matters:fee-claim-report-modal' matter.id %}"
+           hx-target="#htmx-modal-container"><i class="icon-file"></i> Fee Claim</a>
+      </li>
+    </ul>
   </div>
-  <div id="matterActivityTable">
-    {% if activity_view == "expenses" %}
-      {% include "matters/activity/expenses-list.html" %}
-    {% else %}
-      <div class="table-container">
-        <table class="table matter-activity card-table">
-          <thead>
+  <a href="{% url 'activity:time-filter-matter' matter.id %}">
+    <i class="icon-file-symlink"></i> View in Activity Tab</a>
+</div>
+</div>
+<div id="matterActivityTable">
+  {% if activity_view == "categories" %}
+    {% include "matters/categories/list.html" %}
+  {% elif activity_view == "expenses" %}
+    {% include "matters/activity/expenses-list.html" %}
+  {% else %}
+    <div class="table-container">
+      <table class="table matter-activity card-table">
+        <thead>
+          <tr>
+            <th class="col-select">
+              <button class="btn-check"
+                      hx-post="{% url 'matters:activity-select-all' matter.id %}"
+                      hx-swap="none"
+                      title="Select all">
+                <i class="icon-square{% if all_selected %}-check{% endif %}"></i>
+              </button>
+            </th>
+            <th class="date">
+              Date
+              <a href="#"
+                 hx-post="{% url 'matters:activity-sort' matter.id %}"
+                 hx-swap="none">
+                <i class="icon-chevrons-up-down"></i>
+              </a>
+            </th>
+            <th class="user">User</th>
+            <th class="actions">Actions</th>
+            <th class="category">Category</th>
+            <th class="numeric hours">Hours</th>
+            <th class="numeric rate">Rate</th>
+            <th class="numeric fee">Fee</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in entries %}
+            <tr id="time-{{ entry.id }}">{% include "matters/activity/table-row.html" %}</tr>
+          {% empty %}
             <tr>
-              <th class="col-select">
-                <button class="btn-check"
-                        hx-post="{% url 'matters:activity-select-all' matter.id %}"
-                        hx-swap="none"
-                        title="Select all">
-                  <i class="icon-square{% if all_selected %}-check{% endif %}"></i>
-                </button>
-              </th>
-              <th class="date">
-                Date
-                <a href="#"
-                   hx-post="{% url 'matters:activity-sort' matter.id %}"
-                   hx-swap="none">
-                  <i class="icon-chevrons-up-down"></i>
-                </a>
-              </th>
-              <th class="user">User</th>
-              <th class="actions">Actions</th>
-              <th class="numeric hours">Hours</th>
-              <th class="numeric rate">Rate</th>
-              <th class="numeric fee">Fee</th>
+              <td colspan="8" class="empty-message">No time entries found for this matter.</td>
             </tr>
-          </thead>
-          <tbody>
-            {% for entry in entries %}
-              <tr id="time-{{ entry.id }}">{% include "matters/activity/table-row.html" %}</tr>
-            {% empty %}
-              <tr>
-                <td colspan="7" class="empty-message">No time entries found for this matter.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <div class="flex-start-space">
-        <div>{% include "pagination.html" %}</div>
-        {% if summary %}
-          <div class="totals-table">
-            <table>
-              <tr>
-                <td>Total Hours</td>
-                <td class="numeric">{{ summary.total_hours|floatformat:1 }}</td>
-              </tr>
-              <tr>
-                <td>Comp Hours</td>
-                <td class="numeric">{{ summary.comp_hours|floatformat:1 }}</td>
-              </tr>
-              <tr class="total">
-                <th>Net Hours</th>
-                <td class="numeric">{{ summary.net_hours|floatformat:1 }}</td>
-              </tr>
-            </table>
-            <table>
-              <tr>
-                <td>Total Fees</td>
-                <td class="numeric">${{ summary.total_fees|floatformat:2|intcomma }}</td>
-              </tr>
-              <tr>
-                <td>Comp Fees</td>
-                <td class="numeric">${{ summary.comp_fees|floatformat:2|intcomma }}</td>
-              </tr>
-              <tr class="total">
-                <th>Net Fees</th>
-                <td class="numeric">${{ summary.net_fees|floatformat:2|intcomma }}</td>
-              </tr>
-            </table>
-          </div>
-        {% endif %}
-      </div>
-    {% endif %}
-  </div>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="flex-start-space">
+      <div>{% include "pagination.html" %}</div>
+      {% if summary %}
+        <div class="totals-table">
+          <table>
+            <tr>
+              <td>Total Hours</td>
+              <td class="numeric">{{ summary.total_hours|floatformat:1 }}</td>
+            </tr>
+            <tr>
+              <td>Comp Hours</td>
+              <td class="numeric">{{ summary.comp_hours|floatformat:1 }}</td>
+            </tr>
+            <tr class="total">
+              <th>Net Hours</th>
+              <td class="numeric">{{ summary.net_hours|floatformat:1 }}</td>
+            </tr>
+          </table>
+          <table>
+            <tr>
+              <td>Total Fees</td>
+              <td class="numeric">${{ summary.total_fees|floatformat:2|intcomma }}</td>
+            </tr>
+            <tr>
+              <td>Comp Fees</td>
+              <td class="numeric">${{ summary.comp_fees|floatformat:2|intcomma }}</td>
+            </tr>
+            <tr class="total">
+              <th>Net Fees</th>
+              <td class="numeric">${{ summary.net_fees|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
 {% endblock subcontent %}

@@ -22,7 +22,7 @@ from apps.management.selection import (
 from apps.management.user_filter import cycle_user_filter
 from apps.matters.models import Matter
 from apps.matters.rates.models import Rate
-from utils.toasts import toast_success
+from utils.toasts import toast_success, toast_warning
 
 from .export import write_clio_csv, write_standard_csv
 from .filter import TimeEntryFilter
@@ -666,9 +666,18 @@ def time_bulk_update_matter(request):
 
         if matter_id:
             matter = get_object_or_404(Matter, pk=matter_id)
-            entries = TimeEntry.objects.filter(id__in=selected_time)
+            entries = TimeEntry.objects.filter(id__in=selected_time).select_related(
+                "invoice"
+            )
 
+            locked = 0
             for entry in entries:
+                # Entries on a finalized invoice are no longer editable —
+                # moving one would silently pull it off the invoice.
+                if entry.locked:
+                    locked += 1
+                    continue
+
                 # Clear invoice if matter changes
                 entry.matter = matter
                 entry.invoice = None
@@ -676,7 +685,14 @@ def time_bulk_update_matter(request):
                 entry.save()
 
             clear_selected_ids(request, key)
-            return HttpResponse(status=204, headers={"HX-Trigger": TIME_TRIGGER})
+            response = HttpResponse(status=204, headers={"HX-Trigger": TIME_TRIGGER})
+            if locked:
+                toast_warning(
+                    response,
+                    f"Skipped {locked} {'entry' if locked == 1 else 'entries'} "
+                    "on a finalized invoice.",
+                )
+            return response
 
     matters = Matter.objects.filter(
         status__in=["Pending", "Open", "Complete"]
@@ -705,15 +721,29 @@ def time_bulk_update_comp(request):
     if request.method == "POST":
         comp_value = request.POST.get("comp")
         if comp_value in ["true", "false"]:
-            entries = TimeEntry.objects.filter(id__in=selected_time)
+            entries = TimeEntry.objects.filter(id__in=selected_time).select_related(
+                "invoice"
+            )
             comp_bool = comp_value == "true"
 
+            locked = 0
             for entry in entries:
+                # Entries on a finalized invoice are no longer editable.
+                if entry.locked:
+                    locked += 1
+                    continue
                 entry.comp = comp_bool
                 entry.save()
 
             clear_selected_ids(request, key)
-            return HttpResponse(status=204, headers={"HX-Trigger": TIME_TRIGGER})
+            response = HttpResponse(status=204, headers={"HX-Trigger": TIME_TRIGGER})
+            if locked:
+                toast_warning(
+                    response,
+                    f"Skipped {locked} {'entry' if locked == 1 else 'entries'} "
+                    "on a finalized invoice.",
+                )
+            return response
 
     context = {
         "selected_count": len(selected_time),

@@ -6,6 +6,7 @@
         <th class="date">Date</th>
         <th class="user">User</th>
         <th class="actions">Expense</th>
+        <th class="category">Category</th>
         <th class="numeric amount">Amount</th>
       </tr>
     </thead>
@@ -24,6 +25,9 @@
               {% if expense.category %}{{ expense.category }} —{% endif %}
             {{ expense.description }}</a>
           </td>
+          <td class="category">
+            {% include "activity/categories/cell.html" with object_type="expense" object=expense category=expense.activity_category %}
+          </td>
           <td class="numeric amount">
             {% if expense.comp %}
               comp
@@ -34,7 +38,7 @@
         </tr>
       {% empty %}
         <tr>
-          <td colspan="4" class="empty-message">No expenses found for this matter.</td>
+          <td colspan="5" class="empty-message">No expenses found for this matter.</td>
         </tr>
       {% endfor %}
     </tbody>

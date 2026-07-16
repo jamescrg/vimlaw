@@ -3,7 +3,7 @@ from django.test import Client
 
 from apps.accounts.models import CustomUser
 from apps.activity.expenses.models import ExpenseEntry
-from apps.activity.models import ActivityLabel
+from apps.activity.models import ActivityCategory
 from apps.activity.time.models import TimeEntry
 from apps.matters.models import Matter, PracticeArea
 
@@ -46,8 +46,34 @@ def matter(practice_area):
 
 
 @pytest.fixture
-def activity_label():
-    return ActivityLabel.objects.create(name="Urgent", color="red")
+def other_matter(practice_area):
+    return Matter.objects.create(
+        name="Other Matter",
+        work_status="Awaiting response from OC",
+        status="Open",
+        practice_area=practice_area,
+    )
+
+
+@pytest.fixture
+def category(matter):
+    return ActivityCategory.objects.create(
+        name="General", matter=matter, claimed=True, position=0
+    )
+
+
+@pytest.fixture
+def category_2(matter):
+    return ActivityCategory.objects.create(
+        name="Counterclaim", matter=matter, claimed=True, position=1
+    )
+
+
+@pytest.fixture
+def unclaimed_category(matter):
+    return ActivityCategory.objects.create(
+        name="Housekeeping", matter=matter, claimed=False, position=2
+    )
 
 
 @pytest.fixture

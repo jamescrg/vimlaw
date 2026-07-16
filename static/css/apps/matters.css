@@ -175,7 +175,7 @@ Matter Switcher
   align-items: center;
   background: none;
   border: none;
-  color: var(--color-muted-more);
+  color: var(--color-muted);
   display: inline-flex;
   font-size: 1.25rem;
   padding: 0.25rem 0.5rem;
@@ -315,12 +315,22 @@ Mode Pills (Detail/Case toggle)
   margin-right: 0.25rem;
 }
 
-.toolbar .mode-pill:first-child {
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+/* toolbar.css's generic `.toolbar button` radius outranks a bare two-class
+   rule, so scope through .mode-pills to flatten the middle pills; the
+   first/last rules below re-round the outer corners. */
+.toolbar .mode-pills .mode-pill {
+  border-radius: 0;
+}
+
+.toolbar .mode-pills .mode-pill:not(:last-child) {
   border-right: none;
 }
 
-.toolbar .mode-pill:last-child {
+.toolbar .mode-pills .mode-pill:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.toolbar .mode-pills .mode-pill:last-child {
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
@@ -330,7 +340,7 @@ Mode Pills (Detail/Case toggle)
   color: var(--selected-color);
 }
 
-.toolbar .mode-pill.active:first-child {
+.toolbar .mode-pill.active:not(:last-child) {
   border-right: none;
 }
 
@@ -671,4 +681,141 @@ Matter Overview tab
 
 .matter-group-edit-form input {
   flex: 1;
+}
+
+/* ==========================================================================
+ Activity category coding (Category column on entry rows)
+========================================================================== */
+
+/* Categories behave like folders, so the column shows the plain name with a
+   picker dropdown; uncoded rows get a muted Categorize button instead. */
+.matter-activity .date {
+  width: 7.5rem;
+}
+
+.matter-activity .user {
+  width: 4rem;
+}
+
+.matter-activity th.category,
+.matter-activity td.category {
+  width: 13rem;
+}
+
+.matter-activity th.amount,
+.matter-activity td.amount {
+  width: 10rem;
+}
+
+.category-cell-empty,
+.category-cell-empty:hover {
+  color: var(--color-muted-more);
+}
+
+/* The categories sub-view table: fixed-width claimed + money columns; under
+   table-layout: fixed the category column is the sole auto column, so it
+   absorbs the slack while the sized columns render at exactly their widths —
+   which is what lets the totals grid below line up with them. */
+.categories-table {
+  table-layout: fixed;
+}
+
+.categories-table .status-col {
+  text-align: center;
+  width: 6.5rem;
+}
+
+.categories-table th.numeric,
+.categories-table td.numeric {
+  width: 10rem;
+}
+
+/* Entry counts are short — a tight, centered column. */
+.categories-table th.entries-col,
+.categories-table td.entries-col {
+  text-align: center;
+  width: 5.5rem;
+}
+
+/* The heavy rule sits under the Uncategorized row, separating entry data
+   from the rollup rows (borders are separate, so replacing the row's own
+   bottom border keeps it a single line). The 1px top border restores the
+   line the global `tbody tr:last-child td { border-bottom: none }` strips
+   from the category row above — that rule assumes tables end at the tbody,
+   but this one continues into a tfoot. */
+.categories-uncategorized td {
+  border-bottom: 2px solid var(--border-medium);
+  border-top: 1px solid var(--border-medium);
+}
+
+/* The global `tbody tr:last-child td` rule drops the last row's bottom
+   border at the table edge, but this table ends in a tfoot — mirror the
+   rule (and the corner radii) there so the edge isn't doubled. */
+.categories-table tfoot tr:last-child td {
+  border-bottom: none;
+}
+
+.categories-table tfoot tr:last-child td:first-child {
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.categories-table tfoot tr:last-child td:last-child {
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
+}
+
+/* Placeholder in the drag-handle slot: Uncategorized can't be reordered.
+   Same shade as the grip handles above it. */
+.groups-table .drag-placeholder {
+  color: var(--icon-muted);
+}
+
+/* Fee claim options modal: label + Yes/No select as one inline row, with
+   the explanatory note spaced off it. The .form-compact grid would paint
+   the select 100% wide and wedge the label — the text takes the slack and
+   the select stays Yes/No-sized. */
+.fee-claim-option {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.fee-claim-option select {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+#fee-claim-form .text-muted {
+  margin-top: 1rem;
+}
+
+/* Category column header carries the add button, tucked to the right. */
+.category-header-cell {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Long category names ellipse instead of stretching the Category column
+   (the picker button is the cell's content, so the cap lives on it:
+   13rem column minus the 1rem cell padding each side). */
+.matter-activity td.category .button-link {
+  display: inline-block;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+/* Same for the categories table's name cell — the flex row needs min-width
+   0 before its child can shrink enough to truncate. */
+.categories-table .name-cell-content .dropdown {
+  min-width: 0;
+}
+
+.categories-table .name-cell-content .button-link {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
