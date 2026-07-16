@@ -55,7 +55,7 @@ class TestFeeClaimReport:
         assert sections[0]["expenses_net"] == 50
         assert sections[1]["fees_net"] == 100
         assert context["has_unclaimed"] is False
-        assert context["grand_totals"] == {"fees": 700, "expenses": 50}
+        assert context["grand_totals"] == {"fees": 700, "expenses": 50, "total": 750}
 
     def test_uncategorized_follows_matter_switch(self, user, matter, category):
         make_entry(user, matter, hours=1.0, rate=100, category=category)
@@ -82,9 +82,9 @@ class TestFeeClaimReport:
         ]
         assert context["sections"][1]["claimed"] is False
         assert context["has_unclaimed"] is True
-        assert context["claimed_totals"] == {"fees": 100, "expenses": 0}
-        assert context["unclaimed_totals"] == {"fees": 50, "expenses": 0}
-        assert context["grand_totals"] == {"fees": 150, "expenses": 0}
+        assert context["claimed_totals"] == {"fees": 100, "expenses": 0, "total": 100}
+        assert context["unclaimed_totals"] == {"fees": 50, "expenses": 0, "total": 50}
+        assert context["grand_totals"] == {"fees": 150, "expenses": 0, "total": 150}
 
     def test_include_unclaimed_categories(
         self, user, matter, category, unclaimed_category
@@ -110,13 +110,13 @@ class TestFeeClaimReport:
     def test_empty_categories_skipped(self, matter, category):
         context = build_fee_claim_context(matter)
         assert context["sections"] == []
-        assert context["grand_totals"] == {"fees": 0, "expenses": 0}
+        assert context["grand_totals"] == {"fees": 0, "expenses": 0, "total": 0}
 
     def test_pdf_view_with_options(self, client, user, matter, category):
         make_entry(user, matter, category=category)
         response = client.get(
             reverse("matters:fee-claim-report", kwargs={"id": matter.id}),
-            {"include_unclaimed": "on"},
+            {"include_unclaimed": "true"},
         )
         assert response.status_code == 200
         assert response["Content-Type"] == "application/pdf"
@@ -127,30 +127,29 @@ class TestFeeClaimReport:
             reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
         )
         assert response.status_code == 200
-        # Defaults to including unclaimed (the matter field's default). The
-        # checkbox is the modal's only "checked" attribute.
-        assert b"include_unclaimed" in response.content
-        assert b"checked" in response.content
+        # Defaults to including unclaimed (the matter field's default).
+        assert b'value="true" selected' in response.content
 
         matter.report_include_unclaimed = False
         matter.save()
         response = client.get(
             reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
         )
-        assert b"include_unclaimed" in response.content
-        assert b"checked" not in response.content
+        assert b'value="false" selected' in response.content
 
     def test_generating_persists_option_to_matter(self, client, user, matter, category):
         make_entry(user, matter, category=category)
 
-        # Unchecked checkbox → key absent → option off, saved to the matter.
-        client.get(reverse("matters:fee-claim-report", kwargs={"id": matter.id}))
+        client.get(
+            reverse("matters:fee-claim-report", kwargs={"id": matter.id}),
+            {"include_unclaimed": "false"},
+        )
         matter.refresh_from_db()
         assert matter.report_include_unclaimed is False
 
         client.get(
             reverse("matters:fee-claim-report", kwargs={"id": matter.id}),
-            {"include_unclaimed": "on"},
+            {"include_unclaimed": "true"},
         )
         matter.refresh_from_db()
         assert matter.report_include_unclaimed is True

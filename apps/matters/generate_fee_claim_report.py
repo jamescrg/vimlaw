@@ -29,14 +29,17 @@ def build_fee_claim_context(matter: Matter, include_unclaimed: bool = False) -> 
     def add_section(title, claimed, time_entries, expenses):
         if not time_entries and not expenses:
             return
+        fees_net = sum(e.fee for e in time_entries if not e.comp)
+        expenses_net = sum(x.amount for x in expenses if not x.comp)
         sections.append(
             {
                 "title": title,
                 "claimed": claimed,
                 "entries": time_entries,
                 "expenses": expenses,
-                "fees_net": sum(e.fee for e in time_entries if not e.comp),
-                "expenses_net": sum(x.amount for x in expenses if not x.comp),
+                "fees_net": fees_net,
+                "expenses_net": expenses_net,
+                "total": fees_net + expenses_net,
             }
         )
 
@@ -69,10 +72,9 @@ def build_fee_claim_context(matter: Matter, include_unclaimed: bool = False) -> 
         )
 
     def rollup(rows):
-        return {
-            "fees": sum(s["fees_net"] for s in rows),
-            "expenses": sum(s["expenses_net"] for s in rows),
-        }
+        fees = sum(s["fees_net"] for s in rows)
+        expenses = sum(s["expenses_net"] for s in rows)
+        return {"fees": fees, "expenses": expenses, "total": fees + expenses}
 
     claimed_sections = [s for s in sections if s["claimed"]]
     unclaimed_sections = [s for s in sections if not s["claimed"]]

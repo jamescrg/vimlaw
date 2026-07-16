@@ -55,7 +55,7 @@ document.addEventListener('alpine:init', () => {
       menu.style.left = `${rect.left}px`;
       menu.style.right = 'auto';
       menu.style.bottom = 'auto';
-      if (button.tagName === 'BUTTON') {
+      if (button.tagName === 'BUTTON' || button.classList.contains('dropdown-match-width')) {
         menu.style.minWidth = `${rect.width}px`;
       }
 

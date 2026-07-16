@@ -7,11 +7,17 @@
     <meta charset="UTF-8" content="" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
-    <title>{{ matter.name }} - Activity by Category</title>
+    <title>Fee and Expense Report</title>
     <style>
       /* Air between a section's time-entries table and its expenses table. */
       .section .table+.table {
         margin-top: 14pt;
+      }
+
+      /* The summary's Claimed column: fixed like the money columns, centered. */
+      .summary-claimed {
+        text-align: center;
+        width: 0.8in;
       }
     </style>
     <link rel="shortcut icon" href={% static 'images/kosmos-mark.svg' %} />
@@ -29,11 +35,12 @@
       <div class="header">
         {% include "components/pdf_header.html" %}
         <div class="header-right">
-          <p class="text-right">Activity by Category</p>
+          <p class="text-right">
+            <strong>Fee and Expense Report</strong>
+          </p>
           <p class="text-right">{{ current_date|date:"Y-m-d" }}</p>
           <br />
           <p class="text-right">Matter {{ matter.id }}</p>
-          <p class="text-right">"{{ matter.name }}"</p>
           {% if matter.client_reference_id %}<p class="text-right">{{ matter.client_reference_id }}</p>{% endif %}
         </div>
       </div>
@@ -102,14 +109,15 @@
           <table class="table invoice-totals">
             <tr>
               <th class="text-left hl-gray">Category</th>
-              <th class="text-left hl-gray">Claimed</th>
+              <th class="hl-gray summary-claimed">Claimed</th>
               <th class="money hl-gray">Fees</th>
               <th class="money hl-gray">Expenses</th>
+              <th class="money hl-gray">Total</th>
             </tr>
             {% for section in sections %}
               <tr>
                 <td>{{ section.title }}</td>
-                <td>
+                <td class="summary-claimed">
                   {% if section.claimed %}
                     Yes
                   {% else %}
@@ -118,33 +126,40 @@
                 </td>
                 <td class="money">${{ section.fees_net|floatformat:2|intcomma }}</td>
                 <td class="money">${{ section.expenses_net|floatformat:2|intcomma }}</td>
+                <td class="money">${{ section.total|floatformat:2|intcomma }}</td>
               </tr>
             {% endfor %}
             {% if has_unclaimed %}
-              <tr>
-                <td class="total hl-yellow">Total Claimed</td>
-                <td class="hl-yellow"></td>
-                <td class="money total hl-yellow">${{ claimed_totals.fees|floatformat:2|intcomma }}</td>
-                <td class="money total hl-yellow">${{ claimed_totals.expenses|floatformat:2|intcomma }}</td>
-              </tr>
-              <tr>
-                <td>Total Unclaimed</td>
-                <td></td>
-                <td class="money">${{ unclaimed_totals.fees|floatformat:2|intcomma }}</td>
-                <td class="money">${{ unclaimed_totals.expenses|floatformat:2|intcomma }}</td>
-              </tr>
+              {% comment %}Same rollup order as the Categories view: all,
+              then unclaimed, closing on the highlighted claim number.{% endcomment %}
               <tr>
                 <td class="total">Total</td>
-                <td></td>
+                <td class="summary-claimed"></td>
                 <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
                 <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ grand_totals.total|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td>Unclaimed</td>
+                <td class="summary-claimed"></td>
+                <td class="money">${{ unclaimed_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money">${{ unclaimed_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money">${{ unclaimed_totals.total|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td class="total">Total Claim</td>
+                <td class="summary-claimed"></td>
+                <td class="money total">${{ claimed_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ claimed_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money total hl-yellow">${{ claimed_totals.total|floatformat:2|intcomma }}</td>
               </tr>
             {% else %}
               <tr>
-                <td class="total">Total</td>
-                <td></td>
+                <td class="total">Total Claim</td>
+                <td class="summary-claimed"></td>
                 <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
                 <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money total hl-yellow">${{ grand_totals.total|floatformat:2|intcomma }}</td>
               </tr>
             {% endif %}
           </table>

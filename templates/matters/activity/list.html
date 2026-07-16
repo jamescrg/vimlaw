@@ -157,6 +157,7 @@
 <div class="toolbar-right">
   <div class="dropdown" x-data="dropdown()">
     <a href="#"
+       class="dropdown-match-width"
        x-ref="button"
        @click.prevent="toggle()"
        :aria-expanded="open"><i class="icon-file"></i> Activity Report <small><i class="icon-chevron-down"></i></small></a>
@@ -170,7 +171,7 @@
         <a class="dropdown-item"
            href="#"
            hx-get="{% url 'matters:fee-claim-report-modal' matter.id %}"
-           hx-target="#htmx-modal-container"><i class="icon-tag"></i> By Category</a>
+           hx-target="#htmx-modal-container"><i class="icon-file"></i> Fee Claim</a>
       </li>
     </ul>
   </div>

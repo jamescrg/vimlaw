@@ -309,7 +309,7 @@ def fee_claim_report(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
     # The chosen option becomes the matter's new default (team-wide).
-    include_unclaimed = request.GET.get("include_unclaimed") == "on"
+    include_unclaimed = request.GET.get("include_unclaimed") == "true"
     if matter.report_include_unclaimed != include_unclaimed:
         matter.report_include_unclaimed = include_unclaimed
         matter.save()
@@ -321,7 +321,7 @@ def fee_claim_report(request, id):
     with open(file.name, "rb") as pdf:
         response = HttpResponse(pdf.read(), content_type="application/pdf")
         filename = (
-            f'filename="Activity by Category - {matter.name} - {current_date}.pdf"'
+            f'filename="Fee and Expense Report - {matter.name} - {current_date}.pdf"'
         )
         response["Content-Disposition"] = f"attachment; {filename}"
 
