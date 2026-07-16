@@ -120,7 +120,6 @@ def get_matter_activity_data(request, matter):
     (session `matter_activity_view`, default 'time'). Expenses is a simple
     read-only list; Time keeps the existing sort/paginate/select machinery."""
     view = request.session.get("matter_activity_view", "time")
-    has_claimed_categories = matter.activity_categories.filter(claimed=True).exists()
 
     category_filter = _category_filter_value(request, matter.id)
     selected_category = None
@@ -131,7 +130,6 @@ def get_matter_activity_data(request, matter):
         "categories": matter.activity_categories.all(),
         "category_filter": category_filter,
         "selected_category": selected_category,
-        "has_claimed_categories": has_claimed_categories,
     }
 
     if view == "categories":
@@ -302,14 +300,22 @@ def fee_claim_report_modal(request, id):
 @matter_access_required
 def fee_claim_report(request, id):
     matter = get_object_or_404(Matter, pk=id)
+
+    # The chosen option becomes the matter's new default (team-wide).
     include_unclaimed = request.GET.get("include_unclaimed") == "on"
+    if matter.report_include_unclaimed != include_unclaimed:
+        matter.report_include_unclaimed = include_unclaimed
+        matter.save()
+
     file = generate_fee_claim_report(matter, request, include_unclaimed)
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 
     with open(file.name, "rb") as pdf:
         response = HttpResponse(pdf.read(), content_type="application/pdf")
-        filename = f'filename="Fee Claim Report - {matter.name} - {current_date}.pdf"'
+        filename = (
+            f'filename="Activity by Category - {matter.name} - {current_date}.pdf"'
+        )
         response["Content-Disposition"] = f"attachment; {filename}"
 
     os.unlink(file.name)

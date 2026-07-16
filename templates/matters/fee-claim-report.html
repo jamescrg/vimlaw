@@ -7,7 +7,13 @@
     <meta charset="UTF-8" content="" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
-    <title>{{ matter.name }} - Fee Claim Report</title>
+    <title>{{ matter.name }} - Activity by Category</title>
+    <style>
+      /* Air between a section's time-entries table and its expenses table. */
+      .section .table+.table {
+        margin-top: 14pt;
+      }
+    </style>
     <link rel="shortcut icon" href={% static 'images/kosmos-mark.svg' %} />
     <link rel="stylesheet" href={% static_v 'css/palette.css' %} />
     <link rel="stylesheet" href={% static_v 'css/colors.css' %} />
@@ -23,7 +29,7 @@
       <div class="header">
         {% include "components/pdf_header.html" %}
         <div class="header-right">
-          <p class="text-right">Fee Claim Report</p>
+          <p class="text-right">Activity by Category</p>
           <p class="text-right">{{ current_date|date:"Y-m-d" }}</p>
           <br />
           <p class="text-right">Matter {{ matter.id }}</p>
@@ -135,10 +141,10 @@
               </tr>
             {% else %}
               <tr>
-                <td class="total hl-yellow">Total</td>
-                <td class="hl-yellow"></td>
-                <td class="money total hl-yellow">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
-                <td class="money total hl-yellow">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="total">Total</td>
+                <td></td>
+                <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
               </tr>
             {% endif %}
           </table>

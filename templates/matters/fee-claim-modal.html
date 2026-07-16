@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Fee Claim Report</h1>
+      <h1 class="modal-title">Activity by Category</h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
@@ -18,8 +18,10 @@
             action="{% url 'matters:fee-claim-report' matter.id %}"
             class="form-compact">
         <label class="fee-claim-option">
-          <input type="checkbox" name="include_unclaimed">
-          Include unclaimed categories as separate sections
+          <input type="checkbox"
+                 name="include_unclaimed"
+                 {% if matter.report_include_unclaimed %}checked{% endif %}>
+          Include unclaimed categories (omit for a more concise report)
         </label>
         <p class="text-muted">
           Sections follow the Categories view: each category lists its time

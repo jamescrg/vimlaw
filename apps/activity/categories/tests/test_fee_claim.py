@@ -122,12 +122,36 @@ class TestFeeClaimReport:
         assert response["Content-Type"] == "application/pdf"
         assert response.content[:4] == b"%PDF"
 
-    def test_options_modal_loads(self, client, matter):
+    def test_options_modal_defaults_from_matter(self, client, matter):
         response = client.get(
             reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
         )
         assert response.status_code == 200
+        # Defaults to including unclaimed (the matter field's default).
+        assert b'name="include_unclaimed" checked' in response.content
+
+        matter.report_include_unclaimed = False
+        matter.save()
+        response = client.get(
+            reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
+        )
+        assert b'name="include_unclaimed" checked' not in response.content
         assert b"include_unclaimed" in response.content
+
+    def test_generating_persists_option_to_matter(self, client, user, matter, category):
+        make_entry(user, matter, category=category)
+
+        # Unchecked checkbox → key absent → option off, saved to the matter.
+        client.get(reverse("matters:fee-claim-report", kwargs={"id": matter.id}))
+        matter.refresh_from_db()
+        assert matter.report_include_unclaimed is False
+
+        client.get(
+            reverse("matters:fee-claim-report", kwargs={"id": matter.id}),
+            {"include_unclaimed": "on"},
+        )
+        matter.refresh_from_db()
+        assert matter.report_include_unclaimed is True
 
 
 class TestMatterCategoryFilter:
