@@ -1,0 +1,88 @@
+{% load humanize %}
+{% comment %}
+The Categories sub-view of the matter Activity tab: the matter's coding
+buckets with per-category fee totals, drag-ordered (row order = Fee Claim
+Report section order). Included by matters/activity/list.html.
+{% endcomment %}
+<div class="table-container">
+  <table class="table settings-table groups-table categories-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="status-col center-data">Claimed</th>
+        <th class="numeric">Time</th>
+        <th class="numeric">Comp</th>
+        <th class="numeric">Net</th>
+        <th class="numeric">Expenses</th>
+      </tr>
+    </thead>
+    <tbody id="categories-sortable"
+           data-reorder-url="{% url 'matters:categories-reorder' matter.id %}">
+      {% for row in category_rows %}
+        <tr data-category-id="{{ row.category.id }}">
+          <td class="dropdown-cell">
+            <div class="name-cell-content">
+              <i class="icon-grip-vertical drag-handle"></i>
+              <div class="dropdown" x-data="dropdown()">
+                <a href="#"
+                   class="app-badge label-{{ row.category.color }}"
+                   x-ref="button"
+                   @click.prevent="toggle()"
+                   :aria-expanded="open">{{ row.category.name }}</a>
+                <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                  <li>
+                    <a class="dropdown-item"
+                       hx-get="{% url 'matters:categories-edit' row.category.id %}"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item"
+                       hx-post="{% url 'matters:categories-delete' row.category.id %}"
+                       hx-confirm="Delete &ldquo;{{ row.category.name }}&rdquo;? Entries coded to it become uncategorized."><i class="icon-trash-2"></i> Delete</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </td>
+          <td class="status-col center-data">
+            {% if row.category.claimed %}
+              <i class="icon-circle-check true-bool"
+                 title="A fee category on this matter's Fee Claim Report"></i>
+            {% endif %}
+          </td>
+          <td class="numeric">${{ row.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ row.expenses|floatformat:2|intcomma }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6" class="empty-message">
+            No categories for this matter yet. Claimed categories become the sections of the Fee Claim Report &mdash; drag rows to set their order.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    {% if category_rows %}
+      <tfoot>
+        <tr class="categories-uncategorized">
+          <td>Uncategorized</td>
+          <td class="status-col"></td>
+          <td class="numeric">${{ uncategorized.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ uncategorized.expenses|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr class="total">
+          <td>Total</td>
+          <td class="status-col"></td>
+          <td class="numeric">${{ category_totals.time_gross|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.time_comp|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.time_net|floatformat:2|intcomma }}</td>
+          <td class="numeric">${{ category_totals.expenses|floatformat:2|intcomma }}</td>
+        </tr>
+      </tfoot>
+    {% endif %}
+  </table>
+</div>

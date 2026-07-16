@@ -1,0 +1,47 @@
+{% comment %}
+Per-row category picker: the current category badge (or a muted Categorize
+affordance) opens a dropdown of the entry's matter's categories plus None.
+Context: object, object_type ("time"/"expense"), category (current or None).
+{% endcomment %}
+<span class="category-badge dropdown" x-data="dropdown()">
+  {% if category %}
+    <a href="#"
+       class="app-badge label-{{ category.color }}"
+       x-ref="button"
+       @click.prevent="toggle()"
+       :aria-expanded="open"><i class="icon-tag"></i>{{ category.name }}</a>
+  {% else %}
+    <a href="#"
+       class="category-badge-empty btn-ghost"
+       title="Set category"
+       x-ref="button"
+       @click.prevent="toggle()"
+       :aria-expanded="open"><i class="icon-tag"></i></a>
+  {% endif %}
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    {% for choice in object.matter.activity_categories.all %}
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-post="{% url 'activity:set-category' object_type object.id %}"
+           hx-vals='{"category_id": "{{ choice.id }}"}'
+           hx-swap="none">
+          <span class="app-badge label-{{ choice.color }}">{{ choice.name }}</span>
+        </a>
+      </li>
+    {% empty %}
+      <li>
+        <span class="dropdown-item text-muted">No categories on this matter</span>
+      </li>
+    {% endfor %}
+    {% if category %}
+      <li>
+        <a class="dropdown-item urgent"
+           href="#"
+           hx-post="{% url 'activity:set-category' object_type object.id %}"
+           hx-vals='{"category_id": ""}'
+           hx-swap="none"><i class="icon-x"></i> None</a>
+      </li>
+    {% endif %}
+  </ul>
+</span>

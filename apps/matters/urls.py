@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .activity import views as activity
+from .categories import views as categories
 from .client_wizard import (
     client_cancel,
     client_create_contact,
@@ -245,6 +246,11 @@ urlpatterns = [
         activity.activity_view,
         name="activity-view",
     ),
+    path(
+        "matters/<int:id>/activity/filter-category",
+        activity.activity_filter_category,
+        name="activity-filter-category",
+    ),
     # Activity selection and bulk actions
     path(
         "matters/<int:matter_id>/activity/<int:entry_id>/toggle-select",
@@ -272,9 +278,31 @@ urlpatterns = [
         name="activity-bulk-update-comp",
     ),
     path(
-        "matters/<int:matter_id>/activity/bulk/apply-labels",
-        activity.activity_bulk_apply_labels,
-        name="activity-bulk-apply-labels",
+        "matters/<int:matter_id>/activity/bulk/set-category",
+        activity.activity_bulk_set_category,
+        name="activity-bulk-set-category",
+    ),
+    # Activity categories (one-per-entry coding; managed in the Categories
+    # sub-view of the activity tab)
+    path(
+        "matters/<int:id>/categories/add",
+        categories.add_category,
+        name="categories-add",
+    ),
+    path(
+        "matters/<int:id>/categories/reorder",
+        categories.categories_reorder,
+        name="categories-reorder",
+    ),
+    path(
+        "matters/categories/<int:category_id>/edit",
+        categories.edit_category,
+        name="categories-edit",
+    ),
+    path(
+        "matters/categories/<int:category_id>/delete",
+        categories.delete_category,
+        name="categories-delete",
     ),
     # events
     path("matters/<int:id>/events/", events.events_index, name="events-index"),
@@ -526,5 +554,10 @@ urlpatterns = [
         "matters/<int:id>/activity-report/",
         activity.activity_report,
         name="activity-report",
+    ),
+    path(
+        "matters/<int:id>/fee-claim-report/",
+        activity.fee_claim_report,
+        name="fee-claim-report",
     ),
 ]

@@ -3,9 +3,9 @@
     <div class="modal-header">
       <h1 class="modal-title">
         {% if edit %}
-          Edit Label
+          Edit Category
         {% else %}
-          Add Label
+          Add Category
         {% endif %}
       </h1>
       <div>
@@ -15,8 +15,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <form id="label-form"
-            hx-post="{% if edit %}{% url 'activity:labels-edit' label.id %}{% else %}{% url 'activity:labels-add' %}{% endif %}"
+      <form id="category-form"
+            hx-post="{% if edit %}{% url 'matters:categories-edit' category.id %}{% else %}{% url 'matters:categories-add' matter.id %}{% endif %}"
             hx-target="#htmx-modal-container"
             role="form"
             class="form-compact col2">
@@ -28,15 +28,15 @@
       {% if edit %}
         <button type="button"
                 class="btn btn-danger"
-                hx-confirm="Are you sure you want to delete this label?"
-                hx-delete="{% url 'activity:labels-delete' label.id %}"
+                hx-confirm="Delete this category? Entries coded to it become uncategorized."
+                hx-delete="{% url 'matters:categories-delete' category.id %}"
                 hx-target="#htmx-modal-container">Delete</button>
       {% else %}
         <button type="button"
                 class="btn btn-secondary"
                 @click="$dispatch('close-modal')">Cancel</button>
       {% endif %}
-      <button type="submit" form="label-form" class="btn btn-success">Submit</button>
+      <button type="submit" form="category-form" class="btn btn-success">Submit</button>
     </div>
   </div>
 </div>

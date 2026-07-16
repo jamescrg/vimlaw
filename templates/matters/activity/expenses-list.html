@@ -23,6 +23,7 @@
                data-bs-target="#htmx-modal-container">
               {% if expense.category %}{{ expense.category }} —{% endif %}
             {{ expense.description }}</a>
+            {% include "activity/categories/badge-menu.html" with object_type="expense" object=expense category=expense.activity_category %}
           </td>
           <td class="numeric amount">
             {% if expense.comp %}

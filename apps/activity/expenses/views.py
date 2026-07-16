@@ -17,6 +17,7 @@ from apps.management.selection import (
 )
 from apps.management.user_filter import cycle_user_filter
 from apps.matters.models import Matter
+from utils.toasts import toast_warning
 
 from .export import write_clio_csv, write_standard_csv
 from .filter import ExpenseFilter
@@ -452,9 +453,18 @@ def expenses_bulk_update_matter(request):
 
         if matter_id:
             matter = get_object_or_404(Matter, pk=matter_id)
-            entries = ExpenseEntry.objects.filter(id__in=selected_expenses)
+            entries = ExpenseEntry.objects.filter(
+                id__in=selected_expenses
+            ).select_related("invoice")
 
+            locked = 0
             for entry in entries:
+                # Entries on a finalized invoice are no longer editable —
+                # moving one would silently pull it off the invoice.
+                if entry.locked:
+                    locked += 1
+                    continue
+
                 # Clear invoice if matter changes
                 entry.matter = matter
                 entry.invoice = None
@@ -462,7 +472,16 @@ def expenses_bulk_update_matter(request):
                 entry.save()
 
             clear_selected_ids(request, key)
-            return HttpResponse(status=204, headers={"HX-Trigger": EXPENSES_TRIGGER})
+            response = HttpResponse(
+                status=204, headers={"HX-Trigger": EXPENSES_TRIGGER}
+            )
+            if locked:
+                toast_warning(
+                    response,
+                    f"Skipped {locked} {'expense' if locked == 1 else 'expenses'} "
+                    "on a finalized invoice.",
+                )
+            return response
 
     matters = Matter.objects.filter(
         status__in=["Pending", "Open", "Complete"]
@@ -491,15 +510,31 @@ def expenses_bulk_update_comp(request):
     if request.method == "POST":
         comp_value = request.POST.get("comp")
         if comp_value in ["true", "false"]:
-            entries = ExpenseEntry.objects.filter(id__in=selected_expenses)
+            entries = ExpenseEntry.objects.filter(
+                id__in=selected_expenses
+            ).select_related("invoice")
             comp_bool = comp_value == "true"
 
+            locked = 0
             for entry in entries:
+                # Entries on a finalized invoice are no longer editable.
+                if entry.locked:
+                    locked += 1
+                    continue
                 entry.comp = comp_bool
                 entry.save()
 
             clear_selected_ids(request, key)
-            return HttpResponse(status=204, headers={"HX-Trigger": EXPENSES_TRIGGER})
+            response = HttpResponse(
+                status=204, headers={"HX-Trigger": EXPENSES_TRIGGER}
+            )
+            if locked:
+                toast_warning(
+                    response,
+                    f"Skipped {locked} {'expense' if locked == 1 else 'expenses'} "
+                    "on a finalized invoice.",
+                )
+            return response
 
     context = {
         "selected_count": len(selected_expenses),

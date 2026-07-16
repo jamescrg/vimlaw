@@ -24,9 +24,6 @@
       {% if expense.category %}{{ expense.category }} -{% endif %}
     {{ expense.description }}</a>
   {% endif %}
-  {% for label in expense.labels.all %}
-    {% include "activity/labels/badge.html" with object_type="expense" object=expense %}
-  {% endfor %}
 </td>
 <td class="amount">
   {% if expense.invoice %}

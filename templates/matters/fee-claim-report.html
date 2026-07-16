@@ -1,0 +1,94 @@
+{% load humanize %}
+{% load static %}
+{% load cache_buster %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" content="" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>{{ matter.name }} - Fee Claim Report</title>
+    <link rel="shortcut icon" href={% static 'images/kosmos-mark.svg' %} />
+    <link rel="stylesheet" href={% static_v 'css/palette.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/colors.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/general.css' %} />
+    <link rel="stylesheet" href={% static_v 'css/pdf/invoice.css' %} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet" />
+  </head>
+  <body>
+    <div class="template">
+      <div class="header">
+        {% include "components/pdf_header.html" %}
+        <div class="header-right">
+          <p class="text-right">Fee Claim Report</p>
+          <p class="text-right">{{ current_date|date:"Y-m-d" }}</p>
+          <br />
+          <p class="text-right">Matter {{ matter.id }}</p>
+          <p class="text-right">"{{ matter.name }}"</p>
+          {% if matter.client_reference_id %}<p class="text-right">{{ matter.client_reference_id }}</p>{% endif %}
+        </div>
+      </div>
+      {% for section in sections %}
+        <div class="section">
+          <h3>{{ section.category.name }}</h3>
+          <table class="table">
+            <tr>
+              <th class="text-left hl-gray">Date</th>
+              <th class="text-left hl-gray">Description</th>
+              <th class="text-right hl-gray">Hours</th>
+              <th class="text-right hl-gray">Rate</th>
+              <th class="money hl-gray">Total</th>
+            </tr>
+            {% for entry in section.entries %}
+              <tr>
+                <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} ({{ entry.user.initials }})</td>
+                <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
+                <td class="text-right {% if entry.comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
+                <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endfor %}
+            {% if section.comp %}
+              <tr>
+                <td colspan="4">{{ section.category.name }}</td>
+                <td class="money">${{ section.gross|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td colspan="4">Less Comp Time</td>
+                <td class="money">- ${{ section.comp|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endif %}
+            <tr>
+              <td colspan="4">Total {{ section.category.name }}</td>
+              <td class="money">${{ section.net|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% empty %}
+        <div class="section">
+          <p>No claimed fee categories with time entries on this matter.</p>
+        </div>
+      {% endfor %}
+      {% if sections %}
+        <div class="section">
+          <h3>Fee Claim Total</h3>
+          <table class="table invoice-totals">
+            {% for section in sections %}
+              <tr>
+                <td>{{ section.category.name }}</td>
+                <td class="money">${{ section.net|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endfor %}
+            <tr>
+              <td class="total hl-yellow">Fee Claim Total</td>
+              <td class="money total hl-yellow">${{ claim_total|floatformat:2|intcomma }}</td>
+            </tr>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+  </body>
+</html>

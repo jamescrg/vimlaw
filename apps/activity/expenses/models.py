@@ -2,7 +2,7 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
-from apps.activity.models import ActivityLabel
+from apps.activity.models import ActivityCategory
 from apps.invoicing.invoices.models import Invoice
 from apps.matters.models import Matter
 from utils.models import AuditMixin
@@ -20,8 +20,15 @@ class ExpenseEntry(AuditMixin, models.Model):
     invoice = models.ForeignKey(
         Invoice, on_delete=models.SET_NULL, null=True, blank=True
     )
-    labels = models.ManyToManyField(
-        ActivityLabel, related_name="expense_entries", blank=True
+    # One coding bucket per expense (accounting-style); null = uncategorized.
+    # Named activity_category because `category` is the free-text descriptor
+    # shown on invoices.
+    activity_category = models.ForeignKey(
+        ActivityCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expense_entries",
     )
     history = HistoricalRecords()
 
@@ -34,6 +41,12 @@ class ExpenseEntry(AuditMixin, models.Model):
             models.Index(fields=["date"]),
             models.Index(fields=["matter"]),
         ]
+
+    @property
+    def locked(self):
+        """On an invoice that has left DRAFT — no longer eligible for
+        editing (matter/comp/amount changes). Labels stay applicable."""
+        return self.invoice_id is not None and self.invoice.status != "DRAFT"
 
     @property
     def slug(self):
