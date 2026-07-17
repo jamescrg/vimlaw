@@ -9,6 +9,7 @@ from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
 from apps.activity.time.models import TimeEntry
 from apps.matters.models import Matter
+from apps.matters.timekeepers import build_timekeepers
 from apps.settings.models import Firm
 
 
@@ -47,6 +48,7 @@ def generate_activity_report(
 
     context = {
         "matter": matter,
+        "timekeepers": build_timekeepers(matter, time_entries),
         "time_entries": time_entries,
         "expenses": expenses,
         "flat_fee_entries": flat_fee_entries,

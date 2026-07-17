@@ -31,6 +31,27 @@
           {% if matter.client_reference_id %}<p class="text-right">{{ matter.client_reference_id }}</p>{% endif %}
         </div>
       </div>
+      {% if timekeepers %}
+        <div class="section">
+          <h3>Timekeepers</h3>
+          <table class="table">
+            <tr>
+              <th class="text-left hl-gray">Initials</th>
+              <th class="text-left hl-gray">Name</th>
+              <th class="text-left hl-gray">Title</th>
+              <th class="money hl-gray">Rate</th>
+            </tr>
+            {% for timekeeper in timekeepers %}
+              <tr>
+                <td>{{ timekeeper.user.initials }}</td>
+                <td>{{ timekeeper.user.full_name }}</td>
+                <td>{{ timekeeper.user.title_display }}</td>
+                <td class="money">${{ timekeeper.rate|floatformat:2 }}</td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+      {% endif %}
       {% if time_entries %}
         <div class="section">
           <h3>Time Entries</h3>

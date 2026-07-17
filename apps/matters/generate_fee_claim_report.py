@@ -8,6 +8,7 @@ from weasyprint import HTML
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.time.models import TimeEntry
 from apps.matters.models import Matter
+from apps.matters.timekeepers import build_timekeepers
 from apps.settings.models import Firm
 
 
@@ -91,22 +92,7 @@ def build_fee_claim_context(
     claimed_sections = [s for s in sections if s["claimed"]]
     unclaimed_sections = [s for s in sections if not s["claimed"]]
 
-    # Legend of everyone whose initials appear in the entry listings, with
-    # their rate on this matter (matter rate, else the user's default).
-    from apps.matters.rates.models import Rate
-
-    matter_rates = {
-        rate.user_id: rate.matter_rate for rate in Rate.objects.filter(matter=matter)
-    }
-    timekeepers = {}
-    for section in sections:
-        for entry in section["entries"]:
-            if entry.user_id and entry.user_id not in timekeepers:
-                user = entry.user
-                timekeepers[entry.user_id] = {
-                    "user": user,
-                    "rate": matter_rates.get(user.id, user.user_rate),
-                }
+    timekeepers = build_timekeepers(matter, (e for s in sections for e in s["entries"]))
 
     # Ungrouped mode: one chronological run of everything included.
     all_entries = sorted(
@@ -126,10 +112,7 @@ def build_fee_claim_context(
         "include_unclaimed": include_unclaimed,
         "all_entries": all_entries,
         "all_expenses": all_expenses,
-        "timekeepers": sorted(
-            timekeepers.values(),
-            key=lambda t: (t["user"].initials or "", t["user"].username),
-        ),
+        "timekeepers": timekeepers,
         "reclaim_comp": reclaim_comp,
         "claimed_totals": rollup(claimed_sections),
         "unclaimed_totals": rollup(unclaimed_sections),
