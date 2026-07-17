@@ -19,7 +19,7 @@ class ActivityCategory(AuditMixin, models.Model):
         on_delete=models.CASCADE,
         related_name="activity_categories",
     )
-    claimed = models.BooleanField(default=False)
+    claimed = models.BooleanField(default=True)
     position = models.PositiveIntegerField(default=0)
     history = HistoricalRecords()
 

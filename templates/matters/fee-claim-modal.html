@@ -18,7 +18,7 @@
             action="{% url 'matters:fee-claim-report' matter.id %}"
             class="form-compact">
         <label class="fee-claim-option">
-          Include unclaimed activity
+          Display unclaimed activity?
           <select name="include_unclaimed">
             <option value="false"
                     {% if not matter.report_include_unclaimed %}selected{% endif %}>No</option>
@@ -26,11 +26,26 @@
                     {% if matter.report_include_unclaimed %}selected{% endif %}>Yes</option>
           </select>
         </label>
+        <label class="fee-claim-option">
+          Display time entries
+          <select name="show_entries">
+            <option value="false"
+                    {% if not matter.report_show_entries %}selected{% endif %}>No</option>
+            <option value="true" {% if matter.report_show_entries %}selected{% endif %}>Yes</option>
+          </select>
+        </label>
+        <label class="fee-claim-option">
+          Group time entries by category
+          <select name="group_by_category">
+            <option value="false"
+                    {% if not matter.report_group_by_category %}selected{% endif %}>No</option>
+            <option value="true"
+                    {% if matter.report_group_by_category %}selected{% endif %}>Yes</option>
+          </select>
+        </label>
         <p class="text-muted">
-          Sections follow the Categories view: each category lists its time
-          entries and expenses. Comp entries are shown struck through, and all
-          totals are net &mdash; comped work is never claimed. Uncategorized
-          entries count as
+          Comp entries are shown struck through, and all totals are net
+          &mdash; comped work is never claimed. Uncategorized entries count as
           {% if matter.uncategorized_claimed %}
             claimed
           {% else %}
@@ -44,7 +59,12 @@
       <button type="button"
               class="btn btn-secondary"
               @click="$dispatch('close-modal')">Cancel</button>
-      <button type="submit" form="fee-claim-form" class="btn btn-success">Download PDF</button>
+      {% comment %}The click both submits the download (the native default
+      action fires after handlers) and closes the modal.{% endcomment %}
+      <button type="submit"
+              form="fee-claim-form"
+              class="btn btn-success"
+              @click="$dispatch('close-modal')">Download PDF</button>
     </div>
   </div>
 </div>

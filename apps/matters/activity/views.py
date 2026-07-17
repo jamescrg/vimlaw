@@ -308,13 +308,23 @@ def fee_claim_report_modal(request, id):
 def fee_claim_report(request, id):
     matter = get_object_or_404(Matter, pk=id)
 
-    # The chosen option becomes the matter's new default (team-wide).
+    # The chosen options become the matter's new defaults (team-wide).
     include_unclaimed = request.GET.get("include_unclaimed") == "true"
-    if matter.report_include_unclaimed != include_unclaimed:
+    show_entries = request.GET.get("show_entries") == "true"
+    group_by_category = request.GET.get("group_by_category") == "true"
+    if (
+        matter.report_include_unclaimed != include_unclaimed
+        or matter.report_show_entries != show_entries
+        or matter.report_group_by_category != group_by_category
+    ):
         matter.report_include_unclaimed = include_unclaimed
+        matter.report_show_entries = show_entries
+        matter.report_group_by_category = group_by_category
         matter.save()
 
-    file = generate_fee_claim_report(matter, request, include_unclaimed)
+    file = generate_fee_claim_report(
+        matter, request, include_unclaimed, show_entries, group_by_category
+    )
 
     current_date = datetime.now().strftime("%Y-%m-%d")
 

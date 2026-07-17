@@ -137,22 +137,56 @@ class TestFeeClaimReport:
         )
         assert b'value="false" selected' in response.content
 
-    def test_generating_persists_option_to_matter(self, client, user, matter, category):
+    def test_generating_persists_options_to_matter(
+        self, client, user, matter, category
+    ):
         make_entry(user, matter, category=category)
 
         client.get(
             reverse("matters:fee-claim-report", kwargs={"id": matter.id}),
-            {"include_unclaimed": "false"},
+            {
+                "include_unclaimed": "false",
+                "show_entries": "true",
+                "group_by_category": "false",
+            },
         )
         matter.refresh_from_db()
         assert matter.report_include_unclaimed is False
+        assert matter.report_show_entries is True
+        assert matter.report_group_by_category is False
 
         client.get(
             reverse("matters:fee-claim-report", kwargs={"id": matter.id}),
-            {"include_unclaimed": "true"},
+            {
+                "include_unclaimed": "true",
+                "show_entries": "false",
+                "group_by_category": "true",
+            },
         )
         matter.refresh_from_db()
         assert matter.report_include_unclaimed is True
+        assert matter.report_show_entries is False
+        assert matter.report_group_by_category is True
+
+    def test_ungrouped_mode_lists_chronologically(
+        self, user, matter, category, category_2
+    ):
+        later = make_entry(user, matter, date="2020-02-01", category=category)
+        earlier = make_entry(user, matter, date="2020-01-01", category=category_2)
+
+        context = build_fee_claim_context(
+            matter, show_entries=True, group_by_category=False
+        )
+        assert context["group_by_category"] is False
+        # One run, date order — regardless of category grouping.
+        assert context["all_entries"] == [earlier, later]
+
+    def test_summary_only_mode(self, user, matter, category):
+        make_entry(user, matter, category=category)
+        context = build_fee_claim_context(matter, show_entries=False)
+        assert context["show_entries"] is False
+        # Summary data still present for the template.
+        assert context["grand_totals"]["fees"] == 300
 
 
 class TestMatterCategoryFilter:

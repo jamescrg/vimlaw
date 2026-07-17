@@ -11,7 +11,12 @@ from apps.matters.models import Matter
 from apps.settings.models import Firm
 
 
-def build_fee_claim_context(matter: Matter, include_unclaimed: bool = False) -> dict:
+def build_fee_claim_context(
+    matter: Matter,
+    include_unclaimed: bool = False,
+    show_entries: bool = True,
+    group_by_category: bool = True,
+) -> dict:
     """
     Assemble the fee claim data for a matter, mirroring the Categories view:
     one section per category in drag order, each listing its time entries and
@@ -22,6 +27,10 @@ def build_fee_claim_context(matter: Matter, include_unclaimed: bool = False) -> 
     Unclaimed categories appear only when include_unclaimed is set; the
     uncategorized bucket counts as claimed or unclaimed per the matter's
     switch. Each entry has exactly one category, so nothing double-counts.
+
+    show_entries=False renders the summary alone; group_by_category=False
+    keeps the summary but lists the entries chronologically in single
+    Time Entries / Expenses tables, like the classic activity report.
     """
 
     sections = []
@@ -79,9 +88,34 @@ def build_fee_claim_context(matter: Matter, include_unclaimed: bool = False) -> 
     claimed_sections = [s for s in sections if s["claimed"]]
     unclaimed_sections = [s for s in sections if not s["claimed"]]
 
+    # Legend of everyone whose initials appear in the entry listings.
+    timekeepers = {}
+    for section in sections:
+        for entry in section["entries"]:
+            if entry.user_id and entry.user_id not in timekeepers:
+                timekeepers[entry.user_id] = entry.user
+
+    # Ungrouped mode: one chronological run of everything included.
+    all_entries = sorted(
+        (e for s in sections for e in s["entries"]),
+        key=lambda e: (e.date or date.min, e.id),
+    )
+    all_expenses = sorted(
+        (x for s in sections for x in s["expenses"]),
+        key=lambda x: (x.date or date.min, x.id),
+    )
+
     return {
         "matter": matter,
         "sections": sections,
+        "show_entries": show_entries,
+        "group_by_category": group_by_category,
+        "include_unclaimed": include_unclaimed,
+        "all_entries": all_entries,
+        "all_expenses": all_expenses,
+        "timekeepers": sorted(
+            timekeepers.values(), key=lambda u: (u.initials or "", u.username)
+        ),
         "claimed_totals": rollup(claimed_sections),
         "unclaimed_totals": rollup(unclaimed_sections),
         "grand_totals": rollup(sections),
@@ -92,14 +126,20 @@ def build_fee_claim_context(matter: Matter, include_unclaimed: bool = False) -> 
 
 
 def generate_fee_claim_report(
-    matter: Matter, request: WSGIRequest, include_unclaimed: bool = False
+    matter: Matter,
+    request: WSGIRequest,
+    include_unclaimed: bool = False,
+    show_entries: bool = True,
+    group_by_category: bool = True,
 ) -> NamedTemporaryFile:
     """
     Generate the fee claim report PDF — the exhibit to an attorney affidavit
     on a fee motion.
     """
 
-    context = build_fee_claim_context(matter, include_unclaimed)
+    context = build_fee_claim_context(
+        matter, include_unclaimed, show_entries, group_by_category
+    )
 
     html_string = render_to_string("matters/fee-claim-report.html", context)
     base_url = request.build_absolute_uri("/").rstrip("/")
