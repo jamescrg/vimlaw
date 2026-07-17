@@ -59,6 +59,9 @@ class Matter(AuditMixin, models.Model):
     report_include_unclaimed = models.BooleanField(default=True)
     report_show_entries = models.BooleanField(default=True)
     report_group_by_category = models.BooleanField(default=True)
+    # Claim comped work too: fees compute on gross and comp entries lose
+    # the struck-through treatment.
+    report_reclaim_comp = models.BooleanField(default=False)
     members = models.ManyToManyField(
         "accounts.CustomUser",
         related_name="assigned_matters",

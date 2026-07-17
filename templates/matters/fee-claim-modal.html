@@ -18,7 +18,10 @@
             action="{% url 'matters:fee-claim-report' matter.id %}"
             class="form-compact">
         <label class="fee-claim-option">
-          Display unclaimed activity?
+          <span>Display unclaimed activity
+            <i class="icon-info fee-claim-info"
+               title="Also list categories not marked claimed, with a Total / Unclaimed / Total Claim breakdown. The summary gains a Claimed column."></i>
+          </span>
           <select name="include_unclaimed">
             <option value="false"
                     {% if not matter.report_include_unclaimed %}selected{% endif %}>No</option>
@@ -27,7 +30,10 @@
           </select>
         </label>
         <label class="fee-claim-option">
-          Display time entries
+          <span>Display time entries
+            <i class="icon-info fee-claim-info"
+               title="List the individual time entries and expenses. No renders the summary alone."></i>
+          </span>
           <select name="show_entries">
             <option value="false"
                     {% if not matter.report_show_entries %}selected{% endif %}>No</option>
@@ -35,7 +41,10 @@
           </select>
         </label>
         <label class="fee-claim-option">
-          Group time entries by category
+          <span>Group time entries by category
+            <i class="icon-info fee-claim-info"
+               title="One section per category, in the Categories view's order. No lists everything chronologically, like the activity report."></i>
+          </span>
           <select name="group_by_category">
             <option value="false"
                     {% if not matter.report_group_by_category %}selected{% endif %}>No</option>
@@ -43,9 +52,19 @@
                     {% if matter.report_group_by_category %}selected{% endif %}>Yes</option>
           </select>
         </label>
+        <label class="fee-claim-option">
+          <span>Reclaim comp time
+            <i class="icon-info fee-claim-info"
+               title="Claim comped work too: fees compute on gross amounts and comp entries are no longer struck through."></i>
+          </span>
+          <select name="reclaim_comp">
+            <option value="false"
+                    {% if not matter.report_reclaim_comp %}selected{% endif %}>No</option>
+            <option value="true" {% if matter.report_reclaim_comp %}selected{% endif %}>Yes</option>
+          </select>
+        </label>
         <p class="text-muted">
-          Comp entries are shown struck through, and all totals are net
-          &mdash; comped work is never claimed. Uncategorized entries count as
+          Uncategorized entries count as
           {% if matter.uncategorized_claimed %}
             claimed
           {% else %}

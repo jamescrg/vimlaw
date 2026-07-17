@@ -55,80 +55,86 @@
               <th class="money hl-gray">Expenses</th>
               <th class="money hl-gray">Total</th>
             </tr>
-            {% if show_entries %}
-              {% if group_by_category %}
-                {% for section in sections %}
-                  <tr>
-                    <td>{{ section.title }}</td>
-                    {% if include_unclaimed %}
-                      <td class="summary-claimed">
-                        {% if section.claimed %}
-                          Yes
-                        {% else %}
-                          No
-                        {% endif %}
-                      </td>
+            {% for section in sections %}
+              <tr>
+                <td>{{ section.title }}</td>
+                {% if include_unclaimed %}
+                  <td class="summary-claimed">
+                    {% if section.claimed %}
+                      Yes
+                    {% else %}
+                      No
                     {% endif %}
-                    <td class="money">${{ section.fees_net|floatformat:2|intcomma }}</td>
-                    <td class="money">${{ section.expenses_net|floatformat:2|intcomma }}</td>
-                    <td class="money">${{ section.total|floatformat:2|intcomma }}</td>
-                  </tr>
-                {% endfor %}
-                {% if has_unclaimed %}
-                  {% comment %}Same rollup order as the Categories view: all,
-                  then unclaimed, closing on the highlighted claim number.{% endcomment %}
-                  <tr>
-                    <td class="total">Total</td>
-                    {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
-                    <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
-                    <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
-                    <td class="money total">${{ grand_totals.total|floatformat:2|intcomma }}</td>
-                  </tr>
-                  <tr>
-                    <td>Unclaimed</td>
-                    {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
-                    <td class="money">${{ unclaimed_totals.fees|floatformat:2|intcomma }}</td>
-                    <td class="money">${{ unclaimed_totals.expenses|floatformat:2|intcomma }}</td>
-                    <td class="money">${{ unclaimed_totals.total|floatformat:2|intcomma }}</td>
-                  </tr>
-                  <tr>
-                    <td class="total">Total Claim</td>
-                    {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
-                    <td class="money total">${{ claimed_totals.fees|floatformat:2|intcomma }}</td>
-                    <td class="money total">${{ claimed_totals.expenses|floatformat:2|intcomma }}</td>
-                    <td class="money total hl-yellow">${{ claimed_totals.total|floatformat:2|intcomma }}</td>
-                  </tr>
-                {% else %}
-                  <tr>
-                    <td class="total">Total Claim</td>
-                    {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
-                    <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
-                    <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
-                    <td class="money total hl-yellow">${{ grand_totals.total|floatformat:2|intcomma }}</td>
-                  </tr>
+                  </td>
                 {% endif %}
-              </table>
-            </div>
-          {% endif %}
-          {% if show_entries and timekeepers %}
-            <div class="section">
-              <h3>Timekeepers</h3>
-              <table class="table">
-                <tr>
-                  <th class="text-left hl-gray summary-claimed">Initials</th>
-                  <th class="text-left hl-gray">Name</th>
-                  <th class="text-left hl-gray">Title</th>
-                </tr>
-                {% for user in timekeepers %}
-                  <tr>
-                    <td class="summary-claimed">{{ user.initials }}</td>
-                    <td>{{ user.full_name }}</td>
-                    <td>{{ user.title_display }}</td>
-                  </tr>
-                {% endfor %}
-              </table>
-            </div>
-          {% endif %}
+                <td class="money">${{ section.fees_net|floatformat:2|intcomma }}</td>
+                <td class="money">${{ section.expenses_net|floatformat:2|intcomma }}</td>
+                <td class="money">${{ section.total|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endfor %}
+            {% if has_unclaimed %}
+              {% comment %}Same rollup order as the Categories view: all,
+              then unclaimed, closing on the highlighted claim number.{% endcomment %}
+              <tr>
+                <td class="total">Total</td>
+                {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ grand_totals.total|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td>Unclaimed</td>
+                {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="money">${{ unclaimed_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money">${{ unclaimed_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money">${{ unclaimed_totals.total|floatformat:2|intcomma }}</td>
+              </tr>
+              <tr>
+                <td class="total">Total Claim</td>
+                {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="money total">${{ claimed_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ claimed_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money total hl-yellow">${{ claimed_totals.total|floatformat:2|intcomma }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td class="total">Total Claim</td>
+                {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
+                <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
+                <td class="money total hl-yellow">${{ grand_totals.total|floatformat:2|intcomma }}</td>
+              </tr>
+            {% endif %}
+          </table>
+        </div>
+      {% else %}
+        <div class="section">
+          <p>No fee categories with entries on this matter.</p>
+        </div>
+      {% endif %}
+      {% if show_entries and timekeepers %}
+        <div class="section">
+          <h3>Timekeepers</h3>
+          <table class="table">
+            <tr>
+              <th class="text-left hl-gray">Initials</th>
+              <th class="text-left hl-gray">Name</th>
+              <th class="text-left hl-gray">Title</th>
+              <th class="money hl-gray">Rate</th>
+            </tr>
+            {% for timekeeper in timekeepers %}
+              <tr>
+                <td>{{ timekeeper.user.initials }}</td>
+                <td>{{ timekeeper.user.full_name }}</td>
+                <td>{{ timekeeper.user.title_display }}</td>
+                <td class="money">${{ timekeeper.rate|floatformat:2 }}</td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+      {% endif %}
+      {% if show_entries %}
+        {% if group_by_category %}
           {% for section in sections %}
             <div class="section">
               <h3>
@@ -146,11 +152,13 @@
                   </tr>
                   {% for entry in section.entries %}
                     <tr>
-                      <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
-                      <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} ({{ entry.user.initials }})</td>
-                      <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
-                      <td class="text-right {% if entry.comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
-                      <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
+                      <td class="date{% if entry.comp and not reclaim_comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                      <td class="{% if entry.comp and not reclaim_comp %} comp{% endif %}">
+                        {{ entry.actions }} ({{ entry.user.initials }})
+                      </td>
+                      <td class="text-right {% if entry.comp and not reclaim_comp %}comp{% endif %}">{{ entry.hours }}</td>
+                      <td class="text-right {% if entry.comp and not reclaim_comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
+                      <td class="money {% if entry.comp and not reclaim_comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
                     </tr>
                   {% endfor %}
                   <tr>
@@ -168,12 +176,14 @@
                   </tr>
                   {% for expense in section.expenses %}
                     <tr>
-                      <td class="date{% if expense.comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
-                      <td class="{% if expense.comp %} comp{% endif %}">
+                      <td class="date{% if expense.comp and not reclaim_comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
+                      <td class="{% if expense.comp and not reclaim_comp %} comp{% endif %}">
                         {% if expense.category %}{{ expense.category }} -{% endif %}
                         {{ expense.description }}
                       </td>
-                      <td class="money{% if expense.comp %} comp{% endif %}">${{ expense.amount|floatformat:2|intcomma }}</td>
+                      <td class="money{% if expense.comp and not reclaim_comp %} comp{% endif %}">
+                        ${{ expense.amount|floatformat:2|intcomma }}
+                      </td>
                     </tr>
                   {% endfor %}
                   <tr>
@@ -182,10 +192,6 @@
                   </tr>
                 </table>
               {% endif %}
-            </div>
-          {% empty %}
-            <div class="section">
-              <p>No fee categories with entries on this matter.</p>
             </div>
           {% endfor %}
         {% else %}
@@ -202,11 +208,13 @@
                 </tr>
                 {% for entry in all_entries %}
                   <tr>
-                    <td class="date{% if entry.comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
-                    <td class="{% if entry.comp %} comp{% endif %}">{{ entry.actions }} ({{ entry.user.initials }})</td>
-                    <td class="text-right {% if entry.comp %}comp{% endif %}">{{ entry.hours }}</td>
-                    <td class="text-right {% if entry.comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
-                    <td class="money {% if entry.comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
+                    <td class="date{% if entry.comp and not reclaim_comp %} comp{% endif %}">{{ entry.date|date:"Y-m-d" }}</td>
+                    <td class="{% if entry.comp and not reclaim_comp %} comp{% endif %}">
+                      {{ entry.actions }} ({{ entry.user.initials }})
+                    </td>
+                    <td class="text-right {% if entry.comp and not reclaim_comp %}comp{% endif %}">{{ entry.hours }}</td>
+                    <td class="text-right {% if entry.comp and not reclaim_comp %}comp{% endif %}">${{ entry.rate|floatformat:2 }}</td>
+                    <td class="money {% if entry.comp and not reclaim_comp %}comp{% endif %}">${{ entry.fee|floatformat:2|intcomma }}</td>
                   </tr>
                 {% endfor %}
                 <tr>
@@ -227,12 +235,14 @@
                 </tr>
                 {% for expense in all_expenses %}
                   <tr>
-                    <td class="date{% if expense.comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
-                    <td class="{% if expense.comp %} comp{% endif %}">
+                    <td class="date{% if expense.comp and not reclaim_comp %} comp{% endif %}">{{ expense.date|date:"Y-m-d" }}</td>
+                    <td class="{% if expense.comp and not reclaim_comp %} comp{% endif %}">
                       {% if expense.category %}{{ expense.category }} -{% endif %}
                       {{ expense.description }}
                     </td>
-                    <td class="money{% if expense.comp %} comp{% endif %}">${{ expense.amount|floatformat:2|intcomma }}</td>
+                    <td class="money{% if expense.comp and not reclaim_comp %} comp{% endif %}">
+                      ${{ expense.amount|floatformat:2|intcomma }}
+                    </td>
                   </tr>
                 {% endfor %}
                 <tr>

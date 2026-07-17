@@ -769,19 +769,23 @@ Matter Overview tab
   color: var(--icon-muted);
 }
 
-/* Fee claim options modal: label + Yes/No select as one inline row, with
-   the explanatory note spaced off it. The .form-compact grid would paint
-   the select 100% wide and wedge the label — the text takes the slack and
-   the select stays Yes/No-sized. */
+/* Fee claim options modal: labels left, the Yes/No selects pushed to a
+   right-aligned column so the rows read as a form. The .form-compact grid
+   would paint the selects 100% wide — keep them Yes/No-sized. */
 .fee-claim-option {
   align-items: center;
   display: flex;
   gap: 0.75rem;
+  justify-content: space-between;
 }
 
 .fee-claim-option select {
   flex: 0 0 auto;
-  width: auto;
+  width: 6rem;
+}
+
+.fee-claim-info {
+  color: var(--icon-muted);
 }
 
 #fee-claim-form .text-muted {

@@ -123,19 +123,34 @@ class TestFeeClaimReport:
         assert response.content[:4] == b"%PDF"
 
     def test_options_modal_defaults_from_matter(self, client, matter):
+        import re
+
+        def selected_option(content, name):
+            block = re.search(
+                rf'name="{name}".*?</select>', content.decode(), re.S
+            ).group(0)
+            return re.search(
+                r'<option[^>]*value="(true|false)"[^>]*selected', block, re.S
+            ).group(1)
+
         response = client.get(
             reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
         )
         assert response.status_code == 200
-        # Defaults to including unclaimed (the matter field's default).
-        assert b'value="true" selected' in response.content
+        # Matter-field defaults: unclaimed/entries/grouped on, reclaim off.
+        assert selected_option(response.content, "include_unclaimed") == "true"
+        assert selected_option(response.content, "show_entries") == "true"
+        assert selected_option(response.content, "group_by_category") == "true"
+        assert selected_option(response.content, "reclaim_comp") == "false"
 
         matter.report_include_unclaimed = False
+        matter.report_reclaim_comp = True
         matter.save()
         response = client.get(
             reverse("matters:fee-claim-report-modal", kwargs={"id": matter.id})
         )
-        assert b'value="false" selected' in response.content
+        assert selected_option(response.content, "include_unclaimed") == "false"
+        assert selected_option(response.content, "reclaim_comp") == "true"
 
     def test_generating_persists_options_to_matter(
         self, client, user, matter, category
@@ -161,12 +176,39 @@ class TestFeeClaimReport:
                 "include_unclaimed": "true",
                 "show_entries": "false",
                 "group_by_category": "true",
+                "reclaim_comp": "true",
             },
         )
         matter.refresh_from_db()
         assert matter.report_include_unclaimed is True
         assert matter.report_show_entries is False
         assert matter.report_group_by_category is True
+        assert matter.report_reclaim_comp is True
+
+    def test_reclaim_comp_uses_gross(self, user, matter, category):
+        make_entry(user, matter, hours=2.0, rate=300, category=category)
+        make_entry(user, matter, hours=1.0, rate=300, comp=True, category=category)
+
+        context = build_fee_claim_context(matter)
+        assert context["sections"][0]["fees_net"] == 600
+        assert context["reclaim_comp"] is False
+
+        context = build_fee_claim_context(matter, reclaim_comp=True)
+        assert context["sections"][0]["fees_net"] == 900
+        assert context["reclaim_comp"] is True
+        assert context["grand_totals"]["fees"] == 900
+
+    def test_timekeepers_have_rates(self, user, matter, category):
+        from apps.matters.rates.models import Rate
+
+        make_entry(user, matter, category=category)
+        context = build_fee_claim_context(matter)
+        # No matter rate set → user default.
+        assert context["timekeepers"][0]["rate"] == user.user_rate
+
+        Rate.objects.create(user=user, matter=matter, matter_rate=425)
+        context = build_fee_claim_context(matter)
+        assert context["timekeepers"][0]["rate"] == 425
 
     def test_ungrouped_mode_lists_chronologically(
         self, user, matter, category, category_2
@@ -251,3 +293,57 @@ class TestMatterCategoryFilter:
         )
         selected = client.session[f"selected_matter_activity_{matter.id}"]
         assert selected == [in_filter.id]
+
+
+class TestReportTemplateModes:
+    """Render the template per option mode and assert content markers —
+    size-only smoke checks once let a mis-nested template through."""
+
+    def render(self, matter, **kwargs):
+        from django.template.loader import render_to_string
+
+        return render_to_string(
+            "matters/fee-claim-report.html", build_fee_claim_context(matter, **kwargs)
+        )
+
+    def test_summary_only_hides_entries_and_timekeepers(self, user, matter, category):
+        make_entry(user, matter, actions="Detail row", category=category)
+        html = self.render(matter, show_entries=False)
+        assert "Summary" in html
+        assert "Total Claim" in html
+        assert "Timekeepers" not in html
+        assert "Detail row" not in html
+
+    def test_grouped_mode_sections(self, user, matter, category):
+        make_entry(user, matter, actions="Detail row", category=category)
+        html = self.render(matter, show_entries=True, group_by_category=True)
+        assert "Timekeepers" in html
+        assert "Detail row" in html
+        assert "<h3>Time Entries</h3>" not in html
+
+    def test_ungrouped_mode_single_listing(self, user, matter, category, category_2):
+        make_entry(user, matter, actions="Detail row", category=category)
+        make_entry(user, matter, actions="Other row", category=category_2)
+        html = self.render(matter, show_entries=True, group_by_category=False)
+        assert "<h3>Time Entries</h3>" in html
+        assert "Detail row" in html and "Other row" in html
+        # Summary + timekeepers + one combined listing table.
+        assert html.count("</table>") == 3
+
+    def test_claimed_column_only_with_unclaimed(self, user, matter, category):
+        make_entry(user, matter, category=category)
+        assert ">Claimed</th>" in self.render(matter, include_unclaimed=True)
+        assert ">Claimed</th>" not in self.render(matter, include_unclaimed=False)
+
+    def test_reclaim_comp_drops_strikethrough(self, user, matter, category):
+        import re
+
+        make_entry(user, matter, comp=True, category=category)
+
+        html = self.render(matter)
+        listing = html.split("Timekeepers", 1)[1]
+        assert re.search(r'class="[^"]*\bcomp\b', listing)
+
+        html = self.render(matter, reclaim_comp=True)
+        listing = html.split("Timekeepers", 1)[1]
+        assert not re.search(r'class="[^"]*\bcomp\b', listing)

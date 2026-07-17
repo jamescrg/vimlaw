@@ -312,18 +312,26 @@ def fee_claim_report(request, id):
     include_unclaimed = request.GET.get("include_unclaimed") == "true"
     show_entries = request.GET.get("show_entries") == "true"
     group_by_category = request.GET.get("group_by_category") == "true"
+    reclaim_comp = request.GET.get("reclaim_comp") == "true"
     if (
         matter.report_include_unclaimed != include_unclaimed
         or matter.report_show_entries != show_entries
         or matter.report_group_by_category != group_by_category
+        or matter.report_reclaim_comp != reclaim_comp
     ):
         matter.report_include_unclaimed = include_unclaimed
         matter.report_show_entries = show_entries
         matter.report_group_by_category = group_by_category
+        matter.report_reclaim_comp = reclaim_comp
         matter.save()
 
     file = generate_fee_claim_report(
-        matter, request, include_unclaimed, show_entries, group_by_category
+        matter,
+        request,
+        include_unclaimed,
+        show_entries,
+        group_by_category,
+        reclaim_comp,
     )
 
     current_date = datetime.now().strftime("%Y-%m-%d")

@@ -16,6 +16,7 @@ def build_fee_claim_context(
     include_unclaimed: bool = False,
     show_entries: bool = True,
     group_by_category: bool = True,
+    reclaim_comp: bool = False,
 ) -> dict:
     """
     Assemble the fee claim data for a matter, mirroring the Categories view:
@@ -31,6 +32,8 @@ def build_fee_claim_context(
     show_entries=False renders the summary alone; group_by_category=False
     keeps the summary but lists the entries chronologically in single
     Time Entries / Expenses tables, like the classic activity report.
+    reclaim_comp=True claims comped work too: totals compute on gross and
+    the template drops the struck-through treatment.
     """
 
     sections = []
@@ -38,8 +41,8 @@ def build_fee_claim_context(
     def add_section(title, claimed, time_entries, expenses):
         if not time_entries and not expenses:
             return
-        fees_net = sum(e.fee for e in time_entries if not e.comp)
-        expenses_net = sum(x.amount for x in expenses if not x.comp)
+        fees_net = sum(e.fee for e in time_entries if reclaim_comp or not e.comp)
+        expenses_net = sum(x.amount for x in expenses if reclaim_comp or not x.comp)
         sections.append(
             {
                 "title": title,
@@ -88,12 +91,22 @@ def build_fee_claim_context(
     claimed_sections = [s for s in sections if s["claimed"]]
     unclaimed_sections = [s for s in sections if not s["claimed"]]
 
-    # Legend of everyone whose initials appear in the entry listings.
+    # Legend of everyone whose initials appear in the entry listings, with
+    # their rate on this matter (matter rate, else the user's default).
+    from apps.matters.rates.models import Rate
+
+    matter_rates = {
+        rate.user_id: rate.matter_rate for rate in Rate.objects.filter(matter=matter)
+    }
     timekeepers = {}
     for section in sections:
         for entry in section["entries"]:
             if entry.user_id and entry.user_id not in timekeepers:
-                timekeepers[entry.user_id] = entry.user
+                user = entry.user
+                timekeepers[entry.user_id] = {
+                    "user": user,
+                    "rate": matter_rates.get(user.id, user.user_rate),
+                }
 
     # Ungrouped mode: one chronological run of everything included.
     all_entries = sorted(
@@ -114,8 +127,10 @@ def build_fee_claim_context(
         "all_entries": all_entries,
         "all_expenses": all_expenses,
         "timekeepers": sorted(
-            timekeepers.values(), key=lambda u: (u.initials or "", u.username)
+            timekeepers.values(),
+            key=lambda t: (t["user"].initials or "", t["user"].username),
         ),
+        "reclaim_comp": reclaim_comp,
         "claimed_totals": rollup(claimed_sections),
         "unclaimed_totals": rollup(unclaimed_sections),
         "grand_totals": rollup(sections),
@@ -131,6 +146,7 @@ def generate_fee_claim_report(
     include_unclaimed: bool = False,
     show_entries: bool = True,
     group_by_category: bool = True,
+    reclaim_comp: bool = False,
 ) -> NamedTemporaryFile:
     """
     Generate the fee claim report PDF — the exhibit to an attorney affidavit
@@ -138,7 +154,7 @@ def generate_fee_claim_report(
     """
 
     context = build_fee_claim_context(
-        matter, include_unclaimed, show_entries, group_by_category
+        matter, include_unclaimed, show_entries, group_by_category, reclaim_comp
     )
 
     html_string = render_to_string("matters/fee-claim-report.html", context)
