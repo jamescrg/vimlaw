@@ -823,3 +823,10 @@ Matter Overview tab
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Overview table heads carry a quick-add button just right of the text. */
+.overview-head-cell {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}

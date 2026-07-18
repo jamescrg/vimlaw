@@ -19,6 +19,12 @@
         text-align: center;
         width: 0.8in;
       }
+
+      /* Hours needs no more room than its own header. */
+      .summary-hours {
+        text-align: right;
+        width: 0.6in;
+      }
     </style>
     <link rel="shortcut icon" href={% static 'images/kosmos-mark.svg' %} />
     <link rel="stylesheet" href={% static_v 'css/palette.css' %} />
@@ -51,6 +57,7 @@
             <tr>
               <th class="text-left hl-gray">Category</th>
               {% if include_unclaimed %}<th class="hl-gray summary-claimed">Claimed</th>{% endif %}
+              <th class="summary-hours hl-gray">Hours</th>
               <th class="money hl-gray">Fees</th>
               <th class="money hl-gray">Expenses</th>
               <th class="money hl-gray">Total</th>
@@ -67,6 +74,7 @@
                     {% endif %}
                   </td>
                 {% endif %}
+                <td class="summary-hours">{{ section.hours|floatformat:1 }}</td>
                 <td class="money">${{ section.fees_net|floatformat:2|intcomma }}</td>
                 <td class="money">${{ section.expenses_net|floatformat:2|intcomma }}</td>
                 <td class="money">${{ section.total|floatformat:2|intcomma }}</td>
@@ -78,6 +86,7 @@
               <tr>
                 <td class="total">Total</td>
                 {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="summary-hours total">{{ grand_totals.hours|floatformat:1 }}</td>
                 <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
                 <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
                 <td class="money total">${{ grand_totals.total|floatformat:2|intcomma }}</td>
@@ -85,6 +94,7 @@
               <tr>
                 <td>Unclaimed</td>
                 {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="summary-hours">{{ unclaimed_totals.hours|floatformat:1 }}</td>
                 <td class="money">${{ unclaimed_totals.fees|floatformat:2|intcomma }}</td>
                 <td class="money">${{ unclaimed_totals.expenses|floatformat:2|intcomma }}</td>
                 <td class="money">${{ unclaimed_totals.total|floatformat:2|intcomma }}</td>
@@ -92,6 +102,7 @@
               <tr>
                 <td class="total">Total Claim</td>
                 {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="summary-hours total">{{ claimed_totals.hours|floatformat:1 }}</td>
                 <td class="money total">${{ claimed_totals.fees|floatformat:2|intcomma }}</td>
                 <td class="money total">${{ claimed_totals.expenses|floatformat:2|intcomma }}</td>
                 <td class="money total hl-yellow">${{ claimed_totals.total|floatformat:2|intcomma }}</td>
@@ -100,6 +111,7 @@
               <tr>
                 <td class="total">Total Claim</td>
                 {% if include_unclaimed %}<td class="summary-claimed"></td>{% endif %}
+                <td class="summary-hours total">{{ grand_totals.hours|floatformat:1 }}</td>
                 <td class="money total">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
                 <td class="money total">${{ grand_totals.expenses|floatformat:2|intcomma }}</td>
                 <td class="money total hl-yellow">${{ grand_totals.total|floatformat:2|intcomma }}</td>
@@ -162,7 +174,9 @@
                     </tr>
                   {% endfor %}
                   <tr>
-                    <td colspan="4">{{ section.title }} Fees</td>
+                    <td colspan="2">{{ section.title }} Fees</td>
+                    <td class="text-right">{{ section.hours|floatformat:1 }}</td>
+                    <td></td>
                     <td class="money">${{ section.fees_net|floatformat:2|intcomma }}</td>
                   </tr>
                 </table>
@@ -218,7 +232,9 @@
                   </tr>
                 {% endfor %}
                 <tr>
-                  <td colspan="4">Total Fees</td>
+                  <td colspan="2">Total Fees</td>
+                  <td class="text-right">{{ grand_totals.hours|floatformat:1 }}</td>
+                  <td></td>
                   <td class="money">${{ grand_totals.fees|floatformat:2|intcomma }}</td>
                 </tr>
               </table>

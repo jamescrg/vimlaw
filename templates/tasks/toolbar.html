@@ -53,58 +53,40 @@
                 hx-swap="#outerHTML">
           <i class="icon-list-filter"></i>Filter
         </button>
-        <div class="user-step-group">
+        <div class="dropdown" x-data="dropdown()">
           <button type="button"
-                  class="user-step"
-                  aria-label="Previous user"
-                  title="Previous user"
-                  hx-post="{% url 'tasks:filter-user' user_prev_id %}"
-                  hx-target="#tasks">
-            <i class="icon-chevron-left"></i>
+                  id="tasks-user-filter"
+                  class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            <span><i class="icon-users with-text"></i>&nbsp;{{ selected_user|default:"All Users" }}</span>
+            <small>
+              <i class="icon-chevron-down"></i>
+            </small>
           </button>
-          <div class="dropdown" x-data="dropdown()">
-            <button type="button"
-                    id="tasks-user-filter"
-                    class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
-                    x-ref="button"
-                    @click="toggle()"
-                    :aria-expanded="open">
-              <span><i class="icon-users with-text"></i>&nbsp;{{ selected_user|default:"All Users" }}</span>
-              <small>
-                <i class="icon-chevron-down"></i>
-              </small>
-            </button>
-            <ul class="dropdown-menu"
-                x-ref="menu"
-                x-show="open"
-                hx-target="#tasks-user-filter"
-                hx-swap="outerHTML">
+          <ul class="dropdown-menu"
+              x-ref="menu"
+              x-show="open"
+              hx-target="#tasks-user-filter"
+              hx-swap="outerHTML">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'tasks:filter-user' 0 %}"
+                 hx-target="#tasks"
+                 hx-swap="#outerHTML"><i class="icon-users"></i> All Users</a>
+            </li>
+            {% for u in users %}
               <li>
-                <a class="dropdown-item"
+                <a class="dropdown-item {% if u.id == user_id %}active{% endif %}"
                    href="#"
-                   hx-post="{% url 'tasks:filter-user' 0 %}"
+                   hx-post="{% url 'tasks:filter-user' u.id %}"
                    hx-target="#tasks"
-                   hx-swap="#outerHTML"><i class="icon-users"></i> All Users</a>
+                   hx-swap="#outerHTML"><i class="icon-user"></i> {{ u.username|title }}</a>
               </li>
-              {% for u in users %}
-                <li>
-                  <a class="dropdown-item {% if u.id == user_id %}active{% endif %}"
-                     href="#"
-                     hx-post="{% url 'tasks:filter-user' u.id %}"
-                     hx-target="#tasks"
-                     hx-swap="#outerHTML"><i class="icon-user"></i> {{ u.username|title }}</a>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-          <button type="button"
-                  class="user-step"
-                  aria-label="Next user"
-                  title="Next user"
-                  hx-post="{% url 'tasks:filter-user' user_next_id %}"
-                  hx-target="#tasks">
-            <i class="icon-chevron-right"></i>
-          </button>
+            {% endfor %}
+          </ul>
         </div>
         <div class="dropdown" x-data="dropdown()">
           <button type="button"

@@ -210,7 +210,7 @@ const commandPalette = {
     { label: 'Time Entry', icon: 'icon-clock', url: '/activity/time/add', matterUrl: '/activity/time/add/{id}/activity' },
     { label: 'Task', icon: 'icon-square-check', url: '/tasks/add', matterUrl: '/matters/{id}/tasks/add' },
     { label: 'Expense', icon: 'icon-dollar-sign', url: '/activity/expenses/add', matterUrl: '/activity/expenses/add/{id}/activity' },
-    { label: 'Event', icon: 'icon-calendar', url: '/events/add', matterUrl: '/events/add/{id}' },
+    { label: 'Event', icon: 'icon-calendar', url: '/events/add', matterUrl: '/events/add/{id}/matters' },
     { label: 'Contact', icon: 'icon-user', url: '/contacts/add' },
     { label: 'Intake', icon: 'icon-inbox', url: '/intakes/add' },
   ],
