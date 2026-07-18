@@ -50,6 +50,9 @@ def build_fee_claim_context(
                 "claimed": claimed,
                 "entries": time_entries,
                 "expenses": expenses,
+                "hours": sum(
+                    e.hours for e in time_entries if reclaim_comp or not e.comp
+                ),
                 "fees_net": fees_net,
                 "expenses_net": expenses_net,
                 "total": fees_net + expenses_net,
@@ -87,7 +90,12 @@ def build_fee_claim_context(
     def rollup(rows):
         fees = sum(s["fees_net"] for s in rows)
         expenses = sum(s["expenses_net"] for s in rows)
-        return {"fees": fees, "expenses": expenses, "total": fees + expenses}
+        return {
+            "hours": sum(s["hours"] for s in rows),
+            "fees": fees,
+            "expenses": expenses,
+            "total": fees + expenses,
+        }
 
     claimed_sections = [s for s in sections if s["claimed"]]
     unclaimed_sections = [s for s in sections if not s["claimed"]]

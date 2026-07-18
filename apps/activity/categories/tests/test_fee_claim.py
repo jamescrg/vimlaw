@@ -55,7 +55,12 @@ class TestFeeClaimReport:
         assert sections[0]["expenses_net"] == 50
         assert sections[1]["fees_net"] == 100
         assert context["has_unclaimed"] is False
-        assert context["grand_totals"] == {"fees": 700, "expenses": 50, "total": 750}
+        assert context["grand_totals"] == {
+            "hours": 2.5,
+            "fees": 700,
+            "expenses": 50,
+            "total": 750,
+        }
 
     def test_uncategorized_follows_matter_switch(self, user, matter, category):
         make_entry(user, matter, hours=1.0, rate=100, category=category)
@@ -82,9 +87,24 @@ class TestFeeClaimReport:
         ]
         assert context["sections"][1]["claimed"] is False
         assert context["has_unclaimed"] is True
-        assert context["claimed_totals"] == {"fees": 100, "expenses": 0, "total": 100}
-        assert context["unclaimed_totals"] == {"fees": 50, "expenses": 0, "total": 50}
-        assert context["grand_totals"] == {"fees": 150, "expenses": 0, "total": 150}
+        assert context["claimed_totals"] == {
+            "hours": 1.0,
+            "fees": 100,
+            "expenses": 0,
+            "total": 100,
+        }
+        assert context["unclaimed_totals"] == {
+            "hours": 1.0,
+            "fees": 50,
+            "expenses": 0,
+            "total": 50,
+        }
+        assert context["grand_totals"] == {
+            "hours": 2.0,
+            "fees": 150,
+            "expenses": 0,
+            "total": 150,
+        }
 
     def test_include_unclaimed_categories(
         self, user, matter, category, unclaimed_category
@@ -110,7 +130,12 @@ class TestFeeClaimReport:
     def test_empty_categories_skipped(self, matter, category):
         context = build_fee_claim_context(matter)
         assert context["sections"] == []
-        assert context["grand_totals"] == {"fees": 0, "expenses": 0, "total": 0}
+        assert context["grand_totals"] == {
+            "hours": 0,
+            "fees": 0,
+            "expenses": 0,
+            "total": 0,
+        }
 
     def test_pdf_view_with_options(self, client, user, matter, category):
         make_entry(user, matter, category=category)
@@ -195,6 +220,7 @@ class TestFeeClaimReport:
 
         context = build_fee_claim_context(matter, reclaim_comp=True)
         assert context["sections"][0]["fees_net"] == 900
+        assert context["sections"][0]["hours"] == 3.0
         assert context["reclaim_comp"] is True
         assert context["grand_totals"]["fees"] == 900
 

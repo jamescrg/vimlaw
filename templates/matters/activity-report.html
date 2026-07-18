@@ -74,16 +74,22 @@
             {% endfor %}
             {% if comp_time_fees %}
               <tr>
-                <td colspan="4">Time Entries</td>
+                <td colspan="2">Time Entries</td>
+                <td class="text-right">{{ gross_time_hours|floatformat:1 }}</td>
+                <td></td>
                 <td class="money">${{ gross_time_fees|floatformat:2|intcomma }}</td>
               </tr>
               <tr>
-                <td colspan="4">Less Comp Time</td>
+                <td colspan="2">Less Comp Time</td>
+                <td class="text-right">- {{ comp_time_hours|floatformat:1 }}</td>
+                <td></td>
                 <td class="money">- ${{ comp_time_fees|floatformat:2|intcomma }}</td>
               </tr>
             {% endif %}
             <tr>
-              <td colspan="4">Total Time Entries</td>
+              <td colspan="2">Total Time Entries</td>
+              <td class="text-right">{{ net_time_hours|floatformat:1 }}</td>
+              <td></td>
               <td class="money">${{ net_time_fees|floatformat:2|intcomma }}</td>
             </tr>
           </table>

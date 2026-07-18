@@ -36,6 +36,10 @@ def generate_activity_report(
     comp_time_fees = sum(entry.fee for entry in time_entries if entry.comp)
     net_time_fees = gross_time_fees - comp_time_fees
 
+    gross_time_hours = sum(entry.hours for entry in time_entries)
+    comp_time_hours = sum(entry.hours for entry in time_entries if entry.comp)
+    net_time_hours = gross_time_hours - comp_time_hours
+
     gross_expenses = sum(expense.amount for expense in expenses)
     comp_expenses = sum(expense.amount for expense in expenses if expense.comp)
     net_expenses = gross_expenses - comp_expenses
@@ -53,6 +57,9 @@ def generate_activity_report(
         "expenses": expenses,
         "flat_fee_entries": flat_fee_entries,
         "gross_time_fees": gross_time_fees,
+        "gross_time_hours": gross_time_hours,
+        "comp_time_hours": comp_time_hours,
+        "net_time_hours": net_time_hours,
         "comp_time_fees": comp_time_fees,
         "net_time_fees": net_time_fees,
         "gross_expenses": gross_expenses,

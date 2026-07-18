@@ -154,24 +154,6 @@ def enrich_tasks(request, task_list):
     return task_list
 
 
-def adjacent_user_ids(users, user_id):
-    """Prev/next ids on a toolbar user-stepper cycle: the active users in
-    list order, wrapping at the ends. The All Users state is skipped (it stays
-    reachable from the dropdown); from All Users the steppers enter the cycle
-    at the last/first user. The chevrons post these to the toolbar's
-    filter-user endpoint (tasks and activity/time share this)."""
-    ids = [u.id for u in users]
-    if not ids:
-        return 0, 0
-    try:
-        i = ids.index(int(user_id)) if user_id else None
-    except (TypeError, ValueError):
-        i = None
-    if i is None:
-        return ids[-1], ids[0]
-    return ids[i - 1], ids[(i + 1) % len(ids)]
-
-
 def get_list_data(request):
     list_data = {}
 
@@ -211,7 +193,6 @@ def get_list_data(request):
         selected_user = CustomUser.objects.filter(id=user_id).first()
 
     users = CustomUser.objects.filter(is_active=True).order_by("username")
-    user_prev_id, user_next_id = adjacent_user_ids(users, user_id)
 
     # Get current order (remove - prefix if exists)
     current_order = (
@@ -235,8 +216,6 @@ def get_list_data(request):
         ),
         "today": today,
         "users": users,
-        "user_prev_id": user_prev_id,
-        "user_next_id": user_next_id,
         "importances": list(range(7, 0, -1)),
         "user_id": user_id,
         "matter_id": matter_id,
@@ -336,7 +315,6 @@ def get_board_data(request):
     selected_user = CustomUser.objects.filter(id=user_id).first() if user_id else None
 
     users = CustomUser.objects.filter(is_active=True).order_by("username")
-    user_prev_id, user_next_id = adjacent_user_ids(users, user_id)
 
     selected_session_key = get_session_key("selected_tasks")
     selected_tasks = get_selected_ids(request, selected_session_key)
@@ -347,8 +325,6 @@ def get_board_data(request):
         "trigger_key": "tasksListChanged",
         "today": today,
         "users": users,
-        "user_prev_id": user_prev_id,
-        "user_next_id": user_next_id,
         "importances": list(range(7, 0, -1)),
         "user_id": user_id,
         "matter_id": matter_id,

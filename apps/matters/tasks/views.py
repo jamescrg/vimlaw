@@ -255,7 +255,11 @@ def tasks_add(request, id):
         if form.is_valid():
             task = form.save(commit=False)
             task.status = STATUS_PENDING
-            task.matter = matter  # Automatically assign to the current matter
+            # The current matter is only the preset — the form's matter select
+            # is live, so a task can be filed on another matter without
+            # leaving this page.
+            if not task.matter:
+                task.matter = matter
             task.save()
 
             # Store new task ID for force-show in filtered lists
@@ -289,9 +293,11 @@ def tasks_add(request, id):
             use_required_attribute=False,
         )
 
-    # Set the matter to readonly since we're in a matter context
-    form.fields["matter"].widget.attrs["readonly"] = True
-    form.fields["matter"].queryset = Matter.objects.filter(id=matter.id)
+    # The current matter is preselected, but the full open list stays
+    # available so a task can be added to another matter from here.
+    form.fields["matter"].queryset = Matter.objects.filter(
+        status__in=["Pending", "Open"]
+    ).order_by("name")
     users = CustomUser.objects.filter(is_active=True).order_by("username")
     form.fields["user"].queryset = users
 

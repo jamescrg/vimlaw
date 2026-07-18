@@ -206,17 +206,11 @@ tr > td.importance.complete .button-link {
     order: 2;
   }
 
-  /* Let the dropdown stretch so its full-width button fills the grid cell
-     between the two chevrons. */
-  .tasks-toolbar .user-step-group > .dropdown {
-    flex: 1;
-  }
-
   .tasks-toolbar .filter-tools > .dropdown:has(#tasks-date-filter) {
     order: 4;
   }
 
-  .tasks-toolbar .filter-tools > .user-step-group {
+  .tasks-toolbar .filter-tools > .dropdown:has(#tasks-user-filter) {
     order: 3;
   }
 

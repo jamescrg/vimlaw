@@ -115,7 +115,18 @@
           <col>
         </colgroup>
         <tr>
-          <th class="overview-table-head" colspan="2">Events</th>
+          <th class="overview-table-head" colspan="2">
+            <div class="overview-head-cell">
+              Events
+              <button type="button"
+                      class="btn-check"
+                      hx-get="{% url 'calendar:add-matter-origin' matter.id 'matters' %}"
+                      hx-target="#htmx-modal-container"
+                      title="Add event">
+                <i class="icon-plus"></i>
+              </button>
+            </div>
+          </th>
         </tr>
         {% for event in events %}
           <tr>
@@ -144,7 +155,18 @@
           <col class="col-priority">
         </colgroup>
         <tr>
-          <th class="overview-table-head" colspan="4">Tasks</th>
+          <th class="overview-table-head" colspan="4">
+            <div class="overview-head-cell">
+              Tasks
+              <button type="button"
+                      class="btn-check"
+                      hx-get="{% url 'matters:tasks-add' matter.id %}"
+                      hx-target="#htmx-modal-container"
+                      title="Add task">
+                <i class="icon-plus"></i>
+              </button>
+            </div>
+          </th>
         </tr>
         {% for task in tasks %}
           <tr {% if task.date_due and task.date_due < today %}class="overview-task-overdue"{% endif %}>

@@ -11,7 +11,6 @@ from apps.management.selection import (
     get_session_key,
 )
 from apps.matters.models import Matter
-from apps.tasks.tasks import adjacent_user_ids
 
 
 def get_time_data(request):
@@ -98,7 +97,6 @@ def get_time_data(request):
 
     summary = calculate_summary(entries)
     users = CustomUser.objects.filter(is_active=True).order_by("username")
-    user_prev_id, user_next_id = adjacent_user_ids(users, user_id)
 
     pagination = CustomPaginator(
         entries, per_page=10, request=request, session_key="time_pagination"
@@ -146,8 +144,6 @@ def get_time_data(request):
         "number_entries": number_entries,
         "summary": summary,
         "users": users,
-        "user_prev_id": user_prev_id,
-        "user_next_id": user_next_id,
         "selected_user": selected_user,
         "user_id": user_id,
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,
