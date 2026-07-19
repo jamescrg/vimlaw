@@ -370,4 +370,5 @@
   --nord-snow-dark: #ccd4e2;   /* below nord4 — active states, strong borders */
   --nord-frost-tint: #cbe0e9;  /* nord8 as a light selection wash */
   --nord10-deep: #4d6d94;      /* below nord10 — link ink on snow */
+  --nord8-ink: #2f7e97;        /* nord8 cyan at ink weight — accent icons */
 }
