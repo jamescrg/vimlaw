@@ -2,9 +2,12 @@
   var STORAGE_KEY = 'theme';
   var media = window.matchMedia('(prefers-color-scheme: dark)');
 
-  // Legacy: the retired "sky" theme maps to light (Matcha).
-  if (localStorage.getItem(STORAGE_KEY) === 'sky') {
-    localStorage.setItem(STORAGE_KEY, 'light');
+  // Legacy: retired themes map to their nearest survivor — sky and kosmos
+  // to light (Matcha), kosmos-dark to dark (Gruvbox).
+  var LEGACY = { sky: 'light', kosmos: 'light', 'kosmos-dark': 'dark' };
+  var stored = localStorage.getItem(STORAGE_KEY);
+  if (LEGACY[stored]) {
+    localStorage.setItem(STORAGE_KEY, LEGACY[stored]);
   }
 
   function resolve(setting) {

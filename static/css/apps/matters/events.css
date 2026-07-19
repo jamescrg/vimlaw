@@ -60,11 +60,11 @@ display
     background: var(--past-due-bg) !important;
   }
 
-  :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .events-list tbody tr.hl-yellow {
+  :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .events-list tbody tr.hl-yellow {
     border-left-color: var(--past-due-rail);
   }
 
-  :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .events-list tbody tr[class*="hl-"] > td:first-child {
+  :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .events-list tbody tr[class*="hl-"] > td:first-child {
     box-shadow: none;
   }
 }
