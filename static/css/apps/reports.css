@@ -285,10 +285,10 @@
    the sidebar surface and the selected segment the active-tab surface, so the
    chart toggle reads as part of the same navigation system.
    ========================================================================== */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .toolbar .chart-toggle button {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .toolbar .chart-toggle button {
   background: var(--background-sidebar);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"]) .toolbar .chart-toggle button.toggle-active {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .toolbar .chart-toggle button.toggle-active {
   background: var(--background-sidebar-active);
 }

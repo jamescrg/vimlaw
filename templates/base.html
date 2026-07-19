@@ -96,6 +96,10 @@
     {% endif %}
     (function () {
       var setting = localStorage.getItem('theme') || 'auto';
+      // Retired themes map before first paint so a stored kosmos-dark doesn't
+      // flash light; theme.js repairs the stored value on load.
+      var legacy = { sky: 'light', kosmos: 'light', 'kosmos-dark': 'dark' };
+      if (legacy[setting]) setting = legacy[setting];
       var resolved = setting === 'auto'
         ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
         : setting;

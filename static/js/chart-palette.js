@@ -4,7 +4,8 @@
  * Generates muted, theme-aware series colours for Chart.js so charts blend with
  * the project's monochrome + two-accent aesthetic instead of reading as a loud
  * rainbow. Colours are built in OKLCH at low, constant chroma, anchored on each
- * theme's accent hue (violet / gruvbox aqua / Nord frost / Kosmos amber); a gentle hue arc plus
+ * theme's accent hue (violet / gruvbox aqua / Nord frost / everforest green /
+ * catppuccin mauve); a gentle hue arc plus
  * a lightness ramp keeps adjacent stacked segments distinguishable. Chart.js v4
  * accepts oklch(...) strings directly as fill / grid / tick colours.
  *
@@ -24,12 +25,6 @@ window.KosmosChartPalette = (function () {
       hue: 293, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
       grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)",
     },
-    kosmos: {
-      // Same muted violet family as Matcha (violet is the emphasis accent
-      // here too); neutral stone axes.
-      hue: 293, hueSpan: 42, chroma: 0.07, lMin: 0.6, lMax: 0.82, otherL: 0.88,
-      grid: "oklch(0.90 0 0)", tick: "oklch(0.45 0 0)",
-    },
     dark: {
       hue: 142, hueSpan: 80, chroma: 0.06, lMin: 0.52, lMax: 0.76, otherL: 0.52,
       grid: "oklch(0.41 0.011 52)", tick: "oklch(0.69 0.035 76)",
@@ -43,11 +38,23 @@ window.KosmosChartPalette = (function () {
       hue: 210, hueSpan: 90, chroma: 0.055, lMin: 0.6, lMax: 0.82, otherL: 0.88,
       grid: "oklch(0.90 0.008 250)", tick: "oklch(0.45 0.02 250)",
     },
-    "kosmos-dark": {
-      // Warm arc around the brand amber (hue ~77): sienna through gold to
-      // olive, low chroma so it reads as embers on the night, not neon.
-      hue: 77, hueSpan: 80, chroma: 0.06, lMin: 0.52, lMax: 0.76, otherL: 0.52,
-      grid: "#37322e", tick: "#a8a29e",
+    everforest: {
+      // Green arc around the signature everforest green; mossy axes.
+      hue: 135, hueSpan: 80, chroma: 0.055, lMin: 0.52, lMax: 0.76, otherL: 0.52,
+      grid: "oklch(0.40 0.012 160)", tick: "oklch(0.78 0.035 95)",
+    },
+    "everforest-light": {
+      hue: 135, hueSpan: 80, chroma: 0.06, lMin: 0.6, lMax: 0.82, otherL: 0.88,
+      grid: "oklch(0.91 0.015 100)", tick: "oklch(0.45 0.02 160)",
+    },
+    mocha: {
+      // Mauve-to-blue arc around catppuccin's signature accents.
+      hue: 285, hueSpan: 70, chroma: 0.06, lMin: 0.55, lMax: 0.8, otherL: 0.55,
+      grid: "oklch(0.35 0.02 285)", tick: "oklch(0.78 0.03 285)",
+    },
+    latte: {
+      hue: 285, hueSpan: 70, chroma: 0.065, lMin: 0.6, lMax: 0.82, otherL: 0.88,
+      grid: "oklch(0.90 0.01 285)", tick: "oklch(0.45 0.03 285)",
     },
   };
 
@@ -84,11 +91,13 @@ window.KosmosChartPalette = (function () {
   // it reads the same. Dark/cosmic keep a mid-grey visible on the dark surface.
   const NEUTRAL = {
     light: "oklch(88.5% 0 none)",
-    kosmos: "oklch(88.5% 0 none)",
     dark: "oklch(0.60 0.006 70)",
     cosmic: "oklch(0.62 0.006 250)",
     "nord-light": "oklch(88.5% 0.008 250)",
-    "kosmos-dark": "#57534e",
+    everforest: "oklch(0.60 0.01 150)",
+    "everforest-light": "oklch(88.5% 0.012 100)",
+    mocha: "oklch(0.62 0.015 285)",
+    latte: "oklch(88.5% 0.008 265)",
   };
 
   function neutral(theme) {
@@ -100,11 +109,13 @@ window.KosmosChartPalette = (function () {
   // 'Other' grey. Outlines donut slices and bar segments.
   const BORDER = {
     light: "oklch(83.5% 0 none)",
-    kosmos: "oklch(83.5% 0 none)",
     dark: "oklch(0.482 0.018 61)",
     cosmic: "#4c566a",
     "nord-light": "oklch(0.815 0.015 250)",
-    "kosmos-dark": "#44403c",
+    everforest: "#475258",
+    "everforest-light": "oklch(0.83 0.02 100)",
+    mocha: "#585b70",
+    latte: "oklch(0.81 0.012 265)",
   };
 
   function border(theme) {

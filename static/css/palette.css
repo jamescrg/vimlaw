@@ -310,34 +310,6 @@
   --rose-900: oklch(41% 0.15 10.3deg);
   --rose-950: oklch(27.1% 0.101 12.1deg);
 
-  /* ==========================================================================
-     Kosmos brand palette — drives the "kosmos" (light) and "kosmos-dark"
-     themes. The brand's conventional system (~/kosmos-brand, 2026-07-16):
-     Tailwind's true warm stone, blue links, and the mark's golds as
-     non-text accents. The kosmos light theme runs on this file's own
-     --stone-* ramp (achromatic, indistinguishable at the light end); the
-     dark ramp below is Tailwind stone's warm dark end, which the
-     achromatic ramp doesn't cover (its stone-900 is plain black). The
-     -850/-750 steps are interpolated to fill the six gb-* surface levels.
-     ========================================================================== */
-  --kosmos-stone-100: #f5f5f4;
-  --kosmos-stone-200: #e7e5e4;
-  --kosmos-stone-300: #d6d3d1;
-  --kosmos-stone-400: #a8a29e;
-  --kosmos-stone-600: #57534e;
-  --kosmos-stone-700: #44403c;
-  --kosmos-stone-750: #37322e;   /* interpolated 700/800 */
-  --kosmos-stone-800: #292524;
-  --kosmos-stone-850: #231f1e;   /* interpolated 800/900 */
-  --kosmos-stone-900: #1c1917;
-
-  /* The sun — the brand's golds. Non-text accents only, and by day only
-     in the mark artwork; kosmos-dark uses amber/gold for its accent icon
-     and rail slots. Never a text colour. */
-  --kosmos-gold: #bd8524;         /* the accent by day */
-  --kosmos-gold-ink: #8a5a12;     /* gold at text contrast, sparingly */
-  --kosmos-amber: #e0a542;        /* the accent after dark */
-
   /* Nord (https://www.nordtheme.com) — drives the "cosmic" dark theme.
      Canonical Nord hex; the *-soft / *-dim / *-bright shades are interpolated
      steps Nord doesn't ship, needed to fill the dark ramp's six levels. */
@@ -371,4 +343,81 @@
   --nord-frost-tint: #cbe0e9;  /* nord8 as a light selection wash */
   --nord10-deep: #4d6d94;      /* below nord10 — link ink on snow */
   --nord8-ink: #2f7e97;        /* nord8 cyan at ink weight — accent icons */
+
+  /* Everforest (https://github.com/sainnhe/everforest) — medium variants.
+     Canonical hex for both the dark and light ("paper") palettes; the
+     *-soft / *-mid / *-deep / *-dark shades are interpolated steps the
+     scheme doesn't ship, needed to fill the app's ladders. */
+  --ef-bg-dim: #232a2e;       /* dark: dimmed base */
+  --ef-bg0: #2d353b;          /* dark: main surface */
+  --ef-bg1: #343f44;
+  --ef-bg2: #3d484d;
+  --ef-bg3: #475258;
+  --ef-grey0: #7a8478;        /* dark: faint gray */
+  --ef-grey1: #859289;        /* dark: comment gray */
+  --ef-fg: #d3c6aa;           /* dark: cream text */
+  --ef-fg-soft: #c8bd9f;      /* interpolated — secondary text */
+  --ef-fg-dim: #b9ad91;       /* interpolated — primary body text */
+  --ef-green: #a7c080;        /* dark: signature green */
+  --ef-aqua: #83c092;
+  --ef-green-deep: #708a58;   /* interpolated — solid green button fill */
+  --ef-red: #e67e80;
+  --ef-orange: #e69875;
+  --ef-purple: #d699b6;
+  --efl-paper-bright: #fffbef; /* light: above bg0 — inputs, lightest */
+  --efl-paper-mid: #f9f3de;    /* interpolated — raised surfaces */
+  --efl-bg0: #fdf6e3;          /* light: main paper */
+  --efl-bg1: #f4f0d9;
+  --efl-bg2: #efebd4;
+  --efl-bg3: #e6e2cc;
+  --efl-bg4: #e0dcc7;
+  --efl-bg5: #bdc3af;
+  --efl-visual: #eaedc8;       /* light: selection ground */
+  --efl-fg: #5c6a72;           /* light: text */
+  --efl-fg-dark: #46535c;      /* interpolated — headings */
+  --efl-grey1: #939f91;
+  --efl-grey2: #829181;
+  --efl-green: #8da101;        /* light: signature green */
+  --efl-aqua: #35a77c;
+  --efl-aqua-soft: #5cb193;    /* interpolated — muted accent */
+  --efl-blue: #3a94c5;
+  --efl-blue-deep: #327ba4;    /* interpolated — link hover ink */
+
+  /* Catppuccin (https://catppuccin.com) — Mocha (dark) and Latte (light).
+     Canonical hex; *-soft / *-bright / *-mid / tint shades interpolated. */
+  --ctp-base: #1e1e2e;         /* mocha: main surface */
+  --ctp-base-soft: #272738;    /* interpolated — nav / input step */
+  --ctp-surface0: #313244;
+  --ctp-surface1: #45475a;
+  --ctp-surface2: #585b70;
+  --ctp-overlay0: #6c7086;
+  --ctp-overlay1: #7f849c;
+  --ctp-text: #cdd6f4;         /* mocha: brightest text */
+  --ctp-subtext1: #bac2de;
+  --ctp-subtext0: #a6adc8;
+  --ctp-blue: #89b4fa;
+  --ctp-lavender: #b4befe;
+  --ctp-mauve: #cba6f7;        /* mocha: signature accent */
+  --ctp-red: #f38ba8;
+  --ctp-peach: #fab387;
+  --ctp-green: #a6e3a1;
+  --ctpl-bright: #f8f9fc;      /* latte: above base — inputs, lightest */
+  --ctpl-mid: #f4f5f9;         /* interpolated — raised surfaces */
+  --ctpl-base: #eff1f5;        /* latte: main surface */
+  --ctpl-mantle: #e6e9ef;
+  --ctpl-crust: #dce0e8;
+  --ctpl-surface0: #ccd0da;
+  --ctpl-surface1: #bcc0cc;
+  --ctpl-surface2: #acb0be;
+  --ctpl-overlay0: #9ca0b0;
+  --ctpl-overlay1: #8c8fa1;
+  --ctpl-text: #4c4f69;        /* latte: text */
+  --ctpl-text-dark: #3a3c52;   /* interpolated — headings */
+  --ctpl-subtext0: #6c6f85;
+  --ctpl-blue: #1e66f5;        /* latte: link blue */
+  --ctpl-blue-soft: #4b83f7;   /* interpolated — link hover */
+  --ctpl-lavender-tint: #dfe3fd; /* lavender as a selection wash */
+  --ctpl-mauve: #8839ef;       /* latte: signature accent */
+  --ctpl-lavender: #7287fd;
+  --ctpl-green: #40a02b;
 }
