@@ -3,9 +3,11 @@ import json
 import os
 from datetime import datetime, timedelta
 from logging import getLogger
+from zoneinfo import ZoneInfo
 
 import google.oauth2.credentials
 from dateutil import parser as date_parser
+from django.conf import settings
 from django.db.models import F
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -460,9 +462,18 @@ def _parse_google_event(google_event):
         event_data["start_time"] = None
         event_data["end_time"] = None
     elif "dateTime" in start:
-        # Timed event
+        # Timed event. Google returns RFC3339 datetimes (typically UTC);
+        # convert to the app's zone before storing wall-clock values —
+        # storing the UTC clock verbatim shifted every synced event by the
+        # UTC offset, compounding +4h per round trip (the miscalendared
+        # hearing of 2026-07-17).
+        local_tz = ZoneInfo(settings.TIME_ZONE)
         start_dt = date_parser.parse(start["dateTime"])
         end_dt = date_parser.parse(end["dateTime"])
+        if start_dt.tzinfo is not None:
+            start_dt = start_dt.astimezone(local_tz)
+        if end_dt.tzinfo is not None:
+            end_dt = end_dt.astimezone(local_tz)
         event_data["date"] = start_dt.date()
         event_data["start_time"] = start_dt.time()
         event_data["end_time"] = end_dt.time()
