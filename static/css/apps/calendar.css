@@ -328,6 +328,16 @@
   font-size: 0.75rem;
 }
 
+/* The time grid renders as layered tables: the slots table (hour rows) is
+   stacked on top of the day-columns table, and FullCalendar relies on slot
+   cells being transparent so the columns' vertical borders show through.
+   tables.css paints every td opaque (--background-td), which buries the
+   day separators — keep FC's internal time-grid cells transparent. */
+.fc .fc-timegrid-slots td,
+.fc .fc-timegrid-cols td {
+  background: transparent;
+}
+
 /* View toggle buttons */
 .view-toggle {
   display: flex;
