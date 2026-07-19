@@ -6,8 +6,9 @@
    dark (gb-*) values. Component CSS consumes var(--token) and stays
    theme-agnostic — it flips automatically when the tokens change.
 
-   FIVE themes: two light — light (Matcha) and kosmos (the Kosmos brand's
-   conventional stone; blue links, violet emphasis) — and three dark —
+   SIX themes: three light — light (Matcha), kosmos (the Kosmos brand's
+   conventional stone; blue links, violet emphasis), and nord-light (Nord's
+   Snow Storm; frost blue links, frost cyan selection) — and three dark —
    dark (Gruvbox), cosmic (Nord), and kosmos-dark (the brand's stone night;
    blue links, amber non-text accent). Cosmic and kosmos-dark ARE the dark
    theme structurally — they share the dark token block and every dark
@@ -15,9 +16,9 @@
    stone dark ramp respectively; see the blocks after the dark block). So
    any "dark" rule is scoped to ALL THREE:
    `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="kosmos-dark"])`.
-   Kosmos is light structurally: it inherits every :root default and its
-   block below only repoints colour tokens (lighter stone surfaces, blue
-   links); dark structural rules never apply.
+   Kosmos and nord-light are light structurally: they inherit every :root
+   default and their blocks below only repoint colour tokens; dark
+   structural rules never apply.
 
    RULE OF THUMB:
    1. If dark only needs a different *value*, add/repoint a token here. Do NOT
@@ -267,6 +268,82 @@
 
   /* Selection and the accent icon slots inherit Matcha's violet emphasis.
      Add is pinned green (:root points it at --link, which is blue here). */
+  --add: var(--lime-700);
+}
+
+/* ==========================================================================
+   Nord Light — the third LIGHT theme, cosmic's daytime counterpart.
+
+   Snow Storm surfaces (nord4-6 plus the interpolated --nord-snow-* steps in
+   palette.css), Polar Night text, frost deep-blue links and primary buttons,
+   and the signature frost cyan as the selection wash. Status colours inherit
+   Matcha's (the aurora mid-tones are too light for text on snow); the accent
+   icon slots are repointed to frost. Structurally it IS the light theme —
+   it inherits every :root token and only repoints colours; dark structural
+   rules never apply.
+   ========================================================================== */
+[data-theme="nord-light"] {
+  color-scheme: light;
+
+  /* Typography & Text — the Polar Night ramp over snow */
+  --color-primary: var(--nord2);
+  --color-darker: var(--nord0);
+  --color-muted: var(--nord3-bright);
+  --color-muted-more: var(--nord-gray);
+  --color-lighter: var(--nord4);
+
+  /* Links — a step below nord10 for ink-level contrast, lifting to the
+     canonical frost deep blue on hover */
+  --link: var(--nord10-deep);
+  --link-hover: var(--nord10);
+
+  /* Backgrounds — the Snow Storm ladder: nord6 body and table cells under a
+     shared nord5 chrome tier, nord4 nav */
+  --background-nav: var(--nord4);
+  --background-body: var(--nord6);
+  --background-subnav: var(--nord5);
+  --background-subnav-contrast: var(--nord4);
+  --background-section: var(--nord5);
+  --background-th: var(--nord5);
+  --background-control: var(--nord5);
+  --background-td: var(--nord6);
+  --background-medium-light: var(--nord-snow-mid);
+  --background-light: var(--nord-snow-bright);
+  --ai-frame: var(--nord4);
+  --ai-surface: var(--nord-snow-bright);
+  --ai-raised: var(--nord-snow-mid);
+
+  /* Sidebar */
+  --background-sidebar: var(--nord5);
+  --background-sidebar-hover: var(--nord4);
+  --background-sidebar-active: var(--nord-snow-dark);
+
+  /* Buttons — solid frost blue under near-white snow */
+  --button-primary-background: var(--nord10);
+  --button-primary-color: var(--nord-snow-bright);
+
+  /* Forms & Inputs */
+  --input-border: var(--nord4);
+  --input-background: var(--nord-snow-bright);
+  --input-placeholder: var(--nord-gray);
+
+  /* Borders — cool polar grays in place of stone */
+  --border-light: var(--nord5);
+  --border-medium: var(--nord4);
+  --border-medium-dark: var(--nord-snow-dark);
+  --border-dark: var(--nord-gray);
+
+  /* Selection — the frost cyan wash under Polar Night text */
+  --selected-background: var(--nord-frost-tint);
+  --selected-color: var(--nord1);
+
+  /* Accent icons (filter, active sort, new-note/checklist badges) — the
+     canonical frost deep blue, a step above the darker link ink so they
+     read as accent, not link */
+  --icon-violet: var(--nord10);
+  --icon-violet-muted: var(--nord9);
+
+  /* Add is pinned green (:root points it at --link, which is blue here) */
   --add: var(--lime-700);
 }
 

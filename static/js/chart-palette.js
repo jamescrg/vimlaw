@@ -38,6 +38,11 @@ window.KosmosChartPalette = (function () {
       hue: 210, hueSpan: 90, chroma: 0.055, lMin: 0.55, lMax: 0.8, otherL: 0.55,
       grid: "oklch(0.37 0.02 250)", tick: "oklch(0.78 0.03 250)",
     },
+    "nord-light": {
+      // Cosmic's frost arc at light-theme lightness; cool polar axes.
+      hue: 210, hueSpan: 90, chroma: 0.055, lMin: 0.6, lMax: 0.82, otherL: 0.88,
+      grid: "oklch(0.90 0.008 250)", tick: "oklch(0.45 0.02 250)",
+    },
     "kosmos-dark": {
       // Warm arc around the brand amber (hue ~77): sienna through gold to
       // olive, low chroma so it reads as embers on the night, not neon.
@@ -82,6 +87,7 @@ window.KosmosChartPalette = (function () {
     kosmos: "oklch(88.5% 0 none)",
     dark: "oklch(0.60 0.006 70)",
     cosmic: "oklch(0.62 0.006 250)",
+    "nord-light": "oklch(88.5% 0.008 250)",
     "kosmos-dark": "#57534e",
   };
 
@@ -97,6 +103,7 @@ window.KosmosChartPalette = (function () {
     kosmos: "oklch(83.5% 0 none)",
     dark: "oklch(0.482 0.018 61)",
     cosmic: "#4c566a",
+    "nord-light": "oklch(0.815 0.015 250)",
     "kosmos-dark": "#44403c",
   };
 
