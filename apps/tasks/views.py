@@ -437,6 +437,14 @@ def _detect_filter_label(filter_data, today):
         return "unscheduled"
     if not date_due_min and not date_due_max and has_due_date in ("", "None"):
         return "all"
+    next_monday = today + timedelta(days=7 - today.weekday())
+    next_sunday = next_monday + timedelta(days=6)
+    if (
+        date_due_min == str(next_monday)
+        and date_due_max == str(next_sunday)
+        and not has_due_date
+    ):
+        return "next_week"
     if date_due_min:
         return "custom"
     if not date_due_max:
@@ -573,6 +581,14 @@ def tasks_filter_quick(request, quick_filter):
             "filter_label": "week",
             "date_due_min": "",
             "date_due_max": end_of_week.strftime("%Y-%m-%d"),
+            "has_due_date": "",
+        },
+        # Unlike today/week (open-ended so overdue tasks stay visible), next
+        # week is a forward window: both bounds are set.
+        "next_week": {
+            "filter_label": "next_week",
+            "date_due_min": (end_of_week + timedelta(days=1)).strftime("%Y-%m-%d"),
+            "date_due_max": (end_of_week + timedelta(days=7)).strftime("%Y-%m-%d"),
             "has_due_date": "",
         },
     }

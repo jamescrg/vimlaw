@@ -40,6 +40,19 @@ def test_detect_label_week():
     assert _detect_filter_label({"date_due_max": str(end_of_week)}, today) == "week"
 
 
+def test_detect_label_next_week():
+    today = date(2026, 5, 15)  # a Friday
+    next_monday = today + timedelta(days=7 - today.weekday())
+    next_sunday = next_monday + timedelta(days=6)
+    assert (
+        _detect_filter_label(
+            {"date_due_min": str(next_monday), "date_due_max": str(next_sunday)},
+            today,
+        )
+        == "next_week"
+    )
+
+
 def test_detect_label_custom_with_date_due_min():
     today = date(2026, 5, 15)
     # Quick filters never set date_due_min, so any value here means custom.
@@ -78,6 +91,21 @@ def test_quick_filter_today_does_not_light_filter_button(client):
     client.post(reverse("tasks:filter-quick", args=["today"]))
     response = client.get(reverse("tasks:list"))
     assert response.context["filter_label"] == "today"
+    assert response.context["custom_filter_active"] in (False, None, {})
+
+
+def test_quick_filter_next_week_sets_forward_window(client):
+    client.post(reverse("tasks:filter-quick", args=["next_week"]))
+    session = _session_for(client, "tasks_filter")
+    today = date.today()
+    next_monday = today + timedelta(days=7 - today.weekday())
+    next_sunday = next_monday + timedelta(days=6)
+    assert session.get("filter_label") == "next_week"
+    assert session.get("date_due_min") == str(next_monday)
+    assert session.get("date_due_max") == str(next_sunday)
+
+    response = client.get(reverse("tasks:list"))
+    assert response.context["filter_label"] == "next_week"
     assert response.context["custom_filter_active"] in (False, None, {})
 
 

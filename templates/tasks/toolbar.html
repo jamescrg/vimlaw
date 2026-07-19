@@ -91,7 +91,7 @@
         <div class="dropdown" x-data="dropdown()">
           <button type="button"
                   id="tasks-date-filter"
-                  class="select-btn filter-dropdown-button {% if filter_label == 'today' or filter_label == 'week' or filter_label == 'unscheduled' or filter_label == 'custom' %}toggle-active{% endif %}"
+                  class="select-btn filter-dropdown-button {% if filter_label == 'today' or filter_label == 'week' or filter_label == 'next_week' or filter_label == 'unscheduled' or filter_label == 'custom' %}toggle-active{% endif %}"
                   x-ref="button"
                   @click="toggle()"
                   :aria-expanded="open">
@@ -101,6 +101,8 @@
                 Today
               {% elif filter_label == "week" %}
                 This Week
+              {% elif filter_label == "next_week" %}
+                Next Week
               {% elif filter_label == "unscheduled" %}
                 Unscheduled
               {% elif filter_label == "custom" %}
@@ -144,6 +146,14 @@
                  hx-post="{% url 'tasks:filter-quick' 'week' %}"
                  hx-target="#tasks">
                 <i class="icon-calendar"></i> This Week
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if filter_label == 'next_week' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'tasks:filter-quick' 'next_week' %}"
+                 hx-target="#tasks">
+                <i class="icon-calendar"></i> Next Week
               </a>
             </li>
           </ul>
