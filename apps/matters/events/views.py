@@ -10,7 +10,7 @@ from apps.matters.models import Matter
 def _view_mode(request):
     """List/calendar toggle for the matter Events tab, shared across matters
     (mirrors the main calendar's events_view_mode session flag)."""
-    return request.session.get("matter_events_view_mode", "calendar")
+    return request.session.get("matter_events_view_mode", "list")
 
 
 def _calendar_context(request, matter):

@@ -93,7 +93,7 @@ document.addEventListener("alpine:init", () => {
 
       this.calendar = new FullCalendar.Calendar(calendarEl, {
         // Core settings
-        initialView: "dayGridMonth",
+        initialView: this.savedView(),
         headerToolbar: {
           left: "prev,next today",
           center: "title",
@@ -128,6 +128,16 @@ document.addEventListener("alpine:init", () => {
         // Responsive
         height: "auto",
 
+        // Week/Day views cap the grid to the viewport so the wheel scrolls
+        // FullCalendar's internal scroller (sticky day headers) instead of
+        // the whole page; month keeps auto height. datesSet also fires on
+        // every view switch, so it doubles as the persistence hook.
+        datesSet: (info) => {
+          this.applyViewHeight(info.view.type);
+          localStorage.setItem("calendar-view", info.view.type);
+        },
+        windowResize: () => this.applyViewHeight(this.calendar.view.type),
+
         // Custom button styling to match app
         themeSystem: "standard",
       });
@@ -141,6 +151,30 @@ document.addEventListener("alpine:init", () => {
       document.body.addEventListener("matterEventChanged", () => {
         this.calendar.refetchEvents();
       });
+    },
+
+    savedView() {
+      // Reopen in the last-used view (month/week/day), shared by the Events
+      // tab and matter Events calendars. Validate against the real view
+      // names so a stale or hand-edited value can't break the render.
+      const saved = localStorage.getItem("calendar-view");
+      const valid = ["dayGridMonth", "timeGridWeek", "timeGridDay"];
+      return valid.includes(saved) ? saved : "dayGridMonth";
+    },
+
+    applyViewHeight(viewType) {
+      let height = "auto";
+      if (viewType.startsWith("timeGrid")) {
+        // Fit the calendar between its natural page position and the bottom
+        // of the viewport (with a little breathing room), so the time grid
+        // gets an internal scroller. Floor keeps it usable on short windows.
+        const offsetTop =
+          this.$el.getBoundingClientRect().top + window.scrollY;
+        height = Math.max(480, window.innerHeight - offsetTop - 16);
+      }
+      if (this.calendar.getOption("height") !== height) {
+        this.calendar.setOption("height", height);
+      }
     },
 
     handleEventClick(info) {

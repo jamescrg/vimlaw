@@ -212,7 +212,22 @@
           <col>
         </colgroup>
         <tr>
-          <th class="overview-table-head" colspan="3">Recent Actions</th>
+          <th class="overview-table-head" colspan="3">
+            {% comment %}The 'activity' request_app variant preselects the matter
+              and saves with 204 + timeChanged (which the overview listens for),
+              unlike the matters/case variant that redirects to the Activity
+            tab.{% endcomment %}
+            <div class="overview-head-cell">
+              Recent Actions
+              <button type="button"
+                      class="btn-check"
+                      hx-get="{% url 'activity:time-add' id=matter.id request_app='activity' %}"
+                      hx-target="#htmx-modal-container"
+                      title="Add time entry">
+                <i class="icon-plus"></i>
+              </button>
+            </div>
+          </th>
         </tr>
         {% for entry in recent_actions %}
           <tr>
