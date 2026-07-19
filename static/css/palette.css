@@ -361,4 +361,12 @@
   --nord13: #ebcb8b;         /* Aurora — yellow */
   --nord14: #a3be8c;         /* Aurora — green */
   --nord15: #b48ead;         /* Aurora — purple */
+
+  /* Nord light extensions — Snow Storm only ships three steps (nord4-6), so
+     the light theme's surface ladder needs interpolated steps around them,
+     plus the frost cyan diluted to a selection wash. */
+  --nord-snow-bright: #f5f7fa; /* above nord6 — inputs, lightest surfaces */
+  --nord-snow-mid: #f1f3f8;    /* between bright and nord6 — raised surfaces */
+  --nord-snow-dark: #ccd4e2;   /* below nord4 — active states, strong borders */
+  --nord-frost-tint: #dceaf0;  /* nord8 as a light selection wash */
 }

@@ -793,11 +793,11 @@ tr > td.importance.complete .button-link {
   text-align: center;
 }
 
-/* Light only: the column now fills with --background-subnav, which equals
-   --background-control (stone-200) in light — so lift the count pill a step to
-   stay a visible pill against its lane. Dark/cosmic keep the base fill (the
-   pill already reads fine there and both themes were signed off as-is). */
-[data-theme="light"] .kanban-column-count {
+/* Light + nord-light: the column fills with --background-subnav, which equals
+   --background-control in both (stone-200 / nord5) — so lift the count pill a
+   step to stay a visible pill against its lane. Dark/cosmic keep the base fill
+   (the pill already reads fine there and both themes were signed off as-is). */
+:is([data-theme="light"], [data-theme="nord-light"]) .kanban-column-count {
   background: var(--background-subnav-contrast);
 }
 
