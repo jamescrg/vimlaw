@@ -277,8 +277,8 @@
    Snow Storm surfaces (nord4-6 plus the interpolated --nord-snow-* steps in
    palette.css), Polar Night text, frost deep-blue links and primary buttons,
    and the signature frost cyan as the selection wash. Status colours inherit
-   Matcha's (the aurora mid-tones are too light for text on snow); the violet
-   emphasis icons inherit like kosmos. Structurally it IS the light theme —
+   Matcha's (the aurora mid-tones are too light for text on snow); the accent
+   icon slots are repointed to frost. Structurally it IS the light theme —
    it inherits every :root token and only repoints colours; dark structural
    rules never apply.
    ========================================================================== */
@@ -292,9 +292,10 @@
   --color-muted-more: var(--nord-gray);
   --color-lighter: var(--nord4);
 
-  /* Links — frost deep blue, lifting a step on hover */
-  --link: var(--nord10);
-  --link-hover: var(--nord9);
+  /* Links — a step below nord10 for ink-level contrast, lifting to the
+     canonical frost deep blue on hover */
+  --link: var(--nord10-deep);
+  --link-hover: var(--nord10);
 
   /* Backgrounds — the Snow Storm ladder: nord6 body and table cells under a
      shared nord5 chrome tier, nord4 nav */
@@ -335,6 +336,12 @@
   /* Selection — the frost cyan wash under Polar Night text */
   --selected-background: var(--nord-frost-tint);
   --selected-color: var(--nord1);
+
+  /* Accent icons (filter, active sort, new-note/checklist badges) — the
+     canonical frost deep blue, a step above the darker link ink so they
+     read as accent, not link */
+  --icon-violet: var(--nord10);
+  --icon-violet-muted: var(--nord9);
 
   /* Add is pinned green (:root points it at --link, which is blue here) */
   --add: var(--lime-700);

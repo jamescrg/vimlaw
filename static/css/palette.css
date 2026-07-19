@@ -368,5 +368,6 @@
   --nord-snow-bright: #f5f7fa; /* above nord6 — inputs, lightest surfaces */
   --nord-snow-mid: #f1f3f8;    /* between bright and nord6 — raised surfaces */
   --nord-snow-dark: #ccd4e2;   /* below nord4 — active states, strong borders */
-  --nord-frost-tint: #dceaf0;  /* nord8 as a light selection wash */
+  --nord-frost-tint: #cbe0e9;  /* nord8 as a light selection wash */
+  --nord10-deep: #4d6d94;      /* below nord10 — link ink on snow */
 }
