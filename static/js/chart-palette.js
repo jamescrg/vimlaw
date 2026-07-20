@@ -38,6 +38,11 @@ window.KosmosChartPalette = (function () {
       hue: 210, hueSpan: 90, chroma: 0.055, lMin: 0.6, lMax: 0.82, otherL: 0.88,
       grid: "oklch(0.90 0.008 250)", tick: "oklch(0.45 0.02 250)",
     },
+    corporate: {
+      // Navy-to-azure arc around the reference UI's blues; cool slate axes.
+      hue: 245, hueSpan: 50, chroma: 0.08, lMin: 0.55, lMax: 0.8, otherL: 0.9,
+      grid: "oklch(0.92 0.005 240)", tick: "oklch(0.45 0.02 240)",
+    },
     everforest: {
       // Green arc around the signature everforest green; mossy axes.
       hue: 135, hueSpan: 80, chroma: 0.055, lMin: 0.52, lMax: 0.76, otherL: 0.52,
@@ -94,6 +99,7 @@ window.KosmosChartPalette = (function () {
     dark: "oklch(0.60 0.006 70)",
     cosmic: "oklch(0.62 0.006 250)",
     "nord-light": "oklch(88.5% 0.008 250)",
+    corporate: "oklch(90% 0.005 240)",
     everforest: "oklch(0.60 0.01 150)",
     "everforest-light": "oklch(88.5% 0.012 100)",
     mocha: "oklch(0.62 0.015 285)",
@@ -112,6 +118,7 @@ window.KosmosChartPalette = (function () {
     dark: "oklch(0.482 0.018 61)",
     cosmic: "#4c566a",
     "nord-light": "oklch(0.815 0.015 250)",
+    corporate: "#c6d0d6",
     everforest: "#475258",
     "everforest-light": "oklch(0.83 0.02 100)",
     mocha: "#585b70",
