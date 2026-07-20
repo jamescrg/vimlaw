@@ -368,6 +368,31 @@
   --nord14-tint: #dfe8d4;      /* green */
   --nord15-tint: #e7dbe4;      /* purple */
 
+  /* LawPay (2017-era UI) — sampled from the reference screenshot
+     (~/lawpay.png): deep navy chrome and primary actions, azure active
+     states, steel-blue links, white ground, a paid-green success accent.
+     Text inks are darkened from the sampled anti-aliased values to their
+     design-true weights. */
+  --corporate-navy: #00497b;       /* primary button fill, link hover */
+  --corporate-azure: #007cd9;      /* active nav / accent icons */
+  --corporate-azure-soft: #66a5d8; /* muted accent */
+  --corporate-azure-tint: #dcedf9; /* selection wash */
+  --corporate-steel: #33719f;      /* link ink (steel column-header blue) */
+  --corporate-chrome: #3f5469;     /* the dark window-chrome slate (top nav) */
+  --corporate-slate: #3e4a55;      /* body text (the logotype slate) */
+  --corporate-slate-dark: #2b3640; /* headings */
+  --corporate-gray: #66686b;       /* muted text (sidebar labels) */
+  --corporate-gray-soft: #9aa2a8;  /* fainter text */
+  --corporate-paper: #ffffff;      /* content ground */
+  --corporate-mist: #f8fafa;       /* sidebar ground */
+  --corporate-mist-dark: #e7eaec;  /* chrome tier (toolbars, headers) — a
+                                      true gray, per the sober revision */
+  --corporate-gray-select: #d6dbdf; /* selection/active fill — darker gray */
+  --corporate-line: #dde4e9;       /* hairlines */
+  --corporate-line-dark: #c6d0d6;  /* stronger borders */
+  --corporate-green: #3f9068;      /* the 'Paid' green — success/true */
+  --corporate-green-tint: #ddeee5; /* success fills */
+
   /* Everforest (https://github.com/sainnhe/everforest) — medium variants.
      Canonical hex for both the dark and light ("paper") palettes; the
      *-soft / *-mid / *-deep / *-dark shades are interpolated steps the

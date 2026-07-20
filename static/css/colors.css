@@ -6,8 +6,10 @@
    dark (gb-*) values. Component CSS consumes var(--token) and stays
    theme-agnostic — it flips automatically when the tokens change.
 
-   EIGHT themes. Four light — light (Matcha), nord-light (Nord Snow Storm),
-   everforest-light (forest paper), latte (Catppuccin) — and four dark —
+   NINE themes. Five light — light (Matcha), nord-light (Nord Snow Storm),
+   everforest-light (forest paper), latte (Catppuccin), corporate (after
+   the 2017 LawPay UI: white ground, navy buttons, azure accents) — and
+   four dark —
    dark (Gruvbox), cosmic (Nord), everforest, mocha (Catppuccin).
    The non-Gruvbox darks ARE the dark theme structurally — they share the
    dark token block and every dark structural rule, and only repoint the
@@ -316,6 +318,84 @@
   --label-purple: var(--nord15-tint);
   --label-red: var(--nord11-tint);
   --label-yellow: var(--nord13-tint);
+}
+
+/* ==========================================================================
+   Corporate — a light theme after the 2017 LawPay UI (palette sampled
+   from the reference screenshot).
+
+   White content ground under a pale mist chrome tier; the window-chrome
+   slate serves as the dark neutral (menu icons, outline borders). Deep
+   navy primary buttons, steel-blue links darkening to navy on hover,
+   azure accent icons, the 'Paid' green on success. Structurally a light
+   theme: token-only block, no scoped rules.
+   ========================================================================== */
+[data-theme="corporate"] {
+  color-scheme: light;
+
+  /* Typography & Text — slate over white */
+  --color-primary: var(--corporate-slate);
+  --color-darker: var(--corporate-slate-dark);
+  --color-muted: var(--corporate-gray);
+  --color-muted-more: var(--corporate-gray-soft);
+  --color-lighter: var(--corporate-line-dark);
+
+  /* Links — steel blue, deepening to the brand navy on hover */
+  --link: var(--corporate-steel);
+  --link-hover: var(--corporate-navy);
+
+  /* Backgrounds — white ground and cells under a mist chrome tier.
+     --background-nav is not a bar surface in this app (it colours menu/dot
+     icons, outline-button borders, dropdown click-flashes) — the chrome
+     slate suits that neutral. Nav/sidebar text inherits the slate ink. */
+  --background-nav: var(--corporate-chrome);
+  --background-body: var(--corporate-paper);
+  --background-subnav: var(--corporate-mist);
+  --background-subnav-contrast: var(--corporate-line-dark);
+  --background-section: var(--corporate-mist-dark);
+  --background-th: var(--corporate-mist);
+  --background-control: var(--corporate-mist-dark);
+  --background-td: var(--corporate-paper);
+  --background-medium-light: var(--corporate-mist);
+  --background-light: var(--corporate-mist);
+  --ai-frame: var(--corporate-line);
+  --ai-surface: var(--corporate-paper);
+  --ai-raised: var(--corporate-mist);
+
+  /* Sidebar — white like the reference, labels in the muted gray */
+  --background-sidebar: var(--corporate-mist);
+  --background-sidebar-hover: var(--corporate-mist-dark);
+  --background-sidebar-active: var(--corporate-gray-select);
+
+  /* Buttons — the SEND QUICK BILL navy under white text */
+  --button-primary-background: var(--corporate-navy);
+  --button-primary-color: var(--corporate-paper);
+
+  /* Forms & Inputs */
+  --input-border: var(--corporate-line-dark);
+  --input-background: var(--corporate-paper);
+  --input-placeholder: var(--corporate-gray-soft);
+
+  /* Borders — cool hairlines */
+  --border-light: var(--corporate-line);
+  --border-medium: var(--corporate-line);
+  --border-medium-dark: var(--corporate-line-dark);
+  --border-dark: var(--corporate-gray-soft);
+
+  /* Selection — a darker executive gray under the heading slate; azure
+     survives only on the accent icons (the sober revision) */
+  --selected-background: var(--corporate-gray-select);
+  --selected-color: var(--corporate-slate-dark);
+
+  /* Accent icons (filter, active sort, badges) — the active-state azure */
+  --icon-violet: var(--corporate-azure);
+  --icon-violet-muted: var(--corporate-azure-soft);
+
+  /* Status — the 'Paid' green carries success; Add follows it */
+  --success: var(--corporate-green);
+  --true: var(--corporate-green);
+  --btn-success-bg: var(--corporate-green-tint);
+  --add: var(--corporate-green);
 }
 
 /* ==========================================================================
