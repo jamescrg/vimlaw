@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#466f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <!-- stroke is set as a presentation attribute (above) so rasterizers that
-       ignore <style> (e.g. building a mobile home-screen icon) still get a
-       colour; the <style> only upgrades the browser-tab icon for dark mode. -->
-  <style>
-    @media (prefers-color-scheme: dark) { circle, path { stroke: oklch(0.756 0.108 138); } }
-  </style>
-  <circle cx="12" cy="12" r="1"/>
-  <path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z"/>
-  <path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><style>rect{fill:#4d6d94}path{fill:#eceff4}@media(prefers-color-scheme:dark){rect{fill:#88c0d0}path{fill:#2e3440}}</style><rect width="100" height="100" rx="18"/><path d="M35.69 21.00Q34.57 25.35 34.57 48.80Q40.23 42.87 45.23 37.86Q53.47 29.62 55.05 27.76Q58.29 23.96 58.48 21.00H76.54Q73.86 23.13 67.74 29.52Q61.91 35.45 58.94 38.56Q55.98 41.66 55.70 41.94Q54.49 43.14 52.78 44.81Q51.07 46.48 48.93 48.61Q54.86 53.52 58.66 56.95Q72.19 69.64 78.12 79.00H61.54Q60.24 75.20 57.27 71.40Q55.98 69.83 53.57 67.37Q51.16 64.92 47.64 61.40Q39.58 53.43 34.57 50.09V66.96Q34.67 71.31 34.90 74.27Q35.13 77.24 35.59 79.00H21.88Q22.90 75.48 22.99 67.14Q22.99 49.91 22.99 40.36Q22.99 30.82 22.90 28.69Q22.81 26.56 22.58 24.66Q22.34 22.76 21.88 21.00Z"/></svg>

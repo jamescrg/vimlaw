@@ -34,27 +34,38 @@ body {
   width: 31.25rem;
 }
 
+/* The visual title is the wordmark (::before below); the site handle stays
+   in the DOM as the accessible name, wrapped in .visually-hidden. */
 .auth-title {
   align-items: center;
-  color: var(--link);
   display: flex;
-  flex-direction: column;
-  font-size: 1.75rem;
-  font-weight: 500;
-  gap: 0.5rem;
   justify-content: center;
-  margin-bottom: 0.25rem;
+  margin-bottom: 1.5rem;
 }
 
-/* Brand monogram: the Lucide atom mark, stacked above the wordmark and matching
-   the favicon. Decorative — the title text is the accessible name.
-   (Auth pages don't load the Lucide font, so use the SVG as a background.) */
+/* Brand — the wordmark itself (the fullstar cut), drawn as a mask filled
+   with the theme's link colour so it matches the sidebar in every theme (a
+   background image can't take currentColor, and the inverted favicon badge
+   belongs to the taskbar, not the card). NOTE: a CSS url can't ride
+   static_v — bump the literal ?v below whenever the SVG is regenerated. */
 .auth-title::before {
+  background: var(--link);
   content: "";
   display: inline-block;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: url("../../images/kosmos-mark.svg") center / contain no-repeat;
+  height: 3.8rem;
+  mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg?v=1") center / contain no-repeat;
+  -webkit-mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg?v=1") center / contain no-repeat;
+  width: 12rem;
+}
+
+/* Standard screen-reader-only clip pattern. */
+.visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .auth-subtitle {

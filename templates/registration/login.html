@@ -5,7 +5,9 @@
 {% block content %}
   <div class="auth-container">
     <div class="auth-card">
-      <div class="auth-title">{{ site_handle }}</div>
+      <div class="auth-title">
+        <span class="visually-hidden">{{ site_handle }}</span>
+      </div>
       <div class="auth-subtitle">Log in to your account</div>
       {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
       <form id="login-form" class="account-form" method="post">

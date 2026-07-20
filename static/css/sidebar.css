@@ -38,19 +38,36 @@
   text-decoration: none;
 }
 
-.sidebar-brand i {
-  flex-shrink: 0;
-  font-size: 1.25rem;
-  position: relative;
-  top: 1px;
+/* Brand — both cuts are the kit's inline currentColor SVGs, painted by the
+   anchor's link colour so the brand themes with the app. Expanded shows the
+   scatter wordmark; the collapsed rail and the horizontal bar swap to the
+   kappa. The inline contract is 1em-tall/em-wide, so font-size is the size
+   knob: 2rem × the wordmark's 4.104em aspect ≈ the header's content width. */
+.sidebar-brand-wordmark {
+  display: block;
+  /* The fullstar cut's em-box is 160 units tall against the word's 100-unit
+     cap (the constellation overhangs the cap line), so 1.95rem here keeps
+     the letters at the optical size approved at 1.5rem on the old 123-unit
+     box. */
+  font-size: 1.95rem;
+  line-height: 1;
 }
 
-/* Brand mark: Lucide atom icon, sized a touch larger than the nav icons so it
-   carries as the logo. More specific than `.sidebar-brand i` so the size wins. */
-.sidebar-brand .sidebar-brand-mark {
+/* The inline cuts' viewBoxes are flush to the ink, so the edge stars sit
+   exactly on the SVG viewport boundary — sub-pixel viewport rounding
+   otherwise shaves them flat. Let them paint past it (the overhang is
+   under a pixel). */
+.sidebar-brand-wordmark svg,
+.sidebar-brand-mark-inline svg {
+  display: block;
+  overflow: visible;
+}
+
+.sidebar-brand-mark-inline {
+  display: none;
   flex-shrink: 0;
-  font-size: 1.5rem;
-  top: 0;
+  font-size: 2rem;
+  line-height: 1;
 }
 
 
@@ -149,6 +166,14 @@
   justify-content: center;
 }
 
+.sidebar-collapsed .sidebar-brand-wordmark {
+  display: none;
+}
+
+.sidebar-collapsed .sidebar-brand-mark-inline {
+  display: block;
+}
+
 .sidebar-collapsed .sidebar-nav {
   padding: 0 0.75rem;
 }
@@ -238,22 +263,18 @@
 }
 
 /* Centered brand: absolutely centered so the leading hamburger doesn't push it
-   off-centre. Mirrors the sidebar brand (icon-atom mark + Kosmos wordmark). */
+   off-centre. Carries the starred kappa mark (the drawer has no header). */
 .mobile-topbar-brand {
   align-items: center;
-  color: var(--link);
   display: flex;
-  font-size: 1.3rem;
-  gap: 0.75rem;
   left: 50%;
   position: absolute;
-  text-decoration: none;
   transform: translateX(-50%);
 }
 
-.mobile-topbar-brand .sidebar-brand-mark {
-  flex-shrink: 0;
-  font-size: 1.5rem;
+.mobile-topbar-brand .sidebar-brand-mark-img {
+  display: block;
+  width: 1.75rem;
 }
 
 
@@ -433,6 +454,17 @@
   [data-nav="horizontal"] .sidebar-brand .sidebar-label,
   [data-nav="horizontal"] .sidebar-nav-utils .sidebar-label {
     display: none;
+  }
+
+  /* The bar is too short for the wordmark — carry the inline kappa instead,
+     sized to the bar. */
+  [data-nav="horizontal"] .sidebar-brand .sidebar-brand-wordmark {
+    display: none;
+  }
+
+  [data-nav="horizontal"] .sidebar-brand .sidebar-brand-mark-inline {
+    display: block;
+    font-size: 1.75rem;
   }
 
   [data-nav="horizontal"] .sidebar-nav-utils li a {
