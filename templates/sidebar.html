@@ -6,16 +6,10 @@
        aria-label="Kosmos">
       {% comment %}Both cuts render from one anchor; CSS swaps them — the
         inline currentColor kappa when collapsed (and on the horizontal
-        bar), so the mark takes each theme's link colour; the scatter
-        wordmark badge (its own night ground, theme-independent) when
-      expanded.{% endcomment %}
+        bar), the inline fullstar wordmark when expanded. Both follow the
+      anchor's link colour, so the brand themes with the app.{% endcomment %}
       <span class="sidebar-brand-mark-inline" aria-hidden="true">{% include "components/kosmos-mark.html" %}</span>
-      <img class="sidebar-brand-wordmark"
-           src="{% static 'images/brand/kosmos-wm-neohellenic-scatter.svg' %}"
-           width="553"
-           height="171"
-           alt=""
-           aria-hidden="true">
+      <span class="sidebar-brand-wordmark" aria-hidden="true">{% include "components/kosmos-wordmark.html" %}</span>
     </a>
   </div>
   <nav class="sidebar-nav" id="sidebar-nav">

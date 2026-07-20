@@ -38,21 +38,35 @@
   text-decoration: none;
 }
 
-/* Brand — expanded shows the scatter wordmark badge (its own night ground
-   and starlight ink, identical in every theme; the flush tile gets its
-   clear space from the header padding). The collapsed rail and the
-   horizontal bar swap to the inline currentColor kappa, which follows the
-   anchor's link colour and so themes with the app. */
+/* Brand — both cuts are the kit's inline currentColor SVGs, painted by the
+   anchor's link colour so the brand themes with the app. Expanded shows the
+   scatter wordmark; the collapsed rail and the horizontal bar swap to the
+   kappa. The inline contract is 1em-tall/em-wide, so font-size is the size
+   knob: 2rem × the wordmark's 4.104em aspect ≈ the header's content width. */
 .sidebar-brand-wordmark {
   display: block;
-  height: auto;
-  width: 100%;
+  /* The fullstar cut's em-box is 160 units tall against the word's 100-unit
+     cap (the constellation overhangs the cap line), so 1.95rem here keeps
+     the letters at the optical size approved at 1.5rem on the old 123-unit
+     box. */
+  font-size: 1.95rem;
+  line-height: 1;
+}
+
+/* The inline cuts' viewBoxes are flush to the ink, so the edge stars sit
+   exactly on the SVG viewport boundary — sub-pixel viewport rounding
+   otherwise shaves them flat. Let them paint past it (the overhang is
+   under a pixel). */
+.sidebar-brand-wordmark svg,
+.sidebar-brand-mark-inline svg {
+  display: block;
+  overflow: visible;
 }
 
 .sidebar-brand-mark-inline {
   display: none;
   flex-shrink: 0;
-  font-size: 2.25rem;
+  font-size: 2rem;
   line-height: 1;
 }
 
