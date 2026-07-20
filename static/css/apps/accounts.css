@@ -46,14 +46,15 @@ body {
 /* Brand — the wordmark itself (the fullstar cut), drawn as a mask filled
    with the theme's link colour so it matches the sidebar in every theme (a
    background image can't take currentColor, and the inverted favicon badge
-   belongs to the taskbar, not the card). */
+   belongs to the taskbar, not the card). NOTE: a CSS url can't ride
+   static_v — bump the literal ?v below whenever the SVG is regenerated. */
 .auth-title::before {
   background: var(--link);
   content: "";
   display: inline-block;
   height: 3.8rem;
-  mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg") center / contain no-repeat;
-  -webkit-mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg") center / contain no-repeat;
+  mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg?v=1") center / contain no-repeat;
+  -webkit-mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg?v=1") center / contain no-repeat;
   width: 12rem;
 }
 
