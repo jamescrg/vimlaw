@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 
 dependencies = [
     # Django core
-    "Django==4.2.29",
+    "Django==4.2.30",
     "psycopg2-binary==2.9.10",
     "django-environ==0.11.2",
     # Django extensions
@@ -28,12 +28,12 @@ dependencies = [
     "google-genai==1.54.0",
     # Markdown processing
     "Markdown==3.8.1",
-    "pymdown-extensions==10.18",
+    "pymdown-extensions==10.21.3",
     # Spreadsheet parsing (Drive notes -> Markdown tables)
     "openpyxl==3.1.5",
     "odfpy==1.4.1",
     # PDF generation and processing
-    "weasyprint==68.0",
+    "weasyprint==69.0",
     "pytesseract==0.3.13",
     "pdf2image==1.17.0",
     "pypdf>=6.9.1",
