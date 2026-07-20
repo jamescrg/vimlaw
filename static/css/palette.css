@@ -344,6 +344,25 @@
   --nord10-deep: #4d6d94;      /* below nord10 — link ink on snow */
   --nord8-ink: #2f7e97;        /* nord8 cyan at ink weight — accent icons */
 
+  /* Aurora at ink weight — the warm semantic accents on snow (status text,
+     Add, yellow icons). Canonical aurora is mid-tone, sized for dark
+     grounds; these are the same hues pulled down to text contrast. */
+  --nord11-ink: #a04b54;       /* red — urgent / errors */
+  --nord12-ink: #b3603f;       /* orange — warnings */
+  --nord13-ink: #a5822e;       /* yellow — accent icons */
+  --nord14-ink: #6d8a52;       /* green — Add / success */
+  --nord15-ink: #8d5f86;       /* purple — sort/filter accent icons */
+
+  /* Aurora (and frost) as light tints on snow — row highlights, label and
+     button fills. The wash step is the palest, for past-due surfaces. */
+  --nord9-tint: #d7e0eb;       /* frost blue */
+  --nord11-tint: #eed3d5;      /* red */
+  --nord12-tint: #f2ddd3;      /* orange */
+  --nord13-tint: #f4e7c3;      /* yellow */
+  --nord13-wash: #f8f0da;      /* pale yellow — past-due / due-soon */
+  --nord14-tint: #dfe8d4;      /* green */
+  --nord15-tint: #e7dbe4;      /* purple */
+
   /* Everforest (https://github.com/sainnhe/everforest) — medium variants.
      Canonical hex for both the dark and light ("paper") palettes; the
      *-soft / *-mid / *-deep / *-dark shades are interpolated steps the

@@ -208,11 +208,13 @@
 
    Snow Storm surfaces (nord4-6 plus the interpolated --nord-snow-* steps in
    palette.css), Polar Night text, frost deep-blue links and primary buttons,
-   and the signature frost cyan as the selection wash. Status colours inherit
-   Matcha's (the aurora mid-tones are too light for text on snow); the accent
-   icon slots are repointed to frost. Structurally it IS the light theme —
-   it inherits every :root token and only repoints colours; dark structural
-   rules never apply.
+   and the signature frost cyan as the selection wash. The frost family is
+   deliberately cool everywhere; the warmth comes from aurora, placed only
+   where meaning lives — status inks, Add, the yellow icons, and the
+   highlight/label tints (aurora pulled to ink weight or diluted to snow
+   tints in palette.css, since canonical aurora is sized for dark grounds).
+   Structurally it IS the light theme — it inherits every :root token and
+   only repoints colours; dark structural rules never apply.
    ========================================================================== */
 [data-theme="nord-light"] {
   color-scheme: light;
@@ -269,15 +271,51 @@
   --selected-background: var(--nord-frost-tint);
   --selected-color: var(--nord1);
 
-  /* Accent icons (filter, active sort, new-note/checklist badges) — the
-     signature frost cyan at ink weight. Everything else on the canvas is
-     gray-blue (muted icons nord3-bright, links nord10-deep), so the accent
-     needs the distinct cyan hue to actually read as "on". */
-  --icon-violet: var(--nord8-ink);
-  --icon-violet-muted: var(--nord8);
+  /* Accent icons (filter, active sort, new-note/checklist badges) — aurora
+     purple at ink weight. The cyan ink blended into the gray-blue canvas;
+     mauve is the one hue nothing else on screen uses, so "on" actually
+     reads. */
+  --icon-violet: var(--nord15-ink);
+  --icon-violet-muted: var(--nord15);
+  --icon-yellow: var(--nord13-ink);
 
-  /* Add is pinned green (:root points it at --link, which is blue here) */
-  --add: var(--lime-700);
+  /* Status — aurora at ink weight (--false/--error/--error-border follow
+     --urgent from :root automatically) */
+  --urgent: var(--nord11-ink);
+  --warning: var(--nord12-ink);
+  --success: var(--nord14-ink);
+  --true: var(--nord14-ink);
+  --error-background: var(--nord11-tint);
+
+  /* Add — aurora green (:root points it at --link, which is blue here) */
+  --add: var(--nord14-ink);
+
+  /* Past-due / due-soon washes and the warning toast — aurora yellow
+     diluted to snow */
+  --past-due-bg: var(--nord13-wash);
+  --due-soon-bg: var(--nord13-wash);
+  --toast-warning-header-bg: var(--nord13-tint);
+  --toast-warning-body-bg: var(--nord13-wash);
+
+  /* Buttons — success/danger fills on the aurora tints */
+  --btn-success-bg: var(--nord14-tint);
+  --btn-danger-bg: var(--nord11-tint);
+
+  /* Row highlights — aurora (and frost blue) as snow tints; gray/slate
+     inherit the cool defaults, which already read Nordic */
+  --hl-blue: var(--nord9-tint);
+  --hl-green: var(--nord14-tint);
+  --hl-orange: var(--nord12-tint);
+  --hl-violet: var(--nord15-tint);
+  --hl-red: var(--nord11-tint);
+  --hl-yellow: var(--nord13-tint);
+
+  /* Labels & badges — the same aurora tints (label-gray follows control) */
+  --label-green: var(--nord14-tint);
+  --label-orange: var(--nord12-tint);
+  --label-purple: var(--nord15-tint);
+  --label-red: var(--nord11-tint);
+  --label-yellow: var(--nord13-tint);
 }
 
 /* ==========================================================================
@@ -675,6 +713,9 @@
   --gb-bright-orange: var(--nord12);
   --gb-bright-green:  var(--nord14);
   --gb-bright-purple: var(--nord15);
+
+  /* Add stays green (the dark block points it at --link, frost cyan here) */
+  --add: var(--gb-bright-green);
 }
 
 /* ==========================================================================
@@ -747,4 +788,7 @@
   --gb-bright-orange: var(--ctp-peach);
   --gb-bright-green:  var(--ctp-green);
   --gb-bright-purple: var(--ctp-mauve);
+
+  /* Add stays green (the dark block points it at --link, blue here) */
+  --add: var(--gb-bright-green);
 }
