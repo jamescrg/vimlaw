@@ -436,3 +436,9 @@
   border-color: var(--control-active-bg) !important;
   color: var(--control-active-color) !important;
 }
+
+/* Oxford — the calendar's "today" wash joins the azure family (the .fc
+   block's amber-100 default is Matcha's). */
+[data-theme="oxford"] .fc {
+  --fc-today-bg-color: #d9ebf8;
+}

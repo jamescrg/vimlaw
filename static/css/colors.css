@@ -437,6 +437,24 @@
   --status-green-ink: #036e3f;
   --status-green-line: #86d8ae;
   --status-green-hover: #c0ecd6;
+
+  /* Row highlights, labels, and the soft washes — Oxford's own cool
+     tints on white (the inherited Matcha 100-tints were its last
+     residue; violet stays inherited, it IS the accent family) */
+  --hl-blue: #d9ebf8;
+  --hl-green: var(--status-green-bg);
+  --hl-orange: #fde3cb;
+  --hl-red: #fcdcda;
+  --hl-yellow: #f9ecc4;
+  --label-green: var(--status-green-bg);
+  --label-orange: #fde3cb;
+  --label-red: #fcdcda;
+  --label-yellow: #f9ecc4;
+  --past-due-bg: #fcf4d9;
+  --due-soon-bg: #fcf4d9;
+  --toast-warning-header-bg: #f9ecc4;
+  --toast-warning-body-bg: #fcf4d9;
+  --error-background: #fde3cb;
   --add: var(--oxford-green);
   --icon-yellow: var(--yellow-600);
   --urgent: var(--orange-700);
