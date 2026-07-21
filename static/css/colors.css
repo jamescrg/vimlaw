@@ -176,6 +176,14 @@
   --error-background: var(--orange-100);
   --error-border: var(--urgent);
 
+  /* Semantic status-green chips (citation verification, vetting states in
+     the AI chat) — themable, unlike the provider brand badges which stay
+     constant. Defaults are Matcha's limes. */
+  --status-green-bg: var(--lime-100);
+  --status-green-ink: var(--lime-800);
+  --status-green-line: var(--lime-300);
+  --status-green-hover: var(--lime-200);
+
   /* ==========================================================================
      Labels & Badges
      ========================================================================== */
@@ -423,6 +431,12 @@
   --btn-success-bg: var(--oxford-green-tint);
   --btn-danger-bg: var(--red-150);
   --btn-secondary-bg: var(--oxford-azure-tint);
+
+  /* Status-green chips take the theme's own green family */
+  --status-green-bg: #d5f2e3;
+  --status-green-ink: #036e3f;
+  --status-green-line: #86d8ae;
+  --status-green-hover: #c0ecd6;
   --add: var(--oxford-green);
   --icon-yellow: var(--yellow-600);
   --urgent: var(--orange-700);
