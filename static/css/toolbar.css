@@ -11,7 +11,7 @@
 .toolbar button:not(.dropdown-menu *) {
   align-items: center;
   background: var(--background-control);
-  border: solid 1px var(--border-medium);
+  border: solid 1px var(--button-border);
   border-radius: var(--radius-sm);
   color: var(--button-toolbar);
   display: inline-flex;
@@ -43,7 +43,7 @@
 
 .select-property {
   background-color: var(--background-control);
-  border: solid 1px var(--border-medium);
+  border: solid 1px var(--button-border);
   color: var(--button-toolbar);
   padding: 0.25rem;
 }

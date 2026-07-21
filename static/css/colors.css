@@ -169,6 +169,10 @@
   --border-medium: var(--stone-300);
   --border-medium-dark: var(--stone-350);
   --border-dark: var(--stone-400);
+  /* Toolbar buttons follow the medium border by default; themes that want
+     more button definition without touching the many other border-medium
+     consumers (table grids, hairlines) repoint this alone. */
+  --button-border: var(--border-medium);
 
   /* ==========================================================================
      Selection & Active States
@@ -286,22 +290,30 @@
   --button-primary-color: var(--nord-snow-bright);
 
   /* Forms & Inputs */
-  --input-border: var(--nord4);
+  --input-border: var(--nord-snow-dark);
   --input-background: var(--nord-snow-bright);
   --input-placeholder: var(--nord-gray);
 
-  /* Borders — cool polar grays in place of stone */
-  --border-light: var(--nord5);
-  --border-medium: var(--nord4);
-  --border-medium-dark: var(--nord-snow-dark);
-  --border-dark: var(--nord-gray);
+  /* Borders — cool polar grays in place of stone, the whole ramp one
+     step darker than the surface ladder (2026-07-21: the surface-step
+     values read faint as edges — tables, nav seams, and toolbar frames
+     all rise together) */
+  --border-light: var(--nord4);
+  --border-medium: var(--nord-snow-dark);
+  --border-medium-dark: var(--nord4-dim);
+  --border-dark: var(--nord3-bright);
 
-  /* Selection — the frost cyan wash under Polar Night text */
+  /* Selection — the frost cyan wash under Polar Night text. The active
+     border gets a real frost blue: the inherited --border-medium-dark
+     resolves to the snow-dark surface step here, near-invisible as an
+     outline on the wash. */
   --selected-background: var(--nord-frost-tint);
   --selected-color: var(--nord1);
+  --selected-border: var(--nord7);
+  --button-border: var(--border-medium-dark);
 
   /* Accent icons (filter, active sort, new-note/checklist badges) — aurora
-     purple at ink weight. The cyan ink blended into the gray-blue canvas;
+     purple at ink weight. The 6yan ink blended into the gray-blue canvas;
      mauve is the one hue nothing else on screen uses, so "on" actually
      reads. */
   --icon-violet: var(--nord15-ink);

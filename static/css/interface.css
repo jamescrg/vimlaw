@@ -136,6 +136,15 @@
   color: var(--yellow-400);
 }
 
+/* Selected list rows (contacts, clients/folders sidebar, note and
+   checklist folders) — wash plus the selected ink, matching the nav's
+   active treatment; the row names are links, so the anchors take the
+   ink too. */
+.item-selected-highlight,
+.item-selected-highlight a {
+  color: var(--selected-color);
+}
+
 .item-selected-highlight {
   background: var(--selected-background);
 }
