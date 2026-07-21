@@ -388,9 +388,6 @@
   --border-medium-dark: var(--oxford-line-dark);
   --border-dark: var(--oxford-gray-soft);
 
-  /* The title bar and subnav share one flat mist surface — no seam */
-  --subnav-divider: transparent;
-
   /* Selection — a darker executive gray under the heading slate; azure
      survives only on the accent icons (the sober revision) */
   --selected-background: var(--oxford-gray-select);
@@ -411,9 +408,11 @@
      links, azure = active state. */
   --brand-ink: var(--oxford-navy);
 
-  /* Accent icons (filter, active sort, badges) — the active-state azure */
-  --icon-violet: var(--oxford-azure);
-  --icon-violet-muted: var(--oxford-azure-soft);
+  /* Accent icons (filter, active sort, badges) — violet, the one hue no
+     other Oxford role uses; the azure blended into the blue family and
+     the sort chevrons vanished (green would read as money here) */
+  --icon-violet: var(--violet-600);
+  --icon-violet-muted: var(--violet-400);
 
   /* Status — the 'Paid' green carries success; Add follows it. The
      functional accents run at the azure's intensity (vivid green, true
