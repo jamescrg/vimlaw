@@ -7,7 +7,7 @@
    theme-agnostic — it flips automatically when the tokens change.
 
    NINE themes. Five light — light (Matcha), nord-light (Nord Snow Storm),
-   everforest-light (forest paper), latte (Catppuccin), corporate (after
+   everforest-light (forest paper), latte (Catppuccin), oxford (after
    the 2017 LawPay UI: white ground, navy buttons, azure accents) — and
    four dark —
    dark (Gruvbox), cosmic (Nord), everforest, mocha (Catppuccin).
@@ -321,8 +321,8 @@
 }
 
 /* ==========================================================================
-   Corporate — a light theme after the 2017 LawPay UI (palette sampled
-   from the reference screenshot).
+   Oxford — a light theme after the 2017 LawPay UI (palette sampled
+   from the reference screenshot; oxford-cloth white and navy).
 
    White content ground under a pale mist chrome tier; the window-chrome
    slate serves as the dark neutral (menu icons, outline borders). Deep
@@ -330,72 +330,72 @@
    azure accent icons, the 'Paid' green on success. Structurally a light
    theme: token-only block, no scoped rules.
    ========================================================================== */
-[data-theme="corporate"] {
+[data-theme="oxford"] {
   color-scheme: light;
 
   /* Typography & Text — slate over white */
-  --color-primary: var(--corporate-slate);
-  --color-darker: var(--corporate-slate-dark);
-  --color-muted: var(--corporate-gray);
-  --color-muted-more: var(--corporate-gray-soft);
-  --color-lighter: var(--corporate-line-dark);
+  --color-primary: var(--oxford-slate);
+  --color-darker: var(--oxford-slate-dark);
+  --color-muted: var(--oxford-gray);
+  --color-muted-more: var(--oxford-gray-soft);
+  --color-lighter: var(--oxford-line-dark);
 
   /* Links — steel blue, deepening to the brand navy on hover */
-  --link: var(--corporate-steel);
-  --link-hover: var(--corporate-navy);
+  --link: var(--oxford-steel);
+  --link-hover: var(--oxford-navy);
 
   /* Backgrounds — white ground and cells under a mist chrome tier.
      --background-nav is not a bar surface in this app (it colours menu/dot
      icons, outline-button borders, dropdown click-flashes) — the chrome
      slate suits that neutral. Nav/sidebar text inherits the slate ink. */
-  --background-nav: var(--corporate-chrome);
-  --background-body: var(--corporate-paper);
-  --background-subnav: var(--corporate-mist);
-  --background-subnav-contrast: var(--corporate-line-dark);
-  --background-section: var(--corporate-mist-dark);
-  --background-th: var(--corporate-mist);
-  --background-control: var(--corporate-mist-dark);
-  --background-td: var(--corporate-paper);
-  --background-medium-light: var(--corporate-mist);
-  --background-light: var(--corporate-mist);
-  --ai-frame: var(--corporate-line);
-  --ai-surface: var(--corporate-paper);
-  --ai-raised: var(--corporate-mist);
+  --background-nav: var(--oxford-chrome);
+  --background-body: var(--oxford-paper);
+  --background-subnav: var(--oxford-mist);
+  --background-subnav-contrast: var(--oxford-line-dark);
+  --background-section: var(--oxford-mist-dark);
+  --background-th: var(--oxford-mist);
+  --background-control: var(--oxford-mist-dark);
+  --background-td: var(--oxford-paper);
+  --background-medium-light: var(--oxford-mist);
+  --background-light: var(--oxford-mist);
+  --ai-frame: var(--oxford-line);
+  --ai-surface: var(--oxford-paper);
+  --ai-raised: var(--oxford-mist);
 
   /* Sidebar — white like the reference, labels in the muted gray */
-  --background-sidebar: var(--corporate-mist);
-  --background-sidebar-hover: var(--corporate-mist-dark);
-  --background-sidebar-active: var(--corporate-gray-select);
+  --background-sidebar: var(--oxford-mist);
+  --background-sidebar-hover: var(--oxford-mist-dark);
+  --background-sidebar-active: var(--oxford-gray-select);
 
   /* Buttons — the SEND QUICK BILL navy under white text */
-  --button-primary-background: var(--corporate-navy);
-  --button-primary-color: var(--corporate-paper);
+  --button-primary-background: var(--oxford-navy);
+  --button-primary-color: var(--oxford-paper);
 
   /* Forms & Inputs */
-  --input-border: var(--corporate-line-dark);
-  --input-background: var(--corporate-paper);
-  --input-placeholder: var(--corporate-gray-soft);
+  --input-border: var(--oxford-line-dark);
+  --input-background: var(--oxford-paper);
+  --input-placeholder: var(--oxford-gray-soft);
 
   /* Borders — cool hairlines */
-  --border-light: var(--corporate-line);
-  --border-medium: var(--corporate-line);
-  --border-medium-dark: var(--corporate-line-dark);
-  --border-dark: var(--corporate-gray-soft);
+  --border-light: var(--oxford-line);
+  --border-medium: var(--oxford-line);
+  --border-medium-dark: var(--oxford-line-dark);
+  --border-dark: var(--oxford-gray-soft);
 
   /* Selection — a darker executive gray under the heading slate; azure
      survives only on the accent icons (the sober revision) */
-  --selected-background: var(--corporate-gray-select);
-  --selected-color: var(--corporate-slate-dark);
+  --selected-background: var(--oxford-gray-select);
+  --selected-color: var(--oxford-slate-dark);
 
   /* Accent icons (filter, active sort, badges) — the active-state azure */
-  --icon-violet: var(--corporate-azure);
-  --icon-violet-muted: var(--corporate-azure-soft);
+  --icon-violet: var(--oxford-azure);
+  --icon-violet-muted: var(--oxford-azure-soft);
 
   /* Status — the 'Paid' green carries success; Add follows it */
-  --success: var(--corporate-green);
-  --true: var(--corporate-green);
-  --btn-success-bg: var(--corporate-green-tint);
-  --add: var(--corporate-green);
+  --success: var(--oxford-green);
+  --true: var(--oxford-green);
+  --btn-success-bg: var(--oxford-green-tint);
+  --add: var(--oxford-green);
 }
 
 /* ==========================================================================
