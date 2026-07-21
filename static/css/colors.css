@@ -70,6 +70,9 @@
      ========================================================================== */
   --link: var(--lime-750);
   --link-hover: var(--lime-600);
+  /* Brand surfaces (sidebar mark/wordmark, auth monogram) follow the link
+     colour unless a theme pins a dedicated ink. */
+  --brand-ink: var(--link);
 
   /* ==========================================================================
      Backgrounds
@@ -113,6 +116,9 @@
   --color-nav: var(--color-primary);
   --background-nav-tab-active: var(--background-body);
   --background-subnav-tab-active: var(--background-section);
+  /* The detail pages' title-bar/subnav seam; themes with one flat chrome
+     surface dissolve it. */
+  --subnav-divider: var(--border-medium-dark);
 
   /* ==========================================================================
      Sidebar
@@ -382,10 +388,28 @@
   --border-medium-dark: var(--oxford-line-dark);
   --border-dark: var(--oxford-gray-soft);
 
+  /* The title bar and subnav share one flat mist surface — no seam */
+  --subnav-divider: transparent;
+
   /* Selection — a darker executive gray under the heading slate; azure
      survives only on the accent icons (the sober revision) */
   --selected-background: var(--oxford-gray-select);
   --selected-color: var(--oxford-slate-dark);
+
+  /* Active CONTROLS (toggled toolbar buttons, mode pills, active dropdown
+     items, sidebar active, calendar view buttons) fill with the rail's
+     azure under inverted text — the reference UI's signature. Row/item
+     SELECTION stays on the quiet --selected-* grays so selected table rows
+     keep their readable content. Structural rules co-located in
+     interface.css / sidebar.css / apps/calendar.css. The subnav tabs
+     (matter + case pages) share this fill via detail.css. */
+  --control-active-bg: var(--oxford-azure);
+  --control-active-color: var(--oxford-paper);
+
+  /* The brand (sidebar kappa/wordmark, auth monogram) anchors in the deep
+     navy — one job per blue: navy = brand + primary actions, steel =
+     links, azure = active state. */
+  --brand-ink: var(--oxford-navy);
 
   /* Accent icons (filter, active sort, badges) — the active-state azure */
   --icon-violet: var(--oxford-azure);

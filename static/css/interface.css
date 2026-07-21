@@ -166,3 +166,19 @@
 i.icon-plus {
   vertical-align: middle;
 }
+
+/* Oxford — active controls fill with the accent azure under inverted text
+   (colour decisions in --control-active-*; see colors.css). */
+[data-theme="oxford"] .toggle-active,
+[data-theme="oxford"] .toolbar button.toggle-active,
+[data-theme="oxford"] .toolbar a.toggle-active {
+  background: var(--control-active-bg);
+  border-color: var(--control-active-bg);
+  color: var(--control-active-color);
+}
+
+[data-theme="oxford"] .dropdown-item.active,
+[data-theme="oxford"] .dropdown-menu li.active > a {
+  background: var(--control-active-bg);
+  color: var(--control-active-color);
+}

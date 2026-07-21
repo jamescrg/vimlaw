@@ -30,7 +30,7 @@ Detail Layout (header / subnav / body)
 /* Detail Header - title/toolbar area */
 .detail-header {
   background: var(--background-subnav);
-  padding: 0.75rem;
+  padding: 0.75rem 0.75rem 0.25rem 0.75rem;
 }
 
 .detail-header .toolbar {
@@ -56,11 +56,12 @@ Detail Layout (header / subnav / body)
   margin-right: 0;
 }
 
-/* Subnav - tab navigation */
+/* Subnav - tab navigation. The top divider (title bar / subnav seam) is a
+   token so a theme can dissolve it when both surfaces match. */
 .subnav {
   background: var(--background-subnav);
   border-bottom: solid 1px var(--border-medium-dark);
-  border-top: solid 1px var(--border-medium-dark);
+  border-top: solid 1px var(--subnav-divider);
 }
 
 .subnav ul {
@@ -154,4 +155,16 @@ Detail Layout (header / subnav / body)
     flex-shrink: 0;
   }
 
+}
+
+/* Oxford — the active tab joins the azure control fill (a rail was tried
+   2026-07-21 but read as underpowered beside the filled buttons); covers
+   the matter subnav and the case page's tab group alike. */
+[data-theme="oxford"] .subnav .active {
+  background: var(--control-active-bg);
+  border: none;
+}
+
+[data-theme="oxford"] .subnav .active a {
+  color: var(--control-active-color);
 }
