@@ -74,6 +74,19 @@
      colour unless a theme pins a dedicated ink. */
   --brand-ink: var(--link);
 
+  /* Keyboard focus ring: each theme's accent pulled halfway toward a
+     fixed mid-gray (OKLCH mix keeps the hue) — link colours are
+     text-inks, too heavy as rings on light grounds and glaring on dark;
+     the mix normalizes both directions toward mid-tone. (Relative color
+     syntax expressed this more precisely but lacks browser support.)
+     Resolves per theme because var(--accent-link) substitutes per
+     element. */
+  --focus-ring: color-mix(in oklch, var(--accent-link) 50%, oklch(0.62 0 none));
+  /* Input focus borders run a step lighter than the keyboard ring — the
+     border+inset pair reads heavier than an offset ring, so it gets
+     diluted toward the field's own ground. */
+  --field-focus: color-mix(in oklch, var(--focus-ring) 65%, var(--input-background));
+
   /* ==========================================================================
      Backgrounds
      ========================================================================== */
@@ -408,7 +421,7 @@
      keep their readable content. Structural rules co-located in
      interface.css / sidebar.css / apps/calendar.css. The subnav tabs
      (matter + case pages) share this fill via detail.css. */
-  --control-active-bg: var(--oxford-azure);
+  --control-active-bg: var(--oxford-azure-ink);
   --control-active-color: var(--oxford-paper);
 
   /* The brand (sidebar kappa/wordmark, auth monogram) anchors in the deep
@@ -426,8 +439,8 @@
      functional accents run at the azure's intensity (vivid green, true
      yellow icons, orange-700 urgency, brighter button washes) so they
      hold their own beside the filled actives. */
-  --success: var(--oxford-green);
-  --true: var(--oxford-green);
+  --success: var(--oxford-green-ink);
+  --true: var(--oxford-green-ink);
   --btn-success-bg: var(--oxford-green-tint);
   --btn-danger-bg: var(--red-150);
   --btn-secondary-bg: var(--oxford-azure-tint);

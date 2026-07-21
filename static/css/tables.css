@@ -60,6 +60,13 @@ th:last-child,
   border-right: none;
 }
 
+/* Numeric and money columns align digit-for-digit (fixed-width figures);
+   proportional digits make columns of amounts wobble. */
+.numeric,
+.money {
+  font-variant-numeric: tabular-nums;
+}
+
 td {
   background: var(--background-td);
   border-bottom: solid 1px var(--border-medium);

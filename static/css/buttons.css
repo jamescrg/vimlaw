@@ -386,7 +386,7 @@ td:hover .btn-ghost,
 }
 
 [data-theme="oxford"] .btn-success {
-  background: var(--oxford-green);
+  background: var(--oxford-green-ink);
   border-color: var(--oxford-green);
   color: var(--oxford-paper);
 }

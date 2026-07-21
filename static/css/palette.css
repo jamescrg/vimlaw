@@ -374,7 +374,11 @@
      Text inks are darkened from the sampled anti-aliased values to their
      design-true weights. */
   --oxford-navy: #00497b;       /* primary button fill, link hover */
-  --oxford-azure: #007cd9;      /* active nav / accent icons */
+  --oxford-azure: #007cd9;      /* accent icons, rails (3:1 graphics bar) */
+  --oxford-azure-ink: #0075cb;  /* azure when it carries white text —
+                                   fills for active tabs/pills (4.77:1) */
+  --oxford-green-ink: #00834a;  /* green when it carries text — money,
+                                   Paid, the Confirm fill (4.83:1) */
   --oxford-azure-soft: #66a5d8; /* muted accent */
   --oxford-azure-tint: #dcedf9; /* selection wash */
   --oxford-steel: #33719f;      /* link ink (steel column-header blue) */
