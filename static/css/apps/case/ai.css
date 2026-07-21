@@ -1444,12 +1444,12 @@
 }
 
 .citation-verified a {
-  background: var(--label-green);
-  color: var(--lime-800);
+  background: var(--status-green-bg);
+  color: var(--status-green-ink);
 }
 
 .citation-verified a:hover {
-  background: var(--lime-200);
+  background: var(--status-green-hover);
 }
 
 .citation-unverified a,
@@ -1501,12 +1501,12 @@
 }
 
 .citation-vetted-supports a {
-  background: var(--lime-100);
-  color: var(--lime-800);
+  background: var(--status-green-bg);
+  color: var(--status-green-ink);
 }
 
 .citation-vetted-supports a:hover {
-  background: var(--lime-200);
+  background: var(--status-green-hover);
 }
 
 .citation-vetted-partial a {
@@ -1573,13 +1573,13 @@
 }
 
 .ai-vet-citations-on {
-  background: var(--lime-100);
-  border: 1px solid var(--lime-300);
-  color: var(--lime-800);
+  background: var(--status-green-bg);
+  border: 1px solid var(--status-green-line);
+  color: var(--status-green-ink);
 }
 
 .ai-vet-citations-on:hover {
-  background: var(--lime-200);
+  background: var(--status-green-hover);
 }
 
 .ai-vet-citations-off {
@@ -1647,8 +1647,8 @@
 }
 
 .citation-vetting-verdict-supports {
-  background: var(--lime-100);
-  color: var(--lime-800);
+  background: var(--status-green-bg);
+  color: var(--status-green-ink);
 }
 
 .citation-vetting-verdict-partial {

@@ -49,7 +49,7 @@ body {
    belongs to the taskbar, not the card). NOTE: a CSS url can't ride
    static_v — bump the literal ?v below whenever the SVG is regenerated. */
 .auth-title::before {
-  background: var(--link);
+  background: var(--brand-ink);
   content: "";
   display: inline-block;
   height: 3.8rem;

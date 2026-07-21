@@ -427,3 +427,18 @@
     box-shadow: none;
   }
 }
+
+/* Oxford — the calendar's active view button matches the azure controls. */
+[data-theme="oxford"] .fc .fc-button-primary:not(:disabled).fc-button-active {
+  /* !important matches the hover block above, which would otherwise flash
+     the active button back to gray on hover. */
+  background: var(--control-active-bg) !important;
+  border-color: var(--control-active-bg) !important;
+  color: var(--control-active-color) !important;
+}
+
+/* Oxford — the calendar's "today" wash joins the azure family (the .fc
+   block's amber-100 default is Matcha's). */
+[data-theme="oxford"] .fc {
+  --fc-today-bg-color: #d9ebf8;
+}

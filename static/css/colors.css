@@ -70,6 +70,22 @@
      ========================================================================== */
   --link: var(--lime-750);
   --link-hover: var(--lime-600);
+  /* Brand surfaces (sidebar mark/wordmark, auth monogram) follow the link
+     colour unless a theme pins a dedicated ink. */
+  --brand-ink: var(--link);
+
+  /* Keyboard focus ring: each theme's accent pulled halfway toward a
+     fixed mid-gray (OKLCH mix keeps the hue) — link colours are
+     text-inks, too heavy as rings on light grounds and glaring on dark;
+     the mix normalizes both directions toward mid-tone. (Relative color
+     syntax expressed this more precisely but lacks browser support.)
+     Resolves per theme because var(--accent-link) substitutes per
+     element. */
+  --focus-ring: color-mix(in oklch, var(--accent-link) 50%, oklch(0.62 0 none));
+  /* Input focus borders run a step lighter than the keyboard ring — the
+     border+inset pair reads heavier than an offset ring, so it gets
+     diluted toward the field's own ground. */
+  --field-focus: color-mix(in oklch, var(--focus-ring) 65%, var(--input-background));
 
   /* ==========================================================================
      Backgrounds
@@ -113,6 +129,9 @@
   --color-nav: var(--color-primary);
   --background-nav-tab-active: var(--background-body);
   --background-subnav-tab-active: var(--background-section);
+  /* The detail pages' title-bar/subnav seam; themes with one flat chrome
+     surface dissolve it. */
+  --subnav-divider: var(--border-medium-dark);
 
   /* ==========================================================================
      Sidebar
@@ -169,6 +188,14 @@
   --error: var(--urgent);
   --error-background: var(--orange-100);
   --error-border: var(--urgent);
+
+  /* Semantic status-green chips (citation verification, vetting states in
+     the AI chat) — themable, unlike the provider brand badges which stay
+     constant. Defaults are Matcha's limes. */
+  --status-green-bg: var(--lime-100);
+  --status-green-ink: var(--lime-800);
+  --status-green-line: var(--lime-300);
+  --status-green-hover: var(--lime-200);
 
   /* ==========================================================================
      Labels & Badges
@@ -387,15 +414,64 @@
   --selected-background: var(--oxford-gray-select);
   --selected-color: var(--oxford-slate-dark);
 
-  /* Accent icons (filter, active sort, badges) — the active-state azure */
-  --icon-violet: var(--oxford-azure);
-  --icon-violet-muted: var(--oxford-azure-soft);
+  /* Active CONTROLS (toggled toolbar buttons, mode pills, active dropdown
+     items, sidebar active, calendar view buttons) fill with the rail's
+     azure under inverted text — the reference UI's signature. Row/item
+     SELECTION stays on the quiet --selected-* grays so selected table rows
+     keep their readable content. Structural rules co-located in
+     interface.css / sidebar.css / apps/calendar.css. The subnav tabs
+     (matter + case pages) share this fill via detail.css. */
+  --control-active-bg: var(--oxford-azure-ink);
+  --control-active-color: var(--oxford-paper);
 
-  /* Status — the 'Paid' green carries success; Add follows it */
-  --success: var(--oxford-green);
-  --true: var(--oxford-green);
+  /* The brand (sidebar kappa/wordmark, auth monogram) anchors in the deep
+     navy — one job per blue: navy = brand + primary actions, steel =
+     links, azure = active state. */
+  --brand-ink: var(--oxford-navy);
+
+  /* Accent icons (filter, active sort, badges) — violet, the one hue no
+     other Oxford role uses; the azure blended into the blue family and
+     the sort chevrons vanished (green would read as money here) */
+  --icon-violet: var(--violet-600);
+  --icon-violet-muted: var(--violet-400);
+
+  /* Status — the 'Paid' green carries success; Add follows it. The
+     functional accents run at the azure's intensity (vivid green, true
+     yellow icons, orange-700 urgency, brighter button washes) so they
+     hold their own beside the filled actives. */
+  --success: var(--oxford-green-ink);
+  --true: var(--oxford-green-ink);
   --btn-success-bg: var(--oxford-green-tint);
+  --btn-danger-bg: var(--red-150);
+  --btn-secondary-bg: var(--oxford-azure-tint);
+
+  /* Status-green chips take the theme's own green family */
+  --status-green-bg: #d5f2e3;
+  --status-green-ink: #036e3f;
+  --status-green-line: #86d8ae;
+  --status-green-hover: #c0ecd6;
+
+  /* Row highlights, labels, and the soft washes — Oxford's own cool
+     tints on white (the inherited Matcha 100-tints were its last
+     residue; violet stays inherited, it IS the accent family) */
+  --hl-blue: #d9ebf8;
+  --hl-green: var(--status-green-bg);
+  --hl-orange: #fde3cb;
+  --hl-red: #fcdcda;
+  --hl-yellow: #f9ecc4;
+  --label-green: var(--status-green-bg);
+  --label-orange: #fde3cb;
+  --label-red: #fcdcda;
+  --label-yellow: #f9ecc4;
+  --past-due-bg: #fcf4d9;
+  --due-soon-bg: #fcf4d9;
+  --toast-warning-header-bg: #f9ecc4;
+  --toast-warning-body-bg: #fcf4d9;
+  --error-background: #fde3cb;
   --add: var(--oxford-green);
+  --icon-yellow: var(--yellow-600);
+  --urgent: var(--orange-700);
+  --warning: var(--orange-700);
 }
 
 /* ==========================================================================

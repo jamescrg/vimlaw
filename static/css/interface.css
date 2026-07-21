@@ -166,3 +166,41 @@
 i.icon-plus {
   vertical-align: middle;
 }
+
+/* Oxford — active controls fill with the accent azure under inverted text
+   (colour decisions in --control-active-*; see colors.css). */
+[data-theme="oxford"] .toggle-active,
+[data-theme="oxford"] .toolbar button.toggle-active,
+[data-theme="oxford"] .toolbar a.toggle-active {
+  background: var(--control-active-bg);
+  border-color: var(--control-active-bg);
+  color: var(--control-active-color);
+}
+
+[data-theme="oxford"] .dropdown-item.active,
+[data-theme="oxford"] .dropdown-menu li.active > a {
+  background: var(--control-active-bg);
+  color: var(--control-active-color);
+}
+
+/* ==========================================================================
+   Keyboard focus — a visible :focus-visible ring for interactive controls,
+   in each theme's accent (--accent-link resolves per theme). Mouse clicks
+   don't trigger it, so aesthetics are untouched for pointer users while
+   tab-navigation becomes usable. Crisp solid outline with offset — no
+   box-shadow glow. Re-arms .btn, whose own rule zeroed the outline.
+   Text inputs are deliberately EXCLUDED (browsers fire :focus-visible on
+   click-focus for them, the classic ring-on-every-click annoyance) — they
+   signal focus via a border recolor in forms.css instead.
+   ========================================================================== */
+:is(a, button, summary, [tabindex]:not(input, textarea, select)):focus-visible,
+input:is([type="checkbox"], [type="radio"]):focus-visible,
+.btn:focus-visible {
+  /* --focus-ring (colors.css) is the theme accent normalized to mid
+     lightness — never ink-heavy on light grounds nor glaring on dark. */
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  /* A quiet halo beyond the ring — a pale solid spread (Stripe-style),
+     not a blur, so it reads soft without the fuzzy Bootstrap glow. */
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus-ring) 18%, transparent);
+}
