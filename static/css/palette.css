@@ -390,8 +390,10 @@
   --oxford-gray-select: #d6dbdf; /* selection/active fill — darker gray */
   --oxford-line: #dde4e9;       /* hairlines */
   --oxford-line-dark: #c6d0d6;  /* stronger borders */
-  --oxford-green: #3f9068;      /* the 'Paid' green — success/true */
-  --oxford-green-tint: #ddeee5; /* success fills */
+  --oxford-green: #00a05a;      /* the 'Paid' green, raised to the azure's
+                                   chroma band (sampled #3f9068 read dusty
+                                   beside the vivid actives) */
+  --oxford-green-tint: #cdeedd; /* success fills, brightened to match */
 
   /* Everforest (https://github.com/sainnhe/everforest) — medium variants.
      Canonical hex for both the dark and light ("paper") palettes; the

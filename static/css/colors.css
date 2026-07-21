@@ -415,11 +415,19 @@
   --icon-violet: var(--oxford-azure);
   --icon-violet-muted: var(--oxford-azure-soft);
 
-  /* Status — the 'Paid' green carries success; Add follows it */
+  /* Status — the 'Paid' green carries success; Add follows it. The
+     functional accents run at the azure's intensity (vivid green, true
+     yellow icons, orange-700 urgency, brighter button washes) so they
+     hold their own beside the filled actives. */
   --success: var(--oxford-green);
   --true: var(--oxford-green);
   --btn-success-bg: var(--oxford-green-tint);
+  --btn-danger-bg: var(--red-150);
+  --btn-secondary-bg: var(--oxford-azure-tint);
   --add: var(--oxford-green);
+  --icon-yellow: var(--yellow-600);
+  --urgent: var(--orange-700);
+  --warning: var(--orange-700);
 }
 
 /* ==========================================================================
