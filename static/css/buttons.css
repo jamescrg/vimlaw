@@ -36,11 +36,16 @@
   color: var(--button-secondary-color);
 }
 
+/* Modal footer buttons: each border is an intensified cut of its own
+   fill — the fill mixed toward the theme's ink (--color-darker), which
+   deepens it in light themes and brightens it in dark ones, so borders
+   stay visible in the button's own colour family across every theme
+   (fixed border-medium vanished on the tinted fills). */
 .btn-secondary,
 .btn-secondary:focus,
 .btn-secondary:active {
   background: var(--btn-secondary-bg);
-  border-color: var(--border-medium);
+  border-color: color-mix(in oklch, var(--btn-secondary-bg) 80%, var(--color-darker));
   box-shadow: none;
   color: var(--button-secondary-color);
   outline: none;
@@ -57,14 +62,14 @@
 
 .btn-danger {
   background: var(--btn-danger-bg);
-  border-color: var(--border-medium);
+  border-color: color-mix(in oklch, var(--btn-danger-bg) 80%, var(--color-darker));
   box-shadow: none;
   color: var(--button-secondary-color);
 }
 
 .btn-success {
   background: var(--btn-success-bg);
-  border-color: var(--border-medium);
+  border-color: color-mix(in oklch, var(--btn-success-bg) 80%, var(--color-darker));
   box-shadow: none;
   color: var(--button-secondary-color);
 }
@@ -380,19 +385,10 @@ td:hover .btn-ghost,
 [data-theme="oxford"] .btn-secondary,
 [data-theme="oxford"] .btn-secondary:focus,
 [data-theme="oxford"] .btn-secondary:active {
-  background: var(--oxford-azure-tint);
-  border-color: var(--oxford-azure-soft);
   color: var(--oxford-navy);
 }
 
-[data-theme="oxford"] .btn-success {
-  background: var(--oxford-green-ink);
-  border-color: var(--oxford-green);
-  color: var(--oxford-paper);
-}
-
+[data-theme="oxford"] .btn-success,
 [data-theme="oxford"] .btn-danger {
-  background: var(--red-600);
-  border-color: var(--red-600);
   color: var(--oxford-paper);
 }
