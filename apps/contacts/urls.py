@@ -4,6 +4,7 @@ from django.urls import path
 from apps.contacts.details import views as details
 from apps.contacts.intake import views as intake
 from apps.contacts.matters import views as matters
+from apps.contacts.relationships import views as relationships
 from apps.contacts.trust import views as trust
 from apps.contacts.views import (  # go_to_contact,
     add,
@@ -43,4 +44,29 @@ urlpatterns = [
     path("contacts/<int:contact_id>/matters", matters.index, name="detail-matters"),
     path("contacts/<int:contact_id>/trust", trust.index, name="detail-trust"),
     path("contacts/<int:contact_id>/intake", intake.index, name="detail-intake"),
+    path(
+        "contacts/<int:contact_id>/related",
+        relationships.index,
+        name="detail-related",
+    ),
+    path(
+        "contacts/<int:contact_id>/relationships/table",
+        relationships.table,
+        name="relationship-table",
+    ),
+    path(
+        "contacts/<int:contact_id>/relationships/add",
+        relationships.add,
+        name="add-relationship",
+    ),
+    path(
+        "contacts/<int:contact_id>/relationships/<int:id>/edit",
+        relationships.edit,
+        name="edit-relationship",
+    ),
+    path(
+        "contacts/<int:contact_id>/relationships/<int:id>/delete",
+        relationships.delete,
+        name="delete-relationship",
+    ),
 ]

@@ -62,6 +62,9 @@
       <li {% if contact_subapp == 'matters' %}class="active"{% endif %}>
         <a href="{% url 'contacts:detail-matters' selected_contact.id %}">All Matters</a>
       </li>
+      <li {% if contact_subapp == 'relationships' %}class="active"{% endif %}>
+        <a href="{% url 'contacts:detail-related' selected_contact.id %}">Related</a>
+      </li>
     </ul>
   </nav>
   <div class="detail-body">
@@ -73,31 +76,49 @@
       {% include "contacts/trust/main.html" %}
     {% elif contact_subapp == 'intake' %}
       {% include "contacts/intake/main.html" %}
+    {% elif contact_subapp == 'relationships' %}
+      {% include "contacts/relationships/main.html" %}
     {% else %}
       {% include "contacts/details/main.html" %}
     {% endif %}
-    {# Matter Assignment Actions #}
-    <div class="contact-matter-actions">
-      <div class="action-buttons">
-        <a href="#"
-           class="btn btn-outline-primary"
-           hx-get="/contacts/{{ selected_contact.id }}/assign"
-           hx-target="#htmx-modal-container"
-           data-bs-toggle="modal"
-           data-bs-target="#htmx-modal-container">
-          <i class="icon-circle-plus"></i>
-          Assign to Matter
-        </a>
-        <a href="#"
-           class="btn btn-outline-primary"
-           hx-get="/contacts/{{ selected_contact.id }}/remove"
-           hx-target="#htmx-modal-container"
-           data-bs-toggle="modal"
-           data-bs-target="#htmx-modal-container">
-          <i class="icon-circle-minus"></i>
-          Remove from Matter
-        </a>
+    {% if contact_subapp == 'relationships' %}
+      <div class="contact-matter-actions">
+        <div class="action-buttons">
+          <a href="#"
+             class="btn btn-outline-primary"
+             hx-get="{% url 'contacts:add-relationship' selected_contact.id %}"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container">
+            <i class="icon-circle-plus"></i>
+            Add Relationship
+          </a>
+        </div>
       </div>
-    </div>
+    {% else %}
+      {# Matter Assignment Actions #}
+      <div class="contact-matter-actions">
+        <div class="action-buttons">
+          <a href="#"
+             class="btn btn-outline-primary"
+             hx-get="/contacts/{{ selected_contact.id }}/assign"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container">
+            <i class="icon-circle-plus"></i>
+            Assign to Matter
+          </a>
+          <a href="#"
+             class="btn btn-outline-primary"
+             hx-get="/contacts/{{ selected_contact.id }}/remove"
+             hx-target="#htmx-modal-container"
+             data-bs-toggle="modal"
+             data-bs-target="#htmx-modal-container">
+            <i class="icon-circle-minus"></i>
+            Remove from Matter
+          </a>
+        </div>
+      </div>
+    {% endif %}
   </div>
 </div>

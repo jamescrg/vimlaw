@@ -11,5 +11,10 @@
          hx-trigger="roleListReload from:body"
          hx-get="{% url 'settings:role-list' %}"
          hx-target="this">{% include "settings/contacts/role-table.html" %}</div>
+    <div id="relationship-types"
+         class="settings-contacts-column"
+         hx-trigger="relationshipTypeListReload from:body"
+         hx-get="{% url 'settings:relationship-type-list' %}"
+         hx-target="this">{% include "settings/contacts/relationship-type-table.html" %}</div>
   </div>
 {% endblock subcontent %}
