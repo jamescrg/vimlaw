@@ -12,8 +12,20 @@ Matter Form
 .edit-matter-work-status-input {
   background: inherit;
   border: none;
-  padding: 0;
-  width: 100%;
+  /* Padding for the focus wash, cancelled by negative margins so the glyphs
+     don't shift against the static text they replace and the row height
+     doesn't change. */
+  margin: -0.25rem;
+  padding: 0.25rem;
+  width: calc(100% + 0.5rem);
+}
+
+/* Seamless inline-edit field: the global input:focus inset ring boxes the
+   text in with zero padding, so signal edit mode with a faint wash of the
+   focus colour over the cell ground instead. */
+.edit-matter-work-status-input:focus {
+  background: color-mix(in srgb, var(--field-focus) 15%, transparent);
+  box-shadow: none;
 }
 
 .toolbar-search {
@@ -165,7 +177,8 @@ Matter Switcher
    control, walking the open-matters list (wrapping at the ends). */
 .matter-step-group {
   display: inline-flex;
-  margin-right: 1.25rem;
+  margin-left: 0.75rem;
+  margin-right: 1rem;
   overflow: hidden;
 }
 
