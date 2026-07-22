@@ -315,15 +315,13 @@ Mode Pills (Detail/Case toggle)
   margin-right: 0.25rem;
 }
 
-/* toolbar.css's generic `.toolbar button` radius outranks a bare two-class
-   rule, so scope through .mode-pills to flatten the middle pills; the
-   first/last rules below re-round the outer corners. */
+/* One rounded strip, no interior borders: the group keeps the house
+   rounding on its outer ends, segments are square inside, and the ACTIVE
+   segment is the sole carrier of inner edges — its full --selected-border
+   box marks the selection, alongside the fill. Scoped through .mode-pills
+   so toolbar.css's generic button radius doesn't outrank the flattening. */
 .toolbar .mode-pills .mode-pill {
   border-radius: 0;
-}
-
-.toolbar .mode-pills .mode-pill:not(:last-child) {
-  border-right: none;
 }
 
 .toolbar .mode-pills .mode-pill:first-child {
@@ -334,14 +332,24 @@ Mode Pills (Detail/Case toggle)
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
+.toolbar .mode-pills .mode-pill:not(:last-child) {
+  border-right: none;
+}
+
+.toolbar .mode-pills .mode-pill:not(:first-child) {
+  border-left: none;
+}
+
 .toolbar .mode-pill.active {
   background: var(--selected-background);
-  border: 1px solid var(--selected-border);
   color: var(--selected-color);
 }
 
-.toolbar .mode-pill.active:not(:last-child) {
-  border-right: none;
+/* Restores the active segment's full border against the removals above
+   (higher specificity, later in source). Neighbors carry no side borders
+   of their own, so nothing doubles. */
+.toolbar .mode-pills .mode-pill.active {
+  border: 1px solid var(--selected-border);
 }
 
 /* Dark mode — mirror the sidebar's own surfaces: the unselected pill takes the
