@@ -170,6 +170,31 @@ urlpatterns = [
         contact_urls.update_group_order,
         name="update-group-order",
     ),
+    path(
+        "settings/contacts/relationship-types/",
+        contact_urls.relationship_type_list,
+        name="relationship-type-list",
+    ),
+    path(
+        "settings/contacts/relationship-types/filter/<str:filter_value>/",
+        contact_urls.relationship_type_filter_view,
+        name="relationship-type-filter",
+    ),
+    path(
+        "settings/contacts/relationship-types/add/",
+        contact_urls.add_relationship_type,
+        name="add-relationship-type",
+    ),
+    path(
+        "settings/contacts/relationship-types/edit/<int:type_id>/",
+        contact_urls.edit_relationship_type,
+        name="edit-relationship-type",
+    ),
+    path(
+        "settings/contacts/relationship-types/delete/<int:type_id>/",
+        contact_urls.delete_relationship_type,
+        name="delete-relationship-type",
+    ),
     # Matters (Practice Areas)
     path("settings/matters/", matter_urls.matters_index, name="matters-index"),
     path(

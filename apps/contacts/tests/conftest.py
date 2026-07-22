@@ -2,7 +2,7 @@ import pytest
 from django.test import Client
 
 from apps.accounts.models import CustomUser
-from apps.contacts.models import Contact
+from apps.contacts.models import Contact, RelationshipType
 from apps.folders.models import Folder
 from apps.intakes.models import Intake
 from apps.matters.models import Group, Matter, PracticeArea, Relationship, Role
@@ -127,3 +127,36 @@ def intake():
     )
     intake.save()
     return intake
+
+
+@pytest.fixture
+def contact_beta(user, folder):
+    return Contact.objects.create(
+        user=user,
+        folder=folder,
+        name="Kasturba Gandhi",
+        email="kasturba@example.com",
+    )
+
+
+@pytest.fixture
+def contact_gamma(user, folder):
+    return Contact.objects.create(
+        user=user,
+        folder=folder,
+        name="Jawaharlal Nehru",
+        email="nehru@example.com",
+    )
+
+
+@pytest.fixture
+def symmetric_type():
+    # The seed migration already provides this type; reuse it.
+    return RelationshipType.objects.get_or_create(label="Spouse of")[0]
+
+
+@pytest.fixture
+def asymmetric_type():
+    return RelationshipType.objects.get_or_create(
+        label="Employer of", defaults={"inverse_label": "Employee of"}
+    )[0]

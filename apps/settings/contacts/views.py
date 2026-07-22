@@ -6,8 +6,9 @@ from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
+from apps.contacts.models import RelationshipType
 from apps.matters.models import Group, Role
-from apps.settings.contacts.forms import GroupForm, RoleForm
+from apps.settings.contacts.forms import GroupForm, RelationshipTypeForm, RoleForm
 
 
 @login_required
@@ -28,12 +29,19 @@ def contacts_index(request):
     elif role_filter == "inactive":
         roles = roles.filter(is_active=False)
 
+    relationship_type_filter = request.session.get(
+        "settings_relationship_type_filter", "active"
+    )
+    relationship_types = _filtered_relationship_types(relationship_type_filter)
+
     context = {
         "subapp": "contacts",
         "roles": roles,
         "groups": groups,
         "group_filter": group_filter,
         "role_filter": role_filter,
+        "relationship_types": relationship_types,
+        "relationship_type_filter": relationship_type_filter,
     }
 
     return render(request, "settings/contacts/index.html", context)
@@ -226,3 +234,73 @@ def update_group_order(request):
         return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+def _filtered_relationship_types(type_filter):
+    types = RelationshipType.objects.all()
+    if type_filter == "active":
+        types = types.filter(is_active=True)
+    elif type_filter == "inactive":
+        types = types.filter(is_active=False)
+    return types
+
+
+@login_required
+def relationship_type_list(request):
+    type_filter = request.session.get("settings_relationship_type_filter", "active")
+    context = {
+        "relationship_types": _filtered_relationship_types(type_filter),
+        "relationship_type_filter": type_filter,
+    }
+    return render(request, "settings/contacts/relationship-type-table.html", context)
+
+
+@login_required
+def relationship_type_filter_view(request, filter_value):
+    request.session["settings_relationship_type_filter"] = filter_value
+    return HttpResponse(
+        status=204, headers={"HX-Trigger": "relationshipTypeListReload"}
+    )
+
+
+@login_required
+def add_relationship_type(request):
+    if request.method == "POST":
+        form = RelationshipTypeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "relationshipTypeListReload"}
+            )
+    else:
+        form = RelationshipTypeForm()
+    return render(
+        request, "settings/contacts/relationship-type-form.html", {"form": form}
+    )
+
+
+@login_required
+def edit_relationship_type(request, type_id):
+    relationship_type = RelationshipType.objects.get(id=type_id)
+    if request.method == "POST":
+        form = RelationshipTypeForm(request.POST, instance=relationship_type)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(
+                status=204, headers={"HX-Trigger": "relationshipTypeListReload"}
+            )
+    else:
+        form = RelationshipTypeForm(instance=relationship_type)
+    return render(
+        request,
+        "settings/contacts/relationship-type-form.html",
+        {"form": form, "relationship_type": relationship_type},
+    )
+
+
+@login_required
+def delete_relationship_type(request, type_id):
+    RelationshipType.objects.get(id=type_id).delete()
+    return HttpResponse(
+        status=204, headers={"HX-Trigger": "relationshipTypeListReload"}
+    )

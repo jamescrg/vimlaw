@@ -148,18 +148,27 @@ Miscellaneous
 }
 
 /* ==========================================================================
-Settings Contacts - Two Column Layout
+Settings Contacts - Column Layout
 ========================================================================== */
 
 .settings-contacts-container {
   align-items: flex-start;
   display: flex;
+  flex-wrap: wrap;
   gap: 3rem;
 }
 
 .settings-contacts-column {
-  flex: 1;
+  flex: 1 1 20rem;
   max-width: 25rem;
+}
+
+/* Two text columns + status need more room than the single-name tables;
+   on narrower viewports the wider basis makes this column wrap to its
+   own row rather than squeeze. */
+#relationship-types.settings-contacts-column {
+  flex-basis: 30rem;
+  max-width: 36rem;
 }
 
 @media (width <= 768px) {

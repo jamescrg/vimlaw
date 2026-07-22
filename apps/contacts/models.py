@@ -112,3 +112,76 @@ class Contact(AuditMixin, models.Model):
             models.Index(fields=["user"]),
             models.Index(fields=["folder"]),
         ]
+
+
+class RelationshipType(models.Model):
+    """A named contact-to-contact relationship, phrased from both ends.
+
+    One row describes both directions of a link: `label` is the phrase for
+    the edge's from-side ("Employer of"), `inverse_label` for its to-side
+    ("Employee of"). A blank inverse marks a symmetric relationship
+    (Spouse of) — both ends read the same. Managed in Settings > Contacts.
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    label = models.CharField(max_length=50, unique=True)
+    inverse_label = models.CharField(max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def is_symmetric(self):
+        return not self.inverse_label or self.inverse_label == self.label
+
+    @property
+    def display_inverse(self):
+        return self.inverse_label or self.label
+
+    class Meta:
+        db_table = "app_contact_relationship_type"
+        ordering = ["label"]
+
+
+class ContactRelationship(AuditMixin, models.Model):
+    """A directed edge between two contacts, typed by RelationshipType.
+
+    Stored once per link: "from_contact <label> to_contact". The far side
+    renders the type's inverse label, so each contact's page reads the
+    same edge in its own words. (Distinct from matters.Relationship, the
+    contact-to-matter through model.)
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    from_contact = models.ForeignKey(
+        Contact, on_delete=models.CASCADE, related_name="relationships_from"
+    )
+    to_contact = models.ForeignKey(
+        Contact, on_delete=models.CASCADE, related_name="relationships_to"
+    )
+    relationship_type = models.ForeignKey(
+        RelationshipType, on_delete=models.CASCADE, related_name="relationships"
+    )
+    notes = models.CharField(max_length=255, blank=True, null=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.from_contact} {self.relationship_type.label} {self.to_contact}"
+
+    class Meta:
+        db_table = "app_contact_relationship"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["from_contact", "to_contact", "relationship_type"],
+                name="uniq_contact_relationship_edge",
+            ),
+            models.CheckConstraint(
+                check=~models.Q(from_contact=models.F("to_contact")),
+                name="no_self_contact_relationship",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["from_contact"]),
+            models.Index(fields=["to_contact"]),
+        ]

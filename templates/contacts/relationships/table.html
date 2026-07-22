@@ -1,0 +1,49 @@
+{% if relationship_rows %}
+  <div class="table-container">
+    <table class="table contact-relationships-list">
+      <thead>
+        <tr>
+          <th class="relationship">Relationship</th>
+          <th>Contact</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in relationship_rows %}
+          <tr id="relationship-{{ row.rel.id }}">
+            <td class="relationship dropdown-cell">
+              <div class="dropdown" x-data="dropdown()">
+                <button class="button-link"
+                        type="button"
+                        x-ref="button"
+                        @click="toggle()"
+                        :aria-expanded="open">{{ row.label }}</button>
+                <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                  <li>
+                    <a class="dropdown-item"
+                       hx-get="{% url 'contacts:edit-relationship' selected_contact.id row.rel.id %}"
+                       hx-target="#htmx-modal-container"
+                       hx-trigger="click"><i class="icon-pencil"></i> Edit</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item"
+                       hx-post="{% url 'contacts:delete-relationship' selected_contact.id row.rel.id %}"
+                       hx-confirm="Remove this relationship?"><i class="icon-trash-2"></i> Delete</a>
+                  </li>
+                </ul>
+              </div>
+            </td>
+            <td class="name">
+              <a href="{% url 'contacts:detail-details' row.other.id %}">{{ row.other.name }}</a>
+            </td>
+            <td class="notes">{{ row.rel.notes|default:"" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="contact-empty-state">
+    <p>No relationships recorded for this contact.</p>
+  </div>
+{% endif %}

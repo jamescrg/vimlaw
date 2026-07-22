@@ -1,0 +1,6 @@
+<div class="contact-tab-content">
+  <div id="relationship-table"
+       hx-get="{% url 'contacts:relationship-table' selected_contact.id %}"
+       hx-trigger="relationshipChanged from:body"
+       hx-target="this">{% include "contacts/relationships/table.html" %}</div>
+</div>
