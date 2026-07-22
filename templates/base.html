@@ -124,12 +124,10 @@
               aria-label="Open navigation menu">
         <i class="icon-menu" aria-hidden="true"></i>
       </button>
-      <a href="{% url 'tasks-index' %}" class="mobile-topbar-brand">
-        <img class="sidebar-brand-mark-img"
-             src="{% static_v 'images/brand/k-antique-neohellenic-stars.svg' %}"
-             width="28"
-             height="28"
-             alt="Kosmos">
+      <a href="{% url 'tasks-index' %}"
+         class="mobile-topbar-brand"
+         aria-label="Kosmos">
+        <span class="mobile-topbar-wordmark" aria-hidden="true">{% include "components/kosmos-wordmark.html" %}</span>
       </a>
     </header>
     <div id="toast-container"
