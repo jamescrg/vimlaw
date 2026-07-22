@@ -45,11 +45,10 @@
    knob: 2rem × the wordmark's 4.104em aspect ≈ the header's content width. */
 .sidebar-brand-wordmark {
   display: block;
-  /* The fullstar cut's em-box is 160 units tall against the word's 100-unit
-     cap (the constellation overhangs the cap line), so 1.95rem here keeps
-     the letters at the optical size approved at 1.5rem on the old 123-unit
-     box. */
-  font-size: 1.95rem;
+  /* The v2 cut's em-box is tight to the ink again (123 units against the
+     word's 100-unit cap), so the approved optical size is 1.5rem straight —
+     no more compensating for the old fullstar cut's 160-unit overhang. */
+  font-size: 1.5rem;
   line-height: 1;
 }
 
@@ -263,18 +262,27 @@
 }
 
 /* Centered brand: absolutely centered so the leading hamburger doesn't push it
-   off-centre. Carries the starred kappa mark (the drawer has no header). */
+   off-centre. Carries the inline wordmark, painted by --brand-ink like the
+   sidebar brand (the drawer has no header). */
 .mobile-topbar-brand {
   align-items: center;
+  color: var(--brand-ink);
   display: flex;
   left: 50%;
   position: absolute;
   transform: translateX(-50%);
 }
 
-.mobile-topbar-brand .sidebar-brand-mark-img {
+.mobile-topbar-wordmark {
   display: block;
-  width: 1.75rem;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Same edge-star clipping guard as the sidebar cuts. */
+.mobile-topbar-wordmark svg {
+  display: block;
+  overflow: visible;
 }
 
 
