@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.intakes.api_views import receive_inquiry
+from apps.intakes.api_views import receive_inquiry, receive_intake
 from apps.intakes.views import (
     add,
     add_note,
@@ -64,4 +64,5 @@ urlpatterns = [
     path("intakes/<int:pk>/value-update/", value_update, name="value-update"),
     path("intakes/<int:pk>/value-display/", value_display, name="value-display"),
     path("api/receive-inquiry/", receive_inquiry, name="api-receive-inquiry"),
+    path("api/receive-intake/", receive_intake, name="api-receive-intake"),
 ]
