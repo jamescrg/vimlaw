@@ -157,30 +157,13 @@ Detail Layout (header / subnav / body)
 
 }
 
-/* Basic — active tab as wash + bottom rail (Outlook selection pattern:
-   wash for body, rail for accent, dark text). Replaces the azure fill,
-   which dressed selection up as a button; the rail-only attempt of
-   2026-07-21 read underpowered, but the wash carries it. */
+/* Basic — active tab takes the house emphasis pair: azure wash inside
+   a rail-azure border, slate text (tokens in colors.css). */
 [data-theme="basic"] .subnav .active {
-  background: var(--nav-active-wash);
-  border: none;
-  position: relative;
-}
-
-/* Inset round-capped underline (Fluent tab indicator) — clears the
-   tab's rounded corners instead of clipping into them. */
-[data-theme="basic"] .subnav .active::after {
-  background: var(--nav-active-rail);
-  border-radius: 999px;
-  bottom: 0;
-  content: "";
-  height: 3px;
-  left: 50%;
-  position: absolute;
-  transform: translateX(-50%);
-  width: calc(100% - 0.5rem);
+  background: var(--control-active-bg);
+  border-color: var(--control-active-line);
 }
 
 [data-theme="basic"] .subnav .active a {
-  color: var(--selected-color);
+  color: var(--control-active-color);
 }

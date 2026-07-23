@@ -568,27 +568,7 @@
 /* Oxford — the active nav item takes the azure fill under inverted text,
    the reference UI's signature move (tokens in colors.css). */
 [data-theme="basic"] .sidebar-nav li.active a {
-  /* Wash + rail: selection is state, not action — the pale wash with a
-     left rail says "you are here" while solid fills stay reserved for
-     pressable controls (colour decisions in --nav-active-*). */
-  background: var(--nav-active-wash);
-  border-color: transparent;
-  color: var(--selected-color);
-  position: relative;
-}
-
-/* The rail is one idiom everywhere: an inset round-capped underline
-   beneath the active item — sidebar, horizontal bar, and subnav alike —
-   stopping short of the corners so it never collides with the wash's
-   border radius. */
-[data-theme="basic"] .sidebar-nav li.active a::before {
-  background: var(--nav-active-rail);
-  border-radius: 999px;
-  bottom: 0;
-  content: "";
-  height: 3px;
-  left: 50%;
-  position: absolute;
-  transform: translateX(-50%);
-  width: calc(100% - 0.5rem);
+  background: var(--control-active-bg);
+  border-color: var(--control-active-line);
+  color: var(--control-active-color);
 }

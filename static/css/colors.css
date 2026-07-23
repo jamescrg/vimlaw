@@ -436,13 +436,18 @@
      keep their readable content. Structural rules co-located in
      interface.css / sidebar.css / apps/calendar.css. The subnav tabs
      (matter + case pages) share this fill via detail.css. */
-  --control-active-bg: var(--oxford-azure-ink);
-  --control-active-color: var(--oxford-paper);
-
-  /* Nav selection (sidebar item, subnav tab) — wash + pill rail rather
-     than the control fill: selection is state, not action. */
-  --nav-active-wash: var(--oxford-azure-tint);
-  --nav-active-rail: var(--oxford-azure);
+  /* One emphasis language for every active/selected control — nav
+     items, subnav tabs, toolbar toggles, mode pills, calendar view
+     buttons: the azure wash inside a rail-azure border under slate
+     text. (The azure-ink fill with inverted text, and later a pill-rail
+     experiment, both retired 2026-07-23.) */
+  --control-active-bg: var(--oxford-azure-tint);
+  --control-active-line: color-mix(
+    in oklch,
+    var(--oxford-azure) 80%,
+    var(--oxford-paper)
+  );
+  --control-active-color: var(--oxford-slate-dark);
 
   /* The brand (sidebar kappa/wordmark, auth monogram) anchors in the deep
      navy — one job per blue: navy = brand + primary actions, steel =
@@ -461,10 +466,11 @@
      hold their own beside the filled actives. */
   --success: var(--oxford-green-ink);
   --true: var(--oxford-green-ink);
-  /* Solid footer fills (the tints read washed-out beside the azure
-     actives); the scoped rules in buttons.css add the white labels */
-  --btn-success-bg: var(--oxford-green-ink);
-  --btn-danger-bg: var(--red-600);
+  /* Footer fills — back on the house light-tint/dark-text pattern
+     (the solid inverted fills dated from the azure-actives era, retired
+     2026-07-23); the derived borders intensify each fill's own hue. */
+  --btn-success-bg: var(--status-green-bg);
+  --btn-danger-bg: var(--hl-red);
   --btn-secondary-bg: var(--oxford-azure-tint);
 
   /* Status-green chips take the theme's own green family */

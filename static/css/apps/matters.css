@@ -844,11 +844,23 @@ Matter Overview tab
   gap: 0.5rem;
 }
 
-/* Oxford — the mode pills (the header's Detail/Case switcher and the
-   activity tab's Time/Expenses/Categories group) join the azure control
-   fill (tokens in colors.css). */
+/* Basic — the mode pills (the header's Detail/Case switcher and the
+   activity tab's Time/Expenses/Categories group) take the house
+   emphasis pair: azure wash inside a rail-azure border (tokens in
+   colors.css). Lifted above the neighbours so the azure border wins
+   the group's shared edges. */
 [data-theme="basic"] .toolbar .mode-pill.active {
   background: var(--control-active-bg);
-  border-color: var(--control-active-bg);
+  border-color: var(--control-active-line);
   color: var(--control-active-color);
+  position: relative;
+  z-index: 1;
+}
+
+/* The active pill keeps all four borders (the group collapses interior
+   edges); the -1px margin overlaps the neighbour's left border so the
+   group width holds, and the z-index lift paints azure over gray. */
+[data-theme="basic"] .toolbar .mode-pill.active:not(:last-child) {
+  border-right: 1px solid var(--control-active-line);
+  margin-right: -1px;
 }

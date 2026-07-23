@@ -377,18 +377,12 @@ td:hover .btn-ghost,
   color: var(--violet-500);
 }
 
-/* Oxford — modal footer buttons at the theme's full intensity: solid
-   fills under white labels (the pale washes read washed-out beside the
-   azure actives, and the hairline border vanished on them). Cancel stays
-   the lighter of the three — a strong azure tint under navy with a real
-   azure border — so destructive/affirmative actions outrank it. */
+/* Basic — Cancel keeps a navy label on its azure tint (a shade more
+   presence than the default slate, matching the link ink family).
+   Success/danger take the base tint/dark-text pattern with the derived
+   borders; their solid inverted fills retired 2026-07-23. */
 [data-theme="basic"] .btn-secondary,
 [data-theme="basic"] .btn-secondary:focus,
 [data-theme="basic"] .btn-secondary:active {
   color: var(--oxford-navy);
-}
-
-[data-theme="basic"] .btn-success,
-[data-theme="basic"] .btn-danger {
-  color: var(--oxford-paper);
 }

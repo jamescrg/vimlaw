@@ -176,13 +176,15 @@ i.icon-plus {
   vertical-align: middle;
 }
 
-/* Oxford — active controls fill with the accent azure under inverted text
-   (colour decisions in --control-active-*; see colors.css). */
+/* Basic — active controls take the house emphasis pair: azure wash
+   fill inside a rail-azure border, slate text (tokens in colors.css).
+   Borderless dropdown menu rows carry the wash alone, like selected
+   table rows. */
 [data-theme="basic"] .toggle-active,
 [data-theme="basic"] .toolbar button.toggle-active,
 [data-theme="basic"] .toolbar a.toggle-active {
   background: var(--control-active-bg);
-  border-color: var(--control-active-bg);
+  border-color: var(--control-active-line);
   color: var(--control-active-color);
 }
 
