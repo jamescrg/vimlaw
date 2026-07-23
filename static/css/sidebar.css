@@ -577,17 +577,18 @@
   position: relative;
 }
 
-/* The rail is a Fluent-style inset pill — vertically centered, round
-   caps, stopping short of the corners so it never collides with the
-   item's border radius. */
+/* The rail is one idiom everywhere: an inset round-capped underline
+   beneath the active item — sidebar, horizontal bar, and subnav alike —
+   stopping short of the corners so it never collides with the wash's
+   border radius. */
 [data-theme="basic"] .sidebar-nav li.active a::before {
   background: var(--nav-active-rail);
   border-radius: 999px;
+  bottom: 0;
   content: "";
-  height: 75%;
-  left: 0;
+  height: 3px;
+  left: 50%;
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
+  transform: translateX(-50%);
+  width: calc(100% - 0.5rem);
 }
