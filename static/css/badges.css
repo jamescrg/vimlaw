@@ -3,8 +3,14 @@ Base badge styles (shared by all badge types)
 ------------------------------------------------ */
 
 .app-badge {
-  background-color: var(--label-gray);
-  border: 1px solid var(--border-medium);
+  --badge-bg: var(--label-gray);
+
+  background-color: var(--badge-bg);
+  /* Border is an intensified cut of the badge's own fill — the fill mixed
+     toward the theme's ink, same derivation as the modal footer buttons
+     (a fixed border-medium read indistinct on the tinted fills). The dark
+     themes' outline badges override border-color per class below. */
+  border: 1px solid color-mix(in oklch, var(--badge-bg) 80%, var(--color-darker));
   border-radius: var(--radius-sm);
   color: var(--color-primary);
   display: inline-block;
@@ -35,14 +41,14 @@ a.app-badge:visited {
 Badge color classes
 ------------------------------------------------ */
 
-.app-badge.badge-blue { background-color: var(--blue-100); }
-.app-badge.badge-gray { background-color: var(--label-gray); }
-.app-badge.badge-green { background-color: var(--label-green); }
-.app-badge.badge-lime { background-color: var(--lime-100); }
-.app-badge.badge-orange { background-color: var(--label-orange); }
-.app-badge.badge-purple { background-color: var(--label-purple); }
-.app-badge.badge-red { background-color: var(--label-red); }
-.app-badge.badge-yellow { background-color: var(--label-yellow); }
+.app-badge.badge-blue { --badge-bg: var(--blue-100); }
+.app-badge.badge-gray { --badge-bg: var(--label-gray); }
+.app-badge.badge-green { --badge-bg: var(--label-green); }
+.app-badge.badge-lime { --badge-bg: var(--lime-100); }
+.app-badge.badge-orange { --badge-bg: var(--label-orange); }
+.app-badge.badge-purple { --badge-bg: var(--label-purple); }
+.app-badge.badge-red { --badge-bg: var(--label-red); }
+.app-badge.badge-yellow { --badge-bg: var(--label-yellow); }
 
 /* ------------------------------------------------
 Badge size variants

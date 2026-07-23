@@ -9,18 +9,21 @@ Label color classes
 .label-purple,
 .label-red,
 .label-yellow {
-  border: 1px solid var(--border-medium);
+  background-color: var(--badge-bg);
+  /* Same fill-derived border as .app-badge (badges.css) — badges and labels
+     are one family; the dark outline block overrides per class. */
+  border: 1px solid color-mix(in oklch, var(--badge-bg) 80%, var(--color-darker));
   color: var(--color-primary);
   font-weight: normal;
 }
 
-.label-blue { background-color: var(--blue-100); }
-.label-gray { background-color: var(--label-gray); }
-.label-green { background-color: var(--label-green); }
-.label-orange { background-color: var(--label-orange); }
-.label-purple { background-color: var(--label-purple); }
-.label-red { background-color: var(--label-red); }
-.label-yellow { background-color: var(--label-yellow); }
+.label-blue { --badge-bg: var(--blue-100); }
+.label-gray { --badge-bg: var(--label-gray); }
+.label-green { --badge-bg: var(--label-green); }
+.label-orange { --badge-bg: var(--label-orange); }
+.label-purple { --badge-bg: var(--label-purple); }
+.label-red { --badge-bg: var(--label-red); }
+.label-yellow { --badge-bg: var(--label-yellow); }
 
 /* ------------------------------------------------
 Label badges (used in files, highlights, timeline)
