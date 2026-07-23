@@ -48,19 +48,6 @@ window.KosmosChartPalette = (function () {
       hue: 135, hueSpan: 80, chroma: 0.055, lMin: 0.52, lMax: 0.76, otherL: 0.52,
       grid: "oklch(0.40 0.012 160)", tick: "oklch(0.78 0.035 95)",
     },
-    "everforest-light": {
-      hue: 135, hueSpan: 80, chroma: 0.06, lMin: 0.6, lMax: 0.82, otherL: 0.88,
-      grid: "oklch(0.91 0.015 100)", tick: "oklch(0.45 0.02 160)",
-    },
-    mocha: {
-      // Mauve-to-blue arc around catppuccin's signature accents.
-      hue: 285, hueSpan: 70, chroma: 0.06, lMin: 0.55, lMax: 0.8, otherL: 0.55,
-      grid: "oklch(0.35 0.02 285)", tick: "oklch(0.78 0.03 285)",
-    },
-    latte: {
-      hue: 285, hueSpan: 70, chroma: 0.065, lMin: 0.6, lMax: 0.82, otherL: 0.88,
-      grid: "oklch(0.90 0.01 285)", tick: "oklch(0.45 0.03 285)",
-    },
   };
 
   function params(theme) {
@@ -101,9 +88,6 @@ window.KosmosChartPalette = (function () {
     "nord-light": "oklch(88.5% 0.008 250)",
     oxford: "oklch(90% 0.005 240)",
     everforest: "oklch(0.60 0.01 150)",
-    "everforest-light": "oklch(88.5% 0.012 100)",
-    mocha: "oklch(0.62 0.015 285)",
-    latte: "oklch(88.5% 0.008 265)",
   };
 
   function neutral(theme) {
@@ -116,13 +100,10 @@ window.KosmosChartPalette = (function () {
   const BORDER = {
     light: "oklch(83.5% 0 none)",
     dark: "oklch(0.482 0.018 61)",
-    cosmic: "#4c566a",
+    cosmic: "oklch(0.452 0.035 264)",
     "nord-light": "oklch(0.815 0.015 250)",
-    oxford: "#c6d0d6",
-    everforest: "#475258",
-    "everforest-light": "oklch(0.83 0.02 100)",
-    mocha: "#585b70",
-    latte: "oklch(0.81 0.012 265)",
+    oxford: "oklch(0.852 0.014 234)",
+    everforest: "oklch(0.431 0.017 232)",
   };
 
   function border(theme) {

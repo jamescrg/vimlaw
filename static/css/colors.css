@@ -6,16 +6,14 @@
    dark (gb-*) values. Component CSS consumes var(--token) and stays
    theme-agnostic — it flips automatically when the tokens change.
 
-   NINE themes. Five light — light (Matcha), nord-light (Nord Snow Storm),
-   everforest-light (forest paper), latte (Catppuccin), oxford (after
-   the 2017 LawPay UI: white ground, navy buttons, azure accents) — and
-   four dark —
-   dark (Gruvbox), cosmic (Nord), everforest, mocha (Catppuccin).
+   SIX themes. Three light — light (Matcha), nord-light (Nord Snow Storm),
+   oxford (after the 2017 LawPay UI: white ground, navy buttons, azure
+   accents) — and three dark — dark (Gruvbox), cosmic (Nord), everforest.
    The non-Gruvbox darks ARE the dark theme structurally — they share the
    dark token block and every dark structural rule, and only repoint the
    --gb-* ramp (see the blocks after the dark block). So any "dark" rule is
    scoped to ALL FOUR:
-   `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"])`.
+   `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])`.
    The non-Matcha lights are light structurally: they inherit every :root
    default and their blocks below only repoint colour tokens; dark
    structural rules never apply. (Retired: sky, kosmos, kosmos-dark —
@@ -27,7 +25,7 @@
    2. Only when dark needs a structurally *different rule* (e.g. filled vs
       outline buttons, accent rail vs fill — where the colour moves to a
       different property) add a
-      `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .component`
+      `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .component`
       block, co-located at the bottom of that component's own CSS file under a
       "Dark mode —" comment. Keep the colour decision in a token, the
       structural rule in the component. Do not start a monolithic dark.css.
@@ -304,13 +302,14 @@
   --border-dark: var(--nord3-bright);
 
   /* Selection — the frost cyan wash under Polar Night text. The active
-     border gets a real frost blue: the inherited --border-medium-dark
-     resolves to the snow-dark surface step here, near-invisible as an
-     outline on the wash. */
+     border gets a real frost hue, dimmed toward the snow ground: full
+     nord7 read sharp as an outline on the wash. Toolbar buttons take the
+     mid border step for the same reason (nord4-dim is the general
+     medium-dark border and stays put — cosmic's text ramp shares it). */
   --selected-background: var(--nord-frost-tint);
   --selected-color: var(--nord1);
-  --selected-border: var(--nord7);
-  --button-border: var(--border-medium-dark);
+  --selected-border: var(--nord7-dim);
+  --button-border: var(--nord4-mid);
 
   /* Accent icons (filter, active sort, new-note/checklist badges) — aurora
      purple at ink weight. The 6yan ink blended into the gray-blue canvas;
@@ -462,169 +461,32 @@
   --btn-secondary-bg: var(--oxford-azure-tint);
 
   /* Status-green chips take the theme's own green family */
-  --status-green-bg: #d5f2e3;
-  --status-green-ink: #036e3f;
-  --status-green-line: #86d8ae;
-  --status-green-hover: #c0ecd6;
+  --status-green-bg: oklch(0.936 0.036 163);
+  --status-green-ink: oklch(0.474 0.1143 155.8);
+  --status-green-line: oklch(0.818 0.101 160.7);
+  --status-green-hover: oklch(0.906 0.055 163);
 
   /* Row highlights, labels, and the soft washes — Oxford's own cool
      tints on white (the inherited Matcha 100-tints were its last
      residue; violet stays inherited, it IS the accent family) */
-  --hl-blue: #d9ebf8;
+  --hl-blue: oklch(0.931 0.026 239);
   --hl-green: var(--status-green-bg);
-  --hl-orange: #fde3cb;
-  --hl-red: #fcdcda;
-  --hl-yellow: #f9ecc4;
+  --hl-orange: oklch(0.931 0.043 65);
+  --hl-red: oklch(0.92 0.036 22);
+  --hl-yellow: oklch(0.943 0.054 92);
   --label-green: var(--status-green-bg);
-  --label-orange: #fde3cb;
-  --label-red: #fcdcda;
-  --label-yellow: #f9ecc4;
-  --past-due-bg: #fcf4d9;
-  --due-soon-bg: #fcf4d9;
-  --toast-warning-header-bg: #f9ecc4;
-  --toast-warning-body-bg: #fcf4d9;
-  --error-background: #fde3cb;
+  --label-orange: oklch(0.931 0.043 65);
+  --label-red: oklch(0.92 0.036 22);
+  --label-yellow: oklch(0.943 0.054 92);
+  --past-due-bg: oklch(0.966 0.036 93);
+  --due-soon-bg: oklch(0.966 0.036 93);
+  --toast-warning-header-bg: oklch(0.943 0.054 92);
+  --toast-warning-body-bg: oklch(0.966 0.036 93);
+  --error-background: oklch(0.931 0.043 65);
   --add: var(--oxford-green);
   --icon-yellow: var(--yellow-600);
   --urgent: var(--orange-700);
   --warning: var(--orange-700);
-}
-
-/* ==========================================================================
-   Everforest Light — warm "paper" ground, the forest scheme's light half.
-
-   Cream bg0-bg3 surfaces, gray-green text, blue links, the signature green
-   on primary buttons and Add, and the aqua as the accent-icon hue (distinct
-   from both links and green). Selection uses the scheme's own bg_visual.
-   Structurally a light theme: token-only block, no scoped rules.
-   ========================================================================== */
-[data-theme="everforest-light"] {
-  color-scheme: light;
-
-  /* Typography & Text */
-  --color-primary: var(--efl-fg);
-  --color-darker: var(--efl-fg-dark);
-  --color-muted: var(--efl-grey2);
-  --color-muted-more: var(--efl-grey1);
-  --color-lighter: var(--efl-bg5);
-
-  /* Links — everforest's blue, darkening on hover */
-  --link: var(--efl-blue);
-  --link-hover: var(--efl-blue-deep);
-
-  /* Backgrounds — the paper ladder: bg0 body/cells under bg1 chrome */
-  --background-nav: var(--efl-bg3);
-  --background-body: var(--efl-bg0);
-  --background-subnav: var(--efl-bg1);
-  --background-subnav-contrast: var(--efl-bg2);
-  --background-section: var(--efl-bg1);
-  --background-th: var(--efl-bg1);
-  --background-control: var(--efl-bg1);
-  --background-td: var(--efl-bg0);
-  --background-medium-light: var(--efl-paper-mid);
-  --background-light: var(--efl-paper-bright);
-  --ai-frame: var(--efl-bg3);
-  --ai-surface: var(--efl-paper-bright);
-  --ai-raised: var(--efl-paper-mid);
-
-  /* Sidebar */
-  --background-sidebar: var(--efl-bg1);
-  --background-sidebar-hover: var(--efl-bg2);
-  --background-sidebar-active: var(--efl-bg3);
-
-  /* Buttons — the signature green under paper-bright text */
-  --button-primary-background: var(--efl-green);
-  --button-primary-color: var(--efl-paper-bright);
-
-  /* Forms & Inputs */
-  --input-border: var(--efl-bg4);
-  --input-background: var(--efl-paper-bright);
-  --input-placeholder: var(--efl-grey1);
-
-  /* Borders — the paper ramp in place of stone */
-  --border-light: var(--efl-bg2);
-  --border-medium: var(--efl-bg4);
-  --border-medium-dark: var(--efl-bg5);
-  --border-dark: var(--efl-grey1);
-
-  /* Selection — the scheme's own visual-selection ground */
-  --selected-background: var(--efl-visual);
-  --selected-color: var(--efl-fg-dark);
-
-  /* Accent icons — aqua, hue-distinct from links (blue) and Add (green) */
-  --icon-violet: var(--efl-aqua);
-  --icon-violet-muted: var(--efl-aqua-soft);
-
-  /* Add — the signature green */
-  --add: var(--efl-green);
-}
-
-/* ==========================================================================
-   Catppuccin Latte — the pastel system's light flavor.
-
-   Cool near-white base under mantle/crust chrome, latte's designed link
-   blue, mauve as the signature accent-icon hue, and a lavender wash for
-   selection. Structurally a light theme: token-only block, no scoped rules.
-   ========================================================================== */
-[data-theme="latte"] {
-  color-scheme: light;
-
-  /* Typography & Text */
-  --color-primary: var(--ctpl-text);
-  --color-darker: var(--ctpl-text-dark);
-  --color-muted: var(--ctpl-subtext0);
-  --color-muted-more: var(--ctpl-overlay1);
-  --color-lighter: var(--ctpl-surface2);
-
-  /* Links — latte blue, lightening a step on hover */
-  --link: var(--ctpl-blue);
-  --link-hover: var(--ctpl-blue-soft);
-
-  /* Backgrounds — base body/cells under mantle chrome, crust nav */
-  --background-nav: var(--ctpl-crust);
-  --background-body: var(--ctpl-base);
-  --background-subnav: var(--ctpl-mantle);
-  --background-subnav-contrast: var(--ctpl-crust);
-  --background-section: var(--ctpl-mantle);
-  --background-th: var(--ctpl-mantle);
-  --background-control: var(--ctpl-mantle);
-  --background-td: var(--ctpl-base);
-  --background-medium-light: var(--ctpl-mid);
-  --background-light: var(--ctpl-bright);
-  --ai-frame: var(--ctpl-crust);
-  --ai-surface: var(--ctpl-bright);
-  --ai-raised: var(--ctpl-mid);
-
-  /* Sidebar */
-  --background-sidebar: var(--ctpl-mantle);
-  --background-sidebar-hover: var(--ctpl-crust);
-  --background-sidebar-active: var(--ctpl-surface0);
-
-  /* Buttons — solid latte blue under near-white text */
-  --button-primary-background: var(--ctpl-blue);
-  --button-primary-color: var(--ctpl-bright);
-
-  /* Forms & Inputs */
-  --input-border: var(--ctpl-surface1);
-  --input-background: var(--ctpl-bright);
-  --input-placeholder: var(--ctpl-overlay0);
-
-  /* Borders — the surface/overlay ramp in place of stone */
-  --border-light: var(--ctpl-surface0);
-  --border-medium: var(--ctpl-surface1);
-  --border-medium-dark: var(--ctpl-surface2);
-  --border-dark: var(--ctpl-overlay0);
-
-  /* Selection — lavender wash under darkened text */
-  --selected-background: var(--ctpl-lavender-tint);
-  --selected-color: var(--ctpl-text-dark);
-
-  /* Accent icons — the signature mauve; lavender for the muted slot */
-  --icon-violet: var(--ctpl-mauve);
-  --icon-violet-muted: var(--ctpl-lavender);
-
-  /* Add is pinned green (:root points it at --link, which is blue here) */
-  --add: var(--ctpl-green);
 }
 
 /* ==========================================================================
@@ -644,22 +506,22 @@
 /* Dark mode — bright "line" colour per highlight class, for contexts that show
    the colour as an accent (underline / rail / swatch) rather than a muddy dark
    fill. Harmless on the generic .hl-* fills, which ignore it. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .hl-yellow { --hl-line: var(--yellow-400); }
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .hl-red    { --hl-line: var(--red-400); }
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .hl-orange { --hl-line: var(--orange-400); }
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .hl-green  { --hl-line: var(--lime-400); }
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .hl-blue   { --hl-line: var(--blue-400); }
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) :is(.hl-violet, .hl-purple) { --hl-line: var(--violet-400); }
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) :is(.hl-slate, .hl-gray) { --hl-line: var(--slate-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .hl-yellow { --hl-line: var(--yellow-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .hl-red    { --hl-line: var(--red-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .hl-orange { --hl-line: var(--orange-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .hl-green  { --hl-line: var(--lime-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .hl-blue   { --hl-line: var(--blue-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) :is(.hl-violet, .hl-purple) { --hl-line: var(--violet-400); }
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) :is(.hl-slate, .hl-gray) { --hl-line: var(--slate-400); }
 
 /* Dark mode — any table row flagged with a highlight colour shows it as a bright
    left rail on the first cell, never a full-row fill (dark fills go muddy and
    dominate). Covers facts/timeline, calendar & event rows, dash totals, etc. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) tr[class*="hl-"],
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) tr[class*="hl-"] > td {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) tr[class*="hl-"],
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) tr[class*="hl-"] > td {
   background: transparent !important;
 }
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) tr[class*="hl-"] > td:first-child {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) tr[class*="hl-"] > td:first-child {
   box-shadow: inset 3px 0 0 0 var(--hl-line);
 }
 
@@ -697,7 +559,7 @@
    The bootstrap script in base.html resolves "auto" to either "light" or
    "dark" before paint, so CSS only handles the two concrete states.
    ========================================================================== */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) {
   /* Native form controls (radios, checkboxes) + scrollbars render dark */
   color-scheme: dark;
 
@@ -853,7 +715,7 @@
    Cosmic — the dark theme, on the Nord palette.
 
    Cosmic IS the dark theme structurally: it shares the entire token mapping
-   above and every co-located `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"])`
+   above and every co-located `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])`
    rule. The ONLY thing it changes is the underlying ramp — the --gb-* tokens
    are repointed from Gruvbox to Nord. Because the semantic tokens above resolve
    var(--gb-*) per element, swapping the ramp re-skins the whole UI to Nord.
@@ -924,43 +786,4 @@
   --gb-bright-orange: var(--ef-orange);
   --gb-bright-green:  var(--ef-green);
   --gb-bright-purple: var(--ef-purple);
-}
-
-/* ==========================================================================
-   Mocha — Catppuccin's dark flavor, sharing the dark structure.
-
-   Like cosmic, mocha IS the dark theme structurally and only repoints the
-   --gb-* ramp: base/surface/overlay surfaces under blue-tinted text, blue
-   and lavender as the link family (a solid Tailwind blue-700 fills primary
-   buttons — mocha ships no ink-weight blue), and mauve as the signature
-   accent on selection and icons.
-   ========================================================================== */
-[data-theme="mocha"] {
-  /* Base and surfaces — lifting through the surface/overlay steps */
-  --gb-dark:      var(--ctp-base);
-  --gb-dark-soft: var(--ctp-base-soft);
-  --gb-dark1:     var(--ctp-surface0);
-  --gb-dark2:     var(--ctp-surface1);
-  --gb-dark3:     var(--ctp-surface2);
-  --gb-dark4:     var(--ctp-overlay0);
-
-  /* Blue-tinted text ramp */
-  --gb-light:  var(--ctp-text);
-  --gb-light3: var(--ctp-subtext1);
-  --gb-light4: var(--ctp-subtext0);
-  --gb-gray:   var(--ctp-overlay1);
-
-  /* Blue/lavender link family; solid blue-700 under button text */
-  --gb-bright-aqua: var(--ctp-blue);
-  --gb-aqua:        var(--ctp-lavender);
-  --gb-faded-aqua:  var(--blue-700);
-
-  /* Status accents — mauve is the signature (selection text, accent icons) */
-  --gb-bright-red:    var(--ctp-red);
-  --gb-bright-orange: var(--ctp-peach);
-  --gb-bright-green:  var(--ctp-green);
-  --gb-bright-purple: var(--ctp-mauve);
-
-  /* Add stays green (the dark block points it at --link, blue here) */
-  --add: var(--gb-bright-green);
 }

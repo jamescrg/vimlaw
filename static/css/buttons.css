@@ -84,46 +84,46 @@
    variant signals its purpose through border + text colour instead, and
    fills with its accent on hover for affordance.
    ========================================================================== */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-primary,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-primary:focus {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-primary,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-primary:focus {
   background: var(--background-control);
   border-color: var(--link);
   color: var(--link);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-primary:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-primary:hover {
   background: var(--link);
   border-color: var(--link);
   color: var(--gb-dark);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-primary:disabled {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-primary:disabled {
   background: var(--background-control);
   border-color: var(--background-control);
   color: var(--color-muted-more);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-secondary,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-secondary:focus,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-secondary:active {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-secondary,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-secondary:focus,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-secondary:active {
   background: var(--background-control);
   border-color: var(--border-medium-dark);
   color: var(--color-darker);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-secondary:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-secondary:hover {
   background: var(--background-subnav-contrast);
   border-color: var(--border-dark);
   color: var(--color-darker);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-danger {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-danger {
   background: var(--background-control);
   border-color: var(--gb-bright-red);
   color: var(--gb-bright-red);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-danger:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-danger:hover {
   background: var(--gb-bright-red);
   border-color: var(--gb-bright-red);
   color: var(--gb-dark);
@@ -131,21 +131,21 @@
 
 /* Success/submit reads as the brand action — track the link green (gb-bright-aqua),
    not the limier --success token used for checkmarks/true indicators. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-success {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-success {
   background: var(--background-control);
   border-color: var(--link);
   color: var(--link);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-success:hover {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-success:hover {
   background: var(--link);
   border-color: var(--link);
   color: var(--gb-dark);
 }
 
 /* Icons inherit the button's semantic colour (base already does this for success). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-primary i,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .btn-danger i {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-primary i,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .btn-danger i {
   color: inherit;
 }
 

@@ -131,7 +131,7 @@
 /* Dark mode — active item matches the hover fill (gb-dark2) with no border;
    the purple text alone marks it active. The shared --selected-background
    otherwise matches the sidebar's own gb-dark1, leaving no fill contrast. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .sidebar-nav li.active a {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .sidebar-nav li.active a {
   background: var(--background-sidebar-active);
   border: none;
 }

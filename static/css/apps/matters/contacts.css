@@ -132,7 +132,7 @@ table.matter-contacts {
 }
 
 /* Dark mode — focused result gets a neutral lift + blue rail, not a blue fill. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .matter-contacts .assign-results li a.focused {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .matter-contacts .assign-results li a.focused {
   background: var(--background-subnav-contrast);
   box-shadow: inset 3px 0 0 0 var(--blue-400);
 }

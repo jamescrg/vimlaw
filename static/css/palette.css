@@ -313,166 +313,116 @@
   /* Nord (https://www.nordtheme.com) — drives the "cosmic" dark theme.
      Canonical Nord hex; the *-soft / *-dim / *-bright shades are interpolated
      steps Nord doesn't ship, needed to fill the dark ramp's six levels. */
-  --nord0: #2e3440;          /* Polar Night — deepest base */
-  --nord0-soft: #333b49;     /* between nord0/nord1 — soft surface step */
-  --nord1: #3b4252;
-  --nord2: #434c5e;
-  --nord3: #4c566a;
-  --nord3-bright: #616e88;   /* Nord's lighter polar gray (comments) */
-  --nord4: #d8dee9;          /* Snow Storm — text */
-  --nord4-dim: #aab3c5;      /* dimmed snow for primary body text */
-  --nord5: #e5e9f0;
-  --nord6: #eceff4;          /* brightest text */
-  --nord-gray: #7b88a1;      /* muted text */
-  --nord7: #8fbcbb;          /* Frost — teal */
-  --nord8: #88c0d0;          /* Frost — signature cyan accent */
-  --nord9: #81a1c1;          /* Frost — blue */
-  --nord10: #5e81ac;         /* Frost — deep blue */
-  --nord11: #bf616a;         /* Aurora — red */
-  --nord12: #d08770;         /* Aurora — orange */
-  --nord13: #ebcb8b;         /* Aurora — yellow */
-  --nord14: #a3be8c;         /* Aurora — green */
-  --nord15: #b48ead;         /* Aurora — purple */
+  --nord0: oklch(0.324 0.023 264);          /* Polar Night — deepest base */
+  --nord0-soft: oklch(0.351 0.027 262);     /* between nord0/nord1 — soft surface step */
+  --nord1: oklch(0.379 0.029 266);
+  --nord2: oklch(0.416 0.032 264);
+  --nord3: oklch(0.452 0.035 264);
+  --nord3-bright: oklch(0.537 0.044 264);   /* Nord's lighter polar gray (comments) */
+  --nord4: oklch(0.899 0.016 263);          /* Snow Storm — text */
+  --nord4-dim: oklch(0.765 0.028 264);      /* dimmed snow for primary body text */
+  --nord5: oklch(0.933 0.01 262);
+  --nord6: oklch(0.951 0.007 261);          /* brightest text */
+  --nord-gray: oklch(0.625 0.041 263);      /* muted text */
+  --nord7: oklch(0.763 0.048 194);          /* Frost — teal */
+  --nord8: oklch(0.775 0.062 217);          /* Frost — signature cyan accent */
+  --nord9: oklch(0.697 0.059 249);          /* Frost — blue */
+  --nord10: oklch(0.594 0.077 254);         /* Frost — deep blue */
+  --nord11: oklch(0.606 0.121 15);         /* Aurora — red */
+  --nord12: oklch(0.693 0.096 38);         /* Aurora — orange */
+  --nord13: oklch(0.855 0.089 84);         /* Aurora — yellow */
+  --nord14: oklch(0.768 0.075 131);         /* Aurora — green */
+  --nord15: oklch(0.692 0.062 333);         /* Aurora — purple */
 
   /* Nord light extensions — Snow Storm only ships three steps (nord4-6), so
      the light theme's surface ladder needs interpolated steps around them,
      plus the frost cyan diluted to a selection wash. */
-  --nord-snow-bright: #f5f7fa; /* above nord6 — inputs, lightest surfaces */
-  --nord-snow-mid: #f1f3f8;    /* between bright and nord6 — raised surfaces */
-  --nord-snow-dark: #ccd4e2;   /* below nord4 — active states, strong borders */
-  --nord-frost-tint: #cbe0e9;  /* nord8 as a light selection wash */
-  --nord10-deep: #4d6d94;      /* below nord10 — link ink on snow */
-  --nord8-ink: #2f7e97;        /* nord8 cyan at ink weight — accent icons */
+  --nord-snow-bright: oklch(0.975 0.005 258); /* above nord6 — inputs, lightest surfaces */
+  --nord-snow-mid: oklch(0.964 0.007 269);    /* between bright and nord6 — raised surfaces */
+  --nord-snow-dark: oklch(0.868 0.021 262);   /* below nord4 — active states, strong borders */
+  --nord-frost-tint: oklch(0.894 0.026 225);  /* nord8 as a light selection wash */
+  --nord10-deep: oklch(0.527 0.072 254);      /* below nord10 — link ink on snow */
+  --nord4-mid: oklch(0.83 0.023 263);         /* between snow-dark and nord4-dim —
+                                                 toolbar-button edges: nord4-dim reads
+                                                 heavy on control chrome */
+  --nord7-dim: oklch(0.8 0.044 194);         /* frost teal lifted toward snow —
+                                                 selected-item borders */
+  --nord8-ink: oklch(0.556 0.0846 222.5);        /* nord8 cyan at ink weight — accent icons */
 
   /* Aurora at ink weight — the warm semantic accents on snow (status text,
      Add, yellow icons). Canonical aurora is mid-tone, sized for dark
      grounds; these are the same hues pulled down to text contrast. */
-  --nord11-ink: #a04b54;       /* red — urgent / errors */
-  --nord12-ink: #b3603f;       /* orange — warnings */
-  --nord13-ink: #a5822e;       /* yellow — accent icons */
-  --nord14-ink: #558030;       /* green — Add / success; aurora hue with
+  --nord11-ink: oklch(0.522 0.113 15);       /* red — urgent / errors */
+  --nord12-ink: oklch(0.579 0.117 42);       /* orange — warnings */
+  --nord13-ink: oklch(0.625 0.109 86);       /* yellow — accent icons */
+  --nord14-ink: oklch(0.55 0.12 133);       /* green — Add / success; aurora hue with
                                   lime-level chroma restored (canonical
                                   nord14 desaturates to gray-green as ink) */
-  --nord15-ink: #ad2492;       /* purple — sort/filter accent icons; aurora
+  --nord15-ink: oklch(0.523 0.204 337.7);       /* purple — sort/filter accent icons; aurora
                                   hue pushed to full magenta vividness
                                   (canonical nord15 fades into the
                                   gray-blues as ink) */
 
   /* Aurora (and frost) as light tints on snow — row highlights, label and
      button fills. The wash step is the palest, for past-due surfaces. */
-  --nord9-tint: #d7e0eb;       /* frost blue */
-  --nord11-tint: #eed3d5;      /* red */
-  --nord12-tint: #f2ddd3;      /* orange */
-  --nord13-tint: #f4e7c3;      /* yellow */
-  --nord13-wash: #f8f0da;      /* pale yellow — past-due / due-soon */
-  --nord14-tint: #dfe8d4;      /* green */
-  --nord15-tint: #e7dbe4;      /* purple */
+  --nord9-tint: oklch(0.903 0.018 253);       /* frost blue */
+  --nord11-tint: oklch(0.89 0.03 13);      /* red */
+  --nord12-tint: oklch(0.912 0.027 47);      /* orange */
+  --nord13-tint: oklch(0.929 0.049 91);      /* yellow */
+  --nord13-wash: oklch(0.956 0.03 90);      /* pale yellow — past-due / due-soon */
+  --nord14-tint: oklch(0.919 0.028 127);      /* green */
+  --nord15-tint: oklch(0.904 0.018 334);      /* purple */
 
   /* LawPay (2017-era UI) — sampled from the reference screenshot
      (~/lawpay.png): deep navy chrome and primary actions, azure active
      states, steel-blue links, white ground, a paid-green success accent.
      Text inks are darkened from the sampled anti-aliased values to their
      design-true weights. */
-  --oxford-navy: #00497b;       /* primary button fill, link hover */
-  --oxford-azure: #007cd9;      /* accent icons, rails (3:1 graphics bar) */
-  --oxford-azure-ink: #0075cb;  /* azure when it carries white text —
+  --oxford-navy: oklch(0.395 0.105 247);       /* primary button fill, link hover */
+  --oxford-azure: oklch(0.58 0.1684 250.9);      /* accent icons, rails (3:1 graphics bar) */
+  --oxford-azure-ink: oklch(0.555 0.159 250);  /* azure when it carries white text —
                                    fills for active tabs/pills (4.77:1) */
-  --oxford-green-ink: #00834a;  /* green when it carries text — money,
+  --oxford-green-ink: oklch(0.5359 0.1321 155.1);  /* green when it carries text — money,
                                    Paid, the Confirm fill (4.83:1) */
-  --oxford-azure-soft: #66a5d8; /* muted accent */
-  --oxford-azure-tint: #dcedf9; /* selection wash */
-  --oxford-steel: #33719f;      /* link ink (steel column-header blue) */
-  --oxford-chrome: #3f5469;     /* the dark window-chrome slate (top nav) */
-  --oxford-slate: #3e4a55;      /* body text (the logotype slate) */
-  --oxford-slate-dark: #2b3640; /* headings */
-  --oxford-gray: #66686b;       /* muted text (sidebar labels) */
-  --oxford-gray-soft: #9aa2a8;  /* fainter text */
-  --oxford-paper: #ffffff;      /* content ground */
-  --oxford-mist: #f8fafa;       /* sidebar ground */
-  --oxford-mist-dark: #e7eaec;  /* chrome tier (toolbars, headers) — a
+  --oxford-azure-soft: oklch(0.7 0.1 244.3); /* muted accent */
+  --oxford-azure-tint: oklch(0.937 0.024 238); /* selection wash */
+  --oxford-steel: oklch(0.529 0.097 244);      /* link ink (steel column-header blue) */
+  --oxford-chrome: oklch(0.437 0.043 249);     /* the dark window-chrome slate (top nav) */
+  --oxford-slate: oklch(0.403 0.024 246);      /* body text (the logotype slate) */
+  --oxford-slate-dark: oklch(0.327 0.023 246); /* headings */
+  --oxford-gray: oklch(0.517 0.005 258);       /* muted text (sidebar labels) */
+  --oxford-gray-soft: oklch(0.708 0.013 240);  /* fainter text */
+  --oxford-paper: oklch(1 0 none);      /* content ground */
+  --oxford-mist: oklch(0.984 0.002 197);       /* sidebar ground */
+  --oxford-mist-dark: oklch(0.935 0.004 236);  /* chrome tier (toolbars, headers) — a
                                       true gray, per the sober revision */
-  --oxford-gray-select: #d6dbdf; /* selection/active fill — darker gray */
-  --oxford-line: #dde4e9;       /* hairlines */
-  --oxford-line-dark: #c6d0d6;  /* stronger borders */
-  --oxford-green: #00a05a;      /* the 'Paid' green, raised to the azure's
+  --oxford-gray-select: oklch(0.889 0.008 242); /* selection/active fill — darker gray */
+  --oxford-line: oklch(0.915 0.01 239);       /* hairlines */
+  --oxford-line-dark: oklch(0.852 0.014 234);  /* stronger borders */
+  --oxford-green: oklch(0.6197 0.1543 154.62);      /* the 'Paid' green, raised to the azure's
                                    chroma band (sampled #3f9068 read dusty
                                    beside the vivid actives) */
-  --oxford-green-tint: #cdeedd; /* success fills, brightened to match */
+  --oxford-green-tint: oklch(0.921 0.041 163); /* success fills, brightened to match */
 
-  /* Everforest (https://github.com/sainnhe/everforest) — medium variants.
-     Canonical hex for both the dark and light ("paper") palettes; the
-     *-soft / *-mid / *-deep / *-dark shades are interpolated steps the
-     scheme doesn't ship, needed to fill the app's ladders. */
-  --ef-bg-dim: #232a2e;       /* dark: dimmed base */
-  --ef-bg0: #2d353b;          /* dark: main surface */
-  --ef-bg1: #343f44;
-  --ef-bg2: #3d484d;
-  --ef-bg3: #475258;
-  --ef-grey0: #7a8478;        /* dark: faint gray */
-  --ef-grey1: #859289;        /* dark: comment gray */
-  --ef-fg: #d3c6aa;           /* dark: cream text */
-  --ef-fg-soft: #c8bd9f;      /* interpolated — secondary text */
-  --ef-fg-dim: #b9ad91;       /* interpolated — primary body text */
-  --ef-green: #a7c080;        /* dark: signature green */
-  --ef-aqua: #83c092;
-  --ef-green-deep: #708a58;   /* interpolated — solid green button fill */
-  --ef-red: #e67e80;
-  --ef-orange: #e69875;
-  --ef-purple: #d699b6;
-  --efl-paper-bright: #fffbef; /* light: above bg0 — inputs, lightest */
-  --efl-paper-mid: #f9f3de;    /* interpolated — raised surfaces */
-  --efl-bg0: #fdf6e3;          /* light: main paper */
-  --efl-bg1: #f4f0d9;
-  --efl-bg2: #efebd4;
-  --efl-bg3: #e6e2cc;
-  --efl-bg4: #e0dcc7;
-  --efl-bg5: #bdc3af;
-  --efl-visual: #eaedc8;       /* light: selection ground */
-  --efl-fg: #5c6a72;           /* light: text */
-  --efl-fg-dark: #46535c;      /* interpolated — headings */
-  --efl-grey1: #939f91;
-  --efl-grey2: #829181;
-  --efl-green: #8da101;        /* light: signature green */
-  --efl-aqua: #35a77c;
-  --efl-aqua-soft: #5cb193;    /* interpolated — muted accent */
-  --efl-blue: #3a94c5;
-  --efl-blue-deep: #327ba4;    /* interpolated — link hover ink */
+  /* Everforest (https://github.com/sainnhe/everforest) — medium dark
+     variant. Canonical values; the *-soft / *-dim / *-deep shades are
+     interpolated steps the scheme doesn't ship, needed to fill the app's
+     ladders. */
+  --ef-bg-dim: oklch(0.28 0.012 233);       /* dark: dimmed base */
+  --ef-bg0: oklch(0.324 0.015 240);          /* dark: main surface */
+  --ef-bg1: oklch(0.36 0.017 227);
+  --ef-bg2: oklch(0.394 0.017 227);
+  --ef-bg3: oklch(0.431 0.017 232);
+  --ef-grey0: oklch(0.601 0.021 140);        /* dark: faint gray */
+  --ef-grey1: oklch(0.647 0.02 156);        /* dark: comment gray */
+  --ef-fg: oklch(0.83 0.041 86);           /* dark: cream text */
+  --ef-fg-soft: oklch(0.8 0.043 90);      /* interpolated — secondary text */
+  --ef-fg-dim: oklch(0.75 0.041 88);       /* interpolated — primary body text */
+  --ef-green: oklch(0.773 0.091 126);        /* dark: signature green */
+  --ef-aqua: oklch(0.754 0.091 151.4);
+  --ef-green-deep: oklch(0.6 0.078 131);   /* interpolated — solid green button fill */
+  --ef-red: oklch(0.709 0.128 20);
+  --ef-orange: oklch(0.75 0.106 45);
+  --ef-purple: oklch(0.75 0.082 349);
 
-  /* Catppuccin (https://catppuccin.com) — Mocha (dark) and Latte (light).
-     Canonical hex; *-soft / *-bright / *-mid / tint shades interpolated. */
-  --ctp-base: #1e1e2e;         /* mocha: main surface */
-  --ctp-base-soft: #272738;    /* interpolated — nav / input step */
-  --ctp-surface0: #313244;
-  --ctp-surface1: #45475a;
-  --ctp-surface2: #585b70;
-  --ctp-overlay0: #6c7086;
-  --ctp-overlay1: #7f849c;
-  --ctp-text: #cdd6f4;         /* mocha: brightest text */
-  --ctp-subtext1: #bac2de;
-  --ctp-subtext0: #a6adc8;
-  --ctp-blue: #89b4fa;
-  --ctp-lavender: #b4befe;
-  --ctp-mauve: #cba6f7;        /* mocha: signature accent */
-  --ctp-red: #f38ba8;
-  --ctp-peach: #fab387;
-  --ctp-green: #a6e3a1;
-  --ctpl-bright: #f8f9fc;      /* latte: above base — inputs, lightest */
-  --ctpl-mid: #f4f5f9;         /* interpolated — raised surfaces */
-  --ctpl-base: #eff1f5;        /* latte: main surface */
-  --ctpl-mantle: #e6e9ef;
-  --ctpl-crust: #dce0e8;
-  --ctpl-surface0: #ccd0da;
-  --ctpl-surface1: #bcc0cc;
-  --ctpl-surface2: #acb0be;
-  --ctpl-overlay0: #9ca0b0;
-  --ctpl-overlay1: #8c8fa1;
-  --ctpl-text: #4c4f69;        /* latte: text */
-  --ctpl-text-dark: #3a3c52;   /* interpolated — headings */
-  --ctpl-subtext0: #6c6f85;
-  --ctpl-blue: #1e66f5;        /* latte: link blue */
-  --ctpl-blue-soft: #4b83f7;   /* interpolated — link hover */
-  --ctpl-lavender-tint: #dfe3fd; /* lavender as a selection wash */
-  --ctpl-mauve: #8839ef;       /* latte: signature accent */
-  --ctpl-lavender: #7287fd;
-  --ctpl-green: #40a02b;
 }

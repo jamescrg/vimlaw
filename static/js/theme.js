@@ -2,9 +2,17 @@
   var STORAGE_KEY = 'theme';
   var media = window.matchMedia('(prefers-color-scheme: dark)');
 
-  // Legacy: retired themes map to their nearest survivor — sky and kosmos
-  // to light (Matcha), kosmos-dark to dark (Gruvbox).
-  var LEGACY = { sky: 'light', kosmos: 'light', 'kosmos-dark': 'dark' };
+  // Legacy: retired themes map to their nearest survivor — sky, kosmos,
+  // latte, and everforest-light to light (Matcha); kosmos-dark and mocha
+  // to dark (Gruvbox).
+  var LEGACY = {
+    sky: 'light',
+    kosmos: 'light',
+    latte: 'light',
+    'everforest-light': 'light',
+    'kosmos-dark': 'dark',
+    mocha: 'dark',
+  };
   var stored = localStorage.getItem(STORAGE_KEY);
   if (LEGACY[stored]) {
     localStorage.setItem(STORAGE_KEY, LEGACY[stored]);

@@ -105,16 +105,16 @@
   background: var(--due-soon-bg);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .event-card {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .event-card {
   border-left: 3px solid var(--border-medium);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .event-card.is-today {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .event-card.is-today {
   background: var(--background-body);
   border-left-color: var(--yellow-400);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .event-card.is-tomorrow {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .event-card.is-tomorrow {
   background: var(--background-body);
   border-left-color: var(--yellow-400);
 }
@@ -126,7 +126,7 @@
   background: var(--past-due-bg);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .event-card.past-due {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .event-card.past-due {
   background: var(--background-body);
   border-left-color: var(--past-due-rail);
 }

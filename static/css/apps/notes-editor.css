@@ -295,7 +295,7 @@
 
 /* Dark mode — outline the reference chip instead of a grey fill (inset ring
    keeps the inline layout from shifting). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) .note-ref {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .note-ref {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--border-medium-dark);
 }
@@ -353,56 +353,56 @@
 
 /* Dark mode — marks stay light (paper-highlighter look, matching how they'd
    print) but the inherited text would flip light, so force it dark. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor mark {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor mark {
   color: var(--stone-900);
 }
 
 /* Dark mode — Gruvbox Dark syntax colours; the code block background is a dark
    token, so the light Gruvbox hues would be unreadable on it. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-comment,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-quote {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-comment,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-quote {
   color: #a89984;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-keyword,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-selector-tag,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-deletion,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-name,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-tag {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-keyword,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-selector-tag,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-deletion,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-name,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-tag {
   color: #fb4934;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-string,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-addition {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-string,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-addition {
   color: #b8bb26;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-number,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-literal {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-number,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-literal {
   color: #d3869b;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-type,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-built_in {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-type,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-built_in {
   color: #fabd2f;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-title,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-section,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-attribute {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-title,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-section,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-attribute {
   color: #8ec07c;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-variable,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-template-variable,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-attr,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-params {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-variable,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-template-variable,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-attr,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-params {
   color: #83a598;
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-symbol,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-meta,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"], [data-theme="mocha"]) #note-editor pre code .hljs-operator {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-symbol,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-meta,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor pre code .hljs-operator {
   color: #fe8019;
 }
 
