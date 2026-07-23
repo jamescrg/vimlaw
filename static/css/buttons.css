@@ -382,13 +382,13 @@ td:hover .btn-ghost,
    azure actives, and the hairline border vanished on them). Cancel stays
    the lighter of the three — a strong azure tint under navy with a real
    azure border — so destructive/affirmative actions outrank it. */
-[data-theme="oxford"] .btn-secondary,
-[data-theme="oxford"] .btn-secondary:focus,
-[data-theme="oxford"] .btn-secondary:active {
+[data-theme="basic"] .btn-secondary,
+[data-theme="basic"] .btn-secondary:focus,
+[data-theme="basic"] .btn-secondary:active {
   color: var(--oxford-navy);
 }
 
-[data-theme="oxford"] .btn-success,
-[data-theme="oxford"] .btn-danger {
+[data-theme="basic"] .btn-success,
+[data-theme="basic"] .btn-danger {
   color: var(--oxford-paper);
 }

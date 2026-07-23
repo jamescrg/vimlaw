@@ -797,7 +797,7 @@ tr > td.importance.complete .button-link {
    --background-control in all of them — so lift the count pill a step to stay
    a visible pill against its lane. Dark themes keep the base fill (the pill
    already reads fine there). */
-:is([data-theme="light"], [data-theme="nord-light"], [data-theme="oxford"]) .kanban-column-count {
+:is([data-theme="light"], [data-theme="nord-light"], [data-theme="basic"]) .kanban-column-count {
   background: var(--background-subnav-contrast);
 }
 

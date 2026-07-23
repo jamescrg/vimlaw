@@ -4,7 +4,7 @@
 
   // Legacy: retired themes map to their nearest survivor — sky, kosmos,
   // latte, and everforest-light to light (Matcha); kosmos-dark and mocha
-  // to dark (Gruvbox).
+  // to dark (Gruvbox). oxford was renamed basic.
   var LEGACY = {
     sky: 'light',
     kosmos: 'light',
@@ -12,6 +12,7 @@
     'everforest-light': 'light',
     'kosmos-dark': 'dark',
     mocha: 'dark',
+    oxford: 'basic',
   };
   var stored = localStorage.getItem(STORAGE_KEY);
   if (LEGACY[stored]) {

@@ -436,3 +436,29 @@ td.empty-message {
 .delete-icon {
   color: var(--urgent);
 }
+
+
+/* ==========================================================================
+   Oxford — ink entity links (Outlook-style color economy pilot)
+
+   In tables, "clickable" is the norm, so link-blue on every entity name
+   carries no information while tinting the whole canvas; shade carries the
+   distinction instead: plain data text lightens to the muted gray while
+   clickable text takes the deep slate, with a navy hover to confirm. Blue
+   keeps meaning action/selection/status. Pilot scoped to Oxford tables
+   only — the global `a` rule is untouched.
+   ========================================================================== */
+
+[data-theme="basic"] .table td {
+  color: color-mix(in oklch, var(--color-muted) 80%, var(--color-muted-more));
+}
+
+[data-theme="basic"] .table a:not(.btn),
+[data-theme="basic"] .table .button-link {
+  color: color-mix(in oklch, var(--color-darker) 65%, var(--color-primary));
+}
+
+[data-theme="basic"] .table a:not(.btn):hover,
+[data-theme="basic"] .table .button-link:hover {
+  color: var(--link-hover);
+}

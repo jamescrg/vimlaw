@@ -7,7 +7,7 @@
    theme-agnostic — it flips automatically when the tokens change.
 
    SIX themes. Three light — light (Matcha), nord-light (Nord Snow Storm),
-   oxford (after the 2017 LawPay UI: white ground, navy buttons, azure
+   basic (after the 2017 LawPay UI: white ground, navy buttons, azure
    accents) — and three dark — dark (Gruvbox), cosmic (Nord), everforest.
    The non-Gruvbox darks ARE the dark theme structurally — they share the
    dark token block and every dark structural rule, and only repoint the
@@ -361,8 +361,10 @@
 }
 
 /* ==========================================================================
-   Oxford — a light theme after the 2017 LawPay UI (palette sampled
-   from the reference screenshot; oxford-cloth white and navy).
+   Basic — a light theme after the 2017 LawPay UI (palette sampled
+   from the reference screenshot; the --oxford-* palette keeps its
+   source name, as the nord and gb palettes do). Formerly
+   data-theme="oxford"; theme.js migrates stored settings.
 
    White content ground under a pale mist chrome tier; the window-chrome
    slate serves as the dark neutral (menu icons, outline borders). Deep
@@ -370,7 +372,7 @@
    azure accent icons, the 'Paid' green on success. Structurally a light
    theme: token-only block, no scoped rules.
    ========================================================================== */
-[data-theme="oxford"] {
+[data-theme="basic"] {
   color-scheme: light;
 
   /* Typography & Text — slate over white */

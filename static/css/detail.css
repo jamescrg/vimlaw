@@ -160,11 +160,11 @@ Detail Layout (header / subnav / body)
 /* Oxford — the active tab joins the azure control fill (a rail was tried
    2026-07-21 but read as underpowered beside the filled buttons); covers
    the matter subnav and the case page's tab group alike. */
-[data-theme="oxford"] .subnav .active {
+[data-theme="basic"] .subnav .active {
   background: var(--control-active-bg);
   border: none;
 }
 
-[data-theme="oxford"] .subnav .active a {
+[data-theme="basic"] .subnav .active a {
   color: var(--control-active-color);
 }

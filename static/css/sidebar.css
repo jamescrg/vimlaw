@@ -567,7 +567,7 @@
 
 /* Oxford — the active nav item takes the azure fill under inverted text,
    the reference UI's signature move (tokens in colors.css). */
-[data-theme="oxford"] .sidebar-nav li.active a {
+[data-theme="basic"] .sidebar-nav li.active a {
   background: var(--control-active-bg);
   border-color: var(--control-active-bg);
   color: var(--control-active-color);
