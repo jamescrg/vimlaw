@@ -157,14 +157,30 @@ Detail Layout (header / subnav / body)
 
 }
 
-/* Oxford — the active tab joins the azure control fill (a rail was tried
-   2026-07-21 but read as underpowered beside the filled buttons); covers
-   the matter subnav and the case page's tab group alike. */
+/* Basic — active tab as wash + bottom rail (Outlook selection pattern:
+   wash for body, rail for accent, dark text). Replaces the azure fill,
+   which dressed selection up as a button; the rail-only attempt of
+   2026-07-21 read underpowered, but the wash carries it. */
 [data-theme="basic"] .subnav .active {
-  background: var(--control-active-bg);
+  background: var(--nav-active-wash);
   border: none;
+  position: relative;
+}
+
+/* Inset round-capped underline (Fluent tab indicator) — clears the
+   tab's rounded corners instead of clipping into them. */
+[data-theme="basic"] .subnav .active::after {
+  background: var(--nav-active-rail);
+  border-radius: 999px;
+  bottom: 0;
+  content: "";
+  height: 3px;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  width: calc(100% - 0.5rem);
 }
 
 [data-theme="basic"] .subnav .active a {
-  color: var(--control-active-color);
+  color: var(--selected-color);
 }

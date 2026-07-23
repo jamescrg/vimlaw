@@ -439,6 +439,11 @@
   --control-active-bg: var(--oxford-azure-ink);
   --control-active-color: var(--oxford-paper);
 
+  /* Nav selection (sidebar item, subnav tab) — wash + pill rail rather
+     than the control fill: selection is state, not action. */
+  --nav-active-wash: var(--oxford-azure-tint);
+  --nav-active-rail: var(--oxford-azure);
+
   /* The brand (sidebar kappa/wordmark, auth monogram) anchors in the deep
      navy — one job per blue: navy = brand + primary actions, steel =
      links, azure = active state. */
