@@ -425,4 +425,53 @@
   --ef-orange: oklch(0.75 0.106 45);
   --ef-purple: oklch(0.75 0.082 349);
 
+  /* Letterhead (Craig Legal, ~/cl minimal.css) — one warm stone axis,
+     hue 68–100, lightness the only real dial; fountain-pen blue as the
+     sole working accent. Canonical cl values keep their exact oklch;
+     the ladder steps are interpolated on the same axis to fill the
+     app's surface and border ladders. The Kosmos --stone-* ramp is
+     achromatic, so it cannot stand in for these. */
+  --lh-bright: oklch(0.978 0.006 100);       /* above paper — lightest surfaces */
+  --lh-mid: oklch(0.966 0.008 100);          /* raised light surfaces */
+  --lh-paper: oklch(0.954 0.0094 100);       /* cl --paper — body ground, cells */
+  --lh-paper-dim: oklch(0.938 0.013 99.5);   /* section tier / table headers */
+  --lh-field: oklch(0.92 0.0162 99);         /* cl --field — chrome tier, inputs */
+  --lh-field-dim: oklch(0.902 0.017 98);     /* hover step between field and chip */
+  --lh-chip: oklch(0.885 0.0185 97);         /* cl --chip — "you are here" fills */
+  --lh-rule: oklch(0.822 0.0237 96);         /* cl --rule — THE hairline */
+  --lh-rule-dark: oklch(0.74 0.026 92);      /* stronger border step */
+  --lh-rule-strong: oklch(0.62 0.026 88);    /* darkest border step */
+  --lh-ink-faint: oklch(0.58 0.021 84);      /* placeholders, faintest text */
+  --lh-ink-soft: oklch(0.466 0.0189 82.7);   /* cl --ink-soft — secondary text */
+  --lh-ink: oklch(0.374 0.0087 67.6);        /* cl --ink — primary text, button fill */
+  --lh-press: oklch(0.291 0.0084 75.3);      /* cl --press — headings, button hover */
+  --lh-on-ink: oklch(0.99 0.006 100);        /* cl --on-ink — text on ink buttons */
+
+  /* Fountain-pen blue — calendar events, chart arc, blue highlights */
+  --lh-blue: oklch(0.47 0.1 252);            /* cl --link */
+  --lh-blue-bright: oklch(0.55 0.105 252);   /* hover lift */
+  --lh-blue-dim: oklch(0.72 0.06 252);       /* selected-item borders */
+  --lh-blue-tint: oklch(0.9 0.032 252);      /* selection wash */
+  --lh-blue-wash: oklch(0.936 0.02 252);     /* hl-blue rows, calendar today */
+
+  /* Functional inks — Kosmos's status/label semantics kept, chroma
+     roughly halved vs Matcha and warm-shifted: quiet ink stamps on
+     stone paper */
+  --lh-red-ink: oklch(0.49 0.11 30);         /* sealing-wax red — urgent/error */
+  --lh-amber-ink: oklch(0.52 0.1 55);        /* sienna — warnings */
+  --lh-gold-ink: oklch(0.6 0.11 80);         /* old-gold — yellow icons */
+  --lh-green-ink: oklch(0.5 0.08 135);       /* ledger green — success/Add */
+  --lh-plum-ink: oklch(0.49 0.12 305);       /* plum — accent icons (sort/filter) */
+  --lh-plum-soft: oklch(0.6 0.09 305);       /* muted plum */
+
+  /* The same hues diluted to paper tints — labels, highlights, washes */
+  --lh-red-tint: oklch(0.912 0.032 30);
+  --lh-orange-tint: oklch(0.922 0.036 60);
+  --lh-amber-tint: oklch(0.928 0.04 90);
+  --lh-amber-wash: oklch(0.945 0.024 95);    /* past-due / due-soon — barely off paper */
+  --lh-green-tint: oklch(0.918 0.03 133);
+  --lh-green-line: oklch(0.82 0.06 135);     /* status-green chip line */
+  --lh-green-hover: oklch(0.9 0.038 133);
+  --lh-plum-tint: oklch(0.914 0.024 310);
+  --lh-slate-tint: oklch(0.916 0.012 250);   /* cool gray — hl-slate, distinct from warm ground */
 }
