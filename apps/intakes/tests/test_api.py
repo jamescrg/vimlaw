@@ -118,3 +118,53 @@ def test_receive_intake_bad_json_400():
         "/api/receive-intake/", data="not json", content_type="application/json"
     )
     assert response.status_code == 400
+
+
+def post_inquiry(payload):
+    return Client().post(
+        "/api/receive-inquiry/",
+        data=json.dumps(payload),
+        content_type="application/json",
+    )
+
+
+def test_receive_inquiry_returns_intake_id_and_files_note():
+    # The website depends on this contract: the returned intake_id is
+    # the binding that later client-form reports attach to
+    response = post_inquiry(
+        {
+            "full_name": "Jane Roe",
+            "phone_number": "4045550100",
+            "email": "jane@example.com",
+            "summary": "My neighbor moved a fence onto my land.",
+        }
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"]
+
+    intake = Intake.objects.get(id=body["intake_id"])
+    assert intake.name == "Jane Roe"
+    assert intake.phone == "4045550100"
+    assert intake.email == "jane@example.com"
+    assert intake.status == "Open"
+
+    note = Note.objects.get(intake=intake)
+    assert note.user is None
+    assert note.type == "Email In"
+    assert "fence onto my land" in note.details
+
+
+def test_receive_inquiry_missing_fields_400():
+    response = post_inquiry({"full_name": "Jane Roe"})
+    assert response.status_code == 400
+    assert not response.json()["success"]
+
+
+def test_receive_inquiry_bad_json_400():
+    response = Client().post(
+        "/api/receive-inquiry/",
+        data="{not json",
+        content_type="application/json",
+    )
+    assert response.status_code == 400
