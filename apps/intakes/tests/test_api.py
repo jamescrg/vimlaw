@@ -1,11 +1,18 @@
 import json
 
 import pytest
-from django.test import Client
+from django.test import Client, override_settings
 
 from apps.intakes.models import Intake, Note
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def _unenforced_seam(settings):
+    """Pin the no-key default regardless of the developer's .env; the
+    auth-mode tests opt back in with @override_settings."""
+    settings.KOSMOS_SEAM_KEY = ""
 
 
 def post_intake(payload):
@@ -203,3 +210,159 @@ def test_receive_intake_stale_note_id_files_fresh_note():
     assert response["success"]
     assert response["note_id"] != 999999
     assert Note.objects.filter(intake_id=first["intake_id"]).count() == 2
+
+
+# ---------------------------------------------------------------------------
+# The seam key: when KOSMOS_SEAM_KEY is configured, every seam endpoint
+# requires the matching X-Seam-Key header. The tests above run with the
+# default empty key and double as the unenforced-mode pins.
+# ---------------------------------------------------------------------------
+
+
+def post_intake_with_key(payload, key):
+    return Client().post(
+        "/api/receive-intake/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        headers={"X-Seam-Key": key} if key else None,
+    )
+
+
+@override_settings(KOSMOS_SEAM_KEY="s3cret")
+def test_receive_intake_rejects_missing_or_wrong_seam_key():
+    assert post_intake({"full_name": "J", "report": "R"}).status_code == 403
+    assert (
+        post_intake_with_key({"full_name": "J", "report": "R"}, "wrong").status_code
+        == 403
+    )
+    assert Intake.objects.count() == 0
+
+
+@override_settings(KOSMOS_SEAM_KEY="s3cret")
+def test_receive_intake_accepts_correct_seam_key():
+    response = post_intake_with_key({"full_name": "J", "report": "R"}, "s3cret")
+    assert response.status_code == 200
+    assert response.json()["success"]
+
+
+@override_settings(KOSMOS_SEAM_KEY="s3cret")
+def test_receive_inquiry_requires_seam_key():
+    payload = {
+        "full_name": "Jane Roe",
+        "phone_number": "4045550100",
+        "email": "jane@example.com",
+        "summary": "Fence dispute.",
+    }
+    assert post_inquiry(payload).status_code == 403
+    ok = Client().post(
+        "/api/receive-inquiry/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        headers={"X-Seam-Key": "s3cret"},
+    )
+    assert ok.status_code == 200
+
+
+@override_settings(KOSMOS_SEAM_KEY="s3cret")
+def test_search_requires_seam_key():
+    assert Client().get("/api/intakes/search/", {"q": "Jane"}).status_code == 403
+    ok = Client().get(
+        "/api/intakes/search/", {"q": "Jane"}, headers={"X-Seam-Key": "s3cret"}
+    )
+    assert ok.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# The search endpoint: the website office's window into the roster,
+# consulted before minting client-form links so phone-logged intakes
+# are attached rather than duplicated.
+# ---------------------------------------------------------------------------
+
+
+def search(q):
+    return Client().get("/api/intakes/search/", {"q": q})
+
+
+def make_intake(**kwargs):
+    from datetime import date
+
+    defaults = {"name": "Jane Roe", "date": date(2026, 7, 20), "status": "Open"}
+    defaults.update(kwargs)
+    return Intake.objects.create(**defaults)
+
+
+def test_search_numeric_q_matches_id_exactly():
+    target = make_intake(name="Jane Roe")
+    make_intake(name="Other Person")
+    body = search(str(target.id)).json()
+    assert body["success"]
+    assert [r["id"] for r in body["results"]] == [target.id]
+
+
+def test_search_numeric_q_matches_phone_fragment():
+    # Digits match digits regardless of how the phone was typed
+    target = make_intake(name="Jane Roe", phone="404-555-0122")
+    body = search("5550122").json()
+    assert [r["id"] for r in body["results"]] == [target.id]
+
+
+def test_search_dashed_q_matches_undashed_phone():
+    target = make_intake(name="Jane Roe", phone="4045550122")
+    body = search("555-0122").json()
+    assert [r["id"] for r in body["results"]] == [target.id]
+
+
+def test_search_text_q_matches_name_case_insensitively():
+    target = make_intake(name="Jane Roe")
+    make_intake(name="Someone Else")
+    body = search("jane").json()
+    assert [r["id"] for r in body["results"]] == [target.id]
+
+
+def test_search_returns_expected_shape():
+    from apps.matters.models import PracticeArea
+
+    area, _ = PracticeArea.objects.get_or_create(name="Boundary")
+    make_intake(
+        name="Jane Roe",
+        phone="4045550100",
+        email="jane@example.com",
+        status="Unresponsive",
+        practice_area=area,
+    )
+    bare = make_intake(name="Jane Doe", date=None, phone=None, email=None)
+    body = search("Jane").json()
+    rows = {r["name"]: r for r in body["results"]}
+    full = rows["Jane Roe"]
+    assert full["phone"] == "4045550100"
+    assert full["email"] == "jane@example.com"
+    assert full["status"] == "Unresponsive"
+    assert full["date"] == "2026-07-20"
+    assert full["practice_area"] == "Boundary"
+    empty = rows["Jane Doe"]
+    assert empty["id"] == bare.id
+    assert empty["phone"] == ""
+    assert empty["email"] == ""
+    assert empty["date"] == ""
+    assert empty["practice_area"] == ""
+
+
+def test_search_caps_at_twenty_most_recent():
+    for i in range(25):
+        make_intake(name=f"Jane {i}")
+    body = search("Jane").json()
+    assert len(body["results"]) == 20
+    ids = [r["id"] for r in body["results"]]
+    assert ids == sorted(ids, reverse=True)
+
+
+def test_search_blank_q_lists_open_roster():
+    open_intake = make_intake(name="Jane Roe", status="Open")
+    make_intake(name="Gone Quiet", status="Unresponsive")
+    make_intake(name="Signed Up", status="Accepted")
+    body = search("   ").json()
+    assert [r["id"] for r in body["results"]] == [open_intake.id]
+
+
+def test_search_rejects_post():
+    assert Client().post("/api/intakes/search/").status_code == 405
