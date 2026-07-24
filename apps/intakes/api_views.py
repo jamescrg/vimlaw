@@ -86,7 +86,10 @@ def receive_intake(request):
     Maps the basic contact details onto an Intake and files the full
     report as a note with no user, typed "Client Form" to flag it as
     self-submitted by the prospective client. A follow-up payload may
-    carry intake_id to attach a supplement note to the same intake.
+    carry intake_id to attach a note to the same intake, and note_id
+    to update a previously filed note in place — the website's forms
+    stay editable after submission, and each resubmission replaces its
+    original note rather than adding another.
     """
     try:
         data = json.loads(request.body)
@@ -94,6 +97,7 @@ def receive_intake(request):
         full_name = data.get("full_name", "")
         report = data.get("report", "")
         intake_id = data.get("intake_id")
+        note_id = data.get("note_id")
 
         if not report or not (full_name or intake_id):
             return JsonResponse(
@@ -123,14 +127,23 @@ def receive_intake(request):
                 source="Internet",
             )
 
-        note = Note.objects.create(
-            date=datetime.now().date(),
-            time=datetime.now().time(),
-            intake=intake,
-            user=None,
-            type="Client Form",
-            details=report,
-        )
+        note = None
+        if note_id:
+            # An update edits the original note; a stale id falls
+            # through and files a fresh note instead
+            note = Note.objects.filter(id=note_id, intake=intake).first()
+        if note is not None:
+            note.details = report
+            note.save()
+        else:
+            note = Note.objects.create(
+                date=datetime.now().date(),
+                time=datetime.now().time(),
+                intake=intake,
+                user=None,
+                type="Client Form",
+                details=report,
+            )
 
         return JsonResponse(
             {
