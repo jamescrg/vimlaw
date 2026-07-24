@@ -1,12 +1,34 @@
 import json
+import re
 from datetime import datetime
+from functools import wraps
 
+from django.conf import settings
+from django.db import models
+from django.db.models import Q, Value
+from django.db.models.functions import Replace
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from apps.intakes.models import Intake, Note
 from apps.matters.models import PracticeArea
+
+
+def seam_protected(view):
+    """Requires X-Seam-Key when KOSMOS_SEAM_KEY is configured; when the
+    env var is unset, auth is not enforced so a one-sided deploy can't
+    brick the seam. Enforcement begins when both envs carry the secret."""
+
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        key = settings.KOSMOS_SEAM_KEY
+        if key and request.headers.get("X-Seam-Key") != key:
+            return JsonResponse({"success": False, "error": "Unauthorized"}, status=403)
+        return view(request, *args, **kwargs)
+
+    return wrapper
+
 
 # The website questionnaire's dispute natures, mapped onto the firm's
 # practice areas (rows seeded by matters migration 0048)
@@ -28,6 +50,7 @@ DISPUTE_TO_PRACTICE_AREA = {
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@seam_protected
 def receive_inquiry(request):
     """
     API endpoint to receive inquiry data from external sources.
@@ -79,7 +102,57 @@ def receive_inquiry(request):
 
 
 @csrf_exempt
+@require_http_methods(["GET"])
+@seam_protected
+def search_intakes(request):
+    """
+    The website office's window into the intake roster: it searches
+    here before minting client-form links, so an intake logged from a
+    phone call is found and attached rather than duplicated. A blank
+    query lists the open roster — the office's landing view, one click
+    from attaching. Numeric queries match the intake number exactly or
+    a phone fragment; text queries match name or phone.
+    """
+    q = (request.GET.get("q") or "").strip()
+    if not q:
+        matches = Q(status="Open")
+    else:
+        # Phones are stored however they were typed; compare digits to
+        # digits so "5550122" finds "404-555-0122"
+        q_digits = re.sub(r"\D", "", q)
+        matches = Q(id=int(q)) if q.isdigit() else Q(name__icontains=q)
+        if q_digits:
+            matches |= Q(phone_digits__contains=q_digits)
+
+    phone_digits = models.F("phone")
+    for mark in ("-", " ", "(", ")", "."):
+        phone_digits = Replace(phone_digits, Value(mark), Value(""))
+    intakes = (
+        Intake.objects.annotate(phone_digits=phone_digits)
+        .filter(matches)
+        .select_related("practice_area")
+        .order_by("-id")[:20]
+    )
+    results = [
+        {
+            "id": intake.id,
+            "name": intake.name,
+            "phone": intake.phone or "",
+            "email": intake.email or "",
+            "status": intake.status,
+            "date": intake.date.isoformat() if intake.date else "",
+            "practice_area": (
+                intake.practice_area.name if intake.practice_area else ""
+            ),
+        }
+        for intake in intakes
+    ]
+    return JsonResponse({"success": True, "results": results})
+
+
+@csrf_exempt
 @require_http_methods(["POST"])
+@seam_protected
 def receive_intake(request):
     """
     API endpoint receiving the website's client intake questionnaire.
@@ -109,6 +182,11 @@ def receive_intake(request):
             intake = Intake.objects.filter(id=intake_id).first()
 
         if intake is None:
+            # Create-fallback for legacy unbound website intakes only.
+            # Since the website's office attaches to existing Kosmos
+            # intakes (intake records are born here, not there), every
+            # new push carries intake_id and this branch should be
+            # unreachable; it stays for old cl rows without a binding.
             area_name = DISPUTE_TO_PRACTICE_AREA.get(data.get("dispute_nature", ""))
             practice_area = (
                 PracticeArea.objects.filter(name=area_name).first()

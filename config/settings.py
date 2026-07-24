@@ -314,6 +314,11 @@ class CustomFormRendererCompact(TemplatesSetting):
 FORM_RENDERER = "config.settings.CustomFormRendererSpacious"
 FORM_SETTINGS = {"label_suffix": ""}
 
+# Shared secret protecting the cl <-> Kosmos intake seam. Empty means
+# auth is not enforced, so a one-sided deploy can't brick the seam;
+# enforcement begins once both apps' envs carry the same key.
+KOSMOS_SEAM_KEY = env("KOSMOS_SEAM_KEY", default="")
+
 # Anthropic API Configuration
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 
