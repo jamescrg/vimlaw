@@ -168,3 +168,38 @@ def test_receive_inquiry_bad_json_400():
         content_type="application/json",
     )
     assert response.status_code == 400
+
+
+def test_receive_intake_updates_note_in_place():
+    first = post_intake(
+        {"full_name": "Jane Roe", "report": "# Client Intake Report v1"}
+    ).json()
+    second = post_intake(
+        {
+            "intake_id": first["intake_id"],
+            "note_id": first["note_id"],
+            "report": "# Client Intake Report v2\n\n*Last updated today.*",
+        }
+    ).json()
+    assert second["success"]
+    assert second["note_id"] == first["note_id"]
+    assert Note.objects.filter(intake_id=first["intake_id"]).count() == 1
+    note = Note.objects.get(id=first["note_id"])
+    assert "v2" in note.details
+    assert "v1" not in note.details
+
+
+def test_receive_intake_stale_note_id_files_fresh_note():
+    first = post_intake(
+        {"full_name": "Jane Roe", "report": "# Client Intake Report"}
+    ).json()
+    response = post_intake(
+        {
+            "intake_id": first["intake_id"],
+            "note_id": 999999,
+            "report": "# Another Report",
+        }
+    ).json()
+    assert response["success"]
+    assert response["note_id"] != 999999
+    assert Note.objects.filter(intake_id=first["intake_id"]).count() == 2
