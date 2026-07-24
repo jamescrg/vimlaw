@@ -444,3 +444,12 @@
 [data-theme="basic"] .fc {
   --fc-today-bg-color: #d9ebf8;
 }
+
+/* Letterhead — today washes in pale fountain blue (the amber-100
+   default is louder than anything on this stone paper), and events
+   trade the base lime for the theme's own blue: clickable = blue. */
+[data-theme="letterhead"] .fc {
+  --fc-today-bg-color: var(--lh-blue-wash);
+  --fc-event-bg-color: var(--lh-blue);
+  --fc-event-border-color: oklch(0.4 0.09 252);
+}

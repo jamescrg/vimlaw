@@ -1,18 +1,20 @@
 /* ==========================================================================
-   THEMING CONVENTION (four light themes + four dark themes)
+   THEMING CONVENTION (four light themes + three dark themes)
    --------------------------------------------------------------------------
    Theming is token-first. `:root` below defines every semantic token in its
    LIGHT value; the dark block further down RE-DEFINES those same tokens with
    dark (gb-*) values. Component CSS consumes var(--token) and stays
    theme-agnostic — it flips automatically when the tokens change.
 
-   SIX themes. Three light — light (Matcha), nord-light (Nord Snow Storm),
+   SEVEN themes. Four light — light (Matcha), nord-light (Nord Snow Storm),
    basic (after the 2017 LawPay UI: white ground, navy buttons, azure
-   accents) — and three dark — dark (Gruvbox), cosmic (Nord), everforest.
+   accents), letterhead (after the Craig Legal engagement letter: bone
+   paper, hairline rules, fountain-pen blue) — and three dark — dark
+   (Gruvbox), cosmic (Nord), everforest.
    The non-Gruvbox darks ARE the dark theme structurally — they share the
    dark token block and every dark structural rule, and only repoint the
    --gb-* ramp (see the blocks after the dark block). So any "dark" rule is
-   scoped to ALL FOUR:
+   scoped to ALL THREE:
    `:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])`.
    The non-Matcha lights are light structurally: they inherit every :root
    default and their blocks below only repoint colour tokens; dark
@@ -500,6 +502,128 @@
   --icon-yellow: var(--yellow-600);
   --urgent: var(--orange-700);
   --warning: var(--orange-700);
+}
+
+/* ==========================================================================
+   Letterhead — the fourth LIGHT theme, after the Craig Legal engagement
+   letter (~/cl): one warm stone axis (hue 68–100), hairline rules as the
+   only graphic device, links and selection in the letter's own inks
+   (soft-ink links, chip-fill selection), ink-filled primary buttons.
+   Fountain-pen blue recedes to the calendar, the charts, and the blue
+   highlight class. Functional colors survive as quiet warm-shifted ink
+   stamps at roughly half Matcha's chroma. Structurally a light theme:
+   token-only block, no scoped rules — the default fill-based active
+   idiom IS cl's chip.
+   ========================================================================== */
+[data-theme="letterhead"] {
+  color-scheme: light;
+
+  /* Typography & Text — cl's ink ramp over bone paper */
+  --color-primary: var(--lh-ink);
+  --color-darker: var(--lh-press);
+  --color-muted: var(--lh-ink-soft);
+  --color-muted-more: var(--lh-ink-faint);
+  --color-lighter: var(--lh-rule);
+
+  /* Links — the letter's own soft ink, darkening to full ink on
+     hover (cl's topbar idiom). --brand-ink, --accent-link,
+     --focus-ring, --field-focus derive from --link in :root and
+     follow into the ink family — blue recedes to the calendar,
+     charts, and the blue highlight class */
+  --link: var(--lh-ink-soft);
+  --link-hover: var(--lh-ink);
+
+  /* Backgrounds — paper ground, field chrome, chip actives */
+  --background-nav: var(--lh-rule);
+  --background-body: var(--lh-paper);
+  --background-subnav: var(--lh-field);
+  --background-subnav-contrast: var(--lh-chip);
+  --background-control: var(--lh-field);
+  --background-section: var(--lh-paper-dim);
+  --background-th: var(--lh-paper-dim);
+  --background-td: var(--lh-paper);
+  --background-medium-light: var(--lh-mid);
+  --background-light: var(--lh-bright);
+  --ai-frame: var(--lh-chip);
+  --ai-surface: var(--lh-bright);
+  --ai-raised: var(--lh-paper);
+  --past-due-bg: var(--lh-amber-wash);
+  --due-soon-bg: var(--lh-amber-wash);
+  --toast-warning-header-bg: var(--lh-amber-tint);
+  --toast-warning-body-bg: var(--lh-amber-wash);
+
+  /* Navigation — actives keep the :root fill idiom (cl's chip); the
+     subnav tab wears the chip itself, divided by the hairline */
+  --background-subnav-tab-active: var(--lh-chip);
+  --subnav-divider: var(--lh-rule);
+
+  /* Sidebar — the field tier, chip marks current */
+  --background-sidebar: var(--lh-field);
+  --background-sidebar-hover: var(--lh-field-dim);
+  --background-sidebar-active: var(--lh-chip);
+
+  /* Buttons — cl buttons are INK, not blue: blue stays reserved for
+     clickable text, ink means "press here" */
+  --button-primary-background: var(--lh-ink);
+  --button-primary-color: var(--lh-on-ink);
+  --btn-secondary-bg: var(--lh-blue-wash);
+  --btn-success-bg: var(--lh-green-tint);
+  --btn-danger-bg: var(--lh-red-tint);
+
+  /* Forms & Inputs — cl's signature shaded wells: field darker than
+     paper, defined by the rule hairline */
+  --input-border: var(--lh-rule);
+  --input-background: var(--lh-field);
+  --input-placeholder: var(--lh-ink-faint);
+
+  /* Borders — the rule carries the medium step; the ladder warms
+     around it */
+  --border-light: var(--lh-chip);
+  --border-medium: var(--lh-rule);
+  --border-medium-dark: var(--lh-rule-dark);
+  --border-dark: var(--lh-rule-strong);
+
+  /* Selection — the stone ladder, a shade deeper than the chip so it
+     stands apart from the "you are here" fills around it */
+  --selected-background: var(--lh-chip-dim);
+  --selected-color: var(--lh-press);
+  --selected-border: var(--lh-rule-dark);
+
+  /* Status — warm-muted inks (--false/--error/--error-border follow
+     --urgent from :root) */
+  --urgent: var(--lh-red-ink);
+  --warning: var(--lh-amber-ink);
+  --success: var(--lh-green-ink);
+  --true: var(--lh-green-ink);
+  --error-background: var(--lh-red-tint);
+  --status-green-bg: var(--lh-green-tint);
+  --status-green-ink: var(--lh-green-ink);
+  --status-green-line: var(--lh-green-line);
+  --status-green-hover: var(--lh-green-hover);
+
+  /* Labels — the paper tints (label-gray follows the control tier) */
+  --label-green: var(--lh-green-tint);
+  --label-orange: var(--lh-orange-tint);
+  --label-purple: var(--lh-plum-tint);
+  --label-red: var(--lh-red-tint);
+  --label-yellow: var(--lh-amber-tint);
+
+  /* Icons — plum is the one hue no other Letterhead role uses, so
+     "on" reads; Add must stay green (:root derives it from --link,
+     which is blue here) */
+  --icon-violet: var(--lh-plum-ink);
+  --icon-violet-muted: var(--lh-plum-soft);
+  --icon-yellow: var(--lh-gold-ink);
+  --add: var(--lh-green-ink);
+
+  /* Row highlights — the tints; gray inherits the warm control tier */
+  --hl-blue: var(--lh-blue-wash);
+  --hl-slate: var(--lh-slate-tint);
+  --hl-green: var(--lh-green-tint);
+  --hl-orange: var(--lh-orange-tint);
+  --hl-violet: var(--lh-plum-tint);
+  --hl-red: var(--lh-red-tint);
+  --hl-yellow: var(--lh-amber-tint);
 }
 
 /* ==========================================================================
