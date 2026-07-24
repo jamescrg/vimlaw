@@ -583,9 +583,9 @@
   --border-medium-dark: var(--lh-rule-dark);
   --border-dark: var(--lh-rule-strong);
 
-  /* Selection — the stone ladder, one step darker than the resting
-     control tier: the chip IS cl's selected state */
-  --selected-background: var(--lh-chip);
+  /* Selection — the stone ladder, a shade deeper than the chip so it
+     stands apart from the "you are here" fills around it */
+  --selected-background: var(--lh-chip-dim);
   --selected-color: var(--lh-press);
   --selected-border: var(--lh-rule-dark);
 

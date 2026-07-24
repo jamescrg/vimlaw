@@ -438,6 +438,7 @@
   --lh-field: oklch(0.92 0.0162 99);         /* cl --field — chrome tier, inputs */
   --lh-field-dim: oklch(0.902 0.017 98);     /* hover step between field and chip */
   --lh-chip: oklch(0.885 0.0185 97);         /* cl --chip — "you are here" fills */
+  --lh-chip-dim: oklch(0.84 0.022 96.3);     /* selection — two shades deeper than the chip */
   --lh-rule: oklch(0.822 0.0237 96);         /* cl --rule — THE hairline */
   --lh-rule-dark: oklch(0.74 0.026 92);      /* stronger border step */
   --lh-rule-strong: oklch(0.62 0.026 88);    /* darkest border step */
