@@ -1,16 +1,9 @@
 """Build public payment links for an invoice."""
 
-from django.conf import settings
 from django.urls import reverse
 
+from utils.links import absolute as _absolute
 from utils.signing import make_payment_token, make_request_token
-
-
-def _absolute(path, request):
-    if request is not None:
-        return request.build_absolute_uri(path)
-    base = (getattr(settings, "PUBLIC_BASE_URL", "") or "").rstrip("/")
-    return f"{base}{path}" if base else path
 
 
 def payment_path(invoice) -> str:

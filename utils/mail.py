@@ -54,6 +54,29 @@ def billing_reply_to(company):
     return formataddr((_billing_display_name(company), address))
 
 
+def _firm_display_name(company):
+    """Display name for general firm email headers: the firm's name with the
+    entity suffix dropped, or 'Our office' when it has no name."""
+    firm = _FIRM_SUFFIX_RE.sub("", getattr(company, "name", "") or "").strip()
+    return firm or "Our office"
+
+
+def firm_from_email(company):
+    """From header for client-facing mail that isn't about money — an intake
+    form goes out under the firm's own name, not the billing department's."""
+    address = parseaddr(settings.DEFAULT_FROM_EMAIL or "")[1]
+    return formataddr((_firm_display_name(company), address)) if address else None
+
+
+def firm_reply_to(company):
+    """Reply-To for general firm mail: the firm's own address, so a
+    prospective client's reply reaches the office rather than billing."""
+    address = (getattr(company, "email", "") or "").strip()
+    if not address:
+        return None
+    return formataddr((_firm_display_name(company), address))
+
+
 def firm_postal_address(company):
     """One-line postal address for email footers — a legitimacy signal spam
     filters explicitly weight on commercial/transactional mail. Empty string
