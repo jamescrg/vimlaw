@@ -58,7 +58,7 @@ document.addEventListener('alpine:init', () => {
     // --- Field list ---------------------------------------------------------
 
     addField(type) {
-      const field = { ...structuredClone(this.defaults[type]), _id: newId() };
+      const field = { ...clone(this.defaults[type]), _id: newId() };
       this.fields.push(field);
       this.selectedId = field._id;
       this.$nextTick(() => {
@@ -70,7 +70,7 @@ document.addEventListener('alpine:init', () => {
     duplicate(field) {
       // key: null so the copy gets its own — two fields sharing a key would
       // share an answer.
-      const copy = { ...structuredClone(field), key: null, _id: newId() };
+      const copy = { ...clone(field), key: null, _id: newId() };
       this.fields.splice(this.fields.indexOf(field) + 1, 0, copy);
       this.selectedId = copy._id;
     },
@@ -180,6 +180,19 @@ document.addEventListener('alpine:init', () => {
     },
   }));
 });
+
+/*
+ * Deep-copy a field object.
+ *
+ * NOT structuredClone: Alpine wraps everything reachable from x-data in a
+ * reactive Proxy, and structuredClone throws DataCloneError on a Proxy — which
+ * killed addField() on its first line and made clicking a palette item do
+ * nothing at all. A JSON round-trip goes through ordinary property access, so
+ * it sees through the proxy, and these are plain JSON field objects anyway.
+ */
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
 
 function newId() {
   return (crypto.randomUUID && crypto.randomUUID()) || String(Math.random());

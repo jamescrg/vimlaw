@@ -49,6 +49,7 @@
     </div>
     <div class="fb-body" :class="preview ? 'fb-previewing' : ''">
       <aside class="fb-palette" x-show="!preview">
+        <p class="fb-palette-hint">Click to add a question to the end of the form, then drag it into place.</p>
         <template x-for="group in palette" :key="group.group">
           <div class="fb-palette-group">
             <h2 class="fb-palette-heading" x-text="group.group"></h2>

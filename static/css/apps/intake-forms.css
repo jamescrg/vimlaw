@@ -220,9 +220,12 @@
 .fb-palette-heading {
   color: var(--color-muted);
   font-weight: 600;
-  letter-spacing: 0.03em;
   margin: 0 0 0.5rem;
-  text-transform: uppercase;
+}
+
+.fb-palette-hint {
+  color: var(--color-muted);
+  margin: 0 0 0.75rem;
 }
 
 .fb-palette-item {
