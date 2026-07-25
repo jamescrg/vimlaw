@@ -1,0 +1,524 @@
+/* ==========================================================================
+   Custom intake forms — the template library and the builder.
+
+   The public fill page has its own sheet (css/intake-form.css), loaded only
+   on that page; nothing here reaches it.
+   ========================================================================== */
+
+/* ==========================================================================
+   Template library
+   ========================================================================== */
+
+.form-template-list .form-template-count,
+.form-template-list .form-template-status,
+.form-template-list .form-template-updated {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.form-template-desc {
+  color: var(--color-muted);
+  display: block;
+}
+
+/* ==========================================================================
+   Forms card on the intake detail page
+   ========================================================================== */
+
+.intake-form-row {
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.intake-form-row-main {
+  align-items: center;
+  display: flex;
+  flex: 1 1 14rem;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.intake-form-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intake-form-progress,
+.intake-form-row-meta {
+  color: var(--color-muted);
+}
+
+.intake-form-row-meta {
+  display: flex;
+  flex: 0 1 auto;
+  gap: 1rem;
+}
+
+.intake-form-row-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.intake-form-empty {
+  color: var(--color-muted);
+  padding: 0 1rem 1rem;
+}
+
+/* ==========================================================================
+   Review modal — the answers as they were asked
+   ========================================================================== */
+
+.review-meta {
+  color: var(--color-muted);
+  margin-bottom: 1.5rem;
+}
+
+.review-drift {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.review-answers dt {
+  color: var(--color-muted);
+  margin-top: 1rem;
+}
+
+.review-answers dd {
+  margin: 0.25rem 0 0;
+}
+
+.review-answers dd p:last-child {
+  margin-bottom: 0;
+}
+
+.review-heading {
+  border-bottom: 1px solid var(--border-light);
+  color: var(--color-primary);
+  font-weight: 600;
+  margin-top: 1.5rem;
+  padding-bottom: 0.25rem;
+}
+
+.review-text {
+  color: var(--color-muted);
+}
+
+.review-unanswered {
+  color: var(--color-muted-more);
+}
+
+.review-orphans {
+  border-top: 1px solid var(--border-light);
+  color: var(--color-muted);
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.review-orphans summary {
+  cursor: pointer;
+}
+
+/* Modal helpers shared by the send / link / resend dialogs. */
+.modal-note {
+  color: var(--color-muted);
+  margin-bottom: 1rem;
+}
+
+.form-error-banner {
+  background: var(--error-background);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-md);
+  color: var(--error);
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+}
+
+.form-link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-link-url {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   Builder — frame
+   ========================================================================== */
+
+.fb-toolbar .toolbar-left {
+  flex: 1 1 auto;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.fb-name {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  flex: 1 1 auto;
+  font-weight: 600;
+  max-width: 30rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.fb-name:hover {
+  border-color: var(--border-medium);
+}
+
+.fb-state {
+  color: var(--color-muted);
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.fb-state-dirty {
+  color: var(--warning);
+}
+
+.fb-body {
+  display: flex;
+  gap: 1.5rem;
+  padding-top: 1rem;
+}
+
+.fb-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   Builder — palette
+   ========================================================================== */
+
+.fb-palette {
+  align-self: flex-start;
+  flex: 0 0 13rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.fb-palette-group + .fb-palette-group {
+  margin-top: 1.25rem;
+}
+
+.fb-palette-heading {
+  color: var(--color-muted);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+}
+
+.fb-palette-item {
+  align-items: center;
+  background: var(--background-light);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.fb-palette-item:hover {
+  background: var(--background-section);
+  border-color: var(--border-dark);
+}
+
+.fb-palette-item i {
+  color: var(--color-muted);
+}
+
+/* ==========================================================================
+   Builder — field cards
+   ========================================================================== */
+
+.fb-field {
+  background: var(--background-light);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+.fb-field-open {
+  border-color: var(--border-dark);
+}
+
+/* A heading or an instruction block structures the page rather than asking
+   anything, so it reads as a divider rather than a card. */
+.fb-field-layout {
+  background: var(--background-section);
+}
+
+.fb-field-head {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.fb-handle {
+  background: none;
+  border: none;
+  color: var(--color-muted-more);
+  cursor: grab;
+  display: flex;
+  padding: 0;
+}
+
+.fb-handle:focus-visible {
+  color: var(--color-primary);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.fb-handle:active {
+  cursor: grabbing;
+}
+
+.fb-ghost {
+  opacity: 0.4;
+}
+
+.fb-field-summary {
+  align-items: center;
+  background: none;
+  border: none;
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.fb-chip {
+  background: var(--background-control);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  flex: 0 0 auto;
+  padding: 0 0.5rem;
+}
+
+.fb-field-label {
+  color: var(--color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-req {
+  color: var(--urgent);
+  flex: 0 0 auto;
+}
+
+.fb-field-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+}
+
+/* ==========================================================================
+   Builder — inline field editor
+   ========================================================================== */
+
+.fb-field-body {
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.fb-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fb-edit > span {
+  color: var(--color-muted);
+}
+
+.fb-edit-heading {
+  color: var(--color-muted);
+}
+
+.fb-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.fb-edit-row .fb-edit {
+  flex: 0 0 auto;
+  max-width: 12rem;
+}
+
+.fb-edit-check {
+  align-items: center;
+  align-self: flex-end;
+  flex-direction: row;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+}
+
+.fb-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fb-option {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fb-option input {
+  flex: 1 1 auto;
+}
+
+.fb-add-option {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+
+.fb-empty {
+  color: var(--color-muted);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Builder — preview
+   ========================================================================== */
+
+.fb-previewing {
+  justify-content: center;
+}
+
+.fb-preview {
+  background: var(--background-light);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  margin: 0 auto;
+  max-width: 42rem;
+  padding: 2rem;
+}
+
+.fb-preview-intro,
+.fb-preview-text {
+  color: var(--color-muted);
+}
+
+.fb-preview-block + .fb-preview-block {
+  margin-top: 1.25rem;
+}
+
+.fb-preview-field label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.fb-preview-field input,
+.fb-preview-field select,
+.fb-preview-field textarea {
+  width: 100%;
+}
+
+.fb-preview-help {
+  color: var(--color-muted);
+  margin: 0 0 0.25rem;
+}
+
+.fb-req-mark {
+  color: var(--urgent);
+}
+
+.fb-preview-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fb-preview-choice {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fb-preview-choice input {
+  width: auto;
+}
+
+/* ==========================================================================
+   Narrow screens — the palette becomes a scrolling strip above the canvas
+   ========================================================================== */
+
+@media (width < 768px) {
+  .fb-body {
+    flex-direction: column;
+  }
+
+  .fb-palette {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 1.5rem;
+    overflow-x: auto;
+    position: static;
+  }
+
+  .fb-palette-group + .fb-palette-group {
+    margin-top: 0;
+  }
+
+  .fb-palette-group {
+    flex: 0 0 auto;
+  }
+
+  .fb-palette-item {
+    white-space: nowrap;
+  }
+}
+
+/* ==========================================================================
+   Dark mode — cards and palette buttons lose their fill and read as outlines,
+   matching how buttons.css and badges.css treat the darks.
+   ========================================================================== */
+
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-palette-item,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-field,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-preview {
+  background: transparent;
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-palette-item:hover {
+  background: var(--background-section);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-field-layout {
+  background: var(--background-section);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-chip {
+  background: transparent;
+  border: 1px solid var(--border-medium);
+}

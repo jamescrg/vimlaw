@@ -1,0 +1,37 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">{{ title }}</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="form-template-form"
+            hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      {% if template %}
+        <button type="button"
+                class="btn btn-danger confirm"
+                data-href="{% url 'intakes:form-template-delete' template_id=template.id %}"
+                data-confirm-title="Delete Form"
+                data-confirm-message="Delete “{{ template.name }}”? Forms already sent keep their questions and answers."
+                data-confirm-text="Delete">Delete</button>
+      {% else %}
+        <button type="button"
+                class="btn btn-secondary"
+                @click="$dispatch('close-modal')">Cancel</button>
+      {% endif %}
+      <button type="submit" form="form-template-form" class="btn btn-success">Save</button>
+    </div>
+  </div>
+</div>

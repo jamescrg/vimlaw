@@ -1,0 +1,65 @@
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">{{ submission.template_name }}</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p class="review-meta">
+        Version {{ submission.template_version }}
+        {% if submission.submitted_at %}
+          · submitted {{ submission.submitted_at|date:"Y-m-d g:i A" }}
+        {% else %}
+          · not yet submitted
+        {% endif %}
+        {% if submission.template_drifted %}
+          <span class="review-drift">The form has since changed to version {{ submission.template.version }}. These are the questions as they were asked.</span>
+        {% endif %}
+      </p>
+      <dl class="review-answers">
+        {% for block in blocks %}
+          {% if block.kind == "heading" %}
+            <dt class="review-heading">{{ block.label }}</dt>
+          {% elif block.kind == "text" %}
+            <dd class="review-text">
+              {{ block.text|linebreaks }}
+            </dd>
+          {% else %}
+            <dt>{{ block.label }}</dt>
+            {% if block.answered %}
+              <dd>
+                {{ block.display|linebreaks }}
+              </dd>
+            {% else %}
+              <dd class="review-unanswered">
+                Not answered
+              </dd>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </dl>
+      {% if orphans %}
+        <details class="review-orphans">
+          <summary>Answers no longer on this form ({{ orphans|length }})</summary>
+          <dl>
+            {% for key, value in orphans %}
+              <dt>{{ key }}</dt>
+              <dd>
+                {{ value }}
+              </dd>
+            {% endfor %}
+          </dl>
+        </details>
+      {% endif %}
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Close</button>
+    </div>
+  </div>
+</div>

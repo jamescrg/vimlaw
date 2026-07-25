@@ -48,6 +48,8 @@ urlpatterns = [
     path("", include("apps.invoicing.urls")),
     # Public, tokenized invoice payment page (no login)
     path("", include("apps.invoicing.pay.urls")),
+    # Public, tokenized client intake form (no login)
+    path("", include("apps.intakes.client_forms.public_urls")),
     # Reports App
     path("", include("apps.reports.urls")),
     # Management App

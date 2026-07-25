@@ -1,0 +1,100 @@
+{% extends "base-minimal.html" %}
+{% load static cache_buster %}
+{% block title %}
+  {{ submission.template_name }}
+{% endblock title %}
+{% block content %}
+  <link rel="stylesheet" href="{% static_v 'css/intake-form.css' %}" />
+  <div class="cf-page" x-data="intakeForm({{ config }})">
+    <div class="cf-card">
+      <header class="cf-head">
+        {% if logo_url %}
+          <img class="cf-logo"
+               src="{{ logo_url }}"
+               alt="{{ firm_name }}"
+               width="152"
+               height="auto" />
+        {% elif firm_name %}
+          <h1 class="cf-firm">{{ firm_name }}</h1>
+        {% endif %}
+        <h2 class="cf-title">{{ submission.template_name }}</h2>
+      </header>
+      {% if not editable %}
+        {# Closed by the firm: read-only, but they can still see what they said. #}
+        <p class="cf-banner">
+          Thank you — we've received your answers.
+          {% if firm_email %}
+            If anything needs changing, please contact us at {{ firm_email }}.
+          {% else %}
+            If anything needs changing, please get in touch.
+          {% endif %}
+        </p>
+        <dl class="cf-summary">
+          {% for block in blocks %}
+            {% if block.kind == "heading" %}
+              <dt class="cf-summary-heading">{{ block.label }}</dt>
+            {% elif block.kind == "field" %}
+              <dt>{{ block.label }}</dt>
+              {% if block.answered %}
+                <dd>
+                  {{ block.display|linebreaks }}
+                </dd>
+              {% else %}
+                <dd class="cf-summary-blank">
+                  Not answered
+                </dd>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </dl>
+      {% else %}
+        <p class="cf-banner" x-show="submitted && !editing" x-cloak>
+          Thank you — we've received your answers.
+          <button type="button" class="cf-link-btn" @click="editing = true">Make changes</button>
+        </p>
+        {% if submission.template.intro_text %}
+          <div class="cf-intro" x-show="editing" x-cloak>{{ submission.template.intro_text|linebreaks }}</div>
+        {% endif %}
+        <form class="cf-form" x-show="editing" x-cloak @submit.prevent="submit()">
+          {% for block in blocks %}
+            {% if block.kind == "heading" %}
+              <h3 class="cf-heading">{{ block.label }}</h3>
+            {% elif block.kind == "text" %}
+              <div class="cf-text">{{ block.text|linebreaks }}</div>
+            {% elif block.kind == "field" %}
+              <div class="cf-field"
+                   :class="errors['{{ block.key }}'] ? 'cf-field-error' : ''">
+                <label class="cf-label" for="f-{{ block.key }}">
+                  {{ block.label }}
+                  {% if block.required %}<span class="cf-req">*</span>{% endif %}
+                </label>
+                {% if block.help %}<p class="cf-help">{{ block.help }}</p>{% endif %}
+                {% include "intakes/forms/public/widget.html" %}
+                <p class="cf-error"
+                   x-show="errors['{{ block.key }}']"
+                   x-cloak
+                   x-text="errors['{{ block.key }}']"></p>
+              </div>
+            {% endif %}
+          {% endfor %}
+          <p class="cf-banner cf-banner-error"
+             x-show="message"
+             x-cloak
+             x-text="message"></p>
+          <div class="cf-footer">
+            <span class="cf-state" x-show="state === 'saving'" x-cloak>Saving…</span>
+            <span class="cf-state"
+                  x-show="state === 'saved'"
+                  x-cloak
+                  x-text="'Saved ' + savedAt"></span>
+            <button type="submit" class="cf-submit" :disabled="sending">
+              <span x-text="sending ? 'Sending…' : 'Submit'"></span>
+            </button>
+          </div>
+          <p class="cf-reassure">Your answers save as you type — you can close this page and come back to it.</p>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  <script src="{% static_v 'js/intake-form-fill.js' %}"></script>
+{% endblock content %}

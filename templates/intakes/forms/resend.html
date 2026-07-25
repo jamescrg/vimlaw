@@ -1,0 +1,33 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Send a Reminder</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      {% if send_error %}<p class="form-error-banner">{{ send_error }}</p>{% endif %}
+      <p class="modal-note">
+        Sends a fresh link for <strong>{{ submission.template_name }}</strong>.
+        Anything the client has already filled in is still there.
+      </p>
+      <form id="resend-form"
+            hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit" form="resend-form" class="btn btn-success">Send Reminder</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,351 @@
+/* Public client intake form. Self-contained, like the pay page: one fixed look
+   driven by its own token set, with a generic dark variant keyed off the
+   client's OS preference rather than the firm's app theme — the person filling
+   this in has no account and no theme setting of ours.
+
+   Colours are authored in oklch (project rule), tuned to sit alongside
+   css/pay.css so the firm's two public pages read as one. */
+
+:root {
+  --cf-font: 'Noto Sans', sans-serif;
+  --cf-bg: oklch(96.7% 0.003 264.5)
+    linear-gradient(
+      180deg,
+      oklch(92.8% 0.006 264.5) 0%,
+      oklch(96.7% 0.003 264.5) 70%,
+      oklch(96.7% 0.003 264.5) 100%
+    )
+    fixed;
+  --cf-card: oklch(100% 0 0);
+  --cf-border: oklch(87.2% 0.01 258);
+  --cf-text: oklch(37.3% 0.034 259.7);
+  --cf-heading: oklch(21% 0.034 264.7);
+  --cf-muted: oklch(44.6% 0.03 256.8);
+  --cf-field-bg: oklch(100% 0 0);
+  --cf-field-border: oklch(87.2% 0.01 258);
+  --cf-focus: oklch(44.6% 0.043 257.281);
+  --cf-btn: oklch(44.6% 0.043 257.281);
+  --cf-btn-text: oklch(100% 0 0);
+  --cf-error: oklch(57.7% 0.196 27.3);
+  --cf-rule: oklch(92.8% 0.006 264.5);
+  --cf-banner-bg: oklch(96.7% 0.003 264.5);
+  --cf-focus-ring: oklch(44.6% 0.043 257.281 / 30%);
+}
+
+/* Generic dark theme — a token swap, no structural rules. Soft mid-dark
+   surfaces rather than near-black, matching the pay page. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cf-bg: oklch(25.4% 0 0)
+      linear-gradient(
+        180deg,
+        oklch(29.3% 0 0) 0%,
+        oklch(25.4% 0 0) 70%,
+        oklch(25.4% 0 0) 100%
+      )
+      fixed;
+    --cf-card: oklch(32.5% 0 0);
+    --cf-border: oklch(45.2% 0 0);
+    --cf-text: oklch(92.4% 0 0);
+    --cf-heading: oklch(98.5% 0 0);
+    --cf-muted: oklch(75.1% 0 0);
+    --cf-field-bg: oklch(27.8% 0 0);
+    --cf-field-border: oklch(45.2% 0 0);
+    --cf-focus: oklch(75.1% 0 0);
+    --cf-btn: oklch(49.3% 0 0);
+    --cf-btn-text: oklch(96.1% 0 0);
+    --cf-error: oklch(70.4% 0.191 22.2);
+    --cf-rule: oklch(38% 0 0);
+    --cf-banner-bg: oklch(29.3% 0 0);
+    --cf-focus-ring: oklch(75.1% 0 0 / 35%);
+  }
+}
+
+/* Scoped to the public shell's body class so this wins over the app theme that
+   base-minimal.html loads. */
+body.minimal-layout {
+  background: var(--cf-bg);
+  color: var(--cf-text);
+  font-family: var(--cf-font);
+  min-height: 100vh;
+}
+
+.cf-page {
+  margin: 0 auto;
+  max-width: 42rem;
+  padding: 3rem 1rem;
+}
+
+.cf-card {
+  background: var(--cf-card);
+  border: 1px solid var(--cf-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 10%);
+  padding: 2rem;
+}
+
+.cf-card-narrow {
+  max-width: 30rem;
+}
+
+/* ==========================================================================
+   Head
+   ========================================================================== */
+
+.cf-head {
+  border-bottom: 1px solid var(--cf-rule);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.cf-logo {
+  display: block;
+  height: auto;
+  margin-bottom: 1rem;
+  max-width: 9.5rem;
+}
+
+.cf-firm {
+  color: var(--cf-heading);
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0 0 1rem;
+}
+
+.cf-title {
+  color: var(--cf-heading);
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.cf-intro {
+  color: var(--cf-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   Banners
+   ========================================================================== */
+
+.cf-banner {
+  background: var(--cf-banner-bg);
+  border: 1px solid var(--cf-border);
+  border-radius: 0.25rem;
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+}
+
+.cf-banner-error {
+  border-color: var(--cf-error);
+  color: var(--cf-error);
+}
+
+.cf-link-btn {
+  background: none;
+  border: none;
+  color: var(--cf-focus);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Fields
+   ========================================================================== */
+
+.cf-heading {
+  border-bottom: 1px solid var(--cf-rule);
+  color: var(--cf-heading);
+  font-size: 1.125rem;
+  margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.cf-heading:first-child {
+  margin-top: 0;
+}
+
+.cf-text {
+  color: var(--cf-muted);
+  margin-bottom: 1.5rem;
+}
+
+.cf-field {
+  margin-bottom: 1.5rem;
+}
+
+.cf-label {
+  color: var(--cf-heading);
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.cf-req {
+  color: var(--cf-error);
+}
+
+.cf-help {
+  color: var(--cf-muted);
+  margin: 0 0 0.5rem;
+}
+
+.cf-input {
+  background: var(--cf-field-bg);
+  border: 1px solid var(--cf-field-border);
+  border-radius: 0.25rem;
+  color: var(--cf-text);
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+}
+
+.cf-input:focus {
+  border-color: var(--cf-focus);
+  outline: 2px solid var(--cf-focus-ring);
+  outline-offset: 0;
+}
+
+select.cf-input {
+  appearance: auto;
+}
+
+textarea.cf-input {
+  resize: vertical;
+}
+
+.cf-field-error .cf-input {
+  border-color: var(--cf-error);
+}
+
+.cf-error {
+  color: var(--cf-error);
+  margin: 0.25rem 0 0;
+}
+
+.cf-affix {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cf-affix-mark {
+  color: var(--cf-muted);
+}
+
+.cf-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cf-choice {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cf-choice input {
+  accent-color: var(--cf-focus);
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.cf-footer {
+  align-items: center;
+  border-top: 1px solid var(--cf-rule);
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
+.cf-state {
+  color: var(--cf-muted);
+}
+
+.cf-state-error {
+  color: var(--cf-error);
+}
+
+.cf-submit {
+  background: var(--cf-btn);
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--cf-btn-text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+}
+
+.cf-submit:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.cf-reassure {
+  color: var(--cf-muted);
+  margin: 1rem 0 0;
+  text-align: right;
+}
+
+/* ==========================================================================
+   Read-only summary (the firm has closed the form)
+   ========================================================================== */
+
+.cf-summary dt {
+  color: var(--cf-muted);
+  margin-top: 1rem;
+}
+
+.cf-summary dd {
+  color: var(--cf-heading);
+  margin: 0.25rem 0 0;
+}
+
+.cf-summary-heading {
+  border-bottom: 1px solid var(--cf-rule);
+  color: var(--cf-heading);
+  font-weight: 600;
+  margin-top: 2rem;
+  padding-bottom: 0.5rem;
+}
+
+.cf-summary-blank {
+  color: var(--cf-muted);
+  font-style: italic;
+}
+
+@media (width < 480px) {
+  .cf-page {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .cf-card {
+    padding: 1.25rem;
+  }
+
+  .cf-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .cf-submit {
+    width: 100%;
+  }
+
+  .cf-reassure {
+    text-align: center;
+  }
+}

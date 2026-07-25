@@ -1,0 +1,7 @@
+{% extends "intakes/index-base.html" %}
+{% block subcontent %}
+  <div id="intake-forms"
+       hx-trigger="intakeFormsChanged from:body"
+       hx-get="{% url 'intakes:forms-list' %}"
+       hx-target="this">{% include "intakes/forms/list.html" %}</div>
+{% endblock subcontent %}

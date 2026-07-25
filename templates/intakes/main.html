@@ -1,10 +1,8 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "intakes/index-base.html" %}
+{% block subcontent %}
   {% load humanize %}
-  <div id="content" class="container content">
-    <div id="intakes"
-         hx-trigger="intakesChanged from:body"
-         hx-get="{% url 'intakes:list' %}"
-         hx-target="this">{% include "intakes/list-table.html" %}</div>
-  </div>
-{% endblock content %}
+  <div id="intakes"
+       hx-trigger="intakesChanged from:body"
+       hx-get="{% url 'intakes:list' %}"
+       hx-target="this">{% include "intakes/list-table.html" %}</div>
+{% endblock subcontent %}

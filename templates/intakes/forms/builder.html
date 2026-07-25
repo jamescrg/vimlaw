@@ -1,0 +1,247 @@
+{% extends "intakes/index-base.html" %}
+{% block subcontent %}
+  <div class="fb" x-data="intakeFormBuilder({{ config }})">
+    <div class="toolbar fb-toolbar">
+      <div class="toolbar-left">
+        <a href="{% url 'intakes:forms-index' %}"
+           class="btn-icon"
+           title="All forms">
+          <i class="icon-chevron-left"></i>
+        </a>
+        <input class="fb-name"
+               type="text"
+               x-model="name"
+               aria-label="Form name"
+               placeholder="Untitled form" />
+      </div>
+      <div class="toolbar-right">
+        <span class="fb-state" x-show="error" x-text="error"></span>
+        <span class="fb-state fb-state-dirty" x-show="dirty && !error" x-cloak>Unsaved changes</span>
+        <span class="fb-state"
+              x-show="!dirty && !error && savedAt"
+              x-cloak
+              x-text="'Saved ' + savedAt"></span>
+        <button type="button"
+                class="btn btn-secondary"
+                @click="preview = !preview"
+                x-text="preview ? 'Edit' : 'Preview'"></button>
+        <button type="button"
+                class="btn-icon"
+                title="Form settings"
+                hx-get="{% url 'intakes:form-template-settings' template_id=template.id %}"
+                hx-target="#htmx-modal-container"
+                data-bs-toggle="modal"
+                data-bs-target="#htmx-modal-container">
+          <i class="icon-settings"></i>
+        </button>
+        <button type="button"
+                class="btn-icon"
+                title="Duplicate this form"
+                hx-post="{% url 'intakes:form-template-duplicate' template_id=template.id %}">
+          <i class="icon-copy"></i>
+        </button>
+        <button type="button"
+                class="btn btn-success"
+                @click="save()"
+                :disabled="saving"
+                x-text="saving ? 'Saving…' : 'Save'"></button>
+      </div>
+    </div>
+    <div class="fb-body" :class="preview ? 'fb-previewing' : ''">
+      <aside class="fb-palette" x-show="!preview">
+        <template x-for="group in palette" :key="group.group">
+          <div class="fb-palette-group">
+            <h2 class="fb-palette-heading" x-text="group.group"></h2>
+            <template x-for="item in group.types" :key="item.type">
+              <button type="button" class="fb-palette-item" @click="addField(item.type)">
+                <i :class="item.icon"></i>
+                <span x-text="item.label"></span>
+              </button>
+            </template>
+          </div>
+        </template>
+      </aside>
+      <div class="fb-main">
+        <div class="fb-canvas" x-ref="canvas" x-show="!preview">
+          <template x-for="field in fields" :key="field._id">
+            <div class="fb-field"
+                 :class="{ 'fb-field-open': selectedId === field._id, 'fb-field-layout': isLayout(field) }">
+              <div class="fb-field-head">
+                {# A real button, so the arrow keys reorder for anyone who
+                   can't drag. Sortable only needs the class to grab it. #}
+                <button type="button"
+                        class="fb-handle"
+                        title="Drag to reorder, or use the arrow keys"
+                        aria-label="Reorder this question"
+                        @keydown.arrow-up.prevent="moveField(field, -1)"
+                        @keydown.arrow-down.prevent="moveField(field, 1)">
+                  <i class="icon-grip-vertical"></i>
+                </button>
+                <button type="button" class="fb-field-summary" @click="select(field)">
+                  <span class="fb-chip" x-text="typeLabel(field.type)"></span>
+                  <span class="fb-field-label"
+                        x-text="field.label || (field.type === 'text_block' ? (field.text || 'Instructions') : 'Untitled question')"></span>
+                  <span class="fb-req" x-show="field.required" x-cloak>Required</span>
+                </button>
+                <span class="fb-field-actions">
+                  <button type="button"
+                          class="btn-icon"
+                          title="Duplicate"
+                          @click="duplicate(field)">
+                    <i class="icon-copy"></i>
+                  </button>
+                  <button type="button" class="btn-icon" title="Delete" @click="remove(field)">
+                    <i class="icon-trash-2"></i>
+                  </button>
+                </span>
+              </div>
+              <div class="fb-field-body" x-show="selectedId === field._id" x-cloak>
+                <label class="fb-edit" x-show="field.type !== 'text_block'">
+                  <span x-text="field.type === 'heading' ? 'Heading' : 'Question'"></span>
+                  <input type="text" x-model="field.label" />
+                </label>
+                <label class="fb-edit" x-show="has(field, 'text')">
+                  <span>Text shown to the client</span>
+                  <textarea rows="3" x-model="field.text"></textarea>
+                </label>
+                <label class="fb-edit" x-show="!isLayout(field)">
+                  <span>Help text</span>
+                  <input type="text"
+                         x-model="field.help"
+                         placeholder="Optional guidance under the question" />
+                </label>
+                <div class="fb-edit-row">
+                  <label class="fb-edit fb-edit-check" x-show="!isLayout(field)">
+                    <input type="checkbox" x-model="field.required" />
+                    <span>Required</span>
+                  </label>
+                  <label class="fb-edit" x-show="has(field, 'placeholder')">
+                    <span>Placeholder</span>
+                    <input type="text" x-model="field.placeholder" />
+                  </label>
+                  <label class="fb-edit" x-show="has(field, 'rows')">
+                    <span>Rows</span>
+                    <input type="number" min="2" max="20" x-model.number="field.rows" />
+                  </label>
+                  <label class="fb-edit" x-show="has(field, 'max_length')">
+                    <span>Max characters</span>
+                    <input type="number" min="1" x-model.number="field.max_length" />
+                  </label>
+                  <label class="fb-edit" x-show="has(field, 'min')">
+                    <span>Minimum</span>
+                    <input :type="field.type === 'date' ? 'date' : 'text'" x-model="field.min" />
+                  </label>
+                  <label class="fb-edit" x-show="has(field, 'max')">
+                    <span>Maximum</span>
+                    <input :type="field.type === 'date' ? 'date' : 'text'" x-model="field.max" />
+                  </label>
+                  <label class="fb-edit" x-show="has(field, 'min_selected')">
+                    <span>Choose at least</span>
+                    <input type="number" min="0" x-model.number="field.min_selected" />
+                  </label>
+                  <label class="fb-edit" x-show="has(field, 'max_selected')">
+                    <span>Choose at most</span>
+                    <input type="number" min="0" x-model.number="field.max_selected" />
+                  </label>
+                </div>
+                <div class="fb-options" x-show="has(field, 'options')">
+                  <span class="fb-edit-heading">Options</span>
+                  <template x-for="(option, index) in field.options" :key="index">
+                    <div class="fb-option">
+                      <input type="text" x-model="option.label" placeholder="Option label" />
+                      <button type="button"
+                              class="btn-icon"
+                              title="Move up"
+                              @click="moveOption(field, index, -1)">
+                        <i class="icon-chevron-up"></i>
+                      </button>
+                      <button type="button"
+                              class="btn-icon"
+                              title="Move down"
+                              @click="moveOption(field, index, 1)">
+                        <i class="icon-chevron-down"></i>
+                      </button>
+                      <button type="button"
+                              class="btn-icon"
+                              title="Remove option"
+                              @click="removeOption(field, index)">
+                        <i class="icon-x"></i>
+                      </button>
+                    </div>
+                  </template>
+                  <button type="button"
+                          class="btn btn-secondary fb-add-option"
+                          @click="addOption(field)">Add option</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <p class="fb-empty" x-show="!preview && fields.length === 0" x-cloak>
+          Pick a question type on the left to start building this form.
+        </p>
+        <div class="fb-preview" x-show="preview" x-cloak>
+          <h1 x-text="name || 'Untitled form'"></h1>
+          {% if template.intro_text %}<p class="fb-preview-intro">{{ template.intro_text }}</p>{% endif %}
+          <template x-for="field in fields" :key="field._id">
+            <div class="fb-preview-block">
+              <template x-if="field.type === 'heading'">
+                <h2 x-text="field.label"></h2>
+              </template>
+              <template x-if="field.type === 'text_block'">
+                <p class="fb-preview-text" x-text="field.text"></p>
+              </template>
+              <template x-if="!isLayout(field)">
+                <div class="fb-preview-field">
+                  <label>
+                    <span x-text="field.label || 'Untitled question'"></span>
+                    <span class="fb-req-mark" x-show="field.required">*</span>
+                  </label>
+                  <p class="fb-preview-help" x-show="field.help" x-text="field.help"></p>
+                  <template x-if="field.type === 'textarea'">
+                    <textarea disabled :rows="field.rows" :placeholder="field.placeholder"></textarea>
+                  </template>
+                  <template x-if="field.type === 'select'">
+                    <select disabled>
+                      <option x-text="field.placeholder"></option>
+                      <template x-for="option in field.options" :key="option.label">
+                        <option x-text="option.label"></option>
+                      </template>
+                    </select>
+                  </template>
+                  <template x-if="field.type === 'radio' || field.type === 'checkboxes'">
+                    <div class="fb-preview-choices">
+                      <template x-for="option in field.options" :key="option.label">
+                        <label class="fb-preview-choice">
+                          <input disabled :type="field.type === 'radio' ? 'radio' : 'checkbox'" />
+                          <span x-text="option.label"></span>
+                        </label>
+                      </template>
+                    </div>
+                  </template>
+                  <template x-if="field.type === 'yesno'">
+                    <div class="fb-preview-choices">
+                      <label class="fb-preview-choice">
+                        <input type="radio" disabled />
+                        <span>Yes</span>
+                      </label>
+                      <label class="fb-preview-choice">
+                        <input type="radio" disabled />
+                        <span>No</span>
+                      </label>
+                    </div>
+                  </template>
+                  <template x-if="['text', 'email', 'phone', 'number', 'currency', 'date'].includes(field.type)">
+                    <input disabled
+                           :type="field.type === 'date' ? 'date' : (field.type === 'number' ? 'number' : 'text')"
+                           :placeholder="field.placeholder" />
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock subcontent %}

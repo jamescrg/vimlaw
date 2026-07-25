@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{# djlint:off #}{% block body_class %}has-subnav{% endblock body_class %}{# djlint:on #}
+{% block content %}
+  <div id="content" class="container content">
+    <div class="detail">
+      {% include "intakes/subnav.html" %}
+      <div class="detail-body">
+        {% block subcontent %}
+        {% endblock subcontent %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}

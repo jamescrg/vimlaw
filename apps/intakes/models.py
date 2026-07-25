@@ -87,3 +87,13 @@ class UserIntakeView(models.Model):
         indexes = [
             models.Index(fields=["user", "intake"]),
         ]
+
+
+# Custom client-form models live in a sub-package, because apps/intakes/forms.py
+# is already the ModelForms module. Imported here so the app registry always
+# sees them regardless of URLConf load order.
+from apps.intakes.client_forms.models import (  # noqa: E402,F401
+    FormSubmission,
+    FormSubmissionTransmission,
+    FormTemplate,
+)

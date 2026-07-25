@@ -1,0 +1,14 @@
+{% extends "base-minimal.html" %}
+{% load static cache_buster %}
+{% block title %}
+  Link unavailable
+{% endblock title %}
+{% block content %}
+  <link rel="stylesheet" href="{% static_v 'css/intake-form.css' %}" />
+  <div class="cf-page">
+    <div class="cf-card cf-card-narrow">
+      <h2 class="cf-title">This form isn't available</h2>
+      <p class="cf-banner">{{ reason }}</p>
+    </div>
+  </div>
+{% endblock content %}

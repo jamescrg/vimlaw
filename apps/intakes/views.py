@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
+from apps.intakes.client_forms.models import submissions_for_intake
 from apps.intakes.filter_intakes import IntakeFilter
 from apps.intakes.forms import IntakeForm, NoteForm
 from apps.intakes.intakes import get_table_data
@@ -22,6 +23,7 @@ def intakes_index(request):
 
     context = {
         "app": "intakes",
+        "subapp": "intakes",
     } | table_data
 
     return render(request, "intakes/main.html", context)
@@ -35,6 +37,7 @@ def intakes_list(request):
 
     context = {
         "app": "intakes",
+        "subapp": "intakes",
     } | table_data
 
     return render(request, "intakes/list-table.html", context)
@@ -126,6 +129,7 @@ def detail_index(request, id):
         "notes": notes,
         "contact": contact,
         "practice_areas": practice_areas,
+        "submissions": submissions_for_intake(intake),
     }
 
     return render(request, "intakes/detail-index.html", context)
@@ -156,6 +160,7 @@ def detail(request, id):
         "notes": notes,
         "contact": contact,
         "practice_areas": practice_areas,
+        "submissions": submissions_for_intake(intake),
     }
     return render(request, "intakes/detail.html", context)
 
