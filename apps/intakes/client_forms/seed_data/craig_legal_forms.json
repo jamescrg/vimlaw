@@ -1,0 +1,4158 @@
+[
+ {
+  "key": "inquiry",
+  "name": "Inquiry",
+  "description": "Mirrors the Craig Legal website's Inquiry form.",
+  "intro_text": "Tell us briefly about your legal problem and we'll be in touch.",
+  "schema": [
+   {
+    "key": "contact_0f6a1c",
+    "type": "heading",
+    "label": "Contact",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "full_name_43da66",
+    "type": "text",
+    "label": "Full Name",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "phone_number_2be48b",
+    "type": "phone",
+    "label": "Phone Number",
+    "help": "",
+    "required": true,
+    "placeholder": ""
+   },
+   {
+    "key": "email_address_2f68d0",
+    "type": "email",
+    "label": "Email Address",
+    "help": "",
+    "required": true,
+    "placeholder": ""
+   },
+   {
+    "key": "case_summary_177e42",
+    "type": "heading",
+    "label": "Case Summary",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "case_summary_72ed9e",
+    "type": "textarea",
+    "label": "Case Summary",
+    "help": "Please provide a short description of your legal problem (max 500 words)",
+    "required": true,
+    "placeholder": "",
+    "rows": 8,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "intake",
+  "name": "Client Intake",
+  "description": "Mirrors the Craig Legal website's Client Intake form.",
+  "intro_text": "Please answer as fully as you can. Approximations are fine \u2014 we'll confirm the details together.",
+  "schema": [
+   {
+    "key": "personal_details_8f86e7",
+    "type": "heading",
+    "label": "Personal Details",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "full_name_6e6910",
+    "type": "text",
+    "label": "Full Name",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "phone_number_d06607",
+    "type": "phone",
+    "label": "Phone Number",
+    "help": "",
+    "required": true,
+    "placeholder": ""
+   },
+   {
+    "key": "email_address_ca117b",
+    "type": "email",
+    "label": "Email Address",
+    "help": "",
+    "required": true,
+    "placeholder": ""
+   },
+   {
+    "key": "home_address_11539c",
+    "type": "textarea",
+    "label": "Home Address",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "is_your_mailing_address_the_same_as_your_519201",
+    "type": "select",
+    "label": "Is your mailing address the same as your home address?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "mailing_address_b7a8e6",
+    "type": "textarea",
+    "label": "Mailing Address",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "the_dispute_8ad3d8",
+    "type": "heading",
+    "label": "The Dispute",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "nature_of_the_dispute_7b5233",
+    "type": "select",
+    "label": "Nature of the dispute",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "boundary",
+      "label": "Boundary"
+     },
+     {
+      "value": "easement",
+      "label": "Easement"
+     },
+     {
+      "value": "quiet_title",
+      "label": "Quiet title"
+     },
+     {
+      "value": "contract",
+      "label": "Real estate purchase or sale (excluding fraud)"
+     },
+     {
+      "value": "hoa",
+      "label": "Homeowner / Condo Association"
+     },
+     {
+      "value": "landlord",
+      "label": "Landlord-tenant (I am the landlord)"
+     },
+     {
+      "value": "tenant",
+      "label": "Landlord-tenant (I am the tenant)"
+     },
+     {
+      "value": "construction",
+      "label": "Construction"
+     },
+     {
+      "value": "fraud",
+      "label": "Real estate fraud"
+     },
+     {
+      "value": "commercial",
+      "label": "Commercial dispute"
+     },
+     {
+      "value": "collections",
+      "label": "Collections"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     },
+     {
+      "value": "unknown",
+      "label": "I don't know"
+     }
+    ]
+   },
+   {
+    "key": "brief_description_of_key_events_16cb60",
+    "type": "textarea",
+    "label": "Brief description of key events",
+    "help": "Please describe the key events in the dispute (max 500 words)",
+    "required": true,
+    "placeholder": "",
+    "rows": 8,
+    "max_length": 4000
+   },
+   {
+    "key": "the_property_in_dispute_87067d",
+    "type": "heading",
+    "label": "The Property in Dispute",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "is_the_disputed_property_your_home_addre_c2c60d",
+    "type": "select",
+    "label": "Is the disputed property your home address?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "address_of_the_property_in_dispute_0f5512",
+    "type": "textarea",
+    "label": "Address of the property in dispute",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "name_of_the_property_owner_5c28d2",
+    "type": "text",
+    "label": "Name of the property owner",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "is_the_owner_a_business_entity_llc_corpo_2090b4",
+    "type": "select",
+    "label": "Is the owner a business entity (LLC, corporation, etc.)?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "state_of_incorporation_2d5cc3",
+    "type": "select",
+    "label": "State of incorporation",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "alabama_8c0e09",
+      "label": "Alabama"
+     },
+     {
+      "value": "alaska_dc8c77",
+      "label": "Alaska"
+     },
+     {
+      "value": "arizona_ca4fce",
+      "label": "Arizona"
+     },
+     {
+      "value": "arkansas_287803",
+      "label": "Arkansas"
+     },
+     {
+      "value": "california_a5ff09",
+      "label": "California"
+     },
+     {
+      "value": "colorado_7f642c",
+      "label": "Colorado"
+     },
+     {
+      "value": "connecticut_f04e59",
+      "label": "Connecticut"
+     },
+     {
+      "value": "delaware_eaf867",
+      "label": "Delaware"
+     },
+     {
+      "value": "district_of_columbia_8b49b7",
+      "label": "District of Columbia"
+     },
+     {
+      "value": "florida_a22362",
+      "label": "Florida"
+     },
+     {
+      "value": "georgia_eeffb8",
+      "label": "Georgia"
+     },
+     {
+      "value": "hawaii_a8f654",
+      "label": "Hawaii"
+     },
+     {
+      "value": "idaho_2698d4",
+      "label": "Idaho"
+     },
+     {
+      "value": "illinois_8b3e6e",
+      "label": "Illinois"
+     },
+     {
+      "value": "indiana_ae19ad",
+      "label": "Indiana"
+     },
+     {
+      "value": "iowa_ee1d9b",
+      "label": "Iowa"
+     },
+     {
+      "value": "kansas_6c3b29",
+      "label": "Kansas"
+     },
+     {
+      "value": "kentucky_c28ce4",
+      "label": "Kentucky"
+     },
+     {
+      "value": "louisiana_c52396",
+      "label": "Louisiana"
+     },
+     {
+      "value": "maine_b08004",
+      "label": "Maine"
+     },
+     {
+      "value": "maryland_295849",
+      "label": "Maryland"
+     },
+     {
+      "value": "massachusetts_bd4c2c",
+      "label": "Massachusetts"
+     },
+     {
+      "value": "michigan_eee340",
+      "label": "Michigan"
+     },
+     {
+      "value": "minnesota_52fb72",
+      "label": "Minnesota"
+     },
+     {
+      "value": "mississippi_2c63fd",
+      "label": "Mississippi"
+     },
+     {
+      "value": "missouri_bcc1bf",
+      "label": "Missouri"
+     },
+     {
+      "value": "montana_70d47a",
+      "label": "Montana"
+     },
+     {
+      "value": "nebraska_da5f9e",
+      "label": "Nebraska"
+     },
+     {
+      "value": "nevada_625439",
+      "label": "Nevada"
+     },
+     {
+      "value": "new_hampshire_f253ce",
+      "label": "New Hampshire"
+     },
+     {
+      "value": "new_jersey_1038b9",
+      "label": "New Jersey"
+     },
+     {
+      "value": "new_mexico_ad8885",
+      "label": "New Mexico"
+     },
+     {
+      "value": "new_york_95b3c2",
+      "label": "New York"
+     },
+     {
+      "value": "north_carolina_8e58ae",
+      "label": "North Carolina"
+     },
+     {
+      "value": "north_dakota_9a49b2",
+      "label": "North Dakota"
+     },
+     {
+      "value": "ohio_f83acf",
+      "label": "Ohio"
+     },
+     {
+      "value": "oklahoma_b44009",
+      "label": "Oklahoma"
+     },
+     {
+      "value": "oregon_d0b7a0",
+      "label": "Oregon"
+     },
+     {
+      "value": "pennsylvania_ffc4df",
+      "label": "Pennsylvania"
+     },
+     {
+      "value": "rhode_island_cd3a0e",
+      "label": "Rhode Island"
+     },
+     {
+      "value": "south_carolina_720138",
+      "label": "South Carolina"
+     },
+     {
+      "value": "south_dakota_be6bff",
+      "label": "South Dakota"
+     },
+     {
+      "value": "tennessee_40bdc1",
+      "label": "Tennessee"
+     },
+     {
+      "value": "texas_61f0bf",
+      "label": "Texas"
+     },
+     {
+      "value": "utah_ab62e3",
+      "label": "Utah"
+     },
+     {
+      "value": "vermont_ce9b2b",
+      "label": "Vermont"
+     },
+     {
+      "value": "virginia_fc6944",
+      "label": "Virginia"
+     },
+     {
+      "value": "washington_b1a082",
+      "label": "Washington"
+     },
+     {
+      "value": "west_virginia_6bc440",
+      "label": "West Virginia"
+     },
+     {
+      "value": "wisconsin_57a0ef",
+      "label": "Wisconsin"
+     },
+     {
+      "value": "wyoming_a0ef6c",
+      "label": "Wyoming"
+     },
+     {
+      "value": "other_not_sure_41aba8",
+      "label": "Other / not sure"
+     }
+    ]
+   },
+   {
+    "key": "ownership_interest_1ccd67",
+    "type": "heading",
+    "label": "Ownership & Interest",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "your_relationship_to_the_property_b17566",
+    "type": "select",
+    "label": "Your relationship to the property",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "owner",
+      "label": "Owner"
+     },
+     {
+      "value": "buyer",
+      "label": "Buyer"
+     },
+     {
+      "value": "seller",
+      "label": "Seller"
+     },
+     {
+      "value": "tenant",
+      "label": "Tenant"
+     },
+     {
+      "value": "neighbor",
+      "label": "Neighbor"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "if_other_please_describe_2d4653",
+    "type": "text",
+    "label": "If other, please describe",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "co_owners_or_spouse_on_title_649e1c",
+    "type": "textarea",
+    "label": "Co-Owners or spouse on title",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "mortgage_or_lienholders_646ab8",
+    "type": "textarea",
+    "label": "Mortgage or lienholders",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "opposing_parties_counsel_53c402",
+    "type": "heading",
+    "label": "Opposing Parties & Counsel",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "adverse_or_other_parties_b6d1b8",
+    "type": "textarea",
+    "label": "Adverse or other parties",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "attorneys_involved_if_known_2d74d0",
+    "type": "textarea",
+    "label": "Attorneys involved, if known",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "have_you_been_served_with_legal_papers_o_bbea9a",
+    "type": "select",
+    "label": "Have you been served with legal papers, or do you know of any deadlines?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "date_you_received_the_papers_84b20b",
+    "type": "date",
+    "label": "Date you received the papers",
+    "help": "",
+    "required": false,
+    "min": null,
+    "max": null
+   },
+   {
+    "key": "describe_the_papers_that_were_served_to_b1f3b2",
+    "type": "textarea",
+    "label": "Describe the papers that were served to you",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "litigation_history_578717",
+    "type": "heading",
+    "label": "Litigation History",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "current_or_past_lawsuits_involving_you_a_29ed8f",
+    "type": "textarea",
+    "label": "Current or past lawsuits involving you, and their status",
+    "help": "Include matters unrelated to this dispute. Write \u201cNone\u201d if none.",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   },
+   {
+    "key": "other_attorneys_f35769",
+    "type": "heading",
+    "label": "Other Attorneys",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_consulted_other_attorneys_about_3c80a7",
+    "type": "select",
+    "label": "Have you consulted other attorneys about this matter?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "if_yes_please_tell_us_who_you_consulted_4c375f",
+    "type": "textarea",
+    "label": "If yes, please tell us who you consulted and when.",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "social_media_5bf672",
+    "type": "heading",
+    "label": "Social Media",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_posted_about_the_dispute_on_soc_fb9940",
+    "type": "select",
+    "label": "Have you posted about the dispute on social media?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "if_yes_please_give_the_date_and_location_09846b",
+    "type": "textarea",
+    "label": "If yes, please give the date and location of the post and describe its contents",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "insurance_d00842",
+    "type": "heading",
+    "label": "Insurance",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "do_you_have_title_insurance_79e046",
+    "type": "select",
+    "label": "Do you have title insurance?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "do_you_have_homeowners_insurance_54406e",
+    "type": "select",
+    "label": "Do you have homeowner's insurance?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "onboarding",
+  "name": "Client Onboarding",
+  "description": "Mirrors the Craig Legal website's Client Onboarding form.",
+  "intro_text": "A few details we need before we open your matter.",
+  "schema": [
+   {
+    "key": "the_clients_156d3e",
+    "type": "heading",
+    "label": "The Clients",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "how_many_clients_will_there_be_in_this_m_5ab960",
+    "type": "select",
+    "label": "How many clients will there be in this matter?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "1",
+      "label": "Just one"
+     },
+     {
+      "value": "2",
+      "label": "Two"
+     },
+     {
+      "value": "3_plus",
+      "label": "Three or more"
+     }
+    ]
+   },
+   {
+    "key": "for_each_client_beyond_the_second_please_25fdb2",
+    "type": "textarea",
+    "label": "For each client beyond the second, please give the same details: person or entity, names, and full contact information.",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   },
+   {
+    "key": "client_1_e7832f",
+    "type": "heading",
+    "label": "Client 1",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "is_this_client_a_person_or_an_entity_ff867b",
+    "type": "select",
+    "label": "Is this client a person or an entity?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "person",
+      "label": "A person"
+     },
+     {
+      "value": "entity",
+      "label": "A business or other entity"
+     }
+    ]
+   },
+   {
+    "key": "full_name_b5b684",
+    "type": "text",
+    "label": "Full Name",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "phone_number_55e0d4",
+    "type": "phone",
+    "label": "Phone Number",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "email_address_980ca8",
+    "type": "email",
+    "label": "Email Address",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "physical_address_02be2e",
+    "type": "textarea",
+    "label": "Physical Address",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "mailing_address_if_different_8b4fc8",
+    "type": "textarea",
+    "label": "Mailing address, if different",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "entity_name_af8e6e",
+    "type": "text",
+    "label": "Entity name",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "entity_type_1fcd53",
+    "type": "select",
+    "label": "Entity type",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "llc",
+      "label": "LLC"
+     },
+     {
+      "value": "corporation",
+      "label": "Corporation"
+     },
+     {
+      "value": "partnership",
+      "label": "Partnership"
+     },
+     {
+      "value": "trust",
+      "label": "Trust"
+     },
+     {
+      "value": "estate",
+      "label": "Estate"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "state_of_formation_a80efd",
+    "type": "text",
+    "label": "State of formation",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 50
+   },
+   {
+    "key": "entity_address_801312",
+    "type": "textarea",
+    "label": "Entity address",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "name_of_the_entitys_representative_fbe223",
+    "type": "text",
+    "label": "Name of the entity's representative",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "representatives_phone_c2ca92",
+    "type": "phone",
+    "label": "Representative's phone",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "representatives_email_abadbb",
+    "type": "email",
+    "label": "Representative's email",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "client_2_7fb0f4",
+    "type": "heading",
+    "label": "Client 2",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "is_this_client_a_person_or_an_entity_e169a8",
+    "type": "select",
+    "label": "Is this client a person or an entity?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "person",
+      "label": "A person"
+     },
+     {
+      "value": "entity",
+      "label": "A business or other entity"
+     }
+    ]
+   },
+   {
+    "key": "full_name_76d09a",
+    "type": "text",
+    "label": "Full Name",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "phone_number_b2d7da",
+    "type": "phone",
+    "label": "Phone Number",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "email_address_998617",
+    "type": "email",
+    "label": "Email Address",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "physical_address_5cdb4c",
+    "type": "textarea",
+    "label": "Physical Address",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "mailing_address_if_different_48f3ce",
+    "type": "textarea",
+    "label": "Mailing address, if different",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "entity_name_dcba7c",
+    "type": "text",
+    "label": "Entity name",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "entity_type_a939cc",
+    "type": "select",
+    "label": "Entity type",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "llc",
+      "label": "LLC"
+     },
+     {
+      "value": "corporation",
+      "label": "Corporation"
+     },
+     {
+      "value": "partnership",
+      "label": "Partnership"
+     },
+     {
+      "value": "trust",
+      "label": "Trust"
+     },
+     {
+      "value": "estate",
+      "label": "Estate"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "state_of_formation_5af649",
+    "type": "text",
+    "label": "State of formation",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 50
+   },
+   {
+    "key": "entity_address_bb6371",
+    "type": "textarea",
+    "label": "Entity address",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "name_of_the_entitys_representative_09dabd",
+    "type": "text",
+    "label": "Name of the entity's representative",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "representatives_phone_5655a3",
+    "type": "phone",
+    "label": "Representative's phone",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "representatives_email_c25902",
+    "type": "email",
+    "label": "Representative's email",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "personal_representative_e9dc37",
+    "type": "heading",
+    "label": "Personal Representative",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "would_you_like_to_appoint_a_personal_rep_0e45d8",
+    "type": "select",
+    "label": "Would you like to appoint a personal representative to act on your behalf in this matter?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "full_name_5f21bd",
+    "type": "text",
+    "label": "Full Name",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "relationship_to_you_2fc718",
+    "type": "text",
+    "label": "Relationship to you",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "phone_number_6aaebc",
+    "type": "phone",
+    "label": "Phone Number",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "email_address_97c2c4",
+    "type": "email",
+    "label": "Email Address",
+    "help": "",
+    "required": false,
+    "placeholder": ""
+   },
+   {
+    "key": "physical_address_d9b2f0",
+    "type": "textarea",
+    "label": "Physical Address",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "mailing_address_if_different_d5165b",
+    "type": "textarea",
+    "label": "Mailing address, if different",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "points_of_contact_e6643e",
+    "type": "heading",
+    "label": "Points of Contact",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "who_should_be_our_main_point_of_contact_08d355",
+    "type": "select",
+    "label": "Who should be our main point of contact?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "client_1",
+      "label": "Client 1"
+     },
+     {
+      "value": "client_2",
+      "label": "Client 2"
+     },
+     {
+      "value": "personal_rep",
+      "label": "The personal representative"
+     },
+     {
+      "value": "other",
+      "label": "Someone else (details below)"
+     }
+    ]
+   },
+   {
+    "key": "if_someone_else_their_name_relationship_61be8a",
+    "type": "textarea",
+    "label": "If someone else, their name, relationship to you, phone, email, and mailing address.",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "who_should_we_contact_when_we_cannot_rea_2ba729",
+    "type": "select",
+    "label": "Who should we contact when we cannot reach the main point of contact?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "client_1",
+      "label": "Client 1"
+     },
+     {
+      "value": "client_2",
+      "label": "Client 2"
+     },
+     {
+      "value": "personal_rep",
+      "label": "The personal representative"
+     },
+     {
+      "value": "other",
+      "label": "Someone else (details below)"
+     }
+    ]
+   },
+   {
+    "key": "if_someone_else_their_name_relationship_5fd16b",
+    "type": "textarea",
+    "label": "If someone else, their name, relationship to you, phone, email, and mailing address.",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "billing_retainer_4b6d45",
+    "type": "heading",
+    "label": "Billing & Retainer",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "who_should_receive_invoices_and_billing_f11add",
+    "type": "select",
+    "label": "Who should receive invoices and billing correspondence?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "client_1",
+      "label": "Client 1"
+     },
+     {
+      "value": "client_2",
+      "label": "Client 2"
+     },
+     {
+      "value": "personal_rep",
+      "label": "The personal representative"
+     },
+     {
+      "value": "other",
+      "label": "Someone else (details below)"
+     }
+    ]
+   },
+   {
+    "key": "if_someone_else_their_name_relationship_dd7984",
+    "type": "textarea",
+    "label": "If someone else, their name, relationship to you, phone, email, and mailing address.",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "who_will_be_paying_the_retainer_da4db9",
+    "type": "select",
+    "label": "Who will be paying the retainer?",
+    "help": "",
+    "required": false,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "client_1",
+      "label": "Client 1"
+     },
+     {
+      "value": "client_2",
+      "label": "Client 2"
+     },
+     {
+      "value": "personal_rep",
+      "label": "The personal representative"
+     },
+     {
+      "value": "other",
+      "label": "Someone else (details below)"
+     }
+    ]
+   },
+   {
+    "key": "if_someone_else_their_full_details_name_17491f",
+    "type": "textarea",
+    "label": "If someone else, their full details: name, relationship to you, phone, email, and addresses.",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_boundary",
+  "name": "Boundary Dispute Supplement",
+  "description": "Mirrors the Craig Legal website's Boundary Dispute Supplement form.",
+  "intro_text": "A few more questions specific to boundary disputes. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_encroachment_c905a1",
+    "type": "heading",
+    "label": "The Encroachment",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "who_is_encroaching_on_whom_063a03",
+    "type": "select",
+    "label": "Who is encroaching on whom?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "neighbor_onto_me",
+      "label": "My neighbor onto my property"
+     },
+     {
+      "value": "me_onto_neighbor",
+      "label": "I may be encroaching on my neighbor"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "what_is_the_nature_of_the_encroachment_11269f",
+    "type": "select",
+    "label": "What is the nature of the encroachment?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "fence",
+      "label": "Fence"
+     },
+     {
+      "value": "driveway",
+      "label": "Driveway or paving"
+     },
+     {
+      "value": "structure",
+      "label": "Building or structure"
+     },
+     {
+      "value": "wall",
+      "label": "Wall"
+     },
+     {
+      "value": "landscaping",
+      "label": "Landscaping or trees"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "approximate_size_or_extent_of_the_disput_15de8a",
+    "type": "text",
+    "label": "Approximate size or extent of the disputed area",
+    "help": "E.g. a two-foot strip along the fence line",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "how_long_has_the_encroachment_existed_87c3da",
+    "type": "text",
+    "label": "How long has the encroachment existed?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "when_and_how_did_you_first_learn_of_it_5c482a",
+    "type": "text",
+    "label": "When and how did you first learn of it?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "communications_f71a1a",
+    "type": "heading",
+    "label": "Communications",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_communicated_with_your_neighbor_118baf",
+    "type": "select",
+    "label": "Have you communicated with your neighbor about the encroachment?",
+    "help": "By phone, text, email, or in person",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "describe_the_most_recent_communications_0a2ae4",
+    "type": "textarea",
+    "label": "Describe the most recent communications",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "surveys_e1c2eb",
+    "type": "heading",
+    "label": "Surveys",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "do_you_have_a_survey_of_your_property_2b28d7",
+    "type": "select",
+    "label": "Do you have a survey of your property?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "who_performed_the_survey_and_when_fa5350",
+    "type": "textarea",
+    "label": "Who performed the survey, and when?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "are_you_aware_of_any_other_surveys_inclu_611947",
+    "type": "select",
+    "label": "Are you aware of any other surveys, including conflicting ones?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "history_use_330bfe",
+    "type": "heading",
+    "label": "History & Use",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "has_anyone_ever_given_permission_for_the_1eec99",
+    "type": "select",
+    "label": "Has anyone ever given permission for the encroachment?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "has_a_fence_wall_or_line_been_treated_as_1e5a8d",
+    "type": "select",
+    "label": "Has a fence, wall, or line been treated as the boundary over the years?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "has_either_side_built_or_improved_on_the_7acf77",
+    "type": "select",
+    "label": "Has either side built or improved on the disputed area?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "how_long_have_you_owned_your_property_an_fde57c",
+    "type": "textarea",
+    "label": "How long have you owned your property, and how long has your neighbor owned or occupied theirs?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "photographs_anything_else_9bef55",
+    "type": "heading",
+    "label": "Photographs & Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "do_you_have_photographs_of_the_disputed_1fa6b1",
+    "type": "select",
+    "label": "Do you have photographs of the disputed area?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "anything_else_we_should_know_1fa674",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. police reports, HOA involvement, a pending sale",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_easement",
+  "name": "Easement Dispute Supplement",
+  "description": "Mirrors the Craig Legal website's Easement Dispute Supplement form.",
+  "intro_text": "A few more questions specific to easement disputes. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_easement_1cf3bd",
+    "type": "heading",
+    "label": "The Easement",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "does_the_easement_cross_your_land_or_do_6a2942",
+    "type": "select",
+    "label": "Does the easement cross your land, or do you use it?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "burdened",
+      "label": "It crosses my land"
+     },
+     {
+      "value": "benefited",
+      "label": "I use it to reach or serve my property"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "what_is_the_easement_used_for_938aa2",
+    "type": "select",
+    "label": "What is the easement used for?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "access",
+      "label": "Access or driveway"
+     },
+     {
+      "value": "utilities",
+      "label": "Utilities"
+     },
+     {
+      "value": "drainage",
+      "label": "Drainage"
+     },
+     {
+      "value": "parking",
+      "label": "Parking"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "is_the_easement_in_a_recorded_document_o_e911ce",
+    "type": "select",
+    "label": "Is the easement in a recorded document or deed?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "where_is_it_recorded_and_when_was_it_cre_db70e8",
+    "type": "textarea",
+    "label": "Where is it recorded, and when was it created?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "how_long_has_the_use_been_occurring_64006e",
+    "type": "text",
+    "label": "How long has the use been occurring?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "interference_permission_9a7e35",
+    "type": "heading",
+    "label": "Interference & Permission",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "has_the_use_been_blocked_or_interfered_w_8ea7a0",
+    "type": "select",
+    "label": "Has the use been blocked or interfered with?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "describe_the_interference_with_dates_a4a431",
+    "type": "textarea",
+    "label": "Describe the interference, with dates",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "has_anyone_ever_given_permission_for_the_e8e2b5",
+    "type": "select",
+    "label": "Has anyone ever given permission for the use?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "communications_de398f",
+    "type": "heading",
+    "label": "Communications",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_communicated_with_the_other_par_dea44d",
+    "type": "select",
+    "label": "Have you communicated with the other party about the easement?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "describe_the_most_recent_communications_5e095a",
+    "type": "textarea",
+    "label": "Describe the most recent communications",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "evidence_anything_else_ee6bf2",
+    "type": "heading",
+    "label": "Evidence & Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "do_you_have_a_survey_or_plat_showing_the_97a667",
+    "type": "select",
+    "label": "Do you have a survey or plat showing the easement?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "anything_else_we_should_know_9dd5f9",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. photographs, prior lawsuits, a pending sale",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_quiet_title",
+  "name": "Quiet Title Supplement",
+  "description": "Mirrors the Craig Legal website's Quiet Title Supplement form.",
+  "intro_text": "A few more questions specific to quiet title matters. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_cloud_on_title_e8022b",
+    "type": "heading",
+    "label": "The Cloud on Title",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_is_clouding_your_title_f69fda",
+    "type": "select",
+    "label": "What is clouding your title?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "competing_deed",
+      "label": "A competing deed or claim of ownership"
+     },
+     {
+      "value": "old_lien",
+      "label": "An old lien, mortgage, or judgment"
+     },
+     {
+      "value": "heirs",
+      "label": "Missing or unknown heirs"
+     },
+     {
+      "value": "tax_sale",
+      "label": "A tax sale or tax deed"
+     },
+     {
+      "value": "forgery",
+      "label": "A forged or fraudulent document"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "who_else_claims_an_interest_and_what_do_776138",
+    "type": "textarea",
+    "label": "Who else claims an interest, and what do they claim?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "which_recorded_documents_are_at_issue_if_046298",
+    "type": "textarea",
+    "label": "Which recorded documents are at issue, if known?",
+    "help": "E.g. a deed, lien, or judgment, with dates if known",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "your_ownership_a5d370",
+    "type": "heading",
+    "label": "Your Ownership",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "how_did_you_acquire_the_property_a409e8",
+    "type": "select",
+    "label": "How did you acquire the property?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "purchase",
+      "label": "Purchase"
+     },
+     {
+      "value": "inheritance",
+      "label": "Inheritance"
+     },
+     {
+      "value": "gift",
+      "label": "Gift"
+     },
+     {
+      "value": "tax_deed",
+      "label": "Tax deed"
+     },
+     {
+      "value": "foreclosure",
+      "label": "Foreclosure"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "when_did_you_acquire_it_147a80",
+    "type": "text",
+    "label": "When did you acquire it?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "are_you_currently_in_possession_of_the_p_e8ed93",
+    "type": "select",
+    "label": "Are you currently in possession of the property?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "if_not_who_is_53437a",
+    "type": "text",
+    "label": "If not, who is?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "insurance_taxes_f7cb66",
+    "type": "heading",
+    "label": "Insurance & Taxes",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_notified_a_title_insurance_comp_e96ca9",
+    "type": "select",
+    "label": "Have you notified a title insurance company?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "are_property_taxes_and_any_association_d_c389b0",
+    "type": "select",
+    "label": "Are property taxes and any association dues current?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "anything_else_ab1a81",
+    "type": "heading",
+    "label": "Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "anything_else_we_should_know_45b8ca",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. prior title searches, attorney opinions, correspondence",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_contract",
+  "name": "Purchase / Sale Supplement",
+  "description": "Mirrors the Craig Legal website's Purchase / Sale Supplement form.",
+  "intro_text": "A few more questions specific to purchase and sale disputes. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_transaction_e16aad",
+    "type": "heading",
+    "label": "The Transaction",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "are_you_the_buyer_or_the_seller_ccc05e",
+    "type": "select",
+    "label": "Are you the buyer or the seller?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "buyer",
+      "label": "Buyer"
+     },
+     {
+      "value": "seller",
+      "label": "Seller"
+     },
+     {
+      "value": "other",
+      "label": "Other (e.g. agent, assignee)"
+     }
+    ]
+   },
+   {
+    "key": "where_does_the_transaction_stand_af090c",
+    "type": "select",
+    "label": "Where does the transaction stand?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "under_contract",
+      "label": "Under contract, not yet closed"
+     },
+     {
+      "value": "missed",
+      "label": "Closing was missed or refused"
+     },
+     {
+      "value": "closed",
+      "label": "Closed"
+     },
+     {
+      "value": "terminated",
+      "label": "Terminated or canceled"
+     }
+    ]
+   },
+   {
+    "key": "do_you_have_a_copy_of_the_signed_contrac_b8e68d",
+    "type": "select",
+    "label": "Do you have a copy of the signed contract?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "date_the_contract_was_signed_22d804",
+    "type": "date",
+    "label": "Date the contract was signed",
+    "help": "",
+    "required": true,
+    "min": null,
+    "max": null
+   },
+   {
+    "key": "date_closing_was_or_is_scheduled_d69f2a",
+    "type": "date",
+    "label": "Date closing was (or is) scheduled",
+    "help": "",
+    "required": true,
+    "min": null,
+    "max": null
+   },
+   {
+    "key": "the_dispute_de6bda",
+    "type": "heading",
+    "label": "The Dispute",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_went_wrong_ae6cc5",
+    "type": "textarea",
+    "label": "What went wrong?",
+    "help": "E.g. failure to close, disclosure issues, financing, inspection or repairs, title problems",
+    "required": true,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   },
+   {
+    "key": "earnest_money_how_much_and_who_holds_it_09b066",
+    "type": "text",
+    "label": "Earnest money: how much, and who holds it?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "notices_agents_3c7a56",
+    "type": "heading",
+    "label": "Notices & Agents",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "has_either_side_sent_a_notice_of_default_1b5958",
+    "type": "select",
+    "label": "Has either side sent a notice of default or termination?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "who_sent_it_and_when_5121a4",
+    "type": "textarea",
+    "label": "Who sent it, and when?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "real_estate_agents_or_brokers_involved_i_528db6",
+    "type": "textarea",
+    "label": "Real estate agents or brokers involved, if any",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "what_you_want_6243b4",
+    "type": "heading",
+    "label": "What You Want",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_outcome_do_you_want_3d639d",
+    "type": "select",
+    "label": "What outcome do you want?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "close",
+      "label": "I want the sale to go through"
+     },
+     {
+      "value": "money",
+      "label": "I want money damages or my earnest money"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "anything_else_we_should_know_73583e",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. appraisals, inspection reports, loan denial letters",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_hoa",
+  "name": "Association Dispute Supplement",
+  "description": "Mirrors the Craig Legal website's Association Dispute Supplement form.",
+  "intro_text": "A few more questions specific to homeowner and condo association disputes. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_association_cc8c66",
+    "type": "heading",
+    "label": "The Association",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "are_you_a_property_owner_or_acting_for_t_e394af",
+    "type": "select",
+    "label": "Are you a property owner or acting for the association?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "owner",
+      "label": "A property owner"
+     },
+     {
+      "value": "association",
+      "label": "A board member or the association"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "name_of_the_association_and_management_c_78864d",
+    "type": "text",
+    "label": "Name of the association (and management company, if any)",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "what_is_the_dispute_about_fc29f7",
+    "type": "select",
+    "label": "What is the dispute about?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "violations",
+      "label": "Fines or violation notices"
+     },
+     {
+      "value": "assessments",
+      "label": "Dues or assessments"
+     },
+     {
+      "value": "architectural",
+      "label": "Architectural approval"
+     },
+     {
+      "value": "maintenance",
+      "label": "Maintenance responsibility"
+     },
+     {
+      "value": "governance",
+      "label": "Elections, meetings, or governance"
+     },
+     {
+      "value": "records",
+      "label": "Access to records"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "notices_assessments_262419",
+    "type": "heading",
+    "label": "Notices & Assessments",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_violation_notices_or_fines_been_iss_2fa70a",
+    "type": "select",
+    "label": "Have violation notices or fines been issued?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "describe_them_with_dates_and_amounts_5d0081",
+    "type": "textarea",
+    "label": "Describe them, with dates and amounts",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "are_assessments_current_on_the_property_79fc92",
+    "type": "select",
+    "label": "Are assessments current on the property?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "has_a_lien_been_recorded_or_threatened_17a190",
+    "type": "select",
+    "label": "Has a lien been recorded or threatened?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "has_a_hearing_been_held_or_scheduled_c32b25",
+    "type": "select",
+    "label": "Has a hearing been held or scheduled?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "communications_documents_06756a",
+    "type": "heading",
+    "label": "Communications & Documents",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_corresponded_with_the_board_or_c32255",
+    "type": "select",
+    "label": "Have you corresponded with the board or manager?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "describe_the_most_recent_correspondence_f80bb4",
+    "type": "textarea",
+    "label": "Describe the most recent correspondence",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "which_governing_documents_do_you_have_591119",
+    "type": "textarea",
+    "label": "Which governing documents do you have?",
+    "help": "E.g. covenants (CC&Rs), bylaws, notices, meeting minutes",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "anything_else_801d95",
+    "type": "heading",
+    "label": "Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "anything_else_we_should_know_6100e1",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_landlord",
+  "name": "Landlord-Tenant Supplement (Landlord)",
+  "description": "Mirrors the Craig Legal website's Landlord-Tenant Supplement (Landlord) form.",
+  "intro_text": "A few more questions for landlords. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_tenancy_4bb9a5",
+    "type": "heading",
+    "label": "The Tenancy",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "is_the_property_residential_or_commercia_978ae1",
+    "type": "select",
+    "label": "Is the property residential or commercial?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "residential",
+      "label": "Residential"
+     },
+     {
+      "value": "commercial",
+      "label": "Commercial"
+     }
+    ]
+   },
+   {
+    "key": "is_there_a_written_lease_and_do_you_have_fc6dbc",
+    "type": "select",
+    "label": "Is there a written lease, and do you have a copy?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "lease_term_and_monthly_rent_if_known_7d1f6d",
+    "type": "text",
+    "label": "Lease term and monthly rent, if known",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "the_dispute_4bb9b8",
+    "type": "heading",
+    "label": "The Dispute",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_is_the_dispute_about_379c13",
+    "type": "select",
+    "label": "What is the dispute about?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "nonpayment",
+      "label": "Unpaid rent"
+     },
+     {
+      "value": "holdover",
+      "label": "Holdover after lease end"
+     },
+     {
+      "value": "violations",
+      "label": "Lease violations"
+     },
+     {
+      "value": "damage",
+      "label": "Property damage"
+     },
+     {
+      "value": "deposit",
+      "label": "Security deposit"
+     },
+     {
+      "value": "termination",
+      "label": "Lease termination or renewal"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "amount_of_unpaid_rent_or_damages_if_any_931727",
+    "type": "text",
+    "label": "Amount of unpaid rent or damages, if any",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "notices_court_9ad089",
+    "type": "heading",
+    "label": "Notices & Court",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_served_any_notices_on_the_tenan_146f4b",
+    "type": "select",
+    "label": "Have you served any notices on the tenant?",
+    "help": "E.g. demand for possession, notice to vacate, dispossessory papers",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "which_notices_and_when_d60458",
+    "type": "textarea",
+    "label": "Which notices, and when?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "is_the_tenant_still_in_possession_1a8fdb",
+    "type": "select",
+    "label": "Is the tenant still in possession?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "has_a_court_case_been_filed_343cab",
+    "type": "select",
+    "label": "Has a court case been filed?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "which_court_and_what_are_the_deadlines_o_3d2297",
+    "type": "textarea",
+    "label": "Which court, and what are the deadlines or hearing dates?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "anything_else_00f9b4",
+    "type": "heading",
+    "label": "Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "anything_else_we_should_know_4508f9",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. the lease, a rent ledger or payment records, photographs",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_tenant",
+  "name": "Landlord-Tenant Supplement (Tenant)",
+  "description": "Mirrors the Craig Legal website's Landlord-Tenant Supplement (Tenant) form.",
+  "intro_text": "A few more questions for tenants. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_tenancy_08ec17",
+    "type": "heading",
+    "label": "The Tenancy",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "is_the_property_residential_or_commercia_8448cd",
+    "type": "select",
+    "label": "Is the property residential or commercial?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "residential",
+      "label": "Residential"
+     },
+     {
+      "value": "commercial",
+      "label": "Commercial"
+     }
+    ]
+   },
+   {
+    "key": "is_there_a_written_lease_and_do_you_have_219087",
+    "type": "select",
+    "label": "Is there a written lease, and do you have a copy?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "lease_term_and_monthly_rent_if_known_bdb53b",
+    "type": "text",
+    "label": "Lease term and monthly rent, if known",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "the_dispute_f3990f",
+    "type": "heading",
+    "label": "The Dispute",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_is_the_dispute_about_398802",
+    "type": "select",
+    "label": "What is the dispute about?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "eviction",
+      "label": "I am being evicted or threatened with eviction"
+     },
+     {
+      "value": "repairs",
+      "label": "Repairs or habitability"
+     },
+     {
+      "value": "deposit",
+      "label": "Security deposit"
+     },
+     {
+      "value": "rent_dispute",
+      "label": "Disputed rent or fees"
+     },
+     {
+      "value": "termination",
+      "label": "Lease termination or renewal"
+     },
+     {
+      "value": "lockout",
+      "label": "Lockout or utility shutoff"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "is_your_rent_current_d6852a",
+    "type": "select",
+    "label": "Is your rent current?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "notices_court_90681a",
+    "type": "heading",
+    "label": "Notices & Court",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_you_received_any_notices_from_the_l_9d11f1",
+    "type": "select",
+    "label": "Have you received any notices from the landlord?",
+    "help": "E.g. demand for possession, notice to vacate, dispossessory papers",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "which_notices_and_when_did_you_receive_t_9d5a2c",
+    "type": "textarea",
+    "label": "Which notices, and when did you receive them?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "if_repairs_are_at_issue_describe_them_an_84310e",
+    "type": "textarea",
+    "label": "If repairs are at issue: describe them, and when you reported them",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "are_you_still_living_in_or_occupying_the_294040",
+    "type": "select",
+    "label": "Are you still living in or occupying the property?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "has_a_court_case_been_filed_1be36c",
+    "type": "select",
+    "label": "Has a court case been filed?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "which_court_and_what_are_the_deadlines_o_06fb9f",
+    "type": "textarea",
+    "label": "Which court, and what are the deadlines or hearing dates?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "anything_else_ac54ec",
+    "type": "heading",
+    "label": "Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "anything_else_we_should_know_cc8ab0",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. the lease, photographs, correspondence, payment records",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_construction",
+  "name": "Construction Dispute Supplement",
+  "description": "Mirrors the Craig Legal website's Construction Dispute Supplement form.",
+  "intro_text": "A few more questions specific to construction disputes. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_project_3455ed",
+    "type": "heading",
+    "label": "The Project",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_is_your_role_0cc867",
+    "type": "select",
+    "label": "What is your role?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "owner",
+      "label": "Property owner"
+     },
+     {
+      "value": "contractor",
+      "label": "General contractor"
+     },
+     {
+      "value": "sub",
+      "label": "Subcontractor or supplier"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "briefly_describe_the_project_ea1a1f",
+    "type": "textarea",
+    "label": "Briefly describe the project",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "is_there_a_written_contract_and_do_you_h_9b0025",
+    "type": "select",
+    "label": "Is there a written contract, and do you have a copy?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "contractors_license_number_if_known_26076c",
+    "type": "text",
+    "label": "Contractor's license number, if known",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "contract_price_amount_paid_and_amount_in_87bf24",
+    "type": "text",
+    "label": "Contract price, amount paid, and amount in dispute, if known",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "where_does_the_work_stand_0a25e3",
+    "type": "select",
+    "label": "Where does the work stand?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "not_started",
+      "label": "Not started"
+     },
+     {
+      "value": "in_progress",
+      "label": "In progress"
+     },
+     {
+      "value": "abandoned",
+      "label": "Abandoned"
+     },
+     {
+      "value": "complete",
+      "label": "Complete"
+     }
+    ]
+   },
+   {
+    "key": "the_problem_a42121",
+    "type": "heading",
+    "label": "The Problem",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_is_the_problem_60a1b7",
+    "type": "select",
+    "label": "What is the problem?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "defects",
+      "label": "Defective work"
+     },
+     {
+      "value": "delay",
+      "label": "Delay"
+     },
+     {
+      "value": "nonpayment",
+      "label": "Nonpayment"
+     },
+     {
+      "value": "abandonment",
+      "label": "Abandonment"
+     },
+     {
+      "value": "lien",
+      "label": "A lien dispute"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "describe_the_problem_ac2489",
+    "type": "textarea",
+    "label": "Describe the problem",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   },
+   {
+    "key": "demands_liens_inspections_11f550",
+    "type": "heading",
+    "label": "Demands, Liens & Inspections",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "has_either_party_made_a_written_demand_u_6db34e",
+    "type": "select",
+    "label": "Has either party made a written demand under the Right to Repair Act?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "who_sent_it_when_and_what_was_the_respon_ff37fe",
+    "type": "textarea",
+    "label": "Who sent it, when, and what was the response?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "has_a_lien_been_filed_or_threatened_148262",
+    "type": "select",
+    "label": "Has a lien been filed or threatened?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "by_whom_and_when_ed8061",
+    "type": "textarea",
+    "label": "By whom, and when?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "have_any_inspections_or_expert_reports_b_118139",
+    "type": "select",
+    "label": "Have any inspections or expert reports been done?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "anything_else_49f67e",
+    "type": "heading",
+    "label": "Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "anything_else_we_should_know_b4f6cc",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. photographs, change orders, punch lists, correspondence",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_fraud",
+  "name": "Real Estate Fraud Supplement",
+  "description": "Mirrors the Craig Legal website's Real Estate Fraud Supplement form.",
+  "intro_text": "A few more questions specific to real estate fraud. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_misrepresentation_5a80b1",
+    "type": "heading",
+    "label": "The Misrepresentation",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_was_your_role_in_the_transaction_188493",
+    "type": "select",
+    "label": "What was your role in the transaction?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "buyer",
+      "label": "Buyer"
+     },
+     {
+      "value": "seller",
+      "label": "Seller"
+     },
+     {
+      "value": "lender",
+      "label": "Lender"
+     },
+     {
+      "value": "investor",
+      "label": "Investor"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "what_do_you_believe_was_misrepresented_o_533841",
+    "type": "select",
+    "label": "What do you believe was misrepresented or concealed?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "condition",
+      "label": "The property's condition or defects"
+     },
+     {
+      "value": "title",
+      "label": "Ownership or title"
+     },
+     {
+      "value": "value",
+      "label": "Value or appraisal"
+     },
+     {
+      "value": "funds",
+      "label": "Use of funds or proceeds"
+     },
+     {
+      "value": "forgery",
+      "label": "Identity or forged documents"
+     },
+     {
+      "value": "investment",
+      "label": "Investment returns"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "describe_what_was_said_or_concealed_and_131a25",
+    "type": "textarea",
+    "label": "Describe what was said or concealed, and by whom",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   },
+   {
+    "key": "when_and_how_did_you_discover_it_fc5577",
+    "type": "text",
+    "label": "When and how did you discover it?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "the_purchase_inspection_8af409",
+    "type": "heading",
+    "label": "The Purchase & Inspection",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "date_the_contract_was_signed_if_applicab_cf28a5",
+    "type": "date",
+    "label": "Date the contract was signed, if applicable",
+    "help": "",
+    "required": false,
+    "min": null,
+    "max": null
+   },
+   {
+    "key": "date_closing_occurred_if_it_did_df85cf",
+    "type": "date",
+    "label": "Date closing occurred, if it did",
+    "help": "",
+    "required": false,
+    "min": null,
+    "max": null
+   },
+   {
+    "key": "was_it_an_as_is_contract_9f46b1",
+    "type": "select",
+    "label": "Was it an as-Is contract?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "was_there_a_due_diligence_period_aebe00",
+    "type": "select",
+    "label": "Was there a due diligence period?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "did_you_view_the_property_before_buying_ca7a74",
+    "type": "select",
+    "label": "Did you view the property before buying?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "was_an_inspection_done_b6fcf8",
+    "type": "select",
+    "label": "Was an inspection done?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "do_you_have_a_copy_of_the_inspectors_rep_b14641",
+    "type": "select",
+    "label": "Do you have a copy of the inspector's report?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "was_the_problem_you_complain_of_covered_050fc3",
+    "type": "select",
+    "label": "Was the problem you complain of covered in the inspector's report, or was it missed?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "covered",
+      "label": "It was covered in the report"
+     },
+     {
+      "value": "missed",
+      "label": "It was missed"
+     },
+     {
+      "value": "partial",
+      "label": "Mentioned, but understated"
+     },
+     {
+      "value": "na",
+      "label": "Not applicable / no inspection"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "have_you_discussed_the_issue_with_the_in_8606e8",
+    "type": "select",
+    "label": "Have you discussed the issue with the inspector?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "reliance_losses_430157",
+    "type": "heading",
+    "label": "Reliance & Losses",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "what_did_you_do_in_reliance_on_it_5fa075",
+    "type": "textarea",
+    "label": "What did you do in reliance on it?",
+    "help": "E.g. closed the purchase, wired funds, signed documents",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "approximate_amount_at_stake_or_lost_4764a6",
+    "type": "text",
+    "label": "Approximate amount at stake or lost",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "evidence_reporting_4d7acd",
+    "type": "heading",
+    "label": "Evidence & Reporting",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "do_you_have_documents_supporting_this_b401b0",
+    "type": "select",
+    "label": "Do you have documents supporting this?",
+    "help": "E.g. emails, texts, contracts, wire records, closing statements",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "have_you_reported_it_to_police_or_a_gove_7e4c9c",
+    "type": "select",
+    "label": "Have you reported it to police or a government agency?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "to_whom_and_when_d6a503",
+    "type": "textarea",
+    "label": "To whom, and when?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "were_any_professionals_involved_7d42d7",
+    "type": "textarea",
+    "label": "Were any professionals involved?",
+    "help": "E.g. closing attorney, notary, agent, appraiser",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "anything_else_27df09",
+    "type": "heading",
+    "label": "Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "anything_else_we_should_know_47bde1",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_commercial",
+  "name": "Commercial Dispute Supplement",
+  "description": "Mirrors the Craig Legal website's Commercial Dispute Supplement form.",
+  "intro_text": "A few more questions specific to commercial disputes. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_business_b858de",
+    "type": "heading",
+    "label": "The Business",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "your_businesss_name_and_your_role_in_it_c1ddcf",
+    "type": "text",
+    "label": "Your business's name and your role in it",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "who_is_the_dispute_with_6bcd9a",
+    "type": "select",
+    "label": "Who is the dispute with?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "vendor",
+      "label": "A vendor or supplier"
+     },
+     {
+      "value": "customer",
+      "label": "A customer or client"
+     },
+     {
+      "value": "partner",
+      "label": "A partner or co-owner"
+     },
+     {
+      "value": "landlord",
+      "label": "A landlord or tenant"
+     },
+     {
+      "value": "competitor",
+      "label": "A competitor"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "what_kind_of_dispute_is_it_5d43c5",
+    "type": "select",
+    "label": "What kind of dispute is it?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "breach",
+      "label": "Breach of contract"
+     },
+     {
+      "value": "ownership",
+      "label": "Partnership or ownership"
+     },
+     {
+      "value": "invoices",
+      "label": "Unpaid invoices"
+     },
+     {
+      "value": "noncompete",
+      "label": "Non-compete or trade secrets"
+     },
+     {
+      "value": "torts",
+      "label": "Interference or unfair practices"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "the_contract_stakes_609dbd",
+    "type": "heading",
+    "label": "The Contract & Stakes",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "is_there_a_written_contract_and_do_you_h_91c4bb",
+    "type": "select",
+    "label": "Is there a written contract, and do you have a copy?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "approximate_amount_in_controversy_d0fa57",
+    "type": "text",
+    "label": "Approximate amount in controversy",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "when_did_the_relationship_begin_and_when_b99c36",
+    "type": "textarea",
+    "label": "When did the relationship begin, and when did the dispute arise?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "demands_outlook_3653f2",
+    "type": "heading",
+    "label": "Demands & Outlook",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "have_demand_letters_been_sent_or_receive_306a27",
+    "type": "select",
+    "label": "Have demand letters been sent or received?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "by_whom_and_when_0473e0",
+    "type": "textarea",
+    "label": "By whom, and when?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "is_this_a_business_relationship_you_want_ac1de9",
+    "type": "select",
+    "label": "Is this a business relationship you want to preserve?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "anything_else_a624a0",
+    "type": "heading",
+    "label": "Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "anything_else_we_should_know_ff6b7d",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "E.g. contracts, invoices, correspondence, operating agreements",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ },
+ {
+  "key": "supplement_collections",
+  "name": "Collections Supplement",
+  "description": "Mirrors the Craig Legal website's Collections Supplement form.",
+  "intro_text": "A few more questions specific to collections matters. Please answer as completely as you can; approximations are fine.",
+  "schema": [
+   {
+    "key": "the_debt_719c3a",
+    "type": "heading",
+    "label": "The Debt",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "are_you_owed_money_or_is_someone_pursuin_2da12e",
+    "type": "select",
+    "label": "Are you owed money, or is someone pursuing you?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "creditor",
+      "label": "I am owed money"
+     },
+     {
+      "value": "debtor",
+      "label": "Someone claims I owe money"
+     }
+    ]
+   },
+   {
+    "key": "who_is_the_other_party_6052e1",
+    "type": "text",
+    "label": "Who is the other party?",
+    "help": "Name, and whether a business or individual",
+    "required": true,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "approximate_amount_at_issue_438e39",
+    "type": "text",
+    "label": "Approximate amount at issue",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 100
+   },
+   {
+    "key": "what_is_the_debt_based_on_dcfd1b",
+    "type": "select",
+    "label": "What is the debt based on?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "invoice",
+      "label": "Invoices or an account"
+     },
+     {
+      "value": "note",
+      "label": "A promissory note"
+     },
+     {
+      "value": "judgment",
+      "label": "A court judgment"
+     },
+     {
+      "value": "lease",
+      "label": "A lease"
+     },
+     {
+      "value": "guarantee",
+      "label": "A personal guarantee"
+     },
+     {
+      "value": "other",
+      "label": "Other"
+     }
+    ]
+   },
+   {
+    "key": "documentation_timing_14649e",
+    "type": "heading",
+    "label": "Documentation & Timing",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "do_you_have_signed_documents_supporting_c3c4c2",
+    "type": "select",
+    "label": "Do you have signed documents supporting the debt?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "when_did_the_debt_arise_and_when_was_the_5bccd2",
+    "type": "text",
+    "label": "When did the debt arise, and when was the last payment?",
+    "help": "",
+    "required": true,
+    "placeholder": "",
+    "max_length": 200
+   },
+   {
+    "key": "demands_judgments_1dfca3",
+    "type": "heading",
+    "label": "Demands & Judgments",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "has_a_written_demand_been_made_0e9cf7",
+    "type": "select",
+    "label": "Has a written demand been made?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     }
+    ]
+   },
+   {
+    "key": "by_whom_when_and_what_was_the_response_358356",
+    "type": "textarea",
+    "label": "By whom, when, and what was the response?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "is_there_already_a_court_judgment_1392f9",
+    "type": "select",
+    "label": "Is there already a court judgment?",
+    "help": "",
+    "required": true,
+    "placeholder": "Select",
+    "options": [
+     {
+      "value": "yes",
+      "label": "Yes"
+     },
+     {
+      "value": "no",
+      "label": "No"
+     },
+     {
+      "value": "unsure",
+      "label": "Not sure"
+     }
+    ]
+   },
+   {
+    "key": "which_court_and_when_b8ac8a",
+    "type": "textarea",
+    "label": "Which court, and when?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 2,
+    "max_length": 4000
+   },
+   {
+    "key": "assets_anything_else_bb58de",
+    "type": "heading",
+    "label": "Assets & Anything Else",
+    "help": "",
+    "required": false
+   },
+   {
+    "key": "if_you_are_owed_money_what_do_you_know_a_67c3b8",
+    "type": "textarea",
+    "label": "If you are owed money: what do you know about the other party's assets?",
+    "help": "E.g. real estate, bank accounts, employment",
+    "required": false,
+    "placeholder": "",
+    "rows": 3,
+    "max_length": 4000
+   },
+   {
+    "key": "anything_else_we_should_know_7f9177",
+    "type": "textarea",
+    "label": "Anything else we should know?",
+    "help": "",
+    "required": false,
+    "placeholder": "",
+    "rows": 4,
+    "max_length": 4000
+   }
+  ]
+ }
+]

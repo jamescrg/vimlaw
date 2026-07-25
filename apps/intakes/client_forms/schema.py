@@ -32,7 +32,9 @@ LAYOUT_TYPES = frozenset({"heading", "text_block"})
 CHOICE_TYPES = frozenset({"select", "radio", "checkboxes"})
 
 MAX_FIELDS = 100
-MAX_OPTIONS = 50
+# Comfortably above a US states list (51) or a country list (~195) — those are
+# ordinary dropdowns, not abuse. MAX_SCHEMA_BYTES is the real backstop.
+MAX_OPTIONS = 250
 MAX_LABEL = 200
 MAX_HELP = 300
 MAX_TEXT_BLOCK = 2000

@@ -191,6 +191,21 @@ class FormSubmissionTransmission(AuditMixin, models.Model):
         indexes = [models.Index(fields=["submission"])]
 
 
+def seed_templates():
+    """The bundled starter forms, transcribed from the Craig Legal website's
+    live questionnaires (see the seed_intake_forms management command).
+
+    Field keys in this file are frozen deliberately: re-seeding an environment
+    that already holds submissions must land on the same keys, or answers
+    already given would stop lining up with their questions.
+    """
+    import json
+    import pathlib
+
+    path = pathlib.Path(__file__).parent / "seed_data" / "craig_legal_forms.json"
+    return json.loads(path.read_text())
+
+
 def submissions_for_intake(intake):
     """Every form sent to an intake, newest first, with its send tally — the
     query behind the intake detail page's forms card."""
