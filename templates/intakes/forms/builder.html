@@ -67,8 +67,10 @@
             <div class="fb-field"
                  :class="{ 'fb-field-open': selectedId === field._id, 'fb-field-layout': isLayout(field) }">
               <div class="fb-field-head">
-                {# A real button, so the arrow keys reorder for anyone who
-                   can't drag. Sortable only needs the class to grab it. #}
+                {% comment %}
+                  A real button, so the arrow keys reorder for anyone who
+                  can't drag. Sortable only needs the class to grab it.
+                {% endcomment %}
                 <button type="button"
                         class="fb-handle"
                         title="Drag to reorder, or use the arrow keys"
