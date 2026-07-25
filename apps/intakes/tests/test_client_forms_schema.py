@@ -80,6 +80,26 @@ class TestNormalizeSchema:
             is False
         )
 
+    @pytest.mark.parametrize(
+        "posted,expected",
+        [
+            (True, True),
+            (False, False),
+            ("yes", True),
+            # bool("false") is True, so a plain bool() here would make every
+            # question required the moment the flag arrives as a string.
+            ("false", False),
+            ("no", False),
+            ("", False),
+            (None, False),
+        ],
+    )
+    def test_required_reads_strings_as_the_values_they_name(self, posted, expected):
+        assert (
+            one({"type": "text", "label": "Q", "required": posted})["required"]
+            is expected
+        )
+
     def test_blank_field_carries_every_declared_default(self):
         assert blank_field("textarea")["rows"] == 4
         assert blank_field("checkboxes")["options"] == []

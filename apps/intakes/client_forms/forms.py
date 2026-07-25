@@ -11,10 +11,16 @@ class FormTemplateForm(forms.ModelForm):
         model = FormTemplate
         fields = ("name", "description", "intro_text", "is_active")
 
+        YESNO_CHOICES = (
+            (True, "Yes"),
+            (False, "No"),
+        )
+
         widgets = {
             "name": forms.TextInput(attrs={"class": "span2"}),
             "description": forms.TextInput(attrs={"class": "span2"}),
             "intro_text": forms.Textarea(attrs={"class": "span2", "rows": 4}),
+            "is_active": forms.Select(choices=YESNO_CHOICES),
         }
 
         labels = {

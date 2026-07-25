@@ -114,9 +114,18 @@
                          placeholder="Optional guidance under the question" />
                 </label>
                 <div class="fb-edit-row">
-                  <label class="fb-edit fb-edit-check" x-show="!isLayout(field)">
-                    <input type="checkbox" x-model="field.required" />
+                  <label class="fb-edit" x-show="!isLayout(field)">
                     <span>Required</span>
+                    {% comment %}
+                      Set explicitly rather than through x-model: a select's
+                      value is always a string, and `required` must reach the
+                      server as a real boolean.
+                    {% endcomment %}
+                    <select :value="field.required ? 'yes' : 'no'"
+                            @change="field.required = $event.target.value === 'yes'">
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
                   </label>
                   <label class="fb-edit" x-show="has(field, 'placeholder')">
                     <span>Placeholder</span>

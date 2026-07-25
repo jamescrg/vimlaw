@@ -79,6 +79,15 @@ def _iso_date(raw):
     return date.fromisoformat(str(raw).strip()).isoformat()
 
 
+def _truthy(raw):
+    """Bare `bool()` is wrong for a posted flag: the builder sends JSON, and
+    `bool("false")` is True. Treat the strings a select or a form would produce
+    as the values they name."""
+    if isinstance(raw, str):
+        return raw.strip().lower() not in ("", "false", "no", "0", "off")
+    return bool(raw)
+
+
 def _apply(coerce, raw, default):
     if raw is None or raw == "":
         return default
@@ -328,7 +337,8 @@ def normalize_schema(raw):
             "type": field_type,
             "label": label,
             "help": str(item.get("help") or "").strip()[:MAX_HELP],
-            "required": bool(item.get("required")) and field_type not in LAYOUT_TYPES,
+            "required": _truthy(item.get("required"))
+            and field_type not in LAYOUT_TYPES,
         }
         for name, (coerce, default) in spec["extra"].items():
             field[name] = _apply(coerce, item.get(name), default)
