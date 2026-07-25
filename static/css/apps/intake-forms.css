@@ -9,11 +9,19 @@
    Template library
    ========================================================================== */
 
+/* .table is table-layout: fixed, so the secondary columns need explicit widths
+   and the Form column takes what's left — the same shape as the intakes list.
+   A percentage width here collapses them all against the right edge instead.
+   11.25rem is what the intakes list gives its secondary columns, so the two
+   tables in this tab share a rhythm. */
 .form-template-list .form-template-count,
 .form-template-list .form-template-status,
 .form-template-list .form-template-updated {
-  white-space: nowrap;
-  width: 1%;
+  width: 11.25rem;
+}
+
+.form-template-list .form-template-count {
+  text-align: right;
 }
 
 .form-template-desc {
