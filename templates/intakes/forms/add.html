@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">Send a Form</h1>
+      <h1 class="modal-title">Add a Form</h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
@@ -9,12 +9,11 @@
       </div>
     </div>
     <div class="modal-body">
-      {% if send_error %}<p class="form-error-banner">{{ send_error }}</p>{% endif %}
       <p class="modal-note">
-        Sends <strong>{{ submission.template_name }}</strong> to {{ intake.name }}.
-        Copying the link counts as sending it — the client has it either way.
+        Prepares the form for {{ intake.name }}. Nothing goes out yet — you'll
+        send it from the list when you're ready.
       </p>
-      <form id="send-form"
+      <form id="add-form"
             hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
             role="form"
@@ -27,12 +26,7 @@
       <button type="button"
               class="btn btn-secondary"
               @click="$dispatch('close-modal')">Cancel</button>
-      <button type="submit" form="send-form" name="action" value="link" class="btn">Copy Link</button>
-      <button type="submit"
-              form="send-form"
-              name="action"
-              value="email"
-              class="btn btn-success">Send Email</button>
+      <button type="submit" form="add-form" class="btn btn-success">Add Form</button>
     </div>
   </div>
 </div>

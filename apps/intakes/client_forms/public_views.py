@@ -81,8 +81,10 @@ def form_page(request, token):
         )
 
     # First open is worth knowing about — it distinguishes "never saw it" from
-    # "saw it and didn't answer".
-    if submission.status == "SENT":
+    # "saw it and didn't answer". A draft counts: if the client is looking at
+    # it, staff handed the link over somehow, and the row shouldn't go on
+    # claiming it was never sent.
+    if submission.status in ("DRAFT", "SENT"):
         submission.status = "OPENED"
         submission.opened_at = timezone.now()
         submission.save(update_fields=["status", "opened_at", "updated_at"])

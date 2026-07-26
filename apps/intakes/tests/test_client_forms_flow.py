@@ -64,12 +64,20 @@ def test_build_send_fill_and_read_back(client, intake):
     schema = save.json()["schema"]
     keys = {field["label"]: field["key"] for field in schema}
 
-    # --- Staff sends it ------------------------------------------------------
+    # --- Staff adds it, then sends it as a separate step ---------------------
     client.post(
-        reverse("intakes:form-send", kwargs={"id": intake.id}),
-        {"template": template.id, "to": "gandhi@example.com", "action": "email"},
+        reverse("intakes:form-add", kwargs={"id": intake.id}),
+        {"template": template.id},
     )
     submission = FormSubmission.objects.get(intake=intake)
+    assert submission.status == "DRAFT"
+
+    client.post(
+        reverse("intakes:form-submission-send", kwargs={"sub_id": submission.id}),
+        {"to": "gandhi@example.com", "action": "email"},
+    )
+    submission.refresh_from_db()
+    assert submission.status == "SENT"
     url = form_path(submission)
 
     # --- Client opens it, with no account ------------------------------------

@@ -13,35 +13,43 @@ def firm():
     return Firm.objects.create(name="Craig Legal, PLLC", email="office@example.com")
 
 
-def send_url(intake):
-    return reverse("intakes:form-send", kwargs={"id": intake.id})
+def add_url(intake):
+    return reverse("intakes:form-add", kwargs={"id": intake.id})
 
 
-class TestSendingAForm:
-    def test_sending_snapshots_the_template(self, client, intake, form_template):
-        client.post(
-            send_url(intake),
-            {
-                "template": form_template.id,
-                "to": "client@example.com",
-                "action": "email",
-            },
-        )
+def send_url(submission):
+    return reverse("intakes:form-submission-send", kwargs={"sub_id": submission.id})
+
+
+def add_then(client, intake, template):
+    """Walk step one so a test can get at step two."""
+    client.post(add_url(intake), {"template": template.id})
+    return FormSubmission.objects.get(intake=intake)
+
+
+class TestAddingAForm:
+    """Step one: create the form. Nothing leaves the building."""
+
+    def test_adding_snapshots_the_template_and_sends_nothing(
+        self, client, intake, form_template
+    ):
+        response = client.post(add_url(intake), {"template": form_template.id})
+        assert response.status_code == 204
+
         submission = FormSubmission.objects.get(intake=intake)
         assert submission.schema_snapshot == form_template.schema
         assert submission.template_name == form_template.name
         assert submission.template_version == form_template.version
-        assert submission.status == "SENT"
+        assert submission.status == "DRAFT"
+        assert submission.sent_at is None
+        assert not mail.outbox
+        assert not submission.transmissions.exists()
 
     def test_the_snapshot_is_a_copy_not_a_reference(
         self, client, intake, form_template
     ):
         """Editing the template afterwards must not reach into what was sent."""
-        client.post(
-            send_url(intake),
-            {"template": form_template.id, "to": "c@example.com", "action": "email"},
-        )
-        submission = FormSubmission.objects.get(intake=intake)
+        submission = add_then(client, intake, form_template)
 
         form_template.schema[0]["label"] = "Mutated in place"
         form_template.save()
@@ -49,14 +57,40 @@ class TestSendingAForm:
         submission.refresh_from_db()
         assert submission.schema_snapshot[0]["label"] == "Property address"
 
-    def test_emailing_sends_a_message_and_logs_it(self, client, intake, form_template):
+    def test_a_draft_link_already_works(self, client, intake, form_template):
+        """Staff can copy it into their own email, so it can't be inert."""
+        from django.test import Client as DjangoClient
+
+        from apps.intakes.client_forms.links import form_path
+
+        submission = add_then(client, intake, form_template)
+        assert DjangoClient().get(form_path(submission)).status_code == 200
+
+    def test_a_form_with_no_questions_cannot_be_added(self, client, intake):
+        from apps.intakes.models import FormTemplate
+
+        empty = FormTemplate.objects.create(name="Empty", schema=[])
+        response = client.post(add_url(intake), {"template": empty.id})
+        assert response.status_code == 200
+        assert "no questions yet" in response.content.decode()
+        assert not FormSubmission.objects.filter(intake=intake).exists()
+
+    def test_an_inactive_form_is_not_offered(self, client, intake, form_template):
+        form_template.is_active = False
+        form_template.save()
+        body = client.get(add_url(intake)).content.decode()
+        assert form_template.name not in body
+
+
+class TestSendingAForm:
+    """Step two: hand it over."""
+
+    def test_emailing_sends_a_message_and_marks_it_sent(
+        self, client, intake, form_template
+    ):
+        submission = add_then(client, intake, form_template)
         response = client.post(
-            send_url(intake),
-            {
-                "template": form_template.id,
-                "to": "client@example.com",
-                "action": "email",
-            },
+            send_url(submission), {"to": "client@example.com", "action": "email"}
         )
         assert response.status_code == 204
 
@@ -66,67 +100,62 @@ class TestSendingAForm:
         assert "Craig Legal" in message.subject
         assert "/form/" in message.body
 
-        submission = FormSubmission.objects.get(intake=intake)
-        transmission = submission.transmissions.get()
-        assert transmission.kind == "send"
-        assert transmission.status == "sent"
+        submission.refresh_from_db()
+        assert submission.status == "SENT"
+        assert submission.sent_at is not None
+        assert submission.recipient_email == "client@example.com"
+        assert submission.transmissions.get().kind == "send"
 
     def test_the_email_is_not_from_the_billing_address(
         self, client, intake, form_template
     ):
-        client.post(
-            send_url(intake),
-            {"template": form_template.id, "to": "c@example.com", "action": "email"},
-        )
+        submission = add_then(client, intake, form_template)
+        client.post(send_url(submission), {"to": "c@example.com", "action": "email"})
         assert "Billing" not in mail.outbox[0].from_email
 
-    def test_copying_the_link_shows_it_and_logs_a_link_transmission(
+    def test_copying_the_link_also_counts_as_sending(
         self, client, intake, form_template
     ):
+        """The client has the link either way, so the row must say so."""
+        submission = add_then(client, intake, form_template)
         response = client.post(
-            send_url(intake),
-            {"template": form_template.id, "to": "c@example.com", "action": "link"},
+            send_url(submission), {"to": "c@example.com", "action": "link"}
         )
         assert response.status_code == 200
         assert "/form/" in response.content.decode()
-        # The card behind the modal refreshes, but the modal stays open.
+        # The list behind the modal refreshes, but the modal stays open.
         assert response["HX-Trigger"] == "intakeFormsChanged"
         assert not mail.outbox
 
-        submission = FormSubmission.objects.get(intake=intake)
+        submission.refresh_from_db()
+        assert submission.status == "SENT"
         assert submission.transmissions.get().kind == "link"
 
-    def test_a_bad_address_re_renders_the_modal_with_the_error(
+    def test_a_bad_address_re_renders_the_modal_and_leaves_it_a_draft(
         self, client, intake, form_template
     ):
+        submission = add_then(client, intake, form_template)
         response = client.post(
-            send_url(intake),
-            {"template": form_template.id, "to": "not-an-address", "action": "email"},
+            send_url(submission), {"to": "not-an-address", "action": "email"}
         )
         assert response.status_code == 200
         assert "Invalid email address" in response.content.decode()
         assert not mail.outbox
 
-        submission = FormSubmission.objects.get(intake=intake)
+        submission.refresh_from_db()
+        assert submission.status == "DRAFT"
         assert submission.transmissions.get().status == "failed"
 
-    def test_a_form_with_no_questions_cannot_be_sent(self, client, intake):
-        from apps.intakes.models import FormTemplate
+    def test_sending_twice_does_not_rewind_a_submitted_form(
+        self, client, intake, form_template
+    ):
+        submission = add_then(client, intake, form_template)
+        submission.status = "SUBMITTED"
+        submission.save()
 
-        empty = FormTemplate.objects.create(name="Empty", schema=[])
-        response = client.post(
-            send_url(intake),
-            {"template": empty.id, "to": "c@example.com", "action": "email"},
-        )
-        assert response.status_code == 200
-        assert "no questions yet" in response.content.decode()
-        assert not FormSubmission.objects.filter(intake=intake).exists()
-
-    def test_an_inactive_form_is_not_offered(self, client, intake, form_template):
-        form_template.is_active = False
-        form_template.save()
-        body = client.get(send_url(intake)).content.decode()
-        assert form_template.name not in body
+        client.post(send_url(submission), {"to": "c@example.com", "action": "email"})
+        submission.refresh_from_db()
+        assert submission.status == "SUBMITTED"
 
 
 class TestStatusActions:

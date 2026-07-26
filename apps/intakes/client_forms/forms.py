@@ -39,25 +39,14 @@ class FormTemplateForm(forms.ModelForm):
             del self.fields["name"]
 
 
-class SendFormForm(forms.Form):
-    """Pick a form and say where it goes. Not a ModelForm — the submission it
-    creates is assembled in the view, around a snapshot of the template."""
+class AddFormForm(forms.Form):
+    """Step one of two: which form to prepare for this intake. Sending is a
+    separate step, so nothing about delivery is asked here."""
 
     template = forms.ModelChoiceField(
         queryset=FormTemplate.objects.none(),
         label="Form",
         empty_label="Choose a form…",
-    )
-    to = forms.CharField(
-        label="To", required=False, widget=forms.TextInput(attrs={"class": "span2"})
-    )
-    cc = forms.CharField(
-        label="Cc", required=False, widget=forms.TextInput(attrs={"class": "span2"})
-    )
-    message = forms.CharField(
-        label="Message (optional)",
-        required=False,
-        widget=forms.Textarea(attrs={"class": "span2", "rows": 4, "maxlength": 500}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -76,9 +65,8 @@ class SendFormForm(forms.Form):
         return template
 
 
-class ResendFormForm(forms.Form):
-    """Send an existing submission's link again. The form itself is already
-    chosen and snapshotted, so only the addressing is up for grabs."""
+class SendFormForm(forms.Form):
+    """Step two: where an already-created form goes."""
 
     to = forms.CharField(
         label="To", required=False, widget=forms.TextInput(attrs={"class": "span2"})
@@ -95,3 +83,8 @@ class ResendFormForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
+
+
+# A reminder asks for exactly the same three things as the first send; the
+# views differ, the questions don't.
+ResendFormForm = SendFormForm

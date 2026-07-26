@@ -8,6 +8,7 @@ from apps.intakes.client_forms.views import (
     form_submission_resend,
     form_submission_review,
     form_submission_revoke,
+    form_submission_send,
     form_submission_status,
     form_template_delete,
     form_template_duplicate,
@@ -15,7 +16,7 @@ from apps.intakes.client_forms.views import (
     form_template_settings,
     forms_index,
     forms_list,
-    intake_form_send,
+    intake_form_add,
     intake_forms_panel,
 )
 from apps.intakes.views import (
@@ -109,7 +110,13 @@ urlpatterns = [
     ),
     # Sending a form from an intake, and reading what came back.
     path("intakes/<int:id>/forms/", intake_forms_panel, name="forms-panel"),
-    path("intakes/<int:id>/forms/send/", intake_form_send, name="form-send"),
+    # Two steps: add prepares the form, send hands it to the client.
+    path("intakes/<int:id>/forms/add/", intake_form_add, name="form-add"),
+    path(
+        "intakes/forms/submissions/<int:sub_id>/send/",
+        form_submission_send,
+        name="form-submission-send",
+    ),
     path(
         "intakes/forms/submissions/<int:sub_id>/",
         form_submission_review,

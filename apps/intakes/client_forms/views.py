@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.intakes.client_forms.forms import (
+    AddFormForm,
     FormTemplateForm,
     ResendFormForm,
     SendFormForm,
@@ -52,7 +53,11 @@ def _templates():
 
 
 def _forms_context(**extra):
-    return {"app": "intakes", "subapp": "forms"} | extra
+    """Form templates are firm configuration, so the library and the builder
+    render inside the Settings shell — the arrangement checklists already
+    uses. The URLs stay under /intakes/, which keeps PermissionMiddleware's
+    perm_intakes gate over them."""
+    return {"app": "settings", "subapp": "intake-forms"} | extra
 
 
 def _refresh(message=None):
@@ -235,36 +240,69 @@ def intake_forms_panel(request, id):
 
 
 @login_required
-def intake_form_send(request, id):
-    """Create a submission from a template and hand out its link.
+def intake_form_add(request, id):
+    """Step one: create the form. Nothing is sent.
 
     The snapshot is taken here, once, and never rewritten — it is what makes
-    the answers mean the same thing in five years.
+    the answers mean the same thing in five years. The submission lands as a
+    DRAFT; handing it to the client is a separate, deliberate act.
     """
     intake = get_object_or_404(Intake, pk=id)
-    context = {"intake": intake, "action": f"/intakes/{intake.id}/forms/send/"}
+    context = {"intake": intake, "action": f"/intakes/{intake.id}/forms/add/"}
 
     if request.method != "POST":
-        form = SendFormForm(initial={"to": intake.email or ""})
+        return render(
+            request, "intakes/forms/add.html", context | {"form": AddFormForm()}
+        )
+
+    form = AddFormForm(request.POST)
+    if not form.is_valid():
+        return render(request, "intakes/forms/add.html", context | {"form": form})
+
+    template = form.cleaned_data["template"]
+    FormSubmission.objects.create(
+        intake=intake,
+        template=template,
+        template_name=template.name,
+        template_version=template.version,
+        # Deep copy, not a reference — a later edit to template.schema must not
+        # reach back into what was already created.
+        schema_snapshot=copy.deepcopy(template.schema),
+        recipient_email=intake.email or "",
+    )
+    return _refresh(f"{template.name} added — send it when you're ready")
+
+
+@login_required
+def form_submission_send(request, sub_id):
+    """Step two: hand an existing form to the client, by email or by link."""
+    submission = get_object_or_404(
+        FormSubmission.objects.select_related("intake"), pk=sub_id
+    )
+    context = {
+        "submission": submission,
+        "intake": submission.intake,
+        "action": f"/intakes/forms/submissions/{submission.id}/send/",
+    }
+
+    if request.method != "POST":
+        form = SendFormForm(
+            initial={"to": submission.recipient_email or submission.intake.email or ""}
+        )
         return render(request, "intakes/forms/send.html", context | {"form": form})
 
     form = SendFormForm(request.POST)
     if not form.is_valid():
         return render(request, "intakes/forms/send.html", context | {"form": form})
 
-    template = form.cleaned_data["template"]
-    submission = FormSubmission.objects.create(
-        intake=intake,
-        template=template,
-        template_name=template.name,
-        template_version=template.version,
-        # Deep copy, not a reference — a later edit to template.schema must not
-        # reach back into what was sent.
-        schema_snapshot=copy.deepcopy(template.schema),
-        recipient_email=form.cleaned_data["to"].strip(),
-    )
+    recipient = form.cleaned_data["to"].strip()
 
     if request.POST.get("action") == "link":
+        # Copying the link IS delivery — the client has it from that moment,
+        # so the row must not go on claiming it was never sent.
+        submission.recipient_email = recipient
+        submission.save(update_fields=["recipient_email", "updated_at"])
+        submission.mark_sent()
         log_transmission(submission, kind="link", status="sent", sent_by=request.user)
         response = render(
             request,
@@ -272,10 +310,10 @@ def intake_form_send(request, id):
             {
                 "submission": submission,
                 "form_url": form_url(submission, request),
-                "intake": intake,
+                "intake": submission.intake,
             },
         )
-        # Refresh the card behind the modal without closing it (HTMX only
+        # Refresh the list behind the modal without closing it (HTMX only
         # auto-closes on a 204).
         response["HX-Trigger"] = FORMS_TRIGGER
         return response
@@ -283,7 +321,7 @@ def intake_form_send(request, id):
     try:
         send_form_link(
             submission,
-            to=form.cleaned_data["to"],
+            to=recipient,
             cc=form.cleaned_data["cc"],
             message=form.cleaned_data["message"],
             sent_by=request.user,
@@ -296,14 +334,19 @@ def intake_form_send(request, id):
             context | {"form": form, "send_error": str(exc)},
         )
 
-    return _refresh(f"Form sent to {submission.recipient_email}")
+    submission.recipient_email = recipient
+    submission.save(update_fields=["recipient_email", "updated_at"])
+    submission.mark_sent()
+    return _refresh(f"Form sent to {recipient}")
 
 
 @login_required
 def form_submission_link(request, sub_id):
-    """Show the link for a submission that was already created."""
+    """Show the link for a form that has already been handed over — the quick
+    'give me that URL again' path, distinct from the Send step."""
     submission = get_object_or_404(FormSubmission, pk=sub_id)
     if request.method == "POST":
+        submission.mark_sent()
         log_transmission(submission, kind="link", status="sent", sent_by=request.user)
     return render(
         request,

@@ -51,6 +51,9 @@ class TestAccess:
         assert client.get(form_path(form_submission)).status_code == 200
 
     def test_first_open_marks_it_opened_exactly_once(self, anon, form_submission):
+        """Even from DRAFT: if the client is reading it, staff handed the link
+        over somehow, and the row shouldn't still claim it was never sent."""
+        assert form_submission.status == "DRAFT"
         anon.get(form_path(form_submission))
         form_submission.refresh_from_db()
         assert form_submission.status == "OPENED"

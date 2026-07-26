@@ -6,8 +6,8 @@
         <a href="#"
            type="button"
            class="btn-icon"
-           title="Send a form"
-           hx-get="{% url 'intakes:form-send' id=intake.id %}"
+           title="Add a form"
+           hx-get="{% url 'intakes:form-add' id=intake.id %}"
            hx-target="#htmx-modal-container"
            hx-trigger="click">
           <i class="icon-plus"></i>
@@ -30,10 +30,12 @@
           <span class="app-badge badge-yellow">Opened</span>
         {% elif submission.status == "CLOSED" %}
           <span class="app-badge badge-gray">Closed</span>
+        {% elif submission.status == "SENT" %}
+          <span class="app-badge badge-blue">Sent</span>
         {% elif submission.status == "CANCELED" %}
           <span class="app-badge badge-red">Canceled</span>
         {% else %}
-          <span class="app-badge badge-blue">Sent</span>
+          <span class="app-badge badge-gray">Draft</span>
         {% endif %}
         <span class="intake-form-progress">{{ submission.answered_count }} of {{ submission.question_count }} answered</span>
       </div>
@@ -43,30 +45,40 @@
             Submitted {{ submission.submitted_at|date:"Y-m-d" }}
           {% elif submission.opened_at %}
             Opened {{ submission.opened_at|date:"Y-m-d" }}
+          {% elif submission.sent_at %}
+            Sent {{ submission.sent_at|date:"Y-m-d" }}
           {% else %}
-            Sent {{ submission.created_at|date:"Y-m-d" }}
+            Added {{ submission.created_at|date:"Y-m-d" }}
           {% endif %}
         </span>
         {% if submission.recipient_email %}<span>{{ submission.recipient_email }}</span>{% endif %}
         {% if submission.send_count > 1 %}<span>&times;{{ submission.send_count }}</span>{% endif %}
       </div>
       <div class="intake-form-row-actions">
-        <a href="#"
-           class="btn-icon"
-           title="Copy link"
-           hx-post="{% url 'intakes:form-submission-link' sub_id=submission.id %}"
-           hx-target="#htmx-modal-container"
-           hx-trigger="click">
-          <i class="icon-link"></i>
-        </a>
-        <a href="#"
-           class="btn-icon"
-           title="Send a reminder"
-           hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
-           hx-target="#htmx-modal-container"
-           hx-trigger="click">
-          <i class="icon-mail"></i>
-        </a>
+        {% if submission.is_unsent %}
+          <a href="#"
+             class="btn btn-sm btn-success"
+             hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"
+             hx-target="#htmx-modal-container"
+             hx-trigger="click">Send</a>
+        {% else %}
+          <a href="#"
+             class="btn-icon"
+             title="Copy link"
+             hx-post="{% url 'intakes:form-submission-link' sub_id=submission.id %}"
+             hx-target="#htmx-modal-container"
+             hx-trigger="click">
+            <i class="icon-link"></i>
+          </a>
+          <a href="#"
+             class="btn-icon"
+             title="Send a reminder"
+             hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
+             hx-target="#htmx-modal-container"
+             hx-trigger="click">
+            <i class="icon-mail"></i>
+          </a>
+        {% endif %}
         {% if submission.status == "CLOSED" %}
           <a href="#"
              class="btn-icon"
@@ -85,6 +97,6 @@
       </div>
     </div>
   {% empty %}
-    <p class="intake-form-empty">No forms sent yet. Send one to collect the client's details before you speak.</p>
+    <p class="intake-form-empty">No forms yet. Add one to collect the client's details before you speak.</p>
   {% endfor %}
 {% endblock content %}

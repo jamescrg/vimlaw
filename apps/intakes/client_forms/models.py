@@ -15,6 +15,7 @@ FKs are declared as strings so this module can be imported from
 import uuid
 
 from django.db import models
+from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
 from utils.models import AuditMixin
@@ -62,6 +63,10 @@ class FormTemplate(AuditMixin, models.Model):
 
 class FormSubmission(AuditMixin, models.Model):
     STATUS_CHOICES = (
+        # Created but not yet handed to the client — the equivalent of an
+        # unsent invoice. The link already works, so staff can copy it into
+        # their own email; doing that is what marks it SENT.
+        ("DRAFT", "Draft"),
         ("SENT", "Sent"),
         ("OPENED", "Opened"),
         ("SUBMITTED", "Submitted"),
@@ -69,7 +74,9 @@ class FormSubmission(AuditMixin, models.Model):
         ("CANCELED", "Canceled"),
     )
     # Statuses the client may still type into.
-    FILLABLE = ("SENT", "OPENED", "SUBMITTED")
+    FILLABLE = ("DRAFT", "SENT", "OPENED", "SUBMITTED")
+    # Statuses where the client has not yet been given the link.
+    UNSENT = ("DRAFT",)
 
     # Signed into the public link; never the pk. Rotating it revokes every
     # outstanding link for this submission (see utils/signing.py).
@@ -95,8 +102,9 @@ class FormSubmission(AuditMixin, models.Model):
     schema_snapshot = models.JSONField(default=list)
     # {"<field key>": <value>}; value type per field type — see schema.py.
     answers = models.JSONField(default=dict, blank=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="SENT")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="DRAFT")
     recipient_email = models.CharField(max_length=255, blank=True, default="")
+    sent_at = models.DateTimeField(null=True, blank=True)
     opened_at = models.DateTimeField(null=True, blank=True)
     last_saved_at = models.DateTimeField(null=True, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
@@ -121,6 +129,21 @@ class FormSubmission(AuditMixin, models.Model):
     @property
     def is_fillable(self):
         return self.status in self.FILLABLE
+
+    @property
+    def is_unsent(self):
+        """Created but not yet handed over — the row still offers Send."""
+        return self.status in self.UNSENT
+
+    def mark_sent(self):
+        """The client now has the link, however it reached them. Only moves a
+        draft forward: a form already opened or submitted must not regress."""
+        if self.status != "DRAFT":
+            return False
+        self.status = "SENT"
+        self.sent_at = timezone.now()
+        self.save(update_fields=["status", "sent_at", "updated_at"])
+        return True
 
     @property
     def template_drifted(self):
