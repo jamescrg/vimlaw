@@ -266,14 +266,25 @@ Markdown
 }
 
 .intake-note-details strong {
-  font-weight: 600;
+  font-weight: 500;
 }
 
-/* A question is a paragraph holding nothing but its bolded label, and its
-   answer is the paragraph after. Pull the answer up tight so the two read as
-   one unit, and let the space fall between pairs instead. */
+/* A question is a paragraph holding nothing but its label, and its answer is
+   the paragraph after. Pull the answer up tight so the two read as one unit,
+   and let the space fall between pairs instead. */
 .intake-note-details p:has(> strong:only-child) {
   margin-top: 1.25rem;
+}
+
+/* The question is the caption, not the content — the client's answer is what
+   staff came to read, so the label recedes into muted body weight. It stays
+   <strong> in the markup because that emphasis is the only handle telling a
+   question apart from an answer, and the rules above depend on it. Scoped
+   under the h2 so bold a user typed into an ordinary note still reads as
+   emphasis. */
+.intake-note-details h2 ~ p > strong:only-child {
+  color: var(--color-muted);
+  font-weight: 400;
 }
 
 .intake-note-details p:has(> strong:only-child) + p {
