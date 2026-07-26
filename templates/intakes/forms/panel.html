@@ -76,19 +76,8 @@
             <td class="intake-form-done">{{ submission.answered_count }} / {{ submission.question_count }}</td>
             <td class="intake-form-status">
               <div class="badge-flag-row">
-                {% if submission.status == "SUBMITTED" %}
-                  <span class="app-badge badge-green">Submitted</span>
-                {% elif submission.status == "OPENED" %}
-                  <span class="app-badge badge-yellow">Opened</span>
-                {% elif submission.status == "SENT" %}
-                  <span class="app-badge badge-blue">Sent</span>
-                {% elif submission.status == "CLOSED" %}
-                  <span class="app-badge badge-gray">Closed</span>
-                {% elif submission.status == "CANCELED" %}
-                  <span class="app-badge badge-red">Canceled</span>
-                {% else %}
-                  <span class="app-badge badge-gray">Draft</span>
-                {% endif %}
+                {# The column already says "Status"; a badge would say it twice. #}
+                <span class="intake-form-status-text">{{ submission.get_status_display }}</span>
                 {% comment %}
                   Invoices only show this from ×2, since their Sent status
                   implies the first send. Here the status can be Opened or
