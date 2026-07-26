@@ -36,6 +36,16 @@
               <a href="{% url 'settings:integrations-index' %}">Integrations</a>
             </li>
           {% endif %}
+          {% if user.role == 'ADMIN' or user.perm_intakes %}
+            {% comment %}
+              The page lives under /intakes/, which PermissionMiddleware gates
+              on perm_intakes — so the nav entry matches the gate rather than
+              the surrounding admin-only block.
+            {% endcomment %}
+            <li {% if subapp == "intake-forms" %}class="active"{% endif %}>
+              <a href="{% url 'intakes:forms-index' %}">Intake Forms</a>
+            </li>
+          {% endif %}
           {% if user.role == 'ADMIN' or user.perm_financial %}
             <li {% if subapp == "checklists" %}class="active"{% endif %}>
               <a href="{% url 'checklists:index' %}">Checklists</a>

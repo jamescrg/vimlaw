@@ -8,19 +8,26 @@ from apps.intakes.client_forms.models import FormTemplate
 pytestmark = pytest.mark.django_db
 
 
-class TestFormsSubnav:
-    def test_forms_index_renders(self, client, form_template):
+class TestFormsLibraryLivesUnderSettings:
+    def test_forms_index_renders_in_the_settings_shell(self, client, form_template):
         response = client.get(reverse("intakes:forms-index"))
         assert response.status_code == 200
-        assert response.context["subapp"] == "forms"
+        # Lights the Settings sidebar item and its subnav, like checklists.
+        assert response.context["app"] == "settings"
+        assert response.context["subapp"] == "intake-forms"
         assert form_template.name in response.content.decode()
 
-    def test_intakes_index_still_renders(self, client, intake):
-        """Regression guard on the subnav refactor of intakes/main.html."""
+    def test_the_settings_subnav_links_to_it(self, client):
+        body = client.get(reverse("settings:profile-index")).content.decode()
+        assert reverse("intakes:forms-index") in body
+        assert "Intake Forms" in body
+
+    def test_the_intakes_index_is_a_plain_page_again(self, client, intake):
+        """Forms left the Intakes tab, so its subnav went with it."""
         response = client.get(reverse("intakes:index"))
         assert response.status_code == 200
-        assert response.context["subapp"] == "intakes"
         assert intake.name in response.content.decode()
+        assert "intakes/subnav.html" not in [t.name for t in response.templates]
 
     def test_forms_index_requires_login(self, form_template):
         from django.test import Client
