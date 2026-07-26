@@ -117,14 +117,36 @@
           </table>
         </div>
       </div>
+    </div>
+    {% comment %}
+      Notes and Forms share the right panel, one at a time. The choice is
+      remembered in localStorage rather than component state: this whole
+      region is re-rendered on intakeDetailChanged, which would otherwise
+      snap you back to Notes every time you edited the intake.
+    {% endcomment %}
+    <div class="intake-main"
+         x-data="{ pane: localStorage.getItem('intake_pane') === 'forms' ? 'forms' : 'notes' }">
+      <div class="toolbar intake-pane-switch">
+        {# .mode-pills is the segmented control matters/case use for their toggle. #}
+        <div class="mode-pills">
+          <button type="button"
+                  class="mode-pill"
+                  :class="pane === 'notes' ? 'active' : ''"
+                  @click="pane = 'notes'; localStorage.setItem('intake_pane', 'notes')">Notes</button>
+          <button type="button"
+                  class="mode-pill"
+                  :class="pane === 'forms' ? 'active' : ''"
+                  @click="pane = 'forms'; localStorage.setItem('intake_pane', 'forms')">Forms</button>
+        </div>
+      </div>
       <div id="intakeForms"
            class="card intake-forms"
+           x-show="pane === 'forms'"
+           x-cloak
            hx-trigger="intakeFormsChanged from:body"
            hx-get="{% url 'intakes:forms-panel' id=intake.id %}"
            hx-target="this">{% include "intakes/forms/panel.html" %}</div>
-    </div>
-    <div class="intake-main">
-      <div class="card intake-notes">
+      <div class="card intake-notes" x-show="pane === 'notes'" x-cloak>
         <div class="toolbar">
           <div class="toolbar-left">
             <h1>Notes</h1>
