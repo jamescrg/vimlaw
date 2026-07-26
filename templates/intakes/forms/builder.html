@@ -213,17 +213,31 @@
                   <template x-if="field.type === 'textarea'">
                     <textarea disabled :rows="field.rows" :placeholder="field.placeholder"></textarea>
                   </template>
+                  {% comment %}
+                    The one control in the preview that is not disabled. A
+                    dropdown's whole content is its option list, and a disabled
+                    select cannot be opened to see it — so disabling this is
+                    disabling the only thing there is to check. Nothing is
+                    bound to it and the preview posts nowhere, so choosing an
+                    option does nothing at all.
+
+                    Options are keyed by index, as the editor list is. Keying
+                    on the label collides the moment a second option is added,
+                    because a new one starts blank — and Alpine drops the
+                    duplicate, so the preview would quietly show fewer options
+                    than the form has.
+                  {% endcomment %}
                   <template x-if="field.type === 'select'">
-                    <select disabled>
-                      <option x-text="field.placeholder"></option>
-                      <template x-for="option in field.options" :key="option.label">
+                    <select>
+                      <option x-text="field.placeholder || 'Choose one…'"></option>
+                      <template x-for="(option, index) in field.options" :key="index">
                         <option x-text="option.label"></option>
                       </template>
                     </select>
                   </template>
                   <template x-if="field.type === 'radio' || field.type === 'checkboxes'">
                     <div class="fb-preview-choices">
-                      <template x-for="option in field.options" :key="option.label">
+                      <template x-for="(option, index) in field.options" :key="index">
                         <label class="fb-preview-choice">
                           <input disabled :type="field.type === 'radio' ? 'radio' : 'checkbox'" />
                           <span x-text="option.label"></span>
