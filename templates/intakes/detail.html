@@ -117,13 +117,13 @@
           </table>
         </div>
       </div>
-    </div>
-    <div class="intake-main">
       <div id="intakeForms"
            class="card intake-forms"
            hx-trigger="intakeFormsChanged from:body"
            hx-get="{% url 'intakes:forms-panel' id=intake.id %}"
            hx-target="this">{% include "intakes/forms/panel.html" %}</div>
+    </div>
+    <div class="intake-main">
       <div class="card intake-notes">
         <div class="toolbar">
           <div class="toolbar-left">
