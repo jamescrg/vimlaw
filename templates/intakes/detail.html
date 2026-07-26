@@ -135,12 +135,12 @@
             <div class="mode-pills">
               <button type="button"
                       class="mode-pill"
-                      :class="pane === 'notes' ? 'active' : ''"
-                      @click="pane = 'notes'; localStorage.setItem('intake_pane', 'notes')">Notes</button>
-              <button type="button"
-                      class="mode-pill"
                       :class="pane === 'forms' ? 'active' : ''"
                       @click="pane = 'forms'; localStorage.setItem('intake_pane', 'forms')">Forms</button>
+              <button type="button"
+                      class="mode-pill"
+                      :class="pane === 'notes' ? 'active' : ''"
+                      @click="pane = 'notes'; localStorage.setItem('intake_pane', 'notes')">Notes</button>
             </div>
           </div>
           <div class="toolbar-right">
