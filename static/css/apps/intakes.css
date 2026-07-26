@@ -192,8 +192,11 @@ Detail View - Left Panel
  Notes
 ========================================================================== */
 
-.intake-notes .toolbar {
+/* Notes and Forms live in one card now; its toolbar holds the switch, so the
+   rule under it separates the header from whichever pane is showing. */
+.intake-panel > .toolbar {
   border-bottom: solid 1px var(--border-medium);
+  margin-bottom: 0;
 }
 
 .intake-note {

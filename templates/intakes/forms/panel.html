@@ -1,21 +1,8 @@
+{% comment %}
+  Rows only — the panel card's own header carries the Notes/Forms switch and
+  the + button, so this partial no longer titles itself.
+{% endcomment %}
 {% block content %}
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <h1>Forms</h1>
-      <div class="filter-tools">
-        <a href="#"
-           type="button"
-           class="btn-icon"
-           title="Add a form"
-           hx-get="{% url 'intakes:form-add' id=intake.id %}"
-           hx-target="#htmx-modal-container"
-           hx-trigger="click">
-          <i class="icon-plus"></i>
-        </a>
-      </div>
-    </div>
-    <div class="toolbar-right"></div>
-  </div>
   {% for submission in submissions %}
     <div class="intake-form-row">
       <div class="intake-form-row-main">
