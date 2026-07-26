@@ -38,16 +38,34 @@ document.addEventListener('alpine:init', () => {
     },
 
     mountSortable() {
+      // The node the dragged card sat in front of, captured before Sortable
+      // touches anything. Sortable rearranges the DOM directly, which
+      // desynchronises Alpine's x-for bookkeeping, so the card is put back
+      // exactly where it started and the array is left as the only thing that
+      // actually reorders.
+      let putBack = null;
+
       Sortable.create(this.$refs.canvas, {
         handle: '.fb-handle',
         animation: 150,
         ghostClass: 'fb-ghost',
+        onStart: (evt) => {
+          putBack = evt.item.nextSibling;
+        },
         onEnd: (evt) => {
-          // Sortable physically moves the node, which desynchronises Alpine's
-          // x-for keying. Put it back, reorder the array, and let Alpine
-          // re-render as the single source of truth.
+          // Restore against that saved neighbour rather than an index, which
+          // cannot be made to work here for two reasons. The canvas's first
+          // child is x-for's own <template>: Sortable's indexes skip template
+          // nodes and children[] does not, so every index-based restore is one
+          // slot early and dragging the first card lands it ahead of the
+          // template, where Alpine will never look for it. And an index only
+          // identifies the original neighbour on a downward drag — drag a card
+          // upward and children[oldIndex] is a different node than it was.
+          // A null neighbour appends, which is right for the last card.
+          evt.from.insertBefore(evt.item, putBack);
+          putBack = null;
+
           const { oldIndex, newIndex } = evt;
-          evt.from.insertBefore(evt.item, evt.from.children[oldIndex]);
           if (oldIndex === newIndex) return;
           const moved = this.fields.splice(oldIndex, 1)[0];
           this.fields.splice(newIndex, 0, moved);
