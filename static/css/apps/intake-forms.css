@@ -27,33 +27,82 @@
 }
 
 /* ==========================================================================
-   Forms table on the intake detail page
+   Forms cards on the intake detail page
 
-   It shares the right panel with the notes timeline, so it has the width for
-   real columns. .table is table-layout: fixed, so the secondary columns take
-   explicit widths and Form absorbs what's left.
+   A tile per form rather than a table row: an intake holds a handful at most
+   and they're never sorted, so there's nothing for columns to buy. Transparent
+   with a hairline border, the way contacts draws .contact-card.
    ========================================================================== */
 
-.intake-form-list .intake-form-status,
-.intake-form-list .intake-form-progress,
-.intake-form-list .intake-form-date {
-  text-align: center;
-  width: 7rem;
+.intake-form-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  padding-top: 1.25rem;
 }
 
-.intake-form-list .intake-form-actions {
-  text-align: right;
-  white-space: nowrap;
-  width: 8rem;
+.intake-form-card {
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
 }
 
-.intake-form-list .intake-form-actions .btn-icon + .btn-icon {
-  margin-left: 0.5rem;
+.intake-form-card-top {
+  align-items: start;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
 }
 
-.intake-form-recipient {
+.intake-form-name {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Label over value, so a long recipient address wraps under its own label
+   instead of squeezing the column. */
+.intake-form-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+}
+
+.intake-form-card-meta dt {
   color: var(--color-muted);
-  display: block;
+  font-weight: normal;
+}
+
+.intake-form-card-meta dd {
+  margin: 0;
+}
+
+.intake-form-card-recipient {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.intake-form-card-recipient dd {
+  overflow-wrap: anywhere;
+}
+
+/* Actions sit on the card's floor, so cards of differing height still line
+   their buttons up. */
+.intake-form-card-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+.intake-form-empty {
+  color: var(--color-muted);
+  padding: 1.25rem 0 0;
 }
 
 /* ==========================================================================

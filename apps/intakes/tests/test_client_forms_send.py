@@ -219,4 +219,4 @@ class TestReview:
         body = response.content.decode()
         assert response.status_code == 200
         assert filled_submission.template_name in body
-        assert "3 / 3" in body
+        assert "3 / 3" in body  # the card meta line
