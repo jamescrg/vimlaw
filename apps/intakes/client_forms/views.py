@@ -414,27 +414,39 @@ def form_submission_review(request, sub_id):
     )
 
 
-# Staff actions and the timestamp each one stamps. Anything not listed here is
-# not a transition staff can drive.
-_STATUS_ACTIONS = {
-    "close": ("CLOSED", "closed_at", "Form closed"),
-    "reopen": ("SUBMITTED", None, "Form reopened"),
-    "cancel": ("CANCELED", None, "Form canceled"),
-}
-
-
 @login_required
 @require_POST
 def form_submission_status(request, sub_id, status):
+    """Move a form between states from the status dropdown.
+
+    Status is the whole of the lock: CLOSED is what the public save/submit
+    guard checks, so there is no separate flag to keep in step.
+    """
     submission = get_object_or_404(FormSubmission, pk=sub_id)
-    action = _STATUS_ACTIONS.get(status)
-    if action is None:
+
+    if status == "lock":
+        submission.status = "CLOSED"
+        submission.closed_at = timezone.now()
+        message = "Form locked — the client can no longer edit it"
+    elif status == "reopen":
+        submission.status = submission.reopened_status
+        submission.closed_at = None
+        message = "Form reopened for the client"
+    elif status == "cancel":
+        # Cancelling is what kills the link: form_page 410s a CANCELED form,
+        # so the URL stops working without touching the uuid.
+        submission.status = "CANCELED"
+        submission.closed_at = None
+        message = "Form canceled — its link no longer works"
+    elif status == "draft":
+        submission.status = "DRAFT"
+        submission.closed_at = None
+        submission.sent_at = None
+        message = "Form reverted to draft"
+    else:
         return HttpResponse(status=400)
 
-    new_status, stamp, message = action
-    submission.status = new_status
-    submission.closed_at = timezone.now() if stamp == "closed_at" else None
-    submission.save(update_fields=["status", "closed_at", "updated_at"])
+    submission.save(update_fields=["status", "closed_at", "sent_at", "updated_at"])
     return _refresh(message)
 
 
@@ -454,10 +466,15 @@ def form_submission_delete(request, sub_id):
 
 @login_required
 @require_POST
-def form_submission_revoke(request, sub_id):
-    """Rotate the uuid, which invalidates every link already handed out. Staff
-    must resend afterwards — that is the point."""
+def form_submission_reissue(request, sub_id):
+    """Mint a fresh link by rotating the uuid.
+
+    Every link already handed out stops resolving at once — the token is a
+    signature over this uuid, so changing it invalidates them all. Use when a
+    link reached the wrong person; cancelling only closes the form, and
+    un-cancelling would hand the same URL back.
+    """
     submission = get_object_or_404(FormSubmission, pk=sub_id)
     submission.uuid = uuid.uuid4()
     submission.save(update_fields=["uuid", "updated_at"])
-    return _refresh("Link revoked — send a new one when you're ready")
+    return _refresh("New link issued — the old one no longer works")

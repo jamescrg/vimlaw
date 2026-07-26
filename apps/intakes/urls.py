@@ -6,9 +6,9 @@ from apps.intakes.client_forms.views import (
     form_builder_save,
     form_submission_delete,
     form_submission_link,
+    form_submission_reissue,
     form_submission_resend,
     form_submission_review,
-    form_submission_revoke,
     form_submission_send,
     form_submission_status,
     form_template_delete,
@@ -139,9 +139,9 @@ urlpatterns = [
         name="form-submission-delete",
     ),
     path(
-        "intakes/forms/submissions/<int:sub_id>/revoke/",
-        form_submission_revoke,
-        name="form-submission-revoke",
+        "intakes/forms/submissions/<int:sub_id>/reissue/",
+        form_submission_reissue,
+        name="form-submission-reissue",
     ),
     path(
         "intakes/forms/submissions/<int:sub_id>/status/<str:status>/",

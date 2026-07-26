@@ -1,6 +1,7 @@
 import pytest
 from django.core import mail
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.intakes.client_forms.models import FormSubmission
 from apps.settings.models import Firm
@@ -165,32 +166,102 @@ class TestStatusActions:
             kwargs={"sub_id": submission.id, "status": action},
         )
 
-    def test_closing_then_reopening(self, client, form_submission):
-        client.post(self.status_url(form_submission, "close"))
+    def test_locking_then_reopening(self, client, form_submission):
+        client.post(self.status_url(form_submission, "lock"))
         form_submission.refresh_from_db()
         assert form_submission.status == "CLOSED"
         assert form_submission.closed_at is not None
 
         client.post(self.status_url(form_submission, "reopen"))
         form_submission.refresh_from_db()
-        assert form_submission.status == "SUBMITTED"
         assert form_submission.closed_at is None
+
+    def test_reopening_returns_to_how_far_it_actually_got(
+        self, client, form_submission
+    ):
+        """A form the client never opened must not come back as Submitted."""
+        form_submission.status = "SENT"
+        form_submission.sent_at = timezone.now()
+        form_submission.save()
+
+        client.post(self.status_url(form_submission, "lock"))
+        client.post(self.status_url(form_submission, "reopen"))
+        form_submission.refresh_from_db()
+        assert form_submission.status == "SENT"
+
+    def test_cancelling_kills_the_link_without_touching_the_uuid(
+        self, client, form_submission
+    ):
+        """Cancel is the cheap way to stop a link working — form_page 410s a
+        canceled form, so the URL dies while the uuid stays put."""
+        from django.test import Client as DjangoClient
+
+        from apps.intakes.client_forms.links import form_path
+
+        before = form_submission.uuid
+        url = form_path(form_submission)
+
+        client.post(self.status_url(form_submission, "cancel"))
+        form_submission.refresh_from_db()
+
+        assert form_submission.status == "CANCELED"
+        assert form_submission.uuid == before
+        assert DjangoClient().get(url).status_code == 410
+
+    def test_reverting_to_draft_clears_the_sent_stamp(self, client, form_submission):
+        form_submission.status = "SENT"
+        form_submission.sent_at = timezone.now()
+        form_submission.save()
+
+        client.post(self.status_url(form_submission, "draft"))
+        form_submission.refresh_from_db()
+        assert form_submission.status == "DRAFT"
+        assert form_submission.sent_at is None
+
+    def test_a_canceled_form_can_be_brought_back(self, client, form_submission):
+        client.post(self.status_url(form_submission, "cancel"))
+        client.post(self.status_url(form_submission, "draft"))
+        form_submission.refresh_from_db()
+        assert form_submission.status == "DRAFT"
 
     def test_an_unknown_action_is_rejected(self, client, form_submission):
         assert (
             client.post(self.status_url(form_submission, "explode")).status_code == 400
         )
 
-    def test_revoking_rotates_the_uuid(self, client, form_submission):
-        before = form_submission.uuid
+    def test_offered_actions_depend_on_the_state(self, form_submission):
+        form_submission.status = "DRAFT"
+        assert [a for a, _ in form_submission.status_actions] == ["cancel"]
+
+        form_submission.status = "CANCELED"
+        assert [a for a, _ in form_submission.status_actions] == ["draft"]
+
+        form_submission.status = "CLOSED"
+        assert "reopen" in [a for a, _ in form_submission.status_actions]
+        assert "lock" not in [a for a, _ in form_submission.status_actions]
+
+    def test_reissuing_kills_every_link_already_handed_out(
+        self, client, form_submission
+    ):
+        """The token signs the uuid, so rotating it invalidates them all —
+        which is what cancel alone can't do, since un-cancelling would hand the
+        same URL back."""
+        from django.test import Client as DjangoClient
+
+        from apps.intakes.client_forms.links import form_path
+
+        stale = form_path(form_submission)
         response = client.post(
             reverse(
-                "intakes:form-submission-revoke", kwargs={"sub_id": form_submission.id}
+                "intakes:form-submission-reissue",
+                kwargs={"sub_id": form_submission.id},
             )
         )
         assert response.status_code == 204
+
         form_submission.refresh_from_db()
-        assert form_submission.uuid != before
+        assert DjangoClient().get(stale).status_code == 404
+        assert DjangoClient().get(form_path(form_submission)).status_code == 200
 
 
 class TestDeleting:

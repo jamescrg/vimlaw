@@ -73,7 +73,18 @@
   white-space: normal;
 }
 
-/* Status text and send tally on one line, the tally trailing. */
+/* The status control is a dropdown trigger, but it reports state rather than
+   offering navigation, so it reads as text until hovered. */
+.intake-form-status-text {
+  color: inherit;
+  text-align: left;
+}
+
+.intake-form-status-text:hover {
+  color: var(--link-hover);
+}
+
+/* Status control and send tally on one line, the tally trailing. */
 .intake-form-status .badge-flag-row {
   align-items: center;
   gap: 0.375rem;

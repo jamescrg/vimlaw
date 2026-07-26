@@ -47,17 +47,12 @@
                          hx-target="#htmx-modal-container"><i class="icon-link"></i> Copy link</a>
                     </li>
                   {% endif %}
-                  {% if submission.status == "CLOSED" %}
+                  {% if not submission.is_unsent %}
                     <li>
                       <a class="dropdown-item"
                          href="#"
-                         hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='reopen' %}"><i class="icon-lock-open"></i> Reopen for client</a>
-                    </li>
-                  {% elif submission.status != "CANCELED" %}
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='close' %}"><i class="icon-lock"></i> Lock</a>
+                         hx-post="{% url 'intakes:form-submission-reissue' sub_id=submission.id %}"
+                         hx-confirm="Issue a new link for {{ submission.template_name }}? Any link already sent will stop working, and the client will need the new one."><i class="icon-refresh-cw"></i> Reissue link</a>
                     </li>
                   {% endif %}
                   <li>
@@ -76,8 +71,28 @@
             <td class="intake-form-done">{{ submission.answered_count }} / {{ submission.question_count }}</td>
             <td class="intake-form-status">
               <div class="badge-flag-row">
-                {# The column already says "Status"; a badge would say it twice. #}
-                <span class="intake-form-status-text">{{ submission.get_status_display }}</span>
+                {% comment %}
+                  Status is the lock, so changing it here is how a form is
+                  locked, cancelled or put back to draft. The model decides
+                  which moves are open from the current state.
+                {% endcomment %}
+                <div class="dropdown" x-data="dropdown()">
+                  <button class="button-link intake-form-status-text"
+                          type="button"
+                          x-ref="button"
+                          @click="toggle()"
+                          :aria-expanded="open">{{ submission.get_status_display }}</button>
+                  <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                    {% for action, label in submission.status_actions %}
+                      <li>
+                        <a class="dropdown-item"
+                           href="#"
+                           hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status=action %}"
+                           {% if action == 'cancel' %} hx-confirm="Cancel {{ submission.template_name }}? Its link will stop working for the client." {% endif %}>{{ label }}</a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
                 {% comment %}
                   Invoices only show this from ×2, since their Sent status
                   implies the first send. Here the status can be Opened or

@@ -135,6 +135,37 @@ class FormSubmission(AuditMixin, models.Model):
         """Created but not yet handed over — the row still offers Send."""
         return self.status in self.UNSENT
 
+    @property
+    def status_actions(self):
+        """The status changes staff may make from here, as (action, label).
+
+        Kept on the model so the rule lives beside the states it governs — the
+        panel just renders whatever this returns.
+        """
+        actions = []
+        if self.status == "CLOSED":
+            actions.append(("reopen", "Reopen for client"))
+        elif self.status not in ("DRAFT", "CANCELED"):
+            actions.append(("lock", "Lock"))
+        if self.status != "CANCELED":
+            actions.append(("cancel", "Cancel"))
+        if self.status != "DRAFT":
+            actions.append(("draft", "Revert to draft"))
+        return actions
+
+    @property
+    def reopened_status(self):
+        """Where a locked form returns to: the furthest it actually got, not a
+        flat SUBMITTED — reopening a form the client never opened shouldn't
+        claim they answered it."""
+        if self.submitted_at:
+            return "SUBMITTED"
+        if self.opened_at:
+            return "OPENED"
+        if self.sent_at:
+            return "SENT"
+        return "DRAFT"
+
     def mark_sent(self):
         """The client now has the link, however it reached them. Only moves a
         draft forward: a form already opened or submitted must not regress."""
