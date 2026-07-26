@@ -287,7 +287,10 @@ Markdown
   font-weight: 400;
 }
 
+/* The answer, half a step up in weight against its muted label — the pair
+   reads caption-then-content without either one shouting. */
 .intake-note-details p:has(> strong:only-child) + p {
+  font-weight: 500;
   margin-top: 0.25rem;
 }
 
