@@ -29,43 +29,56 @@
 /* ==========================================================================
    Forms table on the intake detail page
 
-   .table is table-layout: fixed, so the fixed columns take explicit widths
-   and Form absorbs what's left.
+   .table is table-layout: fixed, so the three fixed columns take explicit
+   widths and Form absorbs the rest. The min-width is what stops Form being
+   squeezed past readability in the panel — below it .table-container scrolls
+   rather than the name collapsing. 7 + 5 + 5 fixed leaves Form ~13rem.
    ========================================================================== */
 
+.intake-form-table {
+  min-width: 30rem;
+}
+
 .intake-form-table .intake-form-date {
-  width: 7rem;
+  width: 8rem;
 }
 
-.intake-form-table .intake-form-progress,
-.intake-form-table .intake-form-lock {
+.intake-form-table .intake-form-done {
   text-align: center;
-  width: 6rem;
+  width: 5rem;
 }
 
-/* The name and its menu share the cell; the name takes the slack so the menu
-   stays pinned right whatever the form is called. */
+.intake-form-table .intake-form-send {
+  text-align: center;
+  width: 5rem;
+}
+
+/* Form is the elastic column, so its text wraps rather than truncating — the
+   global td rule (tables.css) forces nowrap + ellipsis on every cell. */
+.intake-form-table td.intake-form-name {
+  white-space: normal;
+}
+
+/* The name and its menu share the cell. align-items: start keeps the menu
+   level with the first line when a long form name wraps. */
 .intake-form-name-cell {
-  align-items: center;
+  align-items: start;
   display: flex;
   gap: 0.5rem;
   justify-content: space-between;
 }
 
 .intake-form-name-cell > a {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-/* An open form is the unremarkable state, so its padlock sits back; a locked
-   one is a deliberate act and reads at full strength. */
-.intake-form-unlocked {
-  color: var(--color-muted-more);
-}
-
-.intake-form-lock-none {
-  color: var(--color-muted-more);
+/* Send control + tally, centred as one unit. */
+.intake-form-send .badge-flag-row {
+  align-items: center;
+  display: flex;
+  gap: 0.375rem;
+  justify-content: center;
 }
 
 /* ==========================================================================

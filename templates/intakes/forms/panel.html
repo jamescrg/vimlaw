@@ -1,8 +1,10 @@
 {% comment %}
-  Date, form, progress, lock. Every action lives in the name cell's three-dot
-  menu — the same dropdown the folder rows use — so the row itself carries only
-  information. The panel card's own header holds the Notes/Forms switch and the
-  + button, so this partial doesn't title itself.
+  Created, Form, Done, Send. Form is the only elastic column; the rest are
+  fixed, and the table carries a min-width so Form can't be squeezed below
+  readability — .table-container scrolls instead. The name cell's three-dot
+  menu holds everything the Send column doesn't. The panel card's own header
+  holds the Notes/Forms switch and the + button, so this partial doesn't title
+  itself.
 {% endcomment %}
 {% block content %}
   <div class="table-container">
@@ -11,8 +13,8 @@
         <tr>
           <th class="intake-form-date">Created</th>
           <th class="intake-form-name">Form</th>
-          <th class="intake-form-progress">Answered</th>
-          <th class="intake-form-lock">Lock</th>
+          <th class="intake-form-done">Done</th>
+          <th class="intake-form-send">Send</th>
         </tr>
       </thead>
       <tbody>
@@ -40,25 +42,25 @@
                          hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
                          hx-target="#htmx-modal-container"><i class="icon-eye"></i> View answers</a>
                     </li>
-                    {% if submission.is_unsent %}
-                      <li>
-                        <a class="dropdown-item"
-                           href="#"
-                           hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"
-                           hx-target="#htmx-modal-container"><i class="icon-send"></i> Send to client</a>
-                      </li>
-                    {% else %}
+                    {% if not submission.is_unsent %}
                       <li>
                         <a class="dropdown-item"
                            href="#"
                            hx-post="{% url 'intakes:form-submission-link' sub_id=submission.id %}"
                            hx-target="#htmx-modal-container"><i class="icon-link"></i> Copy link</a>
                       </li>
+                    {% endif %}
+                    {% if submission.status == "CLOSED" %}
                       <li>
                         <a class="dropdown-item"
                            href="#"
-                           hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
-                           hx-target="#htmx-modal-container"><i class="icon-mail"></i> Send a reminder</a>
+                           hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='reopen' %}"><i class="icon-lock-open"></i> Reopen for client</a>
+                      </li>
+                    {% elif submission.status != "CANCELED" %}
+                      <li>
+                        <a class="dropdown-item"
+                           href="#"
+                           hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='close' %}"><i class="icon-lock"></i> Lock</a>
                       </li>
                     {% endif %}
                     <li>
@@ -75,25 +77,38 @@
                 </div>
               </div>
             </td>
-            <td class="intake-form-progress">{{ submission.answered_count }} / {{ submission.question_count }}</td>
-            <td class="intake-form-lock">
-              {% if submission.status == "CLOSED" %}
-                <a href="#"
-                   class="btn-icon"
-                   title="Locked — the client can't edit. Click to reopen."
-                   hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='reopen' %}">
-                  <i class="icon-lock"></i>
-                </a>
-              {% elif submission.status == "CANCELED" %}
-                <span class="intake-form-lock-none" title="Canceled">&mdash;</span>
-              {% else %}
-                <a href="#"
-                   class="btn-icon intake-form-unlocked"
-                   title="Open — the client can still edit. Click to lock."
-                   hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='close' %}">
-                  <i class="icon-lock-open"></i>
-                </a>
-              {% endif %}
+            <td class="intake-form-done">{{ submission.answered_count }} / {{ submission.question_count }}</td>
+            <td class="intake-form-send">
+              {% comment %}
+                The invoices row's send control (invoicing/invoices/row.html).
+                Unlike invoices there is no status column here, so the tally
+                shows from ×1 — it is the only sign the form has gone out.
+              {% endcomment %}
+              <div class="badge-flag-row">
+                {% if submission.is_unsent %}
+                  <button class="button-link"
+                          type="button"
+                          hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"
+                          hx-target="#htmx-modal-container"
+                          title="Send to client"
+                          aria-label="Send to client">
+                    <i class="icon-send-horizontal"></i>
+                  </button>
+                {% else %}
+                  <button class="button-link"
+                          type="button"
+                          hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
+                          hx-target="#htmx-modal-container"
+                          title="Send a reminder"
+                          aria-label="Send a reminder">
+                    <i class="icon-send-horizontal"></i>
+                  </button>
+                  {% if submission.send_count %}
+                    <span class="app-badge app-badge-round badge-gray"
+                          title="Sent {{ submission.send_count }} time{{ submission.send_count|pluralize }}">×{{ submission.send_count }}</span>
+                  {% endif %}
+                {% endif %}
+              </div>
             </td>
           </tr>
         {% empty %}
