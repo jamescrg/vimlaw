@@ -109,9 +109,11 @@ class FormSubmission(AuditMixin, models.Model):
     last_saved_at = models.DateTimeField(null=True, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     closed_at = models.DateTimeField(null=True, blank=True)
-    # Timeline breadcrumb filed on the intake when the client submits. Fixed
-    # text only — Note.details is rendered through markdown then |safe, so
-    # routing client-supplied answers into it would be a stored-XSS hole.
+    # The intake-timeline note carrying what the client submitted, rewritten
+    # on every submit. Its Markdown is built by render.submission_markdown,
+    # which neutralises every piece of client text: Note.details is rendered
+    # through markdown then emitted |safe, so a raw answer there would be
+    # live HTML.
     note = models.ForeignKey(
         "intakes.Note",
         on_delete=models.SET_NULL,

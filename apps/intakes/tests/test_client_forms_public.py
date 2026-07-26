@@ -251,6 +251,33 @@ class TestSubmit:
         assert "When did it start?" not in details
         assert "Nature of dispute" not in details
 
+    def test_answering_more_and_resubmitting_rewrites_the_note(
+        self, anon, form_submission, answer_keys
+    ):
+        """A form can be reopened and finished later. The note has to follow,
+        or the timeline keeps describing a file that has moved on."""
+        post_json(
+            anon,
+            submit_url(form_submission),
+            {"answers": {answer_keys["Property address"]: "225 Paper Street"}},
+        )
+        form_submission.refresh_from_db()
+        note_id = form_submission.note_id
+
+        post_json(
+            anon,
+            submit_url(form_submission),
+            {"answers": {answer_keys["When did it start?"]: "2026-03-04"}},
+        )
+        form_submission.refresh_from_db()
+        details = form_submission.note.details
+
+        # The same note, rewritten — not a second one filed beside the first.
+        assert form_submission.note_id == note_id
+        assert Note.objects.filter(intake=form_submission.intake).count() == 1
+        assert "March 4, 2026" in details
+        assert "225 Paper Street" in details
+
     def test_client_text_in_the_note_can_never_become_markup(
         self, anon, form_submission, answer_keys
     ):

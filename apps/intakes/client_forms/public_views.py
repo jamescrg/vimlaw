@@ -197,11 +197,9 @@ def form_submit(request, token):
             row.save(update_fields=["answers", "last_saved_at", "updated_at"])
             return JsonResponse({"ok": False, "errors": errors}, status=400)
 
-        first_submission = row.status != "SUBMITTED"
         row.status = "SUBMITTED"
         row.submitted_at = timezone.now()
-        if first_submission and row.note_id is None:
-            row.note = _file_note(row)
+        _file_note(row)
         row.save(
             update_fields=[
                 "answers",
@@ -217,20 +215,35 @@ def form_submit(request, token):
 
 
 def _file_note(submission):
-    """File what the client said into the intake's note timeline.
+    """Put what the client said into the intake's note timeline, as Markdown.
 
-    The answers go in as Markdown so the timeline reads as a record rather
-    than a pointer. Every piece of client text is neutralised on the way in by
+    Rewritten on every submit, not just the first. Submitting is not a
+    one-shot event here — staff reopen a form, the client comes back and
+    answers more — and a note that froze at the first pass would describe a
+    file that has since changed. Its timestamp moves too, so the timeline
+    puts it where the client last actually said something. Nothing is lost:
+    Note carries HistoricalRecords, so each earlier version stays readable.
+
+    Every piece of client text is neutralised on the way in by
     render.submission_markdown — Note.details is rendered through markdown and
     emitted with |safe on the intake page, so an unescaped answer would be
     live HTML there.
     """
     now = timezone.localtime()
-    return Note.objects.create(
-        intake=submission.intake,
-        user=None,
-        type="Client Form",
-        date=now.date(),
-        time=now.time(),
-        details=submission_markdown(submission),
-    )
+    details = submission_markdown(submission)
+
+    if submission.note is None:
+        submission.note = Note.objects.create(
+            intake=submission.intake,
+            user=None,
+            type="Client Form",
+            date=now.date(),
+            time=now.time(),
+            details=details,
+        )
+        return
+
+    submission.note.details = details
+    submission.note.date = now.date()
+    submission.note.time = now.time()
+    submission.note.save(update_fields=["details", "date", "time", "updated_at"])
