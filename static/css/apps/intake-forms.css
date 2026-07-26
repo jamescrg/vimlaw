@@ -27,21 +27,45 @@
 }
 
 /* ==========================================================================
-   Forms list on the intake detail page
+   Forms table on the intake detail page
 
-   The row geometry is shared with the notes timeline beside it — see
-   .intake-row in apps/intakes.css. Only the name's truncation is forms' own.
+   .table is table-layout: fixed, so the fixed columns take explicit widths
+   and Form absorbs what's left.
    ========================================================================== */
 
-.intake-form-name {
+.intake-form-table .intake-form-date {
+  width: 7rem;
+}
+
+.intake-form-table .intake-form-progress,
+.intake-form-table .intake-form-lock {
+  text-align: center;
+  width: 6rem;
+}
+
+/* The name and its menu share the cell; the name takes the slack so the menu
+   stays pinned right whatever the form is called. */
+.intake-form-name-cell {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.intake-form-name-cell > a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.intake-form-empty {
-  color: var(--color-muted);
-  padding: 1rem 0 1rem 0.5rem;
+/* An open form is the unremarkable state, so its padlock sits back; a locked
+   one is a deliberate act and reads at full strength. */
+.intake-form-unlocked {
+  color: var(--color-muted-more);
+}
+
+.intake-form-lock-none {
+  color: var(--color-muted-more);
 }
 
 /* ==========================================================================

@@ -4,6 +4,7 @@ from apps.intakes.api_views import receive_inquiry, receive_intake, search_intak
 from apps.intakes.client_forms.views import (
     form_builder,
     form_builder_save,
+    form_submission_delete,
     form_submission_link,
     form_submission_resend,
     form_submission_review,
@@ -131,6 +132,11 @@ urlpatterns = [
         "intakes/forms/submissions/<int:sub_id>/resend/",
         form_submission_resend,
         name="form-submission-resend",
+    ),
+    path(
+        "intakes/forms/submissions/<int:sub_id>/delete/",
+        form_submission_delete,
+        name="form-submission-delete",
     ),
     path(
         "intakes/forms/submissions/<int:sub_id>/revoke/",

@@ -193,6 +193,51 @@ class TestStatusActions:
         assert form_submission.uuid != before
 
 
+class TestDeleting:
+    def delete_url(self, submission):
+        return reverse(
+            "intakes:form-submission-delete", kwargs={"sub_id": submission.id}
+        )
+
+    def test_a_form_added_by_mistake_can_be_deleted(self, client, form_submission):
+        response = client.post(self.delete_url(form_submission))
+        assert response.status_code == 204
+        assert not FormSubmission.objects.filter(pk=form_submission.pk).exists()
+
+    def test_deleting_takes_its_transmissions_with_it(
+        self, client, intake, form_template
+    ):
+        submission = add_then(client, intake, form_template)
+        client.post(send_url(submission), {"to": "c@example.com", "action": "link"})
+        assert submission.transmissions.exists()
+
+        client.post(self.delete_url(submission))
+        assert not FormSubmission.objects.filter(pk=submission.pk).exists()
+
+    def test_the_warning_names_the_answers_that_would_be_lost(
+        self, client, intake, filled_submission
+    ):
+        """A form with answers is the dangerous case, so the confirm text has
+        to say what's being destroyed rather than ask a generic question."""
+        body = client.get(
+            reverse("intakes:forms-panel", kwargs={"id": intake.id})
+        ).content.decode()
+        assert "answered 3 of 3 questions" in body
+        assert "will be deleted with it" in body
+
+    def test_an_unanswered_form_gets_the_plain_warning(
+        self, client, intake, form_submission
+    ):
+        body = client.get(
+            reverse("intakes:forms-panel", kwargs={"id": intake.id})
+        ).content.decode()
+        assert "cannot be undone" in body
+        assert "will be deleted with it" not in body
+
+    def test_delete_requires_post(self, client, form_submission):
+        assert client.get(self.delete_url(form_submission)).status_code == 405
+
+
 class TestReview:
     def test_the_review_shows_the_questions_as_asked(self, client, filled_submission):
         response = client.get(

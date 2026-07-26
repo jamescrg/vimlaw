@@ -440,6 +440,20 @@ def form_submission_status(request, sub_id, status):
 
 @login_required
 @require_POST
+def form_submission_delete(request, sub_id):
+    """Delete a form sent in error.
+
+    Destroys the client's answers along with it, which is why the template
+    warns when any have been given — there is no other copy.
+    """
+    submission = get_object_or_404(FormSubmission, pk=sub_id)
+    name = submission.template_name
+    submission.delete()
+    return _refresh(f"{name} deleted")
+
+
+@login_required
+@require_POST
 def form_submission_revoke(request, sub_id):
     """Rotate the uuid, which invalidates every link already handed out. Staff
     must resend afterwards — that is the point."""

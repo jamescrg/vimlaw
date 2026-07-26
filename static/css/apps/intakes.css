@@ -201,9 +201,15 @@ Detail View - Left Panel
   margin-bottom: 0;
 }
 
-/* One row shape for both panes. Notes and forms are lists of the same thing —
-   a title line with actions to the right and a muted line under it — so the
-   geometry lives here once and each pane adds only what's its own. */
+/* Keep the forms table off the header rule — otherwise its own top border
+   sits a hairline below it and reads as a double line. Notes needs no
+   equivalent: its first row's padding already provides the gap. */
+.intake-panel > .intake-forms {
+  padding-top: 1rem;
+}
+
+/* A note's row: a title line, then the body. Forms are a table again, so this
+   is the notes timeline's own shape now rather than a shared one. */
 .intake-row {
   border-bottom: solid 1px var(--border-medium);
   padding: 1rem 0 1rem 0.5rem;
@@ -221,21 +227,6 @@ Detail View - Left Panel
   display: flex;
   gap: 0.75rem;
   min-width: 0;
-}
-
-.intake-row-actions {
-  align-items: center;
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0.75rem;
-}
-
-.intake-row-meta {
-  color: var(--color-muted);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  margin-top: 0.25rem;
 }
 
 /* ==========================================================================
