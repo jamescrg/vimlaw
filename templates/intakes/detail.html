@@ -140,7 +140,7 @@
     <div class="intake-main"
          x-data="{ pane: localStorage.getItem('intake_pane') === 'forms' ? 'forms' : 'notes' }">
       <div class="card intake-panel">
-        <div class="toolbar" :class="pane === 'forms' ? 'toolbar-flush' : ''">
+        <div class="toolbar">
           <div class="toolbar-left">
             {# .mode-pills is the segmented control matters and case already use. #}
             <div class="mode-pills">
@@ -186,9 +186,9 @@
         <div class="intake-notes" x-show="pane === 'notes'" x-cloak>
           {% if notes %}
             {% for note in notes %}
-              <div class="intake-note">
-                <div class="intake-note-title">
-                  <div class="intake-note-title-left">
+              <div class="intake-row">
+                <div class="intake-row-title">
+                  <div class="intake-row-title-left">
                     <a href="#"
                        type="button"
                        class="btn-icon"
@@ -200,7 +200,6 @@
                     <span class="intake-note-username">{{ note.user.username|title }}</span>
                     <span class="intake-note-type">{{ note.type }}</span>
                   </div>
-                  <div class="intake-note-title-right"></div>
                 </div>
                 <div class="intake-note-details">{{ note.details|safe }}</div>
               </div>

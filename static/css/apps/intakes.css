@@ -195,62 +195,47 @@ Detail View - Left Panel
 ========================================================================== */
 
 /* Notes and Forms live in one card; its toolbar holds the switch, so the rule
-   under it separates the header from the pane below. The forms table brings
-   its own top border, which would double up — so that pane goes flush. */
+   under it separates the header from whichever pane is showing. */
 .intake-panel > .toolbar {
   border-bottom: solid 1px var(--border-medium);
   margin-bottom: 0;
 }
 
-.intake-panel > .toolbar.toolbar-flush {
-  border-bottom: none;
-}
-
-.intake-note {
+/* One row shape for both panes. Notes and forms are lists of the same thing —
+   a title line with actions to the right and a muted line under it — so the
+   geometry lives here once and each pane adds only what's its own. */
+.intake-row {
   border-bottom: solid 1px var(--border-medium);
   padding: 1rem 0 1rem 0.5rem;
 }
 
-.intake-note-title {
+.intake-row-title {
   align-items: center;
   display: flex;
+  gap: 1rem;
   justify-content: space-between;
 }
 
-.intake-note-title button {
-  background: var(--background-control);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--link);
-  padding: 0.375rem 0.625rem;
+.intake-row-title-left {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
-.intake-note-title-right {
-  margin-right: 0.5rem;
+.intake-row-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.75rem;
 }
 
-.intake-note-date-time {
-  margin-right: 1rem;
-}
-
-.intake-note-username {
-  margin-right: 1rem;
-}
-
-.intake-note-type {
-  margin-right: 1rem;
-}
-
-.intake-note-date {
-  width: 7.5rem;
-}
-
-.intake-note-username {
-  width: 7.5rem;
-}
-
-.intake-note-type {
-  width: 7.5rem;
+.intake-row-meta {
+  color: var(--color-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.25rem;
 }
 
 /* ==========================================================================

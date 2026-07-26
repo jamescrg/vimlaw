@@ -8,9 +8,9 @@
 {% block content %}
   <div class="intake-form-list">
     {% for submission in submissions %}
-      <div class="intake-form-item">
-        <div class="intake-form-item-title">
-          <div class="intake-form-item-title-left">
+      <div class="intake-row">
+        <div class="intake-row-title">
+          <div class="intake-row-title-left">
             <a href="#"
                class="intake-form-name"
                hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
@@ -30,7 +30,7 @@
               <span class="app-badge badge-gray">Draft</span>
             {% endif %}
           </div>
-          <div class="intake-form-item-actions">
+          <div class="intake-row-actions">
             {% if submission.is_unsent %}
               <a href="#"
                  class="btn btn-sm btn-success"
@@ -72,7 +72,7 @@
             {% endif %}
           </div>
         </div>
-        <div class="intake-form-item-meta">
+        <div class="intake-row-meta">
           <span>{{ submission.answered_count }} / {{ submission.question_count }} answered</span>
           <span>
             {% if submission.submitted_at %}

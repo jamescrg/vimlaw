@@ -29,49 +29,14 @@
 /* ==========================================================================
    Forms list on the intake detail page
 
-   Full-width rows divided by a single rule, matching .intake-note in
-   apps/intakes.css — the notes timeline is the neighbour it shares a panel
-   with, so the two read as one surface rather than two treatments.
+   The row geometry is shared with the notes timeline beside it — see
+   .intake-row in apps/intakes.css. Only the name's truncation is forms' own.
    ========================================================================== */
-
-.intake-form-item {
-  border-bottom: solid 1px var(--border-medium);
-  padding: 1rem 0 1rem 0.5rem;
-}
-
-.intake-form-item-title {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-}
-
-.intake-form-item-title-left {
-  align-items: center;
-  display: flex;
-  gap: 0.75rem;
-  min-width: 0;
-}
 
 .intake-form-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.intake-form-item-actions {
-  align-items: center;
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0.75rem;
-}
-
-.intake-form-item-meta {
-  color: var(--color-muted);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  margin-top: 0.25rem;
 }
 
 .intake-form-empty {
