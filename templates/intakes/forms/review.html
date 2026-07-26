@@ -30,15 +30,9 @@
             </dd>
           {% else %}
             <dt>{{ block.label }}</dt>
-            {% if block.answered %}
-              <dd>
-                {{ block.display|linebreaks }}
-              </dd>
-            {% else %}
-              <dd class="review-unanswered">
-                Not answered
-              </dd>
-            {% endif %}
+            <dd>
+              {{ block.display|linebreaks }}
+            </dd>
           {% endif %}
         {% endfor %}
       </dl>

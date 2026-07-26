@@ -7,6 +7,7 @@ public fill page and the staff read view both come through here, so there is
 one interpretation of a form and no second path to drift.
 """
 
+import html
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
@@ -164,3 +165,84 @@ def orphan_answers(schema, answers):
         for key, value in (answers or {}).items()
         if key not in known and is_answered(value)
     ]
+
+
+# --- The answers as Markdown, for the intake's note timeline ---------------
+#
+# Note.details is run through markdown and emitted with |safe on the intake
+# page, so anything a client typed would otherwise be live HTML there — a
+# <script>, an onerror attribute, or a [link](javascript:...) all survive
+# python-markdown untouched. Every answer therefore goes through _plain()
+# below, which strips its power to be markup at all. The structure — headings,
+# table pipes — is ours and stays live.
+
+# Characters markdown gives meaning to. Escaped with a backslash, they render
+# as themselves; `&`, `<` and `>` are handled by html.escape first.
+_MD_SPECIALS = "\\`*_{}[]()#+-.!|~"
+
+
+def _plain(text):
+    """One piece of client text, rendered incapable of producing markup."""
+    escaped = html.escape(str(text), quote=False)
+    for char in _MD_SPECIALS:
+        escaped = escaped.replace(char, "\\" + char)
+    # A cell can't hold a newline; markdown tables are one row per line.
+    return escaped.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
+
+
+def answered_blocks(blocks):
+    """Only what the client actually said: unanswered questions drop out, and
+    so does any heading left with nothing under it.
+
+    Shared by the staff read view and the note Markdown so the two never
+    disagree about what "what they submitted" means. How much went unanswered
+    is already on the forms panel as a Done count, so a roll-call of blanks
+    here would only bury the substance.
+    """
+    kept = []
+    for block in blocks:
+        if block["kind"] == "heading":
+            kept.append(block)
+            continue
+        if block["kind"] in ("field", "unknown") and not block["answered"]:
+            continue
+        kept.append(block)
+
+    # A heading with no answered block before the next heading says nothing.
+    out = []
+    for index, block in enumerate(kept):
+        if block["kind"] == "heading":
+            rest = kept[index + 1 :]
+            following = next((b for b in rest if b["kind"] != "text"), None)
+            if following is None or following["kind"] == "heading":
+                continue
+        out.append(block)
+    return out
+
+
+def submission_markdown(submission):
+    """What the client said, as Markdown, for the note filed on submission."""
+    blocks = answered_blocks(
+        render_blocks(submission.schema_snapshot, submission.answers)
+    )
+
+    lines = [f"### {_plain(submission.template_name)}", ""]
+    open_table = False
+    wrote_any = False
+
+    for block in blocks:
+        if block["kind"] == "heading":
+            lines += ["", f"#### {_plain(block['label'])}", ""]
+            open_table = False
+            continue
+        if block["kind"] not in ("field", "unknown"):
+            continue
+        if not open_table:
+            lines += ["| Question | Answer |", "| --- | --- |"]
+            open_table = True
+        lines.append(f"| {_plain(block['label'])} | {_plain(block['display'])} |")
+        wrote_any = True
+
+    if not wrote_any:
+        lines.append("*No questions were answered.*")
+    return "\n".join(lines).rstrip() + "\n"

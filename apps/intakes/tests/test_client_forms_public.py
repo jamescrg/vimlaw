@@ -222,20 +222,85 @@ class TestSubmit:
         assert form_submission.note.type == "Client Form"
         assert form_submission.note.user is None
 
-    def test_the_note_carries_no_client_supplied_text(
-        self, anon, form_submission, answer_keys
-    ):
-        """Note.details is markdown-rendered and emitted with |safe on the staff
-        detail page, so nothing the client typed may reach it."""
-        payload = "<script>alert('xss')</script>"
+    def test_the_note_carries_the_answers(self, anon, form_submission, answer_keys):
         post_json(
             anon,
             submit_url(form_submission),
-            {"answers": {answer_keys["Property address"]: payload}},
+            {"answers": {answer_keys["Property address"]: "225 Paper Street"}},
         )
         form_submission.refresh_from_db()
-        assert payload not in form_submission.note.details
-        assert "alert" not in form_submission.note.details
+        details = form_submission.note.details
+
+        assert "225 Paper Street" in details
+        assert "Property address" in details
+        assert form_submission.template_name in details
+
+    def test_the_note_omits_questions_the_client_left_blank(
+        self, anon, form_submission, answer_keys
+    ):
+        """The Done count already says how much went unanswered; the timeline
+        should carry what they said, not a roll-call of blanks."""
+        post_json(
+            anon,
+            submit_url(form_submission),
+            {"answers": {answer_keys["Property address"]: "225 Paper Street"}},
+        )
+        form_submission.refresh_from_db()
+        details = form_submission.note.details
+
+        assert "When did it start?" not in details
+        assert "Nature of dispute" not in details
+
+    def test_client_text_in_the_note_can_never_become_markup(
+        self, anon, form_submission, answer_keys
+    ):
+        """Note.details is run through markdown and emitted with |safe on the
+        intake page, so an answer that survived as HTML would be stored XSS.
+        The text is kept — only its power to be markup is taken away."""
+        from html.parser import HTMLParser
+
+        import markdown
+
+        from apps.intakes.views import NOTE_MARKDOWN_EXTENSIONS
+
+        hostile = "<img src=x onerror=alert(1)>[go](javascript:alert(2))"
+        post_json(
+            anon,
+            submit_url(form_submission),
+            {"answers": {answer_keys["Property address"]: hostile}},
+        )
+        form_submission.refresh_from_db()
+        details = form_submission.note.details
+
+        # Stored escaped, not raw.
+        assert "<img" not in details
+        assert "onerror=alert(1)" in details.replace("\\", "")  # the words survive
+
+        class Tags(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.tags, self.attrs = [], []
+
+            def handle_starttag(self, tag, attrs):
+                self.tags.append(tag)
+                self.attrs += attrs
+
+        parser = Tags()
+        parser.feed(markdown.markdown(details, extensions=NOTE_MARKDOWN_EXTENSIONS))
+
+        assert set(parser.tags) <= {
+            "h3",
+            "h4",
+            "table",
+            "thead",
+            "tbody",
+            "tr",
+            "th",
+            "td",
+            "p",
+            "br",
+        }
+        assert parser.attrs == []
 
     def test_revising_after_submitting_does_not_file_a_second_note(
         self, anon, form_submission, answer_keys

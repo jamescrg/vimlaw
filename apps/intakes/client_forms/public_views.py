@@ -21,7 +21,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.intakes.client_forms.models import FormSubmission
-from apps.intakes.client_forms.render import render_blocks
+from apps.intakes.client_forms.render import render_blocks, submission_markdown
 from apps.intakes.client_forms.schema import MAX_ANSWERS_BYTES, validate_answers
 from apps.intakes.models import Note
 from utils.ratelimit import rate_limited
@@ -217,13 +217,13 @@ def form_submit(request, token):
 
 
 def _file_note(submission):
-    """Drop a breadcrumb in the intake's note timeline so the staff badge lights
-    up.
+    """File what the client said into the intake's note timeline.
 
-    The text is FIXED. Note.details is run through markdown and emitted with
-    |safe on the intake detail page, so routing a client's own words through it
-    would be a stored-XSS hole. The answers are read in the forms card, which
-    escapes.
+    The answers go in as Markdown so the timeline reads as a record rather
+    than a pointer. Every piece of client text is neutralised on the way in by
+    render.submission_markdown — Note.details is rendered through markdown and
+    emitted with |safe on the intake page, so an unescaped answer would be
+    live HTML there.
     """
     now = timezone.localtime()
     return Note.objects.create(
@@ -232,5 +232,5 @@ def _file_note(submission):
         type="Client Form",
         date=now.date(),
         time=now.time(),
-        details=f"Submitted the intake form: {submission.template_name}",
+        details=submission_markdown(submission),
     )

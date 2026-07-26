@@ -29,7 +29,11 @@ from apps.intakes.client_forms.models import (
     FormTemplate,
     submissions_for_intake,
 )
-from apps.intakes.client_forms.render import orphan_answers, render_blocks
+from apps.intakes.client_forms.render import (
+    answered_blocks,
+    orphan_answers,
+    render_blocks,
+)
 from apps.intakes.client_forms.schema import (
     MAX_SCHEMA_BYTES,
     SchemaError,
@@ -408,7 +412,9 @@ def form_submission_review(request, sub_id):
         "intakes/forms/review.html",
         {
             "submission": submission,
-            "blocks": render_blocks(submission.schema_snapshot, submission.answers),
+            "blocks": answered_blocks(
+                render_blocks(submission.schema_snapshot, submission.answers)
+            ),
             "orphans": orphan_answers(submission.schema_snapshot, submission.answers),
         },
     )
