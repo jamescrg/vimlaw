@@ -1,10 +1,11 @@
 {% comment %}
-  Created, Form, Done, Send. Form is the only elastic column; the rest are
-  fixed, and the table carries a min-width so Form can't be squeezed below
-  readability — .table-container scrolls instead. The name cell's three-dot
-  menu holds everything the Send column doesn't. The panel card's own header
-  holds the Notes/Forms switch and the + button, so this partial doesn't title
-  itself.
+  Created, Form, Done, Status, Send. Form is the only elastic column and wraps;
+  the rest are fixed, and the table's min-width is what keeps Form readable —
+  .table-container scrolls below it.
+
+  The name itself is the dropdown trigger, the way the matter switcher and the
+  intake status control work. The send tally rides beside the status rather
+  than the send button, mirroring invoicing/invoices/row.html.
 {% endcomment %}
 {% block content %}
   <div class="table-container">
@@ -14,7 +15,10 @@
           <th class="intake-form-date">Created</th>
           <th class="intake-form-name">Form</th>
           <th class="intake-form-done">Done</th>
-          <th class="intake-form-send">Send</th>
+          <th class="intake-form-status">Status</th>
+          <th class="intake-form-send" aria-label="Send">
+            <i class="icon-send-horizontal"></i>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -22,98 +26,105 @@
           <tr>
             <td class="intake-form-date">{{ submission.created_at|date:"Y-m-d" }}</td>
             <td class="intake-form-name card-desc dropdown-cell">
-              <div class="intake-form-name-cell">
-                <a href="#"
-                   hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
-                   hx-target="#htmx-modal-container"
-                   hx-trigger="click">{{ submission.template_name }}</a>
-                <div class="dropdown" x-data="dropdown()">
-                  <button class="btn-icon menu-icon"
-                          type="button"
-                          x-ref="button"
-                          @click="toggle()"
-                          :aria-expanded="open">
-                    <i class="icon-ellipsis-vertical"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+              <div class="dropdown" x-data="dropdown()">
+                <button class="button-link intake-form-name-btn"
+                        type="button"
+                        x-ref="button"
+                        @click="toggle()"
+                        :aria-expanded="open">{{ submission.template_name }}</button>
+                <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                  <li>
+                    <a class="dropdown-item"
+                       href="#"
+                       hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
+                       hx-target="#htmx-modal-container"><i class="icon-eye"></i> View answers</a>
+                  </li>
+                  {% if not submission.is_unsent %}
                     <li>
                       <a class="dropdown-item"
                          href="#"
-                         hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
-                         hx-target="#htmx-modal-container"><i class="icon-eye"></i> View answers</a>
+                         hx-post="{% url 'intakes:form-submission-link' sub_id=submission.id %}"
+                         hx-target="#htmx-modal-container"><i class="icon-link"></i> Copy link</a>
                     </li>
-                    {% if not submission.is_unsent %}
-                      <li>
-                        <a class="dropdown-item"
-                           href="#"
-                           hx-post="{% url 'intakes:form-submission-link' sub_id=submission.id %}"
-                           hx-target="#htmx-modal-container"><i class="icon-link"></i> Copy link</a>
-                      </li>
-                    {% endif %}
-                    {% if submission.status == "CLOSED" %}
-                      <li>
-                        <a class="dropdown-item"
-                           href="#"
-                           hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='reopen' %}"><i class="icon-lock-open"></i> Reopen for client</a>
-                      </li>
-                    {% elif submission.status != "CANCELED" %}
-                      <li>
-                        <a class="dropdown-item"
-                           href="#"
-                           hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='close' %}"><i class="icon-lock"></i> Lock</a>
-                      </li>
-                    {% endif %}
+                  {% endif %}
+                  {% if submission.status == "CLOSED" %}
                     <li>
-                      {% comment %}
-                        Deleting takes the client's answers with it, so the
-                        warning names how many there are when any exist.
-                      {% endcomment %}
                       <a class="dropdown-item"
                          href="#"
-                         hx-post="{% url 'intakes:form-submission-delete' sub_id=submission.id %}"
-                         {% if submission.answered_count %} hx-confirm="Delete {{ submission.template_name }}? The client has answered {{ submission.answered_count }} of {{ submission.question_count }} questions, and those answers will be deleted with it. This cannot be undone." {% else %} hx-confirm="Delete {{ submission.template_name }}? This cannot be undone." {% endif %}><i class="icon-trash-2"></i> Delete</a>
+                         hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='reopen' %}"><i class="icon-lock-open"></i> Reopen for client</a>
                     </li>
-                  </ul>
-                </div>
+                  {% elif submission.status != "CANCELED" %}
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='close' %}"><i class="icon-lock"></i> Lock</a>
+                    </li>
+                  {% endif %}
+                  <li>
+                    {% comment %}
+                      Deleting takes the client's answers with it, so the
+                      warning names how many there are when any exist.
+                    {% endcomment %}
+                    <a class="dropdown-item"
+                       href="#"
+                       hx-post="{% url 'intakes:form-submission-delete' sub_id=submission.id %}"
+                       {% if submission.answered_count %} hx-confirm="Delete {{ submission.template_name }}? The client has answered {{ submission.answered_count }} of {{ submission.question_count }} questions, and those answers will be deleted with it. This cannot be undone." {% else %} hx-confirm="Delete {{ submission.template_name }}? This cannot be undone." {% endif %}><i class="icon-trash-2"></i> Delete</a>
+                  </li>
+                </ul>
               </div>
             </td>
             <td class="intake-form-done">{{ submission.answered_count }} / {{ submission.question_count }}</td>
-            <td class="intake-form-send">
-              {% comment %}
-                The invoices row's send control (invoicing/invoices/row.html).
-                Unlike invoices there is no status column here, so the tally
-                shows from ×1 — it is the only sign the form has gone out.
-              {% endcomment %}
+            <td class="intake-form-status">
               <div class="badge-flag-row">
-                {% if submission.is_unsent %}
-                  <button class="button-link"
-                          type="button"
-                          hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"
-                          hx-target="#htmx-modal-container"
-                          title="Send to client"
-                          aria-label="Send to client">
-                    <i class="icon-send-horizontal"></i>
-                  </button>
+                {% if submission.status == "SUBMITTED" %}
+                  <span class="app-badge badge-green">Submitted</span>
+                {% elif submission.status == "OPENED" %}
+                  <span class="app-badge badge-yellow">Opened</span>
+                {% elif submission.status == "SENT" %}
+                  <span class="app-badge badge-blue">Sent</span>
+                {% elif submission.status == "CLOSED" %}
+                  <span class="app-badge badge-gray">Closed</span>
+                {% elif submission.status == "CANCELED" %}
+                  <span class="app-badge badge-red">Canceled</span>
                 {% else %}
-                  <button class="button-link"
-                          type="button"
-                          hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
-                          hx-target="#htmx-modal-container"
-                          title="Send a reminder"
-                          aria-label="Send a reminder">
-                    <i class="icon-send-horizontal"></i>
-                  </button>
-                  {% if submission.send_count %}
-                    <span class="app-badge app-badge-round badge-gray"
-                          title="Sent {{ submission.send_count }} time{{ submission.send_count|pluralize }}">×{{ submission.send_count }}</span>
-                  {% endif %}
+                  <span class="app-badge badge-gray">Draft</span>
+                {% endif %}
+                {% comment %}
+                  Invoices only show this from ×2, since their Sent status
+                  implies the first send. Here the status can be Opened or
+                  Submitted while the count still matters, so it shows from ×1.
+                {% endcomment %}
+                {% if submission.send_count %}
+                  <span class="app-badge app-badge-round badge-gray"
+                        title="Handed to the client {{ submission.send_count }} time{{ submission.send_count|pluralize }}">×{{ submission.send_count }}</span>
                 {% endif %}
               </div>
+            </td>
+            <td class="intake-form-send">
+              {% if submission.is_unsent %}
+                <button class="button-link"
+                        type="button"
+                        hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"
+                        hx-target="#htmx-modal-container"
+                        title="Send to client"
+                        aria-label="Send to client">
+                  <i class="icon-send-horizontal"></i>
+                </button>
+              {% else %}
+                <button class="button-link"
+                        type="button"
+                        hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
+                        hx-target="#htmx-modal-container"
+                        title="Send a reminder"
+                        aria-label="Send a reminder">
+                  <i class="icon-send-horizontal"></i>
+                </button>
+              {% endif %}
             </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="4" class="empty-message">No forms yet. Add one to collect the client's details before you speak.</td>
+            <td colspan="5" class="empty-message">No forms yet. Add one to collect the client's details before you speak.</td>
           </tr>
         {% endfor %}
       </tbody>

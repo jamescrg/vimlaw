@@ -29,18 +29,18 @@
 /* ==========================================================================
    Forms table on the intake detail page
 
-   .table is table-layout: fixed, so the three fixed columns take explicit
-   widths and Form absorbs the rest. The min-width is what stops Form being
-   squeezed past readability in the panel — below it .table-container scrolls
-   rather than the name collapsing. 7 + 5 + 5 fixed leaves Form ~13rem.
+   .table is table-layout: fixed, so the four fixed columns take explicit
+   widths and Form absorbs the rest. The min-width is what actually enforces a
+   floor under Form: 7 + 5 + 9 + 3.5 committed elsewhere leaves it ~13rem, and
+   .table-container scrolls below that rather than the name collapsing.
    ========================================================================== */
 
 .intake-form-table {
-  min-width: 30rem;
+  min-width: 38rem;
 }
 
 .intake-form-table .intake-form-date {
-  width: 8rem;
+  width: 7rem;
 }
 
 .intake-form-table .intake-form-done {
@@ -48,9 +48,15 @@
   width: 5rem;
 }
 
+/* Wide enough for "Submitted" plus the ×N tally beside it. */
+.intake-form-table .intake-form-status {
+  width: 9rem;
+}
+
+/* The header is the send icon alone, so the column only needs to fit it. */
 .intake-form-table .intake-form-send {
   text-align: center;
-  width: 5rem;
+  width: 3.5rem;
 }
 
 /* Form is the elastic column, so its text wraps rather than truncating — the
@@ -59,26 +65,23 @@
   white-space: normal;
 }
 
-/* The name and its menu share the cell. align-items: start keeps the menu
-   level with the first line when a long form name wraps. */
-.intake-form-name-cell {
-  align-items: start;
-  display: flex;
-  gap: 0.5rem;
-  justify-content: space-between;
-}
-
-.intake-form-name-cell > a {
-  min-width: 0;
+/* The name is the dropdown's trigger, so it has to wrap like ordinary cell
+   text rather than sit on one line as buttons do by default. */
+.intake-form-name-btn {
   overflow-wrap: anywhere;
+  text-align: left;
+  white-space: normal;
 }
 
-/* Send control + tally, centred as one unit. */
-.intake-form-send .badge-flag-row {
+/* Status badge and send tally on one line, the tally trailing. */
+.intake-form-status .badge-flag-row {
   align-items: center;
-  display: flex;
   gap: 0.375rem;
-  justify-content: center;
+  justify-content: flex-start;
+}
+
+.intake-form-status .badge-flag-row > :first-child {
+  flex: 0 0 auto;
 }
 
 /* ==========================================================================
