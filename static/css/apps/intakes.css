@@ -220,6 +220,7 @@ Detail View - Left Panel
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+  margin-bottom: 1.5rem;
 }
 
 .intake-row-title-left {
@@ -237,27 +238,31 @@ Markdown
    over bold question labels. All three are bold at this size, so the sizes
    have to carry the hierarchy on their own, and each heading needs room above
    it — the gap is what says a new section has started. */
+
 .intake-note-details h1 {
   font-size: 1.5em;
   font-weight: 600;
-  margin: 2rem 0 0;
 }
 
 .intake-note-details h2 {
   font-size: 1.25em;
-  font-weight: 600;
-  margin: 2rem 0 0;
+  font-weight: 500;
+  margin-top: 1rem;
 }
 
 .intake-note-details h3 {
   font-size: 1.15em;
-  font-weight: 600;
-  margin: 1.5rem 0 0 0.5rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  margin-left: 0.75rem;
 }
 
-/* The note opens on its heading; only the ones further down need the room. */
-.intake-note-details > :first-child {
-  margin-top: 0;
+/* A ladder: the form's name at the margin, its sections stepped in, the
+   questions stepped in again under them. Scoped to paragraphs following the
+   h2 — only a submitted form has one, so a plain typed note keeps the flat
+   0.5rem the rest of the timeline uses. */
+.intake-note-details h2 ~ p {
+  margin-left: 1.5rem;
 }
 
 .intake-note-details strong {
