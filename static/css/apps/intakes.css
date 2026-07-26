@@ -287,10 +287,12 @@ Markdown
   font-weight: 400;
 }
 
-/* The answer, half a step up in weight against its muted label — the pair
-   reads caption-then-content without either one shouting. */
+/* The answer, half a step up in weight against its muted label and half a
+   step in from it — the pair reads caption-then-content without either one
+   shouting, and the indent makes the answer look filed under its question. */
 .intake-note-details p:has(> strong:only-child) + p {
   font-weight: 500;
+  margin-left: 2rem;
   margin-top: 0.25rem;
 }
 
