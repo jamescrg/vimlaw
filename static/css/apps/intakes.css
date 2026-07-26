@@ -192,11 +192,16 @@ Detail View - Left Panel
  Notes
 ========================================================================== */
 
-/* Notes and Forms live in one card now; its toolbar holds the switch, so the
-   rule under it separates the header from whichever pane is showing. */
+/* Notes and Forms live in one card; its toolbar holds the switch, so the rule
+   under it separates the header from the pane below. The forms table brings
+   its own top border, which would double up — so that pane goes flush. */
 .intake-panel > .toolbar {
   border-bottom: solid 1px var(--border-medium);
   margin-bottom: 0;
+}
+
+.intake-panel > .toolbar.toolbar-flush {
+  border-bottom: none;
 }
 
 .intake-note {
@@ -321,7 +326,23 @@ Markdown
   white-space: normal;
 }
 
-/* Question / Answer: the label column takes a third, the answer the rest. */
+/* The "Question | Answer" head only names the columns of a label-value
+   table, so it carries no information — drop it. */
+.intake-note-details thead {
+  display: none;
+}
+
+/* With the head gone, the first body row takes the top corners; tables.css
+   keys those off thead, which no longer renders. */
+.intake-note-details tbody tr:first-child td:first-child {
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.intake-note-details tbody tr:first-child td:last-child {
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
+/* The label column takes a third, the answer the rest. */
 .intake-note-details td:first-child,
 .intake-note-details th:first-child {
   width: 33%;

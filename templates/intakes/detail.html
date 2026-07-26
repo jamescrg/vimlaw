@@ -129,7 +129,7 @@
     <div class="intake-main"
          x-data="{ pane: localStorage.getItem('intake_pane') === 'forms' ? 'forms' : 'notes' }">
       <div class="card intake-panel">
-        <div class="toolbar">
+        <div class="toolbar" :class="pane === 'forms' ? 'toolbar-flush' : ''">
           <div class="toolbar-left">
             {# .mode-pills is the segmented control matters and case already use. #}
             <div class="mode-pills">

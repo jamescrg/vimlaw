@@ -27,52 +27,33 @@
 }
 
 /* ==========================================================================
-   Forms card on the intake detail page
+   Forms table on the intake detail page
+
+   It shares the right panel with the notes timeline, so it has the width for
+   real columns. .table is table-layout: fixed, so the secondary columns take
+   explicit widths and Form absorbs what's left.
    ========================================================================== */
 
-.intake-form-row {
-  border-top: 1px solid var(--border-light);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  padding: 0.75rem 1rem;
+.intake-form-list .intake-form-status,
+.intake-form-list .intake-form-progress,
+.intake-form-list .intake-form-date {
+  text-align: center;
+  width: 7rem;
 }
 
-.intake-form-row-main {
-  align-items: center;
-  display: flex;
-  flex: 1 1 14rem;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.intake-form-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
+.intake-form-list .intake-form-actions {
+  text-align: right;
   white-space: nowrap;
+  width: 8rem;
 }
 
-.intake-form-progress,
-.intake-form-row-meta {
+.intake-form-list .intake-form-actions .btn-icon + .btn-icon {
+  margin-left: 0.5rem;
+}
+
+.intake-form-recipient {
   color: var(--color-muted);
-}
-
-.intake-form-row-meta {
-  display: flex;
-  flex: 0 1 auto;
-  gap: 1rem;
-}
-
-.intake-form-row-actions {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0.75rem;
-  margin-left: auto;
-}
-
-.intake-form-empty {
-  color: var(--color-muted);
-  padding: 0 1rem 1rem;
+  display: block;
 }
 
 /* ==========================================================================
