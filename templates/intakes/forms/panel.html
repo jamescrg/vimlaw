@@ -1,109 +1,89 @@
 {% comment %}
-  Cards, not a table: an intake carries a handful of forms at most, and nobody
-  sorts them — so each gets its own tile rather than a row in a grid built for
-  scanning many. The panel card's own header carries the Notes/Forms switch and
-  the + button, so this partial doesn't title itself.
+  One full-width row per form, divided by a single rule — the same shape the
+  notes timeline beside it uses. An intake carries a handful of forms at most
+  and nobody sorts them, so there's nothing for table columns to buy. The panel
+  card's own header carries the Notes/Forms switch and the + button, so this
+  partial doesn't title itself.
 {% endcomment %}
 {% block content %}
-  <div class="intake-form-cards">
+  <div class="intake-form-list">
     {% for submission in submissions %}
-      <div class="intake-form-card">
-        <div class="intake-form-card-top">
-          <a href="#"
-             class="intake-form-name"
-             hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
-             hx-target="#htmx-modal-container"
-             hx-trigger="click">{{ submission.template_name }}</a>
-          {% if submission.status == "SUBMITTED" %}
-            <span class="app-badge badge-green">Submitted</span>
-          {% elif submission.status == "OPENED" %}
-            <span class="app-badge badge-yellow">Opened</span>
-          {% elif submission.status == "SENT" %}
-            <span class="app-badge badge-blue">Sent</span>
-          {% elif submission.status == "CLOSED" %}
-            <span class="app-badge badge-gray">Closed</span>
-          {% elif submission.status == "CANCELED" %}
-            <span class="app-badge badge-red">Canceled</span>
-          {% else %}
-            <span class="app-badge badge-gray">Draft</span>
-          {% endif %}
+      <div class="intake-form-item">
+        <div class="intake-form-item-title">
+          <div class="intake-form-item-title-left">
+            <a href="#"
+               class="intake-form-name"
+               hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
+               hx-target="#htmx-modal-container"
+               hx-trigger="click">{{ submission.template_name }}</a>
+            {% if submission.status == "SUBMITTED" %}
+              <span class="app-badge badge-green">Submitted</span>
+            {% elif submission.status == "OPENED" %}
+              <span class="app-badge badge-yellow">Opened</span>
+            {% elif submission.status == "SENT" %}
+              <span class="app-badge badge-blue">Sent</span>
+            {% elif submission.status == "CLOSED" %}
+              <span class="app-badge badge-gray">Closed</span>
+            {% elif submission.status == "CANCELED" %}
+              <span class="app-badge badge-red">Canceled</span>
+            {% else %}
+              <span class="app-badge badge-gray">Draft</span>
+            {% endif %}
+          </div>
+          <div class="intake-form-item-actions">
+            {% if submission.is_unsent %}
+              <a href="#"
+                 class="btn btn-sm btn-success"
+                 hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click">Send</a>
+            {% else %}
+              <a href="#"
+                 class="btn-icon"
+                 title="Copy link"
+                 hx-post="{% url 'intakes:form-submission-link' sub_id=submission.id %}"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click">
+                <i class="icon-link"></i>
+              </a>
+              <a href="#"
+                 class="btn-icon"
+                 title="Send a reminder"
+                 hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click">
+                <i class="icon-mail"></i>
+              </a>
+            {% endif %}
+            {% if submission.status == "CLOSED" %}
+              <a href="#"
+                 class="btn-icon"
+                 title="Reopen for the client"
+                 hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='reopen' %}">
+                <i class="icon-lock-open"></i>
+              </a>
+            {% elif submission.status != "CANCELED" %}
+              <a href="#"
+                 class="btn-icon"
+                 title="Close — the client can no longer edit"
+                 hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='close' %}">
+                <i class="icon-lock"></i>
+              </a>
+            {% endif %}
+          </div>
         </div>
-        <dl class="intake-form-card-meta">
-          <div>
-            <dt>Answered</dt>
-            <dd>
-              {{ submission.answered_count }} / {{ submission.question_count }}
-            </dd>
-          </div>
-          <div>
-            <dt>
-              {% if submission.submitted_at %}
-                Submitted
-              {% elif submission.sent_at %}
-                Sent
-              {% else %}
-                Added
-              {% endif %}
-            </dt>
-            <dd>
-              {% if submission.submitted_at %}
-                {{ submission.submitted_at|date:"Y-m-d" }}
-              {% elif submission.sent_at %}
-                {{ submission.sent_at|date:"Y-m-d" }}
-              {% else %}
-                {{ submission.created_at|date:"Y-m-d" }}
-              {% endif %}
-            </dd>
-          </div>
-          {% if submission.recipient_email %}
-            <div class="intake-form-card-recipient">
-              <dt>To</dt>
-              <dd>
-                {{ submission.recipient_email }}
-              </dd>
-            </div>
-          {% endif %}
-        </dl>
-        <div class="intake-form-card-actions">
-          {% if submission.is_unsent %}
-            <a href="#"
-               class="btn btn-sm btn-success"
-               hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"
-               hx-target="#htmx-modal-container"
-               hx-trigger="click">Send</a>
-          {% else %}
-            <a href="#"
-               class="btn-icon"
-               title="Copy link"
-               hx-post="{% url 'intakes:form-submission-link' sub_id=submission.id %}"
-               hx-target="#htmx-modal-container"
-               hx-trigger="click">
-              <i class="icon-link"></i>
-            </a>
-            <a href="#"
-               class="btn-icon"
-               title="Send a reminder"
-               hx-get="{% url 'intakes:form-submission-resend' sub_id=submission.id %}"
-               hx-target="#htmx-modal-container"
-               hx-trigger="click">
-              <i class="icon-mail"></i>
-            </a>
-          {% endif %}
-          {% if submission.status == "CLOSED" %}
-            <a href="#"
-               class="btn-icon"
-               title="Reopen for the client"
-               hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='reopen' %}">
-              <i class="icon-lock-open"></i>
-            </a>
-          {% elif submission.status != "CANCELED" %}
-            <a href="#"
-               class="btn-icon"
-               title="Close — the client can no longer edit"
-               hx-post="{% url 'intakes:form-submission-status' sub_id=submission.id status='close' %}">
-              <i class="icon-lock"></i>
-            </a>
-          {% endif %}
+        <div class="intake-form-item-meta">
+          <span>{{ submission.answered_count }} / {{ submission.question_count }} answered</span>
+          <span>
+            {% if submission.submitted_at %}
+              Submitted {{ submission.submitted_at|date:"Y-m-d" }}
+            {% elif submission.sent_at %}
+              Sent {{ submission.sent_at|date:"Y-m-d" }}
+            {% else %}
+              Added {{ submission.created_at|date:"Y-m-d" }}
+            {% endif %}
+          </span>
+          {% if submission.recipient_email %}<span>{{ submission.recipient_email }}</span>{% endif %}
         </div>
       </div>
     {% empty %}

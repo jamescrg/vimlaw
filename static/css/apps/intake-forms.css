@@ -27,82 +27,56 @@
 }
 
 /* ==========================================================================
-   Forms cards on the intake detail page
+   Forms list on the intake detail page
 
-   A tile per form rather than a table row: an intake holds a handful at most
-   and they're never sorted, so there's nothing for columns to buy. Transparent
-   with a hairline border, the way contacts draws .contact-card.
+   Full-width rows divided by a single rule, matching .intake-note in
+   apps/intakes.css — the notes timeline is the neighbour it shares a panel
+   with, so the two read as one surface rather than two treatments.
    ========================================================================== */
 
-.intake-form-cards {
-  display: grid;
+.intake-form-item {
+  border-bottom: solid 1px var(--border-medium);
+  padding: 1rem 0 1rem 0.5rem;
+}
+
+.intake-form-item-title {
+  align-items: center;
+  display: flex;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  padding-top: 1.25rem;
-}
-
-.intake-form-card {
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-}
-
-.intake-form-card-top {
-  align-items: start;
-  display: flex;
-  gap: 0.5rem;
   justify-content: space-between;
 }
 
-.intake-form-name {
-  font-weight: 600;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-/* Label over value, so a long recipient address wraps under its own label
-   instead of squeezing the column. */
-.intake-form-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  margin: 0;
-}
-
-.intake-form-card-meta dt {
-  color: var(--color-muted);
-  font-weight: normal;
-}
-
-.intake-form-card-meta dd {
-  margin: 0;
-}
-
-.intake-form-card-recipient {
-  flex: 1 1 100%;
-  min-width: 0;
-}
-
-.intake-form-card-recipient dd {
-  overflow-wrap: anywhere;
-}
-
-/* Actions sit on the card's floor, so cards of differing height still line
-   their buttons up. */
-.intake-form-card-actions {
+.intake-form-item-title-left {
   align-items: center;
   display: flex;
   gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 0.25rem;
+  min-width: 0;
+}
+
+.intake-form-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intake-form-item-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.75rem;
+}
+
+.intake-form-item-meta {
+  color: var(--color-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.25rem;
 }
 
 .intake-form-empty {
   color: var(--color-muted);
-  padding: 1.25rem 0 0;
+  padding: 1rem 0 1rem 0.5rem;
 }
 
 /* ==========================================================================

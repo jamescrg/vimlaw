@@ -25,14 +25,16 @@ body.intake-detail .content {
     gap: 1.5rem;
   }
 
+  /* 2rem off the detail panel, onto the notes/forms panel beside it — the
+     property table needs less width than the prose does. */
   .intake-detail-layout > .intake-sidebar {
-    flex: 0 0 calc(37.5% - 0.5rem);
-    max-width: calc(37.5% - 0.5rem);
+    flex: 0 0 calc(37.5% - 2.5rem);
+    max-width: calc(37.5% - 2.5rem);
   }
 
   .intake-detail-layout > .intake-main {
-    flex: 0 0 calc(62.5% - 1rem);
-    max-width: calc(62.5% - 1rem);
+    flex: 0 0 calc(62.5% + 1rem);
+    max-width: calc(62.5% + 1rem);
   }
 }
 
