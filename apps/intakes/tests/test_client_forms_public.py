@@ -315,18 +315,7 @@ class TestSubmit:
         parser = Tags()
         parser.feed(markdown.markdown(details, extensions=NOTE_MARKDOWN_EXTENSIONS))
 
-        assert set(parser.tags) <= {
-            "h3",
-            "h4",
-            "table",
-            "thead",
-            "tbody",
-            "tr",
-            "th",
-            "td",
-            "p",
-            "br",
-        }
+        assert set(parser.tags) <= {"h2", "h3", "p", "strong", "br"}
         assert parser.attrs == []
 
     def test_revising_after_submitting_does_not_file_a_second_note(

@@ -233,23 +233,46 @@ Detail View - Left Panel
 Markdown
 ========================================================================== */
 
+/* A submitted form arrives as h2 (the form's name) over h3 (its sections)
+   over bold question labels. All three are bold at this size, so the sizes
+   have to carry the hierarchy on their own, and each heading needs room above
+   it — the gap is what says a new section has started. */
 .intake-note-details h1 {
   font-size: 1.5em;
   font-weight: 600;
+  margin: 2rem 0 0;
 }
 
 .intake-note-details h2 {
-  font-size: 1.1em;
+  font-size: 1.35em;
   font-weight: 600;
+  margin: 2rem 0 0;
 }
 
 .intake-note-details h3 {
-  font-size: 1em;
+  font-size: 1.15em;
   font-weight: 600;
+  margin: 1.5rem 0 0 0.5rem;
+}
+
+/* The note opens on its heading; only the ones further down need the room. */
+.intake-note-details > :first-child {
+  margin-top: 0;
 }
 
 .intake-note-details strong {
   font-weight: 600;
+}
+
+/* A question is a paragraph holding nothing but its bolded label, and its
+   answer is the paragraph after. Pull the answer up tight so the two read as
+   one unit, and let the space fall between pairs instead. */
+.intake-note-details p:has(> strong:only-child) {
+  margin-top: 1.25rem;
+}
+
+.intake-note-details p:has(> strong:only-child) + p {
+  margin-top: 0.25rem;
 }
 
 .intake-note-details ul {

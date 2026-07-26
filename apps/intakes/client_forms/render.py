@@ -173,8 +173,8 @@ def orphan_answers(schema, answers):
 # page, so anything a client typed would otherwise be live HTML there — a
 # <script>, an onerror attribute, or a [link](javascript:...) all survive
 # python-markdown untouched. Every answer therefore goes through _plain()
-# below, which strips its power to be markup at all. The structure — headings,
-# table pipes — is ours and stays live.
+# below, which strips its power to be markup at all. The structure — the
+# headings, the bold on a question — is ours and stays live.
 
 # Characters markdown gives meaning to. Escaped with a backslash, they render
 # as themselves; `&`, `<` and `>` are handled by html.escape first.
@@ -221,28 +221,31 @@ def answered_blocks(blocks):
 
 
 def submission_markdown(submission):
-    """What the client said, as Markdown, for the note filed on submission."""
+    """What the client said, as Markdown, for the note filed on submission.
+
+    Question in bold, answer in the paragraph beneath it — the staff read
+    view's shape, not a table. An answer is as often a paragraph as a word,
+    and a two-column grid hands prose a third of the width while a one-word
+    reply keeps the other two thirds empty. Stacked, everything gets the full
+    measure and long and short answers sit together without either looking
+    wrong.
+    """
     blocks = answered_blocks(
         render_blocks(submission.schema_snapshot, submission.answers)
     )
 
-    lines = [f"### {_plain(submission.template_name)}", ""]
-    open_table = False
+    lines = [f"## {_plain(submission.template_name)}"]
     wrote_any = False
 
     for block in blocks:
         if block["kind"] == "heading":
-            lines += ["", f"#### {_plain(block['label'])}", ""]
-            open_table = False
+            lines += ["", f"### {_plain(block['label'])}"]
             continue
         if block["kind"] not in ("field", "unknown"):
             continue
-        if not open_table:
-            lines += ["| Question | Answer |", "| --- | --- |"]
-            open_table = True
-        lines.append(f"| {_plain(block['label'])} | {_plain(block['display'])} |")
+        lines += ["", f"**{_plain(block['label'])}**", "", _plain(block["display"])]
         wrote_any = True
 
     if not wrote_any:
-        lines.append("*No questions were answered.*")
+        lines += ["", "*No questions were answered.*"]
     return "\n".join(lines).rstrip() + "\n"
