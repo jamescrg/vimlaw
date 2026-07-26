@@ -127,10 +127,9 @@ def test_build_send_fill_and_read_back(client, intake):
         content_type="application/json",
     )
 
-    review = client.get(
-        reverse("intakes:form-submission", kwargs={"sub_id": submission.id})
-    )
-    read_back = review.content.decode()
+    read_back = client.get(
+        reverse("intakes:form-submission-fill", kwargs={"sub_id": submission.id})
+    ).content.decode()
     assert "Property address" in read_back
     assert "225 Paper Street" in read_back
     assert "I own it" in read_back  # the option label, not its stored value

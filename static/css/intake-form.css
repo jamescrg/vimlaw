@@ -327,6 +327,61 @@ textarea.cf-input {
   font-style: italic;
 }
 
+/* ==========================================================================
+   Staff mode
+
+   The same page a client sees, opened from the intake so a paralegal can take
+   the answers down over the phone. Everything below the bar is identical on
+   purpose — they are reading the client's form out, so it has to look like
+   the client's form. The bar is the one thing that says whose tab this is.
+   ========================================================================== */
+
+.cf-staff-bar {
+  align-items: center;
+  background: var(--cf-banner-bg);
+  border: 1px solid var(--cf-border);
+  border-radius: 0.25rem;
+  color: var(--cf-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.cf-staff-who strong {
+  color: var(--cf-heading);
+}
+
+.cf-staff-back {
+  color: var(--cf-focus);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.cf-staff-meta {
+  color: var(--cf-muted);
+  margin: 0 0 1rem;
+  padding: 0 1rem;
+}
+
+/* The snapshot means this page can be showing questions the live template no
+   longer has. Set apart on its own line so it is not read as part of the
+   version stamp it follows. */
+.cf-staff-drift {
+  color: var(--cf-error);
+  display: block;
+}
+
+/* Only ever rendered when a snapshot has lost a question its answers still
+   refer to — a notice, so it sits apart from the form proper. */
+.cf-orphans {
+  border-top: 1px solid var(--cf-rule);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
 @media (width < 480px) {
   .cf-page {
     padding: 1.5rem 0.75rem;

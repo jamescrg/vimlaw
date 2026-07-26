@@ -6,6 +6,37 @@
 {% block content %}
   <link rel="stylesheet" href="{% static_v 'css/intake-form.css' %}" />
   <div class="cf-page" x-data="intakeForm({{ config }})">
+    {% comment %}
+      Staff see the client's form itself, not a summary of it — a paralegal
+      reads it out over the phone, so the order and wording have to be what
+      the client would hear. This bar is the only thing that differs, and it
+      is there to stop anyone mistaking this tab for the client's own copy.
+    {% endcomment %}
+    {% if staff %}
+      <div class="cf-staff-bar">
+        <span class="cf-staff-who">
+          Filling in for <strong>{{ submission.intake.name }}</strong>
+        </span>
+        <a class="cf-staff-back"
+           href="{% url 'intakes:detail-index' id=submission.intake.id %}">Back to the intake</a>
+      </div>
+      {% comment %}
+        Which version was asked, and whether the library has moved on since —
+        the snapshot means this page can be showing questions the current
+        template no longer contains, and that has to be visible.
+      {% endcomment %}
+      <p class="cf-staff-meta">
+        Version {{ submission.template_version }}
+        {% if submission.submitted_at %}
+          · submitted {{ submission.submitted_at|date:"Y-m-d g:i A" }}
+        {% else %}
+          · not yet submitted
+        {% endif %}
+        {% if submission.template_drifted %}
+          <span class="cf-staff-drift">The form has since changed to version {{ submission.template.version }}. These are the questions as they were asked.</span>
+        {% endif %}
+      </p>
+    {% endif %}
     <div class="cf-card">
       <header class="cf-head">
         {% if logo_url %}
@@ -20,15 +51,26 @@
         <h2 class="cf-title">{{ submission.template_name }}</h2>
       </header>
       {% if not editable %}
-        {# Closed by the firm: read-only, but they can still see what they said. #}
-        <p class="cf-banner">
-          Thank you — we've received your answers.
-          {% if firm_email %}
-            If anything needs changing, please contact us at {{ firm_email }}.
-          {% else %}
-            If anything needs changing, please get in touch.
-          {% endif %}
-        </p>
+        {% comment %}
+          Closed by the firm: read-only, but they can still see what they
+          said. Staff reaching this are looking at a locked or cancelled form,
+          so they get the state rather than the thank-you.
+        {% endcomment %}
+        {% if staff %}
+          <p class="cf-banner">
+            This form is {{ submission.get_status_display|lower }}, so nothing here can be
+            changed. Reopen it from the intake to edit it again.
+          </p>
+        {% else %}
+          <p class="cf-banner">
+            Thank you — we've received your answers.
+            {% if firm_email %}
+              If anything needs changing, please contact us at {{ firm_email }}.
+            {% else %}
+              If anything needs changing, please get in touch.
+            {% endif %}
+          </p>
+        {% endif %}
         <dl class="cf-summary">
           {% for block in blocks %}
             {% if block.kind == "heading" %}
@@ -48,9 +90,19 @@
           {% endfor %}
         </dl>
       {% else %}
+        {% comment %}
+          Shown after a successful submit. Staff have just filed the answers
+          on the intake themselves, so "we've received your answers" would be
+          addressed to the wrong person.
+        {% endcomment %}
         <p class="cf-banner" x-show="submitted && !editing" x-cloak>
-          Thank you — we've received your answers.
-          <button type="button" class="cf-link-btn" @click="editing = true">Make changes</button>
+          {% if staff %}
+            Marked complete — the answers are filed on the intake as a note.
+            <button type="button" class="cf-link-btn" @click="editing = true">Keep editing</button>
+          {% else %}
+            Thank you — we've received your answers.
+            <button type="button" class="cf-link-btn" @click="editing = true">Make changes</button>
+          {% endif %}
         </p>
         {% if submission.template.intro_text %}
           <div class="cf-intro" x-show="editing" x-cloak>{{ submission.template.intro_text|linebreaks }}</div>
@@ -88,11 +140,47 @@
                   x-cloak
                   x-text="'Saved ' + savedAt"></span>
             <button type="submit" class="cf-submit" :disabled="sending">
-              <span x-text="sending ? 'Sending…' : 'Submit'"></span>
+              {% if staff %}
+                <span x-text="sending ? 'Saving…' : 'Mark complete'"></span>
+              {% else %}
+                <span x-text="sending ? 'Sending…' : 'Submit'"></span>
+              {% endif %}
             </button>
           </div>
-          <p class="cf-reassure">Your answers save as you type — you can close this page and come back to it.</p>
+          {% if staff %}
+            {% comment %}
+              Staff aren't held to the required marks — the caller answers what
+              they answer — so the note says what completing actually does
+              rather than warning about gaps.
+            {% endcomment %}
+            <p class="cf-reassure">
+              Answers save as you type. Marking it complete files them on the intake as a
+              note; you can reopen and change it afterwards.
+            </p>
+          {% else %}
+            <p class="cf-reassure">Your answers save as you type — you can close this page and come back to it.</p>
+          {% endif %}
         </form>
+      {% endif %}
+      {% comment %}
+        Answers whose question is no longer in the snapshot. Nothing writes a
+        snapshot twice today, so this should never fire — it is here so that
+        if one ever is rewritten, the answers surface instead of vanishing.
+        Staff only: it is a data-integrity notice, not something to show a
+        client.
+      {% endcomment %}
+      {% if staff and orphans %}
+        <div class="cf-orphans">
+          <h3 class="cf-heading">Answers with no matching question</h3>
+          <dl class="cf-summary">
+            {% for key, value in orphans %}
+              <dt>{{ key }}</dt>
+              <dd>
+                {{ value }}
+              </dd>
+            {% endfor %}
+          </dl>
+        </div>
       {% endif %}
     </div>
   </div>

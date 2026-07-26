@@ -14,16 +14,14 @@ import json
 
 from django.conf import settings
 from django.core import signing
-from django.db import transaction
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from apps.intakes.client_forms.filling import complete, merge_answers, read_answers
 from apps.intakes.client_forms.models import FormSubmission
-from apps.intakes.client_forms.render import render_blocks, submission_markdown
-from apps.intakes.client_forms.schema import MAX_ANSWERS_BYTES, validate_answers
-from apps.intakes.models import Note
+from apps.intakes.client_forms.render import render_blocks
 from utils.ratelimit import rate_limited
 from utils.signing import read_form_token
 
@@ -123,8 +121,8 @@ def _guard(request, token, *, scope, limit):
     or (None, error_response)."""
     if rate_limited(request, scope, limit=limit, window=300):
         return None, _reject("Too many requests. Please wait a moment.", 429)
-    # Checked before json.loads so an oversized payload is never parsed.
-    if len(request.body) > MAX_ANSWERS_BYTES:
+    answers, error = read_answers(request)
+    if error == "too-large":
         return None, _reject("That's more than this form can hold.", 413)
     try:
         submission = _resolve(token)
@@ -132,36 +130,19 @@ def _guard(request, token, *, scope, limit):
         return None, _reject(str(exc), 410)
     if not submission.is_fillable:
         return None, _reject("This form is closed.", 409)
-    try:
-        body = json.loads(request.body or "{}")
-    except (ValueError, TypeError):
+    if error:
         return None, _reject("Malformed request.", 400)
-    if not isinstance(body.get("answers"), dict):
-        return None, _reject("Malformed request.", 400)
-    return submission, body
+    return submission, {"answers": answers}
 
 
 @require_POST
 def form_save(request, token):
-    """Autosave. Merges the incoming answers into what's stored rather than
-    replacing it, so a partial payload never wipes a key it didn't mention."""
+    """Autosave."""
     submission, body = _guard(request, token, scope="intake-form-save", limit=120)
     if submission is None:
         return body
 
-    with transaction.atomic():
-        row = FormSubmission.objects.select_for_update().get(pk=submission.pk)
-        cleaned, _errors = validate_answers(
-            row.schema_snapshot, body["answers"], partial=True
-        )
-        answers = dict(row.answers or {})
-        answers.update(cleaned)
-        row.answers = answers
-        row.last_saved_at = timezone.now()
-        # Autosave shouldn't write a simple_history row per keystroke batch.
-        row.skip_history_when_saving = True
-        row.save(update_fields=["answers", "last_saved_at", "updated_at"])
-
+    row = merge_answers(submission, body["answers"])
     return JsonResponse(
         {
             "ok": True,
@@ -178,71 +159,10 @@ def form_submit(request, token):
     if submission is None:
         return body
 
-    with transaction.atomic():
-        row = FormSubmission.objects.select_for_update().get(pk=submission.pk)
-        # Validate the raw merge, not a pre-cleaned one: an answer that fails
-        # coercion has to reach the validator to earn its real message ("Enter
-        # a valid email address") instead of being dropped and then reported as
-        # missing. Required checks see the whole document, so an answer given
-        # in an earlier session still counts.
-        merged = dict(row.answers or {}) | body["answers"]
-        cleaned, errors = validate_answers(row.schema_snapshot, merged, partial=False)
-        # `cleaned` holds everything that coerced, so storing it on the error
-        # path keeps the client's other answers; only the offending value is
-        # left out, and their browser still shows it.
-        row.answers = cleaned
-        row.last_saved_at = timezone.now()
-        if errors:
-            row.skip_history_when_saving = True
-            row.save(update_fields=["answers", "last_saved_at", "updated_at"])
-            return JsonResponse({"ok": False, "errors": errors}, status=400)
-
-        row.status = "SUBMITTED"
-        row.submitted_at = timezone.now()
-        _file_note(row)
-        row.save(
-            update_fields=[
-                "answers",
-                "last_saved_at",
-                "status",
-                "submitted_at",
-                "note",
-                "updated_at",
-            ]
-        )
-
+    # require_all: the client is answering their own form, so everything
+    # marked required has to be there. Staff completing one over the phone are
+    # held to a looser rule — see filling.complete.
+    errors = complete(submission, body["answers"], require_all=True)
+    if errors:
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
     return JsonResponse({"ok": True})
-
-
-def _file_note(submission):
-    """Put what the client said into the intake's note timeline, as Markdown.
-
-    Rewritten on every submit, not just the first. Submitting is not a
-    one-shot event here — staff reopen a form, the client comes back and
-    answers more — and a note that froze at the first pass would describe a
-    file that has since changed. Its date stays at the first submit so the
-    timeline keeps its order; that a later pass changed it shows as the
-    note's `edited_at`. Nothing is lost either: Note carries
-    HistoricalRecords, so each earlier version stays readable.
-
-    Every piece of client text is neutralised on the way in by
-    render.submission_markdown — Note.details is rendered through markdown and
-    emitted with |safe on the intake page, so an unescaped answer would be
-    live HTML there.
-    """
-    now = timezone.localtime()
-    details = submission_markdown(submission)
-
-    if submission.note is None:
-        submission.note = Note.objects.create(
-            intake=submission.intake,
-            user=None,
-            type="Client Form",
-            date=now.date(),
-            time=now.time(),
-            details=details,
-        )
-        return
-
-    submission.note.details = details
-    submission.note.save(update_fields=["details", "updated_at"])

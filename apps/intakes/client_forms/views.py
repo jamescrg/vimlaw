@@ -17,6 +17,11 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from apps.intakes.client_forms.filling import (
+    complete,
+    merge_answers,
+    read_answers,
+)
 from apps.intakes.client_forms.forms import (
     AddFormForm,
     FormTemplateForm,
@@ -29,11 +34,7 @@ from apps.intakes.client_forms.models import (
     FormTemplate,
     submissions_for_intake,
 )
-from apps.intakes.client_forms.render import (
-    answered_blocks,
-    orphan_answers,
-    render_blocks,
-)
+from apps.intakes.client_forms.render import orphan_answers, render_blocks
 from apps.intakes.client_forms.schema import (
     MAX_SCHEMA_BYTES,
     SchemaError,
@@ -403,21 +404,107 @@ def form_submission_resend(request, sub_id):
 
 
 @login_required
-def form_submission_review(request, sub_id):
+def form_submission_fill(request, sub_id):
+    """The client's own form, opened by staff.
+
+    A paralegal takes most of these down over the phone, so they need the form
+    itself rather than a read-only summary of it — the same page, the same
+    order, the same wording, so they can read it out as the client hears it.
+    It doubles as the way to see what has been answered so far, which is what
+    the review modal used to be for.
+
+    Deliberately not the client's link: opening that would stamp `opened_at`
+    and flip the row to Opened, and that signal has to keep meaning the client
+    looked at it.
+    """
     submission = get_object_or_404(
         FormSubmission.objects.select_related("template", "intake"), pk=sub_id
     )
+    editable = submission.is_fillable
     return render(
         request,
-        "intakes/forms/review.html",
+        "intakes/forms/public/fill.html",
         {
             "submission": submission,
-            "blocks": answered_blocks(
-                render_blocks(submission.schema_snapshot, submission.answers)
-            ),
+            "blocks": render_blocks(submission.schema_snapshot, submission.answers),
             "orphans": orphan_answers(submission.schema_snapshot, submission.answers),
+            "staff": True,
+            "editable": editable,
+            "firm_name": "",
+            "logo_url": "",
+            "firm_email": "",
+            "config": json.dumps(
+                {
+                    "answers": submission.answers or {},
+                    "saveUrl": f"/intakes/forms/submissions/{submission.id}/fill/save/",
+                    "submitUrl": (
+                        f"/intakes/forms/submissions/{submission.id}/fill/complete/"
+                    ),
+                    # Staff always land in the form, never on a thank-you: they
+                    # are here to work on it, including after it is submitted.
+                    "submitted": False,
+                    "editable": editable,
+                }
+            ),
         },
     )
+
+
+def _staff_answers(request, submission):
+    """The posted answers, or an error response. Same shape as the public
+    guard, minus the rate limit — this side is already behind a login."""
+    if not submission.is_fillable:
+        return None, JsonResponse(
+            {"ok": False, "error": "This form is closed."}, status=409
+        )
+    answers, error = read_answers(request)
+    if error == "too-large":
+        return None, JsonResponse(
+            {"ok": False, "error": "That's more than this form can hold."}, status=413
+        )
+    if error:
+        return None, JsonResponse(
+            {"ok": False, "error": "Malformed request."}, status=400
+        )
+    return answers, None
+
+
+@login_required
+@require_POST
+def form_submission_fill_save(request, sub_id):
+    """Autosave from the staff fill page."""
+    submission = get_object_or_404(FormSubmission, pk=sub_id)
+    answers, error = _staff_answers(request, submission)
+    if error:
+        return error
+
+    row = merge_answers(submission, answers)
+    return JsonResponse(
+        {
+            "ok": True,
+            "saved_at": timezone.localtime(row.last_saved_at).strftime("%-I:%M %p"),
+        }
+    )
+
+
+@login_required
+@require_POST
+def form_submission_fill_complete(request, sub_id):
+    """Mark a form complete from the staff fill page.
+
+    require_all=False: the paralegal is recording what the caller actually
+    told them, so a required question the client wouldn't answer must not be
+    able to jam the form. It stays unanswered, and the Done count says so.
+    """
+    submission = get_object_or_404(FormSubmission, pk=sub_id)
+    answers, error = _staff_answers(request, submission)
+    if error:
+        return error
+
+    errors = complete(submission, answers, by=request.user, require_all=False)
+    if errors:
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
+    return JsonResponse({"ok": True})
 
 
 @login_required
@@ -429,6 +516,13 @@ def form_submission_status(request, sub_id, status):
     guard checks, so there is no separate flag to keep in step.
     """
     submission = get_object_or_404(FormSubmission, pk=sub_id)
+
+    if status == "complete":
+        # The same completion the fill page performs, so a form finished on
+        # paper and one finished on screen leave the record in one shape —
+        # note filed, submitted_at stamped, attributed to whoever did it.
+        complete(submission, by=request.user, require_all=False)
+        return _refresh("Form marked complete")
 
     if status == "lock":
         submission.status = "CLOSED"

@@ -145,6 +145,11 @@ class FormSubmission(AuditMixin, models.Model):
         panel just renders whatever this returns.
         """
         actions = []
+        # Staff often fill a form in themselves, over the phone, and it never
+        # goes to the client at all — so completing has to be reachable from
+        # Draft and not only as the end of a send.
+        if self.status in self.FILLABLE and self.status != "SUBMITTED":
+            actions.append(("complete", "Mark complete"))
         if self.status == "CLOSED":
             actions.append(("reopen", "Reopen for client"))
         elif self.status not in ("DRAFT", "CANCELED"):

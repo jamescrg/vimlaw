@@ -33,11 +33,17 @@
                         @click="toggle()"
                         :aria-expanded="open">{{ submission.template_name }}</button>
                 <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                  {% comment %}
+                    A new tab, not a modal: this is where a paralegal fills the
+                    form in with the client on the phone, so it has to sit
+                    beside the intake rather than cover it. It shows the
+                    answers so far, which is what the old review modal did.
+                  {% endcomment %}
                   <li>
                     <a class="dropdown-item"
-                       href="#"
-                       hx-get="{% url 'intakes:form-submission' sub_id=submission.id %}"
-                       hx-target="#htmx-modal-container"><i class="icon-eye"></i> View answers</a>
+                       href="{% url 'intakes:form-submission-fill' sub_id=submission.id %}"
+                       target="_blank"
+                       rel="noopener"><i class="icon-square-pen"></i> View form</a>
                   </li>
                   {% if not submission.is_unsent %}
                     <li>
@@ -105,7 +111,13 @@
               </div>
             </td>
             <td class="intake-form-send">
-              {% if submission.is_unsent %}
+              {% comment %}
+                Keyed on whether it has actually gone out, not on status: a
+                form a paralegal filled in over the phone is Submitted without
+                ever having been sent, and offering to "remind" the client
+                about it would be nonsense.
+              {% endcomment %}
+              {% if not submission.send_count %}
                 <button class="button-link"
                         type="button"
                         hx-get="{% url 'intakes:form-submission-send' sub_id=submission.id %}"

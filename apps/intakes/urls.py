@@ -5,10 +5,12 @@ from apps.intakes.client_forms.views import (
     form_builder,
     form_builder_save,
     form_submission_delete,
+    form_submission_fill,
+    form_submission_fill_complete,
+    form_submission_fill_save,
     form_submission_link,
     form_submission_reissue,
     form_submission_resend,
-    form_submission_review,
     form_submission_send,
     form_submission_status,
     form_template_delete,
@@ -118,10 +120,22 @@ urlpatterns = [
         form_submission_send,
         name="form-submission-send",
     ),
+    # Opened in a new tab: the paralegal fills it in with the client on the
+    # phone, so it has to sit beside the intake rather than replace it.
     path(
-        "intakes/forms/submissions/<int:sub_id>/",
-        form_submission_review,
-        name="form-submission",
+        "intakes/forms/submissions/<int:sub_id>/fill/",
+        form_submission_fill,
+        name="form-submission-fill",
+    ),
+    path(
+        "intakes/forms/submissions/<int:sub_id>/fill/save/",
+        form_submission_fill_save,
+        name="form-submission-fill-save",
+    ),
+    path(
+        "intakes/forms/submissions/<int:sub_id>/fill/complete/",
+        form_submission_fill_complete,
+        name="form-submission-fill-complete",
     ),
     path(
         "intakes/forms/submissions/<int:sub_id>/link/",

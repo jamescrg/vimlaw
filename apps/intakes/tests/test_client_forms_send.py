@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.core import mail
 from django.urls import reverse
@@ -230,8 +232,13 @@ class TestStatusActions:
         )
 
     def test_offered_actions_depend_on_the_state(self, form_submission):
+        # Complete is reachable straight from Draft: staff fill plenty of
+        # these in themselves and the client never sees them.
         form_submission.status = "DRAFT"
-        assert [a for a, _ in form_submission.status_actions] == ["cancel"]
+        assert [a for a, _ in form_submission.status_actions] == ["complete", "cancel"]
+
+        form_submission.status = "SUBMITTED"
+        assert "complete" not in [a for a, _ in form_submission.status_actions]
 
         form_submission.status = "CANCELED"
         assert [a for a, _ in form_submission.status_actions] == ["draft"]
@@ -309,26 +316,175 @@ class TestDeleting:
         assert client.get(self.delete_url(form_submission)).status_code == 405
 
 
-class TestReview:
-    def test_the_review_shows_the_questions_as_asked(self, client, filled_submission):
+class TestStaffFill:
+    """The page a paralegal opens to take a form down over the phone. It
+    replaced the read-only review modal, so it has to carry what that showed."""
+
+    def test_it_shows_the_questions_as_asked_with_the_answers_so_far(
+        self, client, filled_submission
+    ):
         response = client.get(
-            reverse("intakes:form-submission", kwargs={"sub_id": filled_submission.id})
+            reverse(
+                "intakes:form-submission-fill", kwargs={"sub_id": filled_submission.id}
+            )
         )
         body = response.content.decode()
         assert response.status_code == 200
         assert "Property address" in body
         assert "225 Paper Street" in body
-        assert "Boundary" in body  # the option label, not its stored value
+        # The staff bar, so nobody mistakes this tab for the client's copy.
+        assert "Filling in for" in body
 
-    def test_the_review_flags_a_template_that_has_moved_on(
+    def test_it_flags_a_template_that_has_moved_on(
         self, client, filled_submission, form_template
     ):
         form_template.version += 1
         form_template.save()
         body = client.get(
-            reverse("intakes:form-submission", kwargs={"sub_id": filled_submission.id})
+            reverse(
+                "intakes:form-submission-fill", kwargs={"sub_id": filled_submission.id}
+            )
         ).content.decode()
         assert "has since changed" in body
+
+    def test_opening_it_does_not_claim_the_client_opened_the_form(
+        self, client, filled_submission
+    ):
+        """`opened_at` has to keep meaning the client looked at it — staff
+        working the form must not forge that signal."""
+        filled_submission.status = "SENT"
+        filled_submission.opened_at = None
+        filled_submission.save()
+
+        client.get(
+            reverse(
+                "intakes:form-submission-fill", kwargs={"sub_id": filled_submission.id}
+            )
+        )
+
+        filled_submission.refresh_from_db()
+        assert filled_submission.opened_at is None
+        assert filled_submission.status == "SENT"
+
+    def test_staff_can_complete_it_straight_from_draft(
+        self, client, form_submission, answer_keys
+    ):
+        """The paralegal path: created, never sent, filled in on the call."""
+        assert form_submission.status == "DRAFT"
+
+        response = client.post(
+            reverse(
+                "intakes:form-submission-fill-complete",
+                kwargs={"sub_id": form_submission.id},
+            ),
+            json.dumps(
+                {"answers": {answer_keys["Property address"]: "225 Paper Street"}}
+            ),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 200
+        form_submission.refresh_from_db()
+        assert form_submission.status == "SUBMITTED"
+        assert form_submission.submitted_at is not None
+        # Never sent, so it must not claim it was.
+        assert form_submission.sent_at is None
+        assert "225 Paper Street" in form_submission.note.details
+
+    def test_a_staff_completion_is_attributed_to_the_person_who_took_it(
+        self, client, django_user_model, form_submission, answer_keys
+    ):
+        """The client's own submissions have no user; one taken down over the
+        phone should say who wrote it."""
+        client.post(
+            reverse(
+                "intakes:form-submission-fill-complete",
+                kwargs={"sub_id": form_submission.id},
+            ),
+            json.dumps(
+                {"answers": {answer_keys["Property address"]: "225 Paper Street"}}
+            ),
+            content_type="application/json",
+        )
+
+        form_submission.refresh_from_db()
+        assert form_submission.note.user is not None
+
+    def test_a_required_question_does_not_block_staff(
+        self, client, form_submission, answer_keys
+    ):
+        """Property address is required. A caller who won't give one must not
+        be able to jam the paralegal — the gap shows in the Done count."""
+        response = client.post(
+            reverse(
+                "intakes:form-submission-fill-complete",
+                kwargs={"sub_id": form_submission.id},
+            ),
+            json.dumps({"answers": {answer_keys["When did it start?"]: "2024-03-01"}}),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 200
+        form_submission.refresh_from_db()
+        assert form_submission.status == "SUBMITTED"
+
+    def test_a_malformed_answer_still_fails(self, client, form_submission, answer_keys):
+        """Looser on requiredness, not on coercion: a date has to be a date."""
+        response = client.post(
+            reverse(
+                "intakes:form-submission-fill-complete",
+                kwargs={"sub_id": form_submission.id},
+            ),
+            json.dumps({"answers": {answer_keys["When did it start?"]: "whenever"}}),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 400
+        form_submission.refresh_from_db()
+        assert form_submission.status == "DRAFT"
+
+    def test_staff_cannot_write_to_a_cancelled_form(
+        self, client, form_submission, answer_keys
+    ):
+        form_submission.status = "CANCELED"
+        form_submission.save()
+
+        response = client.post(
+            reverse(
+                "intakes:form-submission-fill-save",
+                kwargs={"sub_id": form_submission.id},
+            ),
+            json.dumps({"answers": {answer_keys["Property address"]: "nope"}}),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 409
+
+    def test_the_status_menu_completes_it_too(self, client, filled_submission):
+        """Same completion as the fill page, so a form finished on paper and
+        one finished on screen leave the record in one shape."""
+        response = client.post(
+            reverse(
+                "intakes:form-submission-status",
+                kwargs={"sub_id": filled_submission.id, "status": "complete"},
+            )
+        )
+
+        assert response.status_code == 204
+        filled_submission.refresh_from_db()
+        assert filled_submission.status == "SUBMITTED"
+        assert filled_submission.note is not None
+
+    def test_it_needs_a_login(self, filled_submission):
+        from django.test import Client as DjangoClient
+
+        response = DjangoClient().get(
+            reverse(
+                "intakes:form-submission-fill", kwargs={"sub_id": filled_submission.id}
+            )
+        )
+        assert response.status_code in (301, 302)
+        assert "/login" in response["Location"]
 
     def test_the_panel_lists_what_was_sent(self, client, intake, filled_submission):
         response = client.get(reverse("intakes:forms-panel", kwargs={"id": intake.id}))
