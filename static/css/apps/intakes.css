@@ -296,6 +296,34 @@ Markdown
   text-decoration: underline;
 }
 
+/* The website's client questionnaire arrives as a Markdown table, so notes
+   render real tables. They get their frame here — the corner rounding and
+   last-row/column border removal come free from the element selectors in
+   tables.css. The important part is the cells: that file forces nowrap +
+   ellipsis on every td, which would truncate every answer, so wrapping is
+   re-enabled the way .overview-main does it in matters.css. */
+.intake-note-details table {
+  border: 1px solid var(--border-medium);
+  border-collapse: separate;
+  border-radius: var(--radius-md);
+  border-spacing: 0;
+  margin: 1rem 0 0;
+  width: 100%;
+}
+
+.intake-note-details th,
+.intake-note-details td {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Question / Answer: the label column takes a third, the answer the rest. */
+.intake-note-details td:first-child,
+.intake-note-details th:first-child {
+  width: 33%;
+}
+
 /* ==========================================================================
 Address Buttons
 ========================================================================== */
