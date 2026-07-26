@@ -220,9 +220,10 @@ def _file_note(submission):
     Rewritten on every submit, not just the first. Submitting is not a
     one-shot event here — staff reopen a form, the client comes back and
     answers more — and a note that froze at the first pass would describe a
-    file that has since changed. Its timestamp moves too, so the timeline
-    puts it where the client last actually said something. Nothing is lost:
-    Note carries HistoricalRecords, so each earlier version stays readable.
+    file that has since changed. Its date stays at the first submit so the
+    timeline keeps its order; that a later pass changed it shows as the
+    note's `edited_at`. Nothing is lost either: Note carries
+    HistoricalRecords, so each earlier version stays readable.
 
     Every piece of client text is neutralised on the way in by
     render.submission_markdown — Note.details is rendered through markdown and
@@ -244,6 +245,4 @@ def _file_note(submission):
         return
 
     submission.note.details = details
-    submission.note.date = now.date()
-    submission.note.time = now.time()
-    submission.note.save(update_fields=["details", "date", "time", "updated_at"])
+    submission.note.save(update_fields=["details", "updated_at"])

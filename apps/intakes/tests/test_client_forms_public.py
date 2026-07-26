@@ -1,5 +1,6 @@
 import json
 import uuid as uuid_module
+from datetime import timedelta
 
 import pytest
 from django.test import (
@@ -263,6 +264,7 @@ class TestSubmit:
         )
         form_submission.refresh_from_db()
         note_id = form_submission.note_id
+        filed_on = (form_submission.note.date, form_submission.note.time)
 
         post_json(
             anon,
@@ -270,13 +272,45 @@ class TestSubmit:
             {"answers": {answer_keys["When did it start?"]: "2026-03-04"}},
         )
         form_submission.refresh_from_db()
-        details = form_submission.note.details
+        note = form_submission.note
 
         # The same note, rewritten — not a second one filed beside the first.
         assert form_submission.note_id == note_id
         assert Note.objects.filter(intake=form_submission.intake).count() == 1
-        assert "March 4, 2026" in details
-        assert "225 Paper Street" in details
+        assert "March 4, 2026" in note.details
+        assert "225 Paper Street" in note.details
+        # It stays where it was filed; that it changed is `edited_at`'s job.
+        assert (note.date, note.time) == filed_on
+
+    def test_a_rewritten_note_reports_when_it_was_last_changed(
+        self, anon, form_submission, answer_keys
+    ):
+        """The row's date says when the note was filed, which for a form is
+        the first submit. Staff need to see that what it says is newer."""
+        post_json(
+            anon,
+            submit_url(form_submission),
+            {"answers": {answer_keys["Property address"]: "225 Paper Street"}},
+        )
+        form_submission.refresh_from_db()
+        note = form_submission.note
+
+        # Fresh out of the box it reads exactly as filed.
+        assert note.edited_at is None
+
+        # Backdate the filing so the second write is unambiguously later —
+        # a real client comes back minutes or days on, not milliseconds.
+        Note.objects.filter(pk=note.pk).update(
+            created_at=note.created_at - timedelta(days=1)
+        )
+        post_json(
+            anon,
+            submit_url(form_submission),
+            {"answers": {answer_keys["When did it start?"]: "2026-03-04"}},
+        )
+
+        note.refresh_from_db()
+        assert note.edited_at == note.updated_at
 
     def test_client_text_in_the_note_can_never_become_markup(
         self, anon, form_submission, answer_keys

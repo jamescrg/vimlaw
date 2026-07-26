@@ -230,6 +230,14 @@ Detail View - Left Panel
   min-width: 0;
 }
 
+/* Sits opposite the filing date, and only when the two disagree. Muted: it
+   qualifies the row rather than competing with it. */
+.intake-note-updated {
+  color: var(--color-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* ==========================================================================
 Markdown
 ========================================================================== */

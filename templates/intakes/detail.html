@@ -200,6 +200,18 @@
                     <span class="intake-note-username">{{ note.user.username|title }}</span>
                     <span class="intake-note-type">{{ note.type }}</span>
                   </div>
+                  {% comment %}
+                    The stamp on the left is when the note was filed. This is
+                    the other half of the story — a client form note is
+                    rewritten every time the client answers more, so what it
+                    says can be much newer than where it sits. Date and time
+                    both, matching the filing stamp opposite: a form is often
+                    finished the same afternoon it was started, and a date
+                    alone would say nothing there.
+                  {% endcomment %}
+                  {% if note.edited_at %}
+                    <span class="intake-note-updated">Updated {{ note.edited_at|date:'Y-m-d' }} {{ note.edited_at|time:'g:i A' }}</span>
+                  {% endif %}
                 </div>
                 <div class="intake-note-details">{{ note.details|safe }}</div>
               </div>

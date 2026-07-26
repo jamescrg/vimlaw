@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -63,6 +65,26 @@ class Note(AuditMixin, models.Model):
 
     def __str__(self):
         return f"{self.type} : {self.id}"
+
+    @property
+    def edited_at(self):
+        """When this note was last rewritten, or None if it still reads as
+        filed.
+
+        `date` is the note's own date — when the call happened, when the
+        client submitted — and it stays put so the timeline keeps its order.
+        This is the other question: has what it says changed since. A client
+        form note is rewritten every time the client answers more, so the two
+        drift apart as a matter of course.
+
+        AuditMixin stamps `updated_at` on the insert as well, so a few
+        seconds of slack keeps an untouched note from claiming it was edited.
+        """
+        if not self.updated_at or not self.created_at:
+            return None
+        if (self.updated_at - self.created_at) < timedelta(seconds=5):
+            return None
+        return self.updated_at
 
     class Meta:
         db_table = "app_intake_note"
