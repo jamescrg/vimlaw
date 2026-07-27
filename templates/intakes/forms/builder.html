@@ -3,11 +3,6 @@
   <div class="fb" x-data="intakeFormBuilder({{ config }})">
     <div class="toolbar fb-toolbar">
       <div class="toolbar-left">
-        <a href="{% url 'intakes:forms-index' %}"
-           class="btn-icon"
-           title="All forms">
-          <i class="icon-chevron-left"></i>
-        </a>
         <h1 class="fb-name" id="fb-name">{% include "intakes/forms/name.html" %}</h1>
       </div>
       <div class="toolbar-right">
