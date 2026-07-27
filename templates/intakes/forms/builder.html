@@ -31,10 +31,17 @@
               x-show="!error && !blocked && !saving && !dirty && savedAt"
               x-cloak
               x-text="'Saved ' + savedAt"></span>
+        <button type="button" class="btn btn-secondary" @click="preview = !preview">
+          <i :class="preview ? 'icon-pencil' : 'icon-eye'"></i>
+          <span x-text="preview ? 'Edit' : 'Preview'"></span>
+        </button>
         <button type="button"
-                class="btn btn-secondary"
-                @click="preview = !preview"
-                x-text="preview ? 'Edit' : 'Preview'"></button>
+                class="btn btn-success"
+                @click="save()"
+                :disabled="saving || !dirty">
+          <i class="icon-save"></i>
+          <span x-text="saving ? 'Saving…' : 'Save'"></span>
+        </button>
         <button type="button"
                 class="btn-icon"
                 title="Form settings"
@@ -50,11 +57,6 @@
                 hx-post="{% url 'intakes:form-template-duplicate' template_id=template.id %}">
           <i class="icon-copy"></i>
         </button>
-        <button type="button"
-                class="btn btn-success"
-                @click="save()"
-                :disabled="saving || !dirty"
-                x-text="saving ? 'Saving…' : 'Save'"></button>
       </div>
     </div>
     <div class="fb-body" :class="preview ? 'fb-previewing' : ''">
