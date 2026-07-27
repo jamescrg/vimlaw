@@ -134,11 +134,24 @@
                   <span>Text shown to the client</span>
                   <textarea rows="3" x-model="field.text"></textarea>
                 </label>
-                <label class="fb-edit" x-show="!isLayout(field)">
+                {% comment %}
+                  Help is retired from new fields: a question that needs a
+                  paragraph of guidance is too complicated for a form, and the
+                  placeholder below carries the format hint. The editor only
+                  appears where legacy help already exists (seeded forms carry
+                  some), so that content is never invisible — clear it and it
+                  is gone for good. The schema and the client page still render
+                  help, because old snapshots are frozen with theirs.
+                {% endcomment %}
+                <label class="fb-edit" x-show="field.help">
                   <span>Help text</span>
+                  <input type="text" x-model="field.help" />
+                </label>
+                <label class="fb-edit" x-show="has(field, 'placeholder')">
+                  <span>Placeholder</span>
                   <input type="text"
-                         x-model="field.help"
-                         placeholder="Optional guidance under the question" />
+                         x-model="field.placeholder"
+                         placeholder="Hint shown inside the empty answer box" />
                 </label>
                 <div class="fb-edit-row">
                   <label class="fb-edit" x-show="!isLayout(field)">
@@ -153,10 +166,6 @@
                       <option value="yes">Yes</option>
                       <option value="no">No</option>
                     </select>
-                  </label>
-                  <label class="fb-edit" x-show="has(field, 'placeholder')">
-                    <span>Placeholder</span>
-                    <input type="text" x-model="field.placeholder" />
                   </label>
                   <label class="fb-edit" x-show="has(field, 'rows')">
                     <span>Rows</span>

@@ -441,7 +441,7 @@
 .fb-empty-hint {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   margin: 0;
   max-width: 26rem;
   text-align: left;
