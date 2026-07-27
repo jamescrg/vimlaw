@@ -67,7 +67,7 @@ document.addEventListener('alpine:init', () => {
         if (res.status === 403) {
           this.state = 'error';
           this.message =
-            'Your session expired. Please reload this page — your answers are still on screen.';
+            'Your session expired. Please reload this page. Your answers are still on screen.';
           return;
         }
         const data = await res.json().catch(() => ({}));
@@ -93,7 +93,7 @@ document.addEventListener('alpine:init', () => {
 
     async submit() {
       if (config.preview) {
-        this.message = 'This is a preview — nothing typed here is saved or sent.';
+        this.message = 'This is a preview. Nothing typed here is saved or sent.';
         return;
       }
       if (this.sending) return;
@@ -107,7 +107,7 @@ document.addEventListener('alpine:init', () => {
         const res = await post(config.submitUrl, { answers: this.answers });
         if (res.status === 403) {
           this.message =
-            'Your session expired. Please reload this page — your answers are still on screen.';
+            'Your session expired. Please reload this page. Your answers are still on screen.';
           return;
         }
         const data = await res.json().catch(() => ({}));

@@ -18,7 +18,7 @@
     {% endcomment %}
     {% if preview %}
       <div class="cf-staff-bar">
-        <span class="cf-staff-who">Preview — nothing typed here is saved or sent.</span>
+        <span class="cf-staff-who">Preview. Nothing typed here is saved or sent.</span>
       </div>
     {% endif %}
     {% if staff %}
@@ -72,7 +72,7 @@
           </p>
         {% else %}
           <p class="cf-banner">
-            Thank you — we've received your answers.
+            Thank you. We've received your answers.
             {% if firm_email %}
               If anything needs changing, please contact us at {{ firm_email }}.
             {% else %}
@@ -106,16 +106,26 @@
         {% endcomment %}
         <p class="cf-banner" x-show="submitted && !editing" x-cloak>
           {% if staff %}
-            Marked complete — the answers are filed on the intake as a note.
+            Marked complete. The answers are filed on the intake as a note.
             <button type="button" class="cf-link-btn" @click="editing = true">Keep editing</button>
           {% else %}
-            Thank you — we've received your answers.
+            Thank you. We've received your answers.
             <button type="button" class="cf-link-btn" @click="editing = true">Make changes</button>
           {% endif %}
         </p>
-        {% if submission.template.intro_text %}
-          <div class="cf-intro" x-show="editing" x-cloak>{{ submission.template.intro_text|linebreaks }}</div>
-        {% endif %}
+        {% comment %}
+          The caption slot. A form's own caption (Form Settings) speaks here;
+          without one, the standard caption stands in — the autosave
+          reassurance, which used to sit under the Submit button and wrapped
+          badly there.
+        {% endcomment %}
+        <div class="cf-intro" x-show="editing" x-cloak>
+          {% if submission.template.intro_text %}
+            {{ submission.template.intro_text|linebreaks }}
+          {% else %}
+            <p>Your answers save as you type. You can close this page and come back to it.</p>
+          {% endif %}
+        </div>
         <form class="cf-form" x-show="editing" x-cloak @submit.prevent="submit()">
           {% for block in blocks %}
             {% if block.kind == "heading" %}
@@ -158,16 +168,14 @@
           </div>
           {% if staff %}
             {% comment %}
-              Staff aren't held to the required marks — the caller answers what
-              they answer — so the note says what completing actually does
+              Staff aren't held to the required marks (the caller answers what
+              they answer), so the note says what completing actually does
               rather than warning about gaps.
             {% endcomment %}
             <p class="cf-reassure">
               Answers save as you type. Marking it complete files them on the intake as a
               note; you can reopen and change it afterwards.
             </p>
-          {% else %}
-            <p class="cf-reassure">Your answers save as you type — you can close this page and come back to it.</p>
           {% endif %}
         </form>
       {% endif %}
