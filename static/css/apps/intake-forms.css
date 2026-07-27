@@ -219,13 +219,8 @@
 }
 
 .fb-palette-heading {
-  color: var(--color-muted);
+  color: var(--color-primary);
   margin: 0 0 0.5rem;
-}
-
-.fb-palette-hint {
-  color: var(--color-muted);
-  margin: 0 0 0.75rem;
 }
 
 .fb-palette-item {
