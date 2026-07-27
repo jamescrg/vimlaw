@@ -8,11 +8,7 @@
            title="All forms">
           <i class="icon-chevron-left"></i>
         </a>
-        <input class="fb-name"
-               type="text"
-               x-model="name"
-               aria-label="Form name"
-               placeholder="Untitled form" />
+        <h1 class="fb-name" id="fb-name">{% include "intakes/forms/name.html" %}</h1>
       </div>
       <div class="toolbar-right">
         {% comment %}
@@ -199,15 +195,39 @@
                           class="btn btn-secondary fb-add-option"
                           @click="addOption(field)">Add option</button>
                 </div>
+                {% comment %}
+                  Closes the editor rather than saving in any special sense —
+                  the form is already saving itself. What it adds is a check on
+                  this one question, so an unlabelled one is caught here with
+                  the field in front of you instead of as a line in the toolbar.
+                {% endcomment %}
+                <div class="fb-edit-footer">
+                  <p class="fb-edit-problem" x-show="problem" x-cloak x-text="problem"></p>
+                  <button type="button" class="btn btn-success" @click="doneEditing(field)">Save</button>
+                </div>
               </div>
             </div>
           </template>
         </div>
-        <p class="fb-empty" x-show="!preview && fields.length === 0" x-cloak>
-          Pick a question type on the left to start building this form.
-        </p>
+        {% comment %}
+          Outside the canvas, and it has to stay there: Sortable counts every
+          element child of its container when working out drag indexes, and
+          x-show leaves a hidden node behind, so moving this inside would shift
+          every index by one.
+        {% endcomment %}
+        <div class="fb-empty" x-show="!preview && fields.length === 0" x-cloak>
+          <i class="icon-clipboard-list"></i>
+          <p class="fb-empty-title">This form has no questions yet</p>
+          <p class="fb-empty-hint">
+            Pick a question type on the left to add the first one. Drag them into order
+            afterwards — everything saves as you go.
+          </p>
+        </div>
         <div class="fb-preview" x-show="preview" x-cloak>
-          <h1 x-text="name || 'Untitled form'"></h1>
+          {# Kept in step by the rename endpoint's out-of-band swap. #}
+          <h1>
+            <span id="fb-preview-name">{{ template.name|default:"Untitled form" }}</span>
+          </h1>
           {% if template.intro_text %}<p class="fb-preview-intro">{{ template.intro_text }}</p>{% endif %}
           <template x-for="field in fields" :key="field._id">
             <div class="fb-preview-block">

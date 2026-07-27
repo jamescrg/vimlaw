@@ -15,6 +15,8 @@ from apps.intakes.client_forms.views import (
     form_submission_status,
     form_template_delete,
     form_template_duplicate,
+    form_template_name_edit,
+    form_template_name_update,
     form_template_new,
     form_template_settings,
     forms_index,
@@ -112,6 +114,16 @@ urlpatterns = [
         name="form-template-delete",
     ),
     # Sending a form from an intake, and reading what came back.
+    path(
+        "intakes/forms/<int:template_id>/name/edit/",
+        form_template_name_edit,
+        name="form-template-name-edit",
+    ),
+    path(
+        "intakes/forms/<int:template_id>/name/",
+        form_template_name_update,
+        name="form-template-name-update",
+    ),
     path("intakes/<int:id>/forms/", intake_forms_panel, name="forms-panel"),
     # Two steps: add prepares the form, send hands it to the client.
     path("intakes/<int:id>/forms/add/", intake_form_add, name="form-add"),

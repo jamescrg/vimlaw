@@ -24,7 +24,6 @@ const AUTOSAVE_MS = 1500;
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('intakeFormBuilder', (config) => ({
-    name: config.name,
     fields: (config.schema || []).map((f) => ({ ...f, _id: newId() })),
     palette: config.palette || [],
     defaults: config.defaults || {},
@@ -38,6 +37,8 @@ document.addEventListener('alpine:init', () => {
     // Why the document can't be saved yet, in words, when that is the reason
     // nothing is happening. Distinct from `error`, which means a save failed.
     blocked: '',
+    // Why the open editor would not close, shown inside it.
+    problem: '',
 
     // Bumped by every edit, so a reply that lands after the next keystroke
     // knows not to declare the form clean.
@@ -49,7 +50,6 @@ document.addEventListener('alpine:init', () => {
 
     init() {
       this.$watch('fields', () => this.touch(), { deep: true });
-      this.$watch('name', () => this.touch());
       this.mountSortable();
 
       // A debounced save can still be pending when the tab goes away.
@@ -79,6 +79,7 @@ document.addEventListener('alpine:init', () => {
       // Recomputed on the edit rather than on the save, so labelling a
       // question clears the notice as it is typed instead of a second later.
       this.blocked = this.notReady();
+      this.problem = '';
       clearTimeout(this._timer);
       this._timer = setTimeout(() => this.save(), AUTOSAVE_MS);
     },
@@ -92,19 +93,40 @@ document.addEventListener('alpine:init', () => {
       this.$nextTick(() => { this._quiet = false; });
     },
 
-    // The server rejects a whole document rather than storing half of one, so
-    // these are the two states worth waiting through rather than reporting.
+    // What stops this one field from being storable, in words, or '' when
+    // nothing does. The server rejects a document whole rather than saving
+    // half of one, so these are the states to wait through rather than report.
+    fieldProblem(field) {
+      if (field.type !== 'text_block' && !String(field.label || '').trim()) {
+        return field.type === 'heading'
+          ? 'Give this heading some text.'
+          : 'Give this question a label.';
+      }
+      if (Array.isArray(field.options)) {
+        const filled = field.options.filter((o) => String(o.label || '').trim());
+        if (!filled.length) return 'Add at least one option.';
+      }
+      return '';
+    },
+
     notReady() {
       for (const field of this.fields) {
-        if (field.type !== 'text_block' && !String(field.label || '').trim()) {
-          return 'Waiting — every question needs a label.';
-        }
-        if (Array.isArray(field.options)) {
-          const filled = field.options.filter((o) => String(o.label || '').trim());
-          if (!filled.length) return 'Waiting — every choice needs an option.';
+        if (this.fieldProblem(field)) {
+          return 'Waiting — one question is still incomplete.';
         }
       }
       return '';
+    },
+
+    // The editor's own Save: check this field, then collapse it and let the
+    // save go now rather than on the debounce. Staying open on a problem is
+    // the point — closing an incomplete question would hide the reason the
+    // form was not saving.
+    doneEditing(field) {
+      this.problem = this.fieldProblem(field);
+      if (this.problem) return;
+      this.selectedId = null;
+      this.save();
     },
 
     mountSortable() {
@@ -149,6 +171,7 @@ document.addEventListener('alpine:init', () => {
       const field = { ...clone(this.defaults[type]), _id: newId() };
       this.fields.push(field);
       this.selectedId = field._id;
+      this.problem = '';
       this.$nextTick(() => {
         const card = this.$refs.canvas.lastElementChild;
         if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -182,6 +205,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     select(field) {
+      this.problem = '';
       this.selectedId = this.selectedId === field._id ? null : field._id;
     },
 
@@ -230,11 +254,16 @@ document.addEventListener('alpine:init', () => {
       return this.fields.filter((f) => !this.isLayout(f)).length;
     },
 
+    /*
+     * The schema, and only the schema.
+     *
+     * The name is edited inline against its own endpoint and belongs to the
+     * server. Sending it from here too would mean two writers for one field:
+     * a rename, then an autosave still carrying the name this page loaded
+     * with, which would quietly put the old one back.
+     */
     payload() {
-      return {
-        name: this.name,
-        schema: this.fields.map(({ _id, ...rest }) => rest),
-      };
+      return { schema: this.fields.map(({ _id, ...rest }) => rest) };
     },
 
     /*

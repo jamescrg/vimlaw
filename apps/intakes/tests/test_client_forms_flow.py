@@ -141,7 +141,8 @@ def test_build_send_fill_and_read_back(client, intake):
 def test_the_settings_modal_cannot_overwrite_a_name_edited_in_the_builder(
     client, form_template
 ):
-    """The builder toolbar owns the name; the settings modal must not offer it."""
+    """The inline title control owns the name; the settings modal must not
+    offer it, or saving settings would overwrite a rename made in the builder."""
     response = client.get(
         reverse(
             "intakes:form-template-settings", kwargs={"template_id": form_template.id}

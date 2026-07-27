@@ -140,6 +140,30 @@ def form_template_settings(request, template_id):
 
 
 @login_required
+def form_template_name_edit(request, template_id):
+    """Swap the builder's title for an input — the matter work-status pattern."""
+    template = get_object_or_404(FormTemplate, pk=template_id)
+    return render(request, "intakes/forms/name-edit.html", {"template": template})
+
+
+@login_required
+@require_POST
+def form_template_name_update(request, template_id):
+    """Save the inline rename and swap the title back.
+
+    The name lives here rather than in the builder's autosave payload: two
+    writers for one field is how one of them ends up overwriting the other,
+    and the schema is the only thing the canvas actually owns.
+    """
+    template = get_object_or_404(FormTemplate, pk=template_id)
+    name = str(request.POST.get("name") or "").strip()[:120]
+    if name and name != template.name:
+        template.name = name
+        template.save(update_fields=["name", "updated_at"])
+    return render(request, "intakes/forms/name.html", {"template": template})
+
+
+@login_required
 @require_POST
 def form_template_duplicate(request, template_id):
     """Copy a template, questions and all. The copy keeps the original's field
@@ -176,7 +200,6 @@ def form_template_delete(request, template_id):
 def form_builder(request, template_id):
     template = get_object_or_404(FormTemplate, pk=template_id)
     config = {
-        "name": template.name,
         "schema": template.schema or [],
         "palette": palette(),
         "defaults": defaults(),
@@ -197,6 +220,12 @@ def form_builder_save(request, template_id):
     The response echoes the normalized schema back, and the builder adopts the
     keys from it: the server mints them, and every future submission's answers
     are filed under them.
+
+    The schema and nothing else — the name is edited inline against
+    `form_template_name_update` and is not accepted here. Two writers for one
+    field is how one of them ends up quietly undoing the other, and with
+    autosave running that would be a rename followed a second later by an
+    autosave carrying the name the page loaded with.
 
     The builder autosaves, so this is called on a pause in typing rather than
     on a difference — the same document arrives again whenever someone tabs
@@ -222,15 +251,10 @@ def form_builder_save(request, template_id):
     except SchemaError as exc:
         return JsonResponse({"ok": False, "error": str(exc)}, status=400)
 
-    name = str(body.get("name") or "").strip()[:120]
-    renamed = bool(name) and name != template.name
-
-    if schema != template.schema or renamed:
-        if name:
-            template.name = name
+    if schema != template.schema:
         template.schema = schema
         template.version += 1
-        template.save()
+        template.save(update_fields=["schema", "version", "updated_at"])
 
     return JsonResponse(
         {

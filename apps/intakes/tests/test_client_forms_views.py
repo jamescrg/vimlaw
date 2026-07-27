@@ -100,10 +100,13 @@ class TestBuilderSave:
 
     def test_save_stores_the_schema_and_bumps_the_version(self, client, form_template):
         before = form_template.version
+        was_called = form_template.name
         response = self.post(
             client,
             form_template,
             {
+                # Offered, and ignored: renaming has its own endpoint, and a
+                # second writer here would undo it on the next autosave.
                 "name": "Renamed",
                 "schema": [{"type": "text", "label": "Your name", "key": None}],
             },
@@ -114,9 +117,9 @@ class TestBuilderSave:
         assert body["version"] == before + 1
 
         form_template.refresh_from_db()
-        assert form_template.name == "Renamed"
+        assert form_template.name == was_called
         assert len(form_template.schema) == 1
-        # The response echoes the minted key back so the builder can re-hydrate.
+        # The response echoes the minted key back so the builder adopts it.
         assert body["schema"][0]["key"] == form_template.schema[0]["key"]
 
     def test_resaving_the_same_document_does_not_move_the_version(
@@ -127,10 +130,7 @@ class TestBuilderSave:
         `template_drifted` reads the version, so a bump with no change behind
         it would tell every submission ever sent from this form that its
         questions had changed since."""
-        payload = {
-            "name": form_template.name,
-            "schema": [{"type": "text", "label": "Your name", "key": None}],
-        }
+        payload = {"schema": [{"type": "text", "label": "Your name", "key": None}]}
         first = self.post(client, form_template, payload).json()
 
         # Second time round, carrying the key the server just minted — which is
@@ -143,10 +143,7 @@ class TestBuilderSave:
         assert form_template.version == first["version"]
 
     def test_a_real_edit_still_moves_the_version(self, client, form_template):
-        payload = {
-            "name": form_template.name,
-            "schema": [{"type": "text", "label": "Your name", "key": None}],
-        }
+        payload = {"schema": [{"type": "text", "label": "Your name", "key": None}]}
         first = self.post(client, form_template, payload).json()
 
         payload["schema"][0]["key"] = first["schema"][0]["key"]
@@ -155,20 +152,63 @@ class TestBuilderSave:
 
         assert second["version"] == first["version"] + 1
 
-    def test_renaming_alone_moves_the_version(self, client, form_template):
-        payload = {
-            "name": form_template.name,
-            "schema": [{"type": "text", "label": "Your name", "key": None}],
-        }
-        first = self.post(client, form_template, payload).json()
+    def test_the_title_edits_inline_and_the_rename_endpoint_owns_it(
+        self, client, form_template
+    ):
+        """The title is the matter work-status control: a link that swaps for
+        an input and back. The name is the server's, so the builder's autosave
+        never carries it and cannot put an old one back."""
+        edit = client.get(
+            reverse(
+                "intakes:form-template-name-edit",
+                kwargs={"template_id": form_template.id},
+            )
+        )
+        assert edit.status_code == 200
+        assert 'name="name"' in edit.content.decode()
 
-        payload["schema"][0]["key"] = first["schema"][0]["key"]
-        payload["name"] = "Something else"
-        second = self.post(client, form_template, payload).json()
+        saved = client.post(
+            reverse(
+                "intakes:form-template-name-update",
+                kwargs={"template_id": form_template.id},
+            ),
+            {"name": "Boundary Questionnaire"},
+        )
+        assert saved.status_code == 200
+        body = saved.content.decode()
+        assert "Boundary Questionnaire" in body
+        # Swaps back to the link, and carries the preview's heading with it.
+        assert "button-link" in body
+        assert 'id="fb-preview-name"' in body
 
-        assert second["version"] == first["version"] + 1
         form_template.refresh_from_db()
-        assert form_template.name == "Something else"
+        assert form_template.name == "Boundary Questionnaire"
+
+    def test_renaming_does_not_move_the_version(self, client, form_template):
+        """Version tracks the questions, which is what `template_drifted`
+        reports on — a form that was renamed did not change what it asks."""
+        before = form_template.version
+        client.post(
+            reverse(
+                "intakes:form-template-name-update",
+                kwargs={"template_id": form_template.id},
+            ),
+            {"name": "Something else"},
+        )
+        form_template.refresh_from_db()
+        assert form_template.version == before
+
+    def test_a_blank_rename_is_ignored(self, client, form_template):
+        was_called = form_template.name
+        client.post(
+            reverse(
+                "intakes:form-template-name-update",
+                kwargs={"template_id": form_template.id},
+            ),
+            {"name": "   "},
+        )
+        form_template.refresh_from_db()
+        assert form_template.name == was_called
 
     def test_save_preserves_a_key_across_a_relabel(self, client, form_template):
         original = form_template.schema[0]

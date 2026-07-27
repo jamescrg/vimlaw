@@ -1,0 +1,18 @@
+{% comment %}
+  The form's name, as the matter's work status does it: a link that swaps
+  itself for an input and back. Free text, so a dropdown of choices is the
+  wrong control — this is the same click-to-edit pair.
+
+  The name is the server's alone. The builder's autosave sends the schema and
+  nothing else, so there is no second copy in Alpine to go stale behind this.
+{% endcomment %}
+<a class="button-link"
+   href="#"
+   hx-get="{% url 'intakes:form-template-name-edit' template_id=template.id %}"
+   hx-target="#fb-name"
+   hx-swap="innerHTML">{{ template.name|default:"Untitled form" }}</a>
+{% comment %}
+  The preview renders its own heading, off-screen behind the Preview toggle.
+  Carried along out-of-band so a rename shows there too without a reload.
+{% endcomment %}
+<span id="fb-preview-name" hx-swap-oob="true">{{ template.name|default:"Untitled form" }}</span>

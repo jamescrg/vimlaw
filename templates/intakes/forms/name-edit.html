@@ -1,0 +1,18 @@
+{% comment %}
+  Transcribed from matters/overview/work-status-edit.html — same triggers, so
+  the field commits on Enter, on blur and on any change, and never strands an
+  edit because someone clicked away.
+{% endcomment %}
+<input class="fb-name-input"
+       type="text"
+       name="name"
+       maxlength="120"
+       aria-label="Form name"
+       placeholder="Untitled form"
+       hx-post="{% url 'intakes:form-template-name-update' template_id=template.id %}"
+       hx-target="#fb-name"
+       hx-swap="innerHTML"
+       hx-trigger="change, blur, keyup[key=='Enter']"
+       onfocus="moveFocusToEnd(this)"
+       autofocus
+       value="{{ template.name }}" />
