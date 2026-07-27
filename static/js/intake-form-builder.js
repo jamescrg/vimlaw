@@ -100,7 +100,7 @@ document.addEventListener('alpine:init', () => {
       if (field.type !== 'text_block' && !String(field.label || '').trim()) {
         return field.type === 'heading'
           ? 'Give this heading some text.'
-          : 'Give this question a label.';
+          : 'Give this field a label.';
       }
       if (Array.isArray(field.options)) {
         const filled = field.options.filter((o) => String(o.label || '').trim());
@@ -112,7 +112,7 @@ document.addEventListener('alpine:init', () => {
     notReady() {
       for (const field of this.fields) {
         if (this.fieldProblem(field)) {
-          return 'Waiting. One question is still incomplete.';
+          return 'Waiting. One field is still incomplete.';
         }
       }
       return '';
