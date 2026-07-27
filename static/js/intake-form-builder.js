@@ -160,13 +160,17 @@ document.addEventListener('alpine:init', () => {
         // live inside the canvas without shifting every drag index by one.
         draggable: '.fb-field',
         group: { name: 'fb-fields', put: true },
-        // A palette item dropped here. The clone Sortable inserted is thrown
-        // away — Alpine owns this DOM — and the real field is spliced into
-        // the array at the drop position instead.
+        // A palette item dropped here. Sortable's clone mode works the other
+        // way round from its name: the ORIGINAL button is what travels, and
+        // the clone is what stays in the palette. The clone is a dead copy —
+        // cloneNode carries no Alpine listeners — so the original must go
+        // back in its place, or the palette is left holding a button that
+        // looks right and does nothing. Then the real field is spliced into
+        // the array at the drop position, and Alpine renders the card.
         onAdd: (evt) => {
           const type = evt.item.dataset.type;
           const index = evt.newIndex;
-          evt.item.remove();
+          evt.clone.replaceWith(evt.item);
           if (!this.defaults[type]) return;
           const field = { ...clone(this.defaults[type]), _id: newId() };
           this.fields.splice(index, 0, field);
