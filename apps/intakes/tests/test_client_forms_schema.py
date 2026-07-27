@@ -5,6 +5,7 @@ from apps.intakes.client_forms.schema import (
     SchemaError,
     blank_field,
     normalize_schema,
+    presentable,
     validate_answers,
 )
 
@@ -37,13 +38,35 @@ class TestNormalizeSchema:
         with pytest.raises(SchemaError, match="unknown type"):
             normalize_schema([{"type": "signature", "label": "Sign here"}])
 
-    def test_rejects_a_field_with_no_label(self):
-        with pytest.raises(SchemaError, match="needs a label"):
-            normalize_schema([{"type": "text", "label": "  "}])
+    def test_an_unfinished_field_stores_and_stays_off_the_client_page(self):
+        """The builder autosaves mid-thought, so an unlabelled field and an
+        optionless dropdown are ordinary states of the document. They store —
+        keys minted like any other — and presentable() is what keeps them off
+        every client-facing surface until they are complete."""
+        schema = normalize_schema(
+            [
+                {"type": "text", "label": "  "},
+                {"type": "select", "label": "Pick", "options": []},
+                {"type": "text", "label": "Name"},
+            ]
+        )
+        assert len(schema) == 3
+        assert all(field["key"] for field in schema)
+        assert [f["label"] for f in presentable(schema)] == ["Name"]
 
-    def test_rejects_a_choice_field_with_no_options(self):
-        with pytest.raises(SchemaError, match="at least one option"):
-            normalize_schema([{"type": "select", "label": "Pick", "options": []}])
+    def test_a_hidden_required_field_does_not_block_the_client(self):
+        """`required` on a field the client was never shown must not make
+        their form unsubmittable."""
+        schema = normalize_schema(
+            [
+                {"type": "text", "label": "", "required": True},
+                {"type": "text", "label": "Name", "required": True},
+            ]
+        )
+        key = schema[1]["key"]
+        cleaned, errors = validate_answers(schema, {key: "Ada"}, partial=False)
+        assert errors == {}
+        assert cleaned == {key: "Ada"}
 
     def test_rejects_more_than_max_fields(self):
         too_many = [{"type": "text", "label": f"Q{n}"} for n in range(MAX_FIELDS + 1)]

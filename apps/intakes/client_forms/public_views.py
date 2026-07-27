@@ -22,6 +22,7 @@ from django.views.decorators.http import require_POST
 from apps.intakes.client_forms.filling import complete, merge_answers, read_answers
 from apps.intakes.client_forms.models import FormSubmission
 from apps.intakes.client_forms.render import render_blocks
+from apps.intakes.client_forms.schema import presentable
 from utils.ratelimit import rate_limited
 from utils.signing import read_form_token
 
@@ -93,7 +94,11 @@ def form_page(request, token):
     editable = submission.status != "CLOSED"
     context = {
         "submission": submission,
-        "blocks": render_blocks(submission.schema_snapshot, submission.answers),
+        # Only finished fields face the client — an unfinished one stored by
+        # the builder is not theirs to see.
+        "blocks": render_blocks(
+            presentable(submission.schema_snapshot), submission.answers
+        ),
         "firm_name": company.name if company else "",
         # Signed media URL, minted per render — fine on a page, never in email.
         "logo_url": company.logo.url if company and company.logo else "",

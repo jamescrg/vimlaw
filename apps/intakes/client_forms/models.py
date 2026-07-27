@@ -44,12 +44,14 @@ class FormTemplate(AuditMixin, models.Model):
 
     @property
     def question_count(self):
-        from apps.intakes.client_forms.schema import LAYOUT_TYPES
+        """Askable questions only: unfinished fields are stored but hidden
+        from the client, so they must not count toward what a form asks."""
+        from apps.intakes.client_forms.schema import LAYOUT_TYPES, presentable
 
         return sum(
             1
-            for field in self.schema or []
-            if isinstance(field, dict) and field.get("type") not in LAYOUT_TYPES
+            for field in presentable(self.schema)
+            if field.get("type") not in LAYOUT_TYPES
         )
 
     @property
@@ -196,12 +198,12 @@ class FormSubmission(AuditMixin, models.Model):
 
     @property
     def question_count(self):
-        from apps.intakes.client_forms.schema import LAYOUT_TYPES
+        from apps.intakes.client_forms.schema import LAYOUT_TYPES, presentable
 
         return sum(
             1
-            for field in self.schema_snapshot or []
-            if isinstance(field, dict) and field.get("type") not in LAYOUT_TYPES
+            for field in presentable(self.schema_snapshot)
+            if field.get("type") not in LAYOUT_TYPES
         )
 
     class Meta:

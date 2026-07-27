@@ -12,13 +12,13 @@
  *    `x-for` before a field has ever been saved, and it is stripped from the
  *    payload on the way out.
  *
- * Saving is automatic and debounced. Two consequences shape the code below.
- * A save must adopt the server's keys without replacing the field objects,
- * because replacing them changes every x-for key and Alpine rebuilds the whole
- * canvas — which would yank the caret out of whatever input is being typed
- * into. And a document mid-edit is not a valid schema (a question added a
- * second ago has no label), so autosave waits for one rather than flashing an
- * error at someone who is simply still typing.
+ * Saving is automatic, debounced, and never blocked: an unfinished field
+ * stores like any other and simply stays off the client's page until it is
+ * complete (schema.py is_complete). The one structural constraint is that a
+ * save must adopt the server's keys without replacing the field objects —
+ * replacing them changes every x-for key and Alpine rebuilds the whole
+ * canvas, which would yank the caret out of whatever input is being typed
+ * into.
  */
 const AUTOSAVE_MS = 1500;
 
@@ -33,11 +33,6 @@ document.addEventListener('alpine:init', () => {
     saving: false,
     savedAt: '',
     error: '',
-    // Why the document can't be saved yet, in words, when that is the reason
-    // nothing is happening. Distinct from `error`, which means a save failed.
-    blocked: '',
-    // Why the open editor would not close, shown inside it.
-    problem: '',
 
     // Bumped by every edit, so a reply that lands after the next keystroke
     // knows not to declare the form clean.
@@ -61,8 +56,6 @@ document.addEventListener('alpine:init', () => {
       document.addEventListener('visibilitychange', flushNow);
       window.addEventListener('pagehide', () => this.save({ keepalive: true }));
 
-      // Still worth asking: the last save may be blocked on an unlabelled
-      // question, in which case there is nothing autosave can do.
       window.addEventListener('beforeunload', (e) => {
         if (!this.dirty) return;
         e.preventDefault();
@@ -78,10 +71,6 @@ document.addEventListener('alpine:init', () => {
       this.dirty = true;
       this.rev += 1;
       this.error = '';
-      // Recomputed on the edit rather than on the save, so labelling a
-      // question clears the notice as it is typed instead of a second later.
-      this.blocked = this.notReady();
-      this.problem = '';
       clearTimeout(this._timer);
       this._timer = setTimeout(() => this.save(), AUTOSAVE_MS);
     },
@@ -95,9 +84,9 @@ document.addEventListener('alpine:init', () => {
       this.$nextTick(() => { this._quiet = false; });
     },
 
-    // What stops this one field from being storable, in words, or '' when
-    // nothing does. The server rejects a document whole rather than saving
-    // half of one, so these are the states to wait through rather than report.
+    // What keeps this one field off the client's page, in words, or '' when
+    // nothing does. Informational, never blocking: the field stores either
+    // way.
     fieldProblem(field) {
       if (field.type !== 'text_block' && !String(field.label || '').trim()) {
         return field.type === 'heading'
@@ -111,33 +100,20 @@ document.addEventListener('alpine:init', () => {
       return '';
     },
 
-    notReady() {
-      for (const field of this.fields) {
-        if (this.fieldProblem(field)) {
-          return 'Waiting. One field is still incomplete.';
-        }
-      }
-      return '';
-    },
-
-    // The editor's own Save: check this field, then collapse it and let the
-    // save go now rather than on the debounce. Staying open on a problem is
-    // the point — closing an incomplete question would hide the reason the
-    // form was not saving.
+    // The editor's own Save: collapse and let the pending save go now rather
+    // than on the debounce. Never refuses — an unfinished field stores fine
+    // and just stays off the client's page, which the red flag says.
     doneEditing(field) {
-      this.problem = this.fieldProblem(field);
-      if (this.problem) return;
       this.selectedId = null;
       this.save();
     },
 
-    // The head's save button doubles as the incomplete marker: it stays
-    // visible (and red) on a closed incomplete field, and clicking it there
-    // opens the field on its problem instead of trying to close it.
+    // The head's save button doubles as the unfinished marker: it stays
+    // visible (and red) on a closed unfinished field, and clicking it there
+    // opens the field on its problem instead of closing anything.
     saveClicked(field) {
       if (this.selectedId !== field._id) {
         this.selectedId = field._id;
-        this.problem = this.fieldProblem(field);
         return;
       }
       this.doneEditing(field);
@@ -177,7 +153,6 @@ document.addEventListener('alpine:init', () => {
           // disorienting. The pencil on the card says what to do next.
           const field = { ...clone(this.defaults[type]), _id: newId() };
           this.fields.splice(index, 0, field);
-          this.problem = '';
         },
         onStart: (evt) => {
           putBack = evt.item.nextSibling;
@@ -223,7 +198,6 @@ document.addEventListener('alpine:init', () => {
     addField(type) {
       const field = { ...clone(this.defaults[type]), _id: newId() };
       this.fields.push(field);
-      this.problem = '';
       this.$nextTick(() => {
         const cards = this.$refs.canvas.querySelectorAll('.fb-field');
         const card = cards[cards.length - 1];
@@ -258,7 +232,6 @@ document.addEventListener('alpine:init', () => {
     },
 
     select(field) {
-      this.problem = '';
       this.selectedId = this.selectedId === field._id ? null : field._id;
     },
 
@@ -325,14 +298,18 @@ document.addEventListener('alpine:init', () => {
      * caret. Keys and option values are the only things that must match,
      * because every answer a client gives is filed under them.
      *
-     * Position identifies a field: normalize_schema emits exactly one field
-     * per field it is given, in order, or rejects the document whole. Options
-     * are the exception — it drops the blank row that "add option" leaves
-     * behind, so ours are walked past to stay in step.
+     * Position in the SENT array identifies a field: normalize_schema emits
+     * exactly one field per field it is given, in order, or rejects the
+     * document whole. The sent array is captured by reference at post time,
+     * because a drag while the request is in the air reorders this.fields —
+     * matching against live indexes would cross keys between fields, and
+     * every answer a client gives is filed under those keys. Options are the
+     * one in-field exception: normalization drops the blank row "add option"
+     * leaves behind, so ours are walked past to stay in step.
      */
-    adoptKeys(saved) {
+    adoptKeys(sent, saved) {
       saved.forEach((savedField, index) => {
-        const field = this.fields[index];
+        const field = sent[index];
         if (!field) return;
         field.key = savedField.key;
         if (!Array.isArray(field.options) || !Array.isArray(savedField.options)) return;
@@ -349,9 +326,6 @@ document.addEventListener('alpine:init', () => {
       clearTimeout(this._timer);
       if (!this.dirty) return;
 
-      this.blocked = this.notReady();
-      if (this.blocked) return;
-
       // Single-flight: a slow save must not land after a newer one, so the
       // next is queued rather than raced.
       if (this._inFlight) {
@@ -362,6 +336,7 @@ document.addEventListener('alpine:init', () => {
       this.saving = true;
       this.error = '';
       const rev = this.rev;
+      const sent = this.fields.slice();
       try {
         const res = await fetch(config.saveUrl, {
           method: 'POST',
@@ -369,7 +344,7 @@ document.addEventListener('alpine:init', () => {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken(),
           },
-          body: JSON.stringify(this.payload()),
+          body: JSON.stringify({ schema: sent.map(({ _id, ...rest }) => rest) }),
           keepalive: !!options.keepalive,
         });
         const data = await res.json().catch(() => ({}));
@@ -377,7 +352,7 @@ document.addEventListener('alpine:init', () => {
           this.error = data.error || 'Could not save this form.';
           return;
         }
-        this.quietly(() => this.adoptKeys(data.schema));
+        this.quietly(() => this.adoptKeys(sent, data.schema));
         this.savedAt = data.saved_at;
         // Only clean if nothing was typed while the request was in the air.
         if (this.rev === rev) this.$nextTick(() => { this.dirty = false; });

@@ -41,6 +41,7 @@ from apps.intakes.client_forms.schema import (
     defaults,
     normalize_schema,
     palette,
+    presentable,
     type_labels,
 )
 from apps.intakes.client_forms.send import (
@@ -176,10 +177,9 @@ def form_template_preview(request, template_id):
     database would race the save and sometimes show the version from a moment
     ago. Nothing here is stored — the template is untouched.
 
-    A document mid-edit is often not a valid schema (an unlabelled field, a
-    dropdown with no options yet), and refusing to preview it would make the
-    button dead exactly when someone wants to look. Those gaps are patched
-    with obvious stand-ins instead.
+    Unfinished fields are hidden here exactly as the client page hides them —
+    the preview's one job is to show what the client would see, and an
+    unlabelled question is not part of that yet.
     """
     template = get_object_or_404(FormTemplate, pk=template_id)
 
@@ -190,29 +190,10 @@ def form_template_preview(request, template_id):
     except (ValueError, TypeError):
         return HttpResponse("Malformed preview request.", status=400)
 
-    patched = []
-    for item in raw if isinstance(raw, list) else []:
-        if not isinstance(item, dict):
-            continue
-        field = dict(item)
-        if (
-            field.get("type") != "text_block"
-            and not str(field.get("label") or "").strip()
-        ):
-            field["label"] = "Untitled"
-        if "options" in field:
-            filled = [
-                o
-                for o in (field.get("options") or [])
-                if isinstance(o, dict) and str(o.get("label") or "").strip()
-            ]
-            field["options"] = filled or [{"label": "Option 1"}]
-        patched.append(field)
-
     try:
-        schema = normalize_schema(patched)
+        schema = presentable(normalize_schema(raw))
     except SchemaError as exc:
-        return HttpResponse(f"This form cannot be previewed yet: {exc}", status=400)
+        return HttpResponse(f"This form cannot be previewed: {exc}", status=400)
 
     from apps.settings.models import Firm
 

@@ -11,11 +11,8 @@
       </div>
       <div class="toolbar-right">
         {% comment %}
-          One line, in order of what most needs saying: a failed save, then a
-          document autosave can't accept yet, then the save in flight, then
-          plain unsaved, then the last save's time. "Waiting" matters most of
-          these — without it, adding a question and not labelling it would look
-          exactly like autosave being broken.
+          One line, in order of what most needs saying: a failed save, then
+          the save in flight, then plain unsaved, then the last save's time.
         {% endcomment %}
         {% comment %}
           With no Save button left, a failed save needs its own way to retry —
@@ -27,16 +24,12 @@
                 x-cloak
                 @click="save()"
                 x-text="error + ' Click to retry.'"></button>
+        <span class="fb-state" x-show="!error && saving" x-cloak>Saving…</span>
         <span class="fb-state fb-state-dirty"
-              x-show="!error && blocked"
-              x-cloak
-              x-text="blocked"></span>
-        <span class="fb-state" x-show="!error && !blocked && saving" x-cloak>Saving…</span>
-        <span class="fb-state fb-state-dirty"
-              x-show="!error && !blocked && !saving && dirty"
+              x-show="!error && !saving && dirty"
               x-cloak>Unsaved changes</span>
         <span class="fb-state"
-              x-show="!error && !blocked && !saving && !dirty && savedAt"
+              x-show="!error && !saving && !dirty && savedAt"
               x-cloak
               x-text="'Saved ' + savedAt"></span>
         {% comment %}
@@ -151,13 +144,12 @@
                 </button>
                 <span class="fb-field-actions">
                   {% comment %}
-                    The save slot has two states. Closed and incomplete: the
-                    red flag, a shortcut onto the problem. Open: the save
-                    button, which checks the field, closes it, and lets the
-                    pending save go now rather than on the debounce. The
-                    always-present chevron at the row's end is what says the
-                    row opens at all — disclosure, the same vocabulary as
-                    every dropdown in the app — so no pencil is needed.
+                    The save slot has two states. Closed and unfinished: the
+                    red flag — the field is stored but hidden from the client
+                    until completed, and clicking opens it on its problem.
+                    Open: the save button, which closes the field and lets
+                    the pending save go now rather than on the debounce.
+                    Nothing blocks: unfinished fields save like any other.
                   {% endcomment %}
                   {% comment %}
                     Doubles as the incomplete marker: visible while the editor
@@ -169,7 +161,7 @@
                   <button type="button"
                           class="btn-icon fb-field-save"
                           :class="fieldProblem(field) ? 'fb-save-problem' : ''"
-                          :title="fieldProblem(field) ? 'Incomplete — click to finish' : 'Save and close'"
+                          :title="fieldProblem(field) ? 'Unfinished. Hidden from the client form until completed.' : 'Save and close'"
                           aria-label="Save and close"
                           x-show="selectedId === field._id || fieldProblem(field)"
                           x-cloak
@@ -287,11 +279,14 @@
                           @click="addOption(field)">Add option</button>
                 </div>
                 {% comment %}
-                  Why the editor refused to close, said with the field in front
-                  of you rather than as a line up in the toolbar. Out of the
-                  layout entirely until there is something to say.
+                  What keeps this field off the client's page, live as it is
+                  typed — the line clears itself the moment the label lands.
+                  Informational: nothing here blocks saving or closing.
                 {% endcomment %}
-                <p class="fb-edit-problem" x-show="problem" x-cloak x-text="problem"></p>
+                <p class="fb-edit-problem"
+                   x-show="fieldProblem(field)"
+                   x-cloak
+                   x-text="fieldProblem(field) + ' Until then, this field stays off the client form.'"></p>
               </div>
             </div>
           </template>

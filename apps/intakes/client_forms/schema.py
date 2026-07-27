@@ -294,7 +294,7 @@ def new_key(label, taken):
 
 def _normalize_options(raw, position):
     if not isinstance(raw, list):
-        raise SchemaError(f"Question {position} needs at least one option.")
+        raise SchemaError(f"Question {position} has malformed options.")
     if len(raw) > MAX_OPTIONS:
         raise SchemaError(f"Question {position} has more than {MAX_OPTIONS} options.")
     options, taken = [], set()
@@ -314,8 +314,8 @@ def _normalize_options(raw, position):
             value = new_key(label, taken)
         taken.add(value)
         options.append({"value": value, "label": label})
-    if not options:
-        raise SchemaError(f"Question {position} needs at least one option.")
+    # No options yet is not an error — the field simply is not complete, and
+    # is_complete() keeps it off the client's page until it is.
     return options
 
 
@@ -341,9 +341,10 @@ def normalize_schema(raw):
         if spec is None:
             raise SchemaError(f"Question {position} has an unknown type.")
 
+        # A blank label stores fine: the builder autosaves mid-thought, and a
+        # half-built field is part of the form's state. is_complete() is what
+        # keeps it off the client's page until it earns a place there.
         label = str(item.get("label") or "").strip()[:MAX_LABEL]
-        if not label and field_type != "text_block":
-            raise SchemaError(f"Question {position} needs a label.")
 
         # Keep the key the builder sent when it is well-formed and unclaimed —
         # that is what carries existing answers across an edit.
@@ -370,6 +371,35 @@ def normalize_schema(raw):
 
 
 # --- Validating client answers ---------------------------------------------
+
+
+def is_complete(field):
+    """Whether a field is finished enough to put in front of a client.
+
+    The builder stores unfinished fields — an unlabelled question, a dropdown
+    with no options yet — because refusing to would make autosave a nag. This
+    is the line they wait behind: no label, no audience; a choice with no
+    choices likewise; an instruction block with no text says nothing.
+    """
+    if not isinstance(field, dict):
+        return False
+    if field.get("type") == "text_block":
+        return bool(str(field.get("text") or "").strip())
+    if not str(field.get("label") or "").strip():
+        return False
+    if field.get("type") in CHOICE_TYPES:
+        return bool(field.get("options"))
+    return True
+
+
+def presentable(schema):
+    """The schema as a client may see it: unfinished fields drop out.
+
+    Every client-facing surface — the fill page, answer validation, question
+    counts, the preview — goes through this one filter, so "hidden until
+    finished" cannot mean different things in different places.
+    """
+    return [f for f in (schema or []) if is_complete(f)]
 
 
 def is_answered(value):
@@ -487,8 +517,8 @@ def validate_answers(schema, answers, *, partial):
         return {}, {}
 
     cleaned, errors = {}, {}
-    for field in schema or []:
-        if not isinstance(field, dict) or field.get("type") in LAYOUT_TYPES:
+    for field in presentable(schema):
+        if field.get("type") in LAYOUT_TYPES:
             continue
         key = field.get("key")
         if not key:
