@@ -145,12 +145,18 @@ document.addEventListener('alpine:init', () => {
         // the array at the drop position, and Alpine renders the card.
         onAdd: (evt) => {
           const type = evt.item.dataset.type;
-          // The Draggable variant, never evt.newIndex: the raw index counts
-          // every element child — the empty-state well included — while this
-          // one counts only .fb-field matches, which is what the fields
-          // array mirrors. The raw pair is how an off-by-one spliced
-          // `undefined` into the array and rendered a dead, unopenable card.
-          const index = evt.newDraggableIndex;
+          // Counted by hand, because neither of Sortable's indexes is right
+          // here. evt.newIndex counts every element child (the well and the
+          // drop strip included), and evt.newDraggableIndex is filtered by
+          // the SOURCE list's draggable selector — '.fb-palette-item' — which
+          // matches nothing in the canvas, so every palette drop reported
+          // index 0 and landed at the top. Counting the .fb-field siblings
+          // above the dropped item is exactly the array position, wherever
+          // Sortable put it.
+          let index = 0;
+          for (let el = evt.item.previousElementSibling; el; el = el.previousElementSibling) {
+            if (el.classList && el.classList.contains('fb-field')) index += 1;
+          }
           evt.clone.replaceWith(evt.item);
           if (!this.defaults[type]) return;
           // Collapsed, not open: the drop already put the card where it
