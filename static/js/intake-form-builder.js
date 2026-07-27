@@ -50,6 +50,9 @@ document.addEventListener('alpine:init', () => {
     init() {
       this.$watch('fields', () => this.touch(), { deep: true });
       this.mountSortable();
+      // The palette groups are x-for children, so they don't exist until
+      // Alpine has rendered — mount their drag sources a tick later.
+      this.$nextTick(() => this.mountPalette());
 
       // A debounced save can still be pending when the tab goes away.
       const flushNow = () => {
@@ -152,6 +155,24 @@ document.addEventListener('alpine:init', () => {
         handle: '.fb-handle',
         animation: 150,
         ghostClass: 'fb-ghost',
+        // The filter matters beyond who is draggable: Sortable's indexes only
+        // count children matching it, which is what lets the empty-state well
+        // live inside the canvas without shifting every drag index by one.
+        draggable: '.fb-field',
+        group: { name: 'fb-fields', put: true },
+        // A palette item dropped here. The clone Sortable inserted is thrown
+        // away — Alpine owns this DOM — and the real field is spliced into
+        // the array at the drop position instead.
+        onAdd: (evt) => {
+          const type = evt.item.dataset.type;
+          const index = evt.newIndex;
+          evt.item.remove();
+          if (!this.defaults[type]) return;
+          const field = { ...clone(this.defaults[type]), _id: newId() };
+          this.fields.splice(index, 0, field);
+          this.selectedId = field._id;
+          this.problem = '';
+        },
         onStart: (evt) => {
           putBack = evt.item.nextSibling;
         },
@@ -173,6 +194,21 @@ document.addEventListener('alpine:init', () => {
           const moved = this.fields.splice(oldIndex, 1)[0];
           this.fields.splice(newIndex, 0, moved);
         },
+      });
+    },
+
+    // Each palette group is a drag source: items clone out of it onto the
+    // canvas and nothing can be dropped into it. Clicking still adds to the
+    // end — Sortable leaves ordinary clicks alone.
+    mountPalette() {
+      this.$root.querySelectorAll('.fb-palette-group').forEach((el) => {
+        Sortable.create(el, {
+          group: { name: 'fb-fields', pull: 'clone', put: false },
+          sort: false,
+          draggable: '.fb-palette-item',
+          animation: 150,
+          ghostClass: 'fb-ghost',
+        });
       });
     },
 

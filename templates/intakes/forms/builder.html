@@ -79,7 +79,10 @@
           <div class="fb-palette-group">
             <h2 class="fb-palette-heading" x-text="group.group"></h2>
             <template x-for="item in group.types" :key="item.type">
-              <button type="button" class="fb-palette-item" @click="addField(item.type)">
+              <button type="button"
+                      class="fb-palette-item"
+                      :data-type="item.type"
+                      @click="addField(item.type)">
                 <i :class="item.icon"></i>
                 <span x-text="item.label"></span>
               </button>
@@ -95,6 +98,20 @@
         {% endcomment %}
         <h2 class="fb-canvas-heading">Form fields</h2>
         <div class="fb-canvas" x-ref="canvas">
+          {% comment %}
+            Inside the canvas so an empty form is still somewhere to drop a
+            field — and safe here only because the canvas Sortable filters on
+            .fb-field, which keeps this well out of its drag-index arithmetic.
+          {% endcomment %}
+          <div class="fb-empty" x-show="fields.length === 0" x-cloak>
+            <i class="icon-clipboard-list"></i>
+            <p class="fb-empty-title">This form has no fields yet</p>
+            <ol class="fb-empty-hint">
+              <li>Click or drag a field type from the left to add the first one.</li>
+              <li>Fields can be dragged up or down the list to determine their order.</li>
+              <li>Headings can be added to divide the form into sections.</li>
+            </ol>
+          </div>
           <template x-for="field in fields" :key="field._id">
             <div class="fb-field"
                  :class="{ 'fb-field-open': selectedId === field._id, 'fb-field-layout': isLayout(field) }">
@@ -260,21 +277,6 @@
               </div>
             </div>
           </template>
-        </div>
-        {% comment %}
-          Outside the canvas, and it has to stay there: Sortable counts every
-          element child of its container when working out drag indexes, and
-          x-show leaves a hidden node behind, so moving this inside would shift
-          every index by one.
-        {% endcomment %}
-        <div class="fb-empty" x-show="fields.length === 0" x-cloak>
-          <i class="icon-clipboard-list"></i>
-          <p class="fb-empty-title">This form has no fields yet</p>
-          <ol class="fb-empty-hint">
-            <li>Click a field type on the left to add the first one.</li>
-            <li>Fields can be dragged up or down the list to determine their order.</li>
-            <li>Headings can be added to divide the form into sections.</li>
-          </ol>
         </div>
       </div>
     </div>
