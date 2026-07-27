@@ -22,6 +22,14 @@ from utils.models import AuditMixin
 
 
 class FormTemplate(AuditMixin, models.Model):
+    # What the caption slot says when a form has no caption of its own — and
+    # what the settings modal starts from, so editing begins at the default
+    # rather than a blank box. One constant, three consumers: the fill page,
+    # the preview, and FormTemplateForm.
+    DEFAULT_CAPTION = (
+        "Your answers save as you type. You can close this page and come back to it."
+    )
+
     name = models.CharField(max_length=120)
     description = models.CharField(max_length=255, blank=True, default="")
     # Shown above the questions on the public page. Plain text, never HTML.

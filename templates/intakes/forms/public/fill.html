@@ -123,7 +123,7 @@
           {% if submission.template.intro_text %}
             {{ submission.template.intro_text|linebreaks }}
           {% else %}
-            <p>Your answers save as you type. You can close this page and come back to it.</p>
+            <p>{{ default_caption }}</p>
           {% endif %}
         </div>
         <form class="cf-form" x-show="editing" x-cloak @submit.prevent="submit()">

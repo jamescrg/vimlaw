@@ -211,6 +211,7 @@ def form_template_preview(request, template_id):
             "firm_name": company.name if company else "",
             "logo_url": company.logo.url if company and company.logo else "",
             "firm_email": (company.email if company else "") or "",
+            "default_caption": FormTemplate.DEFAULT_CAPTION,
             "editable": True,
             "preview": True,
             "config": json.dumps(
@@ -528,10 +529,15 @@ def form_submission_fill(request, sub_id):
         "intakes/forms/public/fill.html",
         {
             "submission": submission,
-            "blocks": render_blocks(submission.schema_snapshot, submission.answers),
+            # The client's form, so the client's filter: unfinished snapshot
+            # fields stay hidden here exactly as on the public page.
+            "blocks": render_blocks(
+                presentable(submission.schema_snapshot), submission.answers
+            ),
             "orphans": orphan_answers(submission.schema_snapshot, submission.answers),
             "staff": True,
             "editable": editable,
+            "default_caption": FormTemplate.DEFAULT_CAPTION,
             "firm_name": "",
             "logo_url": "",
             "firm_email": "",

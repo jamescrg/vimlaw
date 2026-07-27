@@ -93,7 +93,7 @@ class TestAccess:
         body = response.content.decode()
 
         assert response.status_code == 200
-        assert "we've received your answers" in body
+        assert "We've received your answers" in body
         assert "225 Paper Street" in body  # they can still see what they said
         assert 'class="cf-input"' not in body  # but not type into it
 

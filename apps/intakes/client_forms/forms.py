@@ -32,6 +32,11 @@ class FormTemplateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
+        # Start from the standard caption rather than a blank box — the page
+        # will show it either way, so the modal should show what will happen,
+        # and editing a default beats composing from nothing.
+        if not self.instance.intro_text:
+            self.initial.setdefault("intro_text", FormTemplate.DEFAULT_CAPTION)
 
 
 class AddFormForm(forms.Form):

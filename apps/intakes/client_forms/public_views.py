@@ -20,7 +20,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.intakes.client_forms.filling import complete, merge_answers, read_answers
-from apps.intakes.client_forms.models import FormSubmission
+from apps.intakes.client_forms.models import FormSubmission, FormTemplate
 from apps.intakes.client_forms.render import render_blocks
 from apps.intakes.client_forms.schema import presentable
 from utils.ratelimit import rate_limited
@@ -103,6 +103,7 @@ def form_page(request, token):
         # Signed media URL, minted per render — fine on a page, never in email.
         "logo_url": company.logo.url if company and company.logo else "",
         "firm_email": (company.email if company else "") or "",
+        "default_caption": FormTemplate.DEFAULT_CAPTION,
         "editable": editable,
         "config": json.dumps(
             {
