@@ -106,60 +106,6 @@
   color: var(--color-primary);
 }
 
-/* ==========================================================================
-   Review modal — the answers as they were asked
-   ========================================================================== */
-
-.review-meta {
-  color: var(--color-muted);
-  margin-bottom: 1.5rem;
-}
-
-.review-drift {
-  display: block;
-  margin-top: 0.25rem;
-}
-
-.review-answers dt {
-  color: var(--color-muted);
-  margin-top: 1rem;
-}
-
-.review-answers dd {
-  margin: 0.25rem 0 0;
-}
-
-.review-answers dd p:last-child {
-  margin-bottom: 0;
-}
-
-.review-heading {
-  border-bottom: 1px solid var(--border-light);
-  color: var(--color-primary);
-  font-weight: 600;
-  margin-top: 1.5rem;
-  padding-bottom: 0.25rem;
-}
-
-.review-text {
-  color: var(--color-muted);
-}
-
-.review-unanswered {
-  color: var(--color-muted-more);
-}
-
-.review-orphans {
-  border-top: 1px solid var(--border-light);
-  color: var(--color-muted);
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-}
-
-.review-orphans summary {
-  cursor: pointer;
-}
-
 /* Modal helpers shared by the send / link / resend dialogs. */
 .modal-note {
   color: var(--color-muted);
@@ -199,7 +145,6 @@
    holds it — the button-link inside carries the colour and the hover. */
 .fb-name {
   flex: 1 1 auto;
-  font-weight: 600;
   max-width: 30rem;
   min-width: 0;
 }
@@ -211,7 +156,6 @@
 .fb-name-input {
   background: inherit;
   border: none;
-  font-weight: 600;
   margin: -0.25rem;
   padding: 0.25rem;
   width: calc(100% + 0.5rem);
@@ -260,7 +204,6 @@
 
 .fb-palette-heading {
   color: var(--color-muted);
-  font-weight: 500;
   margin: 0 0 0.5rem;
 }
 
@@ -381,6 +324,21 @@
   gap: 0.5rem;
 }
 
+/* icons.css paints .icon-trash-2 red globally, and this row is not a warning —
+   deleting an unsent question costs nothing. A muted circled x sits with the
+   handle and the chip rather than shouting over them. */
+.fb-field-delete {
+  color: var(--color-muted-more);
+}
+
+.fb-field-delete:hover {
+  color: var(--color-muted);
+}
+
+.fb-field-save {
+  color: var(--add);
+}
+
 /* ==========================================================================
    Builder — inline field editor
    ========================================================================== */
@@ -413,20 +371,9 @@
   color: var(--color-muted);
 }
 
-/* The editor's own footer: the message sits left of the button so a refused
-   close is read on the way to clicking it again. */
-.fb-edit-footer {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  padding-top: 0.25rem;
-}
-
 .fb-edit-problem {
   color: var(--urgent);
   margin: 0;
-  margin-right: auto;
 }
 
 .fb-edit-row {
@@ -482,7 +429,6 @@
 
 .fb-empty-title {
   color: var(--color-primary);
-  font-weight: 500;
   margin: 0;
 }
 

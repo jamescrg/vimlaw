@@ -160,7 +160,7 @@ def form_template_name_update(request, template_id):
     if name and name != template.name:
         template.name = name
         template.save(update_fields=["name", "updated_at"])
-    return render(request, "intakes/forms/name.html", {"template": template})
+    return render(request, "intakes/forms/name-saved.html", {"template": template})
 
 
 @login_required

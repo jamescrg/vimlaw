@@ -97,14 +97,31 @@
                   <span class="fb-req" x-show="field.required" x-cloak>Required</span>
                 </button>
                 <span class="fb-field-actions">
+                  {% comment %}
+                    Only while this question's editor is open: it checks the
+                    question, then closes it and lets the pending save go now
+                    rather than on the debounce.
+                  {% endcomment %}
+                  <button type="button"
+                          class="btn-icon fb-field-save"
+                          title="Save and close"
+                          aria-label="Save and close"
+                          x-show="selectedId === field._id"
+                          x-cloak
+                          @click="doneEditing(field)">
+                    <i class="icon-check"></i>
+                  </button>
                   <button type="button"
                           class="btn-icon"
                           title="Duplicate"
                           @click="duplicate(field)">
                     <i class="icon-copy"></i>
                   </button>
-                  <button type="button" class="btn-icon" title="Delete" @click="remove(field)">
-                    <i class="icon-trash-2"></i>
+                  <button type="button"
+                          class="btn-icon fb-field-delete"
+                          title="Delete"
+                          @click="remove(field)">
+                    <i class="icon-circle-x"></i>
                   </button>
                 </span>
               </div>
@@ -196,15 +213,11 @@
                           @click="addOption(field)">Add option</button>
                 </div>
                 {% comment %}
-                  Closes the editor rather than saving in any special sense —
-                  the form is already saving itself. What it adds is a check on
-                  this one question, so an unlabelled one is caught here with
-                  the field in front of you instead of as a line in the toolbar.
+                  Why the editor refused to close, said with the field in front
+                  of you rather than as a line up in the toolbar. Out of the
+                  layout entirely until there is something to say.
                 {% endcomment %}
-                <div class="fb-edit-footer">
-                  <p class="fb-edit-problem" x-show="problem" x-cloak x-text="problem"></p>
-                  <button type="button" class="btn btn-success" @click="doneEditing(field)">Save</button>
-                </div>
+                <p class="fb-edit-problem" x-show="problem" x-cloak x-text="problem"></p>
               </div>
             </div>
           </template>
