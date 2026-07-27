@@ -223,6 +223,10 @@
   top: 1rem;
 }
 
+.fb-palette-group {
+  padding-bottom: 0.25rem;
+}
+
 .fb-palette-group + .fb-palette-group {
   margin-top: 1.25rem;
 }
@@ -472,68 +476,6 @@
 }
 
 /* ==========================================================================
-   Builder — preview
-   ========================================================================== */
-
-.fb-previewing {
-  justify-content: center;
-}
-
-.fb-preview {
-  background: var(--background-light);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  margin: 0 auto;
-  max-width: 42rem;
-  padding: 2rem;
-}
-
-.fb-preview-intro,
-.fb-preview-text {
-  color: var(--color-muted);
-}
-
-.fb-preview-block + .fb-preview-block {
-  margin-top: 1.25rem;
-}
-
-.fb-preview-field label {
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.fb-preview-field input,
-.fb-preview-field select,
-.fb-preview-field textarea {
-  width: 100%;
-}
-
-.fb-preview-help {
-  color: var(--color-muted);
-  margin: 0 0 0.25rem;
-}
-
-.fb-req-mark {
-  color: var(--urgent);
-}
-
-.fb-preview-choices {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.fb-preview-choice {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.fb-preview-choice input {
-  width: auto;
-}
-
-/* ==========================================================================
    Narrow screens — the palette becomes a scrolling strip above the canvas
    ========================================================================== */
 
@@ -571,9 +513,7 @@
 :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
   .fb-palette-item,
 :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
-  .fb-field,
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
-  .fb-preview {
+  .fb-field {
   background: transparent;
 }
 

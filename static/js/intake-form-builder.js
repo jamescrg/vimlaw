@@ -29,7 +29,6 @@ document.addEventListener('alpine:init', () => {
     defaults: config.defaults || {},
 
     selectedId: null,
-    preview: false,
     dirty: false,
     saving: false,
     savedAt: '',
@@ -235,12 +234,10 @@ document.addEventListener('alpine:init', () => {
       return field.type === 'heading' || field.type === 'text_block';
     },
 
+    // From the full label map, not the palette — a type hidden from the
+    // palette still badges the existing fields that use it.
     typeLabel(type) {
-      for (const group of this.palette) {
-        const match = group.types.find((t) => t.type === type);
-        if (match) return match.label;
-      }
-      return type;
+      return (config.labels || {})[type] || type;
     },
 
     // --- Options ------------------------------------------------------------

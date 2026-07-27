@@ -53,6 +53,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     async flush(options = {}) {
+      // A preview has nowhere to save to, and shouldn't pretend otherwise.
+      if (config.preview) return;
       if (!this.editing) return;
       if (this._inFlight) {
         this._queued = true;
@@ -90,6 +92,10 @@ document.addEventListener('alpine:init', () => {
     },
 
     async submit() {
+      if (config.preview) {
+        this.message = 'This is a preview — nothing typed here is saved or sent.';
+        return;
+      }
       if (this.sending) return;
       // Land any pending keystrokes first so the server validates the whole
       // document, not the version from a second ago.

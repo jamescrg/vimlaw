@@ -39,10 +39,23 @@
               x-show="!error && !blocked && !saving && !dirty && savedAt"
               x-cloak
               x-text="'Saved ' + savedAt"></span>
-        <button type="button" class="btn btn-secondary" @click="preview = !preview">
-          <i :class="preview ? 'icon-pencil' : 'icon-eye'"></i>
-          <span x-text="preview ? 'Edit' : 'Preview'"></span>
-        </button>
+        {% comment %}
+          A form POST into a new tab, carrying the schema the builder is
+          holding right now — the real client page, not a lookalike pane, and
+          no race against the autosave. Nothing is stored by the preview.
+        {% endcomment %}
+        <form class="fb-preview-form"
+              method="post"
+              action="{% url 'intakes:form-template-preview' template_id=template.id %}"
+              target="_blank"
+              @submit="$refs.previewSchema.value = JSON.stringify(payload().schema)">
+          {% csrf_token %}
+          <input type="hidden" name="schema" x-ref="previewSchema" value="[]" />
+          <button type="submit" class="btn btn-secondary">
+            <i class="icon-eye"></i>
+            <span>Preview</span>
+          </button>
+        </form>
         <button type="button"
                 class="btn-icon"
                 title="Form settings"
@@ -60,8 +73,8 @@
         </button>
       </div>
     </div>
-    <div class="fb-body" :class="preview ? 'fb-previewing' : ''">
-      <aside class="fb-palette" x-show="!preview">
+    <div class="fb-body">
+      <aside class="fb-palette">
         <template x-for="group in palette" :key="group.group">
           <div class="fb-palette-group">
             <h2 class="fb-palette-heading" x-text="group.group"></h2>
@@ -75,7 +88,7 @@
         </template>
       </aside>
       <div class="fb-main">
-        <div class="fb-canvas" x-ref="canvas" x-show="!preview">
+        <div class="fb-canvas" x-ref="canvas">
           <template x-for="field in fields" :key="field._id">
             <div class="fb-field"
                  :class="{ 'fb-field-open': selectedId === field._id, 'fb-field-layout': isLayout(field) }">
@@ -248,7 +261,7 @@
           x-show leaves a hidden node behind, so moving this inside would shift
           every index by one.
         {% endcomment %}
-        <div class="fb-empty" x-show="!preview && fields.length === 0" x-cloak>
+        <div class="fb-empty" x-show="fields.length === 0" x-cloak>
           <i class="icon-clipboard-list"></i>
           <p class="fb-empty-title">This form has no fields yet</p>
           <ol class="fb-empty-hint">
@@ -256,84 +269,6 @@
             <li>Fields can be dragged up or down the list to determine their order.</li>
             <li>Headings can be added to divide the form into sections.</li>
           </ol>
-        </div>
-        <div class="fb-preview" x-show="preview" x-cloak>
-          {# Kept in step by the rename endpoint's out-of-band swap. #}
-          <h1>
-            <span id="fb-preview-name">{{ template.name|default:"Untitled form" }}</span>
-          </h1>
-          {% if template.intro_text %}<p class="fb-preview-intro">{{ template.intro_text }}</p>{% endif %}
-          <template x-for="field in fields" :key="field._id">
-            <div class="fb-preview-block">
-              <template x-if="field.type === 'heading'">
-                <h2 x-text="field.label"></h2>
-              </template>
-              <template x-if="field.type === 'text_block'">
-                <p class="fb-preview-text" x-text="field.text"></p>
-              </template>
-              <template x-if="!isLayout(field)">
-                <div class="fb-preview-field">
-                  <label>
-                    <span x-text="field.label || 'Untitled question'"></span>
-                    <span class="fb-req-mark" x-show="field.required">*</span>
-                  </label>
-                  <p class="fb-preview-help" x-show="field.help" x-text="field.help"></p>
-                  <template x-if="field.type === 'textarea'">
-                    <textarea disabled :rows="field.rows" :placeholder="field.placeholder"></textarea>
-                  </template>
-                  {% comment %}
-                    The one control in the preview that is not disabled. A
-                    dropdown's whole content is its option list, and a disabled
-                    select cannot be opened to see it — so disabling this is
-                    disabling the only thing there is to check. Nothing is
-                    bound to it and the preview posts nowhere, so choosing an
-                    option does nothing at all.
-
-                    Options are keyed by index, as the editor list is. Keying
-                    on the label collides the moment a second option is added,
-                    because a new one starts blank — and Alpine drops the
-                    duplicate, so the preview would quietly show fewer options
-                    than the form has.
-                  {% endcomment %}
-                  <template x-if="field.type === 'select'">
-                    <select>
-                      <option x-text="field.placeholder || 'Choose one…'"></option>
-                      <template x-for="(option, index) in field.options" :key="index">
-                        <option x-text="option.label"></option>
-                      </template>
-                    </select>
-                  </template>
-                  <template x-if="field.type === 'radio' || field.type === 'checkboxes'">
-                    <div class="fb-preview-choices">
-                      <template x-for="(option, index) in field.options" :key="index">
-                        <label class="fb-preview-choice">
-                          <input disabled :type="field.type === 'radio' ? 'radio' : 'checkbox'" />
-                          <span x-text="option.label"></span>
-                        </label>
-                      </template>
-                    </div>
-                  </template>
-                  <template x-if="field.type === 'yesno'">
-                    <div class="fb-preview-choices">
-                      <label class="fb-preview-choice">
-                        <input type="radio" disabled />
-                        <span>Yes</span>
-                      </label>
-                      <label class="fb-preview-choice">
-                        <input type="radio" disabled />
-                        <span>No</span>
-                      </label>
-                    </div>
-                  </template>
-                  <template x-if="['text', 'email', 'phone', 'number', 'currency', 'date'].includes(field.type)">
-                    <input disabled
-                           :type="field.type === 'date' ? 'date' : (field.type === 'number' ? 'number' : 'text')"
-                           :placeholder="field.placeholder" />
-                  </template>
-                </div>
-              </template>
-            </div>
-          </template>
         </div>
       </div>
     </div>

@@ -18,6 +18,7 @@ from apps.intakes.client_forms.views import (
     form_template_name_edit,
     form_template_name_update,
     form_template_new,
+    form_template_preview,
     form_template_settings,
     forms_index,
     forms_list,
@@ -114,6 +115,11 @@ urlpatterns = [
         name="form-template-delete",
     ),
     # Sending a form from an intake, and reading what came back.
+    path(
+        "intakes/forms/<int:template_id>/preview/",
+        form_template_preview,
+        name="form-template-preview",
+    ),
     path(
         "intakes/forms/<int:template_id>/name/edit/",
         form_template_name_edit,

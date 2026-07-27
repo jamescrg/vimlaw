@@ -12,6 +12,15 @@
       the client would hear. This bar is the only thing that differs, and it
       is there to stop anyone mistaking this tab for the client's own copy.
     {% endcomment %}
+    {% comment %}
+      One line above an otherwise exact client page, because the page is live:
+      whoever is looking can type into it, and nothing they type goes anywhere.
+    {% endcomment %}
+    {% if preview %}
+      <div class="cf-staff-bar">
+        <span class="cf-staff-who">Preview — nothing typed here is saved or sent.</span>
+      </div>
+    {% endif %}
     {% if staff %}
       <div class="cf-staff-bar">
         <span class="cf-staff-who">

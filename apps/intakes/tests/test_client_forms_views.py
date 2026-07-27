@@ -177,9 +177,8 @@ class TestBuilderSave:
         assert saved.status_code == 200
         body = saved.content.decode()
         assert "Boundary Questionnaire" in body
-        # Swaps back to the link, and carries the preview's heading with it.
+        # Swaps back to the link.
         assert "button-link" in body
-        assert 'id="fb-preview-name"' in body
 
         form_template.refresh_from_db()
         assert form_template.name == "Boundary Questionnaire"

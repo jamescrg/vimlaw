@@ -41,6 +41,7 @@ from apps.intakes.client_forms.schema import (
     defaults,
     normalize_schema,
     palette,
+    type_labels,
 )
 from apps.intakes.client_forms.send import (
     FormSendError,
@@ -162,7 +163,87 @@ def form_template_name_update(request, template_id):
         if name and name != template.name:
             template.name = name
             template.save(update_fields=["name", "updated_at"])
-    return render(request, "intakes/forms/name-saved.html", {"template": template})
+    return render(request, "intakes/forms/name.html", {"template": template})
+
+
+@login_required
+@require_POST
+def form_template_preview(request, template_id):
+    """The real client page, rendered from the schema the builder is holding.
+
+    A POST, not a GET, and the schema rides in the request: the builder's
+    latest keystrokes may not have autosaved yet, so a preview that read the
+    database would race the save and sometimes show the version from a moment
+    ago. Nothing here is stored — the template is untouched.
+
+    A document mid-edit is often not a valid schema (an unlabelled field, a
+    dropdown with no options yet), and refusing to preview it would make the
+    button dead exactly when someone wants to look. Those gaps are patched
+    with obvious stand-ins instead.
+    """
+    template = get_object_or_404(FormTemplate, pk=template_id)
+
+    if len(request.body) > MAX_SCHEMA_BYTES:
+        return HttpResponse("This form is too large to preview.", status=413)
+    try:
+        raw = json.loads(request.POST.get("schema") or "[]")
+    except (ValueError, TypeError):
+        return HttpResponse("Malformed preview request.", status=400)
+
+    patched = []
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict):
+            continue
+        field = dict(item)
+        if (
+            field.get("type") != "text_block"
+            and not str(field.get("label") or "").strip()
+        ):
+            field["label"] = "Untitled"
+        if "options" in field:
+            filled = [
+                o
+                for o in (field.get("options") or [])
+                if isinstance(o, dict) and str(o.get("label") or "").strip()
+            ]
+            field["options"] = filled or [{"label": "Option 1"}]
+        patched.append(field)
+
+    try:
+        schema = normalize_schema(patched)
+    except SchemaError as exc:
+        return HttpResponse(f"This form cannot be previewed yet: {exc}", status=400)
+
+    from apps.settings.models import Firm
+
+    company = Firm.objects.first()
+    # An unsaved shim, never persisted — just enough submission for fill.html.
+    shim = FormSubmission(
+        template=template, template_name=template.name, schema_snapshot=schema
+    )
+    return render(
+        request,
+        "intakes/forms/public/fill.html",
+        {
+            "submission": shim,
+            "blocks": render_blocks(schema, {}),
+            "firm_name": company.name if company else "",
+            "logo_url": company.logo.url if company and company.logo else "",
+            "firm_email": (company.email if company else "") or "",
+            "editable": True,
+            "preview": True,
+            "config": json.dumps(
+                {
+                    "answers": {},
+                    "saveUrl": "",
+                    "submitUrl": "",
+                    "submitted": False,
+                    "editable": True,
+                    "preview": True,
+                }
+            ),
+        },
+    )
 
 
 @login_required
@@ -204,6 +285,7 @@ def form_builder(request, template_id):
     config = {
         "schema": template.schema or [],
         "palette": palette(),
+        "labels": type_labels(),
         "defaults": defaults(),
         "saveUrl": f"/intakes/forms/{template.id}/save/",
     }

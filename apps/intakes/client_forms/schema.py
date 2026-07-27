@@ -223,6 +223,14 @@ FIELD_TYPES = {
 FIELD_GROUPS = ("Layout", "Fields")
 
 
+# Types kept out of the palette for now — still fully supported everywhere
+# else, because seeded forms and old snapshots already use them; hiding them
+# only stops new ones being added.
+PALETTE_HIDDEN = frozenset(
+    {"email", "phone", "number", "currency", "date", "radio", "checkboxes"}
+)
+
+
 def palette():
     """The builder's palette: one entry per field type, grouped for display."""
     return [
@@ -231,11 +239,18 @@ def palette():
             "types": [
                 {"type": name, "label": spec["label"], "icon": spec["icon"]}
                 for name, spec in FIELD_TYPES.items()
-                if spec["group"] == group
+                if spec["group"] == group and name not in PALETTE_HIDDEN
             ],
         }
         for group in FIELD_GROUPS
     ]
+
+
+def type_labels():
+    """Every type's display label, palette-hidden ones included — the builder
+    needs to badge a field on an existing form even when the palette no longer
+    offers its type."""
+    return {name: spec["label"] for name, spec in FIELD_TYPES.items()}
 
 
 def blank_field(field_type):
