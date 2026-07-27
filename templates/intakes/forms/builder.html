@@ -149,12 +149,11 @@
                         @click="saveClicked(field)">
                   {% comment %}
                     Two states, two glyphs. Open: the disk, because the button
-                    saves and closes. Closed and unfinished: a crossed-out eye,
-                    because the fact that matters is not "incomplete" but that
-                    the field is hidden from the client's form — a red disk
-                    here read as "saving is broken".
+                    saves and closes. Closed and unfinished: a circled alert —
+                    needs attention — with the tooltip carrying the specifics
+                    (hidden from the client's form until completed).
                   {% endcomment %}
-                  <i :class="fieldProblem(field) && selectedId !== field._id ? 'icon-eye-off' : 'icon-save'"></i>
+                  <i :class="fieldProblem(field) && selectedId !== field._id ? 'icon-circle-alert' : 'icon-save'"></i>
                 </button>
                 {% comment %}
                   The save state, shown on the card being edited. It is the
