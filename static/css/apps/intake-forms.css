@@ -344,20 +344,9 @@
   gap: 1rem;
 }
 
-/* icons.css paints .icon-trash-2 red globally, and this row is not a warning —
-   deleting an unsent question costs nothing. A muted circled x sits with the
-   handle and the chip rather than shouting over them. */
-.fb-field-delete {
-  color: var(--color-muted-more);
-}
-
-.fb-field-delete:hover {
-  color: var(--color-muted);
-}
-
-.fb-field-save {
-  color: var(--add);
-}
+/* Save, duplicate and delete all in the head's own ink — one cluster of equal
+   actions, none of them shouting. (Delete would otherwise arrive red: icons.css
+   paints trash icons globally, which is why it is a circled x.) */
 
 /* ==========================================================================
    Builder — inline field editor
