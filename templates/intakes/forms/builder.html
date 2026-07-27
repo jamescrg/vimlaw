@@ -147,7 +147,14 @@
                         x-show="selectedId === field._id || fieldProblem(field)"
                         x-cloak
                         @click="saveClicked(field)">
-                  <i class="icon-save"></i>
+                  {% comment %}
+                    Two states, two glyphs. Open: the disk, because the button
+                    saves and closes. Closed and unfinished: a crossed-out eye,
+                    because the fact that matters is not "incomplete" but that
+                    the field is hidden from the client's form — a red disk
+                    here read as "saving is broken".
+                  {% endcomment %}
+                  <i :class="fieldProblem(field) && selectedId !== field._id ? 'icon-eye-off' : 'icon-save'"></i>
                 </button>
                 {% comment %}
                   The save state, shown on the card being edited. It is the
