@@ -11,12 +11,10 @@
       </div>
       <div class="toolbar-right">
         {% comment %}
-          One line, in order of what most needs saying: a failed save, then
-          the save in flight, then plain unsaved, then the last save's time.
-        {% endcomment %}
-        {% comment %}
-          With no Save button left, a failed save needs its own way to retry —
-          the error line is one.
+          Only failure lives up here now: the retry line has to be findable
+          even with every card closed. The save/unsaved state rides on the
+          open field card instead, next to its type badge, where the person
+          actually typing is looking.
         {% endcomment %}
         <button type="button"
                 class="button-link fb-state fb-state-error"
@@ -24,14 +22,6 @@
                 x-cloak
                 @click="save()"
                 x-text="error + ' Click to retry.'"></button>
-        <span class="fb-state" x-show="!error && saving" x-cloak>Saving…</span>
-        <span class="fb-state fb-state-dirty"
-              x-show="!error && !saving && dirty"
-              x-cloak>Unsaved changes</span>
-        <span class="fb-state"
-              x-show="!error && !saving && !dirty && savedAt"
-              x-cloak
-              x-text="'Saved ' + savedAt"></span>
         {% comment %}
           A form POST into a new tab, carrying the schema the builder is
           holding right now — the real client page, not a lookalike pane, and
@@ -140,6 +130,16 @@
                         x-text="field.label || (field.type === 'text_block' ? (field.text || 'Instructions') : (field.type === 'heading' ? 'Untitled' : 'Untitled question'))"></span>
                   <span class="app-badge app-badge-sm badge-blue fb-type-badge"
                         x-text="typeLabel(field.type)"></span>
+                  {% comment %}
+                    The save state, shown on the card being edited. It is the
+                    whole document's state (saves carry the whole form), just
+                    surfaced where the typing is happening.
+                  {% endcomment %}
+                  <span class="fb-card-state"
+                        :class="dirty && !saving ? 'fb-state-dirty' : ''"
+                        x-show="selectedId === field._id && !error"
+                        x-cloak
+                        x-text="saving ? 'Saving…' : (dirty ? 'Unsaved changes' : (savedAt ? 'Saved ' + savedAt : ''))"></span>
                   <span class="fb-req" x-show="field.required" x-cloak>Required</span>
                 </button>
                 <span class="fb-field-actions">
