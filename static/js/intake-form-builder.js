@@ -112,7 +112,7 @@ document.addEventListener('alpine:init', () => {
     notReady() {
       for (const field of this.fields) {
         if (this.fieldProblem(field)) {
-          return 'Waiting — one question is still incomplete.';
+          return 'Waiting. One question is still incomplete.';
         }
       }
       return '';
