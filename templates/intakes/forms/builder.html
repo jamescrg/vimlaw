@@ -90,7 +90,8 @@
                   <i class="icon-grip-vertical"></i>
                 </button>
                 <button type="button" class="fb-field-summary" @click="select(field)">
-                  <span class="fb-chip" x-text="typeLabel(field.type)"></span>
+                  <span class="app-badge app-badge-sm badge-blue fb-type-badge"
+                        x-text="typeLabel(field.type)"></span>
                   <span class="fb-field-label"
                         x-text="field.label || (field.type === 'text_block' ? (field.text || 'Instructions') : 'Untitled question')"></span>
                   <span class="fb-req" x-show="field.required" x-cloak>Required</span>
