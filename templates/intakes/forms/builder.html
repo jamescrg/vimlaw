@@ -155,16 +155,6 @@
                   {% endcomment %}
                   <i :class="fieldProblem(field) ? 'icon-circle-alert' : 'icon-save'"></i>
                 </button>
-                {% comment %}
-                  The save state, shown on the card being edited. It is the
-                  whole document's state (saves carry the whole form), just
-                  surfaced where the typing is happening.
-                {% endcomment %}
-                <span class="fb-card-state"
-                      :class="dirty && !saving ? 'fb-state-dirty' : ''"
-                      x-show="selectedId === field._id && !error"
-                      x-cloak
-                      x-text="saving ? 'Saving…' : (dirty ? 'Unsaved changes' : (savedAt ? 'Saved ' + savedAt : ''))"></span>
                 <span class="fb-field-actions">
                   <button type="button"
                           class="btn-icon"

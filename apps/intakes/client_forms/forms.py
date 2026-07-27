@@ -35,8 +35,10 @@ class FormTemplateForm(forms.ModelForm):
         # Start from the standard caption rather than a blank box — the page
         # will show it either way, so the modal should show what will happen,
         # and editing a default beats composing from nothing.
-        if not self.instance.intro_text:
-            self.initial.setdefault("intro_text", FormTemplate.DEFAULT_CAPTION)
+        # Assigned, not setdefault: model_to_dict already seeded initial with
+        # the instance's empty string, so a default would never take.
+        if not self.initial.get("intro_text"):
+            self.initial["intro_text"] = FormTemplate.DEFAULT_CAPTION
 
 
 class AddFormForm(forms.Form):

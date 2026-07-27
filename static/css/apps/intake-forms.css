@@ -358,11 +358,6 @@
   flex: 0 0 auto;
 }
 
-.fb-card-state {
-  color: var(--color-muted);
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
 
 /* The incomplete flag — the one red on the card, and the card earns it. */
 .fb-save-problem {
