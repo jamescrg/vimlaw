@@ -135,6 +135,15 @@
    Builder — frame
    ========================================================================== */
 
+/* The rule under the toolbar is what settles the columns below it: the canvas
+   starts with a card and the palette with a group heading, so their first
+   rows can never top-align — anchored to a shared line, that difference reads
+   as two columns rather than a shelf. Same seam the intake panel draws under
+   its own toolbar (intakes.css). */
+.fb-toolbar {
+  border-bottom: 1px solid var(--border-medium);
+}
+
 .fb-toolbar .toolbar-left {
   flex: 1 1 auto;
   gap: 0.5rem;
