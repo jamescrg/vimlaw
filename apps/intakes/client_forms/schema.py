@@ -119,6 +119,20 @@ FIELD_TYPES = {
             "max_length": (_bounded_int(1, 1000), 255),
         },
     },
+    "select": {
+        "label": "Dropdown",
+        "group": "Questions",
+        "icon": "icon-chevron-down",
+        "input_type": "",
+        "extra": {"placeholder": (_text(120), "Choose one…")},
+    },
+    "yesno": {
+        "label": "Yes / No",
+        "group": "Questions",
+        "icon": "icon-toggle-left",
+        "input_type": "",
+        "extra": {},
+    },
     "textarea": {
         "label": "Paragraph",
         "group": "Questions",
@@ -169,36 +183,22 @@ FIELD_TYPES = {
         "input_type": "date",
         "extra": {"min": (_iso_date, None), "max": (_iso_date, None)},
     },
-    "select": {
-        "label": "Dropdown",
-        "group": "Choices",
-        "icon": "icon-chevron-down",
-        "input_type": "",
-        "extra": {"placeholder": (_text(120), "Choose one…")},
-    },
     "radio": {
         "label": "Radio buttons",
-        "group": "Choices",
+        "group": "Questions",
         "icon": "icon-circle-dot",
         "input_type": "",
         "extra": {},
     },
     "checkboxes": {
         "label": "Checkboxes",
-        "group": "Choices",
+        "group": "Questions",
         "icon": "icon-square-check",
         "input_type": "",
         "extra": {
             "min_selected": (_bounded_int(0, MAX_OPTIONS), 0),
             "max_selected": (_bounded_int(0, MAX_OPTIONS), 0),
         },
-    },
-    "yesno": {
-        "label": "Yes / No",
-        "group": "Choices",
-        "icon": "icon-toggle-left",
-        "input_type": "",
-        "extra": {},
     },
     "heading": {
         "label": "Section heading",
@@ -216,10 +216,11 @@ FIELD_TYPES = {
     },
 }
 
-# Palette groups, in the order the builder shows them.
 # Palette display order. Layout leads: a form usually opens with a heading or
-# an instruction block, so the first thing reached for sits first.
-FIELD_GROUPS = ("Layout", "Questions", "Choices")
+# an instruction block, so the first thing reached for sits first. One
+# Questions group holds everything askable — the choice types are questions
+# too — ordered most-reached-for first (dict order above is display order).
+FIELD_GROUPS = ("Layout", "Questions")
 
 
 def palette():
