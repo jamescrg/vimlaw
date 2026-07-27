@@ -217,7 +217,9 @@ FIELD_TYPES = {
 }
 
 # Palette groups, in the order the builder shows them.
-FIELD_GROUPS = ("Questions", "Choices", "Layout")
+# Palette display order. Layout leads: a form usually opens with a heading or
+# an instruction block, so the first thing reached for sits first.
+FIELD_GROUPS = ("Layout", "Questions", "Choices")
 
 
 def palette():
