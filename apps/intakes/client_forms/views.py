@@ -194,9 +194,17 @@ def form_builder(request, template_id):
 def form_builder_save(request, template_id):
     """Store the whole schema in one POST.
 
-    The response echoes the normalized schema back, and the builder must
-    re-hydrate from it: the server mints the field keys, and every future
-    submission's answers are filed under them.
+    The response echoes the normalized schema back, and the builder adopts the
+    keys from it: the server mints them, and every future submission's answers
+    are filed under them.
+
+    The builder autosaves, so this is called on a pause in typing rather than
+    on a difference — the same document arrives again whenever someone tabs
+    away and back, or edits a label and puts it back. A save that normalizes to
+    what is already stored therefore returns without moving the version on. Not
+    for the sake of the number: `template_drifted` reads it, so a bump with no
+    change behind it tells every submission ever sent from this form that the
+    questions have changed since.
     """
     template = get_object_or_404(FormTemplate, pk=template_id)
 
@@ -215,16 +223,21 @@ def form_builder_save(request, template_id):
         return JsonResponse({"ok": False, "error": str(exc)}, status=400)
 
     name = str(body.get("name") or "").strip()[:120]
-    if name:
-        template.name = name
-    template.schema = schema
-    template.version += 1
-    template.save()
+    renamed = bool(name) and name != template.name
+
+    if schema != template.schema or renamed:
+        if name:
+            template.name = name
+        template.schema = schema
+        template.version += 1
+        template.save()
 
     return JsonResponse(
         {
             "ok": True,
-            "schema": schema,
+            # The stored schema, which on an unchanged save is the one already
+            # there — same keys either way, which is all the builder adopts.
+            "schema": template.schema,
             "version": template.version,
             "saved_at": timezone.localtime(template.updated_at).strftime("%-I:%M %p"),
         }

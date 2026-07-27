@@ -15,10 +15,24 @@
                placeholder="Untitled form" />
       </div>
       <div class="toolbar-right">
-        <span class="fb-state" x-show="error" x-text="error"></span>
-        <span class="fb-state fb-state-dirty" x-show="dirty && !error" x-cloak>Unsaved changes</span>
+        {% comment %}
+          One line, in order of what most needs saying: a failed save, then a
+          document autosave can't accept yet, then the save in flight, then
+          plain unsaved, then the last save's time. "Waiting" matters most of
+          these — without it, adding a question and not labelling it would look
+          exactly like autosave being broken.
+        {% endcomment %}
+        <span class="fb-state" x-show="error" x-cloak x-text="error"></span>
+        <span class="fb-state fb-state-dirty"
+              x-show="!error && blocked"
+              x-cloak
+              x-text="blocked"></span>
+        <span class="fb-state" x-show="!error && !blocked && saving" x-cloak>Saving…</span>
+        <span class="fb-state fb-state-dirty"
+              x-show="!error && !blocked && !saving && dirty"
+              x-cloak>Unsaved changes</span>
         <span class="fb-state"
-              x-show="!dirty && !error && savedAt"
+              x-show="!error && !blocked && !saving && !dirty && savedAt"
               x-cloak
               x-text="'Saved ' + savedAt"></span>
         <button type="button"
@@ -43,7 +57,7 @@
         <button type="button"
                 class="btn btn-success"
                 @click="save()"
-                :disabled="saving"
+                :disabled="saving || !dirty"
                 x-text="saving ? 'Saving…' : 'Save'"></button>
       </div>
     </div>

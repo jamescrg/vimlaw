@@ -11,7 +11,17 @@
  *  - `_id` is ours, not the server's. Alpine needs a stable identity for
  *    `x-for` before a field has ever been saved, and it is stripped from the
  *    payload on the way out.
+ *
+ * Saving is automatic and debounced. Two consequences shape the code below.
+ * A save must adopt the server's keys without replacing the field objects,
+ * because replacing them changes every x-for key and Alpine rebuilds the whole
+ * canvas — which would yank the caret out of whatever input is being typed
+ * into. And a document mid-edit is not a valid schema (a question added a
+ * second ago has no label), so autosave waits for one rather than flashing an
+ * error at someone who is simply still typing.
  */
+const AUTOSAVE_MS = 1500;
+
 document.addEventListener('alpine:init', () => {
   Alpine.data('intakeFormBuilder', (config) => ({
     name: config.name,
@@ -25,16 +35,76 @@ document.addEventListener('alpine:init', () => {
     saving: false,
     savedAt: '',
     error: '',
+    // Why the document can't be saved yet, in words, when that is the reason
+    // nothing is happening. Distinct from `error`, which means a save failed.
+    blocked: '',
+
+    // Bumped by every edit, so a reply that lands after the next keystroke
+    // knows not to declare the form clean.
+    rev: 0,
+    _timer: null,
+    _inFlight: false,
+    _queued: false,
+    _quiet: false,
 
     init() {
-      this.$watch('fields', () => { this.dirty = true; }, { deep: true });
-      this.$watch('name', () => { this.dirty = true; });
+      this.$watch('fields', () => this.touch(), { deep: true });
+      this.$watch('name', () => this.touch());
       this.mountSortable();
+
+      // A debounced save can still be pending when the tab goes away.
+      const flushNow = () => {
+        if (document.visibilityState === 'hidden') this.save({ keepalive: true });
+      };
+      document.addEventListener('visibilitychange', flushNow);
+      window.addEventListener('pagehide', () => this.save({ keepalive: true }));
+
+      // Still worth asking: the last save may be blocked on an unlabelled
+      // question, in which case there is nothing autosave can do.
       window.addEventListener('beforeunload', (e) => {
         if (!this.dirty) return;
         e.preventDefault();
         e.returnValue = '';
       });
+    },
+
+    // Every edit lands here. The debounce is what makes one edit one save:
+    // typing a label is a change per keystroke, and each save mints keys and
+    // moves the template's version on.
+    touch() {
+      if (this._quiet) return;
+      this.dirty = true;
+      this.rev += 1;
+      this.error = '';
+      // Recomputed on the edit rather than on the save, so labelling a
+      // question clears the notice as it is typed instead of a second later.
+      this.blocked = this.notReady();
+      clearTimeout(this._timer);
+      this._timer = setTimeout(() => this.save(), AUTOSAVE_MS);
+    },
+
+    // Run a mutation without waking the watcher. Adopting the server's keys
+    // writes to `fields`, which would otherwise schedule the save that would
+    // adopt the keys that would schedule the save.
+    quietly(mutate) {
+      this._quiet = true;
+      mutate();
+      this.$nextTick(() => { this._quiet = false; });
+    },
+
+    // The server rejects a whole document rather than storing half of one, so
+    // these are the two states worth waiting through rather than reporting.
+    notReady() {
+      for (const field of this.fields) {
+        if (field.type !== 'text_block' && !String(field.label || '').trim()) {
+          return 'Waiting — every question needs a label.';
+        }
+        if (Array.isArray(field.options)) {
+          const filled = field.options.filter((o) => String(o.label || '').trim());
+          if (!filled.length) return 'Waiting — every choice needs an option.';
+        }
+      }
+      return '';
     },
 
     mountSortable() {
@@ -167,10 +237,51 @@ document.addEventListener('alpine:init', () => {
       };
     },
 
-    async save() {
-      if (this.saving) return;
+    /*
+     * Adopt the keys the server just minted — identity only.
+     *
+     * Never the text. The server trims and truncates labels, and writing its
+     * version back over a field someone is still typing into would move their
+     * caret. Keys and option values are the only things that must match,
+     * because every answer a client gives is filed under them.
+     *
+     * Position identifies a field: normalize_schema emits exactly one field
+     * per field it is given, in order, or rejects the document whole. Options
+     * are the exception — it drops the blank row that "add option" leaves
+     * behind, so ours are walked past to stay in step.
+     */
+    adoptKeys(saved) {
+      saved.forEach((savedField, index) => {
+        const field = this.fields[index];
+        if (!field) return;
+        field.key = savedField.key;
+        if (!Array.isArray(field.options) || !Array.isArray(savedField.options)) return;
+        let cursor = 0;
+        for (const option of field.options) {
+          if (!String(option.label || '').trim()) continue;
+          if (savedField.options[cursor]) option.value = savedField.options[cursor].value;
+          cursor += 1;
+        }
+      });
+    },
+
+    async save(options = {}) {
+      clearTimeout(this._timer);
+      if (!this.dirty) return;
+
+      this.blocked = this.notReady();
+      if (this.blocked) return;
+
+      // Single-flight: a slow save must not land after a newer one, so the
+      // next is queued rather than raced.
+      if (this._inFlight) {
+        this._queued = true;
+        return;
+      }
+      this._inFlight = true;
       this.saving = true;
       this.error = '';
+      const rev = this.rev;
       try {
         const res = await fetch(config.saveUrl, {
           method: 'POST',
@@ -179,21 +290,26 @@ document.addEventListener('alpine:init', () => {
             'X-CSRFToken': csrfToken(),
           },
           body: JSON.stringify(this.payload()),
+          keepalive: !!options.keepalive,
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) {
           this.error = data.error || 'Could not save this form.';
           return;
         }
-        // Re-hydrate: the keys the server just minted are what future answers
-        // will be filed under, so our copy has to match.
-        this.fields = data.schema.map((f) => ({ ...f, _id: newId() }));
+        this.quietly(() => this.adoptKeys(data.schema));
         this.savedAt = data.saved_at;
-        this.$nextTick(() => { this.dirty = false; });
+        // Only clean if nothing was typed while the request was in the air.
+        if (this.rev === rev) this.$nextTick(() => { this.dirty = false; });
       } catch (e) {
         this.error = 'Could not reach the server. Your changes are still here.';
       } finally {
+        this._inFlight = false;
         this.saving = false;
+        if (this._queued) {
+          this._queued = false;
+          this.save();
+        }
       }
     },
   }));
