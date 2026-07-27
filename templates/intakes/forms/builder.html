@@ -3,7 +3,11 @@
   <div class="fb" x-data="intakeFormBuilder({{ config }})">
     <div class="toolbar fb-toolbar">
       <div class="toolbar-left">
-        <h1 class="fb-name" id="fb-name">{% include "intakes/forms/name.html" %}</h1>
+        <h1 class="fb-name"
+            id="fb-name"
+            hx-get="{% url 'intakes:form-template-name-update' template_id=template.id %}"
+            hx-trigger="intakeFormsChanged from:body"
+            hx-swap="innerHTML">{% include "intakes/forms/name.html" %}</h1>
       </div>
       <div class="toolbar-right">
         {% comment %}
@@ -13,7 +17,16 @@
           these — without it, adding a question and not labelling it would look
           exactly like autosave being broken.
         {% endcomment %}
-        <span class="fb-state" x-show="error" x-cloak x-text="error"></span>
+        {% comment %}
+          With no Save button left, a failed save needs its own way to retry —
+          the error line is one.
+        {% endcomment %}
+        <button type="button"
+                class="button-link fb-state fb-state-error"
+                x-show="error"
+                x-cloak
+                @click="save()"
+                x-text="error + ' Click to retry.'"></button>
         <span class="fb-state fb-state-dirty"
               x-show="!error && blocked"
               x-cloak
@@ -29,13 +42,6 @@
         <button type="button" class="btn btn-secondary" @click="preview = !preview">
           <i :class="preview ? 'icon-pencil' : 'icon-eye'"></i>
           <span x-text="preview ? 'Edit' : 'Preview'"></span>
-        </button>
-        <button type="button"
-                class="btn btn-success"
-                @click="save()"
-                :disabled="saving || !dirty">
-          <i class="icon-save"></i>
-          <span x-text="saving ? 'Saving…' : 'Save'"></span>
         </button>
         <button type="button"
                 class="btn-icon"
@@ -246,7 +252,7 @@
           <i class="icon-clipboard-list"></i>
           <p class="fb-empty-title">This form has no fields yet</p>
           <ol class="fb-empty-hint">
-            <li>Click a question or choice on the left to add the first one.</li>
+            <li>Click a field type on the left to add the first one.</li>
             <li>Fields can be dragged up or down the list to determine their order.</li>
             <li>Headings can be added to divide the form into sections.</li>
           </ol>

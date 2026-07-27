@@ -111,7 +111,7 @@ _PLACEHOLDER = (_text(120), "")
 FIELD_TYPES = {
     "text": {
         "label": "Short text",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-type",
         "input_type": "text",
         "extra": {
@@ -121,21 +121,21 @@ FIELD_TYPES = {
     },
     "select": {
         "label": "Dropdown",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-chevron-down",
         "input_type": "",
         "extra": {"placeholder": (_text(120), "Choose one…")},
     },
     "yesno": {
         "label": "Yes / No",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-toggle-left",
         "input_type": "",
         "extra": {},
     },
     "textarea": {
         "label": "Paragraph",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-align-left",
         "input_type": "",
         "extra": {
@@ -146,21 +146,21 @@ FIELD_TYPES = {
     },
     "email": {
         "label": "Email",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-mail",
         "input_type": "email",
         "extra": {"placeholder": _PLACEHOLDER},
     },
     "phone": {
         "label": "Phone",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-phone",
         "input_type": "tel",
         "extra": {"placeholder": _PLACEHOLDER},
     },
     "number": {
         "label": "Number",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-hash",
         "input_type": "number",
         "extra": {
@@ -171,28 +171,28 @@ FIELD_TYPES = {
     },
     "currency": {
         "label": "Amount",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-dollar-sign",
         "input_type": "text",
         "extra": {"min": (_number, None), "max": (_number, None)},
     },
     "date": {
         "label": "Date",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-calendar",
         "input_type": "date",
         "extra": {"min": (_iso_date, None), "max": (_iso_date, None)},
     },
     "radio": {
         "label": "Radio buttons",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-circle-dot",
         "input_type": "",
         "extra": {},
     },
     "checkboxes": {
         "label": "Checkboxes",
-        "group": "Questions",
+        "group": "Fields",
         "icon": "icon-square-check",
         "input_type": "",
         "extra": {
@@ -217,10 +217,10 @@ FIELD_TYPES = {
 }
 
 # Palette display order. Layout leads: a form usually opens with a heading or
-# an instruction block, so the first thing reached for sits first. One
-# Questions group holds everything askable — the choice types are questions
-# too — ordered most-reached-for first (dict order above is display order).
-FIELD_GROUPS = ("Layout", "Questions")
+# an instruction block, so the first thing reached for sits first. One Fields
+# group holds everything askable, ordered most-reached-for first (dict order
+# above is display order).
+FIELD_GROUPS = ("Layout", "Fields")
 
 
 def palette():

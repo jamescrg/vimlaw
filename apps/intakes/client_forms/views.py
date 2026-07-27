@@ -147,19 +147,21 @@ def form_template_name_edit(request, template_id):
 
 
 @login_required
-@require_POST
 def form_template_name_update(request, template_id):
-    """Save the inline rename and swap the title back.
+    """Save the inline rename and swap the title back; on GET, just render the
+    current title. The builder re-fetches this on intakeFormsChanged, which is
+    how a rename made in the settings modal reaches the toolbar and preview.
 
-    The name lives here rather than in the builder's autosave payload: two
-    writers for one field is how one of them ends up overwriting the other,
-    and the schema is the only thing the canvas actually owns.
+    The name is not in the builder's autosave payload: with a save firing
+    every pause in typing, a stale copy there would quietly overwrite a rename
+    made anywhere else.
     """
     template = get_object_or_404(FormTemplate, pk=template_id)
-    name = str(request.POST.get("name") or "").strip()[:120]
-    if name and name != template.name:
-        template.name = name
-        template.save(update_fields=["name", "updated_at"])
+    if request.method == "POST":
+        name = str(request.POST.get("name") or "").strip()[:120]
+        if name and name != template.name:
+            template.name = name
+            template.save(update_fields=["name", "updated_at"])
     return render(request, "intakes/forms/name-saved.html", {"template": template})
 
 

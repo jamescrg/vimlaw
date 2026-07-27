@@ -138,18 +138,18 @@ def test_build_send_fill_and_read_back(client, intake):
     assert "has since changed" in read_back
 
 
-def test_the_settings_modal_cannot_overwrite_a_name_edited_in_the_builder(
-    client, form_template
-):
-    """The inline title control owns the name; the settings modal must not
-    offer it, or saving settings would overwrite a rename made in the builder."""
+def test_the_settings_modal_renames_the_form_too(client, form_template):
+    """Both the inline title and the settings modal may rename. The builder's
+    autosave still never carries the name, so neither editor can be undone by
+    a stale schema save; and the builder re-fetches the title on the settings
+    modal's own refresh trigger, so the two stay in sight of each other."""
     response = client.get(
         reverse(
             "intakes:form-template-settings", kwargs={"template_id": form_template.id}
         )
     )
     assert response.status_code == 200
-    assert 'name="name"' not in response.content.decode()
+    assert 'name="name"' in response.content.decode()
 
     client.post(
         reverse(
@@ -159,9 +159,9 @@ def test_the_settings_modal_cannot_overwrite_a_name_edited_in_the_builder(
             "description": "Updated",
             "intro_text": "",
             "is_active": "on",
-            "name": "Hijacked",
+            "name": "Renamed in settings",
         },
     )
     form_template.refresh_from_db()
-    assert form_template.name == "Property Dispute Questionnaire"
+    assert form_template.name == "Renamed in settings"
     assert form_template.description == "Updated"

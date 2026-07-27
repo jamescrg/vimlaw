@@ -32,11 +32,6 @@ class FormTemplateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
-        # The builder's toolbar owns the name of an existing form. Offering it
-        # here too would let a rename in one place be silently overwritten by a
-        # stale value posted from the other.
-        if self.instance.pk:
-            del self.fields["name"]
 
 
 class AddFormForm(forms.Form):

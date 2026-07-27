@@ -192,6 +192,15 @@
   color: var(--warning);
 }
 
+/* A button so it can retry the save, but dressed as the status line it sits
+   in — toolbar.css would otherwise give it full button chrome. */
+.fb-toolbar .fb-state-error {
+  background: none;
+  border: none;
+  color: var(--urgent);
+  padding: 0;
+}
+
 .fb-body {
   display: flex;
   gap: 1.5rem;
