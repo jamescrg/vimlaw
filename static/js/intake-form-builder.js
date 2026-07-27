@@ -172,9 +172,11 @@ document.addEventListener('alpine:init', () => {
           const index = evt.newIndex;
           evt.clone.replaceWith(evt.item);
           if (!this.defaults[type]) return;
+          // Collapsed, not open: the drop already put the card where it
+          // belongs, and having it explode into the editor mid-gesture is
+          // disorienting. The pencil on the card says what to do next.
           const field = { ...clone(this.defaults[type]), _id: newId() };
           this.fields.splice(index, 0, field);
-          this.selectedId = field._id;
           this.problem = '';
         },
         onStart: (evt) => {
@@ -221,10 +223,10 @@ document.addEventListener('alpine:init', () => {
     addField(type) {
       const field = { ...clone(this.defaults[type]), _id: newId() };
       this.fields.push(field);
-      this.selectedId = field._id;
       this.problem = '';
       this.$nextTick(() => {
-        const card = this.$refs.canvas.lastElementChild;
+        const cards = this.$refs.canvas.querySelectorAll('.fb-field');
+        const card = cards[cards.length - 1];
         if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       });
     },

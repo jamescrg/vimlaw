@@ -446,6 +446,17 @@
   margin-top: 0.25rem;
 }
 
+/* Once fields exist, a slim standing echo of the empty-state well: the place
+   a dragged field lands, kept visible so the invitation to drag survives the
+   first drop. */
+.fb-drop-strip {
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  color: var(--color-muted-more);
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
 /* A dashed well where the first question will land, rather than a line of
    grey text floating in the space the canvas is not yet filling. */
 .fb-empty {

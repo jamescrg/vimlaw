@@ -137,10 +137,21 @@
                 </button>
                 <span class="fb-field-actions">
                   {% comment %}
-                    Only while this question's editor is open: it checks the
-                    question, then closes it and lets the pending save go now
-                    rather than on the debounce.
+                    One slot, three states. Closed and complete: a pencil, the
+                    prompt that this card opens for editing — new fields land
+                    collapsed, so this is how anyone knows what to do next.
+                    Closed and incomplete: the red save flag (below). Open:
+                    the save button, which checks the field, closes it, and
+                    lets the pending save go now rather than on the debounce.
                   {% endcomment %}
+                  <button type="button"
+                          class="btn-icon"
+                          title="Edit this field"
+                          aria-label="Edit this field"
+                          x-show="selectedId !== field._id && !fieldProblem(field)"
+                          @click="select(field)">
+                    <i class="icon-pencil"></i>
+                  </button>
                   {% comment %}
                     Doubles as the incomplete marker: visible while the editor
                     is open, and also — in red — on a closed field that is not
@@ -277,6 +288,13 @@
               </div>
             </div>
           </template>
+          {% comment %}
+            The standing drop target once the well has gone — without it, the
+            invitation to drag disappears with the first field. No .fb-field
+            class, so the canvas Sortable's index arithmetic never counts it,
+            and a drop on it lands after the last card.
+          {% endcomment %}
+          <div class="fb-drop-strip" x-show="fields.length" x-cloak>Drag a field here to add it to the end</div>
         </div>
       </div>
     </div>
