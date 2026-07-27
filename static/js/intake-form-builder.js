@@ -145,7 +145,12 @@ document.addEventListener('alpine:init', () => {
         // the array at the drop position, and Alpine renders the card.
         onAdd: (evt) => {
           const type = evt.item.dataset.type;
-          const index = evt.newIndex;
+          // The Draggable variant, never evt.newIndex: the raw index counts
+          // every element child — the empty-state well included — while this
+          // one counts only .fb-field matches, which is what the fields
+          // array mirrors. The raw pair is how an off-by-one spliced
+          // `undefined` into the array and rendered a dead, unopenable card.
+          const index = evt.newDraggableIndex;
           evt.clone.replaceWith(evt.item);
           if (!this.defaults[type]) return;
           // Collapsed, not open: the drop already put the card where it
@@ -170,9 +175,12 @@ document.addEventListener('alpine:init', () => {
           evt.from.insertBefore(evt.item, putBack);
           putBack = null;
 
-          const { oldIndex, newIndex } = evt;
+          // Draggable-filtered indexes, for the same reason as onAdd above.
+          const oldIndex = evt.oldDraggableIndex;
+          const newIndex = evt.newDraggableIndex;
           if (oldIndex === newIndex) return;
           const moved = this.fields.splice(oldIndex, 1)[0];
+          if (moved === undefined) return;
           this.fields.splice(newIndex, 0, moved);
         },
       });
