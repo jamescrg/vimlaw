@@ -338,12 +338,15 @@
   opacity: 0.4;
 }
 
+/* Content-sized, not stretched: the save control has to sit directly against
+   the badge, so the head's free space falls after it instead of inside the
+   summary. Still shrinkable, so a long label ellipsizes. */
 .fb-field-summary {
   align-items: center;
   background: none;
   border: none;
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   gap: 0.75rem;
   min-width: 0;
   padding: 0;
@@ -384,10 +387,12 @@
   flex: 0 0 auto;
 }
 
+/* Copy and delete keep the far side; the auto margin is the gap. */
 .fb-field-actions {
   display: flex;
   flex: 0 0 auto;
   gap: 1.5rem;
+  margin-left: auto;
 }
 
 /* Save, duplicate and delete all in the head's own ink — one cluster of equal

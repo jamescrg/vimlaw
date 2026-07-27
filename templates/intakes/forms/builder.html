@@ -130,44 +130,36 @@
                         x-text="field.label || (field.type === 'text_block' ? (field.text || 'Instructions') : (field.type === 'heading' ? 'Untitled' : 'Untitled question'))"></span>
                   <span class="app-badge app-badge-sm badge-blue fb-type-badge"
                         x-text="typeLabel(field.type)"></span>
-                  {% comment %}
-                    The save state, shown on the card being edited. It is the
-                    whole document's state (saves carry the whole form), just
-                    surfaced where the typing is happening.
-                  {% endcomment %}
-                  <span class="fb-card-state"
-                        :class="dirty && !saving ? 'fb-state-dirty' : ''"
-                        x-show="selectedId === field._id && !error"
-                        x-cloak
-                        x-text="saving ? 'Saving…' : (dirty ? 'Unsaved changes' : (savedAt ? 'Saved ' + savedAt : ''))"></span>
                   <span class="fb-req" x-show="field.required" x-cloak>Required</span>
                 </button>
+                {% comment %}
+                  Directly adjacent to the badge, on the near side of the
+                  head's gap — the summary is a button, so the save control
+                  is its sibling rather than its child. Two states: the red
+                  unfinished flag on a closed incomplete card, the save
+                  button while open.
+                {% endcomment %}
+                <button type="button"
+                        class="btn-icon fb-field-save"
+                        :class="fieldProblem(field) ? 'fb-save-problem' : ''"
+                        :title="fieldProblem(field) ? 'Unfinished. Hidden from the client form until completed.' : 'Save and close'"
+                        aria-label="Save and close"
+                        x-show="selectedId === field._id || fieldProblem(field)"
+                        x-cloak
+                        @click="saveClicked(field)">
+                  <i class="icon-save"></i>
+                </button>
+                {% comment %}
+                  The save state, shown on the card being edited. It is the
+                  whole document's state (saves carry the whole form), just
+                  surfaced where the typing is happening.
+                {% endcomment %}
+                <span class="fb-card-state"
+                      :class="dirty && !saving ? 'fb-state-dirty' : ''"
+                      x-show="selectedId === field._id && !error"
+                      x-cloak
+                      x-text="saving ? 'Saving…' : (dirty ? 'Unsaved changes' : (savedAt ? 'Saved ' + savedAt : ''))"></span>
                 <span class="fb-field-actions">
-                  {% comment %}
-                    The save slot has two states. Closed and unfinished: the
-                    red flag — the field is stored but hidden from the client
-                    until completed, and clicking opens it on its problem.
-                    Open: the save button, which closes the field and lets
-                    the pending save go now rather than on the debounce.
-                    Nothing blocks: unfinished fields save like any other.
-                  {% endcomment %}
-                  {% comment %}
-                    Doubles as the incomplete marker: visible while the editor
-                    is open, and also — in red — on a closed field that is not
-                    storable, so the toolbar's "waiting" line always has a
-                    matching flag on the card it is waiting for. Clicking the
-                    red state opens the field on its problem.
-                  {% endcomment %}
-                  <button type="button"
-                          class="btn-icon fb-field-save"
-                          :class="fieldProblem(field) ? 'fb-save-problem' : ''"
-                          :title="fieldProblem(field) ? 'Unfinished. Hidden from the client form until completed.' : 'Save and close'"
-                          aria-label="Save and close"
-                          x-show="selectedId === field._id || fieldProblem(field)"
-                          x-cloak
-                          @click="saveClicked(field)">
-                    <i class="icon-save"></i>
-                  </button>
                   <button type="button"
                           class="btn-icon"
                           title="Duplicate"
