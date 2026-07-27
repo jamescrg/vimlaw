@@ -301,6 +301,16 @@
   padding: 0.75rem;
 }
 
+/* The disclosure triangle, muted like the handle beside it — chrome, not
+   content. */
+.fb-field-toggle {
+  color: var(--color-muted-more);
+}
+
+.fb-field-toggle:hover {
+  color: var(--color-primary);
+}
+
 .fb-handle {
   background: none;
   border: none;

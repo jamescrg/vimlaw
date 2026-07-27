@@ -117,6 +117,20 @@
                  :class="{ 'fb-field-open': selectedId === field._id, 'fb-field-layout': isLayout(field) }">
               <div class="fb-field-head">
                 {% comment %}
+                  Disclosure leads the row, tree-view style: right when
+                  closed, down when open. On the left edge it is the first
+                  thing the eye meets, which is the point — the chevron is
+                  how anyone knows the row opens.
+                {% endcomment %}
+                <button type="button"
+                        class="btn-icon fb-field-toggle"
+                        :title="selectedId === field._id ? 'Collapse' : 'Expand to edit'"
+                        :aria-expanded="selectedId === field._id"
+                        aria-label="Expand this field for editing"
+                        @click="select(field)">
+                  <i :class="selectedId === field._id ? 'icon-chevron-down' : 'icon-chevron-right'"></i>
+                </button>
+                {% comment %}
                   A real button, so the arrow keys reorder for anyone who
                   can't drag. Sortable only needs the class to grab it.
                 {% endcomment %}
@@ -173,14 +187,6 @@
                           title="Delete"
                           @click="remove(field)">
                     <i class="icon-circle-x"></i>
-                  </button>
-                  <button type="button"
-                          class="btn-icon"
-                          :title="selectedId === field._id ? 'Collapse' : 'Expand to edit'"
-                          :aria-expanded="selectedId === field._id"
-                          aria-label="Expand this field for editing"
-                          @click="select(field)">
-                    <i :class="selectedId === field._id ? 'icon-chevron-up' : 'icon-chevron-down'"></i>
                   </button>
                 </span>
               </div>
