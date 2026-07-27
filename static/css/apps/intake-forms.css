@@ -425,7 +425,7 @@
    grey text floating in the space the canvas is not yet filling. */
 .fb-empty {
   align-items: center;
-  border: 1px dashed var(--border-medium);
+  border: 2px dashed var(--border-dark);
   border-radius: var(--radius-md);
   color: var(--color-muted);
   display: flex;
