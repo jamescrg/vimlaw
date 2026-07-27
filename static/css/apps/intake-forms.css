@@ -322,11 +322,22 @@
   flex: 0 0 auto;
 }
 
+/* The incomplete flag — the one red on the card, and the card earns it. */
+.fb-save-problem {
+  color: var(--urgent);
+}
+
 .fb-field-label {
   color: var(--color-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Label leads, badge trails it; the summary's free space falls after the
+   badge rather than between the two. */
+.fb-field-summary .fb-field-label {
+  flex: 0 1 auto;
 }
 
 .fb-req {

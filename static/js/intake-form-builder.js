@@ -129,6 +129,18 @@ document.addEventListener('alpine:init', () => {
       this.save();
     },
 
+    // The head's save button doubles as the incomplete marker: it stays
+    // visible (and red) on a closed incomplete field, and clicking it there
+    // opens the field on its problem instead of trying to close it.
+    saveClicked(field) {
+      if (this.selectedId !== field._id) {
+        this.selectedId = field._id;
+        this.problem = this.fieldProblem(field);
+        return;
+      }
+      this.doneEditing(field);
+    },
+
     mountSortable() {
       // The node the dragged card sat in front of, captured before Sortable
       // touches anything. Sortable rearranges the DOM directly, which
