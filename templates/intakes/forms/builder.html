@@ -93,7 +93,7 @@
                   <span class="app-badge app-badge-sm badge-blue fb-type-badge"
                         x-text="typeLabel(field.type)"></span>
                   <span class="fb-field-label"
-                        x-text="field.label || (field.type === 'text_block' ? (field.text || 'Instructions') : 'Untitled question')"></span>
+                        x-text="field.label || (field.type === 'text_block' ? (field.text || 'Instructions') : (field.type === 'heading' ? 'Untitled' : 'Untitled question'))"></span>
                   <span class="fb-req" x-show="field.required" x-cloak>Required</span>
                 </button>
                 <span class="fb-field-actions">
@@ -231,9 +231,11 @@
         <div class="fb-empty" x-show="!preview && fields.length === 0" x-cloak>
           <i class="icon-clipboard-list"></i>
           <p class="fb-empty-title">This form has no fields yet</p>
-          <p class="fb-empty-hint">Click a question or choice on the left to add the first one.</p>
-          <p class="fb-empty-hint">Fields can be dragged up or down the list to determine their order.</p>
-          <p class="fb-empty-hint">Section headings can be added to create form sections.</p>
+          <ol class="fb-empty-hint">
+            <li>Click a question or choice on the left to add the first one.</li>
+            <li>Fields can be dragged up or down the list to determine their order.</li>
+            <li>Headings can be added to divide the form into sections.</li>
+          </ol>
         </div>
         <div class="fb-preview" x-show="preview" x-cloak>
           {# Kept in step by the rename endpoint's out-of-band swap. #}

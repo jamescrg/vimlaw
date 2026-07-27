@@ -259,10 +259,6 @@
   margin-bottom: 0.5rem;
 }
 
-.fb-field-open {
-  border-color: var(--border-dark);
-}
-
 /* Expanded, the head keeps a real lower edge — the seam between chrome and
    workspace, in the card's own border weight rather than a faint hairline. */
 .fb-field-open .fb-field-head {
@@ -341,7 +337,7 @@
 .fb-field-actions {
   display: flex;
   flex: 0 0 auto;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 /* Save, duplicate and delete all in the head's own ink — one cluster of equal
@@ -440,9 +436,19 @@
   margin: 0;
 }
 
+/* A numbered list, left-aligned against the well's centred title — centring
+   ragged multi-line sentences made every wrap look accidental. */
 .fb-empty-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   margin: 0;
   max-width: 26rem;
+  text-align: left;
+}
+
+.fb-empty-hint li {
+  list-style: decimal inside;
 }
 
 /* ==========================================================================
