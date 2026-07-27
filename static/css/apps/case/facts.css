@@ -253,6 +253,27 @@ Assign results (sources modal)
 }
 
 /* ------------------------------------------------
+Row highlights
+------------------------------------------------ */
+
+/* A flagged fact carries its colour across the whole row, where the shared
+   .hl-* fill (colors.css) lands a step too dark; the row takes the wash
+   instead. Targets the cell — the row template stamps the colour class on
+   every td, which paints over any tr fill — at a specificity the dark rail
+   rule in colors.css still beats, so the darks keep their rail. */
+/* The row itself drops its fill — the cells carry the wash, and a leftover tr
+   fill would otherwise show at the rounded first/last corners. */
+.facts-list tr[class*="hl-"] { background: transparent !important; }
+
+.facts-list td.hl-gray { background: var(--hl-wash-gray) !important; }
+.facts-list td.hl-blue { background: var(--hl-wash-blue) !important; }
+.facts-list td.hl-green { background: var(--hl-wash-green) !important; }
+.facts-list td.hl-orange { background: var(--hl-wash-orange) !important; }
+.facts-list td.hl-purple { background: var(--hl-wash-violet) !important; }
+.facts-list td.hl-red { background: var(--hl-wash-red) !important; }
+.facts-list td.hl-yellow { background: var(--hl-wash-yellow) !important; }
+
+/* ------------------------------------------------
 Responsive
 ------------------------------------------------ */
 

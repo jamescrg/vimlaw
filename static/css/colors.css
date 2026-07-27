@@ -234,6 +234,21 @@
   --hl-red: var(--red-100);
   --hl-yellow: var(--yellow-100);
 
+  /* Row washes — the same hues a step lighter, for tables that carry the colour
+     across a whole row (the timeline). The --hl-* fills above are sized for
+     small areas — text marks, chips, a button state — and over five columns
+     that much tint reads heavy. Derived off each fill rather than pinned to a
+     ramp step, so the tinted light themes soften by the same amount as Matcha.
+     The darks paint a rail instead of a fill and never use these. */
+  --hl-wash-gray: color-mix(in oklch, var(--hl-gray) 50%, var(--background-td));
+  --hl-wash-blue: color-mix(in oklch, var(--hl-blue) 50%, var(--background-td));
+  --hl-wash-slate: color-mix(in oklch, var(--hl-slate) 50%, var(--background-td));
+  --hl-wash-green: color-mix(in oklch, var(--hl-green) 50%, var(--background-td));
+  --hl-wash-orange: color-mix(in oklch, var(--hl-orange) 50%, var(--background-td));
+  --hl-wash-violet: color-mix(in oklch, var(--hl-violet) 50%, var(--background-td));
+  --hl-wash-red: color-mix(in oklch, var(--hl-red) 50%, var(--background-td));
+  --hl-wash-yellow: color-mix(in oklch, var(--hl-yellow) 50%, var(--background-td));
+
 }
 
 /* ==========================================================================

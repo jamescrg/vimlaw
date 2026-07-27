@@ -52,14 +52,30 @@ def get_list_data(request):
             del request.session["selected_contact_id"]
 
         if selected_contact:
-            relationships = list(Relationship.objects.filter(contact=selected_contact))
+            # One row per matter, not per relationship. A contact is often tied
+            # to the same matter more than once — the canonical client always
+            # carries a Client-group/Client-role row (Matter._ensure_client_
+            # relationship), and a party can hold a second role besides — but
+            # these lists show only the matter, so extra rows read as duplicate
+            # links with nothing to tell them apart.
+            relationships = {}
+            for relationship in Relationship.objects.filter(
+                contact=selected_contact
+            ).select_related("matter"):
+                relationships.setdefault(relationship.matter_id, relationship)
 
-            # For each matter this contact is related to, add a static relationship object
-            related_matters = Matter.objects.filter(client=selected_contact)
+            # Fallback for a client with no Client-role row: matters saved while
+            # the Client system group/role were missing skip the mirror, and the
+            # matter would otherwise not show here at all. Matter.client stays
+            # canonical, so a stand-in relationship represents it.
+            for matter in Matter.objects.filter(client=selected_contact).exclude(
+                id__in=list(relationships)
+            ):
+                relationships[matter.id] = Relationship(
+                    contact=selected_contact, matter=matter
+                )
 
-            for matter in related_matters:
-                relationship = Relationship(contact=selected_contact, matter=matter)
-                relationships.append(relationship)
+            relationships = list(relationships.values())
 
             # Group and sort relationships by status
             # Order: Open, Pending, Complete/Closed
