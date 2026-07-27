@@ -240,7 +240,8 @@
   margin-top: 1.25rem;
 }
 
-.fb-palette-heading {
+.fb-palette-heading,
+.fb-canvas-heading {
   color: var(--color-primary);
   margin: 0 0 0.75rem;
 }
