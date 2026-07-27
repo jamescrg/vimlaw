@@ -25,7 +25,7 @@ class FormTemplateForm(forms.ModelForm):
 
         labels = {
             "description": "Description (staff only)",
-            "intro_text": "Introduction shown to the client",
+            "intro_text": "Caption shown to the client",
             "is_active": "Available to send",
         }
 
