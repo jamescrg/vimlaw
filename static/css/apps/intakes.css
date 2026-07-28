@@ -402,7 +402,7 @@ Importance flag in the detail header (beside the intake name)
 ========================================================================== */
 
 /* Bare icon: the generic .toolbar button chrome doesn't belong on a flag.
-   The 4px drop is an optical alignment nudge against the name's baseline,
+   The 3px drop is an optical alignment nudge against the name's baseline,
    not a spacing value. */
 .intake-sidebar .intake-importance .button-link {
   background: none;
@@ -410,7 +410,7 @@ Importance flag in the detail header (beside the intake name)
   color: var(--color-muted-more);
   padding: 0;
   position: relative;
-  top: 4px;
+  top: 3px;
 }
 
 /* Pull the name 0.25rem closer than the toolbar-left 1.25rem gap allows */
