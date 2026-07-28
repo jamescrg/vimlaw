@@ -29,17 +29,20 @@ The firm's practice areas: {area_names}.
 
 Return ONLY a JSON object with this exact shape:
 {{
-  "assessment": "<the assessment, in markdown>",
+  "summary": "<what the matter is, in 1-3 sentences>",
+  "analysis": "<the analysis, in markdown>",
   "importance": <integer 1-7, or null>,
   "follow_up_questions": ["<question>", ...]
 }}
 
 Rules:
-- "assessment": what the matter is, whether it fits the firm, the apparent
-  strengths and weaknesses of the caller's position, and anything that
-  makes the engagement attractive or unattractive. Be frank and concise:
-  as long as necessary and no longer. No filler, no hedging boilerplate,
-  no restating the intake back at length.
+- "summary": what the matter is and what the prospective client wants,
+  1-3 plain sentences.
+- "analysis": whether the matter fits the firm, the apparent strengths and
+  weaknesses of the caller's position, and anything that makes the
+  engagement attractive or unattractive. Be frank and concise: as long as
+  necessary and no longer. No filler, no hedging boilerplate, no restating
+  the intake back at length.
 - "importance": how promising this intake looks for the firm, on the
   firm's 1-7 scale (7 Highest, 6 Higher, 5 High, 4 Normal, 3 Low, 2 Lower,
   1 Lowest). Judge the substance, not the amount of detail: move above 4
@@ -106,22 +109,30 @@ def run_assessment(intake):
             if cleaned.startswith("json"):
                 cleaned = cleaned[4:]
         data = json.loads(cleaned.strip())
-        text = (data.get("assessment") or "").strip()
-        if not text:
+        summary = (data.get("summary") or "").strip()
+        analysis = (data.get("analysis") or "").strip()
+        if not summary and not analysis:
             raise ValueError("AI returned no assessment")
     except Exception as exc:
         logger.exception("Intake assessment failed")
         return str(exc)
 
+    sections = []
+    if summary:
+        sections.append(f"## Summary\n\n{summary}")
+    if analysis:
+        sections.append(f"## Analysis\n\n{analysis}")
     questions = [
         q.strip()
         for q in (data.get("follow_up_questions") or [])
         if isinstance(q, str) and q.strip()
     ][:10]
     if questions:
-        text += "\n\n**Follow-up questions:**\n" + "\n".join(
-            f"{i}. {q}" for i, q in enumerate(questions, 1)
-        )
+        # The blank line after the header matters: without it markdown runs
+        # the header and items together into one paragraph
+        numbered = "\n".join(f"{i}. {q}" for i, q in enumerate(questions, 1))
+        sections.append(f"## Follow-up questions\n\n{numbered}")
+    text = "\n\n".join(sections)
 
     try:
         intake.importance = min(max(int(data.get("importance")), 1), 7)

@@ -7,7 +7,8 @@ from apps.intakes.models import Intake
 pytestmark = pytest.mark.django_db
 
 ASSESSMENT = {
-    "assessment": "Solid boundary dispute that fits the practice.",
+    "summary": "Boundary dispute over a neighbor's fence.",
+    "analysis": "Solid boundary dispute that fits the practice.",
     "importance": 6,
     "follow_up_questions": ["Is there a survey?", "How long has the fence stood?"],
 }
@@ -42,9 +43,12 @@ def test_assess_stores_assessment_and_importance(client, intake, mock_ai):
     intake.refresh_from_db()
     assert intake.importance == 6
     assert intake.assessed_at is not None
-    assert "Solid boundary dispute" in intake.assessment
-    assert "Follow-up questions" in intake.assessment
-    assert "1. Is there a survey?" in intake.assessment
+    assert "## Summary\n\nBoundary dispute" in intake.assessment
+    assert "## Analysis\n\nSolid boundary dispute" in intake.assessment
+    # The blank line after the header keeps markdown from mashing the
+    # numbered questions into one paragraph
+    assert "## Follow-up questions\n\n1. Is there a survey?" in intake.assessment
+    assert "\n2. How long has the fence stood?" in intake.assessment
     assert b"Kosmos" in response.content
 
 
