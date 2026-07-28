@@ -9,17 +9,19 @@
       </div>
     </div>
     <div class="modal-body">
-      <p class="modal-note">
-        Prepares the form for {{ intake.name }}. Nothing goes out yet — you'll
-        send it from the list when you're ready.
-      </p>
+      {% comment %}
+        One select, full width, no label or caption — the modal's own title
+        says everything a label would. The field is rendered by hand because
+        {{ form }} would bring the label back.
+      {% endcomment %}
       <form id="add-form"
             hx-post="{{ action }}"
             hx-target="#htmx-modal-container"
             role="form"
-            class="form-compact col2">
+            class="form-compact">
         {% csrf_token %}
-        {{ form }}
+        {{ form.template }}
+        {{ form.template.errors }}
       </form>
     </div>
     <div class="modal-footer">

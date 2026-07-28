@@ -45,17 +45,20 @@ class AddFormForm(forms.Form):
     """Step one of two: which form to prepare for this intake. Sending is a
     separate step, so nothing about delivery is asked here."""
 
+    # No empty option: the modal is one choice and one button, so the first
+    # form is preselected and a plain Add works. The select carries an
+    # aria-label because the modal shows no visible one.
     template = forms.ModelChoiceField(
         queryset=FormTemplate.objects.none(),
-        label="Form",
-        empty_label="Choose a form…",
+        empty_label=None,
+        widget=forms.Select(attrs={"aria-label": "Form"}),
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
-        # Only forms that are switched on and actually ask something. Sending
-        # an empty form wastes the one chance to ask.
+        # Only forms switched on in Settings ("Available to send") appear —
+        # worth remembering when a form seems to be missing from this list.
         self.fields["template"].queryset = FormTemplate.objects.filter(is_active=True)
 
     def clean_template(self):
