@@ -1,6 +1,10 @@
 import pytest
 from pytest_django.asserts import assertTemplateUsed
 
+from apps.case.ai.models import Conversation
+from apps.case.ai.selector import MODEL_CONTEXT_LIMITS, MODEL_HARD_LIMITS
+from apps.case.ai.tasks import CLAUDE_MODELS, GEMINI_MODELS
+from apps.case.ai.views import RETIRED_LLMS, VALID_LLMS
 from apps.settings.models import Firm
 
 pytestmark = pytest.mark.django_db
@@ -134,3 +138,29 @@ class TestAICreatePrompt:
         content = response.content.decode()
         assert "United States common law" in content
         assert "[JURISDICTION]" not in content
+
+
+class TestLLMChoiceWiring:
+    """Every model in the picker has to be wired through four tables: the
+    request validator, the provider dispatch, and both selector budgets.
+    Missing one is silent — the picker offers a model that then falls back
+    to Sonnet, or blows past its context window."""
+
+    def test_every_picker_choice_is_fully_wired(self):
+        for key, _label in Conversation.LLM_CHOICES:
+            assert key in VALID_LLMS, f"{key} would be rejected by the views"
+            assert key in MODEL_CONTEXT_LIMITS, f"{key} has no selector budget"
+            assert key in MODEL_HARD_LIMITS, f"{key} has no hard ceiling"
+            assert key in CLAUDE_MODELS or key in GEMINI_MODELS, (
+                f"{key} maps to no provider model ID"
+            )
+
+    def test_opus_4_6_dispatches_to_opus_4_6(self):
+        assert CLAUDE_MODELS["claude-opus-4-6"] == "claude-opus-4-6"
+        assert MODEL_HARD_LIMITS["claude-opus-4-6"] == 1_000_000
+
+    def test_retired_choices_still_dispatch(self):
+        """Conversations started on a retired model keep sending."""
+        for key in RETIRED_LLMS:
+            assert key in VALID_LLMS
+            assert key in CLAUDE_MODELS or key in GEMINI_MODELS
