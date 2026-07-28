@@ -1,0 +1,12 @@
+{% if assessment_error %}
+  <div class="alert alert-danger" role="alert">Assessment failed: {{ assessment_error }}</div>
+{% endif %}
+{% if intake.assessed_at %}
+  <p class="assessment-byline">Kosmos · Last updated {{ intake.assessed_at|date:"N j, Y, g:i a" }}</p>
+  <div class="assessment-body">{{ assessment_html|safe }}</div>
+{% else %}
+  <p class="assessment-empty">
+    No assessment yet. Assessing reads the intake details and every note, gives a frank take
+    on the matter, adjusts the importance rating, and lists follow-up questions worth asking.
+  </p>
+{% endif %}

@@ -118,47 +118,90 @@
         </div>
       </div>
     </div>
-    <div class="intake-main">
+    {% comment %}
+      Notes and Assessment share one panel, switched by the segmented control
+      in its header — so the header names the pane rather than repeating it as
+      a title, and the header action follows whichever pane is showing. The
+      choice is kept in localStorage, not component state: this region
+      re-renders on intakeDetailChanged, which would otherwise snap back to
+      Notes every time the intake was edited.
+    {% endcomment %}
+    <div class="intake-main"
+         x-data="{ pane: localStorage.getItem('intake_pane') === 'assessment' ? 'assessment' : 'notes' }">
       <div class="card intake-notes">
         <div class="toolbar">
           <div class="toolbar-left">
-            <h1>Notes</h1>
-            <div class="filter-tools">
-              <a href="#"
-                 type="button"
-                 class="btn-icon"
-                 hx-get="/intakes/{{ intake.id }}/add-note"
-                 hx-target="#htmx-modal-container"
-                 hx-trigger="click">
-                <i class="icon-plus"></i>
-              </a>
+            {# .mode-pills is the segmented control matters and case already use. #}
+            <div class="mode-pills">
+              <button type="button"
+                      class="mode-pill"
+                      :class="pane === 'notes' ? 'active' : ''"
+                      @click="pane = 'notes'; localStorage.setItem('intake_pane', 'notes')">Notes</button>
+              <button type="button"
+                      class="mode-pill"
+                      :class="pane === 'assessment' ? 'active' : ''"
+                      @click="pane = 'assessment'; localStorage.setItem('intake_pane', 'assessment')">
+                Assessment
+              </button>
             </div>
           </div>
-          <div class="toolbar-right"></div>
-        </div>
-        {% if notes %}
-          {% for note in notes %}
-            <div class="intake-note">
-              <div class="intake-note-title">
-                <div class="intake-note-title-left">
-                  <a href="#"
-                     type="button"
-                     class="btn-icon"
-                     hx-get="/intakes/{{ note.id }}/edit-note"
-                     hx-target="#htmx-modal-container"
-                     hx-trigger="click">
-                    <span class="intake-note-date-time">{{ note.date|date:'Y-m-d' }} {{ note.time|time:'g:i A' }}</span>
-                  </a>
-                  <span class="intake-note-username">{{ note.user.username|title }}</span>
-                  <span class="intake-note-type">{{ note.type }}</span>
-                </div>
-                <div class="intake-note-title-right"></div>
-              </div>
-              <div class="intake-note-details">{{ note.details|safe }}</div>
-            </div>
-          {% endfor %}
-        {% endif %}
+          <div class="toolbar-right">
+            <a href="#"
+               type="button"
+               class="btn-icon"
+               title="Add a note"
+               x-show="pane === 'notes'"
+               hx-get="/intakes/{{ intake.id }}/add-note"
+               hx-target="#htmx-modal-container"
+               hx-trigger="click">
+              <i class="icon-plus"></i>
+            </a>
+            <button type="button"
+                    id="assess-run"
+                    class="btn btn-success btn-busy"
+                    x-show="pane === 'assessment'"
+                    x-cloak
+                    hx-post="{% url 'intakes:assess' intake.id %}"
+                    hx-target="#intakeAssessment"
+                    hx-indicator="#assess-run"
+                    hx-disabled-elt="#assess-run">
+            <span class="btn-busy-idle"><i class="icon-refresh-cw"></i>
+            {% if intake.assessed_at %}
+              Update
+            {% else %}
+              Assess
+            {% endif %}
+          </span>
+          <span class="btn-busy-loading"><span class="btn-spinner"></span> Assessing…</span>
+        </button>
       </div>
     </div>
+    <div x-show="pane === 'notes'">
+      {% if notes %}
+        {% for note in notes %}
+          <div class="intake-note">
+            <div class="intake-note-title">
+              <div class="intake-note-title-left">
+                <a href="#"
+                   type="button"
+                   class="btn-icon"
+                   hx-get="/intakes/{{ note.id }}/edit-note"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click">
+                  <span class="intake-note-date-time">{{ note.date|date:'Y-m-d' }} {{ note.time|time:'g:i A' }}</span>
+                </a>
+                <span class="intake-note-username">{{ note.user.username|title }}</span>
+                <span class="intake-note-type">{{ note.type }}</span>
+              </div>
+              <div class="intake-note-title-right"></div>
+            </div>
+            <div class="intake-note-details">{{ note.details|safe }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <div id="intakeAssessment" x-show="pane === 'assessment'" x-cloak>{% include "intakes/assessment.html" %}</div>
   </div>
+</div>
+</div>
 {% endblock content %}

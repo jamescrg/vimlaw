@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
+from apps.intakes.assess import assessment_html
 from apps.intakes.filter_intakes import IntakeFilter
 from apps.intakes.forms import IntakeForm, NoteForm
 from apps.intakes.intakes import get_table_data
@@ -126,6 +127,7 @@ def detail_index(request, id):
         "notes": notes,
         "contact": contact,
         "practice_areas": practice_areas,
+        "assessment_html": assessment_html(intake),
     }
 
     return render(request, "intakes/detail-index.html", context)
@@ -156,6 +158,7 @@ def detail(request, id):
         "notes": notes,
         "contact": contact,
         "practice_areas": practice_areas,
+        "assessment_html": assessment_html(intake),
     }
     return render(request, "intakes/detail.html", context)
 

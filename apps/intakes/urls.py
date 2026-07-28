@@ -1,6 +1,8 @@
 from django.urls import path
 
 from apps.intakes.api_views import receive_inquiry, receive_intake, search_intakes
+from apps.intakes.assess import assess
+from apps.intakes.inbound import mailgun_inbound
 from apps.intakes.views import (
     add,
     add_note,
@@ -31,6 +33,7 @@ urlpatterns = [
     path("intakes/list/", intakes_list, name="list"),
     path("intakes/<int:id>/", detail_index, name="detail-index"),
     path("intakes/<int:id>/detail/", detail, name="detail"),
+    path("intakes/<int:id>/assess", assess, name="assess"),
     path("intakes/add", add, name="add"),
     path("intakes/<int:id>/edit", edit, name="edit"),
     path("intakes/<int:id>/delete", delete, name="delete"),
@@ -66,4 +69,5 @@ urlpatterns = [
     path("api/receive-inquiry/", receive_inquiry, name="api-receive-inquiry"),
     path("api/receive-intake/", receive_intake, name="api-receive-intake"),
     path("api/intakes/search/", search_intakes, name="api-search-intakes"),
+    path("api/inbound-email/", mailgun_inbound, name="api-inbound-email"),
 ]

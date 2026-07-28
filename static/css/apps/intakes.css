@@ -85,6 +85,9 @@ Detail View - Left Panel
 }
 
 .intake-section.details table th {
+  /* The global th shading (--background-th) reads as a stripe down the
+     label column here; the sidebar card is calmer without it. */
+  background: transparent;
   width: 6rem;
 }
 
@@ -392,4 +395,53 @@ Value Inline Edit
   .intake-list tbody tr.importance-3 { border-left-color: var(--slate-400); }
   .intake-list tbody tr.importance-2 { border-left-color: var(--slate-500); }
   .intake-list tbody tr.importance-1 { border-left-color: var(--slate-600); }
+}
+
+/* ==========================================================================
+Assessment pane (Notes | Assessment segmented control on the detail)
+========================================================================== */
+
+.intake-notes .assessment-byline,
+.intake-notes .assessment-empty {
+  color: var(--color-muted);
+}
+
+.intake-notes .assessment-byline {
+  margin: 0.75rem 0 1rem;
+}
+
+.intake-notes .assessment-body {
+  line-height: 1.5;
+}
+
+.intake-notes .assessment-body h2 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.intake-notes .assessment-body h2:first-child {
+  margin-top: 0;
+}
+
+.intake-notes .assessment-body ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+/* lists.css resets li to list-style none app-wide; markdown output here
+   should read as real lists again */
+.intake-notes .assessment-body ol li {
+  list-style-type: decimal;
+  margin-bottom: 0.25rem;
+}
+
+.intake-notes .assessment-body ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.intake-notes .assessment-body ul li {
+  list-style-type: disc;
+  margin-bottom: 0.25rem;
 }
