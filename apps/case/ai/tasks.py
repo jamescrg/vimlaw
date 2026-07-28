@@ -14,6 +14,24 @@ from .selector import MODEL_HARD_LIMITS, estimate_tokens
 
 logger = logging.getLogger(__name__)
 
+# Picker choice -> Anthropic model ID. Every entry has a 1M-token context
+# window with no beta header and no long-context surcharge; the selector
+# budget plus the hard-ceiling check in context assembly keep prompts inside
+# it. "claude" is the retired Sonnet 4.6 choice, kept so conversations
+# started on it still send.
+CLAUDE_MODELS = {
+    "claude": "claude-sonnet-4-6",
+    "claude-opus": "claude-opus-4-8",
+    "claude-opus-4-6": "claude-opus-4-6",
+}
+
+# Picker choice -> Gemini model ID. "gemini-pro" is the retired 2.5 Pro pin.
+GEMINI_MODELS = {
+    "gemini-flash": "gemini-2.5-flash",
+    "gemini-pro": "gemini-2.5-pro",
+    "gemini-pro-latest": "gemini-pro-latest",
+}
+
 
 def process_ai_request(
     conversation_id: int,
@@ -158,14 +176,9 @@ def process_ai_request(
             logger.info("AI request cancelled for conversation %s", conversation_id)
             return
 
-        if llm in ("gemini-flash", "gemini-pro", "gemini-pro-latest"):
+        if llm in GEMINI_MODELS:
             # Use streaming with thought summaries for Gemini
-            model_map = {
-                "gemini-flash": "gemini-2.5-flash",
-                "gemini-pro": "gemini-2.5-pro",
-                "gemini-pro-latest": "gemini-pro-latest",
-            }
-            model = model_map[llm]
+            model = GEMINI_MODELS[llm]
 
             update_status("thinking", "Thinking...")
 
@@ -189,12 +202,7 @@ def process_ai_request(
             # Claude - show elapsed time updates
             update_status("generating", "Generating response...")
 
-            # Map llm choice to model ID. Both models have a 1M-token
-            # context window; the selector budget plus the hard-ceiling check
-            # in context assembly together keep prompts within that window.
-            claude_model = (
-                "claude-opus-4-8" if llm == "claude-opus" else "claude-sonnet-4-6"
-            )
+            claude_model = CLAUDE_MODELS.get(llm, "claude-sonnet-4-6")
 
             response_text, input_tokens, output_tokens = send_to_claude(
                 context_text,

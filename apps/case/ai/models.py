@@ -15,6 +15,7 @@ class Conversation(AuditMixin, models.Model):
     # plumbing so existing conversations on those models keep working.
     LLM_CHOICES = [
         ("claude-opus", "Claude Opus 4.8"),
+        ("claude-opus-4-6", "Claude Opus 4.6"),
         ("gemini-flash", "Gemini 2.5 Flash"),
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
     ]
