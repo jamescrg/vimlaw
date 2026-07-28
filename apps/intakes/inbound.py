@@ -83,6 +83,9 @@ Return ONLY a JSON object with this exact shape:
 Rules:
 - "kind" is "voicemail" only when the message is a voicemail transcription
   (e.g. Zoom Phone); otherwise "email".
+- "phone": for voicemails, prefer the callback number the caller states in
+  the transcription; when none is stated, use the caller-ID number shown
+  in the voicemail notification itself.
 - Use null for anything not stated in the message; never invent values.
 - "practice_area" must be copied exactly from the list above, or null if no
   clear fit.
