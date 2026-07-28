@@ -317,7 +317,10 @@ def intake_edit_importance(request, pk, importance):
     intake = get_object_or_404(Intake, pk=pk)
     intake.importance = importance
     intake.save(update_fields=["importance"])
-    return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
+    # Both surfaces show importance: the list and the detail sidebar
+    return HttpResponse(
+        status=204, headers={"HX-Trigger": "intakesChanged, intakeDetailChanged"}
+    )
 
 
 @login_required
