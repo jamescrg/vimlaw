@@ -85,6 +85,9 @@ Detail View - Left Panel
 }
 
 .intake-section.details table th {
+  /* The global th shading (--background-th) reads as a stripe down the
+     label column here; the sidebar card is calmer without it. */
+  background: transparent;
   width: 6rem;
 }
 
