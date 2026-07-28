@@ -250,6 +250,42 @@ def test_voicemail_kind_maps_to_vm_note(user, mock_ai):
     assert Note.objects.get().type == "VM In"
 
 
+ZOOM_BODY = (
+    "---------- Forwarded message ---------\n"
+    "From: Zoom Phone <no-reply@zoom.us>\n\n"
+    "You have a new voicemail!\n"
+    "From: (404) 555-0100\nDuration: 0:45\n\n"
+    "Voicemail transcription:\n"
+    "Hi this is Jane Roe my neighbor put a fence on my land please call me\n\n"
+    "Play voicemail: https://zoom.us/vm/abc123\nUnsubscribe | Help"
+)
+
+
+def test_voicemail_note_uses_extracted_transcript(user, mock_ai):
+    transcript = "Hi this is Jane Roe my neighbor put a fence on my land please call me"
+    mock_ai({**EXTRACTION, "kind": "voicemail", "transcript": transcript})
+    post_inbound({"body-plain": ZOOM_BODY})
+    details = Note.objects.get().details
+    assert transcript in details
+    assert "You have a new voicemail" not in details
+    assert "Play voicemail" not in details
+
+
+def test_voicemail_without_transcript_falls_back_to_body(user, mock_ai):
+    mock_ai({**EXTRACTION, "kind": "voicemail", "transcript": None})
+    post_inbound({"body-plain": ZOOM_BODY})
+    assert "You have a new voicemail" in Note.objects.get().details
+
+
+def test_email_kind_ignores_transcript_field(user, mock_ai):
+    # A confused model must not replace a client's email text
+    mock_ai({**EXTRACTION, "kind": "email", "transcript": "bogus"})
+    post_inbound()
+    details = Note.objects.get().details
+    assert "bogus" not in details
+    assert "fence over my property line" in details
+
+
 def test_practice_area_matches_case_insensitively(user, mock_ai):
     mock_ai({**EXTRACTION, "practice_area": "gEnErAl"})
     post_inbound()

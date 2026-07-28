@@ -70,7 +70,8 @@ Return ONLY a JSON object with this exact shape:
   "value": <approximate dollar value of the disputed property or dispute as an integer, or null>,
   "practice_area": "<one of: {area_names}, or null>",
   "source": "<one of: Unknown, Internet, Agent, Attorney - Internal, Attorney - External, Other>",
-  "summary": "<1-2 sentence summary of what the person wants>"
+  "summary": "<1-2 sentence summary of what the person wants>",
+  "transcript": "<voicemail only: the transcription text, or null for emails>"
 }}
 
 Rules:
@@ -82,6 +83,11 @@ Rules:
 - "source": "Internet" if they found the firm online, "Attorney - External"
   if referred by an outside attorney, "Agent" if referred by a real estate
   agent or broker; otherwise "Unknown" unless the message clearly says.
+- "transcript": when the message is a voicemail transcription, copy the
+  caller's transcribed words EXACTLY as they appear, word for word - no
+  paraphrasing, no corrections, no added punctuation. Do not include the
+  provider's surrounding text (caller-ID lines, links, footers). Null when
+  the message is an email.
 - Return ONLY the JSON object, no other text, no markdown fences."""
 
 
@@ -273,8 +279,14 @@ def process_inbound_email(inbound_email_id):
 
     # The AI reads the full text (the forwarder's commentary above the
     # marker can inform the summary), but the note keeps only the client's
-    # message — verbatim, no AI rewriting.
+    # message. For emails that's the marker-stripped text, verbatim — no AI
+    # rewriting of client-authored words. For voicemails the AI lifts the
+    # transcript out of the provider's notification chrome; the text is
+    # machine-generated anyway and the untouched original stays on the
+    # InboundEmail row.
     note_text = _strip_forward_prelude(text).strip()
+    if data.get("kind") == "voicemail" and (data.get("transcript") or "").strip():
+        note_text = data["transcript"].strip()
     summary = (data.get("summary") or "").strip()
     details = (
         f"**AI summary:** {summary}\n\n---\n\n{note_text}" if summary else note_text
