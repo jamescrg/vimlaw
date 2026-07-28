@@ -62,7 +62,7 @@ EXTRACTION = {
     "phone": "(404) 555-0100",
     "email": "jane@example.com",
     "address": "12 Oak St, Atlanta, GA",
-    "disputed_property": "14 Oak St, Atlanta, GA",
+    "disputed_property_address": "14 Oak St, Atlanta, GA",
     "value": 250000,
     "practice_area": "General",
     "source": "Internet",

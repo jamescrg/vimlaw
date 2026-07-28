@@ -70,7 +70,7 @@ Return ONLY a JSON object with this exact shape:
   "phone": "<client's phone number, or null>",
   "email": "<client's email address, or null>",
   "address": "<client's mailing address, or null>",
-  "disputed_property": "<address or description of the disputed property if different from the client's address, or null>",
+  "disputed_property_address": "<street address of the disputed property when it differs from the client's own address - an address only, never a description - or null>",
   "value": <approximate dollar value of the disputed property or dispute as an integer, or null>,
   "practice_area": "<one of: {area_names}, or null>",
   "source": "<one of: Unknown, Internet, Agent, Attorney - Internal, Attorney - External, Other>",
@@ -407,7 +407,9 @@ def process_inbound_email(inbound_email_id):
             phone=(phone or "").strip()[:50] or None,
             email=(data.get("email") or "").strip()[:100] or None,
             address=(data.get("address") or "").strip()[:255] or None,
-            disputed_property=(data.get("disputed_property") or "").strip()[:255]
+            disputed_property=(data.get("disputed_property_address") or "").strip()[
+                :255
+            ]
             or None,
             value=value,
             practice_area=practice_area,
