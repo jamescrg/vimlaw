@@ -3,9 +3,23 @@
 {% block content %}
   {% load humanize %}
   <div id="content" class="container content">
-    <div id="intakeDetail"
-         hx-trigger="intakeDetailChanged from:body"
-         hx-get="{% url 'intakes:detail' intake.id %}"
-         hx-target="this">{% include "intakes/detail.html" %}</div>
+    <nav class="subnav">
+      <ul>
+        <li {% if not intake_subapp %}class="active"{% endif %}>
+          <a href="{% url 'intakes:detail-index' intake.id %}">Details</a>
+        </li>
+        <li {% if intake_subapp == 'assessment' %}class="active"{% endif %}>
+          <a href="{% url 'intakes:assessment' intake.id %}">Assessment</a>
+        </li>
+      </ul>
+    </nav>
+    {% if intake_subapp == 'assessment' %}
+      <div id="intakeAssessment">{% include "intakes/assessment.html" %}</div>
+    {% else %}
+      <div id="intakeDetail"
+           hx-trigger="intakeDetailChanged from:body"
+           hx-get="{% url 'intakes:detail' intake.id %}"
+           hx-target="this">{% include "intakes/detail.html" %}</div>
+    {% endif %}
   </div>
 {% endblock content %}

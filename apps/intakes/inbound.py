@@ -328,6 +328,9 @@ def process_inbound_email(inbound_email_id):
     )
     note_type = "VM In" if data.get("kind") == "voicemail" else "Email In"
 
+    # A rating away from Normal seeds the Assessment tab with the reasoning
+    seeds_assessment = importance is not None and importance != 4 and rationale
+
     now = timezone.localtime()
     kosmos = _kosmos_user()
     with transaction.atomic():
@@ -344,6 +347,8 @@ def process_inbound_email(inbound_email_id):
             value=value,
             practice_area=practice_area,
             importance=importance or 4,
+            assessment=rationale if seeds_assessment else "",
+            assessed_at=now if seeds_assessment else None,
         )
         Note.objects.create(
             intake=intake,
@@ -353,16 +358,6 @@ def process_inbound_email(inbound_email_id):
             type=note_type,
             details=details,
         )
-        # A rating away from Normal earns a second note explaining why
-        if importance is not None and importance != 4 and rationale:
-            Note.objects.create(
-                intake=intake,
-                user=kosmos,
-                date=now.date(),
-                time=now.time(),
-                type="Comment",
-                details=f"**AI assessment (importance {importance}):** {rationale}",
-            )
         inbound.intake = intake
         inbound.status = "failed" if error else "processed"
         inbound.error = error or ""

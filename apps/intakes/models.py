@@ -28,6 +28,10 @@ class Intake(AuditMixin, models.Model):
     )
     source = models.CharField(max_length=50, null=True)
     status = models.CharField(max_length=50, default="Open")
+    # The current AI read on this intake (Assessment tab). Overwritten on
+    # each run; only the latest matters, so no history table.
+    assessment = models.TextField(blank=True, default="")
+    assessed_at = models.DateTimeField(null=True, blank=True)
     history = HistoricalRecords()
 
     def __str__(self):

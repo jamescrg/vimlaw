@@ -393,3 +393,24 @@ Value Inline Edit
   .intake-list tbody tr.importance-2 { border-left-color: var(--slate-500); }
   .intake-list tbody tr.importance-1 { border-left-color: var(--slate-600); }
 }
+
+/* ==========================================================================
+Assessment tab (intake detail subnav)
+========================================================================== */
+
+.intake-assessment {
+  max-width: 50rem;
+}
+
+.intake-assessment .assessment-byline,
+.intake-assessment .assessment-empty {
+  color: var(--color-muted);
+}
+
+.intake-assessment .assessment-byline {
+  margin: 0 0 1rem;
+}
+
+.intake-assessment .assessment-body {
+  line-height: 1.5;
+}
