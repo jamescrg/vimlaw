@@ -179,8 +179,11 @@ def test_happy_path_creates_intake_and_note(user, mock_ai):
 
     note = Note.objects.get()
     assert note.intake_id == intake.id
-    assert note.user == user
+    # Kosmos authorship makes the new-note badge fire for the forwarder too
+    assert note.user.username == "kosmos"
+    assert not note.user.is_active
     assert note.type == "Email In"
+    assert intake.importance == 4
     assert "AI summary" in note.details
     assert "boundary dispute with her neighbor" in note.details
     assert "fence over my property line" in note.details
@@ -316,6 +319,64 @@ def test_malformed_ai_response_still_creates_intake(user, mock_ai):
     assert inbound.status == "failed"
     assert inbound.error
     assert inbound.intake_id == intake.id
+
+
+def test_high_importance_adds_assessment_note(user, mock_ai):
+    mock_ai(
+        {
+            **EXTRACTION,
+            "importance": 6,
+            "importance_rationale": "Large disputed value and a clear claim.",
+        }
+    )
+    post_inbound()
+    intake = Intake.objects.get()
+    assert intake.importance == 6
+    assessment = Note.objects.get(type="Comment")
+    assert assessment.intake_id == intake.id
+    assert assessment.user.username == "kosmos"
+    assert "importance 6" in assessment.details
+    assert "Large disputed value" in assessment.details
+
+
+def test_low_importance_adds_assessment_note(user, mock_ai):
+    mock_ai(
+        {
+            **EXTRACTION,
+            "importance": 2,
+            "importance_rationale": "Outside the firm's practice areas.",
+        }
+    )
+    post_inbound()
+    assert Intake.objects.get().importance == 2
+    assert "Outside the firm" in Note.objects.get(type="Comment").details
+
+
+def test_null_importance_keeps_default_without_note(user, mock_ai):
+    mock_ai({**EXTRACTION, "importance": None, "importance_rationale": None})
+    post_inbound()
+    assert Intake.objects.get().importance == 4
+    assert not Note.objects.filter(type="Comment").exists()
+
+
+def test_normal_importance_gets_no_assessment_note(user, mock_ai):
+    mock_ai({**EXTRACTION, "importance": 4, "importance_rationale": "Routine."})
+    post_inbound()
+    assert Intake.objects.get().importance == 4
+    assert not Note.objects.filter(type="Comment").exists()
+
+
+def test_invalid_importance_ignored(user, mock_ai):
+    mock_ai({**EXTRACTION, "importance": "very high", "importance_rationale": "x"})
+    post_inbound()
+    assert Intake.objects.get().importance == 4
+    assert not Note.objects.filter(type="Comment").exists()
+
+
+def test_out_of_range_importance_clamped(user, mock_ai):
+    mock_ai({**EXTRACTION, "importance": 11, "importance_rationale": "Big case."})
+    post_inbound()
+    assert Intake.objects.get().importance == 7
 
 
 def test_missing_name_falls_back_to_phone(user, mock_ai):

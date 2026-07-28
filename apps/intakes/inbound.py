@@ -71,7 +71,9 @@ Return ONLY a JSON object with this exact shape:
   "practice_area": "<one of: {area_names}, or null>",
   "source": "<one of: Unknown, Internet, Agent, Attorney - Internal, Attorney - External, Other>",
   "summary": "<1-2 sentence summary of what the person wants>",
-  "transcript": "<voicemail only: the transcription text, or null for emails>"
+  "transcript": "<voicemail only: the transcription text, or null for emails>",
+  "importance": <integer 1-7, or null>,
+  "importance_rationale": "<2-4 sentences explaining the rating, or null>"
 }}
 
 Rules:
@@ -88,6 +90,18 @@ Rules:
   paraphrasing, no corrections, no added punctuation. Do not include the
   provider's surrounding text (caller-ID lines, links, footers). Null when
   the message is an email.
+- "importance": how promising this intake looks for the firm, on the firm's
+  1-7 scale (7 Highest, 6 Higher, 5 High, 4 Normal, 3 Low, 2 Lower,
+  1 Lowest). Judge the substance, not the amount of detail: raise above 4
+  only on concrete positive signals (clearly fits the firm's practice
+  areas, meaningful amount in dispute, an apparently viable claim, genuine
+  urgency); lower below 4 only on concrete negative signals (outside the
+  practice areas, no real legal dispute, apparently unviable position,
+  signs of an undesirable engagement). When the message is too thin to
+  judge either way, use null and the intake keeps its normal rating.
+- "importance_rationale": required whenever "importance" is anything other
+  than null or 4 - explain in 2-4 sentences why this intake deserves a
+  higher or lower rating. Null otherwise.
 - Return ONLY the JSON object, no other text, no markdown fences."""
 
 
@@ -197,6 +211,23 @@ def mailgun_inbound(request):
     return HttpResponse(status=200)
 
 
+def _kosmos_user():
+    """The system identity that authors AI-created notes. A real (inactive,
+    login-less) user rather than None so the note renders an author and the
+    new-note badge fires for every human viewer - notes by the forwarding
+    user would read as already seen by the person most likely to review the
+    intake. is_active=False keeps it out of the sender allowlist, the AI
+    team roster, and the digest."""
+    user, created = CustomUser.objects.get_or_create(
+        username="kosmos",
+        defaults={"is_active": False, "is_attorney": False, "title": "AI Assistant"},
+    )
+    if created:
+        user.set_unusable_password()
+        user.save()
+    return user
+
+
 def _strip_forward_prelude(text):
     """Drop the forwarder's signature/preamble above the first recognized
     forwarded-message marker; the marker and the From/Date block below it
@@ -251,10 +282,6 @@ def process_inbound_email(inbound_email_id):
     text = (inbound.body_plain or inbound.stripped_text or "").strip()
     data, error = _extract_intake_fields(inbound.subject, text[:EXTRACTION_TEXT_LIMIT])
 
-    user = CustomUser.objects.filter(
-        email__iexact=inbound.sender, is_active=True
-    ).first()
-
     phone, _ = normalize_phone((data.get("phone") or "").strip())
     name = (data.get("name") or "").strip()
     if not name and phone:
@@ -277,6 +304,14 @@ def process_inbound_email(inbound_email_id):
     except (TypeError, ValueError):
         value = None
 
+    # 1-7 scale, 4 = Normal. The AI rates only on concrete signals; a thin
+    # message comes back null and keeps the model default.
+    try:
+        importance = min(max(int(data.get("importance")), 1), 7)
+    except (TypeError, ValueError):
+        importance = None
+    rationale = (data.get("importance_rationale") or "").strip()
+
     # The AI reads the full text (the forwarder's commentary above the
     # marker can inform the summary), but the note keeps only the client's
     # message. For emails that's the marker-stripped text, verbatim — no AI
@@ -294,6 +329,7 @@ def process_inbound_email(inbound_email_id):
     note_type = "VM In" if data.get("kind") == "voicemail" else "Email In"
 
     now = timezone.localtime()
+    kosmos = _kosmos_user()
     with transaction.atomic():
         intake = Intake.objects.create(
             name=name[:100],
@@ -307,15 +343,26 @@ def process_inbound_email(inbound_email_id):
             or None,
             value=value,
             practice_area=practice_area,
+            importance=importance or 4,
         )
         Note.objects.create(
             intake=intake,
-            user=user,
+            user=kosmos,
             date=now.date(),
             time=now.time(),
             type=note_type,
             details=details,
         )
+        # A rating away from Normal earns a second note explaining why
+        if importance is not None and importance != 4 and rationale:
+            Note.objects.create(
+                intake=intake,
+                user=kosmos,
+                date=now.date(),
+                time=now.time(),
+                type="Comment",
+                details=f"**AI assessment (importance {importance}):** {rationale}",
+            )
         inbound.intake = intake
         inbound.status = "failed" if error else "processed"
         inbound.error = error or ""
