@@ -105,6 +105,18 @@ body.minimal-layout {
   max-width: 9.5rem;
 }
 
+/* In dark mode a raster logo designed for light backgrounds disappears into
+   the dark surface. A small rounded pad behind it — co-extensive with the
+   image, whatever its aspect ratio — carries the logo without asking anyone
+   to upload a dark variant. */
+@media (prefers-color-scheme: dark) {
+  .cf-logo {
+    background: oklch(100% 0 0);
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+  }
+}
+
 .cf-firm {
   color: var(--cf-heading);
   font-size: 1.5rem;
