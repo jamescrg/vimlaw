@@ -25,9 +25,10 @@ def mock_ai(monkeypatch):
     return _set
 
 
-def test_assessment_tab_renders_empty_state(client, intake):
-    response = client.get(f"/intakes/{intake.id}/assessment/")
+def test_detail_shows_assessment_pane_empty_state(client, intake):
+    response = client.get(f"/intakes/{intake.id}/")
     assert response.status_code == 200
+    assert b"Assessment" in response.content  # the segmented-control pill
     assert b"No assessment yet" in response.content
 
 
@@ -35,6 +36,8 @@ def test_assess_stores_assessment_and_importance(client, intake, mock_ai):
     mock_ai(ASSESSMENT)
     response = client.post(f"/intakes/{intake.id}/assess")
     assert response.status_code == 200
+    # Success refreshes the whole detail so the importance flag catches up
+    assert response.headers.get("HX-Trigger") == "intakeDetailChanged"
 
     intake.refresh_from_db()
     assert intake.importance == 6
@@ -65,13 +68,14 @@ def test_failed_assess_keeps_previous_assessment(client, intake, mock_ai):
     mock_ai("I refuse to answer in JSON.")
     response = client.post(f"/intakes/{intake.id}/assess")
     assert b"Assessment failed" in response.content
+    assert "HX-Trigger" not in response.headers
     intake.refresh_from_db()
     assert intake.assessment == "Earlier read."
 
 
-def test_tab_shows_stored_assessment(client, intake, mock_ai):
+def test_detail_shows_stored_assessment(client, intake, mock_ai):
     mock_ai(ASSESSMENT)
     client.post(f"/intakes/{intake.id}/assess")
-    response = client.get(f"/intakes/{intake.id}/assessment/")
+    response = client.get(f"/intakes/{intake.id}/")
     assert b"Solid boundary dispute" in response.content
     assert b"Update" in response.content

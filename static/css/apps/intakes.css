@@ -395,22 +395,18 @@ Value Inline Edit
 }
 
 /* ==========================================================================
-Assessment tab (intake detail subnav)
+Assessment pane (Notes | Assessment segmented control on the detail)
 ========================================================================== */
 
-.intake-assessment {
-  max-width: 50rem;
-}
-
-.intake-assessment .assessment-byline,
-.intake-assessment .assessment-empty {
+.intake-notes .assessment-byline,
+.intake-notes .assessment-empty {
   color: var(--color-muted);
 }
 
-.intake-assessment .assessment-byline {
+.intake-notes .assessment-byline {
   margin: 0 0 1rem;
 }
 
-.intake-assessment .assessment-body {
+.intake-notes .assessment-body {
   line-height: 1.5;
 }

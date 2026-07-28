@@ -134,32 +134,29 @@ def run_assessment(intake):
     return None
 
 
-def _assessment_context(intake, error=None):
-    return {
-        "app": "intakes",
-        "intake": intake,
-        "intake_subapp": "assessment",
-        "assessment_html": (
-            markdown.markdown(intake.assessment) if intake.assessment else ""
-        ),
-        "assessment_error": error,
-    }
-
-
-@login_required
-def assessment_index(request, id):
-    """The Assessment tab: the latest stored assessment plus the trigger
-    to run a fresh one."""
-    intake = get_object_or_404(Intake, pk=id)
-    return render(request, "intakes/detail-index.html", _assessment_context(intake))
+def assessment_html(intake):
+    """The stored assessment rendered for the pane (notes render the same
+    way in the detail views)."""
+    return markdown.markdown(intake.assessment) if intake.assessment else ""
 
 
 @login_required
 @require_http_methods(["POST"])
 def assess(request, id):
-    """Run a fresh assessment and re-render the tab pane."""
+    """Run a fresh assessment and re-render the pane. On success the
+    response also triggers a full detail refresh so the sidebar's
+    importance flag catches up."""
     intake = get_object_or_404(Intake, pk=id)
     error = run_assessment(intake)
-    return render(
-        request, "intakes/assessment.html", _assessment_context(intake, error)
+    response = render(
+        request,
+        "intakes/assessment.html",
+        {
+            "intake": intake,
+            "assessment_html": assessment_html(intake),
+            "assessment_error": error,
+        },
     )
+    if not error:
+        response["HX-Trigger"] = "intakeDetailChanged"
+    return response
