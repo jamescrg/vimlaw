@@ -8,6 +8,14 @@ Open intake whose first note holds the original message text. If extraction
 fails, the intake is still created from the raw message and the stored
 `InboundEmail` row records the error (visible in the Django admin).
 
+Follow-ups work the same way: forward them to the same address. When the
+extracted sender email (or, failing that, a 10-digit phone match) matches
+an existing intake, the message is logged as a note on that intake instead
+of opening a duplicate; the most recent matching intake wins. A follow-up
+landing on an Unresponsive intake flips it back to Open (the caller
+resurfacing is what that status was waiting on); every other status is
+left alone.
+
 Only mail sent FROM an active firm user's login email is accepted; anything
 else (spam sent straight to the intake address) is dropped without a trace.
 Forward from the same address that is on your Kosmos user account, or the

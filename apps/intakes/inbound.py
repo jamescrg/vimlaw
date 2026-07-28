@@ -5,8 +5,10 @@ transcription) to the intake address; Mailgun's route POSTs the parsed
 message here. After signature, allowlist, and duplicate checks the message
 is stored as an InboundEmail row and handed to a worker, which asks the AI
 to extract intake fields and creates an Intake plus a first Note holding
-the original message text. An intake is always created for an accepted
-message, even when extraction fails.
+the original message text. A follow-up whose extracted email or phone
+matches an existing intake is logged as a note on that intake instead of
+opening a duplicate. An intake is always created for an accepted message,
+even when extraction fails.
 """
 
 import hashlib
@@ -20,6 +22,8 @@ from email.utils import parseaddr
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
+from django.db.models import F, Value
+from django.db.models.functions import Replace
 from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -228,6 +232,35 @@ def _kosmos_user():
     return user
 
 
+def _match_existing_intake(email_addr, phone):
+    """A follow-up from a known prospective client lands on their existing
+    intake rather than opening a duplicate. Match on the extracted email
+    first, then on a 10-digit phone comparison (digits against digits, the
+    search_intakes idiom, since phones are stored however they were typed).
+    The most recent matching intake wins."""
+    if email_addr:
+        match = (
+            Intake.objects.filter(email__iexact=email_addr)
+            .order_by("-date", "-id")
+            .first()
+        )
+        if match:
+            return match
+
+    digits = re.sub(r"\D", "", phone or "")[-10:]
+    if len(digits) == 10:
+        phone_digits = F("phone")
+        for mark in ("-", " ", "(", ")", "."):
+            phone_digits = Replace(phone_digits, Value(mark), Value(""))
+        return (
+            Intake.objects.annotate(phone_digits=phone_digits)
+            .filter(phone_digits__contains=digits)
+            .order_by("-date", "-id")
+            .first()
+        )
+    return None
+
+
 def _strip_forward_prelude(text):
     """Drop the forwarder's signature/preamble above the first recognized
     forwarded-message marker; the marker and the From/Date block below it
@@ -283,7 +316,8 @@ def process_inbound_email(inbound_email_id):
     data, error = _extract_intake_fields(inbound.subject, text[:EXTRACTION_TEXT_LIMIT])
 
     phone, _ = normalize_phone((data.get("phone") or "").strip())
-    name = (data.get("name") or "").strip()
+    # Voicemail transcripts often arrive all-lowercase; title-case the name
+    name = (data.get("name") or "").strip().title()
     if not name and phone:
         name = f"Unknown caller {phone}"
     if not name:
@@ -328,11 +362,39 @@ def process_inbound_email(inbound_email_id):
     )
     note_type = "VM In" if data.get("kind") == "voicemail" else "Email In"
 
+    now = timezone.localtime()
+    kosmos = _kosmos_user()
+
+    # A follow-up from a known caller is logged on their existing intake
+    # instead of opening a duplicate. The intake's own fields, importance,
+    # and assessment are left alone - reassessing is a click away.
+    matched = _match_existing_intake((data.get("email") or "").strip(), phone)
+    if matched:
+        with transaction.atomic():
+            Note.objects.create(
+                intake=matched,
+                user=kosmos,
+                date=now.date(),
+                time=now.time(),
+                type=note_type,
+                details=details,
+            )
+            if matched.status == "Unresponsive":
+                # The client resurfacing is exactly what this status was
+                # waiting on; reopening also relights the new-note badge.
+                # (Pending stays put: it means the intake is being migrated
+                # to a client, not that we're waiting on the caller.)
+                matched.status = "Open"
+                matched.save()
+            inbound.intake = matched
+            inbound.status = "failed" if error else "processed"
+            inbound.error = error or ""
+            inbound.save()
+        return
+
     # A rating away from Normal seeds the Assessment tab with the reasoning
     seeds_assessment = importance is not None and importance != 4 and rationale
 
-    now = timezone.localtime()
-    kosmos = _kosmos_user()
     with transaction.atomic():
         intake = Intake.objects.create(
             name=name[:100],
