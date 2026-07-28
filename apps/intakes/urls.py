@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.intakes.api_views import receive_inquiry, receive_intake, search_intakes
+from apps.intakes.inbound import mailgun_inbound
 from apps.intakes.views import (
     add,
     add_note,
@@ -66,4 +67,5 @@ urlpatterns = [
     path("api/receive-inquiry/", receive_inquiry, name="api-receive-inquiry"),
     path("api/receive-intake/", receive_intake, name="api-receive-intake"),
     path("api/intakes/search/", search_intakes, name="api-search-intakes"),
+    path("api/inbound-email/", mailgun_inbound, name="api-inbound-email"),
 ]

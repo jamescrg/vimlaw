@@ -68,6 +68,38 @@ class Note(AuditMixin, models.Model):
         db_table = "app_intake_note"
 
 
+class InboundEmail(models.Model):
+    """A message received on the Mailgun intake route. Rows are kept even
+    when AI extraction fails so no forwarded message is ever lost and a
+    failed row can be reprocessed."""
+
+    id = models.BigAutoField(primary_key=True)
+    message_id = models.CharField(max_length=255, unique=True)
+    sender = models.CharField(max_length=255)
+    recipient = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=500, blank=True)
+    body_plain = models.TextField(blank=True)
+    stripped_text = models.TextField(blank=True)
+    received_at = models.DateTimeField(default=timezone.now)
+    # received -> processed (AI extraction succeeded) or failed (fallback
+    # intake created from the raw message; error records why)
+    status = models.CharField(max_length=20, default="received")
+    error = models.TextField(blank=True)
+    intake = models.ForeignKey(
+        Intake,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="inbound_emails",
+    )
+
+    def __str__(self):
+        return f"{self.sender} : {self.subject[:40]}"
+
+    class Meta:
+        db_table = "app_inbound_email"
+
+
 class UserIntakeView(models.Model):
     """Tracks when users last viewed intake details for badge notification system."""
 
