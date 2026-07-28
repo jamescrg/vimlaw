@@ -31,8 +31,10 @@ Return ONLY a JSON object with this exact shape:
 {{
   "summary": "<what the matter is, in 1-3 sentences>",
   "analysis": "<the analysis, in markdown>",
+  "limitations": "<statute-of-limitations concern, or null>",
   "importance": <integer 1-7, or null>,
-  "follow_up_questions": ["<question>", ...]
+  "follow_up_questions": ["<question>", ...],
+  "documents": ["<document worth collecting>", ...]
 }}
 
 Rules:
@@ -52,9 +54,19 @@ Rules:
   practice areas, no real legal dispute, apparently unviable position,
   signs of an undesirable engagement). Use null when there is too little
   information to justify moving off the current rating.
+- "limitations": be particularly alert to statute-of-limitations and other
+  deadline problems. When the facts suggest a limitations period may be
+  running short or already missed, describe the concern and its urgency
+  concisely here. Null when nothing stands out; do not force one.
 - "follow_up_questions": the questions the firm should ask next to size up
-  this matter, most useful first, at most 10. Empty list when nothing
-  meaningful is missing.
+  this matter, most useful first, at most 10. Factual questions only -
+  things the caller would know firsthand. Never ask for documents,
+  records, or paperwork here; those belong in "documents". Empty list
+  when nothing meaningful is missing.
+- "documents": the documents worth collecting from the prospective client
+  to evaluate the matter (deeds, surveys, contracts, correspondence,
+  photos, ...), most useful first, at most 10. Empty list when none come
+  to mind.
 - Return ONLY the JSON object, no other text, no markdown fences."""
 
 
@@ -117,21 +129,28 @@ def run_assessment(intake):
         logger.exception("Intake assessment failed")
         return str(exc)
 
+    def clean_list(key):
+        items = data.get(key) or []
+        return [i.strip() for i in items if isinstance(i, str) and i.strip()][:10]
+
     sections = []
     if summary:
         sections.append(f"## Summary\n\n{summary}")
     if analysis:
         sections.append(f"## Analysis\n\n{analysis}")
-    questions = [
-        q.strip()
-        for q in (data.get("follow_up_questions") or [])
-        if isinstance(q, str) and q.strip()
-    ][:10]
+    limitations = (data.get("limitations") or "").strip()
+    if limitations:
+        sections.append(f"## Statute of limitations\n\n{limitations}")
+    questions = clean_list("follow_up_questions")
     if questions:
         # The blank line after the header matters: without it markdown runs
         # the header and items together into one paragraph
         numbered = "\n".join(f"{i}. {q}" for i, q in enumerate(questions, 1))
         sections.append(f"## Follow-up questions\n\n{numbered}")
+    documents = clean_list("documents")
+    if documents:
+        bulleted = "\n".join(f"- {d}" for d in documents)
+        sections.append(f"## Recommended documents\n\n{bulleted}")
     text = "\n\n".join(sections)
 
     try:

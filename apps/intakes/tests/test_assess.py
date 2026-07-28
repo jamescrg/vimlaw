@@ -52,6 +52,28 @@ def test_assess_stores_assessment_and_importance(client, intake, mock_ai):
     assert b"Kosmos" in response.content
 
 
+def test_limitations_and_documents_sections(client, intake, mock_ai):
+    mock_ai(
+        {
+            **ASSESSMENT,
+            "limitations": "Adverse possession requires 20 years; only 10 have run.",
+            "documents": ["Deed", "Survey"],
+        }
+    )
+    client.post(f"/intakes/{intake.id}/assess")
+    intake.refresh_from_db()
+    assert "## Statute of limitations\n\nAdverse possession" in intake.assessment
+    assert "## Recommended documents\n\n- Deed\n- Survey" in intake.assessment
+
+
+def test_no_limitations_or_documents_sections_when_absent(client, intake, mock_ai):
+    mock_ai({**ASSESSMENT, "limitations": None, "documents": []})
+    client.post(f"/intakes/{intake.id}/assess")
+    intake.refresh_from_db()
+    assert "Statute of limitations" not in intake.assessment
+    assert "Recommended documents" not in intake.assessment
+
+
 def test_assess_null_importance_keeps_current(client, intake, mock_ai):
     Intake.objects.filter(id=intake.id).update(importance=6)
     mock_ai({**ASSESSMENT, "importance": None})

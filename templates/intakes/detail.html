@@ -144,18 +144,18 @@
                 Assessment
               </button>
             </div>
-            <div class="filter-tools" x-show="pane === 'notes'">
-              <a href="#"
-                 type="button"
-                 class="btn-icon"
-                 hx-get="/intakes/{{ intake.id }}/add-note"
-                 hx-target="#htmx-modal-container"
-                 hx-trigger="click">
-                <i class="icon-plus"></i>
-              </a>
-            </div>
           </div>
           <div class="toolbar-right">
+            <a href="#"
+               type="button"
+               class="btn-icon"
+               title="Add a note"
+               x-show="pane === 'notes'"
+               hx-get="/intakes/{{ intake.id }}/add-note"
+               hx-target="#htmx-modal-container"
+               hx-trigger="click">
+              <i class="icon-plus"></i>
+            </a>
             <button type="button"
                     id="assess-run"
                     class="btn btn-success btn-busy"
