@@ -382,6 +382,74 @@ def test_out_of_range_importance_clamped(user, mock_ai):
     assert Intake.objects.get().importance == 7
 
 
+def test_followup_by_email_logs_note_on_existing_intake(user, intake, mock_ai):
+    # intake fixture: email contact@example.com, phone 123.456.7890
+    mock_ai({**EXTRACTION, "email": "Contact@Example.com"})
+    post_inbound()
+    assert Intake.objects.count() == 1  # no duplicate
+    note = Note.objects.get()
+    assert note.intake_id == intake.id
+    assert note.type == "Email In"
+    assert note.user.username == "kosmos"
+    assert InboundEmail.objects.get().intake_id == intake.id
+
+
+def test_followup_by_phone_matches_despite_formatting(user, intake, mock_ai):
+    # Stored as 123.456.7890; extracted with different punctuation
+    mock_ai({**EXTRACTION, "email": None, "phone": "(123) 456-7890"})
+    post_inbound()
+    assert Intake.objects.count() == 1
+    assert Note.objects.get().intake_id == intake.id
+
+
+def test_followup_reopens_unresponsive_intake(user, intake, mock_ai):
+    Intake.objects.filter(id=intake.id).update(status="Unresponsive")
+    mock_ai({**EXTRACTION, "email": "contact@example.com"})
+    post_inbound()
+    intake.refresh_from_db()
+    assert intake.status == "Open"
+
+
+def test_followup_leaves_pending_intake_alone(user, intake, mock_ai):
+    # Pending means the intake is being migrated to a client
+    Intake.objects.filter(id=intake.id).update(status="Pending")
+    mock_ai({**EXTRACTION, "email": "contact@example.com"})
+    post_inbound()
+    intake.refresh_from_db()
+    assert intake.status == "Pending"
+
+
+def test_followup_matches_most_recent_intake(user, intake, mock_ai):
+    newer = Intake.objects.create(
+        name="Second Matter", email="contact@example.com", date="2025-01-01"
+    )
+    mock_ai({**EXTRACTION, "email": "contact@example.com"})
+    post_inbound()
+    assert Note.objects.get().intake_id == newer.id
+
+
+def test_followup_does_not_touch_fields_or_assessment(user, intake, mock_ai):
+    mock_ai(
+        {
+            **EXTRACTION,
+            "email": "contact@example.com",
+            "importance": 7,
+            "importance_rationale": "Huge case.",
+        }
+    )
+    post_inbound()
+    intake.refresh_from_db()
+    assert intake.importance == 4
+    assert intake.assessment == ""
+    assert intake.name == "Mohandas Gandhi"
+
+
+def test_name_is_title_cased(user, mock_ai):
+    mock_ai({**EXTRACTION, "name": "jane q. roe"})
+    post_inbound()
+    assert Intake.objects.get().name == "Jane Q. Roe"
+
+
 def test_missing_name_falls_back_to_phone(user, mock_ai):
     mock_ai({**EXTRACTION, "name": None})
     post_inbound()
