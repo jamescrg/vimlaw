@@ -401,12 +401,16 @@ Value Inline Edit
 Importance flag in the detail header (beside the intake name)
 ========================================================================== */
 
-/* Bare icon: the generic .toolbar button chrome doesn't belong on a flag */
+/* Bare icon: the generic .toolbar button chrome doesn't belong on a flag.
+   The 2px drop is an optical alignment nudge against the name's baseline,
+   not a spacing value. */
 .intake-sidebar .intake-importance .button-link {
   background: none;
   border: none;
   color: var(--color-muted-more);
   padding: 0;
+  position: relative;
+  top: 2px;
 }
 
 /* Level colours, same ramp the list uses (which scopes them to
