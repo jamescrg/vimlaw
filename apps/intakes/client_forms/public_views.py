@@ -110,7 +110,11 @@ def form_page(request, token):
                 "answers": submission.answers or {},
                 "saveUrl": f"/form/{token}/save/",
                 "submitUrl": f"/form/{token}/submit/",
-                "submitted": submission.status in ("SUBMITTED", "CLOSED"),
+                # Always false on a page load: the received-confirmation is
+                # for the moment of submitting, not a wall the link runs into
+                # ever after. Revisiting the link lands in the form, answers
+                # in place.
+                "submitted": False,
                 "editable": editable,
             }
         ),

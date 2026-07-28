@@ -41,11 +41,6 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
-            "--draft",
-            action="store_true",
-            help="Create the forms inactive, so they can be reviewed before use.",
-        )
-        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Report what would happen without writing anything.",
@@ -88,7 +83,6 @@ class Command(BaseCommand):
                             name=form["name"],
                             description=form["description"],
                             intro_text=form["intro_text"],
-                            is_active=not options["draft"],
                             schema=schema,
                         )
                     created.append(form["name"])

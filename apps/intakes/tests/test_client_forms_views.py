@@ -53,9 +53,7 @@ class TestTemplateCrud:
         template = FormTemplate.objects.get(name="Landlord Questionnaire")
         assert response["HX-Redirect"] == f"/intakes/forms/{template.id}/"
 
-    def test_duplicating_copies_the_questions_but_not_the_active_flag(
-        self, client, form_template
-    ):
+    def test_duplicating_copies_the_questions(self, client, form_template):
         response = client.post(
             reverse(
                 "intakes:form-template-duplicate",
@@ -65,7 +63,6 @@ class TestTemplateCrud:
         assert response.status_code == 204
         copy_of = FormTemplate.objects.get(name="Property Dispute Questionnaire (copy)")
         assert copy_of.schema == form_template.schema
-        assert copy_of.is_active is False
 
     def test_deleting_a_template_keeps_its_submissions(self, client, filled_submission):
         template_id = filled_submission.template_id

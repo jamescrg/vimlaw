@@ -78,11 +78,13 @@ class TestAddingAForm:
         assert "no questions yet" in response.content.decode()
         assert not FormSubmission.objects.filter(intake=intake).exists()
 
-    def test_an_inactive_form_is_not_offered(self, client, intake, form_template):
-        form_template.is_active = False
+    def test_every_form_is_offered(self, client, intake, form_template):
+        """is_active is retired: nothing filters the add-form list, so a form
+        can never silently go missing from it."""
+        form_template.is_active = False  # a stale flag left in the column
         form_template.save()
         body = client.get(add_url(intake)).content.decode()
-        assert form_template.name not in body
+        assert form_template.name in body
 
 
 class TestSendingAForm:

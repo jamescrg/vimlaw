@@ -9,24 +9,17 @@ class FormTemplateForm(forms.ModelForm):
 
     class Meta:
         model = FormTemplate
-        fields = ("name", "description", "intro_text", "is_active")
-
-        YESNO_CHOICES = (
-            (True, "Yes"),
-            (False, "No"),
-        )
+        fields = ("name", "description", "intro_text")
 
         widgets = {
             "name": forms.TextInput(attrs={"class": "span2"}),
             "description": forms.TextInput(attrs={"class": "span2"}),
             "intro_text": forms.Textarea(attrs={"class": "span2", "rows": 4}),
-            "is_active": forms.Select(choices=YESNO_CHOICES),
         }
 
         labels = {
             "description": "Description (staff only)",
             "intro_text": "Caption shown to the client",
-            "is_active": "Available to send",
         }
 
     def __init__(self, *args, **kwargs):
@@ -57,9 +50,9 @@ class AddFormForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
-        # Only forms switched on in Settings ("Available to send") appear —
-        # worth remembering when a form seems to be missing from this list.
-        self.fields["template"].queryset = FormTemplate.objects.filter(is_active=True)
+        # Every form is available — is_active is retired (the column stays,
+        # unread, until a cleanup migration).
+        self.fields["template"].queryset = FormTemplate.objects.all()
 
     def clean_template(self):
         template = self.cleaned_data["template"]

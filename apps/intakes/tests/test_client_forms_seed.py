@@ -87,10 +87,6 @@ class TestSeedCommand:
         assert blocks[name_key]["label"] == "Full Name"
         assert blocks[name_key]["display"] == "Mohandas Gandhi"
 
-    def test_draft_creates_them_inactive(self):
-        call_command("seed_intake_forms", only=["inquiry"], draft=True, verbosity=0)
-        assert FormTemplate.objects.get(name="Inquiry").is_active is False
-
     def test_dry_run_writes_nothing(self):
         call_command("seed_intake_forms", dry_run=True, verbosity=0)
         assert FormTemplate.objects.count() == 0

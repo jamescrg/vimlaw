@@ -238,7 +238,6 @@ def form_template_duplicate(request, template_id):
         name=f"{template.name} (copy)"[:120],
         description=template.description,
         intro_text=template.intro_text,
-        is_active=False,
         schema=copy.deepcopy(template.schema),
     )
     response = HttpResponse(status=204)

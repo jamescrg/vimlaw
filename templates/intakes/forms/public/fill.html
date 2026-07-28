@@ -7,10 +7,11 @@
   <link rel="stylesheet" href="{% static_v 'css/intake-form.css' %}" />
   <div class="cf-page" x-data="intakeForm({{ config }})">
     {% comment %}
-      Staff see the client's form itself, not a summary of it — a paralegal
-      reads it out over the phone, so the order and wording have to be what
-      the client would hear. This bar is the only thing that differs, and it
-      is there to stop anyone mistaking this tab for the client's own copy.
+      Staff see the client's form exactly — same card, same Submit, same
+      banners — because a paralegal reads it out over the phone and the two
+      must never disagree. This bar and the version line under it are the only
+      staff additions, and they exist to stop anyone mistaking this tab for
+      the client's own copy.
     {% endcomment %}
     {% comment %}
       One line above an otherwise exact client page, because the page is live:
@@ -105,13 +106,8 @@
           addressed to the wrong person.
         {% endcomment %}
         <p class="cf-banner" x-show="submitted && !editing" x-cloak>
-          {% if staff %}
-            Marked complete. The answers are filed on the intake as a note.
-            <button type="button" class="cf-link-btn" @click="editing = true">Keep editing</button>
-          {% else %}
-            Thank you. We've received your answers.
-            <button type="button" class="cf-link-btn" @click="editing = true">Make changes</button>
-          {% endif %}
+          Thank you. We've received your answers.
+          <button type="button" class="cf-link-btn" @click="editing = true">Make changes</button>
         </p>
         {% comment %}
           The caption slot. A form's own caption (Form Settings) speaks here;
@@ -159,24 +155,9 @@
                   x-cloak
                   x-text="'Saved ' + savedAt"></span>
             <button type="submit" class="cf-submit" :disabled="sending">
-              {% if staff %}
-                <span x-text="sending ? 'Saving…' : 'Mark complete'"></span>
-              {% else %}
-                <span x-text="sending ? 'Sending…' : 'Submit'"></span>
-              {% endif %}
+              <span x-text="sending ? 'Sending…' : 'Submit'"></span>
             </button>
           </div>
-          {% if staff %}
-            {% comment %}
-              Staff aren't held to the required marks (the caller answers what
-              they answer), so the note says what completing actually does
-              rather than warning about gaps.
-            {% endcomment %}
-            <p class="cf-reassure">
-              Answers save as you type. Marking it complete files them on the intake as a
-              note; you can reopen and change it afterwards.
-            </p>
-          {% endif %}
         </form>
       {% endif %}
       {% comment %}

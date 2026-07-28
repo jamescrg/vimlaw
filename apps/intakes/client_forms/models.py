@@ -26,14 +26,15 @@ class FormTemplate(AuditMixin, models.Model):
     # what the settings modal starts from, so editing begins at the default
     # rather than a blank box. One constant, three consumers: the fill page,
     # the preview, and FormTemplateForm.
-    DEFAULT_CAPTION = (
-        "Your answers save as you type. You can close this page and come back to it."
-    )
+    DEFAULT_CAPTION = "Your answers save as you type. You can close this page and come back to your work."
 
     name = models.CharField(max_length=120)
     description = models.CharField(max_length=255, blank=True, default="")
     # Shown above the questions on the public page. Plain text, never HTML.
     intro_text = models.TextField(blank=True, default="")
+    # Retired 2026-07-28: every form is available to send. The column stays
+    # until a cleanup migration so the nightly prod-snapshot reload of the dev
+    # DB can't strand code that expects it gone. Nothing reads it.
     is_active = models.BooleanField(default=True)
     # Bumped on every schema save. Purely informational — submissions carry
     # their own snapshot, so nothing renders from this. It drives the "sent
@@ -64,7 +65,7 @@ class FormTemplate(AuditMixin, models.Model):
 
     @property
     def is_sendable(self):
-        return self.is_active and self.question_count > 0
+        return self.question_count > 0
 
     class Meta:
         db_table = "app_intake_form_template"

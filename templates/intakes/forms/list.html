@@ -21,7 +21,6 @@
         <th class="form-template-name">Form</th>
         <th class="form-template-count">Questions</th>
         <th class="form-template-count">Sent</th>
-        <th class="form-template-status">Status</th>
         <th class="form-template-updated">Updated</th>
       </tr>
     </thead>
@@ -34,18 +33,11 @@
           </td>
           <td class="form-template-count">{{ template.question_count }}</td>
           <td class="form-template-count">{{ template.submission_count }}</td>
-          <td class="form-template-status">
-            {% if template.is_active %}
-              <span class="app-badge badge-green">Active</span>
-            {% else %}
-              <span class="app-badge badge-gray">Draft</span>
-            {% endif %}
-          </td>
           <td class="form-template-updated">{{ template.updated_at|date:"Y-m-d" }}</td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="5" class="empty-message">No forms yet. Build one to send to a prospective client.</td>
+          <td colspan="4" class="empty-message">No forms yet. Build one to send to a prospective client.</td>
         </tr>
       {% endfor %}
     </tbody>
