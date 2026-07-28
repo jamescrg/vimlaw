@@ -25,26 +25,34 @@ message will be silently ignored.
 
 2. **Route.** The Mailgun plan's route quota is 1 and the slot was already
    held by the billing-replies safety net (replies sent to the From address
-   `billing@mail.craiglegal.law` instead of the Reply-To). Both jobs share
-   one route (updated in place 2026-07-28, route id `6a4ba62d934b42fdb0585a6c`):
-   - Expression: `match_recipient("(billing|intake)@mail\.craiglegal\.law")`
+   `billing@mail.craiglegal.law` instead of the Reply-To). Everything shares
+   one route (route id `6a4ba62d934b42fdb0585a6c`):
+   - Expression:
+     `match_recipient("(billing|intake|intake-dev)@mail\.craiglegal\.law")`
    - Actions: `forward("billing@craiglegal.law")`,
-     `forward("https://kosmos.craiglegal.law/api/inbound-email/")`, `stop()`
-   - Consequences: the webhook receives billing replies too (dropped by the
-     recipient check in `apps/intakes/inbound.py`; only `intake@` mail
-     becomes an intake), and the billing inbox also receives a copy of each
-     forwarded intake (add a Gmail filter on `to:intake@mail.craiglegal.law`
-     to auto-archive the copies if the noise bothers you).
+     `forward("https://kosmos.craiglegal.law/api/inbound-email/")`,
+     `forward("https://kosmos.dev-server.io/api/inbound-email/")`, `stop()`
+   - Every matched message goes to BOTH webhooks; each instance only
+     processes mail for the address it owns (`INTAKE_INBOUND_RECIPIENT` in
+     `config/.env`: `intake` on prod, `intake-dev` on dev) and drops the
+     rest. Forward to `intake-dev@mail.craiglegal.law` to integration-test
+     against the dev server at any time; the nightly dev DB reload sweeps
+     the test intakes away.
+   - The billing inbox also receives a copy of everything the route matches,
+     including intake forwards (add a Gmail filter on
+     `to:(intake@mail.craiglegal.law OR intake-dev@mail.craiglegal.law)` to
+     auto-archive the copies if the noise bothers you).
    - If the route needs recreating, use the API; the dashboard's route form
      fails with unhelpful errors:
 
    ```
    curl -s --user 'api:<MAILGUN_API_KEY>' https://api.mailgun.net/v3/routes \
      -F priority=0 \
-     -F description='Billing replies to Workspace + intake forwards to Kosmos' \
-     -F expression='match_recipient("(billing|intake)@mail\.craiglegal\.law")' \
+     -F description='Billing replies to Workspace + intake forwards to Kosmos prod and dev' \
+     -F expression='match_recipient("(billing|intake|intake-dev)@mail\.craiglegal\.law")' \
      -F action='forward("billing@craiglegal.law")' \
      -F action='forward("https://kosmos.craiglegal.law/api/inbound-email/")' \
+     -F action='forward("https://kosmos.dev-server.io/api/inbound-email/")' \
      -F action='stop()'
    ```
 
@@ -62,7 +70,8 @@ message will be silently ignored.
 
 ## Smoke test
 
-Forward any email from a firm address to `intake@mail.craiglegal.law`. An
+Forward any email from a firm address to `intake@mail.craiglegal.law` (or
+`intake-dev@mail.craiglegal.law` to test against the dev server). An
 Open intake with a first note ("Email In" or "VM In") should appear in the
 intakes list within a minute. If nothing appears, check the `InboundEmail`
 rows in the admin: no row means the message was rejected at the webhook

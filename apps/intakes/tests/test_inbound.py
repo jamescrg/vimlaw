@@ -24,6 +24,12 @@ def _signing_key(settings):
 
 
 @pytest.fixture(autouse=True)
+def _recipient(settings):
+    """Pin the prod default; the dev box's .env says intake-dev."""
+    settings.INTAKE_INBOUND_RECIPIENT = "intake"
+
+
+@pytest.fixture(autouse=True)
 def _inline_tasks(monkeypatch):
     """Run the worker task synchronously instead of queueing it."""
     import django_q.tasks
@@ -125,6 +131,16 @@ def test_non_intake_recipient_dropped(user, mock_ai):
     assert response.status_code == 200
     assert InboundEmail.objects.count() == 0
     assert Intake.objects.count() == 0
+
+
+def test_recipient_local_part_is_configurable(user, mock_ai, settings):
+    # Dev claims intake-dev@ and must ignore prod's intake@ mail
+    settings.INTAKE_INBOUND_RECIPIENT = "intake-dev"
+    mock_ai(EXTRACTION)
+    assert post_inbound().status_code == 200  # default recipient is intake@
+    assert InboundEmail.objects.count() == 0
+    post_inbound({"recipient": "intake-dev@mail.example.com"})
+    assert Intake.objects.count() == 1
 
 
 def test_unknown_sender_dropped(user, mock_ai):

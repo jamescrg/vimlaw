@@ -130,9 +130,11 @@ def mailgun_inbound(request):
         return HttpResponse(status=403)
 
     # The Mailgun route is shared (route-quota 1): it also relays billing
-    # replies, so only mail addressed to the intake mailbox becomes an intake
+    # replies and posts to prod and dev alike, so only mail addressed to
+    # THIS instance's intake mailbox becomes an intake here
     recipient = request.POST.get("recipient", "")
-    if not recipient.lower().startswith("intake@"):
+    local_part = recipient.split("@")[0].strip().lower()
+    if local_part != settings.INTAKE_INBOUND_RECIPIENT:
         return HttpResponse(status=200)
 
     # The forwarding sender must be a firm user; the prospective client's
