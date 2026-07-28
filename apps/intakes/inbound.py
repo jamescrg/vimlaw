@@ -129,6 +129,12 @@ def mailgun_inbound(request):
     if not _verify_mailgun_signature(request.POST):
         return HttpResponse(status=403)
 
+    # The Mailgun route is shared (route-quota 1): it also relays billing
+    # replies, so only mail addressed to the intake mailbox becomes an intake
+    recipient = request.POST.get("recipient", "")
+    if not recipient.lower().startswith("intake@"):
+        return HttpResponse(status=200)
+
     # The forwarding sender must be a firm user; the prospective client's
     # details live inside the forwarded body, not the envelope. Anything
     # else is spam sent straight to the intake address: drop unstored.

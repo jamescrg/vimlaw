@@ -118,6 +118,15 @@ def test_blank_key_unenforced(user, mock_ai, settings):
     assert InboundEmail.objects.count() == 1
 
 
+def test_non_intake_recipient_dropped(user, mock_ai):
+    # The shared route also relays billing replies to the webhook
+    mock_ai(EXTRACTION)
+    response = post_inbound({"recipient": "billing@mail.example.com"})
+    assert response.status_code == 200
+    assert InboundEmail.objects.count() == 0
+    assert Intake.objects.count() == 0
+
+
 def test_unknown_sender_dropped(user, mock_ai):
     mock_ai(EXTRACTION)
     response = post_inbound({"from": "Spammer <spam@example.net>"})

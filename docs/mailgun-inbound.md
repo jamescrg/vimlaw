@@ -23,10 +23,30 @@ message will be silently ignored.
    mail.craiglegal.law.  MX 10 mxb.mailgun.org.
    ```
 
-2. **Route.** Mailgun dashboard > Receiving > Create Route:
-   - Expression type: Match Recipient, `intake@mail.craiglegal.law`
-   - Action: Forward, `https://kosmos.craiglegal.law/api/inbound-email/`
-   - Also check "Stop" so no later route fires.
+2. **Route.** The Mailgun plan's route quota is 1 and the slot was already
+   held by the billing-replies safety net (replies sent to the From address
+   `billing@mail.craiglegal.law` instead of the Reply-To). Both jobs share
+   one route (updated in place 2026-07-28, route id `6a4ba62d934b42fdb0585a6c`):
+   - Expression: `match_recipient("(billing|intake)@mail\.craiglegal\.law")`
+   - Actions: `forward("billing@craiglegal.law")`,
+     `forward("https://kosmos.craiglegal.law/api/inbound-email/")`, `stop()`
+   - Consequences: the webhook receives billing replies too (dropped by the
+     recipient check in `apps/intakes/inbound.py`; only `intake@` mail
+     becomes an intake), and the billing inbox also receives a copy of each
+     forwarded intake (add a Gmail filter on `to:intake@mail.craiglegal.law`
+     to auto-archive the copies if the noise bothers you).
+   - If the route needs recreating, use the API; the dashboard's route form
+     fails with unhelpful errors:
+
+   ```
+   curl -s --user 'api:<MAILGUN_API_KEY>' https://api.mailgun.net/v3/routes \
+     -F priority=0 \
+     -F description='Billing replies to Workspace + intake forwards to Kosmos' \
+     -F expression='match_recipient("(billing|intake)@mail\.craiglegal\.law")' \
+     -F action='forward("billing@craiglegal.law")' \
+     -F action='forward("https://kosmos.craiglegal.law/api/inbound-email/")' \
+     -F action='stop()'
+   ```
 
 3. **Signing key.** Mailgun dashboard > Settings > API Security > HTTP
    webhook signing key. Put it in `config/.env`:
