@@ -25,8 +25,8 @@ def _signing_key(settings):
 
 @pytest.fixture(autouse=True)
 def _recipient(settings):
-    """Pin the prod default; the dev box's .env says intake-dev."""
-    settings.INTAKE_INBOUND_RECIPIENT = "intake"
+    """Pin the prod default; the dev box's .env says intakes-dev."""
+    settings.INTAKE_INBOUND_RECIPIENT = "intakes"
 
 
 @pytest.fixture(autouse=True)
@@ -83,7 +83,7 @@ def post_inbound(overrides=None, **sig_kwargs):
     # Public ingress: no login, csrf exempt, form-encoded like Mailgun posts
     data = {
         "from": "Ollie <testuser@example.com>",
-        "recipient": "intake@mail.example.com",
+        "recipient": "intakes@mail.example.com",
         "subject": "FW: Boundary dispute",
         "body-plain": "Hi, my neighbor built a fence over my property line.",
         "Message-Id": "<unique-id@mail.example.com>",
@@ -134,12 +134,12 @@ def test_non_intake_recipient_dropped(user, mock_ai):
 
 
 def test_recipient_local_part_is_configurable(user, mock_ai, settings):
-    # Dev claims intake-dev@ and must ignore prod's intake@ mail
-    settings.INTAKE_INBOUND_RECIPIENT = "intake-dev"
+    # Dev claims intakes-dev@ and must ignore prod's intakes@ mail
+    settings.INTAKE_INBOUND_RECIPIENT = "intakes-dev"
     mock_ai(EXTRACTION)
-    assert post_inbound().status_code == 200  # default recipient is intake@
+    assert post_inbound().status_code == 200  # default recipient is intakes@
     assert InboundEmail.objects.count() == 0
-    post_inbound({"recipient": "intake-dev@mail.example.com"})
+    post_inbound({"recipient": "intakes-dev@mail.example.com"})
     assert Intake.objects.count() == 1
 
 
