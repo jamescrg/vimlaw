@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import logging
+import re
 import time
 from email.utils import parseaddr
 
@@ -40,6 +41,16 @@ SIGNATURE_MAX_AGE = 300
 EXTRACTION_TEXT_LIMIT = 50_000
 
 VALID_SOURCES = {value for value, _ in IntakeForm.Meta.SOURCES}
+
+# Lines that begin the forwarded portion in the major mail clients;
+# everything above the earliest one is the forwarder's own wrapper
+# (signature, "FW:" chrome), not the client's message.
+FORWARD_MARKERS = [
+    re.compile(r"^-{4,}\s*Forwarded message\s*-{4,}\s*$", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^Begin forwarded message:\s*$", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^-{3,}\s*Original Message\s*-{3,}\s*$", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^_{8,}\s*$", re.MULTILINE),
+]
 
 EXTRACTION_PROMPT = """You extract prospective-client intake details from an email forwarded to a
 law firm's intake mailbox. The message is one of: (a) an email inquiry from
@@ -180,6 +191,17 @@ def mailgun_inbound(request):
     return HttpResponse(status=200)
 
 
+def _strip_forward_prelude(text):
+    """Drop the forwarder's signature/preamble above the first recognized
+    forwarded-message marker; the marker and the From/Date block below it
+    stay, since they identify the client. A client whose marker isn't
+    recognized keeps the full text — noisy beats lost."""
+    positions = [
+        match.start() for marker in FORWARD_MARKERS if (match := marker.search(text))
+    ]
+    return text[min(positions) :] if positions else text
+
+
 def _extract_intake_fields(subject, text):
     """One AI call mapping the message onto intake fields. Returns
     (data, error); any failure returns ({}, reason) so the caller can
@@ -249,8 +271,14 @@ def process_inbound_email(inbound_email_id):
     except (TypeError, ValueError):
         value = None
 
+    # The AI reads the full text (the forwarder's commentary above the
+    # marker can inform the summary), but the note keeps only the client's
+    # message — verbatim, no AI rewriting.
+    note_text = _strip_forward_prelude(text).strip()
     summary = (data.get("summary") or "").strip()
-    details = f"**AI summary:** {summary}\n\n---\n\n{text}" if summary else text
+    details = (
+        f"**AI summary:** {summary}\n\n---\n\n{note_text}" if summary else note_text
+    )
     note_type = "VM In" if data.get("kind") == "voicemail" else "Email In"
 
     now = timezone.localtime()

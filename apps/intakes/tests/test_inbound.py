@@ -191,6 +191,59 @@ def test_happy_path_creates_intake_and_note(user, mock_ai):
     assert inbound.error == ""
 
 
+FORWARDED_BODY = (
+    "See below, promising case.\n\n"
+    "James Craig\nCraig Legal, LLC\n406-555-0199\n\n"
+    "---------- Forwarded message ---------\n"
+    "From: Jane Roe <jane@example.com>\n"
+    "Date: Mon, Jul 27, 2026\n"
+    "Subject: Fence dispute\n\n"
+    "My neighbor built a fence over my property line."
+)
+
+
+def test_note_strips_forwarder_signature(user, mock_ai):
+    mock_ai(EXTRACTION)
+    post_inbound({"body-plain": FORWARDED_BODY})
+    details = Note.objects.get().details
+    assert "Craig Legal, LLC" not in details
+    assert "promising case" not in details
+    assert "Forwarded message" in details
+    assert "From: Jane Roe" in details
+    assert "fence over my property line" in details
+
+
+def test_note_strips_outlook_original_message(user, mock_ai):
+    mock_ai(EXTRACTION)
+    body = (
+        "Sig line\n\n-----Original Message-----\n"
+        "From: Jane Roe\n\nFence dispute details."
+    )
+    post_inbound({"body-plain": body})
+    details = Note.objects.get().details
+    assert "Sig line" not in details
+    assert "Fence dispute details." in details
+
+
+def test_note_keeps_full_text_without_marker(user, mock_ai):
+    # An unrecognized client's forward loses nothing
+    mock_ai(EXTRACTION)
+    post_inbound()
+    assert "fence over my property line" in Note.objects.get().details
+
+
+def test_ai_still_receives_full_text(user, monkeypatch):
+    seen = {}
+
+    def fake_gemini(system, messages, *args, **kwargs):
+        seen["content"] = messages[0]["content"]
+        return json.dumps(EXTRACTION), 10, 5
+
+    monkeypatch.setattr("apps.case.ai.gemini_client.send_to_gemini", fake_gemini)
+    post_inbound({"body-plain": FORWARDED_BODY})
+    assert "promising case" in seen["content"]
+
+
 def test_voicemail_kind_maps_to_vm_note(user, mock_ai):
     mock_ai({**EXTRACTION, "kind": "voicemail"})
     post_inbound()
