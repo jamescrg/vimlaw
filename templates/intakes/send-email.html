@@ -1,0 +1,65 @@
+{{ template_map|json_script:"intake-email-templates" }}
+<div class="modal-dialog modal-lg">
+  <div class="modal-content"
+       x-data="{ templates: JSON.parse(document.getElementById('intake-email-templates').textContent), fill(id) { if (!id || !this.templates[id]) return; document.getElementById('intake-email-subject').value = this.templates[id].subject; document.getElementById('intake-email-body').value = this.templates[id].body; } }">
+    <div class="modal-header">
+      <h1 class="modal-title">Send Email</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+      {% if not intake.email %}
+        <div class="alert alert-danger" role="alert">This intake has no email address. Add one before sending.</div>
+      {% else %}
+        <form id="intake-send-email-form"
+              hx-post="{% url 'intakes:send-email-send' id=intake.id %}"
+              hx-target="#htmx-modal-container"
+              role="form"
+              class="form-compact">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="intake-email-to">To</label>
+            <input id="intake-email-to"
+                   type="text"
+                   value="{{ intake.email }}"
+                   readonly
+                   disabled>
+          </div>
+          <div class="form-group">
+            <label for="intake-email-template">Template</label>
+            <select id="intake-email-template" @change="fill($event.target.value)">
+              <option value="">Choose a template…</option>
+              {% for template in email_templates %}<option value="{{ template.id }}">{{ template.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="intake-email-subject">Subject</label>
+            <input id="intake-email-subject"
+                   name="subject"
+                   type="text"
+                   value="{{ subject|default:'' }}"
+                   required>
+          </div>
+          <div class="form-group">
+            <label for="intake-email-body">Body</label>
+            <textarea id="intake-email-body" name="body" rows="14" required>{{ body|default:'' }}</textarea>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      {% if intake.email %}
+        <button type="submit" form="intake-send-email-form" class="btn btn-success">
+          <i class="icon-mail"></i> Send
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</div>

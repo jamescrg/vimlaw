@@ -45,6 +45,9 @@
             <li {% if subapp == "intake-forms" %}class="active"{% endif %}>
               <a href="{% url 'intakes:forms-index' %}">Intake Forms</a>
             </li>
+            <li {% if subapp == "intake-emails" %}class="active"{% endif %}>
+              <a href="{% url 'settings:intake-emails-index' %}">Intake Emails</a>
+            </li>
           {% endif %}
           {% if user.role == 'ADMIN' or user.perm_financial %}
             <li {% if subapp == "checklists" %}class="active"{% endif %}>

@@ -3,6 +3,7 @@ from django.urls import path
 import apps.settings.appearance.views as appearance_urls
 import apps.settings.contacts.views as contact_urls
 import apps.settings.firm.views as firm_urls
+import apps.settings.intake_emails.views as intake_email_urls
 import apps.settings.integrations.views as integration_urls
 import apps.settings.matters.views as matter_urls
 import apps.settings.notifications.views as notification_urls
@@ -13,6 +14,31 @@ import apps.settings.users.views as user_urls
 app_name = "settings"
 
 urlpatterns = [
+    path(
+        "settings/intake-emails/",
+        intake_email_urls.intake_emails_index,
+        name="intake-emails-index",
+    ),
+    path(
+        "settings/intake-emails/list/",
+        intake_email_urls.email_template_list,
+        name="intake-email-list",
+    ),
+    path(
+        "settings/intake-emails/add/",
+        intake_email_urls.add_email_template,
+        name="add-intake-email",
+    ),
+    path(
+        "settings/intake-emails/edit/<int:template_id>/",
+        intake_email_urls.edit_email_template,
+        name="edit-intake-email",
+    ),
+    path(
+        "settings/intake-emails/delete/<int:template_id>/",
+        intake_email_urls.delete_email_template,
+        name="delete-intake-email",
+    ),
     # Session
     path("settings/", session_urls.index, name="settings"),
     path(

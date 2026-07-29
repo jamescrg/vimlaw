@@ -126,6 +126,25 @@ class InboundEmail(models.Model):
         db_table = "app_inbound_email"
 
 
+class IntakeEmailTemplate(AuditMixin, models.Model):
+    """A canned plain-text email for messaging an intake (rejection,
+    referral, request for information, ...). Deliberately no merge fields:
+    the send modal lets the sender hand-edit the salutation instead."""
+
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = "app_intake_email_template"
+        ordering = ["name"]
+
+
 class UserIntakeView(models.Model):
     """Tracks when users last viewed intake details for badge notification system."""
 

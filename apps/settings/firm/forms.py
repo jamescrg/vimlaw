@@ -31,6 +31,7 @@ class FirmForm(forms.ModelForm):
             "email",
             "billing_email",
             "invoice_bcc",
+            "intake_email",
             "jurisdiction",
         ]
         widgets = {
@@ -39,6 +40,7 @@ class FirmForm(forms.ModelForm):
         labels = {
             "billing_email": "Billing Email",
             "invoice_bcc": "Invoice BCC",
+            "intake_email": "Intake Email",
         }
         help_texts = {
             "jurisdiction": "Default jurisdiction for legal research.",
@@ -57,6 +59,7 @@ class FirmForm(forms.ModelForm):
             "email",
             "billing_email",
             "invoice_bcc",
+            "intake_email",
             "jurisdiction",
         ]
         # Keep browsers from offering to "save this address". Firefox/Chrome
