@@ -77,28 +77,6 @@
           <span class="app-badge badge-purple">{{ intake.name|truncatechars:30 }}</span>
           <h1 id="conversationTitle">Intake Chat</h1>
           <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
-          <div class="ai-header-actions">
-            {% comment %}
-              Plain form posts (full navigation), not htmx: End renders a
-              whole closing page, and the browser's own loading state covers
-              the summary call. The Kosmos comment is posted before the
-              conversation is deleted; Discard deletes without a note.
-            {% endcomment %}
-            <form method="post"
-                  action="{% url 'intakes:chat-end' intake.id %}"
-                  onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Summarizing…';">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-success">
-                <i class="icon-check"></i> End & summarize
-              </button>
-            </form>
-            <form method="post"
-                  action="{% url 'intakes:chat-discard' intake.id %}"
-                  onsubmit="return confirm('Discard this chat without posting a summary?');">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-secondary">Discard</button>
-            </form>
-          </div>
         </header>
         {% if end_error %}
           <div class="alert alert-danger" role="alert">
@@ -125,6 +103,34 @@
                         required
                         autofocus
                         onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
+            </form>
+            {% comment %}
+              Plain form posts (full navigation), not htmx: End renders a
+              whole closing page, and the browser's own loading state covers
+              the summary call. The Kosmos comment is posted before the
+              conversation is deleted; Discard deletes without a note.
+            {% endcomment %}
+            <form method="post"
+                  class="ai-end-form"
+                  action="{% url 'intakes:chat-end' intake.id %}"
+                  onsubmit="this.querySelector('button').disabled = true;">
+              {% csrf_token %}
+              <button type="submit"
+                      class="btn-icon ai-end-btn"
+                      title="End chat: post a summary of the conclusions to the intake notes">
+                <i class="icon-save"></i>
+              </button>
+            </form>
+            <form method="post"
+                  class="ai-end-form"
+                  action="{% url 'intakes:chat-discard' intake.id %}"
+                  onsubmit="return confirm('Discard this chat without posting a summary?');">
+              {% csrf_token %}
+              <button type="submit"
+                      class="btn-icon ai-end-btn"
+                      title="Discard chat: no summary, nothing posted">
+                <i class="icon-trash-2"></i>
+              </button>
             </form>
           </div>
         </div>

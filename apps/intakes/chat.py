@@ -33,7 +33,12 @@ case that has not been accepted yet. Help the attorney think it through:
 answer questions about the facts, evaluate theories, weigh whether the
 engagement is worth taking, and suggest what to ask or collect next. The
 intake's details, its notes chronology, and the current AI assessment
-follow below. Be frank and concise."""
+follow below.
+
+Keep replies brief and pointed: answer the question asked in a few
+sentences to a short paragraph, and stop. No sprawling analyses, no
+restating the intake, no unsolicited surveys of every angle - the
+attorney will ask when they want depth."""
 
 SUMMARY_PROMPT = """You summarize an AI chat about a prospective-client intake for the firm's
 notes log. Summarize the CONCLUSIONS reached in the course of the
