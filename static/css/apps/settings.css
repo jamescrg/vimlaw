@@ -256,7 +256,9 @@ Settings Contacts - Column Layout
 
 /* Users Table */
 .users-table {
-  min-width: 62rem;
+  /* At least the sum of the column widths below - anything less compresses
+     the columns and crowds the headers; the container scrolls instead. */
+  min-width: 79rem;
 }
 
 .users-table .username {
@@ -294,7 +296,8 @@ Settings Contacts - Column Layout
 
 /* Permissions */
 .users-table .permissions {
-  width: 13rem;
+  /* A text summary now (was a five-icon row) */
+  width: 9rem;
 }
 
 /* Muted aside next to the permissions summary when matter access is
