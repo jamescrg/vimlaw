@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('intakes', '0013_migrate_importance_to_normal'),
+        ('intakes', '0015_historicalintake_assessed_at_and_more'),
     ]
 
     operations = [
