@@ -7,16 +7,17 @@ from apps.matters.models import PracticeArea
 def get_table_data(request):
     table_data = {}
 
-    default_filter = {"status": "Open", "order_by": "-date"}
+    # filter_label rides in the session dict so the matching quick-filter
+    # chip lights up - the tasks and time-entry defaults seed theirs the
+    # same way
+    default_filter = {"status": "Open", "order_by": "-date", "filter_label": "Open"}
 
-    filter_data = request.session.get("intake_filter", {})
+    # First visit falls back to the default; filter_data (not just the
+    # queryset) must reflect it so the chip highlight below sees the label
+    filter_data = request.session.get("intake_filter") or default_filter
 
-    if filter_data:
-        filter = IntakeFilter(filter_data)
-        intakes = filter.qs
-    else:
-        filter = IntakeFilter(default_filter)
-        intakes = filter.qs
+    filter = IntakeFilter(filter_data)
+    intakes = filter.qs
 
     request.session["intake_filter"] = filter.data
     request.session.modified = True
