@@ -198,6 +198,15 @@ class FakeProcessor(PaymentProcessor):
             txn["status"] = txn["destiny"]
         return self._event(transaction_id)
 
+    def simulate_deposit(self, transaction_id) -> WebhookEvent:
+        """Deposit the funds into the bank (the processor's DEPOSITED state):
+        advance a still-pending charge to its destiny and flag it settled."""
+        txn = _TRANSACTIONS[transaction_id]
+        if txn["status"] in ACCEPTED_STATUSES:
+            txn["status"] = txn["destiny"]
+        txn["settled"] = True
+        return self._event(transaction_id)
+
     def simulate_event(self, transaction_id, status) -> WebhookEvent:
         """Force `transaction_id` to `status` and return the matching event."""
         _TRANSACTIONS[transaction_id]["status"] = status
