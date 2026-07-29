@@ -179,15 +179,20 @@ Vertical subnav variant (Settings)
 .detail:has(> .subnav-vertical) {
   align-items: stretch;
   display: flex;
-  /* Fill the viewport below the content padding (1.25rem top + 3rem
-     bottom) so the rail runs the full height of the screen. */
-  min-height: calc(100vh - 4.25rem);
+  /* Fill the viewport below the content's top padding; the container's
+     bottom padding is dropped (below) so the rail meets the screen edge. */
+  min-height: calc(100vh - 1.25rem);
+}
+
+.content:has(> .detail > .subnav-vertical) {
+  padding-bottom: 0;
 }
 
 .subnav-vertical {
   border-bottom: none;
   border-radius: 0 0 0 var(--radius-md);
   border-right: solid 1px var(--border-medium-dark);
+  border-top: none;
   /* Same width as the main nav, so the two rails read as one family */
   flex: 0 0 var(--sidebar-width);
 }
