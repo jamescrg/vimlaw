@@ -540,6 +540,16 @@
     margin-block: 0;
   }
 
+  /* The centering above is for horizontal tab bars; the settings vertical
+     rail keeps its list pinned to the top. */
+  [data-nav="horizontal"] .subnav.subnav-vertical {
+    align-items: flex-start;
+  }
+
+  [data-nav="horizontal"] .subnav.subnav-vertical ul {
+    margin-block: 1rem;
+  }
+
   [data-nav="horizontal"] .detail > .subnav:first-child {
     border-top: none;
   }

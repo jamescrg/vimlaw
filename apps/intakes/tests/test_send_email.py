@@ -48,6 +48,11 @@ def test_send_happy_path(client, user, intake, firm, template):
     assert "Craig Legal" in sent.from_email
     assert sent.subject == "Regarding your inquiry"
     assert sent.body.startswith("Dear Mr. Gandhi,")
+    # Multipart: HTML alternative carries the same text with line breaks
+    html, mimetype = sent.alternatives[0]
+    assert mimetype == "text/html"
+    assert "Dear Mr. Gandhi," in html
+    assert "<br" in html
 
     note = Note.objects.get()
     assert note.intake_id == intake.id

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet">
+    <style>
+      /* Authored as a normal stylesheet; premailer inlines this at send time
+         (utils.mail.render_inlined). Deliberately letter-plain - these are
+         personal messages from the attorney, not billing chrome. */
+      body {
+        background-color: #ffffff;
+        color: #374151;
+        font-family: "Noto Sans", Arial, "Helvetica Neue", sans-serif;
+        font-size: 16px;
+        line-height: 1.55;
+        margin: 0;
+        padding: 24px 16px 48px;
+      }
+
+      .letter {
+        /* Left-aligned like a letter; the max-width only caps the measure */
+        margin: 0;
+        max-width: 40em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="letter">{{ body|linebreaksbr }}</div>
+  </body>
+</html>

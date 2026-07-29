@@ -3,7 +3,7 @@
 {% block content %}
   <div id="content" class="container content">
     <div class="detail">
-      <nav class="subnav">
+      <nav class="subnav subnav-vertical">
         <ul>
           <li {% if subapp == "profile" %}class="active"{% endif %}>
             <a href="{% url 'settings:profile-index' %}">Profile</a>
