@@ -179,6 +179,9 @@ Vertical subnav variant (Settings)
 .detail:has(> .subnav-vertical) {
   align-items: stretch;
   display: flex;
+  /* Fill the viewport below the content padding (1.25rem top + 3rem
+     bottom) so the rail runs the full height of the screen. */
+  min-height: calc(100vh - 4.25rem);
 }
 
 .subnav-vertical {
