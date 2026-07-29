@@ -26,10 +26,11 @@ logger = logging.getLogger(__name__)
 # notes / reference conversations / etc.) which the selector does not trim.
 # Without that headroom, heavy matters can push the assembled prompt past
 # the model's window even though the selector itself stayed under budget.
-# Claude Sonnet/Opus 4.6 and Gemini 2.5 Flash/Pro all have ~1M-token windows.
+# Every Claude and Gemini model in the picker has a ~1M-token window.
 MODEL_CONTEXT_LIMITS = {
     "claude": 600_000,
     "claude-opus": 600_000,
+    "claude-opus-4-6": 600_000,
     "gemini-flash": 750_000,
     "gemini-pro": 750_000,
     "gemini-pro-latest": 750_000,
@@ -41,6 +42,7 @@ MODEL_CONTEXT_LIMITS = {
 MODEL_HARD_LIMITS = {
     "claude": 1_000_000,
     "claude-opus": 1_000_000,
+    "claude-opus-4-6": 1_000_000,
     "gemini-flash": 1_000_000,
     "gemini-pro": 1_000_000,
     "gemini-pro-latest": 1_000_000,

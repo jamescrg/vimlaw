@@ -87,6 +87,9 @@ Detail View - Left Panel
 }
 
 .intake-section.details table th {
+  /* The global th shading (--background-th) reads as a stripe down the
+     label column here; the sidebar card is calmer without it. */
+  background: transparent;
   width: 6rem;
 }
 
@@ -474,4 +477,107 @@ Value Inline Edit
   .intake-list tbody tr.importance-3 { border-left-color: var(--slate-400); }
   .intake-list tbody tr.importance-2 { border-left-color: var(--slate-500); }
   .intake-list tbody tr.importance-1 { border-left-color: var(--slate-600); }
+}
+
+/* ==========================================================================
+Importance flag in the detail header (beside the intake name)
+========================================================================== */
+
+/* Bare icon: the generic .toolbar button chrome doesn't belong on a flag.
+   The 3px drop is an optical alignment nudge against the name's baseline,
+   not a spacing value. */
+.intake-sidebar .intake-importance .button-link {
+  background: none;
+  border: none;
+  color: var(--color-muted-more);
+  padding: 0;
+  position: relative;
+  top: 3px;
+}
+
+/* Pull the name 0.25rem closer than the toolbar-left 1.25rem gap allows */
+.intake-sidebar .toolbar-left .intake-importance {
+  margin-right: -0.25rem;
+}
+
+/* Level colours, same ramp the list uses (which scopes them to
+   .intake-list; the button icon now carries its own importance class) */
+.intake-importance i.importance-7,
+.intake-importance i.importance-6 {
+  color: var(--red-600);
+}
+
+.intake-importance i.importance-5 {
+  color: var(--violet-600);
+}
+
+.intake-importance i.importance-3 {
+  color: var(--slate-400);
+}
+
+.intake-importance i.importance-2 {
+  color: var(--slate-500);
+}
+
+.intake-importance i.importance-1 {
+  color: var(--slate-600);
+}
+
+/* ==========================================================================
+Assessment pane (Notes | Assessment segmented control on the detail)
+========================================================================== */
+
+/* The pane's action buttons sit 1rem off the pills (toolbar-left's
+   1.25rem gap pulled back a step) and 1rem apart; flex centering keeps
+   the anchor-based Chat button level with the real buttons. */
+.intake-notes .intake-panel-actions {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  margin-left: -0.25rem;
+}
+
+.intake-notes .assessment-byline,
+.intake-notes .assessment-empty {
+  color: var(--color-muted);
+}
+
+.intake-notes .assessment-byline {
+  margin: 0.75rem 0 1rem;
+}
+
+.intake-notes .assessment-body {
+  line-height: 1.5;
+}
+
+.intake-notes .assessment-body h2 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.intake-notes .assessment-body h2:first-child {
+  margin-top: 0;
+}
+
+.intake-notes .assessment-body ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+/* lists.css resets li to list-style none app-wide; markdown output here
+   should read as real lists again */
+.intake-notes .assessment-body ol li {
+  list-style-type: decimal;
+  margin-bottom: 0.25rem;
+}
+
+.intake-notes .assessment-body ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.intake-notes .assessment-body ul li {
+  list-style-type: disc;
+  margin-bottom: 0.25rem;
 }

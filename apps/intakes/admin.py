@@ -1,7 +1,7 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import FormSubmission, FormTemplate, Intake
+from .models import FormSubmission, FormTemplate, InboundEmail, Intake
 
 
 class IntakeAdmin(SimpleHistoryAdmin):
@@ -34,6 +34,18 @@ class FormSubmissionAdmin(SimpleHistoryAdmin):
     readonly_fields = ("uuid", "schema_snapshot", "answers")
 
 
+class InboundEmailAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "received_at",
+        "sender",
+        "subject",
+        "status",
+        "intake",
+    )
+
+
 admin.site.register(Intake, IntakeAdmin)
 admin.site.register(FormTemplate, FormTemplateAdmin)
 admin.site.register(FormSubmission, FormSubmissionAdmin)
+admin.site.register(InboundEmail, InboundEmailAdmin)

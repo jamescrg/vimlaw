@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
+from apps.intakes.assess import assessment_html
 from apps.intakes.client_forms.models import submissions_for_intake
 from apps.intakes.filter_intakes import IntakeFilter
 from apps.intakes.forms import IntakeForm, NoteForm
@@ -143,6 +144,7 @@ def detail_index(request, id):
         "contact": contact,
         "practice_areas": practice_areas,
         "submissions": submissions_for_intake(intake),
+        "assessment_html": assessment_html(intake),
     }
 
     return render(request, "intakes/detail-index.html", context)
@@ -174,6 +176,7 @@ def detail(request, id):
         "contact": contact,
         "practice_areas": practice_areas,
         "submissions": submissions_for_intake(intake),
+        "assessment_html": assessment_html(intake),
     }
     return render(request, "intakes/detail.html", context)
 
@@ -332,7 +335,10 @@ def intake_edit_importance(request, pk, importance):
     intake = get_object_or_404(Intake, pk=pk)
     intake.importance = importance
     intake.save(update_fields=["importance"])
-    return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
+    # Both surfaces show importance: the list and the detail sidebar
+    return HttpResponse(
+        status=204, headers={"HX-Trigger": "intakesChanged, intakeDetailChanged"}
+    )
 
 
 @login_required

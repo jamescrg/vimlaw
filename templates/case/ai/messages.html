@@ -137,8 +137,16 @@
 {% empty %}
   <div class="ai-empty-state">
     <i class="icon-message-circle"></i>
-    <p>Start a conversation about this matter.</p>
-    <p class="text-muted">I have access to all documents, contacts, timeline, and case information.</p>
+    {% if intake %}
+      <p>Start a conversation about this intake.</p>
+      <p class="text-muted">I have access to the intake details, its notes, and the current assessment.</p>
+    {% elif agenda %}
+      <p>Your agenda is being prepared.</p>
+      <p class="text-muted">I can see open matters, tasks, events, recent work, and intakes.</p>
+    {% else %}
+      <p>Start a conversation about this matter.</p>
+      <p class="text-muted">I have access to all documents, contacts, timeline, and case information.</p>
+    {% endif %}
   </div>
 {% endfor %}
 {% if is_processing %}

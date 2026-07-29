@@ -15,12 +15,35 @@ class Conversation(AuditMixin, models.Model):
     # plumbing so existing conversations on those models keep working.
     LLM_CHOICES = [
         ("claude-opus", "Claude Opus 4.8"),
+        ("claude-opus-4-6", "Claude Opus 4.6"),
         ("gemini-flash", "Gemini 2.5 Flash"),
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
     ]
 
+    # A conversation belongs to exactly one of: a matter (case chat), an
+    # intake (intake chat), or an agenda user (the dash agenda chat).
+    # Intake and agenda conversations are ephemeral: at most one live per
+    # owner, deleted on end/discard.
     matter = models.ForeignKey(
-        Matter, on_delete=models.CASCADE, related_name="ai_conversations"
+        Matter,
+        on_delete=models.CASCADE,
+        related_name="ai_conversations",
+        null=True,
+        blank=True,
+    )
+    intake = models.ForeignKey(
+        "intakes.Intake",
+        on_delete=models.CASCADE,
+        related_name="ai_conversations",
+        null=True,
+        blank=True,
+    )
+    agenda_user = models.ForeignKey(
+        "accounts.CustomUser",
+        on_delete=models.CASCADE,
+        related_name="agenda_conversations",
+        null=True,
+        blank=True,
     )
     user = models.ForeignKey(
         CustomUser,
@@ -63,7 +86,15 @@ class Conversation(AuditMixin, models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.matter.name} - {self.title or 'Untitled'}"
+        if self.matter_id:
+            owner = self.matter.name
+        elif self.intake_id:
+            owner = self.intake.name
+        elif self.agenda_user_id:
+            owner = f"Agenda - {self.agenda_user.username}"
+        else:
+            owner = "Unattached"
+        return f"{owner} - {self.title or 'Untitled'}"
 
     def get_participants(self):
         """Return distinct users who have sent messages in this conversation."""

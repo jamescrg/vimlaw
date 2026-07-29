@@ -15,10 +15,13 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
-# Anthropic's prompt cache requires a minimum of 1024 tokens for Sonnet/Opus
-# (2048 for Haiku). We use a character heuristic (~4 chars/token) that
-# comfortably clears the Sonnet minimum and avoids wasting a cache-write on
-# small system prompts. Below this, we fall back to the plain string form.
+# Anthropic's prompt cache has a per-model minimum prefix: 1024 tokens on
+# Sonnet 4.6 and Opus 4.8, 4096 on Opus 4.6. We use a character heuristic
+# (~4 chars/token) that clears the 1024 minimum and avoids marking small
+# system prompts; below it we fall back to the plain string form. On Opus
+# 4.6 a marked prompt under ~16k chars simply doesn't cache — the marker is
+# ignored, not billed — so matter contexts that small show no cache lines in
+# the log. Every real matter context clears it comfortably.
 _ANTHROPIC_CACHE_MIN_CHARS = 5000
 
 
@@ -54,17 +57,17 @@ def send_to_claude(
     Uses streaming mode to allow cancellation mid-request. When cancelled,
     only tokens generated up to that point are billed.
 
-    Sonnet 4.6 and Opus 4.8 expose a 1M-token context window on this account
-    without any beta header. The selector's MODEL_CONTEXT_LIMITS is a soft
-    cap on auto-selected content; the assembler enforces a separate hard
-    ceiling so the total prompt stays under the model window even when
-    always-included content (highlights, facts, notes, reference convos)
-    inflates the fixed portion.
+    Sonnet 4.6, Opus 4.6 and Opus 4.8 all expose a 1M-token context window on
+    this account without any beta header and at standard input pricing. The
+    selector's MODEL_CONTEXT_LIMITS is a soft cap on auto-selected content;
+    the assembler enforces a separate hard ceiling so the total prompt stays
+    under the model window even when always-included content (highlights,
+    facts, notes, reference convos) inflates the fixed portion.
 
     Args:
         system_context: The system prompt with matter context
         messages: List of {"role": "user"|"assistant", "content": str}
-        model: Claude model to use (claude-sonnet-4-6 or claude-opus-4-8)
+        model: Claude model to use — see CLAUDE_MODELS in tasks.py
         is_cancelled: Optional callback that returns True if request should be cancelled
 
     Returns:

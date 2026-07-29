@@ -1,0 +1,40 @@
+{% load static %}
+{% load cache_buster %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" content="" />
+    <title>Agenda chat discarded</title>
+    <link rel="icon"
+          type="image/x-icon"
+          href="{% static_v 'images/ai-favicon.svg' %}" />
+    <meta name="viewport" content="width = device-width, initial-scale = 1" />
+    <link rel="stylesheet" href="{% static_v 'css/palette.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/colors.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/typeography.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/buttons.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/apps/case/ai.css' %}" />
+    <script>
+    (function () {
+      var setting = localStorage.getItem('theme') || 'auto';
+      var resolved = setting === 'auto'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : setting;
+      document.documentElement.setAttribute('data-theme', resolved);
+    })();
+    </script>
+  </head>
+  <body class="ai-chat-body">
+    <div class="ai-chat-ended">
+      <p>Agenda chat discarded. The next one starts fresh.</p>
+      <p>
+        <a class="btn btn-secondary" href="{% url 'dash:index' %}">Back to the dash</a>
+      </p>
+    </div>
+    <script>
+    // Tabs opened by the app can close themselves; a directly-opened tab
+    // can't, hence the message and link above.
+    window.close();
+    </script>
+  </body>
+</html>

@@ -3,7 +3,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from apps.contacts.models import Contact
-from apps.matters.models import Relationship
+from apps.matters.models import Relationship, Role
 
 pytestmark = pytest.mark.django_db
 
@@ -116,6 +116,44 @@ def test_add_intake(client, intake, contact, folder):
     contact.save()
     response = client.get(f"/contacts/{intake.id}/add_intake")
     assert response.status_code == 200
+
+
+# -----------------------------------------------------
+# matters tab - one row per matter
+# -----------------------------------------------------
+def test_matters_tab_lists_a_matter_once_per_contact(
+    client, contact, matter, group, role
+):
+    """A client carries a Client-role relationship to their own matter (the
+    mirror Matter.save() writes), and may hold a second role besides. The tab
+    shows matters, not roles, so each matter appears exactly once."""
+    matter.client = contact
+    matter.save()
+    Relationship.objects.create(matter=matter, contact=contact, group=group, role=role)
+    second_role = Role.objects.create(name="Guardian")
+    Relationship.objects.create(
+        matter=matter, contact=contact, group=group, role=second_role
+    )
+
+    response = client.get(reverse("contacts:detail-matters", args=[contact.id]))
+
+    assert response.status_code == 200
+    assert [r.matter for r in response.context["relationships"]] == [matter]
+    assert [r.matter for r in response.context["open_matters"]] == [matter]
+
+
+def test_matters_tab_shows_client_matter_without_a_relationship_row(
+    client, contact, matter
+):
+    """Matter.client is canonical: a matter whose client mirror never landed
+    still belongs on the tab."""
+    matter.client = contact
+    matter.save()
+    Relationship.objects.filter(matter=matter, contact=contact).delete()
+
+    response = client.get(reverse("contacts:detail-matters", args=[contact.id]))
+
+    assert [r.matter for r in response.context["relationships"]] == [matter]
 
 
 # -----------------------------------------------------
