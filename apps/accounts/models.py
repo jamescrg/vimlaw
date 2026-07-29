@@ -42,9 +42,23 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
 
+    PERM_FIELDS = (
+        "perm_all_matters",
+        "perm_financial",
+        "perm_intakes",
+        "perm_reports",
+        "perm_research",
+    )
+
     @property
     def is_admin(self):
         return self.role == "ADMIN"
+
+    @property
+    def perm_count(self):
+        """How many of the five permissions are granted (users table
+        summary)."""
+        return sum(1 for f in self.PERM_FIELDS if getattr(self, f))
 
     def has_matter_access(self, matter):
         if self.is_admin or self.perm_all_matters:
