@@ -10,7 +10,7 @@ inbox, and is recorded as an "Email Out" note tagged to the sending user.
 import logging
 
 from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
@@ -18,7 +18,7 @@ from django.views.decorators.http import require_http_methods
 
 from apps.intakes.models import Intake, IntakeEmailTemplate, Note
 from apps.settings.models import Firm
-from utils.mail import firm_from_email, intake_reply_to
+from utils.mail import firm_from_email, intake_reply_to, render_inlined
 from utils.toasts import toast_success
 
 logger = logging.getLogger(__name__)
@@ -58,13 +58,20 @@ def send_email(request, id):
         company = Firm.objects.first()
         reply_to = intake_reply_to(company)
         cc = (company.intake_email or "").strip() if company else ""
-        email = EmailMessage(
+        # Multipart: the plain text stays as the fallback body; the HTML
+        # alternative renders the same text cleanly (single-part text/plain
+        # displays oddly in most clients).
+        email = EmailMultiAlternatives(
             subject=subject,
             body=body,
             from_email=firm_from_email(company),
             to=[intake.email],
             cc=[cc] if cc else None,
             reply_to=[reply_to] if reply_to else None,
+        )
+        email.attach_alternative(
+            render_inlined("emails/intake_template_email.html", {"body": body}),
+            "text/html",
         )
         try:
             email.send()
