@@ -2032,3 +2032,28 @@
   text-decoration-thickness: 0.125em;
   text-underline-offset: 0.2em;
 }
+
+/* Intake chat window: End/Discard icon controls beside the input, and
+   the chat-ended page */
+.ai-input-row .ai-end-form {
+  flex: 0 0 auto;
+}
+
+.ai-end-btn {
+  background: var(--background-light);
+  border: 1px solid var(--border-medium-dark);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  font-size: 1rem;
+  padding: 0.5rem;
+}
+
+.ai-end-btn:hover {
+  background: var(--ai-raised);
+  color: var(--color-primary);
+}
+
+.ai-chat-ended {
+  margin: auto;
+  text-align: center;
+}

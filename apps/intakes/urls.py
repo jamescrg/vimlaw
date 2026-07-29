@@ -2,6 +2,13 @@ from django.urls import path
 
 from apps.intakes.api_views import receive_inquiry, receive_intake, search_intakes
 from apps.intakes.assess import assess
+from apps.intakes.chat import (
+    chat_discard,
+    chat_end,
+    chat_messages,
+    chat_send,
+    chat_window,
+)
 from apps.intakes.inbound import mailgun_inbound
 from apps.intakes.views import (
     add,
@@ -34,6 +41,11 @@ urlpatterns = [
     path("intakes/<int:id>/", detail_index, name="detail-index"),
     path("intakes/<int:id>/detail/", detail, name="detail"),
     path("intakes/<int:id>/assess", assess, name="assess"),
+    path("intakes/<int:id>/chat/", chat_window, name="chat"),
+    path("intakes/<int:id>/chat/send", chat_send, name="chat-send"),
+    path("intakes/<int:id>/chat/messages", chat_messages, name="chat-messages"),
+    path("intakes/<int:id>/chat/end", chat_end, name="chat-end"),
+    path("intakes/<int:id>/chat/discard", chat_discard, name="chat-discard"),
     path("intakes/add", add, name="add"),
     path("intakes/<int:id>/edit", edit, name="edit"),
     path("intakes/<int:id>/delete", delete, name="delete"),
