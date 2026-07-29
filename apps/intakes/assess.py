@@ -53,7 +53,12 @@ Rules:
   evidence of VALUE and MERITS:
   - Value: a high dollar amount in dispute, valuable property, or a
     high-net-worth client. Look for indicators in the property itself,
-    in the client's profile, and in the magnitude of the case.
+    in the client's profile, and in the magnitude of the case. The bar
+    is a matter potentially worth more than $50,000. A smaller matter
+    can still earn the value mark, but only when the client appears to
+    have the financial means to fully litigate, is motivated to do so,
+    and the merits are strong enough that attorney fees might be
+    recoverable - never on a sub-$50,000 amount alone.
   - Merits: a strong case is one the firm can typically WIN. The firm's
     philosophy: a winnable case is where it delivers real value to the
     client, can command a higher fee, and the engagement is profitable.

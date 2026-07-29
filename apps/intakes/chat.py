@@ -8,7 +8,9 @@ most one live conversation per intake - resumable until explicitly ended.
 the conversation; "Discard" just deletes it.
 """
 
+import json
 import logging
+import re
 import threading
 
 from django.contrib.auth.decorators import login_required
@@ -20,8 +22,11 @@ from django.views.decorators.http import require_http_methods
 
 from apps.case.ai.models import Conversation, Message
 from apps.intakes.assess import _intake_context
+from apps.intakes.forms import IntakeForm
 from apps.intakes.inbound import _kosmos_user
 from apps.intakes.models import Intake, Note
+from apps.matters.models import PracticeArea
+from config.helpers import normalize_phone
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +44,17 @@ Keep replies brief and pointed: answer the question asked in a few
 sentences to a short paragraph, and stop. No sprawling analyses, no
 restating the intake, no unsolicited surveys of every angle - the
 attorney will ask when they want depth."""
+
+UPDATE_PROTOCOL = """UPDATING THE INTAKE. Only when the user explicitly directs you to change
+the intake's fields, end your reply with exactly one fenced block in this
+form, including ONLY the fields the user asked to change:
+
+```update-intake
+{{"name": "<str>", "phone": "<str>", "email": "<str>", "address": "<str>", "disputed_property_address": "<str>", "value": <int>, "practice_area": "<one of: {areas}>", "source": "<one of: {sources}>", "status": "<one of: {statuses}>", "importance": <1-7>}}
+```
+
+Discussing or suggesting a change is NOT direction to make it - never
+emit the block unprompted."""
 
 SUMMARY_PROMPT = """You summarize an AI chat about a prospective-client intake for the firm's
 notes log. Summarize the CONCLUSIONS reached in the course of the
@@ -58,11 +74,20 @@ def _system_prompt(intake, user):
     jurisdiction = (company.jurisdiction if company else "") or (
         "United States common law"
     )
+    protocol = UPDATE_PROTOCOL.format(
+        areas=", ".join(
+            PracticeArea.objects.filter(is_active=True).values_list("name", flat=True)
+        ),
+        sources=", ".join(v for v, _ in IntakeForm.Meta.SOURCES),
+        statuses=", ".join(v for v, _ in IntakeForm.Meta.STATUSES),
+    )
     parts = [
         build_request_info(user),
         load_legal_prompt(jurisdiction),
         "\n---\n",
         CHAT_PREAMBLE,
+        "",
+        protocol,
         "",
         _intake_context(intake),
     ]
@@ -73,6 +98,95 @@ def _system_prompt(intake, user):
 
 def _live_conversation(intake):
     return Conversation.objects.filter(intake=intake).first()
+
+
+# ── User-directed field updates ──────────────────────────────────────────────
+
+UPDATE_BLOCK_RE = re.compile(r"```update-intake\s*\n(.*?)```", re.DOTALL)
+
+VALID_SOURCES = {v for v, _ in IntakeForm.Meta.SOURCES}
+VALID_STATUSES = {v for v, _ in IntakeForm.Meta.STATUSES}
+
+
+def _apply_update_entry(intake, data):
+    """Apply one validated update dict to the intake. Returns confirmation
+    lines; invalid values are reported rather than silently applied."""
+    lines = []
+
+    def set_field(field, value, display=None):
+        setattr(intake, field, value)
+        lines.append(f"- Updated {field.replace('_', ' ')}: {display or value}")
+
+    if "name" in data and str(data["name"]).strip():
+        set_field("name", str(data["name"]).strip()[:100])
+    if "phone" in data:
+        phone, _ = normalize_phone(str(data["phone"] or "").strip())
+        set_field("phone", (phone or "")[:50] or None)
+    if "email" in data:
+        set_field("email", str(data["email"] or "").strip()[:100] or None)
+    if "address" in data:
+        set_field("address", str(data["address"] or "").strip()[:255] or None)
+    if "disputed_property_address" in data:
+        set_field(
+            "disputed_property",
+            str(data["disputed_property_address"] or "").strip()[:255] or None,
+        )
+    if "value" in data:
+        try:
+            set_field("value", int(data["value"]))
+        except (TypeError, ValueError):
+            lines.append(f"- Value '{data['value']}' not understood - unchanged")
+    if "practice_area" in data:
+        area = PracticeArea.objects.filter(
+            is_active=True, name__iexact=str(data["practice_area"] or "").strip()
+        ).first()
+        if area:
+            set_field("practice_area", area, display=area.name)
+        else:
+            lines.append(
+                f"- Practice area '{data['practice_area']}' not recognized - unchanged"
+            )
+    if "source" in data:
+        if data["source"] in VALID_SOURCES:
+            set_field("source", data["source"])
+        else:
+            lines.append(f"- Source '{data['source']}' not recognized - unchanged")
+    if "status" in data:
+        if data["status"] in VALID_STATUSES:
+            set_field("status", data["status"])
+        else:
+            lines.append(f"- Status '{data['status']}' not recognized - unchanged")
+    if "importance" in data:
+        try:
+            set_field("importance", min(max(int(data["importance"]), 1), 7))
+        except (TypeError, ValueError):
+            lines.append(
+                f"- Importance '{data['importance']}' not understood - unchanged"
+            )
+
+    return lines
+
+
+def _apply_update_blocks(response_text, intake):
+    """Apply any user-directed update-intake blocks, replacing each with a
+    confirmation list. A malformed block is left as text and changes
+    nothing."""
+
+    def replace(match):
+        try:
+            data = json.loads(match.group(1).strip())
+            if not isinstance(data, dict):
+                raise ValueError("update-intake block is not an object")
+        except (ValueError, TypeError):
+            logger.warning("Unparseable update-intake block left in place")
+            return match.group(0)
+
+        lines = _apply_update_entry(intake, data)
+        if lines:
+            intake.save()
+        return "\n".join(lines) if lines else "(no fields updated)"
+
+    return UPDATE_BLOCK_RE.sub(replace, response_text)
 
 
 def _process_intake_chat(conversation_id, intake_id, user_id):
@@ -129,6 +243,9 @@ def _process_intake_chat(conversation_id, intake_id, user_id):
 
         if is_cancelled():
             return
+
+        # Apply any user-directed field updates and store the confirmed text
+        response_text = _apply_update_blocks(response_text, intake)
 
         cache.set(
             cache_key,
