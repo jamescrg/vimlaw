@@ -146,37 +146,39 @@
                 Assessment
               </button>
             </div>
-          </div>
-          <div class="toolbar-right">
-            <a href="#"
-               type="button"
-               class="btn-icon"
-               title="Add a note"
-               x-show="pane === 'notes'"
-               hx-get="/intakes/{{ intake.id }}/add-note"
-               hx-target="#htmx-modal-container"
-               hx-trigger="click">
-              <i class="icon-plus"></i>
-            </a>
-            <button type="button"
-                    id="assess-run"
-                    class="btn btn-success btn-busy"
-                    x-show="pane === 'assessment'"
-                    x-cloak
-                    hx-post="{% url 'intakes:assess' intake.id %}"
-                    hx-target="#intakeAssessment"
-                    hx-indicator="#assess-run"
-                    hx-disabled-elt="#assess-run">
-            <span class="btn-busy-idle"><i class="icon-refresh-cw"></i>
-            {% if intake.assessed_at %}
-              Update
-            {% else %}
-              Assess
-            {% endif %}
-          </span>
-          <span class="btn-busy-loading"><span class="btn-spinner"></span> Assessing…</span>
-        </button>
+            {# The pane's action rides beside the pills, 1rem off them #}
+            <div class="intake-panel-actions">
+              <a href="#"
+                 type="button"
+                 class="btn-icon"
+                 title="Add a note"
+                 x-show="pane === 'notes'"
+                 hx-get="/intakes/{{ intake.id }}/add-note"
+                 hx-target="#htmx-modal-container"
+                 hx-trigger="click">
+                <i class="icon-plus"></i>
+              </a>
+              <button type="button"
+                      id="assess-run"
+                      class="btn btn-success btn-busy"
+                      x-show="pane === 'assessment'"
+                      x-cloak
+                      hx-post="{% url 'intakes:assess' intake.id %}"
+                      hx-target="#intakeAssessment"
+                      hx-indicator="#assess-run"
+                      hx-disabled-elt="#assess-run">
+              <span class="btn-busy-idle"><i class="icon-refresh-cw"></i>
+              {% if intake.assessed_at %}
+                Update
+              {% else %}
+                Assess
+              {% endif %}
+            </span>
+            <span class="btn-busy-loading"><span class="btn-spinner"></span> Assessing…</span>
+          </button>
+        </div>
       </div>
+      <div class="toolbar-right"></div>
     </div>
     <div x-show="pane === 'notes'">
       {% if notes %}
