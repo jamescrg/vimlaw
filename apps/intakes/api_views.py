@@ -69,6 +69,44 @@ def receive_inquiry(request):
                 {"success": False, "error": "Missing required fields"}, status=400
             )
 
+        # A repeat inquirer threads onto their existing intake instead of
+        # opening a duplicate - the same matching the inbound-email
+        # follow-up flow uses (email first, then 10-digit phone).
+        from apps.intakes.inbound import _match_existing_intake
+
+        matched = _match_existing_intake(email, phone_number)
+        if matched:
+            details = summary
+            updates = []
+            if not matched.phone and phone_number:
+                matched.phone = phone_number
+                updates.append(f"New phone: {phone_number}")
+            if not matched.email and email:
+                matched.email = email
+                updates.append(f"New email: {email}")
+            if matched.status == "Unresponsive":
+                # The client resurfacing is what this status was waiting on
+                matched.status = "Open"
+            matched.save()
+            if updates:
+                details = "\n".join(updates) + "\n\n" + details
+
+            Note.objects.create(
+                date=datetime.now().date(),
+                time=datetime.now().time(),
+                intake=matched,
+                type="Email In",
+                details=details,
+            )
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Inquiry added to existing intake",
+                    "intake_id": matched.id,
+                }
+            )
+
         intake = Intake.objects.create(
             name=full_name,
             phone=phone_number,

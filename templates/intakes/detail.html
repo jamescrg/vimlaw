@@ -145,8 +145,16 @@
       state: this region re-renders on intakeDetailChanged, which would
       otherwise snap back to Notes every time the intake was edited.
     {% endcomment %}
+    {% comment %}
+      Pane visibility is CSS-driven off this container's pane-* class rather
+      than per-element x-show: htmx's settle phase restores attribute
+      snapshots on id-matched elements after a swap, wiping any style Alpine
+      just wrote (the forms pane appeared inside the notes list after every
+      note save). The container has no id, so settle never touches it.
+    {% endcomment %}
     <div class="intake-main"
-         x-data="{ pane: ['forms', 'assessment'].includes(localStorage.getItem('intake_pane')) ? localStorage.getItem('intake_pane') : 'notes' }">
+         x-data="{ pane: ['forms', 'assessment'].includes(localStorage.getItem('intake_pane')) ? localStorage.getItem('intake_pane') : 'notes' }"
+         :class="'pane-' + pane">
       {% comment %}
         The card carries both class anchors: .intake-panel scopes the
         form-builder rules, .intake-notes the assessment-pane rules.
@@ -175,10 +183,8 @@
             <div class="intake-panel-actions">
               <a href="#"
                  type="button"
-                 class="btn-icon"
+                 class="btn-icon pane-action pane-action-forms"
                  title="Add a form"
-                 x-show="pane === 'forms'"
-                 x-cloak
                  hx-get="{% url 'intakes:form-add' id=intake.id %}"
                  hx-target="#htmx-modal-container"
                  hx-trigger="click">
@@ -186,9 +192,8 @@
               </a>
               <a href="#"
                  type="button"
-                 class="btn-icon"
+                 class="btn-icon pane-action pane-action-notes"
                  title="Add a note"
-                 x-show="pane === 'notes'"
                  hx-get="/intakes/{{ intake.id }}/add-note"
                  hx-target="#htmx-modal-container"
                  hx-trigger="click">
@@ -196,9 +201,7 @@
               </a>
               <button type="button"
                       id="assess-run"
-                      class="btn btn-success btn-busy"
-                      x-show="pane === 'assessment'"
-                      x-cloak
+                      class="btn btn-success btn-busy pane-action pane-action-assessment"
                       hx-post="{% url 'intakes:assess' intake.id %}"
                       hx-target="#intakeAssessment"
                       hx-indicator="#assess-run"
@@ -214,21 +217,17 @@
           </button>
           <a href="{% url 'intakes:chat' intake.id %}"
              target="_blank"
-             class="btn btn-success"
-             x-show="pane === 'assessment'"
-             x-cloak><i class="icon-message-circle"></i> Chat</a>
+             class="btn btn-success pane-action pane-action-assessment"><i class="icon-message-circle"></i> Chat</a>
         </div>
       </div>
       <div class="toolbar-right"></div>
     </div>
     <div id="intakeForms"
          class="intake-forms"
-         x-show="pane === 'forms'"
-         x-cloak
          hx-trigger="intakeFormsChanged from:body"
          hx-get="{% url 'intakes:forms-panel' id=intake.id %}"
          hx-target="this">{% include "intakes/forms/panel.html" %}</div>
-    <div x-show="pane === 'notes'">
+    <div class="intake-notes-pane">
       {% if notes %}
         {% for note in notes %}
           <div class="intake-row">
@@ -263,7 +262,7 @@
         {% endfor %}
       {% endif %}
     </div>
-    <div id="intakeAssessment" x-show="pane === 'assessment'" x-cloak>{% include "intakes/assessment.html" %}</div>
+    <div id="intakeAssessment">{% include "intakes/assessment.html" %}</div>
   </div>
 </div>
 </div>

@@ -366,3 +366,70 @@ def test_search_blank_q_lists_open_roster():
 
 def test_search_rejects_post():
     assert Client().post("/api/intakes/search/").status_code == 405
+
+
+# --- Repeat inquiries thread onto existing intakes ---------------------------
+
+
+INQUIRY = {
+    "full_name": "Jane Roe",
+    "phone_number": "4045550100",
+    "email": "jane@example.com",
+    "summary": "My neighbor's fence is on my land.",
+}
+
+
+def test_repeat_inquiry_by_email_appends_note():
+    first = post_inquiry(INQUIRY)
+    intake_id = first.json()["intake_id"]
+
+    second = post_inquiry({**INQUIRY, "summary": "Following up on my fence issue."})
+    assert second.json()["intake_id"] == intake_id
+    assert Intake.objects.count() == 1
+    notes = Note.objects.filter(intake_id=intake_id).order_by("id")
+    assert notes.count() == 2
+    assert "Following up" in notes.last().details
+
+
+def test_repeat_inquiry_fills_missing_phone():
+    intake = Intake.objects.create(
+        name="Jane Roe", email="jane@example.com", status="Open", date="2026-01-01"
+    )
+    post_inquiry(INQUIRY)
+    intake.refresh_from_db()
+    assert intake.phone == "4045550100"
+    note = Note.objects.get()
+    assert "New phone: 4045550100" in note.details
+    assert "fence is on my land" in note.details
+
+
+def test_repeat_inquiry_matches_by_phone():
+    intake = Intake.objects.create(
+        name="Jane Roe", phone="404.555.0100", status="Open", date="2026-01-01"
+    )
+    post_inquiry({**INQUIRY, "email": "different@example.com"})
+    assert Intake.objects.count() == 1
+    intake.refresh_from_db()
+    assert intake.email == "different@example.com"
+
+
+def test_repeat_inquiry_reopens_unresponsive():
+    Intake.objects.create(
+        name="Jane Roe",
+        email="jane@example.com",
+        status="Unresponsive",
+        date="2026-01-01",
+    )
+    post_inquiry(INQUIRY)
+    assert Intake.objects.get().status == "Open"
+
+
+def test_repeat_inquiry_leaves_pending_alone():
+    Intake.objects.create(
+        name="Jane Roe",
+        email="jane@example.com",
+        status="Pending",
+        date="2026-01-01",
+    )
+    post_inquiry(INQUIRY)
+    assert Intake.objects.get().status == "Pending"

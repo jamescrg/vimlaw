@@ -90,7 +90,7 @@ Detail View - Left Panel
   /* The global th shading (--background-th) reads as a stripe down the
      label column here; the sidebar card is calmer without it. */
   background: transparent;
-  width: 6rem;
+  width: 7rem;
 }
 
 .intake-details td {
@@ -580,4 +580,45 @@ Assessment pane (Notes | Assessment segmented control on the detail)
 .intake-notes .assessment-body ul li {
   list-style-type: disc;
   margin-bottom: 0.25rem;
+}
+
+/* ==========================================================================
+Pane visibility (Forms | Notes | Assessment segmented control)
+========================================================================== */
+
+/* Driven by the container's Alpine-bound pane-* class, not per-element
+   x-show: htmx's settle phase restores attribute snapshots on id-matched
+   elements after a swap, wiping inline styles Alpine writes. Default
+   (pre-Alpine, or storage says notes) shows the Notes pane. */
+#intakeForms,
+#intakeAssessment {
+  display: none;
+}
+
+.intake-main.pane-forms #intakeForms,
+.intake-main.pane-assessment #intakeAssessment {
+  display: block;
+}
+
+.intake-main.pane-forms .intake-notes-pane,
+.intake-main.pane-assessment .intake-notes-pane {
+  display: none;
+}
+
+/* The hide must outrank toolbar.css's .toolbar a/button display rule. */
+.intake-panel .intake-panel-actions .pane-action {
+  display: none;
+}
+
+.intake-main.pane-notes .intake-panel-actions .pane-action-notes,
+.intake-main.pane-forms .intake-panel-actions .pane-action-forms,
+.intake-main.pane-assessment .intake-panel-actions .pane-action-assessment {
+  display: inline-flex;
+}
+
+/* The three-dot intake menu is a bare icon, without the toolbar button
+   chrome (same treatment as the importance flag). */
+.intake-sidebar .toolbar .menu-icon {
+  background: none;
+  border: none;
 }
