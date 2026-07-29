@@ -1,0 +1,247 @@
+{% load static %}
+{% load cache_buster %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" content="" />
+    <title>Suggested Agenda</title>
+    <link rel="icon"
+          type="image/x-icon"
+          href="{% static_v 'images/ai-favicon.svg' %}" />
+    <meta name="viewport" content="width = device-width, initial-scale = 1" />
+    <link rel="stylesheet"
+          href="https://unpkg.com/lucide-static@0.462.0/font/lucide.css" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-reboot.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="{% static_v 'css/palette.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/colors.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/typeography.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/badges.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/buttons.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/icons.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/forms.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/modals.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/apps/case/ai.css' %}" />
+    <script>
+    /* Match the app's theme (set on <html> before paint to avoid a flash).
+       Mirrors the IIFE in base.html; this standalone page has its own <head>. */
+    (function () {
+      var setting = localStorage.getItem('theme') || 'auto';
+      var resolved = setting === 'auto'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : setting;
+      document.documentElement.setAttribute('data-theme', resolved);
+    })();
+    </script>
+  </head>
+  <body class="ai-chat-body" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div class="ai-chat-layout">
+      <aside class="ai-chat-sidebar" id="historySidebar">
+        <div class="ai-sidebar-header">
+          <h2>History</h2>
+          <button type="button"
+                  class="btn-icon ai-sidebar-toggle"
+                  onclick="toggleSidebar()"
+                  title="Collapse sidebar">
+            <i class="icon-chevron-left"></i>
+          </button>
+        </div>
+        <div class="ai-sidebar-list" id="promptList">
+          {% for message in messages %}
+            {% if message.role == "user" %}
+              <a href="#message-{{ message.id }}"
+                 class="ai-sidebar-item"
+                 data-tooltip="{{ message.content|truncatechars:300 }}"
+                 onclick="scrollToMessage('message-{{ message.id }}'); return false;">
+                <span class="ai-sidebar-item-initials">
+                  {% if message.user %}
+                    {{ message.user.first_name|slice:":1" }}{{ message.user.last_name|slice:":1" }}
+                  {% else %}
+                    ?
+                  {% endif %}
+                </span>
+                <span class="ai-sidebar-item-text">{{ message.content|truncatechars:60 }}</span>
+              </a>
+            {% endif %}
+          {% empty %}
+            <div class="ai-sidebar-empty">No prompts yet</div>
+          {% endfor %}
+        </div>
+      </aside>
+      <main class="ai-chat-main">
+        <header class="ai-chat-header">
+          <span class="app-badge badge-purple">{{ request.user.full_name }}</span>
+          <h1 id="conversationTitle">Suggested Agenda</h1>
+          <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
+        </header>
+        <div class="ai-chat-scroll">
+          <div id="messageContainer"
+               class="ai-messages"
+               hx-get="{% url 'dash:agenda-messages' %}"
+               hx-trigger="messagesUpdated from:body"
+               hx-swap="innerHTML">{% include "case/ai/messages.html" %}</div>
+        </div>
+        <div class="ai-input-container">
+          <div class="ai-input-row">
+            <form id="chatForm"
+                  hx-post="{% url 'dash:agenda-send' %}"
+                  hx-target="#messageContainer"
+                  hx-swap="innerHTML">
+              <textarea name="message"
+                        id="aiMessageInput"
+                        placeholder="Ask about your agenda..."
+                        rows="2"
+                        required
+                        autofocus
+                        onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
+            </form>
+            <form method="post"
+                  class="ai-end-form"
+                  action="{% url 'dash:agenda-discard' %}"
+                  onsubmit="return confirm('Discard this agenda chat and start fresh next time?');">
+              {% csrf_token %}
+              <button type="submit"
+                      class="btn-icon ai-end-btn"
+                      title="Discard chat: next open starts a fresh agenda">
+                <i class="icon-trash-2"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script>
+    function scrollToMessage(messageId) {
+      const element = document.getElementById(messageId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        element.classList.add('ai-message-highlight');
+        setTimeout(() => element.classList.remove('ai-message-highlight'), 2000);
+      }
+    }
+
+    function scrollMessagesToBottom() {
+      setTimeout(() => {
+        const container = document.querySelector('.ai-chat-scroll');
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 50);
+    }
+
+    // Auto-scroll should only "stick" to the bottom when the user is already
+    // there (same behavior as the case chat window).
+    let aiStickToBottom = true;
+    (function watchChatScroll() {
+      const container = document.querySelector('.ai-chat-scroll');
+      if (!container) return;
+      container.addEventListener('scroll', function () {
+        aiStickToBottom =
+          container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+      });
+    })();
+
+    document.getElementById('chatForm').addEventListener('htmx:afterRequest', function(event) {
+      document.getElementById('aiMessageInput').value = '';
+      updatePromptList();
+      aiStickToBottom = true;
+      scrollMessagesToBottom();
+    });
+
+    function updatePromptList() {
+      const messages = document.querySelectorAll('.ai-message-user');
+      const promptList = document.getElementById('promptList');
+      promptList.innerHTML = '';
+      messages.forEach((msg) => {
+        const id = msg.id;
+        const text = msg.querySelector('.ai-message-text').innerText;
+        const initials = msg.dataset.initials || '?';
+        const link = document.createElement('a');
+        link.href = '#' + id;
+        link.className = 'ai-sidebar-item';
+        link.dataset.tooltip = text.substring(0, 300) + (text.length > 300 ? '...' : '');
+        link.onclick = function(e) {
+          e.preventDefault();
+          scrollToMessage(id);
+        };
+        const initialsSpan = document.createElement('span');
+        initialsSpan.className = 'ai-sidebar-item-initials';
+        initialsSpan.textContent = initials;
+        const textSpan = document.createElement('span');
+        textSpan.className = 'ai-sidebar-item-text';
+        textSpan.textContent = text.substring(0, 60) + (text.length > 60 ? '...' : '');
+        link.appendChild(initialsSpan);
+        link.appendChild(textSpan);
+        promptList.appendChild(link);
+      });
+      if (promptList.children.length === 0) {
+        promptList.innerHTML = '<div class="ai-sidebar-empty">No prompts yet</div>';
+      }
+    }
+
+    // Handoff links: the AI offers case/intake chat links when the user
+    // drifts into case merits - open them in a new tab so the agenda
+    // conversation stays put.
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('.ai-markdown a[href]');
+      if (link) {
+        e.preventDefault();
+        window.open(link.getAttribute('href'), '_blank');
+      }
+    });
+
+    // Escape key: single press cancels request, double press clears textarea
+    let lastEscapeTime = 0;
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const now = Date.now();
+        if (now - lastEscapeTime < 500) {
+          document.getElementById('aiMessageInput').value = '';
+          lastEscapeTime = 0;
+        } else {
+          const cancelBtn = document.querySelector('.ai-cancel-btn');
+          if (cancelBtn) {
+            cancelBtn.click();
+          } else {
+            htmx.trigger(document.getElementById('chatForm'), 'htmx:abort');
+          }
+          lastEscapeTime = now;
+        }
+      }
+    });
+
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+      if (e.target.closest('[data-no-auto-scroll]')) return;
+      if (e.target.id === 'messageContainer' || e.target.closest('#messageContainer')) {
+        if (aiStickToBottom) scrollMessagesToBottom();
+        updatePromptList();
+      }
+    });
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('historySidebar');
+      const icon = sidebar.querySelector('.ai-sidebar-toggle i');
+      sidebar.classList.toggle('collapsed');
+      if (sidebar.classList.contains('collapsed')) {
+        icon.className = 'icon-chevron-right';
+      } else {
+        icon.className = 'icon-chevron-left';
+      }
+    }
+
+    // Tooltip positioning for sidebar items
+    document.getElementById('promptList').addEventListener('mouseover', function(e) {
+      const item = e.target.closest('.ai-sidebar-item');
+      if (item && item.dataset.tooltip) {
+        const rect = item.getBoundingClientRect();
+        item.style.setProperty('--tooltip-top', rect.top + rect.height / 2 + 'px');
+      }
+    });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,468 @@
+"""Suggested agendas: a dash-launched AI chat that plans the user's work.
+
+Gemini Pro reviews the firm's open matters, active tasks, upcoming events,
+recent time entries, and open intakes, and suggests an agenda - defaulting
+to the day ahead, expandable to week or month by asking. Admins get the
+whole team's workload and cross-user suggestions; everyone else plans
+their own. At the user's explicit direction the AI emits a fenced
+create-tasks block that this module parses into real Task rows. One live
+agenda conversation per user, resumable until discarded; opening with
+none live auto-generates the daily agenda.
+
+Reuses the case/intake chat machinery: Conversation/Message, the cache
+status protocol polled by case:ai-status, and the shared message
+templates.
+"""
+
+import json
+import logging
+import re
+import threading
+from datetime import date, timedelta
+
+from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import render
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods
+
+from apps.accounts.access import filter_matters_for_user
+from apps.accounts.models import CustomUser
+from apps.activity.time.models import TimeEntry
+from apps.calendar.models import Event
+from apps.case.ai.models import Conversation, Message
+from apps.intakes.models import Intake, Note
+from apps.matters.models import Matter
+from apps.tasks.constants import ACTIVE_STATUSES, STATUS_PENDING
+from apps.tasks.models import Task
+
+logger = logging.getLogger(__name__)
+
+AGENDA_MODEL = "gemini-pro-latest"
+
+AGENDA_CONTEXT_LIMIT = 80_000
+TIME_ENTRY_DAYS = 14
+EVENT_LOOKAHEAD_DAYS = 30
+
+AUTO_START_MESSAGE = "Suggest my agenda for the day ahead."
+
+AGENDA_PREAMBLE = """You are the firm's agenda assistant. From the workload data below, suggest
+what to work on - a prioritized, concrete agenda. Default to the day
+ahead; expand to a week or a month only when asked.
+
+How to weigh the data:
+- Event dates are hard deadlines. Task due dates are generally soft -
+  treat them as intentions, not commitments.
+- A matter's work status may be out of date; recent time entries are
+  fresher evidence of where things actually stand.
+- Flag stale intakes (many days since the last note) that need a touch.
+- Balance attention across matters; note anything that looks neglected.
+
+Keep replies concise and agenda-shaped: short prioritized lists with a
+line of reasoning where it helps, not essays.
+{admin_note}
+STAY IN YOUR LANE. This chat plans workload; it does not analyze case
+merits. When the user starts discussing the substance of a specific
+matter or intake, give at most a one-line acknowledgment, point out that
+the dedicated chat has the full context (documents, notes, filings) this
+window lacks, and offer its markdown link from the data below, e.g.
+[Open the Smith chat](/case/12/ai/conversations/new/). Never attempt
+substantive legal analysis here.
+
+CREATING TASKS. Only when the user explicitly directs you to create
+tasks, end your reply with exactly one fenced block in this form:
+
+```create-tasks
+[{{"description": "<4-200 chars>", "matter": "<exact matter name or null>", "user": "<team member full name or null>", "due": "YYYY-MM-DD or null", "importance": 4}}]
+```
+
+Suggesting an agenda item is NOT direction to create a task - never emit
+the block unprompted. Importance is the firm's 1-7 scale (4 = Normal).
+"""
+
+ADMIN_NOTE = """
+The requesting user is an ADMIN: the data covers the whole team. When
+asked (or when clearly useful), suggest what individual team members
+should focus on and flag workload imbalances - name names.
+"""
+
+
+def _matter_label(matter):
+    return matter.name or f"Matter {matter.id}"
+
+
+def _agenda_context(user):
+    """The workload data sections. Admins see everyone; others see their
+    own tasks and time (plus unassigned items) against the firm's matters."""
+    today = timezone.localdate()
+    parts = []
+
+    matters = (
+        filter_matters_for_user(
+            Matter.objects.filter(status__in=["Pending", "Open"]), user
+        )
+        .select_related("practice_area", "client")
+        .order_by("name")
+    )
+    parts.append("OPEN MATTERS (chat links go to each matter's case chat)")
+    for m in matters:
+        parts.append(
+            f"- {_matter_label(m)} [{m.status}]"
+            f" | area: {m.practice_area.name if m.practice_area else ''}"
+            f" | client: {m.client.name if m.client else ''}"
+            f" | description: {m.description or ''}"
+            f" | work status: {m.work_status or 'not set'}"
+            f" | chat: /case/{m.id}/ai/conversations/new/"
+        )
+
+    tasks = Task.objects.filter(status__in=ACTIVE_STATUSES).select_related(
+        "user", "matter"
+    )
+    if not user.is_admin:
+        tasks = tasks.filter(Q(user=user) | Q(user__isnull=True))
+    parts.append("\nACTIVE TASKS (due dates are generally soft)")
+    for t in tasks.order_by("date_due", "-importance"):
+        parts.append(
+            f"- {t.description}"
+            f" | matter: {_matter_label(t.matter) if t.matter else 'Admin'}"
+            f" | due: {t.date_due or 'none'}"
+            f" | importance: {t.importance}"
+            f" | status: {t.status}"
+            f" | assigned: {t.user.full_name if t.user else 'unassigned'}"
+        )
+
+    events = Event.objects.filter(
+        status="Pending",
+        date__lte=today + timedelta(days=EVENT_LOOKAHEAD_DAYS),
+    ).select_related("assigned_to", "matter")
+    if not user.is_admin:
+        events = events.filter(Q(assigned_to=user) | Q(assigned_to__isnull=True))
+    parts.append("\nEVENTS (pending; overdue and next 30 days; hard dates)")
+    for e in events.order_by("date", "start_time"):
+        overdue = " OVERDUE" if e.date and e.date < today else ""
+        parts.append(
+            f"- {e.date}{overdue} {e.start_time or ''} | {e.description or ''}"
+            f" | matter: {_matter_label(e.matter) if e.matter else ''}"
+            f" | type: {e.event_type or ''}"
+            f" | assigned: {e.assigned_to.full_name if e.assigned_to else 'Firm'}"
+        )
+
+    entries = TimeEntry.objects.filter(
+        date__gte=today - timedelta(days=TIME_ENTRY_DAYS)
+    ).select_related("user", "matter")
+    if not user.is_admin:
+        entries = entries.filter(user=user)
+    parts.append(
+        f"\nRECENT TIME ENTRIES (last {TIME_ENTRY_DAYS} days; what was actually worked)"
+    )
+    for entry in entries.order_by("-date"):
+        parts.append(
+            f"- {entry.date} | {entry.user.full_name if entry.user else ''}"
+            f" | {_matter_label(entry.matter) if entry.matter else ''}"
+            f" | {entry.hours}h | {entry.actions or ''}"
+        )
+
+    intakes = Intake.objects.filter(status__in=["Open", "Pending"]).select_related(
+        "practice_area"
+    )
+    parts.append(
+        "\nOPEN INTAKES (prospective clients; flag stale ones;"
+        " chat links go to each intake's chat)"
+    )
+    for i in intakes.order_by("-date"):
+        last_note = Note.objects.filter(intake=i).order_by("-date", "-id").first()
+        last_activity = (last_note.date if last_note else None) or i.date
+        stale_days = (today - last_activity).days if last_activity else "unknown"
+        parts.append(
+            f"- {i.name} [{i.status}] | opened: {i.date}"
+            f" | area: {i.practice_area.name if i.practice_area else ''}"
+            f" | importance: {i.importance}"
+            f" | days since last activity: {stale_days}"
+            f" | chat: /intakes/{i.id}/chat/"
+        )
+
+    return "\n".join(parts)[:AGENDA_CONTEXT_LIMIT]
+
+
+def _agenda_system_prompt(user):
+    from apps.case.ai.context import build_request_info
+
+    preamble = AGENDA_PREAMBLE.format(admin_note=ADMIN_NOTE if user.is_admin else "")
+    return "\n".join([build_request_info(user), preamble, "---", _agenda_context(user)])
+
+
+# ── Task creation ────────────────────────────────────────────────────────────
+
+TASK_BLOCK_RE = re.compile(r"```create-tasks\s*\n(.*?)```", re.DOTALL)
+
+
+def _create_task_from_entry(entry, requesting_user, today):
+    description = str(entry.get("description") or "").strip()[:200]
+    if len(description) < 4:
+        return None
+
+    matter = None
+    if entry.get("matter"):
+        matter = Matter.objects.filter(
+            name__iexact=str(entry["matter"]).strip(),
+            status__in=["Pending", "Open"],
+        ).first()
+
+    # Non-admins only ever create tasks for themselves; admins may name a
+    # teammate, defaulting to themselves when the name doesn't resolve.
+    assignee = requesting_user
+    if requesting_user.is_admin and entry.get("user"):
+        wanted = str(entry["user"]).strip().lower()
+        match = next(
+            (
+                u
+                for u in CustomUser.objects.filter(is_active=True)
+                if u.full_name.lower() == wanted
+            ),
+            None,
+        )
+        assignee = match or requesting_user
+
+    due = None
+    if entry.get("due"):
+        try:
+            due = date.fromisoformat(str(entry["due"]))
+        except ValueError:
+            due = None
+
+    try:
+        importance = min(max(int(entry.get("importance")), 1), 7)
+    except (TypeError, ValueError):
+        importance = 4
+
+    return Task.objects.create(
+        description=description,
+        status=STATUS_PENDING,
+        date_due=due,
+        importance=importance,
+        user=assignee,
+        matter=matter,
+    )
+
+
+def _apply_task_blocks(response_text, requesting_user):
+    """Create Tasks from any create-tasks blocks, replacing each block
+    with a confirmation list. A malformed block is left as text and
+    creates nothing."""
+    today = timezone.localdate()
+
+    def replace(match):
+        try:
+            entries = json.loads(match.group(1).strip())
+            if not isinstance(entries, list):
+                raise ValueError("create-tasks block is not a list")
+        except (ValueError, TypeError):
+            logger.warning("Unparseable create-tasks block left in place")
+            return match.group(0)
+
+        lines = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            task = _create_task_from_entry(entry, requesting_user, today)
+            if task is not None:
+                lines.append(
+                    f"- Created task: **{task.description}**"
+                    f" ({task.matter.name if task.matter else 'Admin'}"
+                    f", due {task.date_due or 'none'}"
+                    f", for {task.user.full_name})"
+                )
+        return "\n".join(lines) if lines else "(no tasks created)"
+
+    return TASK_BLOCK_RE.sub(replace, response_text)
+
+
+# ── Chat cycle ───────────────────────────────────────────────────────────────
+
+
+def _live_conversation(user):
+    return Conversation.objects.filter(agenda_user=user).first()
+
+
+def _process_agenda_chat(conversation_id, user_id):
+    """Background thread: the shared cache-status protocol, so the
+    case:ai-status polling cycle works unchanged."""
+    from apps.case.ai.gemini_client import send_to_gemini_streaming
+
+    cache_key = f"ai_status_{conversation_id}"
+
+    def is_cancelled():
+        current = cache.get(cache_key)
+        return bool(current) and current.get("status") == "cancelled"
+
+    def update_status(status, message):
+        if is_cancelled():
+            return
+        import time as _time
+
+        current = cache.get(cache_key) or {}
+        payload = {"status": status, "message": message}
+        payload["started_at"] = current.get("started_at", _time.time())
+        cache.set(cache_key, payload, timeout=600)
+
+    try:
+        update_status("context", "Building context...")
+        user = CustomUser.objects.get(id=user_id)
+        conversation = Conversation.objects.get(id=conversation_id)
+        system_context = _agenda_system_prompt(user)
+
+        chat_history = [
+            {"role": msg.role, "content": msg.content}
+            for msg in conversation.messages.all()
+        ]
+
+        update_status("connecting", "Connecting to AI...")
+
+        def on_thought(thought):
+            update_status("thinking", thought[:300])
+
+        response_text, input_tokens, output_tokens = send_to_gemini_streaming(
+            system_context,
+            chat_history,
+            model=AGENDA_MODEL,
+            on_thought=on_thought,
+            is_cancelled=is_cancelled,
+            conversation_id=conversation.id,
+        )
+
+        if is_cancelled():
+            return
+
+        # Create any directed tasks and store the cleaned, confirmed text
+        response_text = _apply_task_blocks(response_text, user)
+
+        cache.set(
+            cache_key,
+            {
+                "status": "complete",
+                "message": "Complete",
+                "response": response_text,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "citations": [],
+            },
+            timeout=600,
+        )
+    except InterruptedError:
+        pass
+    except Exception as exc:
+        logger.exception("Agenda chat request failed")
+        if not is_cancelled():
+            cache.set(
+                cache_key,
+                {"status": "error", "message": str(exc)},
+                timeout=600,
+            )
+
+
+def _start_processing(conversation, user):
+    cache.set(
+        f"ai_status_{conversation.id}",
+        {"status": "starting", "message": "Starting..."},
+        timeout=600,
+    )
+    threading.Thread(
+        target=_process_agenda_chat,
+        args=(conversation.id, user.id),
+        daemon=True,
+    ).start()
+
+
+@login_required
+def agenda_window(request):
+    """The standalone agenda window. With no live conversation, the daily
+    agenda auto-generates: one click from dash to agenda."""
+    conversation = _live_conversation(request.user)
+    is_processing = False
+    if conversation is None:
+        conversation = Conversation.objects.create(
+            agenda_user=request.user,
+            title="Agenda",
+            llm=AGENDA_MODEL,
+            vet_citations=False,
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role="user",
+            content=AUTO_START_MESSAGE,
+            user=request.user,
+        )
+        _start_processing(conversation, request.user)
+        is_processing = True
+
+    return render(
+        request,
+        "dash/agenda-window.html",
+        {
+            "conversation": conversation,
+            "messages": conversation.messages.select_related("user").all(),
+            "agenda": True,
+            "is_processing": is_processing,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def agenda_send(request):
+    user_message = request.POST.get("message", "").strip()
+    if not user_message:
+        return HttpResponse(status=400)
+
+    conversation = _live_conversation(request.user)
+    if conversation is None:
+        conversation = Conversation.objects.create(
+            agenda_user=request.user,
+            title="Agenda",
+            llm=AGENDA_MODEL,
+            vet_citations=False,
+        )
+
+    Message.objects.create(
+        conversation=conversation,
+        role="user",
+        content=user_message,
+        user=request.user,
+    )
+    _start_processing(conversation, request.user)
+
+    return render(
+        request,
+        "case/ai/messages.html",
+        {
+            "messages": conversation.messages.all(),
+            "conversation": conversation,
+            "agenda": True,
+            "is_processing": True,
+        },
+    )
+
+
+@login_required
+def agenda_messages(request):
+    conversation = _live_conversation(request.user)
+    messages = (
+        conversation.messages.select_related("user").all() if conversation else []
+    )
+    return render(
+        request,
+        "case/ai/messages.html",
+        {"messages": messages, "conversation": conversation, "agenda": True},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def agenda_discard(request):
+    """Throw the conversation away; the next open starts fresh."""
+    conversation = _live_conversation(request.user)
+    if conversation is not None:
+        conversation.delete()
+    return render(request, "dash/agenda-closed.html")

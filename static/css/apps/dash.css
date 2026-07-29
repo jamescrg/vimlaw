@@ -36,6 +36,22 @@
    padding-bottom adds 0.25rem of breathing room below the heading row. */
 #dash-wip .toolbar {
   padding-bottom: 1.5rem;
+  position: relative;
+}
+
+/* Pin the Plan button's left edge to the table's left edge: the donut is a
+   fixed 300px box with a 2rem section gap before the table. */
+#dash-wip .wip-plan-btn {
+  left: calc(300px + 2rem);
+  position: absolute;
+}
+
+@media (width <= 768px) {
+  /* The donut wraps above the table on phones - no table edge to pin to;
+     let the button flow after the heading. */
+  #dash-wip .wip-plan-btn {
+    position: static;
+  }
 }
 
 /* ==========================================================================
