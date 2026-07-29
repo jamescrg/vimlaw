@@ -1,16 +1,5 @@
 {% load humanize %}
 <div class="dashboard">
-  {# Page actions: the AI agenda opens in its own tab, outside the htmx fragments #}
-  <div class="toolbar dash-toolbar">
-    <div class="toolbar-left"></div>
-    <div class="toolbar-right">
-      <a href="{% url 'dash:agenda' %}"
-         target="_blank"
-         class="btn btn-success">
-        <i class="icon-list-todo"></i> Agenda
-      </a>
-    </div>
-  </div>
   {# Row 1: Work in Progress — admins toggle by user/matter; others see only self #}
   <div class="dash-row">
     <div id="dash-wip"

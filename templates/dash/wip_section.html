@@ -3,6 +3,12 @@
   <div x-data="wipDimensionToggle()">
     <div class="toolbar">
       <div class="toolbar-left">
+        {# The AI plan chat opens in its own tab, leftmost above the table #}
+        <a href="{% url 'dash:agenda' %}"
+           target="_blank"
+           class="btn btn-success">
+          <i class="icon-list-todo"></i> Plan
+        </a>
         <h2>Work in Progress</h2>
       </div>
       <div class="toolbar-right">
@@ -152,6 +158,11 @@
 {% else %}
   <div class="toolbar">
     <div class="toolbar-left">
+      <a href="{% url 'dash:agenda' %}"
+         target="_blank"
+         class="btn btn-success">
+        <i class="icon-list-todo"></i> Plan
+      </a>
       <h2>Work in Progress</h2>
     </div>
     <div class="toolbar-right">{% include "dash/wip_period_dropdown.html" %}</div>

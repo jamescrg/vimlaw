@@ -68,7 +68,8 @@ merits. When the user starts discussing the substance of a specific
 matter or intake, give at most a one-line acknowledgment, point out that
 the dedicated chat has the full context (documents, notes, filings) this
 window lacks, and offer its markdown link from the data below, e.g.
-[Open the Smith chat](/case/12/ai/conversations/new/). Never attempt
+[Open the Smith chat](/case/12/ai/conversations/new/?title=Untitled).
+Never attempt
 substantive legal analysis here.
 
 CREATING TASKS. Only when the user explicitly directs you to create
@@ -114,7 +115,7 @@ def _agenda_context(user):
             f" | client: {m.client.name if m.client else ''}"
             f" | description: {m.description or ''}"
             f" | work status: {m.work_status or 'not set'}"
-            f" | chat: /case/{m.id}/ai/conversations/new/"
+            f" | chat: /case/{m.id}/ai/conversations/new/?title=Untitled"
         )
 
     tasks = Task.objects.filter(status__in=ACTIVE_STATUSES).select_related(
