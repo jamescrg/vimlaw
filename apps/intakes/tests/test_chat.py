@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.core.cache import cache
 
@@ -143,3 +145,71 @@ def test_end_without_conversation_is_noop(client, intake):
     response = client.post(f"/intakes/{intake.id}/chat/end")
     assert response.status_code == 200
     assert Note.objects.count() == 0
+
+
+# ── User-directed field updates ──────────────────────────────────────────────
+
+
+def update_block(payload):
+    return "Done.\n\n```update-intake\n" + json.dumps(payload) + "\n```"
+
+
+def test_update_block_changes_fields(
+    client, intake, practice_area, mock_gemini, monkeypatch
+):
+    monkeypatch.setattr(
+        "apps.case.ai.gemini_client.send_to_gemini_streaming",
+        lambda *a, **k: (
+            update_block({"value": 75000, "practice_area": "general", "importance": 9}),
+            10,
+            5,
+        ),
+    )
+    send(client, intake, "Set the value to 75k and area to General.")
+    conversation = Conversation.objects.get()
+    client.get(f"/case/ai/status/{conversation.id}/")
+
+    intake.refresh_from_db()
+    assert intake.value == 75000
+    assert intake.practice_area.name == "General"
+    assert intake.importance == 7  # clamped
+
+    assistant = conversation.messages.get(role="assistant")
+    assert "Updated value: 75000" in assistant.content
+    assert "```update-intake" not in assistant.content
+
+
+def test_update_block_rejects_bad_values(client, intake, mock_gemini, monkeypatch):
+    original_status = intake.status
+    monkeypatch.setattr(
+        "apps.case.ai.gemini_client.send_to_gemini_streaming",
+        lambda *a, **k: (
+            update_block({"status": "Vaporized", "source": "Carrier Pigeon"}),
+            10,
+            5,
+        ),
+    )
+    send(client, intake, "Mark it vaporized.")
+    conversation = Conversation.objects.get()
+    client.get(f"/case/ai/status/{conversation.id}/")
+
+    intake.refresh_from_db()
+    assert intake.status == original_status
+    assistant = conversation.messages.get(role="assistant")
+    assert "not recognized" in assistant.content
+
+
+def test_update_block_invalid_json_left_alone(client, intake, monkeypatch):
+    text = "```update-intake\nnot json\n```"
+    monkeypatch.setattr(
+        "apps.case.ai.gemini_client.send_to_gemini_streaming",
+        lambda *a, **k: (text, 10, 5),
+    )
+    original_name = intake.name
+    send(client, intake, "Update something.")
+    conversation = Conversation.objects.get()
+    client.get(f"/case/ai/status/{conversation.id}/")
+
+    intake.refresh_from_db()
+    assert intake.name == original_name
+    assert "```update-intake" in conversation.messages.get(role="assistant").content
