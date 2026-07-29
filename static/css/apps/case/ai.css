@@ -2032,3 +2032,16 @@
   text-decoration-thickness: 0.125em;
   text-underline-offset: 0.2em;
 }
+
+/* Intake chat window: End/Discard controls in the header, and the
+   chat-ended page */
+.ai-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.ai-chat-ended {
+  margin: auto;
+  text-align: center;
+}

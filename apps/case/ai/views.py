@@ -421,9 +421,9 @@ def send_message(request, matter_id):
 @login_required
 def ai_status(request, conv_id):
     """Return current AI processing status for polling."""
-    conversation = get_object_or_404(
-        Conversation, pk=conv_id, matter__in=get_accessible_matters()
-    )
+    # Plain pk lookup: conversations belong to a matter OR an intake, and
+    # the old matter__in filter was Matter.objects.all() anyway
+    conversation = get_object_or_404(Conversation, pk=conv_id)
 
     cache_key = f"ai_status_{conv_id}"
     status_data = cache.get(cache_key, {"status": "unknown", "message": "Checking..."})
@@ -450,16 +450,18 @@ def ai_status(request, conv_id):
         # Update conversation timestamp
         conversation.save()
 
-        # Generate conversation summary in background thread
+        # Generate conversation summary in background thread. Intake chats
+        # skip it: their summary happens once, at End & summarize.
         import threading
 
         from .tasks import generate_conversation_summary
 
-        threading.Thread(
-            target=generate_conversation_summary,
-            args=(conversation.id,),
-            daemon=True,
-        ).start()
+        if conversation.matter_id:
+            threading.Thread(
+                target=generate_conversation_summary,
+                args=(conversation.id,),
+                daemon=True,
+            ).start()
 
         # If the conversation has vetting enabled, seed pending vetting entries
         # on case citations and launch a background job to Flash-vet each one.
@@ -532,9 +534,9 @@ def ai_status(request, conv_id):
 @login_required
 def cancel_request(request, conv_id):
     """Cancel an in-progress AI request."""
-    conversation = get_object_or_404(
-        Conversation, pk=conv_id, matter__in=get_accessible_matters()
-    )
+    # Plain pk lookup, same reasoning as ai_status: intake conversations
+    # have no matter
+    conversation = get_object_or_404(Conversation, pk=conv_id)
 
     if request.method != "POST":
         return HttpResponse(status=405)

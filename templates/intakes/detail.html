@@ -176,6 +176,11 @@
             </span>
             <span class="btn-busy-loading"><span class="btn-spinner"></span> Assessing…</span>
           </button>
+          <a href="{% url 'intakes:chat' intake.id %}"
+             target="_blank"
+             class="btn btn-success"
+             x-show="pane === 'assessment'"
+             x-cloak><i class="icon-message-circle"></i> Chat</a>
         </div>
       </div>
       <div class="toolbar-right"></div>

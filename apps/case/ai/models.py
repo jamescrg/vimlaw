@@ -20,8 +20,22 @@ class Conversation(AuditMixin, models.Model):
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
     ]
 
+    # A conversation belongs to a matter (case chat) OR an intake (intake
+    # chat) - exactly one. Intake conversations are ephemeral: at most one
+    # live per intake, deleted after End & summarize / Discard.
     matter = models.ForeignKey(
-        Matter, on_delete=models.CASCADE, related_name="ai_conversations"
+        Matter,
+        on_delete=models.CASCADE,
+        related_name="ai_conversations",
+        null=True,
+        blank=True,
+    )
+    intake = models.ForeignKey(
+        "intakes.Intake",
+        on_delete=models.CASCADE,
+        related_name="ai_conversations",
+        null=True,
+        blank=True,
     )
     user = models.ForeignKey(
         CustomUser,
@@ -64,7 +78,12 @@ class Conversation(AuditMixin, models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.matter.name} - {self.title or 'Untitled'}"
+        owner = (
+            self.matter.name
+            if self.matter_id
+            else (self.intake.name if self.intake_id else "Unattached")
+        )
+        return f"{owner} - {self.title or 'Untitled'}"
 
     def get_participants(self):
         """Return distinct users who have sent messages in this conversation."""
