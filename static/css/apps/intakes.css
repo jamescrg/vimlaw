@@ -445,9 +445,13 @@ Importance flag in the detail header (beside the intake name)
 Assessment pane (Notes | Assessment segmented control on the detail)
 ========================================================================== */
 
-/* The pane's action button sits 1rem off the pills: the toolbar-left gap
-   is 1.25rem, pulled back a step. */
+/* The pane's action buttons sit 1rem off the pills (toolbar-left's
+   1.25rem gap pulled back a step) and 1rem apart; flex centering keeps
+   the anchor-based Chat button level with the real buttons. */
 .intake-notes .intake-panel-actions {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
   margin-left: -0.25rem;
 }
 
