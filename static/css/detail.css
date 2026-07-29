@@ -179,9 +179,11 @@ Vertical subnav variant (Settings)
 .detail:has(> .subnav-vertical) {
   align-items: stretch;
   display: flex;
-  /* Fill the viewport below the content's top padding; the container's
-     bottom padding is dropped (below) so the rail meets the screen edge. */
-  min-height: calc(100vh - 1.25rem);
+  /* The card already starts at the viewport top (.content > .detail pulls
+     into the container padding), so full height is a plain 100vh; its
+     bottom margin and the container's bottom padding go too. */
+  margin-bottom: 0;
+  min-height: 100vh;
 }
 
 .content:has(> .detail > .subnav-vertical) {
