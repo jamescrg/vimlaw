@@ -167,3 +167,58 @@ Detail Layout (header / subnav / body)
 [data-theme="basic"] .subnav .active a {
   color: var(--control-active-color);
 }
+
+/* ==========================================================================
+Vertical subnav variant (Settings)
+========================================================================== */
+
+/* The settings section list outgrew a horizontal tab row; this variant
+   lays the same subnav as a left rail. Scoped by class - every other
+   subnav keeps the tab layout, and the active-pill and theme rules above
+   apply unchanged. */
+.detail:has(> .subnav-vertical) {
+  align-items: stretch;
+  display: flex;
+}
+
+.subnav-vertical {
+  border-bottom: none;
+  border-radius: 0 0 0 var(--radius-md);
+  border-right: solid 1px var(--border-medium-dark);
+  flex: 0 0 13rem;
+}
+
+.subnav-vertical ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 1rem 0.75rem;
+}
+
+.subnav-vertical li {
+  display: block;
+}
+
+.detail:has(> .subnav-vertical) > .detail-body {
+  border-radius: 0 0 var(--radius-md) 0;
+  flex: 1;
+  min-width: 0;
+}
+
+@media (width <= 1000px) {
+  /* Collapse the rail back into the scrollable tab row phones already use. */
+  .detail:has(> .subnav-vertical) {
+    display: block;
+  }
+
+  .subnav-vertical {
+    border-bottom: solid 1px var(--border-medium-dark);
+    border-radius: 0;
+    border-right: none;
+  }
+
+  .subnav-vertical ul {
+    flex-direction: row;
+    margin: 0.5rem 1rem;
+  }
+}
