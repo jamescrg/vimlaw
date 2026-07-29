@@ -57,11 +57,13 @@ Rules:
   - Merits: a strong case is one the firm can typically WIN. The firm's
     philosophy: a winnable case is where it delivers real value to the
     client, can command a higher fee, and the engagement is profitable.
-  The strongest ratings (6-7) need both. Move below 4 only on concrete
-  negative signals (outside the practice areas, no real legal dispute,
-  an apparently unviable position, signs of an undesirable engagement).
-  Use null when there is too little information to justify moving off
-  the current rating.
+  The strongest ratings (6-7) need both. Being outside the practice areas
+  is NOT disqualifying: a matter with strong value and merits can still
+  rate above Normal - note the practice mismatch in the analysis rather
+  than docking the score for it. Move below 4 only on concrete negative
+  signals (no real legal dispute, an apparently unviable position, signs
+  of an undesirable engagement). Use null when there is too little
+  information to justify moving off the current rating.
 - "limitations": be particularly alert to statute-of-limitations and other
   deadline problems. When the facts suggest a limitations period may be
   running short or already missed, describe the concern and its urgency
