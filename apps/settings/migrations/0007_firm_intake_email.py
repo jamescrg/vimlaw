@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='firm',
             name='intake_email',
-            field=models.EmailField(blank=True, help_text='Copied on template emails sent to intakes, and their Reply-To. Use a human inbox, not the Mailgun intake pipeline address (the pipeline would log a duplicate note).', max_length=254),
+            field=models.EmailField(blank=True, max_length=254),
         ),
     ]
