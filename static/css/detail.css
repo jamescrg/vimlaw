@@ -185,7 +185,8 @@ Vertical subnav variant (Settings)
   border-bottom: none;
   border-radius: 0 0 0 var(--radius-md);
   border-right: solid 1px var(--border-medium-dark);
-  flex: 0 0 13rem;
+  /* Same width as the main nav, so the two rails read as one family */
+  flex: 0 0 var(--sidebar-width);
 }
 
 .subnav-vertical ul {
