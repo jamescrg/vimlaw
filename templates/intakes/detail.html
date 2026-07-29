@@ -197,49 +197,49 @@
                       hx-target="#intakeAssessment"
                       hx-indicator="#assess-run"
                       hx-disabled-elt="#assess-run">
-                <span class="btn-busy-idle"><i class="icon-refresh-cw"></i>
-                  {% if intake.assessed_at %}
-                    Update
-                  {% else %}
-                    Assess
-                  {% endif %}
-                </span>
-                <span class="btn-busy-loading"><span class="btn-spinner"></span> Assessing…</span>
-              </button>
-              <a href="{% url 'intakes:chat' intake.id %}"
-                 target="_blank"
-                 class="btn btn-success"
-                 x-show="pane === 'assessment'"
-                 x-cloak><i class="icon-message-circle"></i> Chat</a>
-            </div>
-          </div>
-          <div class="toolbar-right"></div>
+              <span class="btn-busy-idle"><i class="icon-refresh-cw"></i>
+              {% if intake.assessed_at %}
+                Update
+              {% else %}
+                Assess
+              {% endif %}
+            </span>
+            <span class="btn-busy-loading"><span class="btn-spinner"></span> Assessing…</span>
+          </button>
+          <a href="{% url 'intakes:chat' intake.id %}"
+             target="_blank"
+             class="btn btn-success"
+             x-show="pane === 'assessment'"
+             x-cloak><i class="icon-message-circle"></i> Chat</a>
         </div>
-        <div id="intakeForms"
-             class="intake-forms"
-             x-show="pane === 'forms'"
-             x-cloak
-             hx-trigger="intakeFormsChanged from:body"
-             hx-get="{% url 'intakes:forms-panel' id=intake.id %}"
-             hx-target="this">{% include "intakes/forms/panel.html" %}</div>
-        <div x-show="pane === 'notes'">
-          {% if notes %}
-            {% for note in notes %}
-              <div class="intake-row">
-                <div class="intake-row-title">
-                  <div class="intake-row-title-left">
-                    <a href="#"
-                       type="button"
-                       class="btn-icon"
-                       hx-get="/intakes/{{ note.id }}/edit-note"
-                       hx-target="#htmx-modal-container"
-                       hx-trigger="click">
-                      <span class="intake-note-date-time">{{ note.date|date:'Y-m-d' }} {{ note.time|time:'g:i A' }}</span>
-                    </a>
-                    <span class="intake-note-username">{{ note.user.username|title }}</span>
-                    <span class="intake-note-type">{{ note.type }}</span>
-                  </div>
-                  {% comment %}
+      </div>
+      <div class="toolbar-right"></div>
+    </div>
+    <div id="intakeForms"
+         class="intake-forms"
+         x-show="pane === 'forms'"
+         x-cloak
+         hx-trigger="intakeFormsChanged from:body"
+         hx-get="{% url 'intakes:forms-panel' id=intake.id %}"
+         hx-target="this">{% include "intakes/forms/panel.html" %}</div>
+    <div x-show="pane === 'notes'">
+      {% if notes %}
+        {% for note in notes %}
+          <div class="intake-row">
+            <div class="intake-row-title">
+              <div class="intake-row-title-left">
+                <a href="#"
+                   type="button"
+                   class="btn-icon"
+                   hx-get="/intakes/{{ note.id }}/edit-note"
+                   hx-target="#htmx-modal-container"
+                   hx-trigger="click">
+                  <span class="intake-note-date-time">{{ note.date|date:'Y-m-d' }} {{ note.time|time:'g:i A' }}</span>
+                </a>
+                <span class="intake-note-username">{{ note.user.username|title }}</span>
+                <span class="intake-note-type">{{ note.type }}</span>
+              </div>
+              {% comment %}
                     The stamp on the left is when the note was filed. This is
                     the other half of the story — a client form note is
                     rewritten every time the client answers more, so what it
@@ -247,18 +247,18 @@
                     both, matching the filing stamp opposite: a form is often
                     finished the same afternoon it was started, and a date
                     alone would say nothing there.
-                  {% endcomment %}
-                  {% if note.edited_at %}
-                    <span class="intake-note-updated">Updated {{ note.edited_at|date:'Y-m-d' }} {{ note.edited_at|time:'g:i A' }}</span>
-                  {% endif %}
-                </div>
-                <div class="intake-note-details">{{ note.details|safe }}</div>
-              </div>
-            {% endfor %}
-          {% endif %}
-        </div>
-        <div id="intakeAssessment" x-show="pane === 'assessment'" x-cloak>{% include "intakes/assessment.html" %}</div>
-      </div>
+              {% endcomment %}
+              {% if note.edited_at %}
+                <span class="intake-note-updated">Updated {{ note.edited_at|date:'Y-m-d' }} {{ note.edited_at|time:'g:i A' }}</span>
+              {% endif %}
+            </div>
+            <div class="intake-note-details">{{ note.details|safe }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
     </div>
+    <div id="intakeAssessment" x-show="pane === 'assessment'" x-cloak>{% include "intakes/assessment.html" %}</div>
   </div>
+</div>
+</div>
 {% endblock content %}
