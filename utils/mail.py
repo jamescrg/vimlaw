@@ -77,6 +77,17 @@ def firm_reply_to(company):
     return formataddr((_firm_display_name(company), address))
 
 
+def intake_reply_to(company):
+    """Reply-To for template emails sent to intakes: the firm's intake
+    inbox, falling back to the firm's own address."""
+    address = ""
+    if company:
+        address = (company.intake_email or company.email or "").strip()
+    if not address:
+        return None
+    return formataddr((_firm_display_name(company), address))
+
+
 def firm_postal_address(company):
     """One-line postal address for email footers — a legitimacy signal spam
     filters explicitly weight on commercial/transactional mail. Empty string

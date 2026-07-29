@@ -34,6 +34,7 @@ from apps.intakes.client_forms.views import (
     intake_forms_panel,
 )
 from apps.intakes.inbound import mailgun_inbound
+from apps.intakes.send import send_email, send_email_modal
 from apps.intakes.views import (
     add,
     add_note,
@@ -70,6 +71,8 @@ urlpatterns = [
     path("intakes/<int:id>/chat/messages", chat_messages, name="chat-messages"),
     path("intakes/<int:id>/chat/end", chat_end, name="chat-end"),
     path("intakes/<int:id>/chat/discard", chat_discard, name="chat-discard"),
+    path("intakes/<int:id>/send-email", send_email_modal, name="send-email"),
+    path("intakes/<int:id>/send-email/send", send_email, name="send-email-send"),
     path("intakes/add", add, name="add"),
     path("intakes/<int:id>/edit", edit, name="edit"),
     path("intakes/<int:id>/delete", delete, name="delete"),

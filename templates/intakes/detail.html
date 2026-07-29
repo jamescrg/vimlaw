@@ -25,6 +25,12 @@
                      hx-get="{% url 'intakes:edit' id=intake.id %}"
                      hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
                 </li>
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-get="{% url 'intakes:send-email' id=intake.id %}"
+                     hx-target="#htmx-modal-container"><i class="icon-mail"></i> Send email</a>
+                </li>
                 {% if contact %}
                   <li>
                     <a class="dropdown-item"

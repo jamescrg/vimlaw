@@ -1,7 +1,13 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import FormSubmission, FormTemplate, InboundEmail, Intake
+from .models import (
+    FormSubmission,
+    FormTemplate,
+    InboundEmail,
+    Intake,
+    IntakeEmailTemplate,
+)
 
 
 class IntakeAdmin(SimpleHistoryAdmin):
@@ -49,3 +55,4 @@ admin.site.register(Intake, IntakeAdmin)
 admin.site.register(FormTemplate, FormTemplateAdmin)
 admin.site.register(FormSubmission, FormSubmissionAdmin)
 admin.site.register(InboundEmail, InboundEmailAdmin)
+admin.site.register(IntakeEmailTemplate, SimpleHistoryAdmin)

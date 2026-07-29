@@ -19,6 +19,10 @@ class Firm(AuditMixin):
         default="",
         help_text="Comma-separated addresses BCC'd on every invoice email.",
     )
+    # Cc + Reply-To on template emails sent to intakes. Must be a human
+    # inbox, not the Mailgun intake pipeline address - the pipeline would
+    # log our own outbound copies as duplicate notes.
+    intake_email = models.EmailField(blank=True)
     logo = models.ImageField(upload_to="company/", blank=True, null=True)
     jurisdiction = models.CharField(max_length=100, blank=True)
 

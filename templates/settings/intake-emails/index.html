@@ -1,0 +1,7 @@
+{% extends "settings/main.html" %}
+{% block subcontent %}
+  <div id="intake-email-templates"
+       hx-trigger="intakeEmailTemplateListReload from:body"
+       hx-get="{% url 'settings:intake-email-list' %}"
+       hx-target="this">{% include "settings/intake-emails/table.html" %}</div>
+{% endblock subcontent %}

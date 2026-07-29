@@ -238,3 +238,47 @@ def test_firm_form_prepopulated(client):
     content = response.content.decode()
     assert "My Firm" in content
     assert "555-0000" in content
+
+
+# --- Intake email templates -------------------------------------------------
+
+
+def test_intake_emails_index_renders(client):
+    response = client.get("/settings/intake-emails/")
+    assert response.status_code == 200
+    assert b"Intake Emails" in response.content
+
+
+def test_intake_email_template_crud(client):
+    from apps.intakes.models import IntakeEmailTemplate
+
+    response = client.post(
+        "/settings/intake-emails/add/",
+        {"name": "Rejection", "subject": "Your inquiry", "body": "We must decline."},
+    )
+    assert response.status_code == 204
+    template = IntakeEmailTemplate.objects.get()
+    assert template.name == "Rejection"
+
+    response = client.post(
+        f"/settings/intake-emails/edit/{template.id}/",
+        {"name": "Rejection", "subject": "Re: your inquiry", "body": "We decline."},
+    )
+    assert response.status_code == 204
+    template.refresh_from_db()
+    assert template.subject == "Re: your inquiry"
+
+    response = client.post(f"/settings/intake-emails/delete/{template.id}/")
+    assert response.status_code == 204
+    assert IntakeEmailTemplate.objects.count() == 0
+
+
+def test_firm_form_saves_intake_email(client):
+    from apps.settings.models import Firm
+
+    Firm.objects.create(name="My Firm")
+    response = client.post(
+        "/settings/firm/", {"name": "My Firm", "intake_email": "intakes@example.com"}
+    )
+    assert response.status_code == 200
+    assert Firm.objects.first().intake_email == "intakes@example.com"

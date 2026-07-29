@@ -1,0 +1,36 @@
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">
+        {% if email_template %}
+          Edit Email Template
+        {% else %}
+          Add Email Template
+        {% endif %}
+      </h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="intake-email-template-form"
+            hx-post="{{ request.path }}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-compact">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit"
+              form="intake-email-template-form"
+              class="btn btn-success">Submit</button>
+    </div>
+  </div>
+</div>

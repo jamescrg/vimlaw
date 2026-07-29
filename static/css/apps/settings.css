@@ -76,6 +76,7 @@ Firm Form
 .firm-form #id_email,
 .firm-form #id_billing_email,
 .firm-form #id_invoice_bcc,
+.firm-form #id_intake_email,
 .firm-form #id_jurisdiction {
   max-width: 23.5rem;
   width: 100%;
