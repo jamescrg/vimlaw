@@ -3,13 +3,14 @@
   <div x-data="wipDimensionToggle()">
     <div class="toolbar">
       <div class="toolbar-left">
-        {# The AI plan chat opens in its own tab, leftmost above the table #}
+        <h2>Work in Progress</h2>
+        {# The AI plan chat opens in its own tab; wip-plan-btn pins it to the
+           table's left edge (donut width + gap) on wide screens #}
         <a href="{% url 'dash:agenda' %}"
            target="_blank"
-           class="btn btn-success">
+           class="btn btn-success wip-plan-btn">
           <i class="icon-list-todo"></i> Plan
         </a>
-        <h2>Work in Progress</h2>
       </div>
       <div class="toolbar-right">
         {% if user_rows %}
@@ -158,12 +159,12 @@
 {% else %}
   <div class="toolbar">
     <div class="toolbar-left">
+      <h2>Work in Progress</h2>
       <a href="{% url 'dash:agenda' %}"
          target="_blank"
-         class="btn btn-success">
+         class="btn btn-success wip-plan-btn">
         <i class="icon-list-todo"></i> Plan
       </a>
-      <h2>Work in Progress</h2>
     </div>
     <div class="toolbar-right">{% include "dash/wip_period_dropdown.html" %}</div>
   </div>
