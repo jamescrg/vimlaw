@@ -256,7 +256,9 @@ Settings Contacts - Column Layout
 
 /* Users Table */
 .users-table {
-  min-width: 62rem;
+  /* At least the sum of the column widths below - anything less compresses
+     the columns and crowds the headers; the container scrolls instead. */
+  min-width: 79rem;
 }
 
 .users-table .username {
@@ -294,33 +296,14 @@ Settings Contacts - Column Layout
 
 /* Permissions */
 .users-table .permissions {
-  width: 13rem;
+  /* A text summary now (was a five-icon row) */
+  width: 9rem;
 }
 
-.perm-icons {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-}
-
-.perm-active {
-  color: var(--success);
-}
-
-.perm-inactive {
-  color: var(--icon-muted);
-  opacity: 0.4;
-}
-
-.btn-perm {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.125rem 0.25rem;
-}
-
-.btn-perm:hover {
-  opacity: 0.7;
+/* Muted aside next to the permissions summary when matter access is
+   restricted */
+.perm-limited-hint {
+  color: var(--color-muted);
 }
 
 /* Transfer Columns (Matter Assignment Modal) */

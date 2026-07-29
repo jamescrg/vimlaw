@@ -70,7 +70,7 @@
           <i class="icon-chevrons-up-down"></i>
         </button>
       </th>
-      <th class="is-active">
+      <th class="is-active center-data">
         Active
         <button class="btn-sort {% if current_order == 'is_active' %}active{% endif %}"
                 hx-target="#users"
@@ -108,50 +108,20 @@
         <td>{{ user.email }}</td>
         <td class="permissions">
           {% if user.is_admin %}
-            <span class="perm-icons">
-              <span class="btn-perm"><i class="icon-briefcase perm-active" title="All Matters"></i></span>
-              <span class="btn-perm"><i class="icon-dollar-sign perm-active" title="Financial"></i></span>
-              <span class="btn-perm"><i class="icon-inbox perm-active" title="Intakes"></i></span>
-              <span class="btn-perm"><i class="icon-chart-no-axes-column perm-active" title="Reports"></i></span>
-              <span class="btn-perm"><i class="icon-scale perm-active" title="Research"></i></span>
-            </span>
+            Admin
           {% else %}
-            <span class="perm-icons">
-              {% if user.perm_all_matters %}
-                <button hx-post="{% url 'settings:toggle-perm' user.id 'perm_all_matters' %}"
-                        title="All Matters (click to restrict)"
-                        class="btn-perm">
-                  <i class="icon-briefcase perm-active"></i>
-                </button>
+            <button class="button-link"
+                    type="button"
+                    hx-get="{% url 'settings:user-permissions' user.id %}"
+                    hx-target="#htmx-modal-container"
+                    hx-trigger="click">
+              {% if user.perm_count == 5 %}
+                Full access
               {% else %}
-                <button hx-get="{% url 'settings:matter-assignments' user.id %}"
-                        hx-target="#htmx-modal-container"
-                        title="Manage Matter Access"
-                        class="btn-perm">
-                  <i class="icon-briefcase perm-inactive"></i>
-                </button>
+                {{ user.perm_count }} of 5
               {% endif %}
-              <button hx-post="{% url 'settings:toggle-perm' user.id 'perm_financial' %}"
-                      title="Financial"
-                      class="btn-perm">
-                <i class="icon-dollar-sign {% if user.perm_financial %}perm-active{% else %}perm-inactive{% endif %}"></i>
-              </button>
-              <button hx-post="{% url 'settings:toggle-perm' user.id 'perm_intakes' %}"
-                      title="Intakes"
-                      class="btn-perm">
-                <i class="icon-inbox {% if user.perm_intakes %}perm-active{% else %}perm-inactive{% endif %}"></i>
-              </button>
-              <button hx-post="{% url 'settings:toggle-perm' user.id 'perm_reports' %}"
-                      title="Reports"
-                      class="btn-perm">
-                <i class="icon-chart-no-axes-column {% if user.perm_reports %}perm-active{% else %}perm-inactive{% endif %}"></i>
-              </button>
-              <button hx-post="{% url 'settings:toggle-perm' user.id 'perm_research' %}"
-                      title="Research"
-                      class="btn-perm">
-                <i class="icon-scale {% if user.perm_research %}perm-active{% else %}perm-inactive{% endif %}"></i>
-              </button>
-            </span>
+            </button>
+            {% if not user.perm_all_matters %}<span class="perm-limited-hint">· limited matters</span>{% endif %}
           {% endif %}
         </td>
         <td class="dropdown-cell">
@@ -175,7 +145,7 @@
         </td>
         <td>{{ user.title_display }}</td>
         <td>${{ user.user_rate }}</td>
-        <td>
+        <td class="is-active center-data">
           {% if user.is_active %}
             <i class="icon-circle-check true-bool"></i>
           {% else %}

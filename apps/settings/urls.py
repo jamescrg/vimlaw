@@ -97,6 +97,11 @@ urlpatterns = [
         name="add-user",
     ),
     path(
+        "settings/users/permissions/<int:user_id>/",
+        user_urls.edit_permissions,
+        name="user-permissions",
+    ),
+    path(
         "settings/users/toggle-perm/<int:user_id>/<str:perm>/",
         user_urls.toggle_permission,
         name="toggle-perm",

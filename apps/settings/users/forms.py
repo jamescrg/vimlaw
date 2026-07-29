@@ -74,3 +74,44 @@ class CreateUserForm(forms.ModelForm):
             user.save()
 
         return user
+
+
+class UserPermissionsForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = [
+            "perm_all_matters",
+            "perm_financial",
+            "perm_intakes",
+            "perm_reports",
+            "perm_research",
+        ]
+
+        YESNO_CHOICES = (
+            (True, "Yes"),
+            (False, "No"),
+        )
+
+        widgets = {
+            "perm_all_matters": forms.Select(choices=YESNO_CHOICES),
+            "perm_financial": forms.Select(choices=YESNO_CHOICES),
+            "perm_intakes": forms.Select(choices=YESNO_CHOICES),
+            "perm_reports": forms.Select(choices=YESNO_CHOICES),
+            "perm_research": forms.Select(choices=YESNO_CHOICES),
+        }
+
+        labels = {
+            "perm_all_matters": "All Matters",
+            "perm_financial": "Financial",
+            "perm_intakes": "Intakes",
+            "perm_reports": "Reports",
+            "perm_research": "Research",
+        }
+
+        help_texts = {
+            "perm_all_matters": ("No restricts this user to their assigned matters."),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.renderer = CustomFormRendererCompact()

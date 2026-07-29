@@ -282,3 +282,95 @@ def test_firm_form_saves_intake_email(client):
     )
     assert response.status_code == 200
     assert Firm.objects.first().intake_email == "intakes@example.com"
+
+
+# --- Permissions modal --------------------------------------------------------
+
+
+@pytest.fixture
+def admin_client(db):
+    from django.test import Client as DjangoClient
+
+    from apps.accounts.models import CustomUser
+
+    admin = CustomUser.objects.create(
+        username="boss", email="boss@example.com", role="ADMIN"
+    )
+    admin.set_password("pw")
+    admin.save()
+    c = DjangoClient()
+    c.login(username="boss", password="pw")
+    c.get("/dash/")
+    return c
+
+
+@pytest.fixture
+def staff_member(db):
+    from apps.accounts.models import CustomUser
+
+    return CustomUser.objects.create(
+        username="staffer", email="staffer@example.com", role="USER"
+    )
+
+
+def test_permissions_modal_renders_five_selects(admin_client, staff_member):
+    response = admin_client.get(f"/settings/users/permissions/{staff_member.id}/")
+    assert response.status_code == 200
+    content = response.content.decode()
+    for label in ("All Matters", "Financial", "Intakes", "Reports", "Research"):
+        assert label in content
+    assert content.count("<select") == 5
+
+
+def test_permissions_save_coerces_booleans(admin_client, staff_member):
+    response = admin_client.post(
+        f"/settings/users/permissions/{staff_member.id}/",
+        {
+            "perm_all_matters": "False",
+            "perm_financial": "True",
+            "perm_intakes": "False",
+            "perm_reports": "True",
+            "perm_research": "False",
+        },
+    )
+    assert response.status_code == 204
+    staff_member.refresh_from_db()
+    # The bool("false") trap: these must be REAL booleans, correctly flipped
+    assert staff_member.perm_all_matters is False
+    assert staff_member.perm_financial is True
+    assert staff_member.perm_intakes is False
+    assert staff_member.perm_reports is True
+    assert staff_member.perm_research is False
+
+
+def test_permissions_modal_admin_target_is_notice(admin_client):
+    from apps.accounts.models import CustomUser
+
+    other_admin = CustomUser.objects.create(
+        username="boss2", email="b2@example.com", role="ADMIN"
+    )
+    response = admin_client.get(f"/settings/users/permissions/{other_admin.id}/")
+    assert b"Admins hold all permissions" in response.content
+    assert b"<select" not in response.content
+
+
+def test_permissions_forbidden_for_non_admin(client, staff_member):
+    response = client.post(
+        f"/settings/users/permissions/{staff_member.id}/",
+        {"perm_financial": "False"},
+    )
+    assert response.status_code == 403
+    staff_member.refresh_from_db()
+    assert staff_member.perm_financial is True
+
+
+def test_user_table_shows_permission_summary(admin_client, staff_member):
+    from apps.accounts.models import CustomUser
+
+    CustomUser.objects.filter(id=staff_member.id).update(
+        perm_financial=False, perm_reports=False
+    )
+    response = admin_client.get("/settings/users/list/")
+    content = response.content.decode()
+    assert "3 of 5" in content
+    assert "Full access" in content or "Admin" in content
