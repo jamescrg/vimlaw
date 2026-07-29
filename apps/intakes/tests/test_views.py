@@ -170,3 +170,13 @@ def test_note_delete_nonexistent(client):
     # Note delete uses .filter().delete() which succeeds silently for nonexistent
     response = client.get("/intakes/99999/delete-note")
     assert response.status_code == 204
+
+
+def test_default_filter_highlights_open_chip(client):
+    """First visit seeds the Open default; its quick-filter chip must show
+    selected, matching how tasks/time seed filter_label with the default."""
+    response = client.get("/intakes/list/")
+    assert response.status_code == 200
+    content = response.content.decode()
+    open_chip = content.split('hx-post="/intakes/quick-filter-status/Open"')[0]
+    assert "toggle-active" in open_chip.rsplit("quick-status", 1)[1]
