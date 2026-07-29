@@ -51,7 +51,8 @@ th,
 
 /* Sideways tables (row headers) - no background on th */
 .totals-table th,
-.ledger-totals th {
+.ledger-totals th,
+.intake-details th {
   background: transparent;
 }
 

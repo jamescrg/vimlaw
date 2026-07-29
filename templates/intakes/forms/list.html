@@ -1,0 +1,45 @@
+<div class="toolbar">
+  <div class="toolbar-left">
+    <div class="filter-tools">
+      <button hx-get="{% url 'intakes:form-template-new' %}"
+              hx-target="#htmx-modal-container"
+              data-bs-toggle="modal"
+              data-bs-target="#htmx-modal-container"
+              title="New form">
+        <i class="icon-plus with-text"></i>New Form
+      </button>
+    </div>
+  </div>
+  <div class="toolbar-right">
+    <span class="app-badge app-badge-lg">Count: {{ templates|length }}</span>
+  </div>
+</div>
+<div class="table-container">
+  <table class="table card-table form-template-list">
+    <thead>
+      <tr>
+        <th class="form-template-name">Form</th>
+        <th class="form-template-count">Questions</th>
+        <th class="form-template-count">Sent</th>
+        <th class="form-template-updated">Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for template in templates %}
+        <tr>
+          <td class="form-template-name card-desc">
+            <a href="{% url 'intakes:form-builder' template_id=template.id %}">{{ template.name }}</a>
+            {% if template.description %}<span class="form-template-desc">{{ template.description }}</span>{% endif %}
+          </td>
+          <td class="form-template-count">{{ template.question_count }}</td>
+          <td class="form-template-count">{{ template.submission_count }}</td>
+          <td class="form-template-updated">{{ template.updated_at|date:"Y-m-d" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4" class="empty-message">No forms yet. Build one to send to a prospective client.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

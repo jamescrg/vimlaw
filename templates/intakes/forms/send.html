@@ -1,0 +1,38 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Send a Form</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      {% if send_error %}<p class="form-error-banner">{{ send_error }}</p>{% endif %}
+      <p class="modal-note">
+        Sends <strong>{{ submission.template_name }}</strong> to {{ intake.name }}.
+        Copying the link counts as sending it — the client has it either way.
+      </p>
+      <form id="send-form"
+            hx-post="{{ action }}"
+            hx-target="#htmx-modal-container"
+            role="form"
+            class="form-compact col2">
+        {% csrf_token %}
+        {{ form }}
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit" form="send-form" name="action" value="link" class="btn">Copy Link</button>
+      <button type="submit"
+              form="send-form"
+              name="action"
+              value="email"
+              class="btn btn-success">Send Email</button>
+    </div>
+  </div>
+</div>

@@ -20,7 +20,6 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core import signing
-from django.core.cache import cache
 from django.db import transaction
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -39,6 +38,7 @@ from apps.invoicing.pay.recording import record_payment
 from apps.invoicing.processors import ChargeError, get_processor
 from apps.invoicing.processors.base import ClientConfig
 from apps.invoicing.requests.models import PaymentRequest
+from utils.ratelimit import rate_limited
 from utils.signing import read_payment_token, read_request_token
 
 
@@ -73,25 +73,6 @@ def _matter_info(matter):
         "external_id": str(matter.id),
         "name": (getattr(matter, "name", "") or "").strip(),
     }
-
-
-def _client_ip(request):
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR", "") or "unknown"
-
-
-def _rate_limited(request, scope, *, limit, window):
-    """Best-effort fixed-window limiter keyed by client IP (Django cache)."""
-    key = f"ratelimit:{scope}:{_client_ip(request)}"
-    try:
-        cache.get_or_set(key, 0, window)
-        count = cache.incr(key)
-    except ValueError:
-        cache.set(key, 1, window)
-        count = 1
-    return count > limit
 
 
 def _resolve_invoice(token):
@@ -144,7 +125,7 @@ def _invoice_pdf_response(invoice, request):
 def pay_invoice_pdf(request, token):
     """Invoice PDF behind the same signed token as its pay page — the
     passwordless download that replaces emailing the PDF as an attachment."""
-    if _rate_limited(request, "pay-pdf", limit=30, window=300):
+    if rate_limited(request, "pay-pdf", limit=30, window=300):
         return HttpResponse("Too many requests. Please wait a moment.", status=429)
     try:
         invoice = _resolve_invoice(token)
@@ -204,7 +185,7 @@ def pay_page(request, token):
 @csrf_exempt
 @require_http_methods(["POST"])
 def pay_charge(request, token):
-    if _rate_limited(request, "pay-charge", limit=20, window=300):
+    if rate_limited(request, "pay-charge", limit=20, window=300):
         return JsonResponse(
             {"success": False, "error": "Too many attempts. Please wait a moment."},
             status=429,
@@ -298,7 +279,7 @@ def _resolve_request(token):
 
 def balance_statement_pdf(request, token):
     """Matter ledger statement PDF behind the request token (non-trust only)."""
-    if _rate_limited(request, "pay-pdf", limit=30, window=300):
+    if rate_limited(request, "pay-pdf", limit=30, window=300):
         return HttpResponse("Too many requests. Please wait a moment.", status=429)
     try:
         pay_request = _resolve_request(token)
@@ -330,7 +311,7 @@ def balance_statement_pdf(request, token):
 def balance_invoice_pdf(request, token, invoice_id):
     """One of the request matter's invoices, downloadable via the request
     token. Scoped to the matter — the token holder is that matter's client."""
-    if _rate_limited(request, "pay-pdf", limit=30, window=300):
+    if rate_limited(request, "pay-pdf", limit=30, window=300):
         return HttpResponse("Too many requests. Please wait a moment.", status=429)
     try:
         pay_request = _resolve_request(token)
@@ -458,7 +439,7 @@ def balance_pay_page(request, token):
 @csrf_exempt
 @require_http_methods(["POST"])
 def balance_charge(request, token):
-    if _rate_limited(request, "pay-charge", limit=20, window=300):
+    if rate_limited(request, "pay-charge", limit=20, window=300):
         return JsonResponse(
             {"success": False, "error": "Too many attempts. Please wait a moment."},
             status=429,
@@ -548,7 +529,7 @@ def processor_webhook(request, processor):
     """Receive a processor webhook. We always 200 quickly (the processor retries
     otherwise) and reconcile out-of-band; the reconciler re-fetches the
     transaction to confirm authenticity, so the raw body is never trusted."""
-    if _rate_limited(request, f"webhook-{processor}", limit=240, window=60):
+    if rate_limited(request, f"webhook-{processor}", limit=240, window=60):
         return HttpResponse(status=429)
 
     body = request.body.decode("utf-8", "replace")

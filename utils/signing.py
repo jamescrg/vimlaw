@@ -17,6 +17,7 @@ from django.core import signing
 # purpose means an invoice token can't open a matter-balance page or vice versa.
 _PAY_SALT = "invoicing.invoice-payment"
 _REQUEST_SALT = "invoicing.payment-request"
+_INTAKE_FORM_SALT = "intakes.client-form"
 
 
 def make_payment_token(invoice) -> str:
@@ -32,6 +33,21 @@ def read_payment_token(token: str, *, max_age=None) -> str:
     friendly "link expired / invalid" page.
     """
     return signing.loads(token, salt=_PAY_SALT, max_age=max_age)
+
+
+def make_form_token(submission) -> str:
+    """Opaque signed token granting fill access to a client intake form.
+
+    Signs the submission's uuid, never its pk, so rotating that uuid revokes
+    every outstanding link for the form without touching the answers.
+    """
+    return signing.dumps(str(submission.uuid), salt=_INTAKE_FORM_SALT)
+
+
+def read_form_token(token: str, *, max_age=None) -> str:
+    """Return the FormSubmission uuid encoded in a form token (see
+    read_payment_token for the raised exceptions)."""
+    return signing.loads(token, salt=_INTAKE_FORM_SALT, max_age=max_age)
 
 
 def make_request_token(payment_request) -> str:

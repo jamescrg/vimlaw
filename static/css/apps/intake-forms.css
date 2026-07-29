@@ -1,0 +1,565 @@
+/* ==========================================================================
+   Custom intake forms — the template library and the builder.
+
+   The public fill page has its own sheet (css/intake-form.css), loaded only
+   on that page; nothing here reaches it.
+   ========================================================================== */
+
+/* ==========================================================================
+   Template library
+   ========================================================================== */
+
+/* .table is table-layout: fixed, so the secondary columns need explicit widths
+   and the Form column takes what's left — the same shape as the intakes list.
+   A percentage width here collapses them all against the right edge instead.
+   11.25rem is what the intakes list gives its secondary columns, so the two
+   tables in this tab share a rhythm. */
+.form-template-list .form-template-count,
+.form-template-list .form-template-status,
+.form-template-list .form-template-updated {
+  text-align: center;
+  width: 11.25rem;
+}
+
+.form-template-desc {
+  color: var(--color-muted);
+  display: block;
+}
+
+/* ==========================================================================
+   Forms table on the intake detail page
+
+   .table is table-layout: fixed, so the four fixed columns take explicit
+   widths and Form absorbs the rest. The min-width is what actually enforces a
+   floor under Form: 8 + 5 + 9 + 3.5 committed elsewhere leaves it ~13rem, and
+   .table-container scrolls below that rather than the name collapsing.
+   ========================================================================== */
+
+.intake-form-table {
+  min-width: 39rem;
+}
+
+.intake-form-table .intake-form-date {
+  width: 8rem;
+}
+
+.intake-form-table .intake-form-done {
+  text-align: center;
+  width: 6rem;
+}
+
+/* Wide enough for "Submitted" plus the ×N tally beside it. */
+.intake-form-table .intake-form-status {
+  width: 9rem;
+}
+
+/* The header is the send icon alone, so the column only needs to fit it. */
+.intake-form-table .intake-form-send {
+  text-align: center;
+  width: 3.5rem;
+}
+
+/* Form is the elastic column, so its text wraps rather than truncating — the
+   global td rule (tables.css) forces nowrap + ellipsis on every cell. */
+.intake-form-table td.intake-form-name {
+  white-space: normal;
+}
+
+/* The name is the dropdown's trigger, so it has to wrap like ordinary cell
+   text rather than sit on one line as buttons do by default. */
+.intake-form-name-btn {
+  overflow-wrap: anywhere;
+  text-align: left;
+  white-space: normal;
+}
+
+/* The status control is a dropdown trigger, but it reports state rather than
+   offering navigation, so it reads as text until hovered. */
+.intake-form-status-text {
+  color: inherit;
+  text-align: left;
+}
+
+.intake-form-status-text:hover {
+  color: var(--link-hover);
+}
+
+/* Status control and send tally on one line, the tally trailing. */
+.intake-form-status .badge-flag-row {
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+.intake-form-status .badge-flag-row > :first-child {
+  flex: 0 0 auto;
+}
+
+/* Muted-gray icon button — the app's muted-icon convention, the same override
+   invoicing.css applies to .action-send so the icon sits lighter than the
+   table text rather than reading as a link. */
+.intake-form-table .intake-form-send .button-link {
+  color: var(--color-muted-more);
+}
+
+.intake-form-table .intake-form-send .button-link:hover {
+  color: var(--color-primary);
+}
+
+/* Modal helpers shared by the send / link / resend dialogs. */
+.modal-note {
+  color: var(--color-muted);
+  margin-bottom: 1rem;
+}
+
+.form-error-banner {
+  background: var(--error-background);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-md);
+  color: var(--error);
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+}
+
+.form-link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-link-url {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   Builder — frame
+   ========================================================================== */
+
+/* The rule under the toolbar is what settles the columns below it: the canvas
+   starts with a card and the palette with a group heading, so their first
+   rows can never top-align — anchored to a shared line, that difference reads
+   as two columns rather than a shelf. Same seam the intake panel draws under
+   its own toolbar (intakes.css). */
+.fb-toolbar {
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.fb-toolbar .toolbar-left {
+  flex: 1 1 auto;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* The title is a link that swaps itself for an input, and the matters detail
+   title bar is the pattern: matter-name size, no chrome. toolbar.css paints
+   every toolbar link as a button (background + border), so this is the same
+   escape the matter switcher makes for its own h1. */
+.fb-name {
+  flex: 1 1 auto;
+  font-size: 1.3rem;
+  max-width: 30rem;
+  min-width: 0;
+}
+
+.fb-toolbar .fb-name a {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: inherit;
+  padding: 0;
+}
+
+.fb-toolbar .fb-name a:hover {
+  color: var(--link-hover);
+}
+
+/* The inline editor, matching matters' work-status field
+   (matters.css `.edit-matter-work-status-input`): no chrome until focused, and
+   the padding cancelled by negative margins so the text does not shift when
+   the link becomes an input. */
+.fb-name-input {
+  background: inherit;
+  border: none;
+  font-size: 1.3rem;
+  margin: -0.25rem;
+  padding: 0.25rem;
+  width: calc(100% + 0.5rem);
+}
+
+.fb-name-input:focus {
+  background: color-mix(in srgb, var(--field-focus) 15%, transparent);
+  box-shadow: none;
+}
+
+.fb-state {
+  color: var(--color-muted);
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.fb-state-dirty {
+  color: var(--warning);
+}
+
+/* A button so it can retry the save, but dressed as the status line it sits
+   in — toolbar.css would otherwise give it full button chrome. */
+.fb-toolbar .fb-state-error {
+  background: none;
+  border: none;
+  color: var(--urgent);
+  padding: 0;
+}
+
+.fb-body {
+  display: flex;
+  gap: 1.5rem;
+  padding-top: 1rem;
+}
+
+.fb-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   Builder — palette
+   ========================================================================== */
+
+.fb-palette {
+  align-self: flex-start;
+  flex: 0 0 13rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.fb-palette-group {
+  padding-bottom: 0.25rem;
+}
+
+.fb-palette-group + .fb-palette-group {
+  margin-top: 1.25rem;
+}
+
+.fb-palette-heading,
+.fb-canvas-heading {
+  color: var(--color-primary);
+  margin: 0 0 0.75rem;
+}
+
+.fb-palette-item {
+  align-items: center;
+  background: var(--background-control);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.fb-palette-item:hover {
+  border-color: var(--border-dark);
+}
+
+.fb-palette-item i {
+  color: var(--color-muted);
+}
+
+/* ==========================================================================
+   Builder — field cards
+   ========================================================================== */
+
+/* The control gray, a shade under the body ground — white heads left the
+   cards dissolving into the panel. The open editor body drops back to the
+   body colour below, so head and body read as chrome and workspace. */
+.fb-field {
+  background: var(--background-control);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+/* Expanded, the head keeps a real lower edge — the seam between chrome and
+   workspace, in the card's own border weight rather than a faint hairline. */
+.fb-field-open .fb-field-head {
+  border-bottom: 1px solid var(--border-medium);
+}
+
+/* A heading or an instruction block structures the page rather than asking
+   anything, so it reads as a divider rather than a card. */
+.fb-field-layout {
+  background: var(--background-section);
+}
+
+.fb-field-head {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+/* The disclosure triangle, muted like the handle beside it — chrome, not
+   content. */
+.fb-field-toggle {
+  color: var(--color-muted-more);
+}
+
+.fb-field-toggle:hover {
+  color: var(--color-primary);
+}
+
+.fb-handle {
+  background: none;
+  border: none;
+  color: var(--color-muted-more);
+  cursor: grab;
+  display: flex;
+  padding: 0;
+}
+
+.fb-handle:hover {
+  cursor: grab;
+}
+
+.fb-handle:focus-visible {
+  color: var(--color-primary);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.fb-handle:active {
+  cursor: grabbing;
+}
+
+.fb-ghost {
+  opacity: 0.4;
+}
+
+/* Content-sized, not stretched: the save control has to sit directly against
+   the badge, so the head's free space falls after it instead of inside the
+   summary. Still shrinkable, so a long label ellipsizes. */
+.fb-field-summary {
+  align-items: center;
+  background: none;
+  border: none;
+  display: flex;
+  flex: 0 1 auto;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* The type badge is the shared .app-badge; it only needs to hold its width. */
+.fb-type-badge {
+  flex: 0 0 auto;
+}
+
+
+/* The incomplete flag — the one red on the card, and the card earns it. */
+.fb-save-problem {
+  color: var(--urgent);
+}
+
+.fb-field-label {
+  color: var(--color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Label leads, badge trails it; the summary's free space falls after the
+   badge rather than between the two. */
+.fb-field-summary .fb-field-label {
+  flex: 0 1 auto;
+}
+
+.fb-req {
+  color: var(--urgent);
+  flex: 0 0 auto;
+}
+
+/* Copy and delete keep the far side; the auto margin is the gap. */
+.fb-field-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 1.5rem;
+  margin-left: auto;
+}
+
+/* Save, duplicate and delete all in the head's own ink — one cluster of equal
+   actions, none of them shouting. (Delete would otherwise arrive red: icons.css
+   paints trash icons globally, which is why it is a circled x.) */
+
+/* ==========================================================================
+   Builder — inline field editor
+   ========================================================================== */
+
+/* The page's own ground rather than the card's. The card and the inputs on it
+   are both the light surface, which left the editor a single flat tone with
+   the field boundaries invisible; dropping the panel to the body colour is
+   what makes the inputs read as inputs. */
+.fb-field-body {
+  background: var(--background-body);
+  border-radius: 0 0 calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.fb-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fb-edit > span {
+  color: var(--color-muted);
+}
+
+.fb-edit-heading {
+  color: var(--color-muted);
+}
+
+.fb-edit-problem {
+  color: var(--urgent);
+  margin: 0;
+}
+
+.fb-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.fb-edit-row .fb-edit {
+  flex: 0 0 auto;
+  max-width: 12rem;
+}
+
+.fb-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fb-option {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fb-option input {
+  flex: 1 1 auto;
+}
+
+.fb-add-option {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+
+/* Once fields exist, a slim standing echo of the empty-state well: the place
+   a dragged field lands, kept visible so the invitation to drag survives the
+   first drop. */
+.fb-drop-strip {
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  color: var(--color-muted-more);
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+/* A dashed well where the first question will land, rather than a line of
+   grey text floating in the space the canvas is not yet filling. */
+.fb-empty {
+  align-items: center;
+  border: 2px dashed var(--border-dark);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.fb-empty i {
+  color: var(--color-muted-more);
+  font-size: 2rem;
+}
+
+.fb-empty-title {
+  color: var(--color-primary);
+  margin: 0;
+}
+
+/* A numbered list, left-aligned against the well's centred title — centring
+   ragged multi-line sentences made every wrap look accidental. */
+.fb-empty-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  max-width: 26rem;
+  text-align: left;
+}
+
+.fb-empty-hint li {
+  list-style: decimal inside;
+}
+
+/* ==========================================================================
+   Narrow screens — the palette becomes a scrolling strip above the canvas
+   ========================================================================== */
+
+@media (width < 768px) {
+  .fb-body {
+    flex-direction: column;
+  }
+
+  .fb-palette {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 1.5rem;
+    overflow-x: auto;
+    position: static;
+  }
+
+  .fb-palette-group + .fb-palette-group {
+    margin-top: 0;
+  }
+
+  .fb-palette-group {
+    flex: 0 0 auto;
+  }
+
+  .fb-palette-item {
+    white-space: nowrap;
+  }
+}
+
+/* ==========================================================================
+   Dark mode — cards and palette buttons lose their fill and read as outlines,
+   matching how buttons.css and badges.css treat the darks.
+   ========================================================================== */
+
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-palette-item,
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-field {
+  background: transparent;
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-palette-item:hover {
+  background: var(--background-section);
+}
+
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"])
+  .fb-field-layout {
+  background: var(--background-section);
+}

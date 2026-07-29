@@ -25,14 +25,16 @@ body.intake-detail .content {
     gap: 1.5rem;
   }
 
+  /* 2rem off the detail panel, onto the notes/forms panel beside it — the
+     property table needs less width than the prose does. */
   .intake-detail-layout > .intake-sidebar {
-    flex: 0 0 calc(37.5% - 0.5rem);
-    max-width: calc(37.5% - 0.5rem);
+    flex: 0 0 calc(37.5% - 2.5rem);
+    max-width: calc(37.5% - 2.5rem);
   }
 
   .intake-detail-layout > .intake-main {
-    flex: 0 0 calc(62.5% - 1rem);
-    max-width: calc(62.5% - 1rem);
+    flex: 0 0 calc(62.5% + 1rem);
+    max-width: calc(62.5% + 1rem);
   }
 }
 
@@ -195,60 +197,58 @@ Detail View - Left Panel
  Notes
 ========================================================================== */
 
-.intake-notes .toolbar {
+/* Notes and Forms live in one card; its toolbar holds the switch, so the rule
+   under it separates the header from whichever pane is showing. */
+.intake-panel > .toolbar {
   border-bottom: solid 1px var(--border-medium);
+  margin-bottom: 0;
 }
 
-.intake-note {
+/* Keep the forms table off the header rule — otherwise its own top border
+   sits a hairline below it and reads as a double line. Notes needs no
+   equivalent: its first row's padding already provides the gap. */
+.intake-panel > .intake-forms {
+  padding-top: 1rem;
+}
+
+/* A note's row: a title line, then the body. Forms are a table again, so this
+   is the notes timeline's own shape now rather than a shared one. */
+.intake-row {
   border-bottom: solid 1px var(--border-medium);
   padding: 1rem 0 1rem 0.5rem;
 }
 
-.intake-note-title {
+.intake-row-title {
   align-items: center;
   display: flex;
+  gap: 1rem;
   justify-content: space-between;
+  margin-bottom: 1.5rem;
 }
 
-.intake-note-title button {
-  background: var(--background-control);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--link);
-  padding: 0.375rem 0.625rem;
+.intake-row-title-left {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
-.intake-note-title-right {
-  margin-right: 0.5rem;
-}
-
-.intake-note-date-time {
-  margin-right: 1rem;
-}
-
-.intake-note-username {
-  margin-right: 1rem;
-}
-
-.intake-note-type {
-  margin-right: 1rem;
-}
-
-.intake-note-date {
-  width: 7.5rem;
-}
-
-.intake-note-username {
-  width: 7.5rem;
-}
-
-.intake-note-type {
-  width: 7.5rem;
+/* Sits opposite the filing date, and only when the two disagree. Muted: it
+   qualifies the row rather than competing with it. */
+.intake-note-updated {
+  color: var(--color-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ==========================================================================
 Markdown
 ========================================================================== */
+
+/* A submitted form arrives as h2 (the form's name) over h3 (its sections)
+   over bold question labels. All three are bold at this size, so the sizes
+   have to carry the hierarchy on their own, and each heading needs room above
+   it — the gap is what says a new section has started. */
 
 .intake-note-details h1 {
   font-size: 1.5em;
@@ -256,17 +256,55 @@ Markdown
 }
 
 .intake-note-details h2 {
-  font-size: 1.1em;
-  font-weight: 600;
+  font-size: 1.25em;
+  font-weight: 500;
+  margin-top: 1rem;
 }
 
 .intake-note-details h3 {
-  font-size: 1em;
-  font-weight: 600;
+  font-size: 1.15em;
+  font-weight: 500;
+  margin-top: 1rem;
+  margin-left: 0.75rem;
+}
+
+/* A ladder: the form's name at the margin, its sections stepped in, the
+   questions stepped in again under them. Scoped to paragraphs following the
+   h2 — only a submitted form has one, so a plain typed note keeps the flat
+   0.5rem the rest of the timeline uses. */
+.intake-note-details h2 ~ p {
+  margin-left: 1.5rem;
 }
 
 .intake-note-details strong {
-  font-weight: 600;
+  font-weight: 500;
+}
+
+/* A question is a paragraph holding nothing but its label, and its answer is
+   the paragraph after. Pull the answer up tight so the two read as one unit,
+   and let the space fall between pairs instead. */
+.intake-note-details p:has(> strong:only-child) {
+  margin-top: 1.25rem;
+}
+
+/* The question is the caption, not the content — the client's answer is what
+   staff came to read, so the label recedes into muted body weight. It stays
+   <strong> in the markup because that emphasis is the only handle telling a
+   question apart from an answer, and the rules above depend on it. Scoped
+   under the h2 so bold a user typed into an ordinary note still reads as
+   emphasis. */
+.intake-note-details h2 ~ p > strong:only-child {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+/* The answer, half a step up in weight against its muted label and half a
+   step in from it — the pair reads caption-then-content without either one
+   shouting, and the indent makes the answer look filed under its question. */
+.intake-note-details p:has(> strong:only-child) + p {
+  font-weight: 500;
+  margin-left: 2rem;
+  margin-top: 0.25rem;
 }
 
 .intake-note-details ul {
@@ -297,6 +335,50 @@ Markdown
 
 .intake-note-details a {
   text-decoration: underline;
+}
+
+/* The website's client questionnaire arrives as a Markdown table, so notes
+   render real tables. They get their frame here — the corner rounding and
+   last-row/column border removal come free from the element selectors in
+   tables.css. The important part is the cells: that file forces nowrap +
+   ellipsis on every td, which would truncate every answer, so wrapping is
+   re-enabled the way .overview-main does it in matters.css. */
+.intake-note-details table {
+  border: 1px solid var(--border-medium);
+  border-collapse: separate;
+  border-radius: var(--radius-md);
+  border-spacing: 0;
+  margin: 1rem 0 0;
+  width: 100%;
+}
+
+.intake-note-details th,
+.intake-note-details td {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* The "Question | Answer" head only names the columns of a label-value
+   table, so it carries no information — drop it. */
+.intake-note-details thead {
+  display: none;
+}
+
+/* With the head gone, the first body row takes the top corners; tables.css
+   keys those off thead, which no longer renders. */
+.intake-note-details tbody tr:first-child td:first-child {
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.intake-note-details tbody tr:first-child td:last-child {
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
+/* The label column takes a third, the answer the rest. */
+.intake-note-details td:first-child,
+.intake-note-details th:first-child {
+  width: 33%;
 }
 
 /* ==========================================================================

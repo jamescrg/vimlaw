@@ -1,9 +1,12 @@
+import copy
+
 import pytest
 from django.test import Client
 
 from apps.accounts.models import CustomUser
 from apps.contacts.models import Contact
-from apps.intakes.models import Intake, Note
+from apps.intakes.client_forms.schema import normalize_schema
+from apps.intakes.models import FormSubmission, FormTemplate, Intake, Note
 from apps.matters.models import PracticeArea
 
 
@@ -109,3 +112,60 @@ def note_data(note):
         del note_data[key]
 
     return {k: v for k, v in note_data.items() if v is not None}
+
+
+# --- Custom intake forms ----------------------------------------------------
+
+
+@pytest.fixture
+def form_template():
+    """A four-question template, one of each shape the snapshot tests care
+    about: free text, a heading, a dropdown, and a date."""
+    return FormTemplate.objects.create(
+        name="Property Dispute Questionnaire",
+        description="Background on the property and the dispute.",
+        intro_text="Please answer as fully as you can.",
+        schema=normalize_schema(
+            [
+                {"type": "text", "label": "Property address", "required": True},
+                {"type": "heading", "label": "The dispute"},
+                {
+                    "type": "select",
+                    "label": "Nature of dispute",
+                    "options": [{"label": "Boundary"}, {"label": "Easement"}],
+                },
+                {"type": "date", "label": "When did it start?"},
+            ]
+        ),
+    )
+
+
+@pytest.fixture
+def form_submission(intake, form_template):
+    """A form sent to the intake's client, not yet answered."""
+    return FormSubmission.objects.create(
+        intake=intake,
+        template=form_template,
+        template_name=form_template.name,
+        template_version=form_template.version,
+        schema_snapshot=copy.deepcopy(form_template.schema),
+        recipient_email="contact@example.com",
+    )
+
+
+@pytest.fixture
+def answer_keys(form_template):
+    """Field key by label, so tests can address questions by what they say."""
+    return {field["label"]: field["key"] for field in form_template.schema}
+
+
+@pytest.fixture
+def filled_submission(form_submission, answer_keys):
+    option = form_submission.schema_snapshot[2]["options"][0]["value"]
+    form_submission.answers = {
+        answer_keys["Property address"]: "225 Paper Street",
+        answer_keys["Nature of dispute"]: option,
+        answer_keys["When did it start?"]: "2024-03-01",
+    }
+    form_submission.save()
+    return form_submission

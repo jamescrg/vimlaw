@@ -1,0 +1,37 @@
+<div class="modal-dialog modal-md" x-data="{ copied: false }">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Form Link</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p class="modal-note">
+        Send this to {{ intake.name }} however you like. It opens
+        <strong>{{ submission.template_name }}</strong> with no login, and their
+        answers save as they go.
+      </p>
+      <div class="form-link-row">
+        <input type="text"
+               readonly
+               class="form-link-url"
+               x-ref="url"
+               value="{{ form_url }}"
+               @focus="$el.select()" />
+        <button type="button"
+                class="btn btn-secondary"
+                @click="navigator.clipboard.writeText($refs.url.value).then(() => copied = true).catch(() => { $refs.url.select(); document.execCommand('copy'); copied = true })">
+          <span x-text="copied ? 'Copied' : 'Copy'"></span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Done</button>
+    </div>
+  </div>
+</div>

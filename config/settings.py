@@ -399,6 +399,12 @@ CONFIDO_HOSTED_FIELDS_URL = env(
 INVOICE_PAY_LINK_MAX_AGE = env.int(
     "INVOICE_PAY_LINK_MAX_AGE", default=60 * 60 * 24 * 90
 )
+# How long a tokenized client intake-form link stays valid (seconds). Shorter
+# than the pay link — a prospective client should answer promptly, and staff
+# can resend the form to mint a fresh token against the same submission.
+INTAKE_FORM_LINK_MAX_AGE = env.int(
+    "INTAKE_FORM_LINK_MAX_AGE", default=60 * 60 * 24 * 30
+)
 # Absolute base URL (scheme + host) for links built outside a request context,
 # e.g. payment links in emails sent via async_task. Blank → fall back to the
 # sending request's host when available.

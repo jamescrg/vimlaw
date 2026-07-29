@@ -8,11 +8,27 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.contacts.models import Contact
 from apps.intakes.assess import assessment_html
+from apps.intakes.client_forms.models import submissions_for_intake
 from apps.intakes.filter_intakes import IntakeFilter
 from apps.intakes.forms import IntakeForm, NoteForm
 from apps.intakes.intakes import get_table_data
 from apps.intakes.models import Intake, Note, UserIntakeView
 from apps.matters.models import PracticeArea
+
+# The website's client questionnaire arrives as a Markdown table (see
+# api_views.receive_intake), and python-markdown only renders those with the
+# tables extension — without it the pipes come through as literal text.
+NOTE_MARKDOWN_EXTENSIONS = ["tables"]
+
+
+def render_note_markdown(notes):
+    """Render each note's Markdown body for display. `details` is nullable, so
+    an empty note must not reach markdown.markdown() as None."""
+    for note in notes:
+        note.details = markdown.markdown(
+            note.details or "", extensions=NOTE_MARKDOWN_EXTENSIONS
+        )
+    return notes
 
 
 @login_required
@@ -109,9 +125,9 @@ def detail_index(request, id):
             # last_viewed_at auto-updates with auto_now=True
         )
 
-    notes = Note.objects.filter(intake=intake).order_by("-date", "-time")
-    for note in notes:
-        note.details = markdown.markdown(note.details)
+    notes = render_note_markdown(
+        Note.objects.filter(intake=intake).order_by("-date", "-time")
+    )
 
     # check whether the intake has been added to contacts
     try:
@@ -127,6 +143,7 @@ def detail_index(request, id):
         "notes": notes,
         "contact": contact,
         "practice_areas": practice_areas,
+        "submissions": submissions_for_intake(intake),
         "assessment_html": assessment_html(intake),
     }
 
@@ -140,9 +157,9 @@ def detail(request, id):
     # get the intake
     intake = get_object_or_404(Intake, pk=id)
 
-    notes = Note.objects.filter(intake=intake).order_by("-date", "-time")
-    for note in notes:
-        note.details = markdown.markdown(note.details)
+    notes = render_note_markdown(
+        Note.objects.filter(intake=intake).order_by("-date", "-time")
+    )
 
     # check whether the intake has been added to contacts
     try:
@@ -158,6 +175,7 @@ def detail(request, id):
         "notes": notes,
         "contact": contact,
         "practice_areas": practice_areas,
+        "submissions": submissions_for_intake(intake),
         "assessment_html": assessment_html(intake),
     }
     return render(request, "intakes/detail.html", context)

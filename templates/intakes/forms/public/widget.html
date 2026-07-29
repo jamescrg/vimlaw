@@ -1,0 +1,88 @@
+{% comment %}
+  One input for one block, bound to answers[key]. Every attribute comes from
+  block.attrs, which render.py derives from the field's own spec — so the
+  browser enforces the same bounds the server will.
+{% endcomment %}
+{% if block.type == "textarea" %}
+  <textarea id="f-{{ block.key }}"
+            class="cf-input"
+            x-model="answers['{{ block.key }}']"
+            @input="touch()"
+            {% if block.required %}required{% endif %}
+            {% for name, value in block.attrs.items %}{{ name }}="{{ value }}"{% endfor %}></textarea>
+{% elif block.type == "select" %}
+  <select id="f-{{ block.key }}"
+          class="cf-input"
+          x-model="answers['{{ block.key }}']"
+          @change="flushSoon()"
+          {% if block.required %}required{% endif %}>
+    <option value="">{{ block.attrs.placeholder|default:"Choose one…" }}</option>
+    {% for option in block.options %}<option value="{{ option.value }}">{{ option.label }}</option>{% endfor %}
+  </select>
+{% elif block.type == "radio" %}
+  <div class="cf-choices"
+       role="radiogroup"
+       aria-labelledby="f-{{ block.key }}">
+    {% for option in block.options %}
+      <label class="cf-choice">
+        <input type="radio"
+               name="{{ block.key }}"
+               value="{{ option.value }}"
+               x-model="answers['{{ block.key }}']"
+               @change="flushSoon()" />
+        <span>{{ option.label }}</span>
+      </label>
+    {% endfor %}
+  </div>
+{% elif block.type == "checkboxes" %}
+  <div class="cf-choices">
+    {% for option in block.options %}
+      <label class="cf-choice">
+        <input type="checkbox"
+               name="{{ block.key }}"
+               value="{{ option.value }}"
+               x-model="answers['{{ block.key }}']"
+               @change="flushSoon()" />
+        <span>{{ option.label }}</span>
+      </label>
+    {% endfor %}
+  </div>
+{% elif block.type == "yesno" %}
+  <div class="cf-choices" role="radiogroup">
+    <label class="cf-choice">
+      <input type="radio"
+             name="{{ block.key }}"
+             :value="true"
+             x-model="answers['{{ block.key }}']"
+             @change="flushSoon()" />
+      <span>Yes</span>
+    </label>
+    <label class="cf-choice">
+      <input type="radio"
+             name="{{ block.key }}"
+             :value="false"
+             x-model="answers['{{ block.key }}']"
+             @change="flushSoon()" />
+      <span>No</span>
+    </label>
+  </div>
+{% elif block.type == "currency" %}
+  <div class="cf-affix">
+    <span class="cf-affix-mark">$</span>
+    <input type="text"
+           inputmode="decimal"
+           id="f-{{ block.key }}"
+           class="cf-input"
+           x-model="answers['{{ block.key }}']"
+           @input="touch()"
+           {% if block.required %}required{% endif %} />
+  </div>
+{% else %}
+  <input type="{{ block.input_type|default:'text' }}"
+         id="f-{{ block.key }}"
+         class="cf-input"
+         x-model="answers['{{ block.key }}']"
+         @input="touch()"
+         {% if block.required %}required{% endif %}
+         {% for name, value in block.attrs.items %}{{ name }}="{{ value }}"{% endfor %} />
+{% endif %}

@@ -1,0 +1,16 @@
+{{ firm_name|default:"Our office" }}
+{{ form_name }}
+
+Dear {{ client_name|default:"Client" }},
+
+{% if cover_message %}{{ cover_message }}{% else %}So that we can understand your situation before we speak, please complete the short form below. It takes a few minutes, and your answers save as you go — you can close the page and come back to it.{% endif %}
+
+Open your form: {{ form_url }}
+
+{% if question_count %}Questions: {{ question_count }}{% endif %}
+
+If you have any questions, please reply to this email{% if firm_email %} or contact us at {{ firm_email }}{% endif %}{% if firm_phone %} or {{ firm_phone }}{% endif %}.
+{% if firm_address %}
+--
+{{ firm_name }} · {{ firm_address }}
+{% endif %}

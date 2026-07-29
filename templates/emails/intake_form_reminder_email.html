@@ -1,0 +1,168 @@
+{% load invoicing_extras %}<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ form_name|default:"Intake form" }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+      /* Authored as a normal stylesheet; premailer inlines this onto the
+         elements at send time (see utils.mail.render_inlined). Kept in step
+         with payment_request_email.html so the firm's mail reads as one voice. */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f3f4f6;
+        color: #374151;
+        font-family: "Noto Sans", Arial, "Helvetica Neue", sans-serif;
+      }
+
+      .page {
+        background-color: #f3f4f6;
+        background-image: linear-gradient(180deg, #e5e7eb 0%, #f3f4f6 70%, #f3f4f6 100%);
+      }
+
+      .wrap-cell {
+        padding: 32px 16px 48px;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 480px;
+        background-color: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-head {
+        padding: 24px 24px 16px;
+      }
+
+      /* CID-embedded logo replaces the firm-name text when the firm has one;
+         the alt text covers blocked-image clients. */
+      .firm-logo {
+        display: block;
+        height: auto;
+        max-width: 150px;
+      }
+
+      .firm-name {
+        margin: 0;
+        font-size: 26px;
+        font-weight: normal;
+        color: #111827;
+      }
+
+      .meta {
+        margin: 16px 0 0;
+        font-size: 15px;
+        color: #4b5563;
+      }
+
+      .card-body {
+        padding: 0 24px 24px;
+      }
+
+      .para {
+        margin: 0 0 16px;
+        font-size: 15px;
+        color: #374151;
+      }
+
+      .para a {
+        color: #4b5563;
+      }
+
+      /* The link is the whole point of this email, so it also appears as plain
+         text below the button — some clients strip styled anchors. */
+      .btn {
+        background-color: #475569;
+        border-radius: 8px;
+      }
+
+      .btn a {
+        display: inline-block;
+        padding: 10px 22px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #ffffff;
+        text-decoration: none;
+      }
+
+      .fallback {
+        margin: 16px 0 0;
+        font-size: 13px;
+        color: #6b7280;
+        word-break: break-all;
+      }
+
+      /* A physical address is a legitimacy signal spam filters look for, and
+         this message goes to someone who has never heard from us. */
+      .email-footer {
+        padding: 16px 8px 0;
+        font-size: 13px;
+        color: #6b7280;
+        text-align: center;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .btn {
+          background-color: #525252 !important;
+        }
+
+        .btn a {
+          color: #f5f5f5 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td class="wrap-cell" align="center">
+          <table role="presentation" class="card" width="480" cellpadding="0" cellspacing="0">
+            <tr>
+              <td class="card-head">
+                {% if logo_cid %}
+                  <img class="firm-logo" src="cid:{{ logo_cid }}" alt="{{ firm_name|firm_strip }}" width="150">
+                {% else %}
+                  <h1 class="firm-name">{{ firm_name|default:"Our office"|firm_strip }}</h1>
+                {% endif %}
+                <p class="meta">{{ form_name }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="card-body">
+                <p class="para">Dear {{ client_name|default:"Client" }},</p>
+                {% if cover_message %}
+                  <p class="para" style="white-space: pre-line;">{{ cover_message }}</p>
+                {% else %}
+                  <p class="para">
+                    This is a friendly reminder about the form we sent you. Anything
+                    you have already filled in has been saved &mdash; the link picks
+                    up where you left off.
+                  </p>
+                {% endif %}
+                <table role="presentation" class="btn" cellpadding="0" cellspacing="0" style="margin: 8px 0 0;">
+                  <tr>
+                    <td>
+                      <a href="{{ form_url }}">Open your form</a>
+                    </td>
+                  </tr>
+                </table>
+                <p class="fallback">If the button doesn't work, paste this into your browser: {{ form_url }}</p>
+                <p class="para" style="margin-top: 16px;">
+                  If you have any questions, please reply to this email{% if firm_email %} or contact us at <a href="mailto:{{ firm_email }}">{{ firm_email }}</a>{% endif %}{% if firm_phone %} or {{ firm_phone }}{% endif %}.
+                </p>
+              </td>
+            </tr>
+          </table>
+          {% if firm_address %}
+            <div class="email-footer">{{ firm_name }} &middot; {{ firm_address }}</div>
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

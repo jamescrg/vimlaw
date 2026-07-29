@@ -1,0 +1,186 @@
+{% extends "base-minimal.html" %}
+{% load static cache_buster %}
+{% block title %}
+  {{ submission.template_name }}
+{% endblock title %}
+{% block content %}
+  <link rel="stylesheet" href="{% static_v 'css/intake-form.css' %}" />
+  <div class="cf-page" x-data="intakeForm({{ config }})">
+    {% comment %}
+      Staff see the client's form exactly — same card, same Submit, same
+      banners — because a paralegal reads it out over the phone and the two
+      must never disagree. This bar and the version line under it are the only
+      staff additions, and they exist to stop anyone mistaking this tab for
+      the client's own copy.
+    {% endcomment %}
+    {% comment %}
+      One line above an otherwise exact client page, because the page is live:
+      whoever is looking can type into it, and nothing they type goes anywhere.
+    {% endcomment %}
+    {% if preview %}
+      <div class="cf-staff-bar">
+        <span class="cf-staff-who">Preview. Nothing typed here is saved or sent.</span>
+      </div>
+    {% endif %}
+    {% if staff %}
+      <div class="cf-staff-bar">
+        <span class="cf-staff-who">
+          Filling in for <strong>{{ submission.intake.name }}</strong>
+        </span>
+        <a class="cf-staff-back"
+           href="{% url 'intakes:detail-index' id=submission.intake.id %}">Back to the intake</a>
+      </div>
+      {% comment %}
+        Which version was asked, and whether the library has moved on since —
+        the snapshot means this page can be showing questions the current
+        template no longer contains, and that has to be visible.
+      {% endcomment %}
+      <p class="cf-staff-meta">
+        Version {{ submission.template_version }}
+        {% if submission.submitted_at %}
+          · submitted {{ submission.submitted_at|date:"Y-m-d g:i A" }}
+        {% else %}
+          · not yet submitted
+        {% endif %}
+        {% if submission.template_drifted %}
+          <span class="cf-staff-drift">The form has since changed to version {{ submission.template.version }}. These are the questions as they were asked.</span>
+        {% endif %}
+      </p>
+    {% endif %}
+    <div class="cf-card">
+      <header class="cf-head">
+        {% if logo_url %}
+          <img class="cf-logo"
+               src="{{ logo_url }}"
+               alt="{{ firm_name }}"
+               width="152"
+               height="auto" />
+        {% elif firm_name %}
+          <h1 class="cf-firm">{{ firm_name }}</h1>
+        {% endif %}
+        <h2 class="cf-title">{{ submission.template_name }}</h2>
+      </header>
+      {% if not editable %}
+        {% comment %}
+          Closed by the firm: read-only, but they can still see what they
+          said. Staff reaching this are looking at a locked or cancelled form,
+          so they get the state rather than the thank-you.
+        {% endcomment %}
+        {% if staff %}
+          <p class="cf-banner">
+            This form is {{ submission.get_status_display|lower }}, so nothing here can be
+            changed. Reopen it from the intake to edit it again.
+          </p>
+        {% else %}
+          <p class="cf-banner">
+            Thank you. We've received your answers.
+            {% if firm_email %}
+              If anything needs changing, please contact us at {{ firm_email }}.
+            {% else %}
+              If anything needs changing, please get in touch.
+            {% endif %}
+          </p>
+        {% endif %}
+        <dl class="cf-summary">
+          {% for block in blocks %}
+            {% if block.kind == "heading" %}
+              <dt class="cf-summary-heading">{{ block.label }}</dt>
+            {% elif block.kind == "field" %}
+              <dt>{{ block.label }}</dt>
+              {% if block.answered %}
+                <dd>
+                  {{ block.display|linebreaks }}
+                </dd>
+              {% else %}
+                <dd class="cf-summary-blank">
+                  Not answered
+                </dd>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </dl>
+      {% else %}
+        {% comment %}
+          Shown after a successful submit. Staff have just filed the answers
+          on the intake themselves, so "we've received your answers" would be
+          addressed to the wrong person.
+        {% endcomment %}
+        <p class="cf-banner" x-show="submitted && !editing" x-cloak>
+          Thank you. We've received your answers.
+          <button type="button" class="cf-link-btn" @click="editing = true">Make changes</button>
+        </p>
+        {% comment %}
+          The caption slot. A form's own caption (Form Settings) speaks here;
+          without one, the standard caption stands in — the autosave
+          reassurance, which used to sit under the Submit button and wrapped
+          badly there.
+        {% endcomment %}
+        <div class="cf-intro" x-show="editing" x-cloak>
+          {% if submission.template.intro_text %}
+            {{ submission.template.intro_text|linebreaks }}
+          {% else %}
+            <p>{{ default_caption }}</p>
+          {% endif %}
+        </div>
+        <form class="cf-form" x-show="editing" x-cloak @submit.prevent="submit()">
+          {% for block in blocks %}
+            {% if block.kind == "heading" %}
+              <h3 class="cf-heading">{{ block.label }}</h3>
+            {% elif block.kind == "text" %}
+              <div class="cf-text">{{ block.text|linebreaks }}</div>
+            {% elif block.kind == "field" %}
+              <div class="cf-field"
+                   :class="errors['{{ block.key }}'] ? 'cf-field-error' : ''">
+                <label class="cf-label" for="f-{{ block.key }}">
+                  {{ block.label }}
+                  {% if block.required %}<span class="cf-req">*</span>{% endif %}
+                </label>
+                {% if block.help %}<p class="cf-help">{{ block.help }}</p>{% endif %}
+                {% include "intakes/forms/public/widget.html" %}
+                <p class="cf-error"
+                   x-show="errors['{{ block.key }}']"
+                   x-cloak
+                   x-text="errors['{{ block.key }}']"></p>
+              </div>
+            {% endif %}
+          {% endfor %}
+          <p class="cf-banner cf-banner-error"
+             x-show="message"
+             x-cloak
+             x-text="message"></p>
+          <div class="cf-footer">
+            <span class="cf-state" x-show="state === 'saving'" x-cloak>Saving…</span>
+            <span class="cf-state"
+                  x-show="state === 'saved'"
+                  x-cloak
+                  x-text="'Saved ' + savedAt"></span>
+            <button type="submit" class="cf-submit" :disabled="sending">
+              <span x-text="sending ? 'Sending…' : 'Submit'"></span>
+            </button>
+          </div>
+        </form>
+      {% endif %}
+      {% comment %}
+        Answers whose question is no longer in the snapshot. Nothing writes a
+        snapshot twice today, so this should never fire — it is here so that
+        if one ever is rewritten, the answers surface instead of vanishing.
+        Staff only: it is a data-integrity notice, not something to show a
+        client.
+      {% endcomment %}
+      {% if staff and orphans %}
+        <div class="cf-orphans">
+          <h3 class="cf-heading">Answers with no matching question</h3>
+          <dl class="cf-summary">
+            {% for key, value in orphans %}
+              <dt>{{ key }}</dt>
+              <dd>
+                {{ value }}
+              </dd>
+            {% endfor %}
+          </dl>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <script src="{% static_v 'js/intake-form-fill.js' %}"></script>
+{% endblock content %}
