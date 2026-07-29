@@ -82,7 +82,7 @@ def _intake_context(intake):
         f"Phone: {intake.phone or ''}",
         f"Email: {intake.email or ''}",
         f"Address: {intake.address or ''}",
-        f"Disputed property: {intake.disputed_property or ''}",
+        f"Disputed property address: {intake.disputed_property or ''}",
         f"Disputed value: {intake.value or ''}",
         f"Current importance: {intake.importance}",
         "",

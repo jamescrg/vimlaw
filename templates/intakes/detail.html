@@ -4,6 +4,8 @@
       <div class="card">
         <div class="toolbar">
           <div class="toolbar-left">
+            {# The same importance dropdown the list rows use, leading the name #}
+            <div class="filter-tools intake-importance">{% include "intakes/intake-importance.html" %}</div>
             <h1>{{ intake.name|slice:":23" }}</h1>
           </div>
           <div class="toolbar-right">

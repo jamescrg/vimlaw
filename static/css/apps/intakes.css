@@ -398,6 +398,50 @@ Value Inline Edit
 }
 
 /* ==========================================================================
+Importance flag in the detail header (beside the intake name)
+========================================================================== */
+
+/* Bare icon: the generic .toolbar button chrome doesn't belong on a flag.
+   The 3px drop is an optical alignment nudge against the name's baseline,
+   not a spacing value. */
+.intake-sidebar .intake-importance .button-link {
+  background: none;
+  border: none;
+  color: var(--color-muted-more);
+  padding: 0;
+  position: relative;
+  top: 3px;
+}
+
+/* Pull the name 0.25rem closer than the toolbar-left 1.25rem gap allows */
+.intake-sidebar .toolbar-left .intake-importance {
+  margin-right: -0.25rem;
+}
+
+/* Level colours, same ramp the list uses (which scopes them to
+   .intake-list; the button icon now carries its own importance class) */
+.intake-importance i.importance-7,
+.intake-importance i.importance-6 {
+  color: var(--red-600);
+}
+
+.intake-importance i.importance-5 {
+  color: var(--violet-600);
+}
+
+.intake-importance i.importance-3 {
+  color: var(--slate-400);
+}
+
+.intake-importance i.importance-2 {
+  color: var(--slate-500);
+}
+
+.intake-importance i.importance-1 {
+  color: var(--slate-600);
+}
+
+/* ==========================================================================
 Assessment pane (Notes | Assessment segmented control on the detail)
 ========================================================================== */
 

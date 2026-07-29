@@ -74,7 +74,7 @@ class IntakeForm(forms.ModelForm):
         labels = {
             "date": "Open Date",
             "practice_area": "Practice Area",
-            "disputed_property": "Disputed Property (if different from address)",
+            "disputed_property": "Disputed Property Address (if different)",
             "value": "Disputed Property Value",
         }
 

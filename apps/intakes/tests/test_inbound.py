@@ -41,6 +41,17 @@ def _inline_tasks(monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+def assessment_calls(monkeypatch):
+    """First-pass assessment is assess.run_assessment's job (tested in
+    test_assess.py); here just record which intakes it runs for."""
+    calls = []
+    monkeypatch.setattr(
+        "apps.intakes.inbound.run_assessment", lambda intake: calls.append(intake.id)
+    )
+    return calls
+
+
 @pytest.fixture
 def mock_ai(monkeypatch):
     """Replace the Gemini call; pass a dict (JSON-encoded for you) or a raw
@@ -62,7 +73,7 @@ EXTRACTION = {
     "phone": "(404) 555-0100",
     "email": "jane@example.com",
     "address": "12 Oak St, Atlanta, GA",
-    "disputed_property": "14 Oak St, Atlanta, GA",
+    "disputed_property_address": "14 Oak St, Atlanta, GA",
     "value": 250000,
     "practice_area": "General",
     "source": "Internet",
@@ -321,65 +332,16 @@ def test_malformed_ai_response_still_creates_intake(user, mock_ai):
     assert inbound.intake_id == intake.id
 
 
-def test_high_importance_seeds_assessment(user, mock_ai):
-    mock_ai(
-        {
-            **EXTRACTION,
-            "importance": 6,
-            "importance_rationale": "Large disputed value and a clear claim.",
-        }
-    )
+def test_new_intake_gets_full_first_pass_assessment(user, mock_ai, assessment_calls):
+    mock_ai(EXTRACTION)
     post_inbound()
-    intake = Intake.objects.get()
-    assert intake.importance == 6
-    assert intake.assessment == "Large disputed value and a clear claim."
-    assert intake.assessed_at is not None
-    assert Note.objects.count() == 1  # only the original message
+    assert assessment_calls == [Intake.objects.get().id]
 
 
-def test_low_importance_seeds_assessment(user, mock_ai):
-    mock_ai(
-        {
-            **EXTRACTION,
-            "importance": 2,
-            "importance_rationale": "Outside the firm's practice areas.",
-        }
-    )
+def test_malformed_extraction_still_gets_assessment(user, mock_ai, assessment_calls):
+    mock_ai("I could not parse this, sorry!")
     post_inbound()
-    intake = Intake.objects.get()
-    assert intake.importance == 2
-    assert "Outside the firm" in intake.assessment
-
-
-def test_null_importance_keeps_default_without_assessment(user, mock_ai):
-    mock_ai({**EXTRACTION, "importance": None, "importance_rationale": None})
-    post_inbound()
-    intake = Intake.objects.get()
-    assert intake.importance == 4
-    assert intake.assessment == ""
-    assert intake.assessed_at is None
-
-
-def test_normal_importance_gets_no_assessment(user, mock_ai):
-    mock_ai({**EXTRACTION, "importance": 4, "importance_rationale": "Routine."})
-    post_inbound()
-    intake = Intake.objects.get()
-    assert intake.importance == 4
-    assert intake.assessment == ""
-
-
-def test_invalid_importance_ignored(user, mock_ai):
-    mock_ai({**EXTRACTION, "importance": "very high", "importance_rationale": "x"})
-    post_inbound()
-    intake = Intake.objects.get()
-    assert intake.importance == 4
-    assert intake.assessment == ""
-
-
-def test_out_of_range_importance_clamped(user, mock_ai):
-    mock_ai({**EXTRACTION, "importance": 11, "importance_rationale": "Big case."})
-    post_inbound()
-    assert Intake.objects.get().importance == 7
+    assert assessment_calls == [Intake.objects.get().id]
 
 
 def test_followup_by_email_logs_note_on_existing_intake(user, intake, mock_ai):
@@ -428,20 +390,16 @@ def test_followup_matches_most_recent_intake(user, intake, mock_ai):
     assert Note.objects.get().intake_id == newer.id
 
 
-def test_followup_does_not_touch_fields_or_assessment(user, intake, mock_ai):
-    mock_ai(
-        {
-            **EXTRACTION,
-            "email": "contact@example.com",
-            "importance": 7,
-            "importance_rationale": "Huge case.",
-        }
-    )
+def test_followup_does_not_touch_fields_or_assessment(
+    user, intake, mock_ai, assessment_calls
+):
+    mock_ai({**EXTRACTION, "email": "contact@example.com"})
     post_inbound()
     intake.refresh_from_db()
     assert intake.importance == 4
     assert intake.assessment == ""
     assert intake.name == "Mohandas Gandhi"
+    assert assessment_calls == []  # reassessing a followed-up intake is manual
 
 
 def test_name_is_title_cased(user, mock_ai):

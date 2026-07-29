@@ -324,10 +324,12 @@ KOSMOS_SEAM_KEY = env("KOSMOS_SEAM_KEY", default="")
 # key is configured; enforcement begins once the key is set.
 MAILGUN_WEBHOOK_SIGNING_KEY = env("MAILGUN_WEBHOOK_SIGNING_KEY", default="")
 # Local part of the intake address this instance owns. The shared Mailgun
-# route posts every message to prod AND dev; prod processes intakes@, dev
-# processes intakes-dev@, each dropping the other's mail. This is what makes
+# route posts every message to prod AND dev; prod processes kosmos-intakes@,
+# dev processes kosmos-dev-intakes@, each dropping the other's mail. This is what makes
 # permanent integration testing against dev possible on a 1-route quota.
-INTAKE_INBOUND_RECIPIENT = env("INTAKE_INBOUND_RECIPIENT", default="intakes").lower()
+INTAKE_INBOUND_RECIPIENT = env(
+    "INTAKE_INBOUND_RECIPIENT", default="kosmos-intakes"
+).lower()
 
 # Anthropic API Configuration
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
