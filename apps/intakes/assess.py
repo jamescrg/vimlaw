@@ -47,13 +47,21 @@ Rules:
   the intake back at length.
 - "importance": how promising this intake looks for the firm, on the
   firm's 1-7 scale (7 Highest, 6 Higher, 5 High, 4 Normal, 3 Low, 2 Lower,
-  1 Lowest). Judge the substance, not the amount of detail: move above 4
-  only on concrete positive signals (clearly fits the practice areas,
-  meaningful amount in dispute, an apparently viable claim, genuine
-  urgency); move below 4 only on concrete negative signals (outside the
-  practice areas, no real legal dispute, apparently unviable position,
-  signs of an undesirable engagement). Use null when there is too little
-  information to justify moving off the current rating.
+  1 Lowest). Judge the substance, not the amount of detail. Fitting the
+  firm's practice areas is table stakes, not a plus - most leads fit, so
+  fit alone means Normal. What raises a rating above 4 is concrete
+  evidence of VALUE and MERITS:
+  - Value: a high dollar amount in dispute, valuable property, or a
+    high-net-worth client. Look for indicators in the property itself,
+    in the client's profile, and in the magnitude of the case.
+  - Merits: a strong case is one the firm can typically WIN. The firm's
+    philosophy: a winnable case is where it delivers real value to the
+    client, can command a higher fee, and the engagement is profitable.
+  The strongest ratings (6-7) need both. Move below 4 only on concrete
+  negative signals (outside the practice areas, no real legal dispute,
+  an apparently unviable position, signs of an undesirable engagement).
+  Use null when there is too little information to justify moving off
+  the current rating.
 - "limitations": be particularly alert to statute-of-limitations and other
   deadline problems. When the facts suggest a limitations period may be
   running short or already missed, describe the concern and its urgency
