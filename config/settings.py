@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "apps.management",
     "apps.notes",
     "apps.drive",
+    "apps.mail",
     "django_filters",
     "django_cleanup.apps.CleanupConfig",
     "django_q",
