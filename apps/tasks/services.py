@@ -161,3 +161,76 @@ def process_quick_task_description(description, last_matter_id=None):
             pass
 
     return QuickTaskMatch(description, None, False, "filter", "")
+
+
+# ── AI-entry validation ──────────────────────────────────────────────────────
+# Shared by the agenda chat's create-tasks blocks and the tasks tab's AI
+# command interface. Every resolver is forgiving: unresolvable input means
+# None (or the fallback), never an exception.
+
+
+def resolve_matter_name(name):
+    """Exact-name (case-insensitive) match among Pending/Open matters."""
+    if not name:
+        return None
+    return Matter.objects.filter(
+        name__iexact=str(name).strip(),
+        status__in=["Pending", "Open"],
+    ).first()
+
+
+def resolve_assignee_name(name, requesting_user):
+    """Match a full name among active users; fall back to the requester."""
+    if not name:
+        return requesting_user
+    from apps.accounts.models import CustomUser
+
+    wanted = str(name).strip().lower()
+    match = next(
+        (
+            u
+            for u in CustomUser.objects.filter(is_active=True)
+            if u.full_name.lower() == wanted
+        ),
+        None,
+    )
+    return match or requesting_user
+
+
+def parse_due_date(value):
+    """ISO date string to date; None on anything else."""
+    if not value:
+        return None
+    from datetime import date
+
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def clamp_importance(value, default=4):
+    """Coerce to the firm's 1-7 scale; default on garbage."""
+    try:
+        return min(max(int(value), 1), 7)
+    except (TypeError, ValueError):
+        return default
+
+
+def create_task_from_ai_entry(entry, requesting_user):
+    """Create a Task from an AI-emitted entry dict; None when unusable."""
+    from apps.tasks.constants import STATUS_PENDING
+    from apps.tasks.models import Task
+
+    description = str(entry.get("description") or "").strip()[:200]
+    if len(description) < 4:
+        return None
+
+    return Task.objects.create(
+        description=description,
+        status=STATUS_PENDING,
+        date_due=parse_due_date(entry.get("due")),
+        importance=clamp_importance(entry.get("importance")),
+        user=resolve_assignee_name(entry.get("user"), requesting_user),
+        matter=resolve_matter_name(entry.get("matter")),
+    )

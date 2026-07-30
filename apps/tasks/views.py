@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import date, datetime, timedelta
 
 import markdown
@@ -35,9 +36,17 @@ from apps.tasks.models import (
     TaskNote,
     UserTaskNoteView,
 )
-from apps.tasks.services import process_quick_task_description
+from apps.tasks.services import (
+    clamp_importance,
+    parse_due_date,
+    process_quick_task_description,
+    resolve_assignee_name,
+    resolve_matter_name,
+)
 from apps.tasks.tasks import get_board_data, get_list_data
 from utils.toasts import toast_success, toast_warning
+
+logger = logging.getLogger(__name__)
 
 TASKS_TRIGGER = "tasksListChanged"
 
@@ -292,13 +301,62 @@ def tasks_add(request):
 
 @login_required
 def tasks_add_quick(request):
-    task = Task()
-
     # prevent creation of tasks without a description
     if not request.POST["description"]:
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
-    # Process description with intelligent matter matching
+    filter_data = request.session.get("tasks_filter", {})
+
+    # AI path first: Gemini Flash interprets the whole line. Nulls mean
+    # "not stated", filled with the same defaults the legacy path uses.
+    entry = _quick_add_ai_entry(request)
+    if entry is not None:
+        task = Task(status=STATUS_PENDING)
+        task.description = str(entry.get("description"))[:200]
+
+        task.date_due = parse_due_date(entry.get("due")) or date.today()
+
+        if entry.get("importance") is not None:
+            task.importance = clamp_importance(entry.get("importance"))
+        else:
+            filter_importance = filter_data.get("importance")
+            task.importance = (
+                int(filter_importance)
+                if filter_importance and int(filter_importance) != 0
+                else 4
+            )
+
+        assignee = None
+        if entry.get("user"):
+            assignee = resolve_assignee_name(entry.get("user"), None)
+        if assignee is None:
+            user_id = filter_data.get("user") or request.user.id
+            assignee = CustomUser.objects.filter(pk=int(user_id)).get()
+        task.user = assignee
+
+        matter = resolve_matter_name(entry.get("matter"))
+        if matter is None and not entry.get("matter"):
+            matter_id = filter_data.get("matter", None)
+            if matter_id:
+                matter = Matter.objects.filter(pk=int(matter_id)).first()
+        task.matter = matter
+
+        task.save()
+        response = HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
+        matter_name = task.matter.name if task.matter else "Admin"
+        details = [matter_name, f"due {task.date_due}"]
+        if task.user_id != request.user.id:
+            details.append(f"for {task.user.full_name}")
+        toast_success(response, f"Added to {', '.join(details)}.")
+        if entry.get("matter") and task.matter is None:
+            toast_warning(
+                response,
+                f'No open matter matches "{entry["matter"]}". '
+                f"The task was filed under Admin.",
+            )
+        return _finish_quick_add(request, task, response)
+
+    # Legacy path: prefix matcher (also the fallback when the AI is down)
     last_matter_id = request.session.get("last_quick_task_matter")
     match = process_quick_task_description(request.POST["description"], last_matter_id)
     description = match.description
@@ -307,10 +365,8 @@ def tasks_add_quick(request):
     if not description.strip():
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
-    # get filter values to auto populate task properties
-    filter_data = request.session.get("tasks_filter", {})
-
     # set task description and some property values
+    task = Task()
     task.description = description
     task.status = STATUS_PENDING
     task.date_due = date.today()
@@ -338,17 +394,6 @@ def tasks_add_quick(request):
 
     task.save()
 
-    # Store new task ID for force-show in filtered lists
-    new_task_ids = request.session.get("new_task_ids", [])
-    new_task_ids.append(task.id)
-    request.session["new_task_ids"] = new_task_ids
-
-    # Store the matter ID (or None for Admin) in session for next quick task
-    if task.matter:
-        request.session["last_quick_task_matter"] = task.matter.id
-    else:
-        request.session["last_quick_task_matter"] = None
-
     # Flag when the typed prefix could not be resolved instead of silently
     # misfiling the task. A clean match stays quiet to keep rapid entry fast.
     response = HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
@@ -356,14 +401,48 @@ def tasks_add_quick(request):
     if match.status == "ambiguous":
         toast_warning(
             response,
-            f'"{match.prefix}" matches more than one matter — added to '
-            f"{matter_name}. Type more of the name.",
+            f'"{match.prefix}" matches more than one matter. It was added to '
+            f"{matter_name}; type more of the name next time.",
         )
     elif match.status == "unmatched":
         toast_warning(
             response,
-            f'No open matter matches "{match.prefix}" — added to {matter_name}.',
+            f'No open matter matches "{match.prefix}". It was added to {matter_name}.',
         )
+    return _finish_quick_add(request, task, response)
+
+
+def _quick_add_ai_entry(request):
+    """Interpret the quick-add line with Gemini; None on any failure so the
+    caller falls back to the legacy prefix matcher."""
+    from apps.tasks.ai import interpret_quick_add
+
+    recent_matter = None
+    last_matter_id = request.session.get("last_quick_task_matter")
+    if last_matter_id:
+        recent_matter = (
+            Matter.objects.filter(pk=last_matter_id)
+            .values_list("name", flat=True)
+            .first()
+        )
+    try:
+        entry = interpret_quick_add(
+            request.POST["description"], request.user, recent_matter=recent_matter
+        )
+    except Exception:
+        logger.exception("Quick-add AI interpretation failed; using legacy parser")
+        return None
+    if entry and len(str(entry.get("description", "")).strip()) >= 4:
+        return entry
+    return None
+
+
+def _finish_quick_add(request, task, response):
+    """Shared tail: highlight the new row and remember the matter."""
+    new_task_ids = request.session.get("new_task_ids", [])
+    new_task_ids.append(task.id)
+    request.session["new_task_ids"] = new_task_ids
+    request.session["last_quick_task_matter"] = task.matter.id if task.matter else None
     return response
 
 

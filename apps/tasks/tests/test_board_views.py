@@ -31,16 +31,18 @@ def test_board_view_renders(client, task):
 def test_board_card_selection(client, task):
     client.post("/tasks/view-mode/board/")
 
-    # Unselected: select button present, card not marked selected.
+    # Unselected: card rendered with the shift-click affordance, not marked
+    # selected. (Selection is shift-click since 47ce5dd0: the board JS posts
+    # to toggle-select itself; there is no per-card button in the HTML.)
     body = client.get("/").content.decode()
-    assert f"/tasks/toggle-select/{task.id}/" in body
+    assert f'data-task-id="{task.id}"' in body
+    assert "Shift-click to select" in body
     assert "importance-4 selected" not in body
 
-    # Toggle selection -> card carries the selected class + checked icon.
+    # Toggling (what the shift-click JS does) marks the card selected.
     assert client.post(f"/tasks/toggle-select/{task.id}/").status_code == 204
     body = client.get("/").content.decode()
     assert "importance-4 selected" in body
-    assert "icon-square-check" in body
 
 
 @pytest.mark.django_db
