@@ -5,11 +5,13 @@ import pytest
 from apps.case.ai.auto_summary import (
     AUTO_SUMMARY_PROMPT,
     AUTO_SUMMARY_TITLE,
+    AUTO_SUMMARY_UPDATE_PROMPT,
     refresh_auto_summaries,
     refresh_matter_auto_summary,
 )
 from apps.case.ai.models import Conversation, Message
 from apps.matters.models import Matter
+from apps.notes.models import Note
 
 pytestmark = pytest.mark.django_db
 
@@ -19,13 +21,14 @@ def mock_ai():
     with (
         patch(
             "apps.case.ai.auto_summary.assemble_matter_context_with_selection",
-            return_value="CONTEXT",
-        ),
+            return_value="FULL CONTEXT",
+        ) as assemble,
         patch(
             "apps.case.ai.auto_summary.send_to_gemini",
             return_value=("A fresh summary.", 1000, 200),
         ) as send,
     ):
+        send.assemble = assemble
         yield send
 
 
@@ -69,10 +72,13 @@ class TestWorker:
         conversation = Conversation.objects.get(matter=matter)
         assert conversation.title == AUTO_SUMMARY_TITLE
         assert conversation.llm == "gemini-flash"
-        assert conversation.ai_context == "never"
+        assert conversation.ai_context == "always"
         assert conversation.vet_citations is False
         assert conversation.user is None
         assert conversation.summary == "A fresh summary."
+
+        mock_ai.assemble.assert_called_once()
+        assert mock_ai.call_args.kwargs["system_context"] == "FULL CONTEXT"
 
         messages = list(conversation.messages.all())
         assert [m.role for m in messages] == ["user", "assistant"]
@@ -81,13 +87,30 @@ class TestWorker:
         assert messages[1].input_tokens == 1000
         assert messages[1].output_tokens == 200
 
-    def test_second_run_replaces_messages(self, matter, mock_ai):
+    def test_second_run_is_incremental_and_replaces_messages(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)
         conversation = Conversation.objects.get(matter=matter)
         original_created_at = conversation.created_at
 
+        Note.objects.create(
+            matter=matter, title="Deposition prep", content="Key admissions listed."
+        )
+        old_note = Note.objects.create(
+            matter=matter, title="Old strategy memo", content="Stale."
+        )
+        Note.objects.filter(id=old_note.id).update(updated_at="2020-01-01T00:00:00Z")
+
+        mock_ai.assemble.reset_mock()
         mock_ai.return_value = ("An even fresher summary.", 1100, 210)
         refresh_matter_auto_summary(matter.id)
+
+        # Incremental path: no full assembly; context carries the previous
+        # summary and only the fresh record
+        mock_ai.assemble.assert_not_called()
+        system_context = mock_ai.call_args.kwargs["system_context"]
+        assert "A fresh summary." in system_context
+        assert "Deposition prep" in system_context
+        assert "Old strategy memo" not in system_context
 
         conversation.refresh_from_db()
         assert Conversation.objects.filter(matter=matter).count() == 1
@@ -95,7 +118,34 @@ class TestWorker:
 
         messages = list(conversation.messages.all())
         assert len(messages) == 2
+        assert messages[0].content == AUTO_SUMMARY_UPDATE_PROMPT
         assert messages[1].content == "An even fresher summary."
+
+    def test_incremental_run_with_no_new_records(self, matter, mock_ai):
+        refresh_matter_auto_summary(matter.id)
+
+        mock_ai.return_value = ("Same story, new day.", 500, 100)
+        refresh_matter_auto_summary(matter.id)
+
+        system_context = mock_ai.call_args.kwargs["system_context"]
+        assert "No records have been added or changed" in system_context
+        assert (
+            Conversation.objects.get(matter=matter).messages.last().content
+            == "Same story, new day."
+        )
+
+    def test_large_delta_falls_back_to_full_context(self, matter, mock_ai, monkeypatch):
+        refresh_matter_auto_summary(matter.id)
+        Note.objects.create(matter=matter, title="Big filing", content="x" * 100)
+
+        monkeypatch.setattr("apps.case.ai.auto_summary.INCREMENTAL_FALLBACK_CHARS", 10)
+        mock_ai.assemble.reset_mock()
+        refresh_matter_auto_summary(matter.id)
+
+        mock_ai.assemble.assert_called_once()
+        assert mock_ai.call_args.kwargs["system_context"] == "FULL CONTEXT"
+        messages = Conversation.objects.get(matter=matter).messages
+        assert messages.first().content == AUTO_SUMMARY_PROMPT
 
     def test_gemini_failure_keeps_previous_summary(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)

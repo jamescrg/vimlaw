@@ -146,7 +146,9 @@ def _fetch_caselaw_opinion_text(caselaw) -> str:
     return ""
 
 
-def collect_context_items(matter, current_conversation=None) -> list[ContextItem]:
+def collect_context_items(
+    matter, current_conversation=None, since=None, include_auto=False
+) -> list[ContextItem]:
     """
     Collect items that are always included in context (ai_context="always"
     for Documents/CaseLaw, plus all Highlights, Facts, Notes, Conversations).
@@ -157,14 +159,22 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
     Args:
         matter: The Matter object
         current_conversation: Optional current Conversation to exclude from references
+        since: Optional datetime — only include items updated at or after it
+            (used by the nightly auto-summary to build an incremental delta)
+        include_auto: Include ai_context="auto" Documents/Notes/CaseLaw with
+            full content instead of leaving them to the selector
 
     Returns a list of ContextItem objects sorted by importance (most important first).
     """
     items = []
 
+    docs = Document.objects.filter(matter=matter).exclude(ai_context="never")
+    if since:
+        docs = docs.filter(updated_at__gte=since)
+
     # Collect Documents — only "always" items get full content here
-    for doc in Document.objects.filter(matter=matter).exclude(ai_context="never"):
-        if doc.ai_context == "auto":
+    for doc in docs:
+        if doc.ai_context == "auto" and not include_auto:
             continue  # Handled by selector
 
         # ai_context="always" — include full content
@@ -186,9 +196,12 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
         )
 
     # Collect Highlights (always included — no ai_context field)
-    for hl in Highlight.objects.filter(document__matter=matter).select_related(
+    highlights = Highlight.objects.filter(document__matter=matter).select_related(
         "document"
-    ):
+    )
+    if since:
+        highlights = highlights.filter(updated_at__gte=since)
+    for hl in highlights:
         text_preview = hl.text[:500] if hl.text else ""
         if hl.text and len(hl.text) > 500:
             text_preview += "..."
@@ -207,9 +220,12 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
         )
 
     # Collect Facts (Timeline — always included)
-    for fact in Fact.objects.filter(matter=matter).prefetch_related(
+    facts = Fact.objects.filter(matter=matter).prefetch_related(
         "documents", "highlights"
-    ):
+    )
+    if since:
+        facts = facts.filter(updated_at__gte=since)
+    for fact in facts:
         content = f"**Fact [{fact.date}]:** {fact.description}"
 
         # Add source references
@@ -233,7 +249,12 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
     # Collect Notes — only "always" items get full content here. "auto" notes
     # are chosen by the selector; "never" notes are excluded. Full content, no
     # truncation (parity with Documents).
-    for note in Note.objects.filter(matter=matter, ai_context="always"):
+    notes = Note.objects.filter(matter=matter).exclude(ai_context="never")
+    if not include_auto:
+        notes = notes.filter(ai_context="always")
+    if since:
+        notes = notes.filter(updated_at__gte=since)
+    for note in notes:
         content_parts = [f"**Note: {note.title}**"]
         if note.category:
             content_parts[0] += f" [{note.get_category_display()}]"
@@ -252,7 +273,12 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
         )
 
     # Collect Case Law — only "always" items
-    for caselaw in CaseLaw.objects.filter(matter=matter, ai_context="always"):
+    caselaw_qs = CaseLaw.objects.filter(matter=matter).exclude(ai_context="never")
+    if not include_auto:
+        caselaw_qs = caselaw_qs.filter(ai_context="always")
+    if since:
+        caselaw_qs = caselaw_qs.filter(updated_at__gte=since)
+    for caselaw in caselaw_qs:
         content_parts = [f"**Case Law: {caselaw.case_name}**, {caselaw.citation}"]
         if caselaw.court:
             content_parts.append(f"Court: {caselaw.court}")
@@ -281,6 +307,8 @@ def collect_context_items(matter, current_conversation=None) -> list[ContextItem
     reference_convos = Conversation.objects.filter(
         matter=matter, ai_context="always"
     ).order_by("-updated_at")
+    if since:
+        reference_convos = reference_convos.filter(updated_at__gte=since)
     if current_conversation:
         reference_convos = reference_convos.exclude(id=current_conversation.id)
 
