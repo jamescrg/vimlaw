@@ -238,3 +238,135 @@ def test_context_scopes_by_role(admin_user, staff_user, matter):
     assert "Staff member task" in staff_ctx
     assert "Admin's own task" not in staff_ctx
     assert "Drafted the demand letter" in staff_ctx
+
+
+# ── Overnight plans ──────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def mock_gemini_sync(monkeypatch):
+    def _set(response="1. Close out the Smith matter."):
+        calls = {}
+
+        def fake(system_context, messages, **kwargs):
+            calls["system_context"] = system_context
+            return (response, 200, 80)
+
+        monkeypatch.setattr("apps.case.ai.gemini_client.send_to_gemini", fake)
+        return calls
+
+    return _set
+
+
+def _seed_auto_threads(matter):
+    from apps.case.ai.auto_summary import AUTO_AGENDA_TITLE, AUTO_SUMMARY_TITLE
+    from apps.case.ai.models import Message
+
+    for title, text in [
+        (AUTO_SUMMARY_TITLE, "Boundary line disputed at the north fence."),
+        (AUTO_AGENDA_TITLE, "Depose the surveyor, then move for summary judgment."),
+    ]:
+        conv = Conversation.objects.create(matter=matter, title=title, user=None)
+        Message.objects.create(conversation=conv, role="user", content="prompt")
+        Message.objects.create(conversation=conv, role="assistant", content=text)
+
+
+def test_overnight_plan_creates_ready_conversation(
+    admin_user, matter, mock_gemini_sync
+):
+    from apps.dash.agenda import generate_overnight_plan
+
+    _seed_auto_threads(matter)
+    calls = mock_gemini_sync()
+    generate_overnight_plan(admin_user.id)
+
+    conversation = Conversation.objects.get(agenda_user=admin_user)
+    messages = list(conversation.messages.all())
+    assert [m.role for m in messages] == ["user", "assistant"]
+    assert messages[0].content == AUTO_START_MESSAGE
+    assert messages[1].content == "1. Close out the Smith matter."
+    # Thorough context carries both nightly threads
+    assert "Boundary line disputed" in calls["system_context"]
+    assert "Depose the surveyor" in calls["system_context"]
+
+
+def test_overnight_plan_replaces_previous(admin_user, matter, mock_gemini_sync):
+    from apps.dash.agenda import generate_overnight_plan
+
+    mock_gemini_sync()
+    generate_overnight_plan(admin_user.id)
+    old_id = Conversation.objects.get(agenda_user=admin_user).id
+
+    mock_gemini_sync("2. New day, new plan.")
+    generate_overnight_plan(admin_user.id)
+
+    conversation = Conversation.objects.get(agenda_user=admin_user)
+    assert conversation.id != old_id
+    assert conversation.messages.count() == 2
+    assert conversation.messages.last().content == "2. New day, new plan."
+
+
+def test_overnight_plan_failure_keeps_previous(
+    admin_user, matter, mock_gemini_sync, monkeypatch
+):
+    from apps.dash.agenda import generate_overnight_plan
+
+    mock_gemini_sync()
+    generate_overnight_plan(admin_user.id)
+
+    def boom(*args, **kwargs):
+        raise Exception("Gemini down")
+
+    monkeypatch.setattr("apps.case.ai.gemini_client.send_to_gemini", boom)
+    generate_overnight_plan(admin_user.id)
+
+    conversation = Conversation.objects.get(agenda_user=admin_user)
+    assert conversation.messages.last().content == "1. Close out the Smith matter."
+
+
+def test_window_shows_overnight_plan_without_generating(
+    admin_client, admin_user, matter, mock_gemini_sync, monkeypatch
+):
+    from apps.dash.agenda import generate_overnight_plan
+
+    mock_gemini_sync()
+    generate_overnight_plan(admin_user.id)
+
+    def fail(*args, **kwargs):
+        raise AssertionError("window should not trigger generation")
+
+    monkeypatch.setattr("apps.dash.agenda._start_processing", fail)
+    response = admin_client.get("/dash/agenda/")
+    assert response.status_code == 200
+    assert b"Close out the Smith matter" in response.content
+
+
+def test_refresh_daily_plans_queues_active_users(admin_user, staff_user):
+    from unittest.mock import patch
+
+    from apps.dash.agenda import refresh_daily_plans
+
+    staff_user.is_active = False
+    staff_user.save()
+
+    with patch("django_q.tasks.async_task") as async_task:
+        count = refresh_daily_plans()
+
+    assert count == 1
+    async_task.assert_called_once_with(
+        "apps.dash.agenda.generate_overnight_plan",
+        admin_user.id,
+        task_name=f"DailyPlan-{admin_user.id}",
+        group="daily_plan",
+    )
+
+
+def test_scheduled_plans_guarded_off_prod(admin_user, settings):
+    from unittest.mock import patch
+
+    from apps.dash.agenda import scheduled_refresh_daily_plans
+
+    settings.ENV = "dev"
+    with patch("django_q.tasks.async_task") as async_task:
+        assert scheduled_refresh_daily_plans() == 0
+    async_task.assert_not_called()

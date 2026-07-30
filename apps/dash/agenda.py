@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 AGENDA_MODEL = "gemini-pro-latest"
 
 AGENDA_CONTEXT_LIMIT = 80_000
+AUTO_THREAD_CONTEXT_LIMIT = 400_000
 TIME_ENTRY_DAYS = 14
 EVENT_LOOKAHEAD_DAYS = 30
 
@@ -186,11 +187,50 @@ def _agenda_context(user):
     return "\n".join(parts)[:AGENDA_CONTEXT_LIMIT]
 
 
-def _agenda_system_prompt(user):
+def _auto_thread_section(user):
+    """Full text of each visible open matter's nightly Auto Summary and
+    Auto Agenda: the strategic picture behind the raw workload data."""
+    from apps.case.ai.auto_summary import AUTO_AGENDA_TITLE, AUTO_SUMMARY_TITLE
+
+    matters = filter_matters_for_user(
+        Matter.objects.filter(status="Open"), user
+    ).order_by("name")
+    threads = (
+        Conversation.objects.filter(
+            matter__in=matters,
+            title__in=[AUTO_SUMMARY_TITLE, AUTO_AGENDA_TITLE],
+            user__isnull=True,
+        )
+        .select_related("matter")
+        .prefetch_related("messages")
+    )
+    by_matter = {}
+    for conv in threads:
+        replies = [m.content for m in conv.messages.all() if m.role == "assistant"]
+        if replies:
+            by_matter.setdefault(conv.matter_id, []).append((conv.title, replies[0]))
+
+    parts = [
+        "\nPER-MATTER CASE SUMMARIES AND LITIGATION PLANS"
+        " (auto-generated nightly; use them to weigh what matters most)"
+    ]
+    for m in matters:
+        if m.id not in by_matter:
+            continue
+        parts.append(f"\n### {_matter_label(m)}")
+        for title, content in sorted(by_matter[m.id]):
+            parts.append(f"[{title}]\n{content}")
+    return "\n".join(parts)[:AUTO_THREAD_CONTEXT_LIMIT]
+
+
+def _agenda_system_prompt(user, thorough=False):
     from apps.case.ai.context import build_request_info
 
     preamble = AGENDA_PREAMBLE.format(admin_note=ADMIN_NOTE if user.is_admin else "")
-    return "\n".join([build_request_info(user), preamble, "---", _agenda_context(user)])
+    sections = [build_request_info(user), preamble, "---", _agenda_context(user)]
+    if thorough:
+        sections.append(_auto_thread_section(user))
+    return "\n".join(sections)
 
 
 # ── Task creation ────────────────────────────────────────────────────────────
@@ -277,6 +317,100 @@ def _apply_task_blocks(response_text, requesting_user):
         return "\n".join(lines) if lines else "(no tasks created)"
 
     return TASK_BLOCK_RE.sub(replace, response_text)
+
+
+# ── Overnight plans ──────────────────────────────────────────────────────────
+
+
+def refresh_daily_plans():
+    """Nightly dispatcher: queue one plan generation per active user.
+
+    Scheduled after the per-matter auto threads refresh, so each plan can
+    draw on that night's summaries and litigation agendas.
+    """
+    from django_q.tasks import async_task
+
+    user_ids = list(
+        CustomUser.objects.filter(is_active=True).values_list("id", flat=True)
+    )
+    for user_id in user_ids:
+        async_task(
+            "apps.dash.agenda.generate_overnight_plan",
+            user_id,
+            task_name=f"DailyPlan-{user_id}",
+            group="daily_plan",
+        )
+    logger.info("Daily plans: queued %d users", len(user_ids))
+    return len(user_ids)
+
+
+def scheduled_refresh_daily_plans():
+    """Schedule target. Prod only: the dev DB is overwritten from prod
+    nightly, so dev inherits prod's Schedule rows and would double the
+    spend. On-demand runs (run_daily_plans) bypass this guard."""
+    from django.conf import settings
+
+    if settings.ENV != "prod":
+        logger.info("Daily plans: scheduled run skipped (ENV=%s)", settings.ENV)
+        return 0
+    return refresh_daily_plans()
+
+
+def generate_overnight_plan(user_id):
+    """qcluster task: pre-generate one user's daily plan so the dash Plan
+    button opens instantly. Generate first, then swap conversations: on
+    failure the previous plan (or the on-open interactive fallback)
+    survives."""
+    from django.db import transaction
+
+    from apps.case.ai.gemini_client import send_to_gemini
+
+    user = CustomUser.objects.filter(id=user_id, is_active=True).first()
+    if user is None:
+        logger.warning("Daily plan: user %s missing or inactive", user_id)
+        return
+
+    system_context = _agenda_system_prompt(user, thorough=True)
+    try:
+        response_text, input_tokens, output_tokens = send_to_gemini(
+            system_context=system_context,
+            messages=[{"role": "user", "content": AUTO_START_MESSAGE}],
+            model=AGENDA_MODEL,
+        )
+    except Exception:
+        logger.exception(
+            "Daily plan failed for %s; keeping previous plan", user.username
+        )
+        return
+
+    if not response_text or not response_text.strip():
+        logger.warning(
+            "Daily plan: empty response for %s; keeping previous", user.username
+        )
+        return
+
+    response_text = _apply_task_blocks(response_text.strip(), user)
+    with transaction.atomic():
+        Conversation.objects.filter(agenda_user=user).delete()
+        conversation = Conversation.objects.create(
+            agenda_user=user,
+            title="Agenda",
+            llm=AGENDA_MODEL,
+            vet_citations=False,
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role="user",
+            content=AUTO_START_MESSAGE,
+            user=user,
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content=response_text,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
 
 
 # ── Chat cycle ───────────────────────────────────────────────────────────────

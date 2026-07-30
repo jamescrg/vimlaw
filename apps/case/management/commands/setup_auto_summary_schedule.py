@@ -35,6 +35,13 @@ class Command(BaseCommand):
                 "apps.case.ai.auto_summary.scheduled_refresh_auto_summaries_full",
                 f"{minute_hour} * * 1",
             ),
+            # After the matter threads finish, per-user daily plans draw on
+            # that night's summaries and agendas
+            (
+                "auto-daily-plan",
+                "apps.dash.agenda.scheduled_refresh_daily_plans",
+                "45 2 * * *",
+            ),
         ]
 
         local_now = timezone.localtime(timezone.now())
