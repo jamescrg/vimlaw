@@ -361,7 +361,9 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
-        conversation = Conversation.objects.create(matter=matter, title=title, llm=llm)
+        conversation = Conversation.objects.create(
+            matter=matter, title=title, llm=llm, user=request.user
+        )
         is_new = True
 
     # Update title if this is first message and title is default
