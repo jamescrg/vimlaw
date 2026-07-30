@@ -5,7 +5,8 @@ recent time entries, and open intakes, and suggests an agenda - defaulting
 to the day ahead, expandable to week or month by asking. Admins get the
 whole team's workload and cross-user suggestions; everyone else plans
 their own. At the user's explicit direction the AI emits a fenced
-create-tasks block that this module parses into real Task rows. One live
+create-tasks block that this module parses into real Task rows (any
+user may assign a task to any teammate). One live
 agenda conversation per user, resumable until discarded; opening with
 none live auto-generates the daily agenda.
 
@@ -250,10 +251,10 @@ def _create_task_from_entry(entry, requesting_user, today):
             status__in=["Pending", "Open"],
         ).first()
 
-    # Non-admins only ever create tasks for themselves; admins may name a
-    # teammate, defaulting to themselves when the name doesn't resolve.
+    # Any user may assign to any active teammate by full name, defaulting
+    # to themselves when no name is given or the name doesn't resolve.
     assignee = requesting_user
-    if requesting_user.is_admin and entry.get("user"):
+    if entry.get("user"):
         wanted = str(entry["user"]).strip().lower()
         match = next(
             (
@@ -356,11 +357,55 @@ def scheduled_refresh_daily_plans():
     return refresh_daily_plans()
 
 
+PLAN_FEEDBACK_TEMPLATE = """
+
+YESTERDAY'S PLAN AND THE TEAM'S FEEDBACK ON IT
+The previous plan is below, followed by the discussion the user had in
+that thread. The user's direction is controlling guidance for today's
+plan - honor standing preferences (scheduling habits, priorities,
+matters to leave alone) against the current workload data above.
+
+[Previous plan]
+{previous_plan}
+
+[Discussion]
+{discussion}
+"""
+
+
+def _plan_feedback(user):
+    """Yesterday's plan + discussion, when the user actually conversed in
+    the thread; empty otherwise so a quiet day regenerates fresh."""
+    previous = _live_conversation(user)
+    if previous is None:
+        return ""
+    msgs = list(previous.messages.order_by("created_at"))
+    discussion = msgs[2:]
+    if not discussion:
+        return ""
+
+    lines = []
+    for msg in discussion:
+        if msg.role == "user":
+            name = msg.user.full_name if msg.user else "User"
+            lines.append(f"{name}: {msg.content}")
+        else:
+            lines.append(f"Assistant: {msg.content}")
+
+    previous_plan = ""
+    if len(msgs) > 1 and msgs[1].role == "assistant":
+        previous_plan = msgs[1].content
+    return PLAN_FEEDBACK_TEMPLATE.format(
+        previous_plan=previous_plan, discussion="\n\n".join(lines)
+    )
+
+
 def generate_overnight_plan(user_id):
     """qcluster task: pre-generate one user's daily plan so the dash Plan
     button opens instantly. Generate first, then swap conversations: on
     failure the previous plan (or the on-open interactive fallback)
-    survives."""
+    survives. Discussion in the previous thread is folded in as guidance
+    before the thread is replaced."""
     from django.db import transaction
 
     from apps.case.ai.gemini_client import send_to_gemini
@@ -370,7 +415,7 @@ def generate_overnight_plan(user_id):
         logger.warning("Daily plan: user %s missing or inactive", user_id)
         return
 
-    system_context = _agenda_system_prompt(user, thorough=True)
+    system_context = _agenda_system_prompt(user, thorough=True) + _plan_feedback(user)
     try:
         response_text, input_tokens, output_tokens = send_to_gemini(
             system_context=system_context,

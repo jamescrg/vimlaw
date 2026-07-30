@@ -185,18 +185,26 @@ def test_task_block_invalid_json_left_alone(admin_user):
     assert Task.objects.count() == 0
 
 
-def test_non_admin_assignee_forced_to_self(staff_user, admin_user):
+def test_any_user_can_assign_teammate(staff_user, admin_user):
     _apply_task_blocks(
         block([{"description": "Call the client", "user": "James Craig"}]),
         staff_user,
     )
-    assert Task.objects.get().user_id == staff_user.id
+    assert Task.objects.get().user_id == admin_user.id
 
 
 def test_admin_can_assign_teammate(admin_user, staff_user):
     _apply_task_blocks(
         block([{"description": "Call the client", "user": "Pat Lee"}]),
         admin_user,
+    )
+    assert Task.objects.get().user_id == staff_user.id
+
+
+def test_unresolved_assignee_defaults_to_requester(staff_user, admin_user):
+    _apply_task_blocks(
+        block([{"description": "Call the client", "user": "Nobody Real"}]),
+        staff_user,
     )
     assert Task.objects.get().user_id == staff_user.id
 
@@ -339,6 +347,49 @@ def test_window_shows_overnight_plan_without_generating(
     response = admin_client.get("/dash/agenda/")
     assert response.status_code == 200
     assert b"Close out the Smith matter" in response.content
+
+
+def test_overnight_plan_folds_in_discussion(admin_user, matter, mock_gemini_sync):
+    from apps.case.ai.models import Message
+    from apps.dash.agenda import generate_overnight_plan
+
+    mock_gemini_sync()
+    generate_overnight_plan(admin_user.id)
+    conversation = Conversation.objects.get(agenda_user=admin_user)
+    Message.objects.create(
+        conversation=conversation,
+        role="user",
+        content="Never schedule me for depositions on Fridays.",
+        user=admin_user,
+    )
+    Message.objects.create(
+        conversation=conversation,
+        role="assistant",
+        content="Noted, Fridays stay deposition-free.",
+    )
+
+    calls = mock_gemini_sync("2. Fresh plan, Fridays clear.")
+    generate_overnight_plan(admin_user.id)
+
+    assert "Never schedule me for depositions on Fridays" in calls["system_context"]
+    assert "1. Close out the Smith matter." in calls["system_context"]
+    fresh = Conversation.objects.get(agenda_user=admin_user)
+    assert fresh.messages.count() == 2
+    assert fresh.messages.last().content == "2. Fresh plan, Fridays clear."
+
+
+def test_overnight_plan_without_discussion_has_no_feedback(
+    admin_user, matter, mock_gemini_sync
+):
+    from apps.dash.agenda import generate_overnight_plan
+
+    mock_gemini_sync()
+    generate_overnight_plan(admin_user.id)
+
+    calls = mock_gemini_sync("2. Another fresh plan.")
+    generate_overnight_plan(admin_user.id)
+
+    assert "FEEDBACK" not in calls["system_context"]
 
 
 def test_refresh_daily_plans_queues_active_users(admin_user, staff_user):
