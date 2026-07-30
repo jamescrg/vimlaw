@@ -77,6 +77,26 @@ class TestDispatcher:
         assert pending.id not in queued_ids
 
 
+class TestScheduledGuard:
+    def test_scheduled_run_skipped_off_prod(self, matter, mock_ai, settings):
+        from apps.case.ai.auto_summary import scheduled_refresh_auto_summaries
+
+        settings.ENV = "dev"
+        assert scheduled_refresh_auto_summaries() == 0
+        mock_ai.async_task.assert_not_called()
+
+    def test_scheduled_run_dispatches_on_prod(self, matter, mock_ai, settings):
+        from apps.case.ai.auto_summary import (
+            scheduled_refresh_auto_summaries,
+            scheduled_refresh_auto_summaries_full,
+        )
+
+        settings.ENV = "prod"
+        assert scheduled_refresh_auto_summaries() == 1
+        assert scheduled_refresh_auto_summaries_full() == 1
+        assert mock_ai.async_task.call_args.args[2] is True
+
+
 class TestWorker:
     def test_first_run_creates_conversation(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)

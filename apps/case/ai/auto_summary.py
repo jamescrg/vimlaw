@@ -25,6 +25,7 @@ import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import transaction
 
 from .context import (
@@ -191,13 +192,32 @@ def refresh_auto_summaries(force_full=False):
 
 
 def refresh_auto_summaries_full():
-    """Weekly dispatcher: rebuild every thread from the full record.
+    """Rebuild every thread from the full record.
 
     Guards against quality drift from summaries compounding on summaries.
-    Scheduled for early Monday; the incremental dispatcher covers the other
-    nights.
     """
     return refresh_auto_summaries(force_full=True)
+
+
+def scheduled_refresh_auto_summaries():
+    """Schedule target for the nightly incremental run. Prod only.
+
+    The dev database is overwritten from prod nightly, so dev inherits
+    prod's Schedule rows and would duplicate the whole spend. On-demand
+    runs (the run_auto_summaries command) bypass this guard.
+    """
+    if settings.ENV != "prod":
+        logger.info("Auto summary: scheduled run skipped (ENV=%s)", settings.ENV)
+        return 0
+    return refresh_auto_summaries()
+
+
+def scheduled_refresh_auto_summaries_full():
+    """Schedule target for the weekly (early Monday) full rebuild. Prod only."""
+    if settings.ENV != "prod":
+        logger.info("Auto summary: scheduled rebuild skipped (ENV=%s)", settings.ENV)
+        return 0
+    return refresh_auto_summaries_full()
 
 
 def refresh_matter_auto_summary(matter_id, force_full=False):

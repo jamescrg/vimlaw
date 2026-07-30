@@ -25,12 +25,12 @@ class Command(BaseCommand):
         schedules = [
             (
                 "auto-summary-nightly",
-                "apps.case.ai.auto_summary.refresh_auto_summaries",
+                "apps.case.ai.auto_summary.scheduled_refresh_auto_summaries",
                 f"{minute_hour} * * 0,2-6",
             ),
             (
                 "auto-summary-weekly-rebuild",
-                "apps.case.ai.auto_summary.refresh_auto_summaries_full",
+                "apps.case.ai.auto_summary.scheduled_refresh_auto_summaries_full",
                 f"{minute_hour} * * 1",
             ),
         ]
