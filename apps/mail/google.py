@@ -205,7 +205,7 @@ def _list_label_message_ids(service, label_id):
     """Yield every message id currently under a label (paged)."""
     page_token = None
     while True:
-        kwargs = {"userId": "me", "labelIds": [label_id], "pageSize": 500}
+        kwargs = {"userId": "me", "labelIds": [label_id], "maxResults": 500}
         if page_token:
             kwargs["pageToken"] = page_token
         resp = service.users().messages().list(**kwargs).execute()

@@ -131,7 +131,7 @@ class _Messages:
     def __init__(self, service):
         self._service = service
 
-    def list(self, userId, labelIds, pageSize, pageToken=None):
+    def list(self, userId, labelIds, maxResults, pageToken=None):
         label_id = labelIds[0]
         ids = [
             m["id"]
