@@ -1,14 +1,28 @@
 /* Case Emails tab — Gmail-synced messages (apps/mail). The label-link modal
    reuses the .drive-folder-* classes from notes.css. */
 
-.emails-list th.date,
+/* Fixed layout: every column takes its declared width and the subject
+   column absorbs the remainder (and wraps). */
+.emails-list {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.emails-list th.date {
+  width: 9.5rem;
+}
+
 .emails-list td.date {
   white-space: nowrap;
 }
 
+.emails-list th.sender,
+.emails-list th.recipient {
+  width: 9rem;
+}
+
 .emails-list td.sender,
 .emails-list td.recipient {
-  max-width: 12rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
