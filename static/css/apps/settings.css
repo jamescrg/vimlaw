@@ -300,13 +300,19 @@ Settings Contacts - Column Layout
   color: var(--color-muted);
 }
 
-/* The manage-matter-access pencil rides right of the All Matters switch;
-   the 2px lift is an optical nudge against the switch track. */
+/* The manage-matter-access pencil rides right of the All Matters switch,
+   absolutely positioned so the switch itself stays centered like every
+   other cell; the 2px lift is an optical nudge against the track. */
+.permissions-matrix td {
+  position: relative;
+}
+
 .permissions-matrix .perm-manage-link {
   color: var(--icon-muted);
-  margin-left: 2rem;
-  position: relative;
-  top: -2px;
+  left: calc(50% + 2rem);
+  position: absolute;
+  top: calc(50% - 2px);
+  transform: translateY(-50%);
 }
 
 /* Transfer Columns (Matter Assignment Modal) */
