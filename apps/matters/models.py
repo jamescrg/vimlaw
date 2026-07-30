@@ -136,6 +136,17 @@ class Matter(AuditMixin, models.Model):
             )
 
     @property
+    def gmail_label_short(self):
+        """Label name without the GMAIL_LABEL_ROOT prefix, for display."""
+        from django.conf import settings
+
+        name = self.gmail_label_name or ""
+        prefix = f"{settings.GMAIL_LABEL_ROOT}/" if settings.GMAIL_LABEL_ROOT else ""
+        if prefix and name.startswith(prefix):
+            return name[len(prefix) :]
+        return name
+
+    @property
     def primary_proceeding(self):
         """Return the primary proceeding for this matter, if any."""
         from apps.matters.proceedings.models import Proceeding

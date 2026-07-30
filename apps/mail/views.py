@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -65,7 +66,7 @@ def label_link_modal(request, matter_id):
     """Modal to pick this matter's Gmail label from a live list."""
     matter, _ = get_matter_from_url(request, matter_id)
 
-    labels = mail_google.list_labels()
+    labels = mail_google.list_matter_labels()
     # Labels already linked to a different matter (prevent mis-linking).
     taken = {
         m.gmail_label_id: m
@@ -73,16 +74,14 @@ def label_link_modal(request, matter_id):
         .exclude(gmail_label_id__isnull=True)
         .exclude(gmail_label_id="")
     }
-    label_rows = [
-        {"id": label["id"], "name": label["name"], "taken_by": taken.get(label["id"])}
-        for label in labels
-    ]
+    label_rows = [{**label, "taken_by": taken.get(label["id"])} for label in labels]
 
     context = {
         "matter": matter,
         "labels": label_rows,
         "current": matter.gmail_label_id,
         "linked": mail_google.check_credentials(),
+        "label_root": settings.GMAIL_LABEL_ROOT,
     }
     return render(request, "case/emails/label-link-modal.html", context)
 

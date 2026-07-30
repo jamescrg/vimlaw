@@ -130,17 +130,31 @@ def test_sync_noops_without_mapping(fake_gmail, db):
 
 
 def test_missing_label_recorded(matter, fake_gmail):
-    fake_gmail.labels = [{"id": "Label_2", "name": "Doe", "type": "user"}]
+    fake_gmail.labels = [
+        {"id": "Label_2", "name": "Matters - Open/Doe", "type": "user"}
+    ]
     stats = google.sync(full=True)
     assert stats["missing_labels"] == ["Label_1"]
     assert _state().missing_labels == ["Label_1"]
 
 
 def test_label_rename_refreshes_snapshot(matter, fake_gmail):
-    fake_gmail.labels = [{"id": "Label_1", "name": "Smith (new)", "type": "user"}]
+    fake_gmail.labels = [
+        {"id": "Label_1", "name": "Matters - Open/Smith (new)", "type": "user"}
+    ]
     google.sync(full=True)
     matter.refresh_from_db()
-    assert matter.gmail_label_name == "Smith (new)"
+    assert matter.gmail_label_name == "Matters - Open/Smith (new)"
+
+
+def test_list_matter_labels_scoped_to_root(fake_gmail, settings):
+    settings.GMAIL_LABEL_ROOT = "Matters - Open"
+    labels = google.list_matter_labels()
+    assert [label["short_name"] for label in labels] == ["Doe", "Smith"]
+
+    settings.GMAIL_LABEL_ROOT = ""
+    labels = google.list_matter_labels()
+    assert len(labels) == 3  # every user label, system ones still excluded
 
 
 def test_resync_matter_link_and_unlink(matter, fake_gmail):

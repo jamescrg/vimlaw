@@ -16,8 +16,10 @@
         </p>
       {% elif not labels %}
         <p class="detail-text">
-          No labels were found in the connected mailbox. Create a label in
-          Gmail first, then reopen this dialog.
+          No matter labels were found in the connected mailbox. Create a label
+          under <code>{{ label_root }}</code> in Gmail first, then reopen this
+          dialog. (The parent label comes from the <code>GMAIL_LABEL_ROOT</code>
+          setting.)
         </p>
       {% else %}
         <p class="detail-text">
@@ -39,7 +41,7 @@
                        {% if label.id == current %}checked{% endif %}
                        {% if label.taken_by %}disabled{% endif %}
                        onchange="document.getElementById('label-link-name').value = this.dataset.labelName">
-                <span class="drive-folder-name">{{ label.name }}</span>
+                <span class="drive-folder-name">{{ label.short_name }}</span>
                 {% if label.taken_by %}<span class="drive-folder-taken">linked to {{ label.taken_by }}</span>{% endif %}
               </label>
             {% endfor %}

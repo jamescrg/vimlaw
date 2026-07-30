@@ -56,6 +56,8 @@ def test_label_link_modal_marks_taken_labels(client, matter, matter2, fake_gmail
     assert "Smith" in content
     # matter2 already owns Label_2, so it shows as taken.
     assert "linked to Doe v Roe" in content
+    # Labels outside GMAIL_LABEL_ROOT are not offered.
+    assert "Admin/Billing" not in content
 
 
 def test_label_link_clash_returns_inline_error(client, matter, matter2, _inline_resync):

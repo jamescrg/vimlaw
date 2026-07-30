@@ -167,8 +167,9 @@ class FakeGmailService:
 
     def __init__(self, labels=None, messages=None, history=None, history_id="2000"):
         self.labels = labels or [
-            {"id": "Label_1", "name": "Smith", "type": "user"},
-            {"id": "Label_2", "name": "Doe", "type": "user"},
+            {"id": "Label_1", "name": "Matters - Open/Smith", "type": "user"},
+            {"id": "Label_2", "name": "Matters - Open/Doe", "type": "user"},
+            {"id": "Label_8", "name": "Admin/Billing", "type": "user"},
             {"id": "INBOX", "name": "INBOX", "type": "system"},
         ]
         self.messages = {m["id"]: m for m in (messages or [])}

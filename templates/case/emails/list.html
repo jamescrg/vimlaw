@@ -11,7 +11,7 @@
             title="{% if matter.gmail_label_name %}Gmail label: {{ matter.gmail_label_name }}{% else %}Link a Gmail label to sync case emails{% endif %}">
       <i class="icon-mail with-text"></i>
       {% if matter.gmail_label_name %}
-        {{ matter.gmail_label_name|truncatechars:24 }}
+        {{ matter.gmail_label_short|truncatechars:24 }}
       {% else %}
         Link Gmail Label
       {% endif %}
@@ -33,7 +33,7 @@
   {% elif not email_threads %}
     <p class="detail-text">
       No emails synced yet. Apply the
-      <strong>{{ matter.gmail_label_name }}</strong> label to case emails in
+      <strong>{{ matter.gmail_label_short }}</strong> label to case emails in
       Gmail. They appear here within a couple of minutes.
     </p>
   {% else %}

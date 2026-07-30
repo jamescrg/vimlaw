@@ -28,10 +28,14 @@ class Command(BaseCommand):
             )
             return
 
-        labels = google.list_labels()
+        labels = google.list_matter_labels()
         if not labels:
             self.stderr.write(
-                self.style.ERROR("No user labels found in the connected mailbox.")
+                self.style.ERROR(
+                    "No matter labels found in the connected mailbox "
+                    "(GMAIL_LABEL_ROOT is "
+                    f"{google.settings.GMAIL_LABEL_ROOT!r})."
+                )
             )
             return
 
@@ -50,16 +54,18 @@ class Command(BaseCommand):
         if options["list"]:
             self.stdout.write("Unlinked Gmail labels:")
             for label in unmatched:
-                self.stdout.write(f"  - {label['name']}")
+                self.stdout.write(f"  - {label['short_name']}")
             return
 
         matters = list(Matter.objects.all().order_by("name"))
         names = [m.name or "" for m in matters]
 
         for label in unmatched:
-            self.stdout.write(f"\nGmail label: {self.style.WARNING(label['name'])}")
+            self.stdout.write(
+                f"\nGmail label: {self.style.WARNING(label['short_name'])}"
+            )
             suggestion = difflib.get_close_matches(
-                label["name"], names, n=1, cutoff=0.4
+                label["short_name"], names, n=1, cutoff=0.4
             )
             suggested = matters[names.index(suggestion[0])] if suggestion else None
             if suggested:
@@ -96,6 +102,6 @@ class Command(BaseCommand):
             matter.save(update_fields=["gmail_label_id", "gmail_label_name"])
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  Linked '{label['name']}' -> [{matter.id}] {matter.name}"
+                    f"  Linked '{label['short_name']}' -> [{matter.id}] {matter.name}"
                 )
             )

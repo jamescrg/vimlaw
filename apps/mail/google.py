@@ -27,6 +27,7 @@ import json
 import logging
 
 import google.oauth2.credentials
+from django.conf import settings
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -101,6 +102,26 @@ def list_labels(service=None):
         ),
         key=lambda label: label["name"].lower(),
     )
+
+
+def list_matter_labels(service=None):
+    """User labels offered in the matter-link picker.
+
+    Scoped to children of settings.GMAIL_LABEL_ROOT (the label hierarchy's
+    "Matters - Open" analog of DRIVE_NOTES_ROOT), each carrying a
+    ``short_name`` with the root prefix stripped for display. A blank root
+    offers every user label.
+    """
+    labels = list_labels(service)
+    root = settings.GMAIL_LABEL_ROOT
+    if not root:
+        return [{**label, "short_name": label["name"]} for label in labels]
+    prefix = root + "/"
+    return [
+        {**label, "short_name": label["name"][len(prefix) :]}
+        for label in labels
+        if label["name"].startswith(prefix)
+    ]
 
 
 def _mapped_matters():
