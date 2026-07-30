@@ -147,7 +147,9 @@ class TestWorker:
         # Agenda does not queue anything further
         mock_ai.async_task.assert_not_called()
 
-    def test_second_run_is_incremental_and_replaces_messages(self, matter, mock_ai):
+    def test_second_run_is_incremental_and_replaces_messages(
+        self, matter, user, mock_ai
+    ):
         refresh_matter_auto_summary(matter.id)
         conversation = summary_conv(matter)
         original_created_at = conversation.created_at
@@ -160,17 +162,41 @@ class TestWorker:
         )
         Note.objects.filter(id=old_note.id).update(updated_at="2020-01-01T00:00:00Z")
 
+        from apps.activity.time.models import TimeEntry
+
+        TimeEntry.objects.create(
+            matter=matter,
+            user=user,
+            date="2026-07-29",
+            hours=1,
+            rate=100,
+            actions="Called realtor about listing status",
+        )
+        old_entry = TimeEntry.objects.create(
+            matter=matter,
+            user=user,
+            date="2024-01-01",
+            hours=1,
+            rate=100,
+            actions="Drafted the original petition",
+        )
+        TimeEntry.objects.filter(id=old_entry.id).update(
+            updated_at="2020-01-01T00:00:00Z"
+        )
+
         mock_ai.assemble.reset_mock()
         mock_ai.return_value = ("An even fresher summary.", 1100, 210)
         refresh_matter_auto_summary(matter.id)
 
         # Incremental path: no full assembly; context carries the previous
-        # summary and only the fresh record
+        # summary and only the fresh records
         mock_ai.assemble.assert_not_called()
         system_context = mock_ai.call_args.kwargs["system_context"]
         assert "A fresh summary." in system_context
         assert "Deposition prep" in system_context
         assert "Old strategy memo" not in system_context
+        assert "Called realtor about listing status" in system_context
+        assert "Drafted the original petition" not in system_context
 
         conversation.refresh_from_db()
         assert (

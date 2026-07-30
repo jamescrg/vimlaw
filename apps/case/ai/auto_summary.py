@@ -32,9 +32,11 @@ from .context import (
     assemble_matter_context_with_selection,
     collect_context_items,
     format_contacts,
+    format_events,
     format_matter_overview,
     format_proceedings,
     format_settlement,
+    format_tasks,
     get_importance_label,
     load_legal_prompt,
 )
@@ -68,24 +70,34 @@ SUMMARY_STRUCTURE = (
     "4. Key evidence bearing on each disputed issue\n"
 )
 
+SUMMARY_POSTURE_NOTE = (
+    "State the case's current phase (active litigation, negotiation, awaiting "
+    "a sale or ruling, monitoring, wind-down) as part of the procedural "
+    "posture; the time entries in the context show the work actually being "
+    "performed and are the best evidence of the current phase. Do not "
+    "summarize billing amounts, scheduling, or administrative status. "
+)
+
 AUTO_SUMMARY_PROMPT = (
     "Provide a summary of the substantive issues in this matter. Cover:\n"
     + SUMMARY_STRUCTURE
-    + "Be concise and factual, and ground every point in the case record. Do "
-    "not cover scheduling, billing, or administrative status. If the matter "
-    "file contains little information, say so briefly rather than speculating."
+    + "Be concise and factual, and ground every point in the case record. "
+    + SUMMARY_POSTURE_NOTE
+    + "If the matter file contains little information, say so briefly rather "
+    "than speculating."
 )
 
 AUTO_SUMMARY_UPDATE_PROMPT = (
     "Update the summary of the substantive issues in this matter. The context "
-    "contains the previous summary, the records added or changed since it was "
-    "written, and any attorney feedback on the previous version. Produce a "
-    "complete, standalone replacement summary with the same structure:\n"
+    "contains the previous summary, the records and time entries added or "
+    "changed since it was written, and any attorney feedback on the previous "
+    "version. Produce a complete, standalone replacement summary with the "
+    "same structure:\n"
     + SUMMARY_STRUCTURE
     + "Carry forward what still holds from the previous summary, incorporate "
     "the new records, follow the attorney guidance, and drop anything the new "
     "records supersede. Be concise and factual, and ground every point in the "
-    "case record. Do not cover scheduling, billing, or administrative status."
+    "case record. " + SUMMARY_POSTURE_NOTE
 )
 
 AGENDA_STRUCTURE = (
@@ -97,11 +109,22 @@ AGENDA_STRUCTURE = (
     "resolution for our client, and how each will be won\n"
 )
 
+AGENDA_POSTURE_NOTE = (
+    "Match the plan to the case's actual phase. The tasks, events, and time "
+    "entries in the context show what has already been done and what is "
+    "actually pending; treat them as the ground truth of the current posture. "
+    "If the main objectives are already secured and the matter is in a "
+    "monitoring or holding posture, say so plainly and confine the plan to "
+    "what to watch, the triggers that would require action, and the steps to "
+    "close the matter. Do not invent litigation activity for its own sake. "
+)
+
 AUTO_AGENDA_PROMPT = (
     "Acting as a legal analyst and advocate for our client, build a "
     "litigation plan for this matter. Analyze the record deeply before "
     "answering. Cover:\n"
     + AGENDA_STRUCTURE
+    + AGENDA_POSTURE_NOTE
     + "Ground the plan in the case record, anticipate the opposing parties' "
     "likely moves, and be candid about weaknesses and risks. If the matter "
     "file contains little information, say so briefly rather than speculating."
@@ -109,11 +132,12 @@ AUTO_AGENDA_PROMPT = (
 
 AUTO_AGENDA_UPDATE_PROMPT = (
     "Update the litigation plan for this matter. The context contains the "
-    "previous plan, the records added or changed since it was written, and "
-    "any attorney feedback on the previous version. Acting as a legal analyst "
-    "and advocate for our client, produce a complete, standalone replacement "
-    "plan with the same structure:\n"
+    "previous plan, the records and time entries added or changed since it "
+    "was written, and any attorney feedback on the previous version. Acting "
+    "as a legal analyst and advocate for our client, produce a complete, "
+    "standalone replacement plan with the same structure:\n"
     + AGENDA_STRUCTURE
+    + AGENDA_POSTURE_NOTE
     + "Carry forward what still holds from the previous plan, incorporate the "
     "new records, follow the attorney guidance, and drop steps that are "
     "completed or superseded. Anticipate the opposing parties' likely moves "
@@ -154,11 +178,23 @@ INCREMENTAL_CONTEXT_TEMPLATE = """
 ## Settlement Information
 {settlement}
 
+## Current Tasks
+{tasks}
+
+## Events (upcoming, plus recent past)
+{events}
+
 ## Previous Version of the {title} (generated {previous_date})
 {previous_content}
 
 ## Records Added or Changed Since {previous_date}
 {new_items}
+
+## Time Entries Logged Since {previous_date}
+Work actually performed since the previous version; strong evidence of the
+case's current phase.
+
+{new_time_entries}
 """
 
 FEEDBACK_TEMPLATE = """
@@ -299,6 +335,27 @@ def _format_discussion(messages):
     return "\n\n".join(lines)
 
 
+def _format_new_time_entries(matter, cutoff):
+    """Time entries added or edited since the cutoff, newest first."""
+    from apps.activity.time.models import TimeEntry
+
+    entries = (
+        TimeEntry.objects.filter(matter=matter, updated_at__gte=cutoff)
+        .select_related("user")
+        .order_by("-date")[:50]
+    )
+    if not entries:
+        return "No time entries logged since the previous version."
+
+    lines = []
+    for entry in entries:
+        user_name = entry.user.get_full_name() if entry.user else "Unknown"
+        lines.append(
+            f"- [{entry.date}] {entry.actions} — {entry.hours}h by {user_name}"
+        )
+    return "\n".join(lines)
+
+
 def build_incremental_context(matter, conversation, previous, spec):
     """System context for an update run: previous version + delta since it.
 
@@ -345,10 +402,13 @@ def build_incremental_context(matter, conversation, previous, spec):
         contacts=format_contacts(matter),
         proceedings=format_proceedings(matter),
         settlement=format_settlement(matter),
+        tasks=format_tasks(matter),
+        events=format_events(matter),
         title=spec.title,
         previous_date=previous.created_at.strftime("%b %d, %Y"),
         previous_content=previous.content,
         new_items=new_items,
+        new_time_entries=_format_new_time_entries(matter, cutoff),
     )
 
     return f"{legal_prompt}\n\n---\n{matter_context}"
