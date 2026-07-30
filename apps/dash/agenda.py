@@ -19,7 +19,7 @@ import json
 import logging
 import re
 import threading
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
@@ -36,7 +36,7 @@ from apps.calendar.models import Event
 from apps.case.ai.models import Conversation, Message
 from apps.intakes.models import Intake, Note
 from apps.matters.models import Matter
-from apps.tasks.constants import ACTIVE_STATUSES, STATUS_PENDING
+from apps.tasks.constants import ACTIVE_STATUSES
 from apps.tasks.models import Task
 
 logger = logging.getLogger(__name__)
@@ -239,60 +239,16 @@ def _agenda_system_prompt(user, thorough=False):
 TASK_BLOCK_RE = re.compile(r"```create-tasks\s*\n(.*?)```", re.DOTALL)
 
 
-def _create_task_from_entry(entry, requesting_user, today):
-    description = str(entry.get("description") or "").strip()[:200]
-    if len(description) < 4:
-        return None
+def _create_task_from_entry(entry, requesting_user):
+    from apps.tasks.services import create_task_from_ai_entry
 
-    matter = None
-    if entry.get("matter"):
-        matter = Matter.objects.filter(
-            name__iexact=str(entry["matter"]).strip(),
-            status__in=["Pending", "Open"],
-        ).first()
-
-    # Any user may assign to any active teammate by full name, defaulting
-    # to themselves when no name is given or the name doesn't resolve.
-    assignee = requesting_user
-    if entry.get("user"):
-        wanted = str(entry["user"]).strip().lower()
-        match = next(
-            (
-                u
-                for u in CustomUser.objects.filter(is_active=True)
-                if u.full_name.lower() == wanted
-            ),
-            None,
-        )
-        assignee = match or requesting_user
-
-    due = None
-    if entry.get("due"):
-        try:
-            due = date.fromisoformat(str(entry["due"]))
-        except ValueError:
-            due = None
-
-    try:
-        importance = min(max(int(entry.get("importance")), 1), 7)
-    except (TypeError, ValueError):
-        importance = 4
-
-    return Task.objects.create(
-        description=description,
-        status=STATUS_PENDING,
-        date_due=due,
-        importance=importance,
-        user=assignee,
-        matter=matter,
-    )
+    return create_task_from_ai_entry(entry, requesting_user)
 
 
 def _apply_task_blocks(response_text, requesting_user):
     """Create Tasks from any create-tasks blocks, replacing each block
     with a confirmation list. A malformed block is left as text and
     creates nothing."""
-    today = timezone.localdate()
 
     def replace(match):
         try:
@@ -307,7 +263,7 @@ def _apply_task_blocks(response_text, requesting_user):
         for entry in entries:
             if not isinstance(entry, dict):
                 continue
-            task = _create_task_from_entry(entry, requesting_user, today)
+            task = _create_task_from_entry(entry, requesting_user)
             if task is not None:
                 lines.append(
                     f"- Created task: **{task.description}**"
