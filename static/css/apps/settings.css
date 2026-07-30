@@ -303,6 +303,7 @@ Settings Contacts - Column Layout
 /* The manage-matter-access pencil rides right of the All Matters switch;
    the 2px lift is an optical nudge against the switch track. */
 .permissions-matrix .perm-manage-link {
+  color: var(--icon-muted);
   margin-left: 2rem;
   position: relative;
   top: -2px;
