@@ -500,6 +500,16 @@ urlpatterns = [
         mail.email_importance,
         name="email-importance",
     ),
+    path(
+        "case/emails/<int:email_id>/preview/",
+        mail.email_preview,
+        name="email-preview",
+    ),
+    path(
+        "case/emails/<int:email_id>/promote/",
+        mail.email_promote,
+        name="email-promote",
+    ),
     # Labels (matter-scoped)
     path("case/<int:matter_id>/labels/", labels.labels_index, name="labels-index"),
     path("case/<int:matter_id>/labels/list/", labels.labels_list, name="labels-list"),

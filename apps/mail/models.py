@@ -39,6 +39,9 @@ class Email(AuditMixin, models.Model):
     date = models.DateTimeField(null=True, db_index=True)
     snippet = models.CharField(max_length=500, blank=True)
     body_text = models.TextField(blank=True)
+    # Raw HTML part when the message has one — drives the preview pane and
+    # promoted-PDF rendering; body_text stays canonical for AI context/search.
+    body_html = models.TextField(blank=True)
     BODY_SOURCE_CHOICES = [("plain", "Plain text"), ("html", "HTML")]
     body_source = models.CharField(
         max_length=10, choices=BODY_SOURCE_CHOICES, default="plain"
@@ -52,6 +55,17 @@ class Email(AuditMixin, models.Model):
     )
     ai_context = models.CharField(
         max_length=6, choices=AI_CONTEXT_CHOICES, default="auto"
+    )
+    # Set when the email is promoted to a Document (PDF rendered into the
+    # matter's record). The Document owns highlights and survives any sync
+    # removal of this row; promotion also flips ai_context to "never" so the
+    # content isn't fed to the AI twice.
+    document = models.ForeignKey(
+        "case.Document",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="source_emails",
     )
     synced_at = models.DateTimeField(default=timezone.now)
 

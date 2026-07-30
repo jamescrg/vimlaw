@@ -58,6 +58,8 @@ def test_html_only_falls_back_to_text():
     }
     parsed = parse_payload(msg)
     assert parsed.body_source == "html"
+    # Raw HTML retained for the preview pane / promoted PDFs.
+    assert "<p>" in parsed.body_html
     assert "First & second" in parsed.body_text
     assert "Third" in parsed.body_text
     assert "color:red" not in parsed.body_text

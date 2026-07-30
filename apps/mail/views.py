@@ -137,14 +137,40 @@ def emails_sort(request, matter_id, order):
 
 
 @login_required
+def email_preview(request, email_id):
+    """Preview-pane partial for one email."""
+    email = get_object_or_404(Email, pk=email_id)
+    return render(request, "case/emails/preview.html", {"email": email})
+
+
+@login_required
+@require_POST
+def email_promote(request, email_id):
+    """Promote an email to a Correspondence Document (PDF in the record)."""
+    from .promote import promote_email
+
+    email = get_object_or_404(Email, pk=email_id)
+    base_url = request.build_absolute_uri("/").rstrip("/")
+    try:
+        promote_email(email, request.user, base_url)
+    except Exception:
+        return HttpResponse(
+            '<p class="error-text">Failed to render the email to PDF. '
+            "Try again, or check the logs.</p>"
+        )
+    email.refresh_from_db()
+    return render(request, "case/emails/preview.html", {"email": email})
+
+
+@login_required
 @require_POST
 def email_importance(request, email_id, value):
-    """Set an email's importance and re-render the list (mirrors notes)."""
+    """Set an email's importance and re-render its preview pane."""
     email = get_object_or_404(Email, pk=email_id)
     if 1 <= value <= 7:
         email.importance = value
         email.save(update_fields=["importance"])
-    return emails_list(request, email.matter_id)
+    return render(request, "case/emails/preview.html", {"email": email})
 
 
 # ---------------------------------------------------------------------------

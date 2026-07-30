@@ -1,44 +1,6 @@
-/* Case Emails tab — Gmail-synced messages (apps/mail). The label-link modal
-   reuses the .drive-folder-* classes from notes.css. */
-
-/* Fixed layout: every column takes its declared width and the subject
-   column absorbs the remainder (and wraps). */
-.emails-list {
-  table-layout: fixed;
-  width: 100%;
-}
-
-.emails-list th.date {
-  width: 12rem;
-}
-
-.emails-list td.date {
-  white-space: nowrap;
-}
-
-.emails-list th.sender,
-.emails-list th.recipient {
-  width: 15rem;
-}
-
-.emails-list td.sender,
-.emails-list td.recipient {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.emails-list td.subject {
-  overflow-wrap: anywhere;
-}
-
-.emails-list th.attachment,
-.emails-list td.attachment,
-.emails-list th.importance,
-.emails-list td.importance {
-  text-align: center;
-  width: 3rem;
-}
+/* Case Emails tab — Gmail-synced messages (apps/mail): stacked message list
+   with a reading pane. The label-link modal reuses the .drive-folder-*
+   classes from notes.css. */
 
 .emails-toolbar .toolbar-right {
   display: flex;
@@ -46,32 +8,143 @@
   gap: 0.5rem;
 }
 
-.email-row {
+.emails-split {
+  display: grid;
+  grid-template-columns: 24rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.5rem 0;
+}
+
+/* ---- Message list (left) ---- */
+.email-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-light);
+  border-radius: 0.375rem;
+  max-height: calc(100vh - 14rem);
+  overflow-y: auto;
+}
+
+.email-list-item {
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
+  border-left: 2px solid transparent;
 }
 
-.email-body-row td {
+.email-list-item + .email-list-item {
+  border-top: 1px solid var(--border-light);
+}
+
+.email-list-item:hover {
   background: var(--background-section);
-  padding: 0.75rem;
 }
 
-.email-body-meta {
+.email-list-item.active {
+  background: var(--background-section);
+  border-left-color: var(--focus-ring);
+}
+
+.email-list-line1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.email-list-sender {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.email-list-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.email-list-line2 {
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Reading pane (right) ---- */
+.email-preview {
+  border: 1px solid var(--border-light);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  position: sticky;
+  top: 0.75rem;
+  max-height: calc(100vh - 14rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.email-preview-placeholder {
+  margin: auto;
+}
+
+.email-preview-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.email-preview-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  color: var(--color-muted);
 }
 
-.email-body-attachments {
+.email-preview-subject {
+  overflow-wrap: anywhere;
+}
+
+.email-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.email-preview-meta {
+  color: var(--color-muted);
+  margin-top: 0.5rem;
+}
+
+.email-preview-meta-label {
+  color: var(--color-primary);
+}
+
+.email-preview-attachments {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
   margin-top: 0.5rem;
 }
 
-.email-body {
-  margin-top: 0.5rem;
+.email-preview-frame {
+  margin-top: 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 0.375rem;
+  width: 100%;
+  flex: 1;
+  min-height: 24rem;
+  /* HTML email assumes a white canvas, in dark themes too. */
+  background: white;
+}
+
+.email-preview-body {
+  margin-top: 0.75rem;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

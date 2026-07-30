@@ -25,6 +25,7 @@ class ParsedEmail(NamedTuple):
     date: datetime | None
     snippet: str
     body_text: str
+    body_html: str  # raw HTML part when present ("" otherwise)
     body_source: str  # "plain" | "html"
     attachments: list  # [{"filename", "mime_type", "size"}]
 
@@ -168,6 +169,7 @@ def parse_payload(msg: dict) -> ParsedEmail:
     # Strip NULs — Postgres text columns reject them (same concern as the
     # OCR pipeline's sanitize step).
     body_text = body_text.replace("\x00", "")
+    body_html = found["html"].replace("\x00", "")
 
     return ParsedEmail(
         sender=sender[:500],
@@ -176,6 +178,7 @@ def parse_payload(msg: dict) -> ParsedEmail:
         date=date,
         snippet=html_module.unescape(msg.get("snippet", ""))[:500],
         body_text=body_text,
+        body_html=body_html,
         body_source=body_source,
         attachments=found["attachments"],
     )

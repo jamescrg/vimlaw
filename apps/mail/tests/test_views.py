@@ -33,16 +33,76 @@ def _inline_resync(monkeypatch):
     return calls
 
 
-def test_emails_tab_renders(client, matter, fake_gmail):
+def test_emails_tab_renders_list(client, matter, fake_gmail):
     make_email(matter, "m1", sender="Alice Smith <alice@example.com>")
     response = client.get(reverse("case:emails-index", args=[matter.id]))
     assert response.status_code == 200
     content = response.content.decode()
     assert "Discovery schedule" in content
+    # List rows show the parsed display name, not the raw header.
+    assert "Alice Smith" in content
+    assert "Select an email to read" in content
+
+
+def test_email_preview_pane(client, matter, fake_gmail):
+    email = make_email(matter, "m1")
+    response = client.get(reverse("case:email-preview", args=[email.id]))
+    content = response.content.decode()
+    assert "Proposed dates attached." in content
     assert "schedule.pdf" in content
     assert "https://mail.google.com/mail/u/0/#all/m1" in content
-    # Table shows the parsed display name, not the raw header.
-    assert "Alice Smith" in content
+    assert "Promote to Document" in content
+
+
+def test_email_preview_prefers_html(client, matter, fake_gmail):
+    email = make_email(matter, "m1", body_html="<p>Rich <b>body</b></p>")
+    content = client.get(
+        reverse("case:email-preview", args=[email.id])
+    ).content.decode()
+    assert "srcdoc" in content
+    assert "Rich" in content
+
+
+def test_email_promote_creates_document(
+    client, matter, fake_gmail, settings, tmp_path, monkeypatch
+):
+    from apps.case.models import Document
+
+    settings.STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    }
+    settings.MEDIA_ROOT = str(tmp_path)
+    ocr_queued = []
+    monkeypatch.setattr(
+        "django_q.tasks.async_task",
+        lambda func, *args, **kwargs: ocr_queued.append(args[0]),
+    )
+
+    email = make_email(matter, "m1", body_html="<p>Promote me</p>")
+    response = client.post(reverse("case:email-promote", args=[email.id]))
+    assert response.status_code == 200
+
+    email.refresh_from_db()
+    assert email.document is not None
+    assert email.ai_context == "never"
+    doc = email.document
+    assert doc.matter == matter
+    assert doc.category == "Correspondence"
+    assert doc.file.storage.exists(doc.file.name)
+    assert ocr_queued == [doc.id]
+    # Idempotent: a second promote reuses the same Document.
+    client.post(reverse("case:email-promote", args=[email.id]))
+    email.refresh_from_db()
+    assert email.document == doc
+    assert Document.objects.count() == 1
+    # The pane now offers the Document instead of promotion.
+    content = client.get(
+        reverse("case:email-preview", args=[email.id])
+    ).content.decode()
+    assert "View Document" in content
 
 
 def test_email_importance_update(client, matter, fake_gmail):

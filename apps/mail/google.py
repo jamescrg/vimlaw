@@ -184,6 +184,7 @@ def _fetch_and_store(service, matter, label_id, gmail_id, stats, dry_run):
             date=parsed.date,
             snippet=parsed.snippet,
             body_text=parsed.body_text,
+            body_html=parsed.body_html,
             body_source=parsed.body_source,
             attachments=parsed.attachments,
         )
