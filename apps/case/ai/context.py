@@ -34,6 +34,8 @@ from apps.accounts.models import CustomUser
 from apps.activity.time.models import TimeEntry
 from apps.calendar.models import Event
 from apps.case.models import CaseLaw, Document, Fact, Highlight
+from apps.mail.ai import format_email_thread, group_by_thread
+from apps.mail.models import Email
 from apps.matters.models import Relationship
 from apps.matters.proceedings.models import Proceeding
 from apps.matters.settlement.models import SettlementEntry
@@ -84,6 +86,7 @@ TYPE_ICONS = {
     "note": "📝",
     "caselaw": "⚖️",
     "conversation": "💬",
+    "email": "✉️",
 }
 
 
@@ -300,6 +303,31 @@ def collect_context_items(
                 item_type="caselaw",
                 content="\n".join(content_parts),
                 source_id=caselaw.id,
+            )
+        )
+
+    # Collect Emails (synced from Gmail) — grouped by thread, one item per
+    # thread. Only "always" emails get full content here; "auto" threads are
+    # chosen by the selector. With `since`, a thread is included when it has
+    # new messages, rendering only those (older ones flagged as omitted) so
+    # incremental auto-summaries see just the delta.
+    emails_qs = Email.objects.filter(matter=matter).exclude(ai_context="never")
+    if not include_auto:
+        emails_qs = emails_qs.filter(ai_context="always")
+    for thread_emails in group_by_thread(emails_qs):
+        shown = thread_emails
+        if since:
+            shown = [e for e in thread_emails if e.updated_at >= since]
+            if not shown:
+                continue
+        items.append(
+            ContextItem(
+                importance=max(e.importance for e in shown),
+                item_type="email",
+                content=format_email_thread(
+                    shown, omitted_earlier=len(thread_emails) - len(shown)
+                ),
+                source_id=min(e.id for e in thread_emails),
             )
         )
 

@@ -7,17 +7,15 @@ import apps.mail.google as mail_google
 from apps.case.views import get_matter_from_url, set_last_tab
 from apps.matters.models import Matter
 
+from .ai import group_by_thread
 from .models import Email
 
 
 def get_emails_data(request, matter, matter_id):
     """Emails grouped by Gmail thread, newest thread first."""
-    emails = Email.objects.filter(matter=matter).order_by("date")
-    threads = {}
-    for email in emails:
-        threads.setdefault(email.thread_id or email.gmail_id, []).append(email)
+    emails = Email.objects.filter(matter=matter)
     thread_list = sorted(
-        threads.values(),
+        group_by_thread(emails),
         key=lambda msgs: msgs[-1].date or msgs[-1].created_at,
         reverse=True,
     )
