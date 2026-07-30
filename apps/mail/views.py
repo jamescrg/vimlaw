@@ -1,27 +1,21 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
 import apps.mail.google as mail_google
 from apps.case.views import get_matter_from_url, set_last_tab
 from apps.matters.models import Matter
 
-from .ai import group_by_thread
 from .models import Email
 
 
 def get_emails_data(request, matter, matter_id):
-    """Emails grouped by Gmail thread, newest thread first."""
-    emails = Email.objects.filter(matter=matter)
-    thread_list = sorted(
-        group_by_thread(emails),
-        key=lambda msgs: msgs[-1].date or msgs[-1].created_at,
-        reverse=True,
-    )
+    """Synced emails, newest first."""
+    emails = Email.objects.filter(matter=matter).order_by("-date")
     return {
-        "email_threads": thread_list,
+        "emails": emails,
         "email_count": emails.count(),
         "gmail_linked": mail_google.check_credentials(),
     }
@@ -54,6 +48,17 @@ def emails_list(request, matter_id):
     } | get_emails_data(request, matter, matter_id)
 
     return render(request, "case/emails/list.html", context)
+
+
+@login_required
+@require_POST
+def email_importance(request, email_id, value):
+    """Set an email's importance and re-render the list (mirrors notes)."""
+    email = get_object_or_404(Email, pk=email_id)
+    if 1 <= value <= 7:
+        email.importance = value
+        email.save(update_fields=["importance"])
+    return emails_list(request, email.matter_id)
 
 
 # ---------------------------------------------------------------------------

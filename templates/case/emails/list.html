@@ -30,57 +30,134 @@
       <strong>Link Gmail Label</strong> above, then apply that label to case
       emails in Gmail. They will sync here automatically.
     </p>
-  {% elif not email_threads %}
+  {% elif not emails %}
     <p class="detail-text">
       No emails synced yet. Apply the
       <strong>{{ matter.gmail_label_short }}</strong> label to case emails in
       Gmail. They appear here within a couple of minutes.
     </p>
   {% else %}
-    <div class="email-thread-list">
-      {% for thread in email_threads %}
-        {% with first=thread.0 last=thread|last %}
-          <details class="email-thread">
-            <summary class="email-thread-summary">
-              <span class="email-thread-subject">{{ first.subject|default:"(no subject)" }}</span>
-              <span class="email-thread-meta">
-                {% if thread|length > 1 %}<span class="email-thread-count">{{ thread|length }} messages</span>{% endif %}
-                <span class="email-thread-date">{{ last.date|date:"M j, Y" }}</span>
-              </span>
-            </summary>
-            <div class="email-thread-messages">
-              {% for email in thread %}
-                <div class="email-message">
-                  <div class="email-message-header">
-                    <div class="email-message-parties">
-                      <span class="email-message-from">{{ email.sender }}</span>
-                      <span class="email-message-to">to {{ email.recipients|default:"(undisclosed)" }}</span>
-                    </div>
-                    <div class="email-message-meta">
-                      <span>{{ email.date|date:"M j, Y g:i A" }}</span>
-                      <a href="{{ email.gmail_url }}"
-                         target="_blank"
-                         rel="noopener"
-                         title="Open in Gmail"><i class="icon-external-link"></i></a>
-                    </div>
-                  </div>
-                  {% if email.attachments %}
-                    <div class="email-message-attachments">
-                      {% for att in email.attachments %}
-                        <span class="app-badge"
-                              title="Attachment metadata only (open in Gmail to view)">
-                          <i class="icon-paperclip"></i> {{ att.filename }}
-                        </span>
-                      {% endfor %}
-                    </div>
-                  {% endif %}
-                  <div class="email-message-body">{{ email.body_text }}</div>
+    <div class="table-container">
+      <table class="table emails-list">
+        <thead>
+          <tr>
+            <th class="date">Date</th>
+            <th class="sender">From</th>
+            <th class="recipient">To</th>
+            <th class="subject">Subject</th>
+            <th class="attachment" title="Has attachments">
+              <i class="icon-paperclip"></i>
+            </th>
+            <th class="importance" title="Importance">
+              <i class="icon-flag"></i>
+            </th>
+          </tr>
+        </thead>
+        {% for email in emails %}
+          <tbody x-data="{ open: false }">
+            <tr class="email-row importance-{{ email.importance }}"
+                @click="open = !open">
+              <td class="date">{{ email.date|date:"Y-m-d g:i A" }}</td>
+              <td class="sender" title="{{ email.sender }}">{{ email.sender_display }}</td>
+              <td class="recipient" title="{{ email.recipients }}">{{ email.recipients_display }}</td>
+              <td class="subject">{{ email.subject|default:"(no subject)" }}</td>
+              <td class="attachment">
+                {% if email.attachments %}
+                  <i class="icon-paperclip"
+                     title="{{ email.attachments|length }} attachment{{ email.attachments|length|pluralize }}"></i>
+                {% endif %}
+              </td>
+              <td class="importance dropdown-cell" @click.stop>
+                <div class="dropdown" x-data="dropdown()">
+                  <button class="button-link"
+                          type="button"
+                          x-ref="button"
+                          @click="toggle()"
+                          :aria-expanded="open">
+                    {% if email.importance == 7 %}
+                      <i class="icon-chevrons-up"></i>
+                    {% elif email.importance >= 5 %}
+                      <i class="icon-chevron-up"></i>
+                    {% elif email.importance == 4 %}
+                      <i class="icon-equal"></i>
+                    {% elif email.importance >= 2 %}
+                      <i class="icon-chevron-down"></i>
+                    {% else %}
+                      <i class="icon-chevrons-down"></i>
+                    {% endif %}
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'case:email-importance' email.id 7 %}"
+                         hx-target="#emails"><i class="icon-chevrons-up importance-7"></i> Highest</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'case:email-importance' email.id 6 %}"
+                         hx-target="#emails"><i class="icon-chevron-up importance-6"></i> Higher</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'case:email-importance' email.id 5 %}"
+                         hx-target="#emails"><i class="icon-chevron-up importance-5"></i> High</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'case:email-importance' email.id 4 %}"
+                         hx-target="#emails"><i class="icon-equal"></i> Normal</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'case:email-importance' email.id 3 %}"
+                         hx-target="#emails"><i class="icon-chevron-down importance-3"></i> Low</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'case:email-importance' email.id 2 %}"
+                         hx-target="#emails"><i class="icon-chevron-down importance-2"></i> Lower</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="#"
+                         hx-post="{% url 'case:email-importance' email.id 1 %}"
+                         hx-target="#emails"><i class="icon-chevrons-down importance-1"></i> Lowest</a>
+                    </li>
+                  </ul>
                 </div>
-              {% endfor %}
-            </div>
-          </details>
-        {% endwith %}
-      {% endfor %}
+              </td>
+            </tr>
+            <tr class="email-body-row" x-show="open">
+              <td colspan="6">
+                <div class="email-body-meta">
+                  <span>{{ email.sender }} &rsaquo; {{ email.recipients|default:"(undisclosed)" }}</span>
+                  <a href="{{ email.gmail_url }}"
+                     target="_blank"
+                     rel="noopener"
+                     @click.stop><i class="icon-external-link"></i> Open in Gmail</a>
+                </div>
+                {% if email.attachments %}
+                  <div class="email-body-attachments">
+                    {% for att in email.attachments %}
+                      <span class="app-badge"
+                            title="Attachment metadata only (open in Gmail to view)">
+                        <i class="icon-paperclip"></i> {{ att.filename }}
+                      </span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                <div class="email-body">{{ email.body_text }}</div>
+              </td>
+            </tr>
+          </tbody>
+        {% endfor %}
+      </table>
     </div>
   {% endif %}
 </div>

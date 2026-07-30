@@ -62,6 +62,22 @@ class Email(AuditMixin, models.Model):
     def gmail_url(self):
         return f"https://mail.google.com/mail/u/0/#all/{self.gmail_id}"
 
+    @property
+    def sender_display(self):
+        """Display name from the From header (address when unnamed)."""
+        from email.utils import parseaddr
+
+        name, addr = parseaddr(self.sender or "")
+        return name or addr
+
+    @property
+    def recipients_display(self):
+        """Display names from the To+Cc headers, comma-joined."""
+        from email.utils import getaddresses
+
+        pairs = getaddresses([self.recipients or ""])
+        return ", ".join(name or addr for name, addr in pairs)
+
     class Meta:
         db_table = "app_email"
         ordering = ["-date"]

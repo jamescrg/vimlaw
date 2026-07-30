@@ -34,13 +34,28 @@ def _inline_resync(monkeypatch):
 
 
 def test_emails_tab_renders(client, matter, fake_gmail):
-    make_email(matter, "m1")
+    make_email(matter, "m1", sender="Alice Smith <alice@example.com>")
     response = client.get(reverse("case:emails-index", args=[matter.id]))
     assert response.status_code == 200
     content = response.content.decode()
     assert "Discovery schedule" in content
     assert "schedule.pdf" in content
     assert "https://mail.google.com/mail/u/0/#all/m1" in content
+    # Table shows the parsed display name, not the raw header.
+    assert "Alice Smith" in content
+
+
+def test_email_importance_update(client, matter, fake_gmail):
+    email = make_email(matter, "m1")
+    response = client.post(reverse("case:email-importance", args=[email.id, 6]))
+    assert response.status_code == 200
+    email.refresh_from_db()
+    assert email.importance == 6
+
+    # Out-of-range values are ignored (URL only admits ints).
+    client.post(reverse("case:email-importance", args=[email.id, 9]))
+    email.refresh_from_db()
+    assert email.importance == 6
 
 
 def test_emails_tab_prompts_when_unlinked(client, matter, fake_gmail):

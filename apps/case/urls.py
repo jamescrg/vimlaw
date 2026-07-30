@@ -480,6 +480,11 @@ urlpatterns = [
         mail.label_unlink,
         name="emails-label-unlink",
     ),
+    path(
+        "case/emails/<int:email_id>/importance/<int:value>/",
+        mail.email_importance,
+        name="email-importance",
+    ),
     # Labels (matter-scoped)
     path("case/<int:matter_id>/labels/", labels.labels_index, name="labels-index"),
     path("case/<int:matter_id>/labels/list/", labels.labels_list, name="labels-list"),
