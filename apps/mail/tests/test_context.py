@@ -99,6 +99,32 @@ def test_manifest_one_item_per_thread(matter):
     assert "four five" in content
 
 
+def test_attachment_text_joins_thread_context(matter):
+    from apps.mail.models import EmailAttachment
+
+    email = make_email(matter, "m1", ai_context="always")
+    EmailAttachment.objects.create(
+        email=email,
+        filename="lease.pdf",
+        size=5000,
+        text="The lease term is five years.",
+        extract_status="extracted",
+    )
+
+    items = [i for i in collect_context_items(matter) if i.item_type == "email"]
+    assert "Attachment text: lease.pdf" in items[0].content
+    assert "The lease term is five years." in items[0].content
+
+    # Selector word count includes attachment text.
+    email.ai_context = "auto"
+    email.save(update_fields=["ai_context"])
+    manifest, _ = build_manifest(matter)
+    item = next(i for i in manifest if i.item_type == "email")
+    assert item.word_count == len("We propose fifty thousand dollars.".split()) + len(
+        "The lease term is five years.".split()
+    )
+
+
 def test_selector_response_accepts_email_type():
     keys = _parse_selector_response(
         '{"selected": [{"type": "email", "id": 7}, {"type": "bogus", "id": 1}]}'

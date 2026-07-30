@@ -8,6 +8,8 @@ pytestmark = pytest.mark.django_db
 
 
 def make_email(matter, gmail_id, **kwargs):
+    from apps.mail.models import EmailAttachment
+
     defaults = {
         "thread_id": "thread-1",
         "sender": "alice@example.com",
@@ -15,12 +17,16 @@ def make_email(matter, gmail_id, **kwargs):
         "subject": "Discovery schedule",
         "date": timezone.now(),
         "body_text": "Proposed dates attached.",
-        "attachments": [
-            {"filename": "schedule.pdf", "mime_type": "application/pdf", "size": 100}
-        ],
     }
+    attachments = kwargs.pop(
+        "attachments",
+        [{"filename": "schedule.pdf", "mime_type": "application/pdf", "size": 100}],
+    )
     defaults.update(kwargs)
-    return Email.objects.create(matter=matter, gmail_id=gmail_id, **defaults)
+    email = Email.objects.create(matter=matter, gmail_id=gmail_id, **defaults)
+    for a in attachments:
+        EmailAttachment.objects.create(email=email, **a)
+    return email
 
 
 @pytest.fixture(autouse=True)

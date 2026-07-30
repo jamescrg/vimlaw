@@ -118,6 +118,7 @@ def _walk_parts(part, found):
                 "filename": filename,
                 "mime_type": mime,
                 "size": part.get("body", {}).get("size", 0),
+                "attachment_id": part.get("body", {}).get("attachmentId", ""),
             }
         )
     elif mime == "text/plain" and not found["plain"]:

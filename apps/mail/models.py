@@ -46,8 +46,6 @@ class Email(AuditMixin, models.Model):
     body_source = models.CharField(
         max_length=10, choices=BODY_SOURCE_CHOICES, default="plain"
     )
-    # [{"filename": str, "mime_type": str, "size": int}] — metadata only.
-    attachments = models.JSONField(default=list, blank=True)
     # Email is voluminous and mostly supporting material, so it defaults a
     # notch below Documents/Notes (4).
     importance = models.PositiveIntegerField(
@@ -103,6 +101,44 @@ class Email(AuditMixin, models.Model):
             )
         ]
         indexes = [models.Index(fields=["matter", "thread_id"])]
+
+
+class EmailAttachment(models.Model):
+    """Attachment metadata plus extracted text (the binary stays in Gmail).
+
+    ``gmail_attachment_id`` lets the extraction task fetch the bytes on
+    demand; supported types get their text stored here and fed into the
+    email's AI-context thread. Never fetched for display — Gmail remains the
+    archive for the file itself.
+    """
+
+    EXTRACT_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("extracted", "Extracted"),
+        ("no_text_layer", "No text layer (scanned)"),
+        ("unsupported", "Unsupported type"),
+        ("failed", "Failed"),
+    ]
+
+    email = models.ForeignKey(
+        Email, on_delete=models.CASCADE, related_name="attachment_files"
+    )
+    # Gmail attachment ids routinely exceed 200 characters.
+    gmail_attachment_id = models.TextField(blank=True)
+    filename = models.CharField(max_length=255)
+    mime_type = models.CharField(max_length=100, blank=True)
+    size = models.PositiveIntegerField(default=0)
+    text = models.TextField(blank=True)
+    extract_status = models.CharField(
+        max_length=15, choices=EXTRACT_STATUS_CHOICES, default="pending"
+    )
+
+    def __str__(self):
+        return self.filename
+
+    class Meta:
+        db_table = "app_email_attachment"
+        ordering = ["id"]
 
 
 class GmailSyncState(models.Model):

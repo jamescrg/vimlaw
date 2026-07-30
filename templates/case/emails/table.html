@@ -32,7 +32,7 @@
             <span class="email-list-sender">{{ email.sender_display }}</span>
             <span class="email-list-meta">
               {% if email.document %}<i class="icon-file-check" title="Promoted to Document"></i>{% endif %}
-              {% if email.attachments %}<i class="icon-paperclip"></i>{% endif %}
+              {% if email.attachment_files.all %}<i class="icon-paperclip"></i>{% endif %}
               <span class="email-list-date">{{ email.date|date:"M j, Y" }}</span>
             </span>
           </div>

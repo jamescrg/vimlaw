@@ -99,7 +99,12 @@ def test_nested_multipart_with_attachment():
     parsed = parse_payload(msg)
     assert parsed.body_text == "Body text"
     assert parsed.attachments == [
-        {"filename": "contract.pdf", "mime_type": "application/pdf", "size": 12345}
+        {
+            "filename": "contract.pdf",
+            "mime_type": "application/pdf",
+            "size": 12345,
+            "attachment_id": "att1",
+        }
     ]
     assert parsed.recipients == "Bob <bob@example.com>, c@x.com"
 

@@ -97,12 +97,13 @@
       <span class="email-preview-meta-label">Date:</span> {{ email.date|date:"l, F j, Y g:i A" }}
     </div>
   </div>
-  {% if email.attachments %}
+  {% if email.attachment_files.all %}
     <div class="email-preview-attachments">
-      {% for att in email.attachments %}
+      {% for att in email.attachment_files.all %}
         <span class="app-badge"
-              title="Attachment metadata only (open in Gmail to view)">
+              title="{% if att.extract_status == 'extracted' %}Text extracted for AI context; file remains in Gmail{% else %}{{ att.get_extract_status_display }}; file remains in Gmail{% endif %}">
           <i class="icon-paperclip"></i> {{ att.filename }}
+          {% if att.extract_status == 'extracted' %}<i class="icon-scan-text" title="Text extracted"></i>{% endif %}
         </span>
       {% endfor %}
     </div>

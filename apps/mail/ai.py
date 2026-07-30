@@ -49,10 +49,20 @@ def format_email_thread(emails, omitted_earlier=0):
         parts.append(line)
         if email.body_text:
             parts.append(email.body_text)
-        if email.attachments:
-            atts = ", ".join(
-                f"{a.get('filename', '?')} ({a.get('size', 0):,} bytes)"
-                for a in email.attachments
-            )
-            parts.append(f"Attachments (not imported, available in Gmail): {atts}")
+        atts = list(email.attachment_files.all())
+        if atts:
+            names = ", ".join(f"{a.filename} ({a.size:,} bytes)" for a in atts)
+            parts.append(f"Attachments (files remain in Gmail): {names}")
+            for att in atts:
+                if att.text:
+                    parts.append(f"--- Attachment text: {att.filename} ---\n{att.text}")
     return "\n".join(parts)
+
+
+def thread_word_count(emails):
+    """Words the thread contributes to context: bodies + attachment text."""
+    return sum(
+        len(e.body_text.split())
+        + sum(len(a.text.split()) for a in e.attachment_files.all() if a.text)
+        for e in emails
+    )

@@ -12,7 +12,12 @@ from dataclasses import dataclass
 
 from apps.case.models import CaseLaw, Document
 from apps.invoicing.invoices.models import Invoice
-from apps.mail.ai import format_email_thread, group_by_thread, thread_subject
+from apps.mail.ai import (
+    format_email_thread,
+    group_by_thread,
+    thread_subject,
+    thread_word_count,
+)
 from apps.mail.models import Email
 from apps.notes.models import Note
 
@@ -268,11 +273,13 @@ def build_manifest(matter, current_conversation=None):
     # long thread as N entries would bloat the manifest, and the thread is
     # the unit the attorney thinks in). item_id is the lowest Email id in
     # the thread, a stable integer key.
-    auto_emails = Email.objects.filter(matter=matter, ai_context="auto")
+    auto_emails = Email.objects.filter(
+        matter=matter, ai_context="auto"
+    ).prefetch_related("attachment_files")
     for thread_emails in group_by_thread(auto_emails):
         first, last = thread_emails[0], thread_emails[-1]
         item_id = min(e.id for e in thread_emails)
-        total_words = sum(len(e.body_text.split()) for e in thread_emails)
+        total_words = thread_word_count(thread_emails)
 
         first_date = first.date.strftime("%Y-%m-%d") if first.date else None
         last_date = last.date.strftime("%Y-%m-%d") if last.date else None

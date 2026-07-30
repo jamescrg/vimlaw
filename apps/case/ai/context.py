@@ -311,7 +311,11 @@ def collect_context_items(
     # chosen by the selector. With `since`, a thread is included when it has
     # new messages, rendering only those (older ones flagged as omitted) so
     # incremental auto-summaries see just the delta.
-    emails_qs = Email.objects.filter(matter=matter).exclude(ai_context="never")
+    emails_qs = (
+        Email.objects.filter(matter=matter)
+        .exclude(ai_context="never")
+        .prefetch_related("attachment_files")
+    )
     if not include_auto:
         emails_qs = emails_qs.filter(ai_context="always")
     for thread_emails in group_by_thread(emails_qs):

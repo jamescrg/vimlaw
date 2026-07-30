@@ -146,6 +146,20 @@ class _Messages:
             return _Call(http_error(404))
         return _Call(msg)
 
+    def attachments(self):
+        return _Attachments(self._service)
+
+
+class _Attachments:
+    def __init__(self, service):
+        self._service = service
+
+    def get(self, userId, messageId, id):
+        data = self._service.attachment_data.get(id)
+        if data is None:
+            return _Call(http_error(404))
+        return _Call({"data": base64.urlsafe_b64encode(data).decode()})
+
 
 class _History:
     def __init__(self, service):
@@ -166,6 +180,8 @@ class FakeGmailService:
     """Canned Gmail API: labels, messages keyed by id, one history page."""
 
     def __init__(self, labels=None, messages=None, history=None, history_id="2000"):
+        # attachment_id -> raw bytes, served by attachments().get.
+        self.attachment_data = {}
         self.labels = labels or [
             {"id": "Label_1", "name": "Matters - Open/Smith", "type": "user"},
             {"id": "Label_2", "name": "Matters - Open/Doe", "type": "user"},

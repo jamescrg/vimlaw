@@ -17,7 +17,11 @@ def get_emails_data(request, matter, matter_id):
     filter_session_key = get_session_key("emails_filter", matter_id)
     filter_data = request.session.get(filter_session_key, {})
 
-    queryset = Email.objects.filter(matter=matter).order_by("-date")
+    queryset = (
+        Email.objects.filter(matter=matter)
+        .order_by("-date")
+        .prefetch_related("attachment_files")
+    )
     if filter_data:
         emails = EmailFilter(filter_data, queryset=queryset).qs
     else:

@@ -35,7 +35,20 @@ from apps.matters.models import Matter
 from utils.prepare_path import prepare_path
 
 from . import parser
-from .models import Email, GmailSyncState
+from .models import Email, EmailAttachment, GmailSyncState
+
+
+def _queue_attachment_extraction(email_id):
+    """Extract attachment text in the background (inline if the queue is down)."""
+    try:
+        from django_q.tasks import async_task
+
+        async_task("apps.mail.tasks.process_email_attachments", email_id)
+    except Exception:
+        from . import tasks
+
+        tasks.process_email_attachments(email_id)
+
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +186,7 @@ def _fetch_and_store(service, matter, label_id, gmail_id, stats, dry_run):
             .execute()
         )
         parsed = parser.parse_payload(msg)
-        Email.objects.create(
+        email = Email.objects.create(
             matter=matter,
             gmail_id=gmail_id,
             thread_id=msg.get("threadId", ""),
@@ -186,8 +199,19 @@ def _fetch_and_store(service, matter, label_id, gmail_id, stats, dry_run):
             body_text=parsed.body_text,
             body_html=parsed.body_html,
             body_source=parsed.body_source,
-            attachments=parsed.attachments,
         )
+        if parsed.attachments:
+            EmailAttachment.objects.bulk_create(
+                EmailAttachment(
+                    email=email,
+                    gmail_attachment_id=a["attachment_id"],
+                    filename=a["filename"][:255],
+                    mime_type=a["mime_type"][:100],
+                    size=a["size"],
+                )
+                for a in parsed.attachments
+            )
+            _queue_attachment_extraction(email.id)
         stats["created"] += 1
     except HttpError as e:
         # A message can vanish between the listing and the fetch.
