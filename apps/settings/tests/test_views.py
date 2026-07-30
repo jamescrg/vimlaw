@@ -374,3 +374,37 @@ def test_user_table_shows_permission_summary(admin_client, staff_member):
     content = response.content.decode()
     assert "3 of 5" in content
     assert "Full access" in content or "Admin" in content
+
+
+# --- Permissions matrix -------------------------------------------------------
+
+
+def test_permissions_matrix_renders(admin_client, staff_member):
+    response = admin_client.get("/settings/permissions/")
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "toggle-switch" in content
+    assert "Staffer" in content or "staffer" in content
+    for label in ("All Matters", "Financial", "Intakes", "Reports", "Research"):
+        assert label in content
+
+
+def test_permissions_matrix_admin_row_locked(admin_client):
+    response = admin_client.get("/settings/permissions/")
+    content = response.content.decode()
+    assert "disabled" in content  # the admin's own row renders locked switches
+
+
+def test_permissions_matrix_blocked_for_non_admin(client):
+    response = client.get("/settings/permissions/")
+    assert response.status_code == 403
+
+
+def test_toggle_perm_fires_matrix_reload(admin_client, staff_member):
+    response = admin_client.post(
+        f"/settings/users/toggle-perm/{staff_member.id}/perm_financial/"
+    )
+    assert response.status_code == 204
+    assert "permissionsChanged" in response.headers["HX-Trigger"]
+    staff_member.refresh_from_db()
+    assert staff_member.perm_financial is False

@@ -1,0 +1,52 @@
+<div class="toolbar">
+  <div class="toolbar-left">
+    <h2>Permissions</h2>
+  </div>
+</div>
+<div class="table-container">
+  <table class="table settings-table permissions-matrix">
+    <thead>
+      <tr>
+        <th>User</th>
+        {% for field, label in perm_columns %}<th class="center-data">{{ label }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in perm_rows %}
+        <tr>
+          <td>
+            {{ row.user.full_name }}
+            {% if row.user.is_admin %}<span class="perm-limited-hint">· admin</span>{% endif %}
+          </td>
+          {% for field, granted in row.perms %}
+            <td class="center-data">
+              {% comment %}
+                Admins hold every permission by role; their switches render
+                on and locked so the matrix stays a complete picture.
+              {% endcomment %}
+              <label class="toggle-switch">
+                <input type="checkbox"
+                       {% if granted %}checked{% endif %}
+                       {% if row.user.is_admin %} disabled {% else %} hx-post="{% url 'settings:toggle-perm' row.user.id field %}" hx-trigger="change" hx-swap="none" {% endif %}>
+                <span class="toggle-track"></span>
+              </label>
+              {% if field == "perm_all_matters" and not granted %}
+                <a href="#"
+                   class="btn-icon perm-manage-link"
+                   title="Manage matter access"
+                   hx-get="{% url 'settings:matter-assignments' row.user.id %}"
+                   hx-target="#htmx-modal-container">
+                  <i class="icon-square-pen"></i>
+                </a>
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6" class="empty-message">No active users.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

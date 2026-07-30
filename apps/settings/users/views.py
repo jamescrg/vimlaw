@@ -170,7 +170,9 @@ def toggle_permission(request, user_id, perm):
     setattr(user, perm, not getattr(user, perm))
     user.save(update_fields=[perm])
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})
+    return HttpResponse(
+        status=204, headers={"HX-Trigger": "userListReload, permissionsChanged"}
+    )
 
 
 @login_required

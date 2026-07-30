@@ -1,0 +1,7 @@
+{% extends "settings/main.html" %}
+{% block subcontent %}
+  <div id="permissions-matrix"
+       hx-trigger="permissionsChanged from:body"
+       hx-get="{% url 'settings:permissions-table' %}"
+       hx-target="this">{% include "settings/permissions/table.html" %}</div>
+{% endblock subcontent %}
