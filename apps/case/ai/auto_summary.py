@@ -23,12 +23,9 @@ from .context import (
     assemble_matter_context_with_selection,
     collect_context_items,
     format_contacts,
-    format_events,
     format_matter_overview,
     format_proceedings,
     format_settlement,
-    format_tasks,
-    format_time_entries,
     get_importance_label,
     load_legal_prompt,
 )
@@ -49,30 +46,32 @@ CUTOFF_MARGIN = timedelta(minutes=10)
 INCREMENTAL_FALLBACK_CHARS = 300_000
 
 SUMMARY_STRUCTURE = (
-    "1. Parties and procedural posture\n"
-    "2. Recent developments\n"
-    "3. Upcoming deadlines and events\n"
-    "4. Open tasks\n"
-    "5. Financial posture (billing, settlement)\n"
+    "1. Core factual nexus: the operative events and circumstances from which "
+    "the case arises, in narrative form\n"
+    "2. Legal issues in controversy: each claim or defense and the specific "
+    "elements or questions actually in dispute\n"
+    "3. Each party's position on the disputed issues\n"
+    "4. Key evidence bearing on each disputed issue\n"
 )
 
 AUTO_SUMMARY_PROMPT = (
-    "Provide a structured status summary of this matter as of today. Cover:\n"
+    "Provide a summary of the substantive issues in this matter. Cover:\n"
     + SUMMARY_STRUCTURE
-    + "Be concise and factual. Close with anything that needs urgent attention. "
-    "If the matter file contains little information, say so briefly rather "
-    "than speculating."
+    + "Be concise and factual, and ground every point in the case record. Do "
+    "not cover scheduling, billing, or administrative status. If the matter "
+    "file contains little information, say so briefly rather than speculating."
 )
 
 AUTO_SUMMARY_UPDATE_PROMPT = (
-    "Update the status summary of this matter. The context contains the "
-    "previous summary, the records added or changed since it was written, and "
-    "current administrative information. Produce a complete, standalone "
-    "replacement summary as of today with the same structure:\n"
+    "Update the summary of the substantive issues in this matter. The context "
+    "contains the previous summary and the records added or changed since it "
+    "was written. Produce a complete, standalone replacement summary with the "
+    "same structure:\n"
     + SUMMARY_STRUCTURE
-    + "Carry forward what is still current from the previous summary, "
-    "incorporate the new records, and drop anything outdated. Be concise and "
-    "factual. Close with anything that needs urgent attention."
+    + "Carry forward what still holds from the previous summary, incorporate "
+    "the new records, and drop anything the new records supersede. Be concise "
+    "and factual, and ground every point in the case record. Do not cover "
+    "scheduling, billing, or administrative status."
 )
 
 INCREMENTAL_CONTEXT_TEMPLATE = """
@@ -87,25 +86,14 @@ INCREMENTAL_CONTEXT_TEMPLATE = """
 ## Court Proceedings
 {proceedings}
 
+## Settlement Information
+{settlement}
+
 ## Previous Summary (generated {previous_date})
 {previous_summary}
 
 ## Records Added or Changed Since {previous_date}
 {new_items}
-
-## Administrative Information (current)
-
-### Tasks
-{tasks}
-
-### Upcoming Events
-{events}
-
-### Time Entries & Billing
-{time_entries}
-
-### Settlement Information
-{settlement}
 """
 
 
@@ -198,13 +186,10 @@ def build_incremental_context(matter, conversation, previous):
         matter_overview=format_matter_overview(matter),
         contacts=format_contacts(matter),
         proceedings=format_proceedings(matter),
+        settlement=format_settlement(matter),
         previous_date=previous.created_at.strftime("%b %d, %Y"),
         previous_summary=previous.content,
         new_items=new_items,
-        tasks=format_tasks(matter),
-        events=format_events(matter),
-        time_entries=format_time_entries(matter),
-        settlement=format_settlement(matter),
     )
 
     return f"{legal_prompt}\n\n---\n{matter_context}"
@@ -226,6 +211,22 @@ def refresh_matter_auto_summary(matter_id):
     previous = (
         conversation.messages.filter(role="assistant").order_by("created_at").last()
     )
+
+    # A baseline written under an older prompt covers different ground, so an
+    # incremental pass can't repair it; rebuild from the full record once and
+    # incremental runs resume the night after.
+    stored_prompt = (
+        conversation.messages.filter(role="user").order_by("created_at").last()
+    )
+    if stored_prompt and stored_prompt.content not in (
+        AUTO_SUMMARY_PROMPT,
+        AUTO_SUMMARY_UPDATE_PROMPT,
+    ):
+        logger.info(
+            "Auto summary: prompt changed for matter %s, rebuilding from full context",
+            matter_id,
+        )
+        previous = None
 
     try:
         system_context = None

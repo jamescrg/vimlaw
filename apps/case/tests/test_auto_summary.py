@@ -147,6 +147,20 @@ class TestWorker:
         messages = Conversation.objects.get(matter=matter).messages
         assert messages.first().content == AUTO_SUMMARY_PROMPT
 
+    def test_prompt_change_forces_full_rebuild(self, matter, mock_ai):
+        refresh_matter_auto_summary(matter.id)
+        conversation = Conversation.objects.get(matter=matter)
+        conversation.messages.filter(role="user").update(
+            content="An old, since-retired prompt."
+        )
+
+        mock_ai.assemble.reset_mock()
+        refresh_matter_auto_summary(matter.id)
+
+        mock_ai.assemble.assert_called_once()
+        assert mock_ai.call_args.kwargs["system_context"] == "FULL CONTEXT"
+        assert conversation.messages.first().content == AUTO_SUMMARY_PROMPT
+
     def test_gemini_failure_keeps_previous_summary(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)
 

@@ -406,7 +406,7 @@ def _parse_selector_response(response_text: str) -> list[tuple[str, int]]:
         text = "\n".join(lines)
 
     data = json.loads(text)
-    selected = data.get("selected", [])
+    selected = data.get("selected") or []
 
     keys = []
     for item in selected:
