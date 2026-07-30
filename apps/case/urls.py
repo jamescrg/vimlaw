@@ -11,6 +11,7 @@ from apps.case.notes import views as notes
 from apps.case.research import views as research
 from apps.case.search import views as search
 from apps.case.witnesses import views as witnesses
+from apps.mail import views as mail
 
 app_name = "case"
 
@@ -460,6 +461,24 @@ urlpatterns = [
         "case/<int:matter_id>/notes/drive/unlink/",
         notes.drive_unlink,
         name="notes-drive-unlink",
+    ),
+    # Emails (matter-scoped, synced from Gmail via apps.mail)
+    path("case/<int:matter_id>/emails/", mail.emails_index, name="emails-index"),
+    path("case/<int:matter_id>/emails/list/", mail.emails_list, name="emails-list"),
+    path(
+        "case/<int:matter_id>/emails/label/link/",
+        mail.label_link_modal,
+        name="emails-label-link-modal",
+    ),
+    path(
+        "case/<int:matter_id>/emails/label/link/set/",
+        mail.label_link,
+        name="emails-label-link",
+    ),
+    path(
+        "case/<int:matter_id>/emails/label/unlink/",
+        mail.label_unlink,
+        name="emails-label-unlink",
     ),
     # Labels (matter-scoped)
     path("case/<int:matter_id>/labels/", labels.labels_index, name="labels-index"),

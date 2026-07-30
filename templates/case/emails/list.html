@@ -1,0 +1,86 @@
+<div class="toolbar">
+  <div class="toolbar-left">
+    <span class="detail-text">{{ email_count }} email{{ email_count|pluralize }} synced from Gmail</span>
+  </div>
+  <div class="toolbar-right">
+    <button type="button"
+            class="btn-icon"
+            hx-get="{% url 'case:emails-label-link-modal' matter.id %}"
+            hx-target="#htmx-modal-container"
+            hx-trigger="click"
+            title="{% if matter.gmail_label_name %}Gmail label: {{ matter.gmail_label_name }}{% else %}Link a Gmail label to sync case emails{% endif %}">
+      <i class="icon-mail with-text"></i>
+      {% if matter.gmail_label_name %}
+        {{ matter.gmail_label_name|truncatechars:24 }}
+      {% else %}
+        Link Gmail Label
+      {% endif %}
+    </button>
+  </div>
+</div>
+<div id="emails-table">
+  {% if not gmail_linked %}
+    <p class="detail-text">
+      Gmail isn't connected. An admin can connect it under
+      <a href="{% url 'settings:integrations-index' %}">Settings &rsaquo; Integrations</a>.
+    </p>
+  {% elif not matter.gmail_label_id %}
+    <p class="detail-text">
+      No Gmail label is linked to this matter yet. Choose
+      <strong>Link Gmail Label</strong> above, then apply that label to case
+      emails in Gmail. They will sync here automatically.
+    </p>
+  {% elif not email_threads %}
+    <p class="detail-text">
+      No emails synced yet. Apply the
+      <strong>{{ matter.gmail_label_name }}</strong> label to case emails in
+      Gmail. They appear here within a couple of minutes.
+    </p>
+  {% else %}
+    <div class="email-thread-list">
+      {% for thread in email_threads %}
+        {% with first=thread.0 last=thread|last %}
+          <details class="email-thread">
+            <summary class="email-thread-summary">
+              <span class="email-thread-subject">{{ first.subject|default:"(no subject)" }}</span>
+              <span class="email-thread-meta">
+                {% if thread|length > 1 %}<span class="email-thread-count">{{ thread|length }} messages</span>{% endif %}
+                <span class="email-thread-date">{{ last.date|date:"M j, Y" }}</span>
+              </span>
+            </summary>
+            <div class="email-thread-messages">
+              {% for email in thread %}
+                <div class="email-message">
+                  <div class="email-message-header">
+                    <div class="email-message-parties">
+                      <span class="email-message-from">{{ email.sender }}</span>
+                      <span class="email-message-to">to {{ email.recipients|default:"(undisclosed)" }}</span>
+                    </div>
+                    <div class="email-message-meta">
+                      <span>{{ email.date|date:"M j, Y g:i A" }}</span>
+                      <a href="{{ email.gmail_url }}"
+                         target="_blank"
+                         rel="noopener"
+                         title="Open in Gmail"><i class="icon-external-link"></i></a>
+                    </div>
+                  </div>
+                  {% if email.attachments %}
+                    <div class="email-message-attachments">
+                      {% for att in email.attachments %}
+                        <span class="app-badge"
+                              title="Attachment metadata only (open in Gmail to view)">
+                          <i class="icon-paperclip"></i> {{ att.filename }}
+                        </span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="email-message-body">{{ email.body_text }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

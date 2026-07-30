@@ -1,0 +1,67 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Link Gmail Label</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      {% if not linked %}
+        <p class="detail-text">
+          Gmail isn't connected. An admin can connect it under
+          <a href="{% url 'settings:integrations-index' %}">Settings &rsaquo; Integrations</a>.
+        </p>
+      {% elif not labels %}
+        <p class="detail-text">
+          No labels were found in the connected mailbox. Create a label in
+          Gmail first, then reopen this dialog.
+        </p>
+      {% else %}
+        <p class="detail-text">
+          Choose the Gmail label for <strong>{{ matter }}</strong>. Emails
+          carrying that label will sync onto this matter automatically.
+        </p>
+        <form id="label-link-form"
+              hx-post="{% url 'case:emails-label-link' matter.id %}"
+              hx-target="#label-link-error"
+              hx-swap="innerHTML">
+          {% csrf_token %}
+          <div class="drive-folder-list">
+            {% for label in labels %}
+              <label class="drive-folder-option{% if label.taken_by %} disabled{% endif %}">
+                <input type="radio"
+                       name="label"
+                       value="{{ label.id }}"
+                       data-label-name="{{ label.name }}"
+                       {% if label.id == current %}checked{% endif %}
+                       {% if label.taken_by %}disabled{% endif %}
+                       onchange="document.getElementById('label-link-name').value = this.dataset.labelName">
+                <span class="drive-folder-name">{{ label.name }}</span>
+                {% if label.taken_by %}<span class="drive-folder-taken">linked to {{ label.taken_by }}</span>{% endif %}
+              </label>
+            {% endfor %}
+          </div>
+          <input type="hidden"
+                 id="label-link-name"
+                 name="label_name"
+                 value="{{ matter.gmail_label_name|default:'' }}">
+        </form>
+      {% endif %}
+      <div id="label-link-error"></div>
+    </div>
+    <div class="modal-footer">
+      {% if current %}
+        <button type="button"
+                class="btn btn-danger"
+                hx-post="{% url 'case:emails-label-unlink' matter.id %}"
+                hx-confirm="Unlink this label and remove its synced emails from this matter?">Unlink</button>
+      {% endif %}
+      {% if linked and labels %}
+        <button type="submit" form="label-link-form" class="btn btn-success">Link &amp; Sync</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
