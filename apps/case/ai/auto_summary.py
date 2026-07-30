@@ -1,20 +1,28 @@
-"""Nightly auto-generated case summaries.
+"""Nightly auto-generated AI threads: case summary and litigation agenda.
 
 A django-q schedule calls refresh_auto_summaries() each night, which fans out
-one task per open matter. Each task asks Gemini Flash for a status summary and
-replaces the content of the matter's "Auto Summary" conversation. The thread
-never grows: every run leaves exactly one user prompt and one assistant reply.
+one task per open matter. Each matter refreshes two system-owned conversations
+with Gemini Pro:
+
+- "Auto Summary": the substantive issues — factual nexus, legal issues in
+  controversy, positions, key evidence.
+- "Auto Agenda": a litigation plan — next steps, timeline to resolution,
+  strategic goals. Runs after the summary so the fresh summary is in its
+  context (both threads are ai_context="always" reference conversations).
+
+Each refresh replaces the thread's content: one user prompt and one assistant
+reply. Attorneys can converse in the thread during the day through the normal
+chat UI; that discussion is folded into the next refresh as controlling
+guidance, then the thread resets.
 
 The first run for a matter uses the full context-selection pipeline. Later
-runs are incremental: the previous summary plus only the records added or
-changed since it was written, so the nightly query stays small. A large delta
-falls back to the full pipeline, which knows how to budget context.
-
-The conversation is ai_context="always", so the latest summary is inlined
-into every other chat's context as a reference conversation.
+runs are incremental: the previous version plus only the records added or
+changed since it was written. A large delta, or a thread generated under a
+since-retired prompt, rebuilds from the full record.
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import timedelta
 
 from django.db import transaction
@@ -33,7 +41,9 @@ from .gemini_client import send_to_gemini
 
 logger = logging.getLogger(__name__)
 
-AUTO_SUMMARY_TITLE = "Auto Summary"
+# Picker key and Gemini model ID (see LLM_CHOICES and GEMINI_MODELS)
+LLM_KEY = "gemini-pro-latest"
+GEMINI_MODEL_ID = "gemini-pro-latest"
 
 # Records added or edited while the previous run was generating have
 # timestamps just before the previous assistant message; look back a little
@@ -44,6 +54,9 @@ CUTOFF_MARGIN = timedelta(minutes=10)
 # being an efficiency win; rebuild through the full selection pipeline, which
 # knows how to budget.
 INCREMENTAL_FALLBACK_CHARS = 300_000
+
+AUTO_SUMMARY_TITLE = "Auto Summary"
+AUTO_AGENDA_TITLE = "Auto Agenda"
 
 SUMMARY_STRUCTURE = (
     "1. Core factual nexus: the operative events and circumstances from which "
@@ -64,14 +77,65 @@ AUTO_SUMMARY_PROMPT = (
 
 AUTO_SUMMARY_UPDATE_PROMPT = (
     "Update the summary of the substantive issues in this matter. The context "
-    "contains the previous summary and the records added or changed since it "
-    "was written. Produce a complete, standalone replacement summary with the "
-    "same structure:\n"
+    "contains the previous summary, the records added or changed since it was "
+    "written, and any attorney feedback on the previous version. Produce a "
+    "complete, standalone replacement summary with the same structure:\n"
     + SUMMARY_STRUCTURE
     + "Carry forward what still holds from the previous summary, incorporate "
-    "the new records, and drop anything the new records supersede. Be concise "
-    "and factual, and ground every point in the case record. Do not cover "
-    "scheduling, billing, or administrative status."
+    "the new records, follow the attorney guidance, and drop anything the new "
+    "records supersede. Be concise and factual, and ground every point in the "
+    "case record. Do not cover scheduling, billing, or administrative status."
+)
+
+AGENDA_STRUCTURE = (
+    "1. Next steps: the concrete actions to take now, in priority order, and "
+    "what each accomplishes\n"
+    "2. Timeline to resolution: the realistic path from the current posture "
+    "to final resolution, phase by phase\n"
+    "3. Key strategic goals: what must be secured to bring about a successful "
+    "resolution for our client, and how each will be won\n"
+)
+
+AUTO_AGENDA_PROMPT = (
+    "Acting as a legal analyst and advocate for our client, build a "
+    "litigation plan for this matter. Analyze the record deeply before "
+    "answering. Cover:\n"
+    + AGENDA_STRUCTURE
+    + "Ground the plan in the case record, anticipate the opposing parties' "
+    "likely moves, and be candid about weaknesses and risks. If the matter "
+    "file contains little information, say so briefly rather than speculating."
+)
+
+AUTO_AGENDA_UPDATE_PROMPT = (
+    "Update the litigation plan for this matter. The context contains the "
+    "previous plan, the records added or changed since it was written, and "
+    "any attorney feedback on the previous version. Acting as a legal analyst "
+    "and advocate for our client, produce a complete, standalone replacement "
+    "plan with the same structure:\n"
+    + AGENDA_STRUCTURE
+    + "Carry forward what still holds from the previous plan, incorporate the "
+    "new records, follow the attorney guidance, and drop steps that are "
+    "completed or superseded. Anticipate the opposing parties' likely moves "
+    "and be candid about weaknesses and risks."
+)
+
+
+@dataclass(frozen=True)
+class ThreadSpec:
+    title: str
+    initial_prompt: str
+    update_prompt: str
+
+
+SUMMARY_SPEC = ThreadSpec(
+    title=AUTO_SUMMARY_TITLE,
+    initial_prompt=AUTO_SUMMARY_PROMPT,
+    update_prompt=AUTO_SUMMARY_UPDATE_PROMPT,
+)
+AGENDA_SPEC = ThreadSpec(
+    title=AUTO_AGENDA_TITLE,
+    initial_prompt=AUTO_AGENDA_PROMPT,
+    update_prompt=AUTO_AGENDA_UPDATE_PROMPT,
 )
 
 INCREMENTAL_CONTEXT_TEMPLATE = """
@@ -89,11 +153,21 @@ INCREMENTAL_CONTEXT_TEMPLATE = """
 ## Settlement Information
 {settlement}
 
-## Previous Summary (generated {previous_date})
-{previous_summary}
+## Previous Version of the {title} (generated {previous_date})
+{previous_content}
 
 ## Records Added or Changed Since {previous_date}
 {new_items}
+"""
+
+FEEDBACK_TEMPLATE = """
+
+## Attorney Feedback on the Previous Version
+After the previous version was generated, the firm's attorneys discussed it
+in this thread. Their direction is controlling guidance; follow it unless the
+case record contradicts it.
+
+{discussion}
 """
 
 
@@ -115,8 +189,47 @@ def refresh_auto_summaries():
     return len(matter_ids)
 
 
-def _get_or_create_conversation(matter):
-    """Find the matter's system-owned Auto Summary conversation.
+def refresh_matter_auto_summary(matter_id):
+    """Refresh the Auto Summary thread, then queue the Auto Agenda refresh.
+
+    The agenda runs as its own task so each Gemini Pro call gets the full
+    qcluster timeout, and after the summary so the fresh summary is in the
+    agenda's context.
+    """
+    from django_q.tasks import async_task
+
+    from apps.matters.models import Matter
+
+    try:
+        matter = Matter.objects.get(id=matter_id)
+    except Matter.DoesNotExist:
+        logger.warning("Auto summary: matter %s no longer exists", matter_id)
+        return
+
+    _refresh_thread(matter, SUMMARY_SPEC)
+    async_task(
+        "apps.case.ai.auto_summary.refresh_matter_auto_agenda",
+        matter_id,
+        task_name=f"AutoAgenda-{matter_id}",
+        group="auto_summary",
+    )
+
+
+def refresh_matter_auto_agenda(matter_id):
+    """Refresh the Auto Agenda thread."""
+    from apps.matters.models import Matter
+
+    try:
+        matter = Matter.objects.get(id=matter_id)
+    except Matter.DoesNotExist:
+        logger.warning("Auto agenda: matter %s no longer exists", matter_id)
+        return
+
+    _refresh_thread(matter, AGENDA_SPEC)
+
+
+def _get_or_create_conversation(matter, title):
+    """Find the matter's system-owned conversation with this title.
 
     user__isnull distinguishes ours from any human-created conversation that
     happens to share the title (views always set user). There is no unique
@@ -126,7 +239,7 @@ def _get_or_create_conversation(matter):
 
     conversations = list(
         Conversation.objects.filter(
-            matter=matter, title=AUTO_SUMMARY_TITLE, user__isnull=True
+            matter=matter, title=title, user__isnull=True
         ).order_by("id")
     )
     if conversations:
@@ -134,16 +247,28 @@ def _get_or_create_conversation(matter):
         for stray in conversations[1:]:
             stray.delete()
     else:
-        conversation = Conversation(matter=matter, title=AUTO_SUMMARY_TITLE, user=None)
-    conversation.llm = "gemini-flash"
+        conversation = Conversation(matter=matter, title=title, user=None)
+    conversation.llm = LLM_KEY
     conversation.ai_context = "always"
     conversation.vet_citations = False
     conversation.save()
     return conversation
 
 
-def build_incremental_context(matter, conversation, previous):
-    """System context for an update run: previous summary + delta since it.
+def _format_discussion(messages):
+    """Render thread discussion (everything after the initial pair)."""
+    lines = []
+    for msg in messages:
+        if msg.role == "user":
+            name = msg.user.get_full_name() if msg.user else "Attorney"
+            lines.append(f"**{name}:** {msg.content}")
+        else:
+            lines.append(f"**Assistant:** {msg.content}")
+    return "\n\n".join(lines)
+
+
+def build_incremental_context(matter, conversation, previous, spec):
+    """System context for an update run: previous version + delta since it.
 
     Returns None when the delta is too large to be worth an incremental pass;
     the caller should fall back to the full selection pipeline.
@@ -158,8 +283,9 @@ def build_incremental_context(matter, conversation, previous):
     total_chars = sum(len(item.content) for item in items)
     if total_chars > INCREMENTAL_FALLBACK_CHARS:
         logger.info(
-            "Auto summary: %d chars of new records for matter %s, "
+            "Auto thread %r: %d chars of new records for matter %s, "
             "falling back to full context",
+            spec.title,
             total_chars,
             matter.id,
         )
@@ -171,7 +297,7 @@ def build_incremental_context(matter, conversation, previous):
             for item in items
         )
     else:
-        new_items = "No records have been added or changed since the previous summary."
+        new_items = "No records have been added or changed since the previous version."
 
     company = Firm.objects.first()
     jurisdiction = (
@@ -187,78 +313,81 @@ def build_incremental_context(matter, conversation, previous):
         contacts=format_contacts(matter),
         proceedings=format_proceedings(matter),
         settlement=format_settlement(matter),
+        title=spec.title,
         previous_date=previous.created_at.strftime("%b %d, %Y"),
-        previous_summary=previous.content,
+        previous_content=previous.content,
         new_items=new_items,
     )
 
     return f"{legal_prompt}\n\n---\n{matter_context}"
 
 
-def refresh_matter_auto_summary(matter_id):
-    """Per-matter worker: one Gemini Flash call, then replace the thread."""
-    from apps.matters.models import Matter
-
+def _refresh_thread(matter, spec):
+    """Regenerate one auto thread: one Gemini Pro call, then replace it."""
     from .models import Message
 
-    try:
-        matter = Matter.objects.get(id=matter_id)
-    except Matter.DoesNotExist:
-        logger.warning("Auto summary: matter %s no longer exists", matter_id)
-        return
+    conversation = _get_or_create_conversation(matter, spec.title)
+    messages = list(conversation.messages.order_by("created_at"))
 
-    conversation = _get_or_create_conversation(matter)
-    previous = (
-        conversation.messages.filter(role="assistant").order_by("created_at").last()
-    )
-
-    # A baseline written under an older prompt covers different ground, so an
-    # incremental pass can't repair it; rebuild from the full record once and
-    # incremental runs resume the night after.
-    stored_prompt = (
-        conversation.messages.filter(role="user").order_by("created_at").last()
-    )
-    if stored_prompt and stored_prompt.content not in (
-        AUTO_SUMMARY_PROMPT,
-        AUTO_SUMMARY_UPDATE_PROMPT,
-    ):
-        logger.info(
-            "Auto summary: prompt changed for matter %s, rebuilding from full context",
-            matter_id,
-        )
-        previous = None
+    # The thread's canonical shape is [our prompt, the generated reply,
+    # then any attorney discussion]. The baseline for an incremental run is
+    # the ORIGINAL reply (messages[1]), not later discussion replies.
+    baseline = None
+    discussion = []
+    if len(messages) >= 2 and messages[0].role == "user":
+        discussion = messages[2:]
+        if messages[0].content in (spec.initial_prompt, spec.update_prompt):
+            baseline = messages[1]
+        else:
+            # Generated under an older prompt that covered different ground;
+            # an incremental pass can't repair that baseline. Rebuild from
+            # the full record; the discussion still counts as guidance.
+            logger.info(
+                "Auto thread %r: prompt changed for matter %s, "
+                "rebuilding from full context",
+                spec.title,
+                matter.id,
+            )
 
     try:
         system_context = None
-        prompt = AUTO_SUMMARY_UPDATE_PROMPT
-        if previous:
-            system_context = build_incremental_context(matter, conversation, previous)
+        prompt = spec.update_prompt
+        if baseline:
+            system_context = build_incremental_context(
+                matter, conversation, baseline, spec
+            )
         if system_context is None:
-            prompt = AUTO_SUMMARY_PROMPT
+            prompt = spec.initial_prompt
             system_context = assemble_matter_context_with_selection(
                 matter,
-                AUTO_SUMMARY_PROMPT,
-                "gemini-flash",
+                spec.initial_prompt,
+                LLM_KEY,
                 user=None,
                 conversation=conversation,
+            )
+        if discussion:
+            system_context += FEEDBACK_TEMPLATE.format(
+                discussion=_format_discussion(discussion)
             )
         text, input_tokens, output_tokens = send_to_gemini(
             system_context=system_context,
             messages=[{"role": "user", "content": prompt}],
-            model="gemini-2.5-flash",
+            model=GEMINI_MODEL_ID,
             conversation_id=conversation.id,
         )
     except Exception:
         logger.exception(
-            "Auto summary failed for matter %s; keeping previous summary",
-            matter_id,
+            "Auto thread %r failed for matter %s; keeping previous version",
+            spec.title,
+            matter.id,
         )
         return
 
     if not text or not text.strip():
         logger.warning(
-            "Auto summary: empty response for matter %s; keeping previous",
-            matter_id,
+            "Auto thread %r: empty response for matter %s; keeping previous",
+            spec.title,
+            matter.id,
         )
         return
 

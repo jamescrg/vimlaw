@@ -3,10 +3,13 @@ from unittest.mock import patch
 import pytest
 
 from apps.case.ai.auto_summary import (
+    AUTO_AGENDA_PROMPT,
+    AUTO_AGENDA_TITLE,
     AUTO_SUMMARY_PROMPT,
     AUTO_SUMMARY_TITLE,
     AUTO_SUMMARY_UPDATE_PROMPT,
     refresh_auto_summaries,
+    refresh_matter_auto_agenda,
     refresh_matter_auto_summary,
 )
 from apps.case.ai.models import Conversation, Message
@@ -27,9 +30,17 @@ def mock_ai():
             "apps.case.ai.auto_summary.send_to_gemini",
             return_value=("A fresh summary.", 1000, 200),
         ) as send,
+        patch("django_q.tasks.async_task") as async_task,
     ):
         send.assemble = assemble
+        send.async_task = async_task
         yield send
+
+
+def summary_conv(matter):
+    return Conversation.objects.get(
+        matter=matter, title=AUTO_SUMMARY_TITLE, user__isnull=True
+    )
 
 
 class TestDispatcher:
@@ -69,9 +80,9 @@ class TestWorker:
     def test_first_run_creates_conversation(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)
 
-        conversation = Conversation.objects.get(matter=matter)
+        conversation = summary_conv(matter)
         assert conversation.title == AUTO_SUMMARY_TITLE
-        assert conversation.llm == "gemini-flash"
+        assert conversation.llm == "gemini-pro-latest"
         assert conversation.ai_context == "always"
         assert conversation.vet_citations is False
         assert conversation.user is None
@@ -79,6 +90,7 @@ class TestWorker:
 
         mock_ai.assemble.assert_called_once()
         assert mock_ai.call_args.kwargs["system_context"] == "FULL CONTEXT"
+        assert mock_ai.call_args.kwargs["model"] == "gemini-pro-latest"
 
         messages = list(conversation.messages.all())
         assert [m.role for m in messages] == ["user", "assistant"]
@@ -87,9 +99,35 @@ class TestWorker:
         assert messages[1].input_tokens == 1000
         assert messages[1].output_tokens == 200
 
+    def test_summary_worker_queues_agenda(self, matter, mock_ai):
+        refresh_matter_auto_summary(matter.id)
+
+        mock_ai.async_task.assert_called_once_with(
+            "apps.case.ai.auto_summary.refresh_matter_auto_agenda",
+            matter.id,
+            task_name=f"AutoAgenda-{matter.id}",
+            group="auto_summary",
+        )
+
+    def test_agenda_worker_creates_agenda_thread(self, matter, mock_ai):
+        mock_ai.return_value = ("The plan.", 2000, 400)
+        refresh_matter_auto_agenda(matter.id)
+
+        conversation = Conversation.objects.get(
+            matter=matter, title=AUTO_AGENDA_TITLE, user__isnull=True
+        )
+        assert conversation.llm == "gemini-pro-latest"
+        assert conversation.ai_context == "always"
+        messages = list(conversation.messages.all())
+        assert [m.role for m in messages] == ["user", "assistant"]
+        assert messages[0].content == AUTO_AGENDA_PROMPT
+        assert messages[1].content == "The plan."
+        # Agenda does not queue anything further
+        mock_ai.async_task.assert_not_called()
+
     def test_second_run_is_incremental_and_replaces_messages(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)
-        conversation = Conversation.objects.get(matter=matter)
+        conversation = summary_conv(matter)
         original_created_at = conversation.created_at
 
         Note.objects.create(
@@ -113,13 +151,46 @@ class TestWorker:
         assert "Old strategy memo" not in system_context
 
         conversation.refresh_from_db()
-        assert Conversation.objects.filter(matter=matter).count() == 1
+        assert (
+            Conversation.objects.filter(matter=matter, title=AUTO_SUMMARY_TITLE).count()
+            == 1
+        )
         assert conversation.created_at == original_created_at
 
         messages = list(conversation.messages.all())
         assert len(messages) == 2
         assert messages[0].content == AUTO_SUMMARY_UPDATE_PROMPT
         assert messages[1].content == "An even fresher summary."
+
+    def test_thread_discussion_feeds_next_run_then_resets(self, matter, user, mock_ai):
+        refresh_matter_auto_summary(matter.id)
+        conversation = summary_conv(matter)
+        Message.objects.create(
+            conversation=conversation,
+            role="user",
+            content="Focus on the boundary dispute, drop the billing angle.",
+            user=user,
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="Understood, I will emphasize the boundary dispute.",
+        )
+
+        mock_ai.return_value = ("A guided summary.", 900, 180)
+        refresh_matter_auto_summary(matter.id)
+
+        system_context = mock_ai.call_args.kwargs["system_context"]
+        # Baseline is the original nightly reply, not the discussion reply
+        assert "A fresh summary." in system_context
+        assert "Attorney Feedback on the Previous Version" in system_context
+        assert "Focus on the boundary dispute" in system_context
+        assert "I will emphasize the boundary dispute" in system_context
+
+        # Thread resets to the canonical pair; feedback was consumed
+        messages = list(conversation.messages.all())
+        assert len(messages) == 2
+        assert messages[1].content == "A guided summary."
 
     def test_incremental_run_with_no_new_records(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)
@@ -129,10 +200,8 @@ class TestWorker:
 
         system_context = mock_ai.call_args.kwargs["system_context"]
         assert "No records have been added or changed" in system_context
-        assert (
-            Conversation.objects.get(matter=matter).messages.last().content
-            == "Same story, new day."
-        )
+        assert "Attorney Feedback" not in system_context
+        assert summary_conv(matter).messages.last().content == "Same story, new day."
 
     def test_large_delta_falls_back_to_full_context(self, matter, mock_ai, monkeypatch):
         refresh_matter_auto_summary(matter.id)
@@ -144,12 +213,11 @@ class TestWorker:
 
         mock_ai.assemble.assert_called_once()
         assert mock_ai.call_args.kwargs["system_context"] == "FULL CONTEXT"
-        messages = Conversation.objects.get(matter=matter).messages
-        assert messages.first().content == AUTO_SUMMARY_PROMPT
+        assert summary_conv(matter).messages.first().content == AUTO_SUMMARY_PROMPT
 
     def test_prompt_change_forces_full_rebuild(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)
-        conversation = Conversation.objects.get(matter=matter)
+        conversation = summary_conv(matter)
         conversation.messages.filter(role="user").update(
             content="An old, since-retired prompt."
         )
@@ -161,16 +229,22 @@ class TestWorker:
         assert mock_ai.call_args.kwargs["system_context"] == "FULL CONTEXT"
         assert conversation.messages.first().content == AUTO_SUMMARY_PROMPT
 
-    def test_gemini_failure_keeps_previous_summary(self, matter, mock_ai):
+    def test_gemini_failure_keeps_previous_thread_and_feedback(
+        self, matter, user, mock_ai
+    ):
         refresh_matter_auto_summary(matter.id)
+        conversation = summary_conv(matter)
+        Message.objects.create(
+            conversation=conversation, role="user", content="my guidance", user=user
+        )
 
         mock_ai.side_effect = Exception("Gemini down")
         refresh_matter_auto_summary(matter.id)
 
-        conversation = Conversation.objects.get(matter=matter)
         messages = list(conversation.messages.all())
-        assert len(messages) == 2
+        assert len(messages) == 3
         assert messages[1].content == "A fresh summary."
+        assert messages[2].content == "my guidance"
 
     def test_empty_response_keeps_previous_summary(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)
@@ -178,7 +252,7 @@ class TestWorker:
         mock_ai.return_value = ("   ", 0, 0)
         refresh_matter_auto_summary(matter.id)
 
-        messages = list(Conversation.objects.get(matter=matter).messages.all())
+        messages = list(summary_conv(matter).messages.all())
         assert len(messages) == 2
         assert messages[1].content == "A fresh summary."
 
@@ -190,7 +264,9 @@ class TestWorker:
 
         refresh_matter_auto_summary(matter.id)
 
-        conversations = Conversation.objects.filter(matter=matter)
+        conversations = Conversation.objects.filter(
+            matter=matter, title=AUTO_SUMMARY_TITLE
+        )
         assert conversations.count() == 1
         assert conversations.first().id == first.id
 
@@ -214,4 +290,5 @@ class TestWorker:
 
     def test_missing_matter_does_not_crash(self, mock_ai):
         refresh_matter_auto_summary(999999)
+        refresh_matter_auto_agenda(999999)
         assert Conversation.objects.count() == 0
