@@ -68,6 +68,7 @@ class TestDispatcher:
         async_task.assert_called_once_with(
             "apps.case.ai.auto_summary.refresh_matter_auto_summary",
             matter.id,
+            False,
             task_name=f"AutoSummary-{matter.id}",
             group="auto_summary",
         )
@@ -105,6 +106,7 @@ class TestWorker:
         mock_ai.async_task.assert_called_once_with(
             "apps.case.ai.auto_summary.refresh_matter_auto_agenda",
             matter.id,
+            False,
             task_name=f"AutoAgenda-{matter.id}",
             group="auto_summary",
         )
@@ -214,6 +216,24 @@ class TestWorker:
         mock_ai.assemble.assert_called_once()
         assert mock_ai.call_args.kwargs["system_context"] == "FULL CONTEXT"
         assert summary_conv(matter).messages.first().content == AUTO_SUMMARY_PROMPT
+
+    def test_force_full_rebuilds_but_keeps_feedback(self, matter, user, mock_ai):
+        refresh_matter_auto_summary(matter.id)
+        conversation = summary_conv(matter)
+        Message.objects.create(
+            conversation=conversation, role="user", content="my guidance", user=user
+        )
+
+        mock_ai.assemble.reset_mock()
+        refresh_matter_auto_summary(matter.id, force_full=True)
+
+        mock_ai.assemble.assert_called_once()
+        system_context = mock_ai.call_args.kwargs["system_context"]
+        assert system_context.startswith("FULL CONTEXT")
+        assert "my guidance" in system_context
+        assert mock_ai.async_task.call_args.args[2] is True
+        assert conversation.messages.count() == 2
+        assert conversation.messages.first().content == AUTO_SUMMARY_PROMPT
 
     def test_prompt_change_forces_full_rebuild(self, matter, mock_ai):
         refresh_matter_auto_summary(matter.id)

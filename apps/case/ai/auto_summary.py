@@ -171,7 +171,7 @@ case record contradicts it.
 """
 
 
-def refresh_auto_summaries():
+def refresh_auto_summaries(force_full=False):
     """Nightly dispatcher: queue one refresh task per open matter."""
     from django_q.tasks import async_task
 
@@ -182,6 +182,7 @@ def refresh_auto_summaries():
         async_task(
             "apps.case.ai.auto_summary.refresh_matter_auto_summary",
             matter_id,
+            force_full,
             task_name=f"AutoSummary-{matter_id}",
             group="auto_summary",
         )
@@ -189,7 +190,17 @@ def refresh_auto_summaries():
     return len(matter_ids)
 
 
-def refresh_matter_auto_summary(matter_id):
+def refresh_auto_summaries_full():
+    """Weekly dispatcher: rebuild every thread from the full record.
+
+    Guards against quality drift from summaries compounding on summaries.
+    Scheduled for early Monday; the incremental dispatcher covers the other
+    nights.
+    """
+    return refresh_auto_summaries(force_full=True)
+
+
+def refresh_matter_auto_summary(matter_id, force_full=False):
     """Refresh the Auto Summary thread, then queue the Auto Agenda refresh.
 
     The agenda runs as its own task so each Gemini Pro call gets the full
@@ -206,16 +217,17 @@ def refresh_matter_auto_summary(matter_id):
         logger.warning("Auto summary: matter %s no longer exists", matter_id)
         return
 
-    _refresh_thread(matter, SUMMARY_SPEC)
+    _refresh_thread(matter, SUMMARY_SPEC, force_full=force_full)
     async_task(
         "apps.case.ai.auto_summary.refresh_matter_auto_agenda",
         matter_id,
+        force_full,
         task_name=f"AutoAgenda-{matter_id}",
         group="auto_summary",
     )
 
 
-def refresh_matter_auto_agenda(matter_id):
+def refresh_matter_auto_agenda(matter_id, force_full=False):
     """Refresh the Auto Agenda thread."""
     from apps.matters.models import Matter
 
@@ -225,7 +237,7 @@ def refresh_matter_auto_agenda(matter_id):
         logger.warning("Auto agenda: matter %s no longer exists", matter_id)
         return
 
-    _refresh_thread(matter, AGENDA_SPEC)
+    _refresh_thread(matter, AGENDA_SPEC, force_full=force_full)
 
 
 def _get_or_create_conversation(matter, title):
@@ -322,7 +334,7 @@ def build_incremental_context(matter, conversation, previous, spec):
     return f"{legal_prompt}\n\n---\n{matter_context}"
 
 
-def _refresh_thread(matter, spec):
+def _refresh_thread(matter, spec, force_full=False):
     """Regenerate one auto thread: one Gemini Pro call, then replace it."""
     from .models import Message
 
@@ -336,7 +348,9 @@ def _refresh_thread(matter, spec):
     discussion = []
     if len(messages) >= 2 and messages[0].role == "user":
         discussion = messages[2:]
-        if messages[0].content in (spec.initial_prompt, spec.update_prompt):
+        if force_full:
+            pass
+        elif messages[0].content in (spec.initial_prompt, spec.update_prompt):
             baseline = messages[1]
         else:
             # Generated under an older prompt that covered different ground;
