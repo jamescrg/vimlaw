@@ -40,6 +40,12 @@
   width: 3rem;
 }
 
+.emails-toolbar .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .email-row {
   cursor: pointer;
 }
