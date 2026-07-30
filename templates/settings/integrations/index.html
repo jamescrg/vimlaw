@@ -7,7 +7,8 @@
       </div>
       <p class="detail-text">
         Connect a Google account to syncronize contacts, view calendar events on your
-        home page, and mirror case notes from Google Drive.
+        home page, mirror case notes from Google Drive, and sync labeled case
+        emails from Gmail.
       </p>
       <div class="integrations-list">
         <div class="integrations-item">
@@ -52,6 +53,41 @@
                 No matters are linked to a Drive folder yet. Open a matter's
                 <strong>Notes</strong> tab and choose <strong>Link Drive Folder</strong>
                 to start syncing its case notes.
+              </p>
+            {% endif %}
+          {% endif %}
+        </div>
+        <div class="integrations-item integrations-item-stacked">
+          <div class="integrations-item-row">
+            <span>Gmail (Case Email)</span>
+            {% if email_token %}
+              <a class="btn btn-danger"
+                 href="{% url 'settings:google-logout' 'email' %}">Disconnect</a>
+            {% else %}
+              <a class="btn btn-success"
+                 href="{% url 'settings:google-login' 'email' %}">Connect</a>
+            {% endif %}
+          </div>
+          {% if gmail_status %}
+            {% if gmail_status.linked_matters %}
+              <p class="detail-text drive-sync-note">
+                {{ gmail_status.synced_count }} email{{ gmail_status.synced_count|pluralize }}
+                synced across {{ gmail_status.linked_matters }} matter{{ gmail_status.linked_matters|pluralize }}.
+              </p>
+            {% else %}
+              <p class="detail-text drive-sync-note">
+                No matters are linked to a Gmail label yet. Open a matter's
+                <strong>Emails</strong> tab and choose <strong>Link Gmail Label</strong>
+                to start syncing its case emails.
+              </p>
+            {% endif %}
+            {% if gmail_status.missing_labels %}
+              <p class="detail-text drive-sync-note">
+                Warning: {{ gmail_status.missing_labels|length }} mapped
+                label{{ gmail_status.missing_labels|length|pluralize }} no longer
+                exist{{ gmail_status.missing_labels|length|pluralize:"s," }} in Gmail.
+                Relink the affected matter{{ gmail_status.missing_labels|length|pluralize }}
+                from the Emails tab.
               </p>
             {% endif %}
           {% endif %}

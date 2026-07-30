@@ -5,11 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 import apps.drive.google as drive_google
+import apps.mail.google as mail_google
 from utils.prepare_path import prepare_path
 
 CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
 CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
 DRIVE_TOKEN_PATH = "google/drive_tokens.json"
+EMAIL_TOKEN_PATH = "google/email_tokens.json"
 GOOGLE_TOKEN_PATH = "google/google_tokens.json"
 
 # Map the <app> URL segment to its token file.
@@ -17,6 +19,7 @@ TOKEN_PATHS = {
     "contacts": CONTACTS_TOKEN_PATH,
     "calendar": CALENDAR_TOKEN_PATH,
     "drive": DRIVE_TOKEN_PATH,
+    "email": EMAIL_TOKEN_PATH,
 }
 
 
@@ -43,6 +46,7 @@ def _create_flow(redirect_uri):
             "https://www.googleapis.com/auth/calendar",
             "https://www.googleapis.com/auth/contacts",
             "https://www.googleapis.com/auth/drive.readonly",
+            "https://www.googleapis.com/auth/gmail.readonly",
         ],
     )
 
@@ -63,9 +67,12 @@ def index(request):
     contacts_token = _token_exists(CONTACTS_TOKEN_PATH)
     calendar_token = _token_exists(CALENDAR_TOKEN_PATH)
     drive_token = _token_exists(DRIVE_TOKEN_PATH)
+    email_token = _token_exists(EMAIL_TOKEN_PATH)
 
     # Drive case-notes sync health (last sync, synced count, unmatched folders).
     drive_status = drive_google.get_sync_status() if drive_token else None
+    # Gmail case-email sync health (synced count, missing labels).
+    gmail_status = mail_google.get_sync_status() if email_token else None
 
     context = {
         "app": "settings",
@@ -74,6 +81,8 @@ def index(request):
         "calendar_token": calendar_token,
         "drive_token": drive_token,
         "drive_status": drive_status,
+        "email_token": email_token,
+        "gmail_status": gmail_status,
     }
 
     return render(request, "settings/integrations/index.html", context)
