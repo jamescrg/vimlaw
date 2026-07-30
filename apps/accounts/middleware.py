@@ -35,6 +35,7 @@ class PermissionMiddleware:
     # Paths only admins may access (page + all its endpoints), regardless of perms.
     ADMIN_ONLY_PATHS = [
         "/settings/users/",
+        "/settings/permissions/",
     ]
 
     def __init__(self, get_response):
