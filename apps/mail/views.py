@@ -1,22 +1,44 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 import apps.mail.google as mail_google
-from apps.case.views import get_matter_from_url, set_last_tab
+from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
 
+from .filters import EmailFilter
 from .models import Email
 
 
 def get_emails_data(request, matter, matter_id):
-    """Synced emails, newest first."""
-    emails = Email.objects.filter(matter=matter).order_by("-date")
+    """Synced emails with session-persisted filters applied, newest first."""
+    filter_session_key = get_session_key("emails_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    queryset = Email.objects.filter(matter=matter).order_by("-date")
+    if filter_data:
+        emails = EmailFilter(filter_data, queryset=queryset).qs
+    else:
+        emails = queryset
+
+    current_order = filter_data.get("order_by", "-date")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else "-date"
+
+    keyword = filter_data.get("keyword", "")
+    if isinstance(keyword, list):
+        keyword = keyword[0] if keyword else ""
+
     return {
         "emails": emails,
         "email_count": emails.count(),
+        "current_order": current_order,
+        "keyword": keyword,
+        "filters_active": bool(
+            {k: v for k, v in filter_data.items() if k != "order_by" and v}
+        ),
         "gmail_linked": mail_google.check_credentials(),
     }
 
@@ -48,6 +70,70 @@ def emails_list(request, matter_id):
     } | get_emails_data(request, matter, matter_id)
 
     return render(request, "case/emails/list.html", context)
+
+
+@login_required
+def emails_filter(request, matter_id):
+    """Filter modal for emails (mirrors the notes filter modal)."""
+    matter, matters = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("emails_filter", matter_id)
+
+    if request.method == "POST":
+        filter_data = {
+            key: value
+            for key, value in request.POST.items()
+            if key != "csrfmiddlewaretoken"
+        }
+        request.session[filter_session_key] = filter_data
+        request.session.modified = True
+        return HttpResponse(status=204, headers={"HX-Trigger": "emailsChanged"})
+
+    filter_data = request.session.get(filter_session_key, {})
+    filter_obj = EmailFilter(filter_data, queryset=Email.objects.filter(matter=matter))
+
+    return render(
+        request, "case/emails/filter.html", {"filter": filter_obj, "matter": matter}
+    )
+
+
+@login_required
+def emails_filter_keyword(request, matter_id):
+    """Filter emails by subject keyword (toolbar live search)."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("emails_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+    keyword = request.GET.get("keyword", "").strip()
+
+    if keyword:
+        filter_data["keyword"] = keyword
+    else:
+        filter_data.pop("keyword", None)
+
+    request.session[filter_session_key] = filter_data
+
+    context = {"matter": matter} | get_emails_data(request, matter, matter_id)
+    return render(request, "case/emails/table.html", context)
+
+
+@login_required
+def emails_sort(request, matter_id, order):
+    """Sort emails by field, toggling direction on repeat clicks."""
+    filter_session_key = get_session_key("emails_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    current_order = filter_data.get("order_by", "")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else ""
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+
+    filter_data["order_by"] = new_order
+    request.session[filter_session_key] = filter_data
+    request.session.modified = True
+
+    return redirect("case:emails-list", matter_id=matter_id)
 
 
 @login_required

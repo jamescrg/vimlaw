@@ -481,6 +481,21 @@ urlpatterns = [
         name="emails-label-unlink",
     ),
     path(
+        "case/<int:matter_id>/emails/filter/",
+        mail.emails_filter,
+        name="emails-filter",
+    ),
+    path(
+        "case/<int:matter_id>/emails/filter/keyword/",
+        mail.emails_filter_keyword,
+        name="emails-filter-keyword",
+    ),
+    path(
+        "case/<int:matter_id>/emails/sort/<str:order>/",
+        mail.emails_sort,
+        name="emails-sort",
+    ),
+    path(
         "case/emails/<int:email_id>/importance/<int:value>/",
         mail.email_importance,
         name="email-importance",

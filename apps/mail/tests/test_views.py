@@ -65,6 +65,90 @@ def test_emails_tab_prompts_when_unlinked(client, matter, fake_gmail):
     assert "Link Gmail Label" in response.content.decode()
 
 
+def test_filter_modal_renders(client, matter, fake_gmail):
+    response = client.get(reverse("case:emails-filter", args=[matter.id]))
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Filter Emails" in content
+    assert "Subject Keyword" in content
+
+
+def test_filter_persists_and_narrows(client, matter, fake_gmail):
+    make_email(matter, "m1", subject="Discovery schedule")
+    make_email(
+        matter,
+        "m2",
+        thread_id="thread-2",
+        subject="Settlement offer",
+        sender="Carol <carol@example.com>",
+    )
+
+    response = client.post(
+        reverse("case:emails-filter", args=[matter.id]), {"sender": "carol"}
+    )
+    assert response.status_code == 204
+    assert response.headers["HX-Trigger"] == "emailsChanged"
+
+    content = client.get(
+        reverse("case:emails-index", args=[matter.id])
+    ).content.decode()
+    assert "Settlement offer" in content
+    assert "Discovery schedule" not in content
+
+    # Clear Filters restores the full list.
+    client.post(reverse("case:emails-filter", args=[matter.id]), {"reset": "true"})
+    content = client.get(
+        reverse("case:emails-index", args=[matter.id])
+    ).content.decode()
+    assert "Discovery schedule" in content
+
+
+def test_keyword_search_narrows_table(client, matter, fake_gmail):
+    make_email(matter, "m1", subject="Discovery schedule")
+    make_email(matter, "m2", thread_id="thread-2", subject="Settlement offer")
+
+    response = client.get(
+        reverse("case:emails-filter-keyword", args=[matter.id]),
+        {"keyword": "settlement"},
+    )
+    content = response.content.decode()
+    assert "Settlement offer" in content
+    assert "Discovery schedule" not in content
+
+
+def test_date_range_filter(client, matter, fake_gmail):
+    from datetime import timedelta
+
+    old = make_email(matter, "m1", subject="Old mail")
+    Email.objects.filter(pk=old.pk).update(date=timezone.now() - timedelta(days=30))
+    make_email(matter, "m2", thread_id="thread-2", subject="Recent mail")
+
+    cutoff = (timezone.now() - timedelta(days=7)).date().isoformat()
+    client.post(reverse("case:emails-filter", args=[matter.id]), {"date_after": cutoff})
+    content = client.get(
+        reverse("case:emails-index", args=[matter.id])
+    ).content.decode()
+    assert "Recent mail" in content
+    assert "Old mail" not in content
+
+
+def test_sort_toggles_direction(client, matter, fake_gmail):
+    make_email(matter, "m1", sender="Alice <a@x.com>")
+    make_email(matter, "m2", thread_id="thread-2", sender="Zed <z@x.com>")
+
+    response = client.get(
+        reverse("case:emails-sort", args=[matter.id, "sender"]), follow=True
+    )
+    content = response.content.decode()
+    assert content.index("Alice") < content.index("Zed")
+
+    response = client.get(
+        reverse("case:emails-sort", args=[matter.id, "sender"]), follow=True
+    )
+    content = response.content.decode()
+    assert content.index("Zed") < content.index("Alice")
+
+
 def test_label_link_modal_marks_taken_labels(client, matter, matter2, fake_gmail):
     response = client.get(reverse("case:emails-label-link-modal", args=[matter.id]))
     content = response.content.decode()

@@ -9,7 +9,7 @@
 }
 
 .emails-list th.date {
-  width: 9.5rem;
+  width: 12rem;
 }
 
 .emails-list td.date {
@@ -18,7 +18,7 @@
 
 .emails-list th.sender,
 .emails-list th.recipient {
-  width: 9rem;
+  width: 15rem;
 }
 
 .emails-list td.sender,
@@ -37,7 +37,7 @@
 .emails-list th.importance,
 .emails-list td.importance {
   text-align: center;
-  width: 2.5rem;
+  width: 3rem;
 }
 
 .email-row {

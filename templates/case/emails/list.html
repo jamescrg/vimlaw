@@ -1,6 +1,26 @@
-<div class="toolbar">
+<div class="toolbar emails-toolbar">
   <div class="toolbar-left">
-    <span class="detail-text">{{ email_count }} email{{ email_count|pluralize }} synced from Gmail</span>
+    <div class="filter-tools">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'case:emails-filter' matter.id %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click">
+        <i class="icon-list-filter with-text"></i>Filter
+      </button>
+      <input type="text"
+             id="emails-keyword-input"
+             name="keyword"
+             placeholder="Subject Search"
+             value="{{ keyword }}"
+             class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
+             hx-get="{% url 'case:emails-filter-keyword' matter.id %}"
+             hx-target="#emails-table"
+             hx-trigger="keyup changed delay:500ms"
+             hx-include="this"
+             oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
+      <span class="detail-text">{{ email_count }} email{{ email_count|pluralize }}</span>
+    </div>
   </div>
   <div class="toolbar-right">
     <button type="button"
@@ -18,146 +38,4 @@
     </button>
   </div>
 </div>
-<div id="emails-table">
-  {% if not gmail_linked %}
-    <p class="detail-text">
-      Gmail isn't connected. An admin can connect it under
-      <a href="{% url 'settings:integrations-index' %}">Settings &rsaquo; Integrations</a>.
-    </p>
-  {% elif not matter.gmail_label_id %}
-    <p class="detail-text">
-      No Gmail label is linked to this matter yet. Choose
-      <strong>Link Gmail Label</strong> above, then apply that label to case
-      emails in Gmail. They will sync here automatically.
-    </p>
-  {% elif not emails %}
-    <p class="detail-text">
-      No emails synced yet. Apply the
-      <strong>{{ matter.gmail_label_short }}</strong> label to case emails in
-      Gmail. They appear here within a couple of minutes.
-    </p>
-  {% else %}
-    <div class="table-container">
-      <table class="table emails-list">
-        <thead>
-          <tr>
-            <th class="date">Date</th>
-            <th class="sender">From</th>
-            <th class="recipient">To</th>
-            <th class="subject">Subject</th>
-            <th class="attachment" title="Has attachments">
-              <i class="icon-paperclip"></i>
-            </th>
-            <th class="importance" title="Importance">
-              <i class="icon-flag"></i>
-            </th>
-          </tr>
-        </thead>
-        {% for email in emails %}
-          <tbody x-data="{ open: false }">
-            <tr class="email-row importance-{{ email.importance }}"
-                @click="open = !open">
-              <td class="date">{{ email.date|date:"Y-m-d g:i A" }}</td>
-              <td class="sender" title="{{ email.sender }}">{{ email.sender_display }}</td>
-              <td class="recipient" title="{{ email.recipients }}">{{ email.recipients_display }}</td>
-              <td class="subject">{{ email.subject|default:"(no subject)" }}</td>
-              <td class="attachment">
-                {% if email.attachments %}
-                  <i class="icon-paperclip"
-                     title="{{ email.attachments|length }} attachment{{ email.attachments|length|pluralize }}"></i>
-                {% endif %}
-              </td>
-              <td class="importance dropdown-cell" @click.stop>
-                <div class="dropdown" x-data="dropdown()">
-                  <button class="button-link"
-                          type="button"
-                          x-ref="button"
-                          @click="toggle()"
-                          :aria-expanded="open">
-                    {% if email.importance == 7 %}
-                      <i class="icon-chevrons-up"></i>
-                    {% elif email.importance >= 5 %}
-                      <i class="icon-chevron-up"></i>
-                    {% elif email.importance == 4 %}
-                      <i class="icon-equal"></i>
-                    {% elif email.importance >= 2 %}
-                      <i class="icon-chevron-down"></i>
-                    {% else %}
-                      <i class="icon-chevrons-down"></i>
-                    {% endif %}
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'case:email-importance' email.id 7 %}"
-                         hx-target="#emails"><i class="icon-chevrons-up importance-7"></i> Highest</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'case:email-importance' email.id 6 %}"
-                         hx-target="#emails"><i class="icon-chevron-up importance-6"></i> Higher</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'case:email-importance' email.id 5 %}"
-                         hx-target="#emails"><i class="icon-chevron-up importance-5"></i> High</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'case:email-importance' email.id 4 %}"
-                         hx-target="#emails"><i class="icon-equal"></i> Normal</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'case:email-importance' email.id 3 %}"
-                         hx-target="#emails"><i class="icon-chevron-down importance-3"></i> Low</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'case:email-importance' email.id 2 %}"
-                         hx-target="#emails"><i class="icon-chevron-down importance-2"></i> Lower</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item"
-                         href="#"
-                         hx-post="{% url 'case:email-importance' email.id 1 %}"
-                         hx-target="#emails"><i class="icon-chevrons-down importance-1"></i> Lowest</a>
-                    </li>
-                  </ul>
-                </div>
-              </td>
-            </tr>
-            <tr class="email-body-row" x-show="open">
-              <td colspan="6">
-                <div class="email-body-meta">
-                  <span>{{ email.sender }} &rsaquo; {{ email.recipients|default:"(undisclosed)" }}</span>
-                  <a href="{{ email.gmail_url }}"
-                     target="_blank"
-                     rel="noopener"
-                     @click.stop><i class="icon-external-link"></i> Open in Gmail</a>
-                </div>
-                {% if email.attachments %}
-                  <div class="email-body-attachments">
-                    {% for att in email.attachments %}
-                      <span class="app-badge"
-                            title="Attachment metadata only (open in Gmail to view)">
-                        <i class="icon-paperclip"></i> {{ att.filename }}
-                      </span>
-                    {% endfor %}
-                  </div>
-                {% endif %}
-                <div class="email-body">{{ email.body_text }}</div>
-              </td>
-            </tr>
-          </tbody>
-        {% endfor %}
-      </table>
-    </div>
-  {% endif %}
-</div>
+<div id="emails-table">{% include "case/emails/table.html" %}</div>
