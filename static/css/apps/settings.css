@@ -309,7 +309,7 @@ Settings Contacts - Column Layout
 
 .permissions-matrix .perm-manage-link {
   color: var(--icon-muted);
-  left: calc(50% + 2rem);
+  left: calc(50% + 3rem);
   position: absolute;
   top: calc(50% - 2px);
   transform: translateY(-50%);
