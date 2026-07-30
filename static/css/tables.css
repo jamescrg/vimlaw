@@ -124,7 +124,10 @@ tbody {
   border-top: none;
 }
 
-.center-data {
+.center-data,
+.table > :not(caption) > * > th.center-data {
+  /* The th variant outranks the base th rule's text-align: left, so
+     center-data centers headers as well as cells. */
   text-align: center;
 }
 

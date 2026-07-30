@@ -7,6 +7,7 @@ import apps.settings.intake_emails.views as intake_email_urls
 import apps.settings.integrations.views as integration_urls
 import apps.settings.matters.views as matter_urls
 import apps.settings.notifications.views as notification_urls
+import apps.settings.permissions.views as permission_urls
 import apps.settings.profile.views as profile_urls
 import apps.settings.session.views as session_urls
 import apps.settings.users.views as user_urls
@@ -97,9 +98,14 @@ urlpatterns = [
         name="add-user",
     ),
     path(
-        "settings/users/permissions/<int:user_id>/",
-        user_urls.edit_permissions,
-        name="user-permissions",
+        "settings/permissions/",
+        permission_urls.permissions_index,
+        name="permissions-index",
+    ),
+    path(
+        "settings/permissions/table/",
+        permission_urls.permissions_table,
+        name="permissions-table",
     ),
     path(
         "settings/users/toggle-perm/<int:user_id>/<str:perm>/",

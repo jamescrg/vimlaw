@@ -258,7 +258,7 @@ Settings Contacts - Column Layout
 .users-table {
   /* At least the sum of the column widths below - anything less compresses
      the columns and crowds the headers; the container scrolls instead. */
-  min-width: 79rem;
+  min-width: 70rem;
 }
 
 .users-table .username {
@@ -295,15 +295,24 @@ Settings Contacts - Column Layout
 }
 
 /* Permissions */
-.users-table .permissions {
-  /* A text summary now (was a five-icon row) */
-  width: 9rem;
-}
-
-/* Muted aside next to the permissions summary when matter access is
-   restricted */
+/* Muted aside in the permissions matrix (the admin tag) */
 .perm-limited-hint {
   color: var(--color-muted);
+}
+
+/* The manage-matter-access pencil rides right of the All Matters switch,
+   absolutely positioned so the switch itself stays centered like every
+   other cell; the 2px lift is an optical nudge against the track. */
+.permissions-matrix td {
+  position: relative;
+}
+
+.permissions-matrix .perm-manage-link {
+  color: var(--icon-muted);
+  left: calc(50% + 3rem);
+  position: absolute;
+  top: calc(50% - 2px);
+  transform: translateY(-50%);
 }
 
 /* Transfer Columns (Matter Assignment Modal) */

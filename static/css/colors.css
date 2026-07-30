@@ -216,6 +216,7 @@
      ========================================================================== */
   --icon-default: var(--color-primary);
   --icon-muted: var(--color-muted);
+  --icon-muted-more: var(--color-muted-more);
   --accent-link: var(--link);
   --icon-violet: var(--violet-700);
   --icon-violet-muted: var(--violet-600);

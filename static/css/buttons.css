@@ -327,7 +327,7 @@ td:hover .btn-ghost,
 }
 
 .toggle-switch input:checked + .toggle-track {
-  background: var(--violet-500);
+  background: var(--violet-400);
 }
 
 .toggle-switch input:checked + .toggle-track::before {

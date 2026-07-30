@@ -5,11 +5,7 @@ from django.shortcuts import render
 from apps.accounts.models import CustomUser
 from apps.matters.models import Matter
 from apps.settings.users.filters import UserFilter
-from apps.settings.users.forms import (
-    CreateUserForm,
-    UserForm,
-    UserPermissionsForm,
-)
+from apps.settings.users.forms import CreateUserForm, UserForm
 from apps.settings.users.users import DEFAULT_USER_FILTER, get_user_list
 
 
@@ -123,35 +119,6 @@ def edit_user(request, user_id):
 
 
 @login_required
-def edit_permissions(request, user_id):
-    """The permissions modal: five labeled Yes/No selects saved in one go.
-    Permissions are a checkbox collection, not a quick action - the old
-    per-icon row toggles moved here (2026-07-29)."""
-    if not request.user.is_admin:
-        return HttpResponseForbidden()
-
-    user = CustomUser.objects.get(id=user_id)
-
-    if user.is_admin:
-        # Admins hold every permission by role; nothing to edit
-        return render(request, "settings/users/permissions-form.html", {"target": user})
-
-    if request.method == "POST":
-        form = UserPermissionsForm(request.POST, instance=user)
-        if form.is_valid():
-            form.save()
-            return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})
-    else:
-        form = UserPermissionsForm(instance=user)
-
-    return render(
-        request,
-        "settings/users/permissions-form.html",
-        {"form": form, "target": user},
-    )
-
-
-@login_required
 def toggle_permission(request, user_id, perm):
     if not request.user.is_admin:
         return HttpResponseForbidden()
@@ -170,7 +137,9 @@ def toggle_permission(request, user_id, perm):
     setattr(user, perm, not getattr(user, perm))
     user.save(update_fields=[perm])
 
-    return HttpResponse(status=204, headers={"HX-Trigger": "userListReload"})
+    return HttpResponse(
+        status=204, headers={"HX-Trigger": "userListReload, permissionsChanged"}
+    )
 
 
 @login_required
