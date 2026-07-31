@@ -107,14 +107,17 @@
                 not synced yet.
               {% endif %}
               {% if account.missing_labels %}
-                No label for
-                {{ account.missing_labels|length }} linked
-                matter{{ account.missing_labels|length|pluralize }}
-                ({{ account.missing_labels|join:", " }}). Create the
-                label{{ account.missing_labels|length|pluralize }} in this
-                mailbox for it to contribute.
+                This mailbox still needs
+                {{ account.missing_labels|length }}
+                label{{ account.missing_labels|length|pluralize }} to
+                contribute to every linked matter:
               {% endif %}
             </p>
+            {% if account.missing_labels %}
+              <ul class="missing-label-list">
+                {% for name in account.missing_labels %}<li>{{ name }}</li>{% endfor %}
+              </ul>
+            {% endif %}
           {% endfor %}
         {% endif %}
       </div>
