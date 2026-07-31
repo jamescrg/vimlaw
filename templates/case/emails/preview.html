@@ -80,7 +80,10 @@
                 class="btn-icon"
                 hx-post="{% url 'case:email-promote' email.id %}"
                 hx-target="#email-preview"
-                hx-confirm="Promote this email to a PDF Document on the matter? It becomes part of the record and can carry highlights.">
+                hx-confirm="Promote this email to a PDF Document on the matter? It becomes part of the record and can carry highlights."
+                data-confirm-title="Promote to Document"
+                data-confirm-text="Promote"
+                data-confirm-style="success">
           <i class="icon-file-plus with-text"></i>Promote to Document
         </button>
       {% endif %}

@@ -59,7 +59,9 @@
         <button type="button"
                 class="btn btn-danger"
                 hx-post="{% url 'case:emails-label-unlink' matter.id %}"
-                hx-confirm="Unlink this label and remove its synced emails from this matter?">Unlink</button>
+                hx-confirm="Unlink this label and remove its synced emails from this matter?"
+                data-confirm-title="Unlink Gmail Label"
+                data-confirm-text="Unlink">Unlink</button>
       {% endif %}
       {% if linked and labels %}
         <button type="submit" form="label-link-form" class="btn btn-success">Link &amp; Sync</button>
