@@ -26,6 +26,11 @@ class Matter(AuditMixin, models.Model):
     # Name of this matter's Google Drive folder under DRIVE_NOTES_ROOT, used to
     # attach synced case notes. Set via the link_drive_folders command.
     drive_folder = models.CharField(max_length=255, null=True, blank=True)
+    # Gmail label mapped to this matter for case-email sync. The stable label
+    # id drives the sync (renames can't break it); the name is a display
+    # snapshot refreshed on each sync.
+    gmail_label_id = models.CharField(max_length=64, null=True, blank=True)
+    gmail_label_name = models.CharField(max_length=255, null=True, blank=True)
     practice_area = models.ForeignKey(
         "PracticeArea",
         on_delete=models.SET_NULL,
@@ -129,6 +134,17 @@ class Matter(AuditMixin, models.Model):
                 group=client_group,
                 role=client_role,
             )
+
+    @property
+    def gmail_label_short(self):
+        """Label name without the GMAIL_LABEL_ROOT prefix, for display."""
+        from django.conf import settings
+
+        name = self.gmail_label_name or ""
+        prefix = f"{settings.GMAIL_LABEL_ROOT}/" if settings.GMAIL_LABEL_ROOT else ""
+        if prefix and name.startswith(prefix):
+            return name[len(prefix) :]
+        return name
 
     @property
     def primary_proceeding(self):

@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "apps.management",
     "apps.notes",
     "apps.drive",
+    "apps.mail",
     "django_filters",
     "django_cleanup.apps.CleanupConfig",
     "django_q",
@@ -349,6 +350,11 @@ DRIVE_NOTES_ROOT = env("DRIVE_NOTES_ROOT", default="Matters - Open")
 DRIVE_NOTES_DEBUG_DIR = env("DRIVE_NOTES_DEBUG_DIR", default="")
 # Optional: set if "Matters - Open" lives in a Shared Drive rather than My Drive.
 DRIVE_SHARED_DRIVE_ID = env("DRIVE_SHARED_DRIVE_ID", default="")
+
+# Gmail case-email sync
+# Parent label whose children are offered in the label-to-matter picker (shown
+# without the prefix). Blank offers every user label in the mailbox.
+GMAIL_LABEL_ROOT = env("GMAIL_LABEL_ROOT", default="Matters - Open")
 
 # Online invoice payment collection (Phase 2)
 # Active processor; "fake" simulates the full card+ACH lifecycle so dev/CI run

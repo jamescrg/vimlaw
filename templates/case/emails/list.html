@@ -1,0 +1,41 @@
+<div class="toolbar emails-toolbar">
+  <div class="toolbar-left">
+    <div class="filter-tools">
+      <button type="button"
+              class="btn-icon"
+              hx-get="{% url 'case:emails-filter' matter.id %}"
+              hx-target="#htmx-modal-container"
+              hx-trigger="click">
+        <i class="icon-list-filter with-text"></i>Filter
+      </button>
+      <input type="text"
+             id="emails-keyword-input"
+             name="keyword"
+             placeholder="Subject Search"
+             value="{{ keyword }}"
+             class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
+             hx-get="{% url 'case:emails-filter-keyword' matter.id %}"
+             hx-target="#emails-table"
+             hx-trigger="keyup changed delay:500ms"
+             hx-include="this"
+             oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
+    </div>
+  </div>
+  <div class="toolbar-right">
+    <button type="button"
+            class="btn-icon"
+            hx-get="{% url 'case:emails-label-link-modal' matter.id %}"
+            hx-target="#htmx-modal-container"
+            hx-trigger="click"
+            title="{% if matter.gmail_label_name %}Gmail label: {{ matter.gmail_label_name }}{% else %}Link a Gmail label to sync case emails{% endif %}">
+      <i class="icon-mail with-text"></i>
+      {% if matter.gmail_label_name %}
+        {{ matter.gmail_label_short|truncatechars:24 }}
+      {% else %}
+        Link Gmail Label
+      {% endif %}
+    </button>
+    <span class="app-badge app-badge-lg">Count: {{ email_count }}</span>
+  </div>
+</div>
+<div id="emails-table">{% include "case/emails/table.html" %}</div>

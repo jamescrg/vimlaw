@@ -12,6 +12,13 @@ from dataclasses import dataclass
 
 from apps.case.models import CaseLaw, Document
 from apps.invoicing.invoices.models import Invoice
+from apps.mail.ai import (
+    format_email_thread,
+    group_by_thread,
+    thread_subject,
+    thread_word_count,
+)
+from apps.mail.models import Email
 from apps.notes.models import Note
 
 from .gemini_client import send_to_gemini
@@ -58,7 +65,7 @@ and a manifest of available case materials, select which materials should be \
 included in context to answer the question effectively.
 
 Return ONLY a JSON object with this format:
-{"selected": [{"type": "document", "id": 123}, {"type": "note", "id": 89}, {"type": "caselaw", "id": 45}, {"type": "conversation", "id": 67}, {"type": "invoice", "id": 42}]}
+{"selected": [{"type": "document", "id": 123}, {"type": "note", "id": 89}, {"type": "caselaw", "id": 45}, {"type": "conversation", "id": 67}, {"type": "email", "id": 12}, {"type": "invoice", "id": 42}]}
 
 Rules:
 - Select materials that are relevant to the user's question.
@@ -262,6 +269,42 @@ def build_manifest(matter, current_conversation=None):
             content_parts.append("\n".join(msg_lines))
         content_map[("conversation", conv.id)] = "\n".join(content_parts)
 
+    # Emails with ai_context="auto" — one manifest item per Gmail thread (a
+    # long thread as N entries would bloat the manifest, and the thread is
+    # the unit the attorney thinks in). item_id is the lowest Email id in
+    # the thread, a stable integer key.
+    auto_emails = Email.objects.filter(
+        matter=matter, ai_context="auto"
+    ).prefetch_related("attachment_files")
+    for thread_emails in group_by_thread(auto_emails):
+        first, last = thread_emails[0], thread_emails[-1]
+        item_id = min(e.id for e in thread_emails)
+        total_words = thread_word_count(thread_emails)
+
+        first_date = first.date.strftime("%Y-%m-%d") if first.date else None
+        last_date = last.date.strftime("%Y-%m-%d") if last.date else None
+        if first_date and last_date and first_date != last_date:
+            date_str = f"{first_date} to {last_date}"
+        else:
+            date_str = last_date or first_date
+
+        manifest_items.append(
+            ManifestItem(
+                item_type="email",
+                item_id=item_id,
+                name=thread_subject(thread_emails),
+                category=(
+                    f"Email thread, {len(thread_emails)} "
+                    f"message{'s' if len(thread_emails) != 1 else ''}"
+                ),
+                date=date_str,
+                description=first.snippet or first.body_text[:200].strip(),
+                word_count=total_words,
+                importance=max(e.importance for e in thread_emails),
+            )
+        )
+        content_map[("email", item_id)] = format_email_thread(thread_emails)
+
     # Invoices — every invoice on the matter is offered to the selector, but
     # only included when the user's question is actually about billing.
     for invoice in Invoice.objects.filter(matter=matter).order_by("-date_issued"):
@@ -297,6 +340,7 @@ def format_manifest_for_prompt(items: list[ManifestItem], token_budget: int) -> 
             "caselaw": "CASE",
             "conversation": "CONV",
             "note": "NOTE",
+            "email": "EMAIL",
         }.get(item.item_type, item.item_type.upper())
         date_str = f", {item.date}" if item.date else ""
         lines.append(
@@ -413,7 +457,8 @@ def _parse_selector_response(response_text: str) -> list[tuple[str, int]]:
         item_type = item.get("type", "")
         item_id = item.get("id")
         if (
-            item_type in ("document", "caselaw", "conversation", "invoice", "note")
+            item_type
+            in ("document", "caselaw", "conversation", "invoice", "note", "email")
             and item_id is not None
         ):
             keys.append((item_type, int(item_id)))

@@ -1,0 +1,47 @@
+{% if not gmail_linked %}
+  <p class="detail-text">
+    Gmail isn't connected. An admin can connect it under
+    <a href="{% url 'settings:integrations-index' %}">Settings &rsaquo; Integrations</a>.
+  </p>
+{% elif not matter.gmail_label_id %}
+  <p class="detail-text">
+    No Gmail label is linked to this matter yet. Choose
+    <strong>Link Gmail Label</strong> above, then apply that label to case
+    emails in Gmail. They will sync here automatically.
+  </p>
+{% elif not emails %}
+  {% if filters_active or keyword %}
+    <p class="detail-text">No emails match the current filters.</p>
+  {% else %}
+    <p class="detail-text">
+      No emails synced yet. Apply the
+      <strong>{{ matter.gmail_label_short }}</strong> label to case emails in
+      Gmail. They appear here within a couple of minutes.
+    </p>
+  {% endif %}
+{% else %}
+  <div class="emails-split" x-data="{ sel: null }">
+    <div class="email-list">
+      {% for email in emails %}
+        <div class="email-list-item importance-{{ email.importance }}"
+             :class="{ 'active': sel === {{ email.id }} }"
+             @click="sel = {{ email.id }}"
+             hx-get="{% url 'case:email-preview' email.id %}"
+             hx-target="#email-preview">
+          <div class="email-list-line1">
+            <span class="email-list-sender">{{ email.sender_display }}</span>
+            <span class="email-list-meta">
+              {% if email.document %}<i class="icon-file-check" title="Promoted to Document"></i>{% endif %}
+              {% if email.attachment_files.all %}<i class="icon-paperclip"></i>{% endif %}
+              <span class="email-list-date">{{ email.date|date:"M j, Y" }}</span>
+            </span>
+          </div>
+          <div class="email-list-line2">{{ email.subject|default:"(no subject)" }}</div>
+        </div>
+      {% endfor %}
+    </div>
+    <div id="email-preview" class="email-preview">
+      <p class="detail-text email-preview-placeholder">Select an email to read it here.</p>
+    </div>
+  </div>
+{% endif %}

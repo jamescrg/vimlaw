@@ -1,0 +1,124 @@
+<div class="email-preview-content">
+  <div class="email-preview-header">
+    <h2 class="email-preview-subject">{{ email.subject|default:"(no subject)" }}</h2>
+    <div class="email-preview-actions">
+      <div class="dropdown" x-data="dropdown()">
+        <button class="button-link"
+                type="button"
+                x-ref="button"
+                @click="toggle()"
+                :aria-expanded="open"
+                title="Importance">
+          {% if email.importance == 7 %}
+            <i class="icon-chevrons-up"></i>
+          {% elif email.importance >= 5 %}
+            <i class="icon-chevron-up"></i>
+          {% elif email.importance == 4 %}
+            <i class="icon-equal"></i>
+          {% elif email.importance >= 2 %}
+            <i class="icon-chevron-down"></i>
+          {% else %}
+            <i class="icon-chevrons-down"></i>
+          {% endif %}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:email-importance' email.id 7 %}"
+               hx-target="#email-preview"><i class="icon-chevrons-up importance-7"></i> Highest</a>
+          </li>
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:email-importance' email.id 6 %}"
+               hx-target="#email-preview"><i class="icon-chevron-up importance-6"></i> Higher</a>
+          </li>
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:email-importance' email.id 5 %}"
+               hx-target="#email-preview"><i class="icon-chevron-up importance-5"></i> High</a>
+          </li>
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:email-importance' email.id 4 %}"
+               hx-target="#email-preview"><i class="icon-equal"></i> Normal</a>
+          </li>
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:email-importance' email.id 3 %}"
+               hx-target="#email-preview"><i class="icon-chevron-down importance-3"></i> Low</a>
+          </li>
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:email-importance' email.id 2 %}"
+               hx-target="#email-preview"><i class="icon-chevron-down importance-2"></i> Lower</a>
+          </li>
+          <li>
+            <a class="dropdown-item"
+               href="#"
+               hx-post="{% url 'case:email-importance' email.id 1 %}"
+               hx-target="#email-preview"><i class="icon-chevrons-down importance-1"></i> Lowest</a>
+          </li>
+        </ul>
+      </div>
+      <a href="{{ email.gmail_url }}"
+         target="_blank"
+         rel="noopener"
+         class="btn-icon"
+         title="Open in Gmail"><i class="icon-external-link with-text"></i>Gmail</a>
+      {% if email.document %}
+        <a href="{% url 'case:viewer' email.document.id %}"
+           target="_blank"
+           rel="noopener"
+           class="btn-icon"
+           title="This email is a Document in the record"><i class="icon-file-check with-text"></i>View Document</a>
+      {% else %}
+        <button type="button"
+                class="btn-icon"
+                hx-post="{% url 'case:email-promote' email.id %}"
+                hx-target="#email-preview"
+                hx-confirm="Promote this email to a PDF Document on the matter? It becomes part of the record and can carry highlights."
+                data-confirm-title="Promote to Document"
+                data-confirm-text="Promote"
+                data-confirm-style="success">
+          <i class="icon-file-plus with-text"></i>Promote to Document
+        </button>
+      {% endif %}
+    </div>
+  </div>
+  <div class="email-preview-meta">
+    <div>
+      <span class="email-preview-meta-label">From:</span> {{ email.sender }}
+    </div>
+    <div>
+      <span class="email-preview-meta-label">To:</span> {{ email.recipients|default:"(undisclosed)" }}
+    </div>
+    <div>
+      <span class="email-preview-meta-label">Date:</span> {{ email.date|date:"l, F j, Y g:i A" }}
+    </div>
+  </div>
+  {% if email.attachment_files.all %}
+    <div class="email-preview-attachments">
+      {% for att in email.attachment_files.all %}
+        <span class="app-badge"
+              title="{% if att.extract_status == 'extracted' %}Text extracted for AI context; file remains in Gmail{% else %}{{ att.get_extract_status_display }}; file remains in Gmail{% endif %}">
+          <i class="icon-paperclip"></i> {{ att.filename }}
+          {% if att.extract_status == 'extracted' %}<i class="icon-scan-text" title="Text extracted"></i>{% endif %}
+        </span>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if email.body_html %}
+    <iframe class="email-preview-frame"
+            sandbox=""
+            referrerpolicy="no-referrer"
+            srcdoc="{{ email.body_html }}"></iframe>
+  {% else %}
+    <div class="email-preview-body">{{ email.body_text }}</div>
+  {% endif %}
+</div>
