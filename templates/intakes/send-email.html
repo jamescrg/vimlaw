@@ -1,5 +1,5 @@
 {{ template_map|json_script:"intake-email-templates" }}
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog modal-xl">
   <div class="modal-content"
        x-data="{ templates: JSON.parse(document.getElementById('intake-email-templates').textContent), fill(id) { if (!id || !this.templates[id]) return; document.getElementById('intake-email-subject').value = this.templates[id].subject; document.getElementById('intake-email-body').value = this.templates[id].body; } }">
     <div class="modal-header">
@@ -19,7 +19,7 @@
               hx-post="{% url 'intakes:send-email-send' id=intake.id %}"
               hx-target="#htmx-modal-container"
               role="form"
-              class="form-compact">
+              class="form-compact col3">
           {% csrf_token %}
           <div class="form-group">
             <label for="intake-email-to">To</label>
@@ -43,7 +43,7 @@
               {% for template in email_templates %}<option value="{{ template.id }}">{{ template.name }}</option>{% endfor %}
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group span3">
             <label for="intake-email-subject">Subject</label>
             <input id="intake-email-subject"
                    name="subject"
@@ -51,9 +51,9 @@
                    value="{{ subject|default:'' }}"
                    required>
           </div>
-          <div class="form-group">
+          <div class="form-group span3">
             <label for="intake-email-body">Body</label>
-            <textarea id="intake-email-body" name="body" rows="14" required>{{ body|default:'' }}</textarea>
+            <textarea id="intake-email-body" name="body" rows="10" required>{{ body|default:'' }}</textarea>
           </div>
         </form>
       {% endif %}
