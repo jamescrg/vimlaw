@@ -63,7 +63,13 @@
     <p class="detail-text">
       Connect your own Gmail mailbox to sync labeled case emails. Everyone
       connects their own; a matter's Emails tab combines every connected
-      mailbox, showing each message once.
+      mailbox, showing each message once. To take part in a case's sync,
+      create a Gmail label with the exact name linked to that matter
+      (shown on its Emails tab) and apply it to the case's messages.
+      {% if label_root %}Case labels live under the "{{ label_root }}" parent label.{% endif %}
+      Any labels your mailbox is still missing are listed under your
+      account below. Label names are permanent: they stay the same even
+      if a case is later renamed.
     </p>
     <div class="integrations-list">
       <div class="integrations-item integrations-item-stacked">

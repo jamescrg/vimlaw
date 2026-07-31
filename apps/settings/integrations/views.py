@@ -1,6 +1,7 @@
 import json
 
 import google_auth_oauthlib.flow
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
@@ -88,6 +89,7 @@ def index(request):
         "email_token": email_token,
         "gmail_status": gmail_status,
         "own_gmail_account": GmailAccount.objects.filter(user=request.user).first(),
+        "label_root": settings.GMAIL_LABEL_ROOT,
     }
 
     return render(request, "settings/integrations/index.html", context)
