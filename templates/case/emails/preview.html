@@ -73,6 +73,8 @@
          title="Open in Gmail"><i class="icon-external-link with-text"></i>Gmail</a>
       {% if email.document %}
         <a href="{% url 'case:viewer' email.document.id %}"
+           target="_blank"
+           rel="noopener"
            class="btn-icon"
            title="This email is a Document in the record"><i class="icon-file-check with-text"></i>View Document</a>
       {% else %}
