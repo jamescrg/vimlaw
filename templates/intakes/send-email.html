@@ -1,5 +1,5 @@
 {{ template_map|json_script:"intake-email-templates" }}
-<div class="modal-dialog modal-xl">
+<div class="modal-dialog modal-xl{% if intake.email %} modal-full-height{% endif %}">
   <div class="modal-content"
        x-data="{ templates: JSON.parse(document.getElementById('intake-email-templates').textContent), fill(id) { if (!id || !this.templates[id]) return; document.getElementById('intake-email-subject').value = this.templates[id].subject; document.getElementById('intake-email-body').value = this.templates[id].body; } }">
     <div class="modal-header">

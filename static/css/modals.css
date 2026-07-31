@@ -45,6 +45,25 @@
 .modal-md { max-width: 500px; }
 .modal-sm { max-width: 300px; }
 
+/* Full-height dialogs: the default 1.75rem top margin, mirrored at the
+   bottom; the content column flexes so the body scrolls (or stretches)
+   between the fixed header and footer. */
+.modal-dialog.modal-full-height {
+  height: calc(100vh - 3.5rem);
+}
+
+.modal-full-height .modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.modal-full-height .modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 /* ==========================================================================
    Modal Content Styles
    ========================================================================== */
@@ -183,6 +202,10 @@
   .modal-md,
   .modal-lg {
     max-width: calc(100% - 1rem);
+  }
+
+  .modal-dialog.modal-full-height {
+    height: calc(100vh - 1rem);
   }
 
   .modal-body {

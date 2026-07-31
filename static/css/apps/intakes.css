@@ -622,3 +622,35 @@ Pane visibility (Forms | Notes | Assessment segmented control)
   background: none;
   border: none;
 }
+
+/* Send-email modal runs full height; the form fills the body and the
+   message textarea absorbs the spare rows. The explicit row templates
+   keep the stretch on the body row only (grid would otherwise pad the
+   space out evenly between all rows). */
+.modal-full-height .modal-body:has(#intake-send-email-form) {
+  display: flex;
+  flex-direction: column;
+}
+
+#intake-send-email-form {
+  flex: 1;
+  grid-template-rows: repeat(4, auto) 1fr;
+  min-height: 0;
+}
+
+@media (width >= 768px) {
+  #intake-send-email-form {
+    grid-template-rows: auto auto 1fr;
+  }
+}
+
+#intake-send-email-form .form-group:has(textarea) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#intake-send-email-form textarea {
+  flex: 1;
+  min-height: 10rem;
+}
