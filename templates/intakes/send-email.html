@@ -30,6 +30,13 @@
                    disabled>
           </div>
           <div class="form-group">
+            <label for="intake-email-reply-to">Reply-To</label>
+            <input id="intake-email-reply-to"
+                   name="reply_to"
+                   type="email"
+                   value="{{ reply_to|default:'' }}">
+          </div>
+          <div class="form-group">
             <label for="intake-email-template">Template</label>
             <select id="intake-email-template" @change="fill($event.target.value)">
               <option value="">Choose a template…</option>

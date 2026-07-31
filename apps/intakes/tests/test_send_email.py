@@ -32,6 +32,18 @@ def test_modal_lists_templates(client, intake, template):
     assert intake.email.encode() in response.content
 
 
+def test_modal_prefills_reply_to_with_intake_inbox(client, intake, firm):
+    response = client.get(f"/intakes/{intake.id}/send-email")
+    assert b'name="reply_to"' in response.content
+    assert b'value="intakes@example.com"' in response.content
+
+
+def test_modal_reply_to_falls_back_to_firm_email(client, intake):
+    Firm.objects.create(name="Craig Legal", email="james@example.com")
+    response = client.get(f"/intakes/{intake.id}/send-email")
+    assert b'value="james@example.com"' in response.content
+
+
 def test_send_happy_path(client, user, intake, firm, template):
     response = client.post(
         f"/intakes/{intake.id}/send-email/send",
@@ -60,6 +72,36 @@ def test_send_happy_path(client, user, intake, firm, template):
     assert note.type == "Email Out"
     assert "Regarding your inquiry" in note.details
     assert "Dear Mr. Gandhi," in note.details
+
+
+def test_send_uses_posted_reply_to(client, intake, firm):
+    client.post(
+        f"/intakes/{intake.id}/send-email/send",
+        {"subject": "S", "body": "B", "reply_to": "paralegal@example.com"},
+    )
+    sent = mail.outbox[0]
+    assert "paralegal@example.com" in sent.reply_to[0]
+    assert "Craig Legal" in sent.reply_to[0]  # display name still applied
+
+
+def test_blank_reply_to_falls_back_to_intake_inbox(client, intake, firm):
+    client.post(
+        f"/intakes/{intake.id}/send-email/send",
+        {"subject": "S", "body": "B", "reply_to": "  "},
+    )
+    assert "intakes@example.com" in mail.outbox[0].reply_to[0]
+
+
+def test_invalid_reply_to_rerenders_with_error(client, intake, firm):
+    response = client.post(
+        f"/intakes/{intake.id}/send-email/send",
+        {"subject": "S", "body": "B", "reply_to": "not-an-email"},
+    )
+    assert response.status_code == 200
+    assert b"not a valid email address" in response.content
+    assert b'value="not-an-email"' in response.content  # echoed back
+    assert len(mail.outbox) == 0
+    assert Note.objects.count() == 0
 
 
 def test_no_cc_when_intake_email_unset(client, intake, template):
