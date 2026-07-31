@@ -1,15 +1,18 @@
 {% comment %}
 One upcoming-event card (dash events row + matter overview). Context: event,
-today, tomorrow; pass show_matter=True to add the matter link (omitted on
-matter pages, where the matter is implicit).
+yesterday, today, tomorrow; pass show_matter=True to add the matter link
+(omitted on matter pages, where the matter is implicit). Still-pending
+events past their date get the past-due treatment.
 {% endcomment %}
-<div class="event-card{% if event.date == today %} is-today{% elif event.date == tomorrow %} is-tomorrow{% endif %}"
+<div class="event-card{% if event.date < today %} past-due{% elif event.date == today %} is-today{% elif event.date == tomorrow %} is-tomorrow{% endif %}"
      hx-get="{% url 'calendar:edit' id=event.id %}"
      hx-target="#htmx-modal-container"
      hx-trigger="click">
   <div class="event-card-when">
     <i class="icon-calendar with-text"></i>
-    {% if event.date == today %}
+    {% if event.date == yesterday %}
+      Yesterday
+    {% elif event.date == today %}
       Today
     {% elif event.date == tomorrow %}
       Tomorrow
