@@ -22,6 +22,12 @@
     </div>
   </div>
   <div class="toolbar-right">
+    {% if own_missing_label %}
+      <span class="label-missing-note"
+            title="Your mailbox has no '{{ matter.gmail_label_name }}' label. Create it in Gmail to contribute this case's emails from your inbox.">
+        <i class="icon-alert-triangle with-text"></i>No matching label
+      </span>
+    {% endif %}
     <button type="button"
             class="btn-icon"
             hx-get="{% url 'case:emails-label-link-modal' matter.id %}"

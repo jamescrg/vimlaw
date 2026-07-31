@@ -9,7 +9,7 @@ from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
 
 from .filters import EmailFilter
-from .models import Email
+from .models import Email, GmailAccount
 
 
 def get_emails_data(request, matter, matter_id):
@@ -39,6 +39,16 @@ def get_emails_data(request, matter, matter_id):
     if isinstance(keyword, list):
         keyword = keyword[0] if keyword else ""
 
+    # DB-only check (no Gmail round-trip): the scheduled sync refreshes each
+    # account's missing_labels every tick, so "your mailbox has no label for
+    # this matter" is at most a couple of minutes stale.
+    own_account = GmailAccount.objects.filter(user=request.user).first()
+    own_missing_label = bool(
+        own_account
+        and matter.gmail_label_name
+        and matter.gmail_label_name in (own_account.missing_labels or [])
+    )
+
     return {
         "emails": emails,
         "email_count": emails.count(),
@@ -48,6 +58,7 @@ def get_emails_data(request, matter, matter_id):
             {k: v for k, v in filter_data.items() if k != "order_by" and v}
         ),
         "gmail_linked": mail_google.check_credentials(),
+        "own_missing_label": own_missing_label,
     }
 
 
