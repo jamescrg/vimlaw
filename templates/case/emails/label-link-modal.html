@@ -55,17 +55,21 @@
       <div id="label-link-error"></div>
     </div>
     <div class="modal-footer">
-      {% if current %}
-        <button type="button"
-                class="btn btn-danger"
-                hx-post="{% url 'case:emails-label-unlink' matter.id %}"
-                hx-confirm="Unlink this label and remove its synced emails from this matter?"
-                data-confirm-title="Unlink Gmail Label"
-                data-confirm-text="Unlink">Unlink</button>
-      {% endif %}
-      {% if linked and labels %}
-        <button type="submit" form="label-link-form" class="btn btn-success">Link &amp; Sync</button>
-      {% endif %}
+      <div class="modal-footer-left">
+        {% if current %}
+          <button type="button"
+                  class="btn btn-danger"
+                  hx-post="{% url 'case:emails-label-unlink' matter.id %}"
+                  hx-confirm="Unlink this label and remove its synced emails from this matter?"
+                  data-confirm-title="Unlink Gmail Label"
+                  data-confirm-text="Unlink">Unlink</button>
+        {% endif %}
+      </div>
+      <div class="modal-footer-right">
+        {% if linked and labels %}
+          <button type="submit" form="label-link-form" class="btn btn-success">Link &amp; Sync</button>
+        {% endif %}
+      </div>
     </div>
   </div>
 </div>
