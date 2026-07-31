@@ -17,9 +17,13 @@ def get_emails_data(request, matter, matter_id):
     filter_session_key = get_session_key("emails_filter", matter_id)
     filter_data = request.session.get(filter_session_key, {})
 
+    # dedup: the same message synced from two mailboxes shows once
+    # (first-synced row wins; provenance rows stay in the DB).
     queryset = (
         Email.objects.filter(matter=matter)
+        .dedup()
         .order_by("-date")
+        .select_related("account")
         .prefetch_related("attachment_files")
     )
     if filter_data:
@@ -184,23 +188,28 @@ def email_importance(request, email_id, value):
 
 @login_required
 def label_link_modal(request, matter_id):
-    """Modal to pick this matter's Gmail label from a live list."""
+    """Modal to pick this matter's Gmail label from a live list.
+
+    Labels are read from the requester's own mailbox when connected (any
+    mailbox otherwise); what gets stored is the label NAME — the
+    cross-mailbox contract every account resolves for itself.
+    """
     matter, _ = get_matter_from_url(request, matter_id)
 
-    labels = mail_google.list_matter_labels()
+    labels = mail_google.list_matter_labels(mail_google.account_for(request.user))
     # Labels already linked to a different matter (prevent mis-linking).
     taken = {
-        m.gmail_label_id: m
+        m.gmail_label_name: m
         for m in Matter.objects.exclude(pk=matter.pk)
-        .exclude(gmail_label_id__isnull=True)
-        .exclude(gmail_label_id="")
+        .exclude(gmail_label_name__isnull=True)
+        .exclude(gmail_label_name="")
     }
-    label_rows = [{**label, "taken_by": taken.get(label["id"])} for label in labels]
+    label_rows = [{**label, "taken_by": taken.get(label["name"])} for label in labels]
 
     context = {
         "matter": matter,
         "labels": label_rows,
-        "current": matter.gmail_label_id,
+        "current": matter.gmail_label_name,
         "linked": mail_google.check_credentials(),
         "label_root": settings.GMAIL_LABEL_ROOT,
     }
@@ -222,22 +231,23 @@ def _queue_resync(matter):
 def label_link(request, matter_id):
     """Set this matter's Gmail label and resync its emails."""
     matter, _ = get_matter_from_url(request, matter_id)
-    label_id = request.POST.get("label", "").strip()
     label_name = request.POST.get("label_name", "").strip()
 
-    if label_id:
+    if label_name:
         clash = (
-            Matter.objects.exclude(pk=matter.pk).filter(gmail_label_id=label_id).first()
+            Matter.objects.exclude(pk=matter.pk)
+            .filter(gmail_label_name=label_name)
+            .first()
         )
         if clash:
             # 200 so HTMX swaps the message into the modal's error slot.
             return HttpResponse(
-                f'<p class="error-text">“{label_name or label_id}” is already '
+                f'<p class="error-text">“{label_name}” is already '
                 f"linked to {clash}. Unlink it there first.</p>"
             )
 
-    matter.gmail_label_id = label_id or None
     matter.gmail_label_name = label_name or None
+    matter.gmail_label_id = None  # legacy per-mailbox id, no longer stored
     matter.save(update_fields=["gmail_label_id", "gmail_label_name"])
     _queue_resync(matter)
 

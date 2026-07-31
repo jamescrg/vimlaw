@@ -6,6 +6,7 @@ from django.test import Client
 from googleapiclient.errors import HttpError
 
 from apps.accounts.models import CustomUser
+from apps.mail.models import GmailAccount
 from apps.matters.models import Matter
 from apps.settings.models import Firm
 
@@ -35,11 +36,11 @@ def client(user):
 
 @pytest.fixture
 def matter(db):
+    # The label NAME is the sync contract; ids are per-mailbox.
     return Matter.objects.create(
         name="Smith v Jones",
         status="Open",
-        gmail_label_id="Label_1",
-        gmail_label_name="Smith",
+        gmail_label_name="Matters - Open/Smith",
     )
 
 
@@ -48,8 +49,7 @@ def matter2(db):
     return Matter.objects.create(
         name="Doe v Roe",
         status="Open",
-        gmail_label_id="Label_2",
-        gmail_label_name="Doe",
+        gmail_label_name="Matters - Open/Doe",
     )
 
 
@@ -72,8 +72,13 @@ def gmail_message(
     body="Hello there",
     label_ids=("Label_1",),
     internal_ms=1753800000000,
+    message_id=None,
 ):
-    """A minimal single-part text/plain messages.get(format=full) response."""
+    """A minimal single-part text/plain messages.get(format=full) response.
+
+    ``message_id`` defaults to a per-gmail_id value; pass the same one for
+    two gmail_ids to model one message held in two mailboxes.
+    """
     return {
         "id": gmail_id,
         "threadId": thread_id,
@@ -86,6 +91,10 @@ def gmail_message(
                 {"name": "From", "value": sender},
                 {"name": "To", "value": to},
                 {"name": "Subject", "value": subject},
+                {
+                    "name": "Message-ID",
+                    "value": message_id or f"<{gmail_id}@mail.example.com>",
+                },
             ],
             "body": {"data": b64(body), "size": len(body)},
         },
@@ -107,7 +116,12 @@ class _Users:
         self._service = service
 
     def getProfile(self, userId):
-        return _Call({"historyId": self._service.profile_history_id})
+        return _Call(
+            {
+                "historyId": self._service.profile_history_id,
+                "emailAddress": getattr(self._service, "address", ""),
+            }
+        )
 
     def labels(self):
         return _Labels(self._service)
@@ -140,7 +154,7 @@ class _Messages:
         ]
         return _Call({"messages": [{"id": i} for i in ids]})
 
-    def get(self, userId, id, format):
+    def get(self, userId, id, format, metadataHeaders=None):
         msg = self._service.messages.get(id)
         if msg is None:
             return _Call(http_error(404))
@@ -197,9 +211,33 @@ class FakeGmailService:
 
 
 @pytest.fixture
-def fake_gmail(monkeypatch):
-    """Install a FakeGmailService; configure via the returned instance."""
+def fake_gmail(monkeypatch, user):
+    """Install a FakeGmailService bound to ``user``'s GmailAccount.
+
+    ``build_service`` is patched to a per-account registry, so tests add a
+    second mailbox with ``fake_gmail.connect(other_user, "addr", service2)``
+    (a fresh FakeGmailService by default). check_credentials() is real —
+    it just sees the GmailAccount rows.
+    """
     service = FakeGmailService()
-    monkeypatch.setattr("apps.mail.google.build_service", lambda: service)
-    monkeypatch.setattr("apps.mail.google.check_credentials", lambda: True)
+    service.address = "primary@example.com"
+    service.account = GmailAccount.objects.create(
+        user=user, address=service.address, token='{"token": "t"}'
+    )
+    registry = {service.account.pk: service}
+    monkeypatch.setattr(
+        "apps.mail.google.build_service",
+        lambda account: registry.get(getattr(account, "pk", None), False),
+    )
+
+    def connect(owner, address, other_service=None):
+        other_service = other_service or FakeGmailService()
+        other_service.address = address
+        other_service.account = GmailAccount.objects.create(
+            user=owner, address=address, token='{"token": "t"}'
+        )
+        registry[other_service.account.pk] = other_service
+        return other_service
+
+    service.connect = connect
     return service

@@ -3,13 +3,15 @@ import difflib
 from django.core.management.base import BaseCommand
 
 import apps.mail.google as google
+from apps.mail.models import GmailAccount
 from apps.matters.models import Matter
 
 
 class Command(BaseCommand):
     help = (
-        "Link Gmail labels to Matter records by setting Matter.gmail_label_id. "
-        "Interactive; suggests matches by name."
+        "Link Gmail labels to Matter records by setting Matter.gmail_label_name "
+        "(the cross-mailbox contract). Interactive; suggests matches by name. "
+        "Labels are read from the first connected mailbox."
     )
 
     def add_arguments(self, parser):
@@ -28,7 +30,7 @@ class Command(BaseCommand):
             )
             return
 
-        labels = google.list_matter_labels()
+        labels = google.list_matter_labels(GmailAccount.objects.order_by("id").first())
         if not labels:
             self.stderr.write(
                 self.style.ERROR(
@@ -40,12 +42,12 @@ class Command(BaseCommand):
             return
 
         linked = {
-            m.gmail_label_id
-            for m in Matter.objects.exclude(gmail_label_id__isnull=True).exclude(
-                gmail_label_id=""
+            m.gmail_label_name
+            for m in Matter.objects.exclude(gmail_label_name__isnull=True).exclude(
+                gmail_label_name=""
             )
         }
-        unmatched = [label for label in labels if label["id"] not in linked]
+        unmatched = [label for label in labels if label["name"] not in linked]
 
         if not unmatched:
             self.stdout.write(self.style.SUCCESS("All Gmail labels are linked."))
@@ -88,7 +90,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR("  No such matter; skipped."))
                     continue
 
-            if matter.gmail_label_id:
+            if matter.gmail_label_name:
                 self.stdout.write(
                     self.style.ERROR(
                         f"  [{matter.id}] {matter.name} is already linked to "
@@ -97,9 +99,8 @@ class Command(BaseCommand):
                 )
                 continue
 
-            matter.gmail_label_id = label["id"]
             matter.gmail_label_name = label["name"]
-            matter.save(update_fields=["gmail_label_id", "gmail_label_name"])
+            matter.save(update_fields=["gmail_label_name"])
             self.stdout.write(
                 self.style.SUCCESS(
                     f"  Linked '{label['short_name']}' -> [{matter.id}] {matter.name}"

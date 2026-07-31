@@ -38,7 +38,7 @@
                        name="label"
                        value="{{ label.id }}"
                        data-label-name="{{ label.name }}"
-                       {% if label.id == current %}checked{% endif %}
+                       {% if label.name == current %}checked{% endif %}
                        {% if label.taken_by %}disabled{% endif %}
                        onchange="document.getElementById('label-link-name').value = this.dataset.labelName">
                 <span class="drive-folder-name">{{ label.short_name }}</span>

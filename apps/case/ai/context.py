@@ -311,8 +311,10 @@ def collect_context_items(
     # chosen by the selector. With `since`, a thread is included when it has
     # new messages, rendering only those (older ones flagged as omitted) so
     # incremental auto-summaries see just the delta.
+    # dedup: a message synced from two mailboxes contributes once.
     emails_qs = (
         Email.objects.filter(matter=matter)
+        .dedup()
         .exclude(ai_context="never")
         .prefetch_related("attachment_files")
     )

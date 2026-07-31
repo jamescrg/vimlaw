@@ -35,10 +35,14 @@
             <li {% if subapp == "matters" %}class="active"{% endif %}>
               <a href="{% url 'settings:matters-index' %}">Practice Areas</a>
             </li>
-            <li {% if subapp == "integrations" %}class="active"{% endif %}>
-              <a href="{% url 'settings:integrations-index' %}">Integrations</a>
-            </li>
           {% endif %}
+          {% comment %}
+            Everyone: non-admins see only the Case Email (Gmail) section on
+            the page — each user connects their own mailbox there.
+          {% endcomment %}
+          <li {% if subapp == "integrations" %}class="active"{% endif %}>
+            <a href="{% url 'settings:integrations-index' %}">Integrations</a>
+          </li>
           {% if user.role == 'ADMIN' or user.perm_intakes %}
             {% comment %}
               The page lives under /intakes/, which PermissionMiddleware gates

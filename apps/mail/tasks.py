@@ -14,7 +14,7 @@ import os
 from apps.case.documents.tasks import extract_existing_text, sanitize_text
 from apps.drive.convert import to_markdown
 
-from .models import Email
+from .models import Email, GmailAccount
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +50,13 @@ def process_email_attachments(email_id):
     pending = list(email.attachment_files.filter(extract_status="pending"))
     if not pending:
         return None
-    if not google.check_credentials():
+    # The attachment bytes live in the mailbox this row was synced from;
+    # legacy NULL-account rows predate multi-account and belong to the
+    # first (original) mailbox.
+    account = email.account or GmailAccount.objects.order_by("id").first()
+    service = google.build_service(account)
+    if not service:
         return None  # stays pending; a later run can pick it up
-
-    service = google.build_service()
     stats = {"extracted": 0, "skipped": 0, "failed": 0}
 
     for att in pending:

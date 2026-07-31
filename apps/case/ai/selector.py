@@ -273,9 +273,12 @@ def build_manifest(matter, current_conversation=None):
     # long thread as N entries would bloat the manifest, and the thread is
     # the unit the attorney thinks in). item_id is the lowest Email id in
     # the thread, a stable integer key.
-    auto_emails = Email.objects.filter(
-        matter=matter, ai_context="auto"
-    ).prefetch_related("attachment_files")
+    # dedup: a message synced from two mailboxes appears once.
+    auto_emails = (
+        Email.objects.filter(matter=matter, ai_context="auto")
+        .dedup()
+        .prefetch_related("attachment_files")
+    )
     for thread_emails in group_by_thread(auto_emails):
         first, last = thread_emails[0], thread_emails[-1]
         item_id = min(e.id for e in thread_emails)

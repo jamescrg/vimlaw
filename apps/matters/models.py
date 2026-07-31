@@ -26,9 +26,10 @@ class Matter(AuditMixin, models.Model):
     # Name of this matter's Google Drive folder under DRIVE_NOTES_ROOT, used to
     # attach synced case notes. Set via the link_drive_folders command.
     drive_folder = models.CharField(max_length=255, null=True, blank=True)
-    # Gmail label mapped to this matter for case-email sync. The stable label
-    # id drives the sync (renames can't break it); the name is a display
-    # snapshot refreshed on each sync.
+    # Gmail label mapped to this matter for case-email sync. The label NAME
+    # is the contract: every connected mailbox (GmailAccount) resolves it to
+    # its own label id at sync time, so one link serves all mailboxes.
+    # gmail_label_id is legacy (pre-multi-account) and no longer written.
     gmail_label_id = models.CharField(max_length=64, null=True, blank=True)
     gmail_label_name = models.CharField(max_length=255, null=True, blank=True)
     practice_area = models.ForeignKey(
