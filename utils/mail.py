@@ -77,12 +77,20 @@ def firm_reply_to(company):
     return formataddr((_firm_display_name(company), address))
 
 
-def intake_reply_to(company):
-    """Reply-To for template emails sent to intakes: the firm's intake
-    inbox, falling back to the firm's own address."""
-    address = ""
-    if company:
-        address = (company.intake_email or company.email or "").strip()
+def intake_reply_address(company):
+    """Bare default Reply-To address for intake mail: the firm's intake
+    inbox, falling back to the firm's own address. Empty string when
+    neither is configured."""
+    if not company:
+        return ""
+    return (company.intake_email or company.email or "").strip()
+
+
+def intake_reply_to(company, address=None):
+    """Reply-To for template emails sent to intakes: the given override
+    address, or the firm's intake inbox falling back to the firm's own
+    address."""
+    address = (address or "").strip() or intake_reply_address(company)
     if not address:
         return None
     return formataddr((_firm_display_name(company), address))
