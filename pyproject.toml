@@ -60,6 +60,8 @@ dev = [
     "pytest-split==0.10.0",
     # Code formatting and linting
     "pre-commit==3.7.1",
+    # Dev-server gunicorn reload watcher
+    "inotify>=0.2.12",
 ]
 
 [tool.pytest.ini_options]
