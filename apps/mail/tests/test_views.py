@@ -125,8 +125,8 @@ def test_email_importance_update(client, matter, fake_gmail):
 
 
 def test_emails_tab_prompts_when_unlinked(client, matter, fake_gmail):
-    matter.gmail_label_id = None
-    matter.save(update_fields=["gmail_label_id"])
+    matter.gmail_label_name = None
+    matter.save(update_fields=["gmail_label_name"])
     response = client.get(reverse("case:emails-index", args=[matter.id]))
     assert "Link Gmail Label" in response.content.decode()
 
@@ -228,24 +228,24 @@ def test_label_link_modal_marks_taken_labels(client, matter, matter2, fake_gmail
 def test_label_link_clash_returns_inline_error(client, matter, matter2, _inline_resync):
     response = client.post(
         reverse("case:emails-label-link", args=[matter.id]),
-        {"label": "Label_2", "label_name": "Doe"},
+        {"label_name": "Matters - Open/Doe"},
     )
     assert response.status_code == 200
     assert "already" in response.content.decode()
     matter.refresh_from_db()
-    assert matter.gmail_label_id == "Label_1"  # unchanged
+    assert matter.gmail_label_name == "Matters - Open/Smith"  # unchanged
     assert _inline_resync == []
 
 
 def test_label_link_sets_fields_and_queues_resync(client, matter, _inline_resync):
     response = client.post(
         reverse("case:emails-label-link", args=[matter.id]),
-        {"label": "Label_3", "label_name": "New Label"},
+        {"label_name": "Matters - Open/New Label"},
     )
     assert response.status_code == 204
     matter.refresh_from_db()
-    assert matter.gmail_label_id == "Label_3"
-    assert matter.gmail_label_name == "New Label"
+    assert matter.gmail_label_name == "Matters - Open/New Label"
+    assert matter.gmail_label_id is None  # legacy field cleared
     assert _inline_resync == [matter.id]
 
 
@@ -256,3 +256,70 @@ def test_label_unlink_clears_fields(client, matter, _inline_resync):
     assert matter.gmail_label_id is None
     assert matter.gmail_label_name is None
     assert _inline_resync == [matter.id]
+
+
+# --------------------------------------------------------------------------- #
+# Multi-account display
+# --------------------------------------------------------------------------- #
+def _other_account(username="associate", address="associate@example.com"):
+    from apps.accounts.models import CustomUser
+    from apps.mail.models import GmailAccount
+
+    return GmailAccount.objects.create(
+        user=CustomUser.objects.create(username=username, user_rate=100),
+        address=address,
+        token='{"token": "t"}',
+    )
+
+
+def test_list_collapses_cross_mailbox_duplicates(client, matter, fake_gmail):
+    other = _other_account()
+    make_email(
+        matter,
+        "a1",
+        account=fake_gmail.account,
+        message_id="<orig@example.com>",
+        attachments=[],
+    )
+    make_email(
+        matter,
+        "b1",
+        account=other,
+        message_id="<orig@example.com>",
+        attachments=[],
+    )
+    make_email(
+        matter,
+        "c1",
+        account=other,
+        message_id="<other@example.com>",
+        thread_id="thread-2",
+        subject="Settlement offer",
+        attachments=[],
+    )
+
+    content = client.get(
+        reverse("case:emails-index", args=[matter.id])
+    ).content.decode()
+    assert content.count("Discovery schedule") == 1
+    assert "Settlement offer" in content
+
+
+def test_sent_mail_lists_recipient(client, matter, fake_gmail):
+    make_email(
+        matter,
+        "a1",
+        account=fake_gmail.account,
+        sender="Test Firm <primary@example.com>",
+        recipients="Bob Client <bob@example.com>",
+        attachments=[],
+    )
+    content = client.get(
+        reverse("case:emails-index", args=[matter.id])
+    ).content.decode()
+    assert "To: Bob Client" in content
+
+
+def test_gmail_url_uses_account_mailbox(matter, fake_gmail):
+    email = make_email(matter, "a1", account=fake_gmail.account, attachments=[])
+    assert "mail/u/primary@example.com/#all/a1" in email.gmail_url

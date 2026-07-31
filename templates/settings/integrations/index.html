@@ -7,8 +7,7 @@
       </div>
       <p class="detail-text">
         Connect a Google account to syncronize contacts, view calendar events on your
-        home page, mirror case notes from Google Drive, and sync labeled case
-        emails from Gmail.
+        home page, and mirror case notes from Google Drive.
       </p>
       <div class="integrations-list">
         <div class="integrations-item">
@@ -57,42 +56,63 @@
             {% endif %}
           {% endif %}
         </div>
-        <div class="integrations-item integrations-item-stacked">
-          <div class="integrations-item-row">
-            <span>Gmail (Case Email)</span>
-            {% if email_token %}
-              <a class="btn btn-danger"
-                 href="{% url 'settings:google-logout' 'email' %}">Disconnect</a>
-            {% else %}
-              <a class="btn btn-success"
-                 href="{% url 'settings:google-login' 'email' %}">Connect</a>
-            {% endif %}
-          </div>
-          {% if gmail_status %}
-            {% if gmail_status.linked_matters %}
-              <p class="detail-text drive-sync-note">
-                {{ gmail_status.synced_count }} email{{ gmail_status.synced_count|pluralize }}
-                synced across {{ gmail_status.linked_matters }} matter{{ gmail_status.linked_matters|pluralize }}.
-              </p>
-            {% else %}
-              <p class="detail-text drive-sync-note">
-                No matters are linked to a Gmail label yet. Open a matter's
-                <strong>Emails</strong> tab and choose <strong>Link Gmail Label</strong>
-                to start syncing its case emails.
-              </p>
-            {% endif %}
-            {% if gmail_status.missing_labels %}
-              <p class="detail-text drive-sync-note">
-                Warning: {{ gmail_status.missing_labels|length }} mapped
-                label{{ gmail_status.missing_labels|length|pluralize }} no longer
-                exist{{ gmail_status.missing_labels|length|pluralize:"s," }} in Gmail.
-                Relink the affected matter{{ gmail_status.missing_labels|length|pluralize }}
-                from the Emails tab.
-              </p>
-            {% endif %}
-          {% endif %}
-        </div>
       </div>
     {% endif %}
+    <div class="toolbar">
+      <h1>Case Email</h1>
+    </div>
+    <p class="detail-text">
+      Connect your own Gmail mailbox to sync labeled case emails. Everyone
+      connects their own; a matter's Emails tab combines every connected
+      mailbox, showing each message once.
+    </p>
+    <div class="integrations-list">
+      <div class="integrations-item integrations-item-stacked">
+        <div class="integrations-item-row">
+          {% if own_gmail_account %}
+            <span>Your mailbox: {{ own_gmail_account.address }}</span>
+            <a class="btn btn-danger"
+               href="{% url 'settings:google-logout' 'email' %}">Disconnect</a>
+          {% else %}
+            <span>Your Gmail mailbox</span>
+            <a class="btn btn-success"
+               href="{% url 'settings:google-login' 'email' %}">Connect</a>
+          {% endif %}
+        </div>
+        {% if gmail_status %}
+          {% if gmail_status.linked_matters %}
+            <p class="detail-text drive-sync-note">
+              {{ gmail_status.synced_count }} email{{ gmail_status.synced_count|pluralize }}
+              synced across {{ gmail_status.linked_matters }} matter{{ gmail_status.linked_matters|pluralize }}.
+            </p>
+          {% else %}
+            <p class="detail-text drive-sync-note">
+              No matters are linked to a Gmail label yet. Open a matter's
+              <strong>Emails</strong> tab and choose <strong>Link Gmail Label</strong>
+              to start syncing its case emails.
+            </p>
+          {% endif %}
+          {% for account in gmail_status.accounts %}
+            <p class="detail-text drive-sync-note">
+              {{ account.address }}
+              ({{ account.user.get_full_name|default:account.user.username }}):
+              {% if account.last_sync_at %}
+                last synced {{ account.last_sync_at|date:"M j, g:i A" }}.
+              {% else %}
+                not synced yet.
+              {% endif %}
+              {% if account.missing_labels %}
+                No label for
+                {{ account.missing_labels|length }} linked
+                matter{{ account.missing_labels|length|pluralize }}
+                ({{ account.missing_labels|join:", " }}). Create the
+                label{{ account.missing_labels|length|pluralize }} in this
+                mailbox for it to contribute.
+              {% endif %}
+            </p>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
   </div>
 {% endblock subcontent %}

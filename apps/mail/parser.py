@@ -21,6 +21,7 @@ from typing import NamedTuple
 class ParsedEmail(NamedTuple):
     sender: str
     recipients: str
+    message_id: str  # RFC-822 Message-ID header (cross-mailbox identity)
     subject: str
     date: datetime | None
     snippet: str
@@ -175,6 +176,7 @@ def parse_payload(msg: dict) -> ParsedEmail:
     return ParsedEmail(
         sender=sender[:500],
         recipients=recipients,
+        message_id=_header(headers, "Message-ID").strip()[:998],
         subject=subject[:998],
         date=date,
         snippet=html_module.unescape(msg.get("snippet", ""))[:500],

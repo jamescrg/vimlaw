@@ -3,7 +3,7 @@
     Gmail isn't connected. An admin can connect it under
     <a href="{% url 'settings:integrations-index' %}">Settings &rsaquo; Integrations</a>.
   </p>
-{% elif not matter.gmail_label_id %}
+{% elif not matter.gmail_label_name %}
   <p class="detail-text">
     No Gmail label is linked to this matter yet. Choose
     <strong>Link Gmail Label</strong> above, then apply that label to case
@@ -29,7 +29,13 @@
              hx-get="{% url 'case:email-preview' email.id %}"
              hx-target="#email-preview">
           <div class="email-list-line1">
-            <span class="email-list-sender">{{ email.sender_display }}</span>
+            <span class="email-list-sender">
+              {% if email.is_sent %}
+                To: {{ email.recipients_display|default:"(undisclosed)" }}
+              {% else %}
+                {{ email.sender_display }}
+              {% endif %}
+            </span>
             <span class="email-list-meta">
               {% if email.document %}<i class="icon-file-check" title="Promoted to Document"></i>{% endif %}
               {% if email.attachment_files.all %}<i class="icon-paperclip"></i>{% endif %}

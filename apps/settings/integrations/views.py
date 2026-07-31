@@ -2,10 +2,13 @@ import json
 
 import google_auth_oauthlib.flow
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
+from googleapiclient.discovery import build
 
 import apps.drive.google as drive_google
 import apps.mail.google as mail_google
+from apps.mail.models import GmailAccount
 from utils.prepare_path import prepare_path
 
 CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
@@ -67,11 +70,12 @@ def index(request):
     contacts_token = _token_exists(CONTACTS_TOKEN_PATH)
     calendar_token = _token_exists(CALENDAR_TOKEN_PATH)
     drive_token = _token_exists(DRIVE_TOKEN_PATH)
-    email_token = _token_exists(EMAIL_TOKEN_PATH)
+    # Email is per-user (GmailAccount rows), not a shared token file.
+    email_token = mail_google.check_credentials()
 
     # Drive case-notes sync health (last sync, synced count, unmatched folders).
     drive_status = drive_google.get_sync_status() if drive_token else None
-    # Gmail case-email sync health (synced count, missing labels).
+    # Gmail case-email sync health (per-account last sync, missing labels).
     gmail_status = mail_google.get_sync_status() if email_token else None
 
     context = {
@@ -83,13 +87,22 @@ def index(request):
         "drive_status": drive_status,
         "email_token": email_token,
         "gmail_status": gmail_status,
+        "own_gmail_account": GmailAccount.objects.filter(user=request.user).first(),
     }
 
     return render(request, "settings/integrations/index.html", context)
 
 
+def _forbidden_for(request, app):
+    """Shared-token integrations (firm-wide files) are admin-only; email is
+    per-user, so any signed-in user may connect their own mailbox."""
+    return app != "email" and not request.user.is_admin
+
+
 @login_required
 def google_login(request, app):
+    if _forbidden_for(request, app):
+        return HttpResponseForbidden()
     redirect_uri = _get_redirect_uri(request)
 
     # Create OAuth2 flow instance
@@ -117,6 +130,25 @@ def google_store(request):
     google_credentials = flow.credentials.to_json()
 
     app = request.session["app"]
+    if _forbidden_for(request, app):
+        return HttpResponseForbidden()
+
+    if app == "email":
+        # Per-user mailbox: the token lands on the requester's GmailAccount,
+        # not the shared token file. The address comes from the mailbox
+        # itself (getProfile), so sent mail can be recognized as "ours".
+        service = build("gmail", "v1", credentials=flow.credentials)
+        profile = service.users().getProfile(userId="me").execute()
+        GmailAccount.objects.update_or_create(
+            user=request.user,
+            defaults={
+                "address": profile.get("emailAddress", ""),
+                "token": google_credentials,
+                # Fresh token, fresh mailbox view: force a bootstrap.
+                "history_id": None,
+            },
+        )
+        return redirect("/settings/integrations/")
 
     path = TOKEN_PATHS.get(app, CALENDAR_TOKEN_PATH)
 
@@ -137,6 +169,15 @@ def google_store(request):
 
 @login_required
 def google_logout(request, app):
+    if _forbidden_for(request, app):
+        return HttpResponseForbidden()
+    if app == "email":
+        # Disconnect the requester's own mailbox. Cascades that mailbox's
+        # Email rows; messages a colleague's mailbox also holds stay visible
+        # through their rows (promoted Documents are never touched).
+        GmailAccount.objects.filter(user=request.user).delete()
+        return redirect("/settings/integrations/")
+
     path = TOKEN_PATHS.get(app, CALENDAR_TOKEN_PATH)
 
     prepare_path(path)
