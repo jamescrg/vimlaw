@@ -38,7 +38,10 @@ from apps.trust.trust import get_pending_client_balance
 
 
 def dash_events_context(request):
-    """The next upcoming pending events (today onward).
+    """The next upcoming pending events, plus any still-pending past-due
+    ones — an event stays on the dash until it's marked complete or
+    canceled, and past-due cards sort first (rose past-due treatment in
+    the card CSS).
 
     Seven fills the ~107.5rem usable width of the capped dash (16rem cards + 1rem
     gaps) edge-to-edge; the event-cards row scrolls horizontally for any that
@@ -47,10 +50,11 @@ def dash_events_context(request):
     today = date.today()
     return {
         "upcoming_events": Event.objects.filter(
-            status="Pending", date__gte=today
+            status="Pending", date__isnull=False
         ).order_by("date", "start_time", "party")[:7],
         "today": today,
         "tomorrow": today + timedelta(days=1),
+        "yesterday": today - timedelta(days=1),
     }
 
 
