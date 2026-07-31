@@ -384,3 +384,17 @@ Settings Contacts - Column Layout
 .groups-table .drag-handle:active {
   cursor: grabbing;
 }
+
+/* Section-heading convention for settings subpages:
+   <h2 class="settings-section"> + <hr />. The heading owns the space above
+   it, so a new section never leans on the previous block's bottom margin
+   (the old Appearance-page pattern). Sibling margins collapse, so blocks
+   that still carry a bottom margin (e.g. .theme-options) don't double the
+   gap; the first section starts flush. */
+h2.settings-section {
+  margin-top: 2rem;
+}
+
+h2.settings-section:first-child {
+  margin-top: 0;
+}
