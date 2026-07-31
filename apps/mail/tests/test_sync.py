@@ -3,7 +3,7 @@ import pytest
 import apps.mail.google as google
 from apps.mail.models import Email
 
-from .conftest import FakeGmailService, gmail_message, http_error
+from .conftest import LEGACY_TOKEN, FakeGmailService, gmail_message, http_error
 
 pytestmark = pytest.mark.django_db
 
@@ -134,22 +134,66 @@ def test_sync_noops_without_mapping(fake_gmail, db):
     assert google.sync() is None
 
 
-def test_missing_label_recorded(matter, fake_gmail):
+def test_missing_label_autocreated(matter, fake_gmail):
+    fake_gmail.labels = [
+        {"id": "Label_root", "name": "Matters - Open", "type": "user"},
+        {"id": "Label_2", "name": "Matters - Open/Doe", "type": "user"},
+    ]
+    stats = google.sync(full=True)
+    # The mailbox was provisioned, not just read.
+    assert fake_gmail.created_labels == ["Matters - Open/Smith"]
+    assert stats["missing_labels"] == {}
+    fake_gmail.account.refresh_from_db()
+    assert fake_gmail.account.missing_labels == []
+
+
+def test_root_label_created_when_absent(matter, fake_gmail, settings):
+    settings.GMAIL_LABEL_ROOT = "Matters - Open"
+    fake_gmail.labels = []
+    google.sync(full=True)
+    assert fake_gmail.created_labels == ["Matters - Open", "Matters - Open/Smith"]
+
+
+def test_missing_label_recorded_for_legacy_token(matter, fake_gmail):
+    # A pre-scope token can't create labels: report, don't crash.
+    fake_gmail.account.token = LEGACY_TOKEN
+    fake_gmail.account.save(update_fields=["token"])
     fake_gmail.labels = [
         {"id": "Label_2", "name": "Matters - Open/Doe", "type": "user"}
     ]
     stats = google.sync(full=True)
+    assert fake_gmail.created_labels == []
     assert stats["missing_labels"] == {"primary@example.com": ["Matters - Open/Smith"]}
     fake_gmail.account.refresh_from_db()
     assert fake_gmail.account.missing_labels == ["Matters - Open/Smith"]
 
 
-def test_renamed_label_reported_missing_rows_kept(matter, fake_gmail):
-    # The NAME is the contract now: a rename in one mailbox orphans the
-    # matter there (reported as missing); already-synced rows are kept.
+def test_renamed_label_recreated_canonically(matter, fake_gmail):
+    # Renaming a label in one mailbox (against instructions) orphans that
+    # mailbox: the canonical name is recreated empty, and this account's
+    # rows reconcile away on the full pass (other mailboxes and promoted
+    # Documents are unaffected). The renamed label becomes a personal one.
     fake_gmail.messages = {"m1": gmail_message("m1")}
     google.sync(full=True)
     assert Email.objects.count() == 1
+
+    fake_gmail.labels = [
+        {"id": "Label_root", "name": "Matters - Open", "type": "user"},
+        {"id": "Label_1", "name": "Matters - Open/Smith (new)", "type": "user"},
+    ]
+    stats = google.sync(full=True)
+    assert fake_gmail.created_labels == ["Matters - Open/Smith"]
+    assert stats["missing_labels"] == {}
+    assert Email.objects.count() == 0
+    matter.refresh_from_db()
+    assert matter.gmail_label_name == "Matters - Open/Smith"
+
+
+def test_renamed_label_rows_kept_for_legacy_token(matter, fake_gmail):
+    fake_gmail.account.token = LEGACY_TOKEN
+    fake_gmail.account.save(update_fields=["token"])
+    fake_gmail.messages = {"m1": gmail_message("m1")}
+    google.sync(full=True)
 
     fake_gmail.labels = [
         {"id": "Label_1", "name": "Matters - Open/Smith (new)", "type": "user"}
@@ -157,8 +201,6 @@ def test_renamed_label_reported_missing_rows_kept(matter, fake_gmail):
     stats = google.sync(full=True)
     assert stats["missing_labels"] == {"primary@example.com": ["Matters - Open/Smith"]}
     assert Email.objects.count() == 1
-    matter.refresh_from_db()
-    assert matter.gmail_label_name == "Matters - Open/Smith"
 
 
 def test_list_matter_labels_scoped_to_root(fake_gmail, settings):
@@ -267,3 +309,18 @@ def test_per_account_label_resolution(matter, fake_gmail, second_user):
     assert email.account == other.account
     assert email.matter == matter
     assert email.label_id == "Label_77"
+
+
+def test_default_label_name(settings, db):
+    from apps.matters.models import Matter
+
+    settings.GMAIL_LABEL_ROOT = "Matters - Open"
+    # Ampersand is legal in Gmail label names; only "/" nests, so it
+    # flattens.
+    bake = Matter.objects.create(name="Bake K&L", status="Open")
+    assert google.default_label_name(bake) == "Matters - Open/Bake K&L"
+    nested = Matter.objects.create(name="Smith / Jones", status="Open")
+    assert google.default_label_name(nested) == "Matters - Open/Smith-Jones"
+
+    settings.GMAIL_LABEL_ROOT = ""
+    assert google.default_label_name(bake) == "Bake K&L"

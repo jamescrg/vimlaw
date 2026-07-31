@@ -340,3 +340,21 @@ def test_missing_label_indicator(client, matter, fake_gmail):
         reverse("case:emails-index", args=[matter.id])
     ).content.decode()
     assert "No matching label" not in content
+
+
+def test_label_link_modal_offers_matter_named_label(client, matter, fake_gmail):
+    content = client.get(
+        reverse("case:emails-label-link-modal", args=[matter.id])
+    ).content.decode()
+    assert "Matters - Open/Smith v Jones" in content  # suggested new label
+
+
+def test_label_link_create_from_matter_name(client, matter, fake_gmail, _inline_resync):
+    response = client.post(
+        reverse("case:emails-label-link", args=[matter.id]),
+        {"create_label_name": "Matters - Open/Smith v Jones", "label_name": ""},
+    )
+    assert response.status_code == 204
+    matter.refresh_from_db()
+    assert matter.gmail_label_name == "Matters - Open/Smith v Jones"
+    assert _inline_resync == [matter.id]

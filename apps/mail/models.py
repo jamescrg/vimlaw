@@ -1,8 +1,13 @@
+import json
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
 from utils.models import AuditMixin
+
+# Label create/update scope: message content stays read-only.
+GMAIL_LABELS_SCOPE = "https://www.googleapis.com/auth/gmail.labels"
 
 # AI context inclusion modes (mirrors apps.case.models.AI_CONTEXT_CHOICES).
 AI_CONTEXT_CHOICES = [
@@ -41,6 +46,19 @@ class GmailAccount(models.Model):
 
     def __str__(self):
         return self.address or f"Gmail account {self.pk}"
+
+    @property
+    def can_manage_labels(self):
+        """True when the stored token carries the gmail.labels scope.
+
+        Connects that predate automatic label setup were read-only; the
+        integrations page nudges those users to reconnect.
+        """
+        try:
+            scopes = json.loads(self.token).get("scopes") or []
+        except (TypeError, ValueError):
+            return False
+        return GMAIL_LABELS_SCOPE in scopes
 
     class Meta:
         db_table = "app_gmail_account"
