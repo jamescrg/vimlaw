@@ -63,21 +63,31 @@
     <p class="detail-text">
       Connect your own Gmail mailbox to sync labeled case emails. Everyone
       connects their own; a matter's Emails tab combines every connected
-      mailbox, showing each message once. To take part in a case's sync,
-      create a Gmail label with the exact name linked to that matter
-      (shown on its Emails tab) and apply it to the case's messages.
-      {% if label_root %}Case labels live under the "{{ label_root }}" parent label.{% endif %}
-      Any labels your mailbox is still missing are listed under your
-      account below. Label names are permanent: they stay the same even
-      if a case is later renamed.
+      mailbox, showing each message once.
+      {% if label_root %}
+        Case labels are created in your mailbox automatically under the
+        "{{ label_root }}" parent label.
+      {% else %}
+        Case labels are created in your mailbox automatically.
+      {% endif %}
+      Your only job is applying them to case emails. Please don't rename
+      or delete the labels themselves (deleting one un-files that case's
+      mail in your mailbox).
     </p>
     <div class="integrations-list">
       <div class="integrations-item integrations-item-stacked">
         <div class="integrations-item-row">
           {% if own_gmail_account %}
             <span>Your mailbox: {{ own_gmail_account.address }}</span>
-            <a class="btn btn-danger"
-               href="{% url 'settings:google-logout' 'email' %}">Disconnect</a>
+            <span>
+              {% if not own_gmail_account.can_manage_labels %}
+                <a class="btn btn-success"
+                   href="{% url 'settings:google-login' 'email' %}">Reconnect</a>
+              {% endif %}
+              <a class="btn btn-danger"
+                 href="{% url 'settings:google-logout' 'email' %}"
+                 onclick="return confirm('Disconnect this mailbox? Its synced emails are removed from matters. Other mailboxes and promoted documents are kept.')">Disconnect</a>
+            </span>
           {% else %}
             <span>Your Gmail mailbox</span>
             <a class="btn btn-success"
@@ -106,15 +116,24 @@
               {% else %}
                 not synced yet.
               {% endif %}
+              {% if not account.can_manage_labels %}Reconnect this mailbox to enable automatic label setup.{% endif %}
               {% if account.missing_labels %}
-                No label for
-                {{ account.missing_labels|length }} linked
-                matter{{ account.missing_labels|length|pluralize }}
-                ({{ account.missing_labels|join:", " }}). Create the
-                label{{ account.missing_labels|length|pluralize }} in this
-                mailbox for it to contribute.
+                {% if account.can_manage_labels %}
+                  {{ account.missing_labels|length }}
+                  label{{ account.missing_labels|length|pluralize }} could
+                  not be created yet:
+                {% else %}
+                  Until then, this mailbox is missing
+                  {{ account.missing_labels|length }}
+                  label{{ account.missing_labels|length|pluralize }}:
+                {% endif %}
               {% endif %}
             </p>
+            {% if account.missing_labels %}
+              <ul class="missing-label-list">
+                {% for name in account.missing_labels %}<li>{{ name }}</li>{% endfor %}
+              </ul>
+            {% endif %}
           {% endfor %}
         {% endif %}
       </div>

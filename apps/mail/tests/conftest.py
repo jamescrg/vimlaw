@@ -59,6 +59,14 @@ def http_error(status):
     return HttpError(resp, b"{}")
 
 
+# Post-auto-labels token (carries the labels scope). LEGACY_TOKEN mimics a
+# connect from before the scope was added: read-only, no label creation.
+SCOPED_TOKEN = (
+    '{"token": "t", "scopes": ["https://www.googleapis.com/auth/gmail.labels"]}'
+)
+LEGACY_TOKEN = '{"token": "t"}'
+
+
 def b64(text):
     return base64.urlsafe_b64encode(text.encode()).decode()
 
@@ -140,6 +148,18 @@ class _Labels:
     def list(self, userId):
         return _Call({"labels": self._service.labels})
 
+    def create(self, userId, body):
+        if not getattr(self._service, "allow_label_create", True):
+            return _Call(http_error(403))
+        new = {
+            "id": f"Label_created_{len(self._service.labels)}",
+            "name": body["name"],
+            "type": "user",
+        }
+        self._service.labels.append(new)
+        self._service.created_labels.append(body["name"])
+        return _Call(dict(new))
+
 
 class _Messages:
     def __init__(self, service):
@@ -196,6 +216,8 @@ class FakeGmailService:
     def __init__(self, labels=None, messages=None, history=None, history_id="2000"):
         # attachment_id -> raw bytes, served by attachments().get.
         self.attachment_data = {}
+        # Label names created via labels().create (auto-provisioning).
+        self.created_labels = []
         self.labels = labels or [
             {"id": "Label_1", "name": "Matters - Open/Smith", "type": "user"},
             {"id": "Label_2", "name": "Matters - Open/Doe", "type": "user"},
@@ -222,7 +244,7 @@ def fake_gmail(monkeypatch, user):
     service = FakeGmailService()
     service.address = "primary@example.com"
     service.account = GmailAccount.objects.create(
-        user=user, address=service.address, token='{"token": "t"}'
+        user=user, address=service.address, token=SCOPED_TOKEN
     )
     registry = {service.account.pk: service}
     monkeypatch.setattr(
@@ -234,7 +256,7 @@ def fake_gmail(monkeypatch, user):
         other_service = other_service or FakeGmailService()
         other_service.address = address
         other_service.account = GmailAccount.objects.create(
-            user=owner, address=address, token='{"token": "t"}'
+            user=owner, address=address, token=SCOPED_TOKEN
         )
         registry[other_service.account.pk] = other_service
         return other_service

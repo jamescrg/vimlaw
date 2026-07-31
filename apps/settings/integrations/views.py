@@ -51,6 +51,10 @@ def _create_flow(redirect_uri):
             "https://www.googleapis.com/auth/contacts",
             "https://www.googleapis.com/auth/drive.readonly",
             "https://www.googleapis.com/auth/gmail.readonly",
+            # Label create/rename only — message content stays read-only.
+            # Lets the sync provision each mailbox's matter labels so users
+            # only ever *apply* labels, never build the taxonomy.
+            "https://www.googleapis.com/auth/gmail.labels",
         ],
     )
 

@@ -151,3 +151,21 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* "Your mailbox has no label for this matter" toolbar note (per-user; the
+   flag comes from GmailAccount.missing_labels, refreshed by the scheduled
+   sync). */
+.emails-toolbar .label-missing-note {
+  align-items: center;
+  color: var(--warning);
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+/* "Create a label named after this matter" row in the link modal. */
+.label-create-suggestion {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

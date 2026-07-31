@@ -232,6 +232,19 @@ Settings Contacts - Column Layout
   margin: 0;
 }
 
+/* The labels a mailbox still needs, one per line so the exact names are
+   easy to read and copy (they must match character for character). */
+.missing-label-list {
+  color: var(--color-muted);
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 2.5rem;
+}
+
+.missing-label-list li {
+  font-family: var(--font-mono, monospace);
+  margin: 0.25rem 0;
+}
+
 /* Notifications */
 .notifications-list {
   border: 1px solid var(--border-medium);

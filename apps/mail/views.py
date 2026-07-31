@@ -9,7 +9,7 @@ from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
 
 from .filters import EmailFilter
-from .models import Email
+from .models import Email, GmailAccount
 
 
 def get_emails_data(request, matter, matter_id):
@@ -39,6 +39,16 @@ def get_emails_data(request, matter, matter_id):
     if isinstance(keyword, list):
         keyword = keyword[0] if keyword else ""
 
+    # DB-only check (no Gmail round-trip): the scheduled sync refreshes each
+    # account's missing_labels every tick, so "your mailbox has no label for
+    # this matter" is at most a couple of minutes stale.
+    own_account = GmailAccount.objects.filter(user=request.user).first()
+    own_missing_label = bool(
+        own_account
+        and matter.gmail_label_name
+        and matter.gmail_label_name in (own_account.missing_labels or [])
+    )
+
     return {
         "emails": emails,
         "email_count": emails.count(),
@@ -48,6 +58,7 @@ def get_emails_data(request, matter, matter_id):
             {k: v for k, v in filter_data.items() if k != "order_by" and v}
         ),
         "gmail_linked": mail_google.check_credentials(),
+        "own_missing_label": own_missing_label,
     }
 
 
@@ -206,12 +217,23 @@ def label_link_modal(request, matter_id):
     }
     label_rows = [{**label, "taken_by": taken.get(label["name"])} for label in labels]
 
+    # "Create a label named after the matter" shortcut: the sync provisions
+    # the label in every mailbox, so nobody has to touch Gmail first. Only
+    # offered while the name is unused and unlinked.
+    suggested = mail_google.default_label_name(matter)
+    if suggested in taken or any(label["name"] == suggested for label in labels):
+        suggested = None
+    prefix = f"{settings.GMAIL_LABEL_ROOT}/" if settings.GMAIL_LABEL_ROOT else ""
+    suggested_short = suggested.removeprefix(prefix) if suggested else None
+
     context = {
         "matter": matter,
         "labels": label_rows,
         "current": matter.gmail_label_name,
         "linked": mail_google.check_credentials(),
         "label_root": settings.GMAIL_LABEL_ROOT,
+        "suggested_label": suggested,
+        "suggested_short": suggested_short,
     }
     return render(request, "case/emails/label-link-modal.html", context)
 
@@ -231,7 +253,11 @@ def _queue_resync(matter):
 def label_link(request, matter_id):
     """Set this matter's Gmail label and resync its emails."""
     matter, _ = get_matter_from_url(request, matter_id)
-    label_name = request.POST.get("label_name", "").strip()
+    # create_label_name is the "create a label named after the matter"
+    # shortcut; the sync provisions it in every mailbox on resync.
+    label_name = (
+        request.POST.get("create_label_name") or request.POST.get("label_name") or ""
+    ).strip()
 
     if label_name:
         clash = (

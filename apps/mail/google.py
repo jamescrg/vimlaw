@@ -32,6 +32,7 @@ Flow:
 
 import json
 import logging
+import re
 
 import google.oauth2.credentials
 from django.conf import settings
@@ -155,22 +156,73 @@ def _matters_by_label_name():
     }
 
 
-def _resolve_labels(service, matters_by_name):
+def default_label_name(matter):
+    """Default Gmail label for a matter: its name under GMAIL_LABEL_ROOT.
+
+    Gmail allows nearly any character in a label name (ampersands
+    included); only "/" carries meaning as the nesting separator, so it is
+    flattened to "-". Gmail caps label names at 225 characters.
+    """
+    name = re.sub(r"\s*/\s*", "-", (matter.name or "").strip())
+    root = settings.GMAIL_LABEL_ROOT
+    return (f"{root}/{name}" if root else name)[:225]
+
+
+def _create_labels(service, names, ids_by_name):
+    """Create labels this mailbox lacks (plus the GMAIL_LABEL_ROOT parent
+    the first time). Returns {name: id} for the ones created.
+
+    Failures are logged and the names simply stay missing until a later
+    tick; a 403 means the token predates the gmail.labels scope (the
+    integrations page nudges that user to reconnect), so stop trying.
+    """
+    created = {}
+    root = settings.GMAIL_LABEL_ROOT
+    targets = ([root] if root and root not in ids_by_name else []) + list(names)
+    for name in targets:
+        try:
+            resp = (
+                service.users()
+                .labels()
+                .create(userId="me", body={"name": name})
+                .execute()
+            )
+        except HttpError as e:
+            if e.resp.status == 409:
+                continue  # created concurrently; the next tick resolves it
+            if e.resp.status == 403:
+                logger.warning("Gmail token lacks the labels scope; reconnect needed")
+                break
+            logger.exception("Failed to create Gmail label %r", name)
+            continue
+        if name != root:
+            created[resp["name"]] = resp["id"]
+    return created
+
+
+def _resolve_labels(service, matters_by_name, account=None):
     """Resolve matter label names to this mailbox's own label ids.
 
+    When ``account`` is given and its token can manage labels, missing
+    labels are created on the spot — the mailbox is *provisioned*, not
+    just read, so a teammate's only job is applying labels to messages.
+
     Returns ``(mapped, missing)``: ``{label_id: Matter}`` for names present
-    in the mailbox, plus the sorted label names it has no label for (a
-    mailbox that hasn't created a matter's label simply doesn't contribute
-    to it — surfaced on the integrations page, existing rows kept).
+    in the mailbox, plus the sorted label names it (still) has no label
+    for — either the token needs a reconnect for the labels scope, or
+    creation failed (surfaced on the integrations page, existing rows
+    kept).
     """
     ids_by_name = {label["name"]: label["id"] for label in list_labels(service)}
-    mapped, missing = {}, []
-    for name, matter in matters_by_name.items():
-        label_id = ids_by_name.get(name)
-        if label_id is None:
-            missing.append(name)
-        else:
-            mapped[label_id] = matter
+    missing = [name for name in matters_by_name if name not in ids_by_name]
+    if missing and account is not None and account.can_manage_labels:
+        ids_by_name.update(_create_labels(service, sorted(missing), ids_by_name))
+        missing = [name for name in matters_by_name if name not in ids_by_name]
+    mapped = {
+        ids_by_name[name]: matter
+        for name, matter in matters_by_name.items()
+        if name in ids_by_name
+    }
     return mapped, sorted(missing)
 
 
@@ -406,7 +458,9 @@ def _sync_account(account, matters_by_name, dry_run=False, full=False):
     if not service:
         return None
 
-    mapped, missing = _resolve_labels(service, matters_by_name)
+    mapped, missing = _resolve_labels(
+        service, matters_by_name, account=None if dry_run else account
+    )
     if not dry_run and missing != account.missing_labels:
         account.missing_labels = missing
         account.save(update_fields=["missing_labels"])
@@ -526,7 +580,9 @@ def resync_matter(matter):
         service = build_service(account)
         if not service:
             continue
-        mapped, _missing = _resolve_labels(service, {matter.gmail_label_name: matter})
+        mapped, _missing = _resolve_labels(
+            service, {matter.gmail_label_name: matter}, account=account
+        )
         seen = set()
         try:
             for label_id in mapped:

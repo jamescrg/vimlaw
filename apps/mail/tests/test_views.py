@@ -323,3 +323,38 @@ def test_sent_mail_lists_recipient(client, matter, fake_gmail):
 def test_gmail_url_uses_account_mailbox(matter, fake_gmail):
     email = make_email(matter, "a1", account=fake_gmail.account, attachments=[])
     assert "mail/u/primary@example.com/#all/a1" in email.gmail_url
+
+
+def test_missing_label_indicator(client, matter, fake_gmail):
+    # The user's own mailbox lacks the matter's label: warn in the toolbar.
+    fake_gmail.account.missing_labels = [matter.gmail_label_name]
+    fake_gmail.account.save(update_fields=["missing_labels"])
+    content = client.get(
+        reverse("case:emails-index", args=[matter.id])
+    ).content.decode()
+    assert "No matching label" in content
+
+    fake_gmail.account.missing_labels = []
+    fake_gmail.account.save(update_fields=["missing_labels"])
+    content = client.get(
+        reverse("case:emails-index", args=[matter.id])
+    ).content.decode()
+    assert "No matching label" not in content
+
+
+def test_label_link_modal_offers_matter_named_label(client, matter, fake_gmail):
+    content = client.get(
+        reverse("case:emails-label-link-modal", args=[matter.id])
+    ).content.decode()
+    assert "Matters - Open/Smith v Jones" in content  # suggested new label
+
+
+def test_label_link_create_from_matter_name(client, matter, fake_gmail, _inline_resync):
+    response = client.post(
+        reverse("case:emails-label-link", args=[matter.id]),
+        {"create_label_name": "Matters - Open/Smith v Jones", "label_name": ""},
+    )
+    assert response.status_code == 204
+    matter.refresh_from_db()
+    assert matter.gmail_label_name == "Matters - Open/Smith v Jones"
+    assert _inline_resync == [matter.id]
