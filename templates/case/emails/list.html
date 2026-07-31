@@ -35,8 +35,7 @@
         Link Gmail Label
       {% endif %}
     </button>
-    <span class="app-badge email-count-badge"
-          title="{{ email_count }} email{{ email_count|pluralize }} shown">{{ email_count }}</span>
+    <span class="app-badge app-badge-lg">Count: {{ email_count }}</span>
   </div>
 </div>
 <div id="emails-table">{% include "case/emails/table.html" %}</div>
