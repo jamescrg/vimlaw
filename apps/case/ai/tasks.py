@@ -57,7 +57,7 @@ def process_ai_request(
 
     from apps.matters.models import Matter
 
-    from .context import assemble_matter_context_with_selection
+    from .context import assemble_matter_context_with_selection, build_chat_history
     from .models import Conversation
 
     cache_key = f"ai_status_{conversation_id}"
@@ -104,22 +104,8 @@ def process_ai_request(
             logger.info("AI request cancelled for conversation %s", conversation_id)
             return
 
-        # Build chat history with user names for multi-participant context
-        chat_history = []
-        for msg in conversation.messages.select_related("user"):
-            entry = {"role": msg.role, "content": msg.content}
-            if msg.role == "user" and msg.user:
-                entry["user_name"] = msg.user.get_full_name() or msg.user.username
-            chat_history.append(entry)
-
-        # Format messages for multi-participant conversations
-        user_names = {
-            msg.get("user_name") for msg in chat_history if msg.get("user_name")
-        }
-        if len(user_names) > 1:
-            for msg in chat_history:
-                if msg["role"] == "user" and msg.get("user_name"):
-                    msg["content"] = f"[{msg['user_name']}]: {msg['content']}"
+        # Timestamped history, with user names when multiple people chat
+        chat_history = build_chat_history(conversation)
 
         # Final size guard. estimate_tokens (chars/4) under-counts real
         # tokenization, so apply the cap at 80% of the model window and

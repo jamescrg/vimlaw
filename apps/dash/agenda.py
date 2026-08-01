@@ -448,10 +448,9 @@ def _process_agenda_chat(conversation_id, user_id):
         conversation = Conversation.objects.get(id=conversation_id)
         system_context = _agenda_system_prompt(user)
 
-        chat_history = [
-            {"role": msg.role, "content": msg.content}
-            for msg in conversation.messages.all()
-        ]
+        from apps.case.ai.context import build_chat_history
+
+        chat_history = build_chat_history(conversation)
 
         update_status("connecting", "Connecting to AI...")
 

@@ -24,11 +24,11 @@ Time entries are included as administrative data with invoice relationships.
 
 import logging
 from dataclasses import dataclass
-from datetime import date
 from enum import Enum
 from pathlib import Path
 
 from django.conf import settings
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.activity.time.models import TimeEntry
@@ -394,9 +394,15 @@ def format_items_by_tier(items: list[ContextItem], tier: ImportanceTier) -> str:
     return "\n\n".join(lines)
 
 
-REQUEST_INFO_TEMPLATE = """## Request Date
+REQUEST_INFO_TEMPLATE = """## Current Date
 
-{request_date}
+Today is {request_date}. Treat this as the current date when reasoning
+about deadlines, elapsed time, or anything time-sensitive.
+
+Messages in the conversation history are prefixed with a bracketed
+date-time stamp (e.g. [Jul 04, 2026 02:15 PM]) showing when each was
+sent, so you can follow the chronology. The stamps are metadata added by
+the system. Never begin your own replies with one.
 
 ## Requesting Party
 
@@ -432,13 +438,42 @@ def build_request_info(user):
         )
     )
     return REQUEST_INFO_TEMPLATE.format(
-        request_date=date.today().strftime("%B %d, %Y"),
+        request_date=timezone.localdate().strftime("%A, %B %d, %Y"),
         user_name=user.get_full_name(),
         user_email=user.email,
         role_title=user.title_display,
         firm_name=company.name if company else "",
         team_lines=team_lines,
     )
+
+
+def build_chat_history(conversation) -> list[dict]:
+    """Provider-ready history for a conversation, shared by the case,
+    intake, and agenda chats.
+
+    Every message is prefixed with its sent date-time so the model can
+    follow the chronology (REQUEST_INFO_TEMPLATE tells it the stamps are
+    system metadata). When more than one person has participated, user
+    messages also carry the sender's name.
+    """
+    messages = list(conversation.messages.select_related("user"))
+
+    user_names = {
+        (msg.user.get_full_name() or msg.user.username)
+        for msg in messages
+        if msg.role == "user" and msg.user
+    }
+    multi_user = len(user_names) > 1
+
+    history = []
+    for msg in messages:
+        stamp = timezone.localtime(msg.created_at).strftime("%b %d, %Y %I:%M %p")
+        content = msg.content
+        if multi_user and msg.role == "user" and msg.user:
+            name = msg.user.get_full_name() or msg.user.username
+            content = f"[{name}]: {content}"
+        history.append({"role": msg.role, "content": f"[{stamp}] {content}"})
+    return history
 
 
 MATTER_CONTEXT_TEMPLATE = """
@@ -839,8 +874,6 @@ def format_tasks(matter) -> str:
 
 def format_events(matter) -> str:
     """Format events, upcoming first."""
-    from django.utils import timezone
-
     # Upcoming events
     events = Event.objects.filter(
         matter=matter, date__gte=timezone.now().date()
