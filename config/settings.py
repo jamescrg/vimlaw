@@ -350,6 +350,10 @@ DRIVE_NOTES_ROOT = env("DRIVE_NOTES_ROOT", default="Matters - Open")
 DRIVE_NOTES_DEBUG_DIR = env("DRIVE_NOTES_DEBUG_DIR", default="")
 # Optional: set if "Matters - Open" lives in a Shared Drive rather than My Drive.
 DRIVE_SHARED_DRIVE_ID = env("DRIVE_SHARED_DRIVE_ID", default="")
+# Any folder with this name inside a matter's Drive folder is a curated
+# ingestion point: its PDFs sync in as Evidence documents (drag a file in to
+# add it to the app). Convention-based; no per-matter linking. Blank disables.
+DRIVE_KEY_DOCUMENTS_FOLDER = env("DRIVE_KEY_DOCUMENTS_FOLDER", default="Key Documents")
 
 # Gmail case-email sync
 # Parent label whose children are offered in the label-to-matter picker (shown
