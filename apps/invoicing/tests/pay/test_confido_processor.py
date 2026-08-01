@@ -156,6 +156,76 @@ def test_charge_card_pending_resolves_to_succeeded():
     assert m.call_args.kwargs["headers"]["x-api-key"] == "f_secret_test"
 
 
+def test_charge_debit_card_type_sends_debit_method():
+    # The hosted-fields BIN lookup reports the card type; a debit card must
+    # complete as DEBIT — Confido rejects CREDIT for a debit BIN.
+    txn = {
+        "id": "txn_d",
+        "status_v2": "PENDING",
+        "amountProcessed": 5000,
+        "paymentMethod": "DEBIT",
+    }
+    with patch(
+        "apps.invoicing.processors.confido.requests.post", return_value=_complete(txn)
+    ) as m:
+        r = proc().charge(
+            token="pay_pub_1",
+            amount_cents=5000,
+            reference="Invoice 1",
+            method="card",
+            metadata={"card_type": "debit"},
+        )
+    assert r.status == SUCCEEDED and r.method == CARD
+    variables = m.call_args.kwargs["json"]["variables"]["input"]
+    assert variables["method"] == "DEBIT"
+
+
+def test_charge_method_mismatch_retries_flipped():
+    # No client-reported type -> we complete as CREDIT; Confido rejects the
+    # debit BIN before charging, and the adapter retries once as DEBIT.
+    txn = {
+        "id": "txn_r",
+        "status_v2": "PENDING",
+        "amountProcessed": 5000,
+        "paymentMethod": "DEBIT",
+    }
+    reject = _Resp(
+        {
+            "errors": [
+                {
+                    "message": (
+                        "card type is not credit, but CREDIT method was requested"
+                    )
+                }
+            ]
+        }
+    )
+    with patch(
+        "apps.invoicing.processors.confido.requests.post",
+        side_effect=[reject, _complete(txn)],
+    ) as m:
+        r = proc().charge(
+            token="pay_pub_1", amount_cents=5000, reference="Invoice 1", method="card"
+        )
+    assert r.status == SUCCEEDED and r.transaction_id == "txn_r"
+    first = m.call_args_list[0].kwargs["json"]["variables"]["input"]
+    second = m.call_args_list[1].kwargs["json"]["variables"]["input"]
+    assert first["method"] == "CREDIT"
+    assert second["method"] == "DEBIT"
+
+
+def test_charge_non_mismatch_error_does_not_retry():
+    reject = _Resp(
+        {"errors": [{"message": "Card declined", "extensions": {"code": "declined"}}]}
+    )
+    with patch(
+        "apps.invoicing.processors.confido.requests.post", return_value=reject
+    ) as m:
+        with pytest.raises(ChargeError):
+            proc().charge(token="p", amount_cents=100, reference="r", method="card")
+    assert m.call_count == 1
+
+
 def test_charge_bank_pending_stays_pending():
     txn = {
         "id": "txn_2",

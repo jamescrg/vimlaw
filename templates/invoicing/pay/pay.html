@@ -267,7 +267,7 @@
         // Live tokenization handles: AffiniPay hosted-fields (one per method),
         // the Stripe.js card Element, and the Confido hosted-fields singleton.
         _cardFields: null, _bankFields: null, _stripe: null, _stripeCard: null,
-        _confido: null, _confidoReady: null,
+        _confido: null, _confidoReady: null, _cardType: '',
 
         // Mount AffiniPay hosted fields once, in live mode only. Dev mode uses
         // plain inputs + magic tokens, so this is skipped there.
@@ -422,7 +422,7 @@
             const resp = await fetch(opts.chargeUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: tokenId, method: this.method }),
+              body: JSON.stringify({ token: tokenId, method: this.method, card_type: this._cardType }),
             });
             const data = await resp.json();
             if (!data.success) {
@@ -448,6 +448,13 @@
             // with. So the "token" we hand back is that session token.
             await this._confidoReady;
             await this._confido.submitFields();
+            // Confido validates the completion method against the card's real
+            // type (credit vs debit), which only the fields' BIN lookup knows —
+            // read it from the SDK state and send it up with the charge.
+            try {
+              const state = this._confido.getState ? this._confido.getState() : null;
+              this._cardType = (state && state.cardData && state.cardData.cardType) || '';
+            } catch (e) { this._cardType = ''; }
             return opts.publicKey;
           }
           if (opts.processor === 'stripe') {

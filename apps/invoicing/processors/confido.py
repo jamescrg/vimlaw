@@ -54,9 +54,13 @@ public docs imply); ``transaction(id:)`` and ``transactionRefund(transactionId,
 amount)`` are as used; ``Transaction`` exposes ``status_v2`` +
 ``paymentMethod`` (the ``TransactionPaymentMethod`` enum, a bare scalar).
 
-Still un-exercised (needs the browser hosted-fields submit, which no server-side
-test can drive): a real ``paymentSessionComplete`` charge end-to-end, and the
-credit-vs-debit distinction (cards are sent as ``CREDIT``).
+Credit vs debit: Confido validates the session ``method`` against the card's
+actual BIN type — completing with ``CREDIT`` for a debit card fails with "card
+type is not credit, but CREDIT method was requested" (hit live 2026-08-01). The
+hosted-fields client learns the type from its BIN lookup
+(``getState().cardData.cardType``) and the pay page forwards it; ``charge``
+maps it to ``CREDIT``/``DEBIT`` (via ``metadata["card_type"]``) and, if Confido
+still reports a mismatch, retries the completion once with the flipped method.
 """
 
 import base64
@@ -242,10 +246,18 @@ class ConfidoProcessor(PaymentProcessor):
         email, phone). When present, the paying client and its matter are synced
         into Confido and attached to the transaction — best-effort: a sync
         failure never blocks the charge."""
-        # PaymentSessionMethod enum is ACH | CREDIT | DEBIT. We can't distinguish
-        # credit from debit before the charge, so cards go in as CREDIT; Confido
-        # records the actual brand/type on the resulting Transaction.
-        session_method = "ACH" if method == BANK else "CREDIT"
+        # PaymentSessionMethod enum is ACH | CREDIT | DEBIT — and Confido
+        # VALIDATES card sessions against the card's actual BIN type ("card type
+        # is not credit, but CREDIT method was requested"), so CREDIT-for-all
+        # bounces debit cards. The hosted-fields client knows the type after the
+        # BIN lookup (getState().cardData.cardType) and passes it up in
+        # ``metadata["card_type"]``; default to CREDIT when it's absent and let
+        # the mismatch retry below correct us.
+        card_type = ((metadata or {}).get("card_type") or "").strip().lower()
+        if method == BANK:
+            session_method = "ACH"
+        else:
+            session_method = "DEBIT" if card_type == "debit" else "CREDIT"
         session_input = {
             "amount": int(amount_cents),
             "paymentSessionToken": token,
@@ -273,7 +285,16 @@ class ConfidoProcessor(PaymentProcessor):
           }
         }
         """
-        data = self._graphql(query, {"input": session_input}, "Charge failed")
+        try:
+            data = self._graphql(query, {"input": session_input}, "Charge failed")
+        except ChargeError as exc:
+            flipped = self._flipped_card_method(session_method, exc)
+            if not flipped:
+                raise
+            # A method/BIN mismatch is rejected before any charge is attempted,
+            # so the session is still completable — retry once, flipped.
+            session_input = {**session_input, "method": flipped}
+            data = self._graphql(query, {"input": session_input}, "Charge failed")
         result = data.get("paymentSessionComplete") or {}
         txn = self._first_txn(result)
         if txn is None:
@@ -525,6 +546,19 @@ class ConfidoProcessor(PaymentProcessor):
             code = (err.get("extensions") or {}).get("code")
             return err.get("message"), code
         return None, None
+
+    @staticmethod
+    def _flipped_card_method(session_method, exc):
+        """If a card completion was rejected because the session method doesn't
+        match the card's BIN type ("card type is not credit, but CREDIT method
+        was requested"), return the opposite card method to retry with;
+        otherwise None. The client-reported type is normally right — this covers
+        a missing/stale BIN lookup, and Confido remains the authority."""
+        if session_method not in ("CREDIT", "DEBIT"):
+            return None
+        if "card type is not" not in str(exc).lower():
+            return None
+        return "DEBIT" if session_method == "CREDIT" else "CREDIT"
 
     @staticmethod
     def _first_event(body):
