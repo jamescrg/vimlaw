@@ -355,6 +355,21 @@
     </div>
   {% endif %}
 </div>
+<div class="toolbar-right">
+  <button type="button"
+          class="btn-icon"
+          hx-get="{% url 'case:documents-record-link-modal' matter.id %}"
+          hx-target="#htmx-modal-container"
+          hx-trigger="click"
+          title="{% if linked_record_folder_count %}Drive record folders sync PDFs in as Record documents{% else %}Link Drive record folders to sync each proceeding's PDFs{% endif %}">
+    <i class="icon-cloud with-text"></i>
+    {% if linked_record_folder_count %}
+      {{ linked_record_folder_count }} Record Folder{{ linked_record_folder_count|pluralize }}
+    {% else %}
+      Link Record Folders
+    {% endif %}
+  </button>
+</div>
 </div>
 <div id="files-table">{% include "case/documents/table.html" %}</div>
 </div>

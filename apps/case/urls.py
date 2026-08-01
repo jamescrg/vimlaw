@@ -462,6 +462,17 @@ urlpatterns = [
         notes.drive_unlink,
         name="notes-drive-unlink",
     ),
+    # Drive record-folder linking (Documents tab; one folder per proceeding)
+    path(
+        "case/<int:matter_id>/documents/drive/link/",
+        documents.record_link_modal,
+        name="documents-record-link-modal",
+    ),
+    path(
+        "case/<int:matter_id>/documents/drive/link/set/",
+        documents.record_link,
+        name="documents-record-link",
+    ),
     # Emails (matter-scoped, synced from Gmail via apps.mail)
     path("case/<int:matter_id>/emails/", mail.emails_index, name="emails-index"),
     path("case/<int:matter_id>/emails/list/", mail.emails_list, name="emails-list"),

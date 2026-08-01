@@ -54,6 +54,24 @@
                 to start syncing its case notes.
               </p>
             {% endif %}
+            {% if drive_status.linked_proceedings %}
+              <p class="detail-text drive-sync-note">
+                {{ drive_status.synced_records }} record
+                document{{ drive_status.synced_records|pluralize }} synced
+                across {{ drive_status.linked_proceedings }} linked
+                proceeding{{ drive_status.linked_proceedings|pluralize }}.
+              </p>
+            {% endif %}
+            {% if drive_status.missing_record_folders %}
+              <p class="detail-text drive-sync-note">
+                Warning: {{ drive_status.missing_record_folders|length }} linked
+                record folder{{ drive_status.missing_record_folders|length|pluralize }}
+                no longer exist{{ drive_status.missing_record_folders|length|pluralize:"s," }}
+                in Drive ({{ drive_status.missing_record_folders|join:", " }}).
+                Relink from the affected matter's Documents tab. Nothing was
+                deleted.
+              </p>
+            {% endif %}
           {% endif %}
         </div>
       </div>

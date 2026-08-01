@@ -132,6 +132,9 @@ def get_document_data(request, matter_id):
         "all_selected": all_selected,
         "proceedings": proceedings,
         "selected_proceeding": selected_proceeding,
+        "linked_record_folder_count": proceedings.exclude(drive_folder__isnull=True)
+        .exclude(drive_folder="")
+        .count(),
         "current_order": current_order,
         "importances": list(range(7, 0, -1)),
         "importance_value": importance_value,
