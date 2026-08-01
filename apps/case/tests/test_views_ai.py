@@ -37,10 +37,13 @@ class TestAICreatePrompt:
         assert company.name in content
 
     def test_create_prompt_contains_date(self, client_with_matter):
+        from django.utils import timezone
+
         matter_id = client_with_matter.matter.id
         response = client_with_matter.get(f"/case/{matter_id}/ai/create-prompt/")
         content = response.content.decode()
-        assert "## Request Date" in content
+        assert "## Current Date" in content
+        assert timezone.localdate().strftime("%A, %B %d, %Y") in content
 
     def test_create_prompt_attorney_role(self, client_with_matter, user, matter):
         user.is_attorney = True
@@ -164,3 +167,63 @@ class TestLLMChoiceWiring:
         for key in RETIRED_LLMS:
             assert key in VALID_LLMS
             assert key in CLAUDE_MODELS or key in GEMINI_MODELS
+
+
+class TestBuildChatHistory:
+    """The shared history builder stamps every message with its sent
+    date-time; user messages get name prefixes only when more than one
+    person has participated."""
+
+    def test_messages_are_timestamped(self, matter, user):
+        from django.utils import timezone
+
+        from apps.case.ai.context import build_chat_history
+        from apps.case.ai.models import Message
+
+        conversation = Conversation.objects.create(matter=matter, user=user)
+        msg = Message.objects.create(
+            conversation=conversation, role="user", content="Hello", user=user
+        )
+        Message.objects.create(
+            conversation=conversation, role="assistant", content="Hi there"
+        )
+
+        history = build_chat_history(conversation)
+        assert len(history) == 2
+        stamp = timezone.localtime(msg.created_at).strftime("%b %d, %Y %I:%M %p")
+        assert history[0] == {"role": "user", "content": f"[{stamp}] Hello"}
+        assert history[1]["role"] == "assistant"
+        assert history[1]["content"].endswith("] Hi there")
+
+    def test_single_user_gets_no_name_prefix(self, matter, user):
+        from apps.case.ai.context import build_chat_history
+        from apps.case.ai.models import Message
+
+        conversation = Conversation.objects.create(matter=matter, user=user)
+        Message.objects.create(
+            conversation=conversation, role="user", content="Hello", user=user
+        )
+        history = build_chat_history(conversation)
+        assert user.username not in history[0]["content"]
+
+    def test_multi_user_names_after_timestamp(self, matter, user):
+        from apps.accounts.models import CustomUser
+        from apps.case.ai.context import build_chat_history
+        from apps.case.ai.models import Message
+
+        other = CustomUser.objects.create_user(
+            username="colleague",
+            email="colleague@example.com",
+            password="x",
+            first_name="Ada",
+            last_name="Law",
+        )
+        conversation = Conversation.objects.create(matter=matter, user=user)
+        Message.objects.create(
+            conversation=conversation, role="user", content="Hello", user=user
+        )
+        Message.objects.create(
+            conversation=conversation, role="user", content="Adding on", user=other
+        )
+        history = build_chat_history(conversation)
+        assert "] [Ada Law]: Adding on" in history[1]["content"]
