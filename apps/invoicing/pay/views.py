@@ -203,6 +203,9 @@ def pay_charge(request, token):
 
     payment_token = (body.get("token") or "").strip()
     method = body.get("method") or ""
+    # 'credit'/'debit' from the hosted-fields BIN lookup — Confido validates the
+    # completion method against the card's actual type, so this must flow through.
+    card_type = (body.get("card_type") or "").strip().lower()
     if not payment_token:
         return JsonResponse(
             {"success": False, "error": "Missing payment details."}, status=400
@@ -237,7 +240,10 @@ def pay_charge(request, token):
                     # rejects if the key is reused. The row lock + already-paid
                     # check above is the real double-charge guard.
                     idempotency_key=f"{reference}:{payment_token}",
-                    metadata={"payer_email": _client_email(matter)},
+                    metadata={
+                        "payer_email": _client_email(matter),
+                        **({"card_type": card_type} if card_type else {}),
+                    },
                     client=_client_info(matter.client if matter else None),
                     matter=_matter_info(matter),
                 )
@@ -456,6 +462,7 @@ def balance_charge(request, token):
 
     payment_token = (body.get("token") or "").strip()
     method = body.get("method") or ""
+    card_type = (body.get("card_type") or "").strip().lower()
     if not payment_token:
         return JsonResponse(
             {"success": False, "error": "Missing payment details."}, status=400
@@ -493,7 +500,10 @@ def balance_charge(request, token):
                     idempotency_key=f"request:{req.id}:{payment_token}",
                     method=method,
                     trust=req.is_trust,
-                    metadata={"payer_email": payer_email},
+                    metadata={
+                        "payer_email": payer_email,
+                        **({"card_type": card_type} if card_type else {}),
+                    },
                     client=client_desc,
                     matter=matter_desc,
                 )
