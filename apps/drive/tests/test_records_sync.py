@@ -172,3 +172,78 @@ def test_notes_regression_sync_and_removal(matter, proceeding, fake_drive):
     stats = google.sync()
     assert stats["removed"] == 1
     assert not Note.objects.filter(drive_file_id="n1").exists()
+
+
+def test_date_prefix_names_the_document(matter, proceeding, fake_drive):
+    """The filing convention: '2026-04-29 Complaint.pdf' -> Complaint,
+    dated by the prefix (NOT by Drive's UTC createdTime)."""
+    fake_drive.add_file(
+        "f1",
+        "2026-04-29 Complaint.pdf",
+        "rf1",
+        created="2026-04-30T01:30:00.000Z",  # evening-ET upload: next UTC day
+    )
+    google.sync(full=True)
+    doc = Document.objects.get()
+    assert doc.name == "Complaint"
+    assert doc.date.isoformat() == "2026-04-29"
+
+
+def test_no_prefix_falls_back_to_created_time(matter, proceeding, fake_drive):
+    fake_drive.add_file("f1", "Complaint.pdf", "rf1")
+    google.sync(full=True)
+    doc = Document.objects.get()
+    assert doc.name == "Complaint"
+    assert doc.date.isoformat() == "2026-01-10"
+
+
+def test_manual_upload_twin_adopted_not_duplicated(matter, proceeding, fake_drive):
+    from django.core.files.base import ContentFile
+
+    content = b"%PDF-manual-upload"
+    manual = Document.objects.create(
+        matter=matter,
+        category="Evidence",
+        name="Complaint",
+        date="2026-04-29",
+        ocr_status="completed",
+        ocr_text="already extracted",
+    )
+    manual.file.save(f"{manual.pk}.pdf", ContentFile(content), save=True)
+
+    fake_drive.add_file("f1", "2026-04-29 Complaint.pdf", "rf1", content=content)
+    stats = google.sync(full=True)
+
+    assert stats["records_adopted"] == 1
+    assert stats["records_synced"] == 0
+    assert Document.objects.count() == 1
+    manual.refresh_from_db()
+    assert manual.drive_file_id == "f1"
+    assert manual.proceeding == proceeding
+    assert manual.ocr_status == "completed"  # finished OCR untouched
+    assert fake_drive.ocr_queued == []
+
+
+def test_adoption_skipped_on_size_mismatch(matter, proceeding, fake_drive):
+    from django.core.files.base import ContentFile
+
+    manual = Document.objects.create(matter=matter, name="Complaint", date="2026-04-29")
+    manual.file.save(
+        f"{manual.pk}.pdf", ContentFile(b"%PDF-different-bytes-here"), save=True
+    )
+
+    fake_drive.add_file("f1", "2026-04-29 Complaint.pdf", "rf1", content=b"%PDF-drive")
+    stats = google.sync(full=True)
+    assert stats["records_adopted"] == 0
+    assert stats["records_synced"] == 1
+    assert Document.objects.count() == 2
+
+
+def test_adoption_skipped_when_ambiguous(matter, proceeding, fake_drive):
+    for _ in range(2):
+        Document.objects.create(matter=matter, name="Complaint", date="2026-04-29")
+    fake_drive.add_file("f1", "2026-04-29 Complaint.pdf", "rf1")
+    stats = google.sync(full=True)
+    assert stats["records_adopted"] == 0
+    assert stats["records_synced"] == 1
+    assert Document.objects.count() == 3

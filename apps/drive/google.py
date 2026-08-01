@@ -66,9 +66,9 @@ XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 ALLOWED_EXTENSIONS = (".docx", ".odt", ".md", ".xlsx", ".ods", ".csv")
 NOTES_FOLDER_NAME = "Notes"
 
-# Fields requested for a file in changes/listing responses. createdTime
-# feeds the record mirror's Document.date default.
-FILE_FIELDS = "id, name, mimeType, parents, trashed, modifiedTime, createdTime"
+# Fields requested for a file in changes/listing responses. createdTime and
+# size feed the record mirror (fallback date; duplicate-adoption check).
+FILE_FIELDS = "id, name, mimeType, parents, trashed, modifiedTime, createdTime, size"
 
 
 # --------------------------------------------------------------------------- #

@@ -31,6 +31,7 @@ def _public(meta):
             "trashed",
             "modifiedTime",
             "createdTime",
+            "size",
         )
         if key in meta
     }
@@ -130,6 +131,7 @@ class FakeDriveService:
             "trashed": False,
             "modifiedTime": modified,
             "createdTime": created,
+            "size": str(len(content)),
             "content": content,
         }
         return self.files_by_id[fid]

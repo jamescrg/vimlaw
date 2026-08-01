@@ -20,6 +20,7 @@ changes feed and dispatches in-scope files here.
 
 import logging
 import os
+import re
 from datetime import datetime
 
 from django.core.files.base import ContentFile
@@ -39,11 +40,16 @@ PDF_MIME = "application/pdf"
 
 RECORD_STAT_KEYS = (
     "records_synced",
+    "records_adopted",
     "records_updated",
     "records_unchanged",
     "records_non_pdf",
     "records_failed",
 )
+
+# The filing convention the upload form also parses (file-upload-forms.js):
+# an ISO date prefix names the document's date and is sliced off the name.
+_DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})[\s\-_]*")
 
 
 def new_record_stats():
@@ -91,6 +97,63 @@ def _created_date(file_meta):
         return datetime.fromisoformat(created.replace("Z", "+00:00")).date()
     except ValueError:
         return None
+
+
+def _name_and_date(file_meta):
+    """Document name + date from the filename, per the filing convention.
+
+    "2026-04-29 Complaint.pdf" -> ("Complaint", date(2026, 4, 29)), exactly
+    as the upload form does. Without a (valid) date prefix, the full stem is
+    the name and Drive's createdTime is the fallback date — which is the
+    UTC upload moment, so the prefix always wins when present (createdTime
+    lands a day off for anything filed in the evening).
+    """
+    stem = os.path.splitext(file_meta.get("name", ""))[0]
+    match = _DATE_PREFIX_RE.match(stem)
+    if match:
+        try:
+            date = datetime.strptime(match.group(1), "%Y-%m-%d").date()
+        except ValueError:
+            date = None
+        if date:
+            name = stem[match.end() :].strip() or stem
+            return name[:255], date
+    return stem[:255], _created_date(file_meta)
+
+
+def _meta_size(file_meta):
+    try:
+        return int(file_meta.get("size") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _adopt_candidate(proceeding, name, date, size):
+    """A manually-uploaded twin of this Drive file, if one is identifiable.
+
+    Deliberately conservative heuristic: same matter, not already
+    Drive-synced, same name (case-insensitive), same date, and — when both
+    sizes are known — the same byte size. Exactly one match adopts;
+    ambiguity or any mismatch creates a new row instead of guessing.
+    """
+    qs = Document.objects.filter(
+        matter=proceeding.matter,
+        drive_file_id__isnull=True,
+        name__iexact=name,
+        date=date,
+    )
+    candidates = list(qs[:2])
+    if len(candidates) != 1:
+        return None
+    candidate = candidates[0]
+    if size and candidate.file:
+        try:
+            if candidate.file.size != size:
+                return None
+        except Exception:
+            # Storage hiccup on the size check: don't guess, don't adopt.
+            return None
+    return candidate
 
 
 def _reset_ocr(document):
@@ -158,6 +221,23 @@ def ingest_record(service, file_meta, parts, links, dry_run, stats):
         stats["records_updated" if existing else "records_synced"] += 1
         return
 
+    name, date = _name_and_date(file_meta)
+
+    if not existing:
+        # A manually-uploaded twin (same name, date and size) adopts the
+        # Drive identity instead of becoming a duplicate: provenance is
+        # attached, bytes and finished OCR stay as they are.
+        candidate = _adopt_candidate(proceeding, name, date, _meta_size(file_meta))
+        if candidate:
+            candidate.proceeding = proceeding
+            candidate.drive_file_id = fid
+            candidate.drive_path = rel_path
+            candidate.drive_modified = mtime
+            candidate.drive_synced_at = timezone.now()
+            candidate.save()
+            stats["records_adopted"] += 1
+            return
+
     content = google._download(service, file_meta)
 
     if existing:
@@ -182,8 +262,8 @@ def ingest_record(service, file_meta, parts, links, dry_run, stats):
         matter=proceeding.matter,
         proceeding=proceeding,
         category="Record",
-        name=os.path.splitext(file_meta["name"])[0][:255],
-        date=_created_date(file_meta),
+        name=name,
+        date=date,
         drive_file_id=fid,
         drive_path=rel_path,
         drive_modified=mtime,
