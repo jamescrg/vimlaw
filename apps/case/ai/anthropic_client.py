@@ -226,6 +226,8 @@ def send_to_claude_with_tools(
                 result_json, event = execute_tool(block.name, block.input)
             if event:
                 trail_events.append(event)
+                if on_activity:
+                    on_activity("tool_result", event)
             results.append(
                 {
                     "type": "tool_result",

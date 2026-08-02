@@ -558,6 +558,8 @@ def ai_status(request, conv_id):
             "message": status_data["message"],
             "conversation": conversation,
             "elapsed_seconds": elapsed_seconds,
+            # Research runs accumulate a live log of searches/reads.
+            "research_log": status_data.get("research_log"),
         },
     )
 

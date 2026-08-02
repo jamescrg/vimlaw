@@ -28,15 +28,37 @@ CLUSTER_MARKER_RE = re.compile(r"\s*\[cluster:(\d+)\]")
 
 PROMPT_ROLE = (
     "RESEARCH MODE. You are a careful legal research associate with live "
-    "access to the CourtListener opinion database through tools. Before "
-    "searching, announce your research strategy in a short paragraph: the "
-    "legal issues you see, the jurisdictions that control, and the queries "
-    "you intend to try. Then execute it: search iteratively, refine "
-    "queries that miss, and READ every opinion (read_opinion) before "
-    "characterizing its holding or citing it. Check list_saved_caselaw "
-    "first so prior research is reused, and run check_treatment (when "
-    "available) on every authority your answer relies on. Prefer the "
-    "matter's jurisdiction; broaden only when its law is sparse.\n\n"
+    "access to the CourtListener opinion database through tools. Follow "
+    "this protocol in order:\n\n"
+    "1. STRATEGY (one short paragraph): the legal issue(s), the "
+    "controlling jurisdiction, and the doctrinal search terms you will "
+    "start from.\n"
+    "2. SURVEY: your first searches MUST be doctrinal — the doctrine "
+    "name, the legal standard, the operative facts (e.g. a quoted "
+    'doctrine phrase like "boundary by agreement" AND acquiescence). '
+    "Discover the law from the database. Do NOT open by searching for "
+    "case names or citations you already believe exist — your memory is "
+    "not a source; searching for a specific case is allowed ONLY after "
+    "prior tool results (a search hit, saved case law, or a case cited "
+    "inside an opinion you read) have surfaced it.\n"
+    "3. ADJUST SCOPE: if a search returns few or off-point results, "
+    "widen it (drop the least essential term, add OR synonyms, use "
+    "stem* wildcards). If it returns many scattered results, narrow it "
+    "(add an AND term for the disputed element or the procedural "
+    "posture). Say which way you are adjusting and why, in one line.\n"
+    "4. SELECT: once results look on point, state a shortlist — "
+    "'Candidates:' with each case on one line (name, court, year, and a "
+    "few words on why it made the list).\n"
+    "5. EVALUATE: read_opinion each shortlisted case. After each read, "
+    "give AT MOST two sentences: the holding, and whether it helps or "
+    "hurts here. Run check_treatment (when available) on every case "
+    "your answer will rely on. Drop cases that do not hold up, saying "
+    "so in a few words.\n"
+    "6. ANSWER concisely. No lengthy case summaries: the attorney will "
+    "ask for elaboration on specific cases if wanted.\n\n"
+    "Check list_saved_caselaw before searching so prior research is "
+    "reused. Prefer the matter's jurisdiction; broaden only when its law "
+    "is sparse.\n\n"
 )
 
 PROMPT_CONTRACT = (
@@ -177,6 +199,19 @@ def run_research_request(
     tools = build_tools(depth)
     execute_tool = make_executor(matter, depth)
 
+    # Live research log: concise one-liners accumulated in the status
+    # payload so the whole run stays visible in the conversation while it
+    # works (the one-line status alone loses history between polls). The
+    # persisted trail takes over once the answer lands.
+    log_lines = []
+
+    def push_log(line):
+        log_lines.append(line)
+        current = cache.get(cache_key, {})
+        if current.get("status") not in ("cancelled", None):
+            current["research_log"] = log_lines[-40:]
+            cache.set(cache_key, current, timeout=600)
+
     def on_activity(kind, payload):
         if kind == "tool_call":
             name = payload.get("name", "")
@@ -196,6 +231,27 @@ def run_research_request(
                 )
             else:
                 update_status("searching", "Reviewing saved case law...")
+        elif kind == "tool_result":
+            event = payload
+            etype = event.get("type")
+            if etype == "search":
+                push_log(
+                    f"Searched `{event.get('query', '')}` "
+                    f"({event.get('result_count', 0)} hits)"
+                )
+            elif etype == "read":
+                name = event.get("case_name") or event.get("cluster_id")
+                push_log(f"Read *{name}*")
+            elif etype == "treatment":
+                name = event.get("case_name") or event.get("cluster_id")
+                verdict = (
+                    "negative treatment"
+                    if event.get("has_negative_treatment")
+                    else "no negative treatment"
+                )
+                push_log(f"Treatment check *{name}*: {verdict}")
+            elif etype == "saved":
+                push_log(f"Reviewed saved case law ({event.get('count', 0)})")
         elif kind == "text":
             text = payload.get("text", "")
             if text:
@@ -260,6 +316,9 @@ def run_research_request(
             "output_tokens": output_tokens,
             "citations": citations_data,
             "research_trail": trail,
+            # Kept on the completion payload for debugging; the rendered
+            # message shows the persisted trail instead.
+            "research_log": log_lines,
         },
         timeout=600,
     )

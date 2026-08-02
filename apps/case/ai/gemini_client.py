@@ -388,6 +388,8 @@ def send_to_gemini_with_tools(
                 result_json, event = execute_tool(fc.name, fc_args)
             if event:
                 trail_events.append(event)
+                if on_activity:
+                    on_activity("tool_result", event)
             response_parts.append(
                 types.Part.from_function_response(
                     name=fc.name, response={"result": _json.loads(result_json)}

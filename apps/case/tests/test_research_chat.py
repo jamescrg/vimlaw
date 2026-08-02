@@ -360,9 +360,16 @@ def test_run_research_request_payload(matter, user, monkeypatch):
 
     def fake_loop(system, messages, tools, execute_tool, **kwargs):
         assert "CITATION CONTRACT" in system
+        assert "SURVEY" in system  # the staged research protocol
         assert system.startswith("CONTEXT")
         kwargs["on_activity"](
             "tool_call", {"name": "search_caselaw", "input": {"query": "q1"}}
+        )
+        kwargs["on_activity"](
+            "tool_result", {"type": "search", "query": "q1", "result_count": 3}
+        )
+        kwargs["on_activity"](
+            "tool_result", {"type": "read", "cluster_id": 101, "case_name": "Smith"}
         )
         return (
             "Answer [cluster:101].",
@@ -395,6 +402,9 @@ def test_run_research_request_payload(matter, user, monkeypatch):
     assert payload["research_trail"][-1]["type"] == "grounding"
     assert payload["research_trail"][0]["cluster_id"] == 101
     assert ("searching", "Searching: `q1`") in statuses
+    # The live log accumulated concise lines during the run.
+    assert "Searched `q1` (3 hits)" in payload["research_log"]
+    assert "Read *Smith*" in payload["research_log"]
 
 
 def test_process_ai_request_dispatches_research(matter, user, monkeypatch):

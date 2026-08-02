@@ -27,6 +27,11 @@
     {% endif %}
     <span class="ai-status-message">{{ message|render_markdown }}</span>
     {% if elapsed_seconds %}<span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>{% endif %}
+    {% if research_log %}
+      <ul class="ai-research-log">
+        {% for line in research_log %}<li>{{ line|render_markdown }}</li>{% endfor %}
+      </ul>
+    {% endif %}
     {% if status != "cancelled" %}
       <button type="button"
               class="ai-cancel-btn"
