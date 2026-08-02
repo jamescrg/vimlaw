@@ -29,7 +29,7 @@
                      value="classic"
                      {% if default_kind != "research" %}checked{% endif %}
                      onchange="document.getElementById('research-depth-group').classList.add('hide')">
-              <span class="ai-kind-name">Analytic</span>
+              <span class="ai-kind-name">Classic</span>
               <span class="detail-text">Answers from the case file and the model's knowledge.</span>
             </label>
             <label class="ai-kind-option">
@@ -38,7 +38,7 @@
                      value="research"
                      {% if default_kind == "research" %}checked{% endif %}
                      onchange="document.getElementById('research-depth-group').classList.remove('hide')">
-              <span class="ai-kind-name">Synthetic</span>
+              <span class="ai-kind-name">Research</span>
               <span class="detail-text">Actively searches CourtListener, reads opinions, and cites only what it retrieved.</span>
             </label>
           </div>
