@@ -91,8 +91,21 @@ class Matter(AuditMixin, models.Model):
         if self.status == "Closed":
             from apps.matters.proceedings.models import Proceeding
 
-            # Mark all proceedings as concluded when matter is closed
-            Proceeding.objects.filter(matter=self).update(status="Concluded")
+            # Mark all proceedings as concluded when matter is closed, and
+            # drop their record-folder links along with the matter's Drive
+            # and Gmail links. Closed files move out of the "Matters - Open"
+            # Drive/Gmail roots, so stale links only produce missing-folder
+            # and missing-label drift warnings (and automatic label setup
+            # would recreate a closed matter's Gmail labels). Synced rows
+            # all survive the unlink: record Documents are append-only and
+            # Email rows are only removed by label events on a still-mapped
+            # matter.
+            Proceeding.objects.filter(matter=self).update(
+                status="Concluded", drive_folder=None
+            )
+            self.gmail_label_id = None
+            self.gmail_label_name = None
+            self.drive_folder = None
 
         # (Client status is no longer maintained here — it's derived from a
         # contact's matters; see apps.contacts.models.derive_client_status.)

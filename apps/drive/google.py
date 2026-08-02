@@ -28,10 +28,11 @@ matter is resolved via ``Matter.drive_folder`` (set by the link_drive_folders
 command); folders with no matching Matter are recorded as unmatched.
 
 This module owns the single changes-feed cursor and also dispatches to the
-record-folder mirror (apps/drive/records.py): PDFs under
+document mirrors (apps/drive/records.py): PDFs under
 ``<root>/<matter>/<linked record folder>/...`` become Record Documents on
-the linked proceeding. That mirror is append-only — removals and trashes
-only ever affect Notes here.
+the linked proceeding, and PDFs under any convention-named "Key Documents"
+folder become Evidence documents (curation by drag). Those mirrors are
+append-only — removals and trashes only ever affect Notes here.
 """
 
 import json
@@ -388,6 +389,63 @@ def _walk_record_folder(service, record_folder, prefix, links, dry_run, stats):
                 logger.exception("Failed to sync record %s", child.get("name"))
 
 
+def _walk_key_folder(service, key_folder, prefix, matter, dry_run, stats):
+    """DFS one Key Documents folder, ingesting PDFs as Evidence."""
+    stack = [(key_folder["id"], prefix)]
+    while stack:
+        folder_id, path = stack.pop()
+        for child in _list_children(service, folder_id):
+            if child.get("mimeType") == FOLDER_MIME:
+                stack.append((child["id"], path + [child["name"]]))
+                continue
+            if not records.is_pdf(child):
+                stats["records_non_pdf"] += 1
+                continue
+            try:
+                records.ingest_pdf(
+                    service,
+                    child,
+                    path + [child["name"]],
+                    matter,
+                    None,
+                    "Evidence",
+                    dry_run,
+                    stats,
+                )
+            except Exception:
+                stats["records_failed"] += 1
+                logger.exception("Failed to sync key document %s", child.get("name"))
+
+
+def _find_key_folders(service, matter_folder, children, links):
+    """Locate Key Documents folders anywhere inside a matter's folder.
+
+    Walks the folder tree only (never lists files outside the targets),
+    skipping the Notes subtree and linked record folders, which keep their
+    own semantics. Returns [(folder_meta, path_prefix_parts)].
+    """
+    key_name = records.key_folder_name()
+    if not key_name:
+        return []
+    matter_name = matter_folder["name"]
+    found = []
+    stack = [(child, [matter_name]) for child in children]
+    while stack:
+        folder, prefix = stack.pop()
+        name = folder.get("name")
+        if len(prefix) == 1 and name == NOTES_FOLDER_NAME:
+            continue
+        if (matter_name, name) in links and len(prefix) == 1:
+            continue
+        if name == key_name:
+            found.append((folder, prefix + [name]))
+            continue  # nested Key folders inside Key are just subfolders
+        for sub in _list_children(service, folder["id"]):
+            if sub.get("mimeType") == FOLDER_MIME:
+                stack.append((sub, prefix + [name]))
+    return found
+
+
 def bootstrap(service, root_id, matters, links, debug_dir, dry_run=False):
     """Crawl every <root>/<matter>/Notes/** file and upsert Note rows, and
     every linked record folder's PDFs into Record Documents.
@@ -465,6 +523,13 @@ def bootstrap(service, root_id, matters, links, debug_dir, dry_run=False):
                 stats,
             )
 
+        # Key Documents folders (convention-named curated evidence).
+        matter = matters[matter_folder["name"]]
+        for key_folder, prefix in _find_key_folders(
+            service, matter_folder, children, links
+        ):
+            _walk_key_folder(service, key_folder, prefix, matter, dry_run, stats)
+
     # Any synced Note not seen in the crawl is stale. (Notes only — record
     # Documents are append-only by contract.)
     stale = Note.objects.filter(drive_file_id__isnull=False).exclude(
@@ -533,8 +598,29 @@ def _process_change(
             logger.exception("Failed to sync record %s", file_meta.get("name"))
         return
 
+    if records.in_key_scope(parts, matters):
+        if not records.is_pdf(file_meta):
+            stats["records_non_pdf"] += 1
+            return
+        try:
+            records.ingest_pdf(
+                service,
+                file_meta,
+                parts,
+                matters[parts[0]],
+                None,
+                "Evidence",
+                dry_run,
+                stats,
+            )
+        except Exception:
+            stats["records_failed"] += 1
+            logger.exception("Failed to sync key document %s", file_meta.get("name"))
+        return
+
     # Out of every scope; clean up a note we may have been tracking (a
-    # record Document, by contract, stays).
+    # record Document, by contract, stays — dragging a file OUT of Key
+    # Documents likewise leaves its Evidence document in place).
     _remove_note(file_id, debug_dir, dry_run, stats)
 
 

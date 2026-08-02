@@ -1,8 +1,13 @@
-"""Google Drive record-folder mirror (per proceeding).
+"""Google Drive document mirrors: record folders and Key Documents.
 
 PDFs filed in a proceeding's linked record folder (``Proceeding.drive_folder``,
 a subfolder of the matter's Drive folder) sync in as Record ``Document`` rows
 on that matter+proceeding: OCR'd, searchable, highlightable, AI-visible.
+
+PDFs dragged into any folder named per settings.DRIVE_KEY_DOCUMENTS_FOLDER
+("Key Documents") inside a matter's folder sync in the same way as Evidence
+documents with no proceeding — the drag IS the curation gesture, so the
+evidence folder at large stays uningested noise while its keepers flow in.
 
 Contract (deliberately different from the notes mirror):
 - Append-only. Drive-side deletions, trashes and moves NEVER remove a
@@ -23,6 +28,7 @@ import os
 import re
 from datetime import datetime
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.utils import timezone
@@ -91,6 +97,31 @@ def in_record_scope(parts, links):
     return bool(parts) and len(parts) >= 3 and (parts[0], parts[1]) in links
 
 
+def key_folder_name():
+    """The convention folder name for curated evidence ("Key Documents")."""
+    return settings.DRIVE_KEY_DOCUMENTS_FOLDER
+
+
+def in_key_scope(parts, matters):
+    """True when path parts land inside a matter's Key Documents folder.
+
+    Pure convention, no linking: any folder with the configured name, at
+    any depth inside a linked matter's folder (e.g. Evidence/Key
+    Documents), is a curated ingestion point — dragging a PDF in adds it
+    to the app as Evidence. Checked AFTER the notes and record scopes in
+    the dispatch, so a Key Documents folder nested inside those keeps
+    their semantics.
+    """
+    name = key_folder_name()
+    return (
+        bool(name)
+        and bool(parts)
+        and len(parts) >= 3
+        and parts[0] in matters
+        and name in parts[1:-1]
+    )
+
+
 def _created_date(file_meta):
     created = file_meta.get("createdTime") or ""
     try:
@@ -128,7 +159,7 @@ def _meta_size(file_meta):
         return 0
 
 
-def _adopt_candidate(proceeding, name, date, size):
+def _adopt_candidate(matter, name, date, size):
     """A manually-uploaded twin of this Drive file, if one is identifiable.
 
     Deliberately conservative heuristic: same matter, not already
@@ -137,7 +168,7 @@ def _adopt_candidate(proceeding, name, date, size):
     ambiguity or any mismatch creates a new row instead of guessing.
     """
     qs = Document.objects.filter(
-        matter=proceeding.matter,
+        matter=matter,
         drive_file_id__isnull=True,
         name__iexact=name,
         date=date,
@@ -185,8 +216,27 @@ def _queue_ocr(document_id):
 
 
 def ingest_record(service, file_meta, parts, links, dry_run, stats):
-    """Upsert one record PDF as a Document (tombstoned ids are skipped)."""
+    """Upsert one record-folder PDF (Record category, linked proceeding)."""
     proceeding = links[(parts[0], parts[1])]
+    ingest_pdf(
+        service,
+        file_meta,
+        parts,
+        proceeding.matter,
+        proceeding,
+        "Record",
+        dry_run,
+        stats,
+    )
+
+
+def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run, stats):
+    """Upsert one Drive PDF as a Document (tombstoned ids are skipped).
+
+    ``proceeding`` may be None (Key Documents ingest: category Evidence,
+    no proceeding); a proceeding a user has assigned by hand is then never
+    overwritten on refresh.
+    """
     fid = file_meta["id"]
     mtime = file_meta.get("modifiedTime")
     rel_path = "/".join(parts)[:1024]
@@ -198,13 +248,17 @@ def ingest_record(service, file_meta, parts, links, dry_run, stats):
 
     if existing and existing.drive_modified == mtime:
         # Bytes unchanged; refresh provenance if the file merely moved
-        # between linked folders.
-        if not dry_run and (
-            existing.drive_path != rel_path or existing.proceeding_id != proceeding.id
-        ):
+        # between ingestion folders.
+        moved = (
+            existing.drive_path != rel_path
+            or existing.matter_id != matter.id
+            or (proceeding is not None and existing.proceeding_id != proceeding.id)
+        )
+        if not dry_run and moved:
             existing.drive_path = rel_path
-            existing.proceeding = proceeding
-            existing.matter = proceeding.matter
+            existing.matter = matter
+            if proceeding is not None:
+                existing.proceeding = proceeding
             existing.drive_synced_at = timezone.now()
             existing.save(
                 update_fields=[
@@ -227,9 +281,10 @@ def ingest_record(service, file_meta, parts, links, dry_run, stats):
         # A manually-uploaded twin (same name, date and size) adopts the
         # Drive identity instead of becoming a duplicate: provenance is
         # attached, bytes and finished OCR stay as they are.
-        candidate = _adopt_candidate(proceeding, name, date, _meta_size(file_meta))
+        candidate = _adopt_candidate(matter, name, date, _meta_size(file_meta))
         if candidate:
-            candidate.proceeding = proceeding
+            if proceeding is not None:
+                candidate.proceeding = proceeding
             candidate.drive_file_id = fid
             candidate.drive_path = rel_path
             candidate.drive_modified = mtime
@@ -248,8 +303,9 @@ def ingest_record(service, file_meta, parts, links, dry_run, stats):
             default_storage.delete(existing.file.name)
         existing.file.save(f"{existing.pk}.pdf", ContentFile(content), save=False)
         _reset_ocr(existing)
-        existing.proceeding = proceeding
-        existing.matter = proceeding.matter
+        if proceeding is not None:
+            existing.proceeding = proceeding
+        existing.matter = matter
         existing.drive_path = rel_path
         existing.drive_modified = mtime
         existing.drive_synced_at = timezone.now()
@@ -259,9 +315,9 @@ def ingest_record(service, file_meta, parts, links, dry_run, stats):
         return
 
     document = Document(
-        matter=proceeding.matter,
+        matter=matter,
         proceeding=proceeding,
-        category="Record",
+        category=category,
         name=name,
         date=date,
         drive_file_id=fid,
