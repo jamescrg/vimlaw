@@ -92,6 +92,22 @@ def process_ai_request(
         user = User.objects.get(id=user_id)
         conversation = Conversation.objects.get(id=conversation_id)
 
+        # Research-kind conversations run the agentic CourtListener loop
+        # instead; everything below stays the untouched classic path.
+        if conversation.kind == "research":
+            from .research_chat import run_research_request
+
+            return run_research_request(
+                conversation,
+                matter,
+                user,
+                user_message,
+                llm,
+                update_status,
+                is_cancelled,
+                cache_key,
+            )
+
         context_text = assemble_matter_context_with_selection(
             matter,
             user_message=user_message,

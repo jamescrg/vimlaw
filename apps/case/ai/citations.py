@@ -18,6 +18,8 @@ from django.conf import settings
 from eyecite import get_citations
 from eyecite.models import CaseCitation, FullLawCitation
 
+from apps.case.courtlistener_throttle import throttled_request
+
 logger = logging.getLogger(__name__)
 
 # Load Georgia Code mapping for accurate Justia URLs
@@ -259,7 +261,8 @@ def verify_case_citations_batch(text: str, api_token: str) -> list[dict]:
         text = text[:60000]
 
     try:
-        response = requests.post(
+        response = throttled_request(
+            "post",
             "https://www.courtlistener.com/api/rest/v4/citation-lookup/",
             headers={"Authorization": f"Token {api_token}"},
             data={"text": text},

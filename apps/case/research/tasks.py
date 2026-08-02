@@ -6,8 +6,6 @@ import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import requests
-
 from apps.case.ai.gemini_client import send_to_gemini
 from apps.case.courtlistener import (
     API_V4_URL,
@@ -15,6 +13,8 @@ from apps.case.courtlistener import (
     fetch_opinion,
     get_api_token,
 )
+from apps.case.courtlistener_throttle import throttled_request
+from apps.case.research.query_syntax import COURTLISTENER_SYNTAX_RULES
 
 from .courtlistener import (
     count_forward_citations,
@@ -99,40 +99,8 @@ def _refine_query(query_id):
         "not just the keywords from the user's question.\n"
         "- Include the legal terminology courts actually use when addressing this issue.\n"
         "- Think about what holdings, standards, or tests a relevant opinion would contain.\n\n"
-        "CourtListener search syntax (Solr-based):\n"
-        "- AND (or &): intersection (AND is the default between terms)\n"
-        "- OR: union of alternatives\n"
-        "- NOT (or - prefix): exclude terms\n"
-        '- "quoted phrase": exact phrase match, no stemming\n'
-        "- (parentheses): group expressions, may be nested\n"
-        '- "phrase"~N: proximity — words within N words of each other (ONLY after quoted phrases)\n'
-        "- term~: fuzzy match for spelling variations (no number after ~)\n"
-        "- stem*: wildcard prefix matching — matches all words starting with the stem\n"
-        "  Examples: waiv* → waive, waived, waiver; negligen* → negligence, negligent, negligently\n"
-        "  Use wildcards instead of OR-listing inflections of the same word:\n"
-        "  BAD:  (waive OR waived OR waiver OR waiving)\n"
-        "  GOOD: waiv*\n"
-        "  OR groups are still correct for genuinely different terms (e.g. suit OR action)\n"
-        '- "phrase"~N: proximity — words within N words of each other (ONLY after quoted phrases)\n'
-        "- term~: fuzzy match for spelling variations (no number after ~)\n\n"
-        "CRITICAL SYNTAX RULES — violating these causes server errors:\n"
-        "- The ~ operator ONLY works two ways:\n"
-        '  1. "quoted phrase"~N → proximity (OK: "summary judgment"~5)\n'
-        "  2. word~ → fuzzy spelling (OK: negligen~)\n"
-        "- NEVER write word~N (e.g. motion~3) — this is INVALID and will crash the search\n"
-        "- NEVER use ~ between or after bare words for proximity — use quoted phrases instead\n"
-        "- Parentheses MUST be balanced\n"
-        "- Quotes MUST be balanced\n"
-        "- Do NOT use fielded search (e.g. court_id:) — court filtering is handled separately\n"
-        "- Do NOT use range queries [x TO y] — not supported on the full-text search field\n\n"
-        "Guidelines:\n"
-        "- Use stem* wildcards for word inflections instead of OR-listing every form\n"
-        '- Use OR groups for genuinely different terms or phrases (e.g. suit OR action OR "cause of action")\n'
-        "- Use proximity operators on quoted phrases for multi-word concepts\n"
-        "- Group related concepts with parentheses and connect groups with AND\n"
-        "- Keep the query under 3 levels of nesting to avoid complexity issues\n"
-        "- Keep the query concise — 120 characters or fewer\n\n"
-        "Example input: Can a joint tenant with right of survivorship file an "
+        + COURTLISTENER_SYNTAX_RULES
+        + "Example input: Can a joint tenant with right of survivorship file an "
         "equitable partition suit?\n"
         'Example output: ("joint tenancy" OR "joint tenant") '
         'AND "right of survivorship" AND ("equitable partition" OR partition) '
@@ -534,28 +502,35 @@ def _evaluate_full(result, query_text):
         )
 
 
-def _check_negative_history(result):
-    """Quick check for negative treatment in top forward citations."""
-    if not result.cluster_id:
-        return
+def check_negative_treatment(cluster_id, case_name="", citation=""):
+    """Pure negative-treatment check against top forward citations.
 
-    cluster = fetch_cluster(result.cluster_id)
-    if not cluster:
-        return
+    Returns {"checked": bool, "has_negative_treatment": bool, "reason": str}.
+    checked=False means the chain couldn't be evaluated (no cluster/opinion);
+    no forward citations at all counts as checked with no negative treatment.
+    Shared by the research pipeline and the research chat's check_treatment
+    tool.
+    """
+    if not cluster_id:
+        return {"checked": False, "has_negative_treatment": False, "reason": ""}
 
-    sub_opinions = cluster.get("sub_opinions", [])
+    cluster = fetch_cluster(cluster_id)
+    sub_opinions = cluster.get("sub_opinions", []) if cluster else []
     if not sub_opinions:
-        return
+        return {"checked": False, "has_negative_treatment": False, "reason": ""}
 
     try:
         opinion_id = int(sub_opinions[0].rstrip("/").split("/")[-1])
     except (ValueError, IndexError):
-        return
+        return {"checked": False, "has_negative_treatment": False, "reason": ""}
 
     forward_cites = get_forward_citations(opinion_id, limit=3)
     if not forward_cites:
-        ResearchResult.objects.filter(pk=result.id).update(has_negative_history=False)
-        return
+        return {
+            "checked": True,
+            "has_negative_treatment": False,
+            "reason": "No citing opinions found.",
+        }
 
     excerpts = []
     for cite in forward_cites:
@@ -564,8 +539,11 @@ def _check_negative_history(result):
             excerpts.append(citing_opinion.plain_text[:3000])
 
     if not excerpts:
-        ResearchResult.objects.filter(pk=result.id).update(has_negative_history=False)
-        return
+        return {
+            "checked": True,
+            "has_negative_treatment": False,
+            "reason": "Citing opinions could not be read.",
+        }
 
     combined = "\n\n---\n\n".join(
         f"Citing Opinion {i + 1}:\n{e}" for i, e in enumerate(excerpts)
@@ -573,27 +551,40 @@ def _check_negative_history(result):
 
     system_prompt = "You are a legal research assistant. Respond ONLY with valid JSON."
     user_prompt = (
-        f"The following opinions cite {result.case_name} ({result.citation}). "
+        f"The following opinions cite {case_name} ({citation}). "
         f"Do any of them overrule, disapprove, limit, or negatively treat the cited case?\n\n"
         f"{combined}\n\n"
         f'Respond with JSON: {{"has_negative_treatment": true or false, '
         f'"reason": "one sentence explanation"}}'
     )
 
+    response_text, _, _ = send_to_gemini(
+        system_prompt, [{"role": "user", "content": user_prompt}]
+    )
+    cleaned = response_text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+    parsed = json.loads(cleaned)
+    return {
+        "checked": True,
+        "has_negative_treatment": parsed.get("has_negative_treatment", False),
+        "reason": parsed.get("reason", ""),
+    }
+
+
+def _check_negative_history(result):
+    """Quick check for negative treatment in top forward citations."""
     try:
-        response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
-        )
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-        parsed = json.loads(cleaned)
-        has_negative = parsed.get("has_negative_treatment", False)
-        ResearchResult.objects.filter(pk=result.id).update(
-            has_negative_history=has_negative
+        outcome = check_negative_treatment(
+            result.cluster_id, result.case_name, result.citation
         )
     except Exception:
         logger.exception("Error checking negative history for result %s", result.id)
+        return
+    if outcome["checked"]:
+        ResearchResult.objects.filter(pk=result.id).update(
+            has_negative_history=outcome["has_negative_treatment"]
+        )
 
 
 def _process_result(result, query_text):
@@ -982,7 +973,8 @@ def _get_opinion_metadata(opinion_id):
         if not api_token:
             return {}
 
-        response = requests.get(
+        response = throttled_request(
+            "get",
             f"{API_V4_URL}/opinions/{opinion_id}/",
             headers={"Authorization": f"Token {api_token}"},
             timeout=30,
