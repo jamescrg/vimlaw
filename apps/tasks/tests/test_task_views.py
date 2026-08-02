@@ -108,6 +108,25 @@ def test_list_panel_layout(client, user, task, matter):
     assert response.context["panel_layout"] is True
     assert b"tasks-matters-panel" in response.content
     assert b"task-matter-sep" in response.content
+    assert b"All Matters" in response.content
+    assert b"Admin Tasks" in response.content
+
+
+def test_panel_tab_users(client, user, task):
+    user.tasks_layout = "panel"
+    user.save(update_fields=["tasks_layout"])
+    response = client.post(reverse("tasks:panel-tab", args=["users"]))
+    assert response.status_code == 200
+    assert response.context["panel_tab"] == "users"
+    assert b"All Users" in response.content
+    assert b"All Matters" not in response.content
+
+    response = client.post(reverse("tasks:panel-tab", args=["matters"]))
+    assert response.context["panel_tab"] == "matters"
+    assert b"All Matters" in response.content
+
+    response = client.post(reverse("tasks:panel-tab", args=["bogus"]))
+    assert response.status_code == 404
 
 
 # -----------------------------------------------------

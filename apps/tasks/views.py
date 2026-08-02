@@ -701,6 +701,17 @@ def tasks_filter_matter(request, matter_id):
 
 
 @login_required
+@require_POST
+def tasks_panel_tab(request, tab):
+    """Switch the matters panel between its Matters and Users tabs."""
+    if tab not in ("matters", "users"):
+        raise Http404("Unknown panel tab")
+    request.session["tasks_panel_tab"] = tab
+    request.session.modified = True
+    return _render_tasks(request)
+
+
+@login_required
 def tasks_filter_matter_admin(request):
     """Filter to matterless ("Admin") tasks, from the matters panel."""
     filter_data = request.session.get("tasks_filter", {})

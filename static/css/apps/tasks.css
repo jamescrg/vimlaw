@@ -312,7 +312,7 @@ tr > td.importance.complete .button-link {
 .tasks-split {
   align-items: flex-start;
   display: flex;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .tasks-split .table-container {
@@ -334,6 +334,46 @@ tr > td.importance.complete .button-link {
   top: 1rem;
 }
 
+/* Matters / Users sub nav, styled as the panel's header row (th). Sticky so
+   the tabs stay reachable while the panel scrolls. */
+.tasks-panel-tabs {
+  border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
+  display: flex;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.tasks-panel-tab {
+  background: var(--background-th);
+  border: none;
+  border-bottom: solid 1px var(--border-medium);
+  color: var(--color-muted);
+  cursor: pointer;
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+  text-align: center;
+}
+
+.tasks-panel-tab:first-child {
+  border-right: solid 1px var(--border-medium);
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.tasks-panel-tab:last-child {
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
+/* The active tab joins the list below: cell background, no dividing border. */
+.tasks-panel-tab.active {
+  background: var(--background-td);
+  border-bottom-color: transparent;
+  color: var(--color-primary);
+}
+
 /* Same spacing and borders as table cells (td). flex-shrink: 0 because the
    panel is a max-height flex column — shrinkable items would compress and
    overlap once the matter list outgrows the viewport. */
@@ -347,11 +387,6 @@ tr > td.importance.complete .button-link {
   padding: 0.625rem 1rem;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.tasks-panel-item:first-child {
-  border-top-left-radius: calc(var(--radius-md) - 1px);
-  border-top-right-radius: calc(var(--radius-md) - 1px);
 }
 
 .tasks-panel-item:last-child {

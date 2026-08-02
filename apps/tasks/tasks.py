@@ -210,6 +210,7 @@ def get_list_data(request):
     # the matter dimension is a visible first-class control, so it stops
     # counting toward the Filter button's "custom filter" signal.
     panel_layout = request.user.tasks_layout == "panel"
+    panel_tab = request.session.get("tasks_panel_tab", "matters")
     no_matter = filter_data.get("no_matter") in ("true", True)
 
     list_data = {
@@ -236,6 +237,7 @@ def get_list_data(request):
         # Date, user, and importance have their own toolbar dropdowns (date
         # covers date_due via "Custom range" too) so they're excluded here.
         "panel_layout": panel_layout,
+        "panel_tab": panel_tab,
         "no_matter": no_matter,
         "custom_filter_active": bool(filter_data)
         and any(

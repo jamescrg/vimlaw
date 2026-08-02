@@ -36,6 +36,7 @@ from apps.tasks.views import (
     tasks_index,
     tasks_list,
     tasks_matter,
+    tasks_panel_tab,
     tasks_select,
     tasks_select_all,
     tasks_set_status,
@@ -113,6 +114,7 @@ urlpatterns = [
         tasks_filter_matter_admin,
         name="filter-matter-admin",
     ),
+    path("tasks/panel-tab/<str:tab>/", tasks_panel_tab, name="panel-tab"),
     path(
         "tasks/filter/user/<int:user_id>/",
         tasks_filter_user,
