@@ -139,6 +139,8 @@ def test_panel_tab_dates(client, user, task):
     assert b"Next Week" in response.content
     # The toolbar's date dropdown yields to the Due tab in panel mode.
     assert b"tasks-date-filter" not in response.content
+    # Only the Due tab may render as selected.
+    assert response.content.count(b"tasks-panel-tab active") == 1
 
 
 # -----------------------------------------------------

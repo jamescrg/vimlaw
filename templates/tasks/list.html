@@ -4,7 +4,7 @@
     <nav class="tasks-matters-panel">
       <div class="tasks-panel-tabs">
         <button type="button"
-                class="tasks-panel-tab {% if panel_tab != 'users' %}active{% endif %}"
+                class="tasks-panel-tab {% if panel_tab == 'matters' %}active{% endif %}"
                 hx-post="{% url 'tasks:panel-tab' 'matters' %}"
                 hx-target="#tasks">Matters</button>
         <button type="button"
