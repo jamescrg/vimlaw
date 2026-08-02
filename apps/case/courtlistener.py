@@ -12,6 +12,8 @@ from typing import Optional
 import requests
 from django.conf import settings
 
+from apps.case.courtlistener_throttle import throttled_request
+
 logger = logging.getLogger(__name__)
 
 COURTLISTENER_BASE_URL = "https://www.courtlistener.com"
@@ -66,7 +68,8 @@ def lookup_citation(citation_text: str) -> CaseLookupResult:
         return CaseLookupResult(found=False, error="No API token configured")
 
     try:
-        response = requests.post(
+        response = throttled_request(
+            "post",
             f"{API_V4_URL}/citation-lookup/",
             headers={"Authorization": f"Token {api_token}"},
             data={"text": citation_text},
@@ -134,7 +137,8 @@ def fetch_cluster(cluster_id: int) -> dict:
         return {}
 
     try:
-        response = requests.get(
+        response = throttled_request(
+            "get",
             f"{API_V4_URL}/clusters/{cluster_id}/",
             headers={"Authorization": f"Token {api_token}"},
             timeout=30,
@@ -170,7 +174,8 @@ def fetch_opinion(opinion_id: int) -> OpinionResult:
         return OpinionResult(found=False, error="No API token configured")
 
     try:
-        response = requests.get(
+        response = throttled_request(
+            "get",
             f"{API_V4_URL}/opinions/{opinion_id}/",
             headers={"Authorization": f"Token {api_token}"},
             timeout=60,  # Opinions can be large

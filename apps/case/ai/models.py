@@ -20,6 +20,20 @@ class Conversation(AuditMixin, models.Model):
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
     ]
 
+    # Chat styles: "classic" is the original single-completion chat;
+    # "research" runs an agentic CourtListener tool loop (searches, reads
+    # opinions, cites only what it retrieved). Classic stays untouched as
+    # the fallback while research proves itself.
+    KIND_CHOICES = [
+        ("classic", "Classic"),
+        ("research", "Research"),
+    ]
+    DEPTH_CHOICES = [
+        ("quick", "Quick"),
+        ("standard", "Standard"),
+        ("deep", "Deep"),
+    ]
+
     # A conversation belongs to exactly one of: a matter (case chat), an
     # intake (intake chat), or an agenda user (the dash agenda chat).
     # Intake and agenda conversations are ephemeral: at most one live per
@@ -66,6 +80,12 @@ class Conversation(AuditMixin, models.Model):
         blank=True,
         null=True,
         help_text="AI-generated summary for intelligent context selection",
+    )
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default="classic")
+    # Research-kind only: how extensive the case-law research runs (tool
+    # call budget; deep also plans before searching).
+    research_depth = models.CharField(
+        max_length=10, choices=DEPTH_CHOICES, default="standard"
     )
     vet_citations = models.BooleanField(
         default=True,
@@ -130,6 +150,10 @@ class Message(AuditMixin, models.Model):
 
     # Verified citations for assistant messages
     verified_citations = models.JSONField(default=list, blank=True)
+
+    # Research-kind assistant messages: the research trail (plan, searches,
+    # opinions read, treatment checks) rendered as a collapsible section.
+    research_trail = models.JSONField(default=list, blank=True)
 
     history = HistoricalRecords()
 

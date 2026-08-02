@@ -5,6 +5,7 @@ import logging
 import requests
 
 from apps.case.courtlistener import API_V4_URL, get_api_token
+from apps.case.courtlistener_throttle import throttled_request
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,8 @@ def get_forward_citations(opinion_id, limit=5):
         return []
 
     try:
-        response = requests.get(
+        response = throttled_request(
+            "get",
             f"{API_V4_URL}/opinions-cited/",
             headers={"Authorization": f"Token {api_token}"},
             params={
@@ -69,7 +71,8 @@ def count_forward_citations(opinion_id):
         return None
 
     try:
-        response = requests.get(
+        response = throttled_request(
+            "get",
             f"{API_V4_URL}/opinions-cited/",
             headers={"Authorization": f"Token {api_token}"},
             params={
@@ -115,7 +118,8 @@ def search_opinions(query, court="", limit=5):
         params["court"] = court
 
     try:
-        response = requests.get(
+        response = throttled_request(
+            "get",
             f"{API_V4_URL}/search/",
             headers={"Authorization": f"Token {api_token}"},
             params=params,

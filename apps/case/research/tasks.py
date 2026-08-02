@@ -6,8 +6,6 @@ import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import requests
-
 from apps.case.ai.gemini_client import send_to_gemini
 from apps.case.courtlistener import (
     API_V4_URL,
@@ -15,6 +13,7 @@ from apps.case.courtlistener import (
     fetch_opinion,
     get_api_token,
 )
+from apps.case.courtlistener_throttle import throttled_request
 
 from .courtlistener import (
     count_forward_citations,
@@ -982,7 +981,8 @@ def _get_opinion_metadata(opinion_id):
         if not api_token:
             return {}
 
-        response = requests.get(
+        response = throttled_request(
+            "get",
             f"{API_V4_URL}/opinions/{opinion_id}/",
             headers={"Authorization": f"Token {api_token}"},
             timeout=30,
