@@ -2058,19 +2058,25 @@
   text-align: center;
 }
 
-/* Research chat: new-conversation style options, header badge, trail. */
+/* Research chat: new-conversation style options, header badge, trail.
+   The options share one grid (radio | name | description) so the name and
+   description columns align across rows; display: contents lifts each
+   label's children into it while keeping the label's click-to-select. */
 .ai-kind-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: baseline;
+  display: grid;
+  gap: 0.5rem 0.75rem;
+  grid-template-columns: auto auto 1fr;
 }
 
 .ai-kind-option {
-  align-items: baseline;
+  display: contents;
+}
+
+.ai-kind-option input[type="radio"],
+.ai-kind-option .ai-kind-name,
+.ai-kind-option .detail-text {
   cursor: pointer;
-  display: grid;
-  gap: 0.25rem 0.5rem;
-  grid-template-columns: auto auto 1fr;
 }
 
 .ai-kind-option input[type="radio"] {
