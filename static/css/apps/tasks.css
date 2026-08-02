@@ -334,12 +334,15 @@ tr > td.importance.complete .button-link {
   top: 1rem;
 }
 
-/* Same spacing and borders as table cells (td). */
+/* Same spacing and borders as table cells (td). flex-shrink: 0 because the
+   panel is a max-height flex column — shrinkable items would compress and
+   overlap once the matter list outgrows the viewport. */
 .tasks-panel-item {
   background: var(--background-td);
   border-bottom: solid 1px var(--border-medium);
-  color: var(--color-primary);
+  color: var(--link);
   display: block;
+  flex-shrink: 0;
   overflow: hidden;
   padding: 0.625rem 1rem;
   text-overflow: ellipsis;
@@ -359,6 +362,7 @@ tr > td.importance.complete .button-link {
 
 .tasks-panel-item:hover {
   background: var(--background-control);
+  color: var(--link-hover);
 }
 
 .tasks-panel-item.active {
