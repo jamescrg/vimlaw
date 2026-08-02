@@ -2071,7 +2071,9 @@
   grid-template-columns: auto auto 1fr;
 }
 
-.ai-kind-option {
+/* Outranks forms.css's `.form-compact .form-group label { display: block }`,
+   which otherwise turns the labels into side-by-side grid items. */
+.form-group .ai-kind-options .ai-kind-option {
   display: contents;
 }
 
