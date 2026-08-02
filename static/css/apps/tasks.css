@@ -320,25 +320,41 @@ tr > td.importance.complete .button-link {
   min-width: 0;
 }
 
+/* Framed and filled like .table; items are styled as its cells. */
 .tasks-matters-panel {
+  background: var(--background-body);
+  border: solid 1px var(--border-medium);
+  border-radius: var(--radius-md);
   display: flex;
-  flex: 0 0 14rem;
+  flex: 0 0 16rem;
   flex-direction: column;
-  gap: 0.25rem;
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
   position: sticky;
   top: 1rem;
 }
 
+/* Same spacing and borders as table cells (td). */
 .tasks-panel-item {
-  border-radius: var(--radius-sm);
+  background: var(--background-td);
+  border-bottom: solid 1px var(--border-medium);
   color: var(--color-primary);
   display: block;
   overflow: hidden;
-  padding: 0.25rem 0.75rem;
+  padding: 0.625rem 1rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tasks-panel-item:first-child {
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
+.tasks-panel-item:last-child {
+  border-bottom: none;
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
 }
 
 .tasks-panel-item:hover {
@@ -348,11 +364,6 @@ tr > td.importance.complete .button-link {
 .tasks-panel-item.active {
   background: var(--selected-background);
   color: var(--selected-color);
-}
-
-/* Set All + Admin apart from the matter list below them. */
-.tasks-panel-admin {
-  margin-bottom: 0.75rem;
 }
 
 /* Inline matter prefix in the description cell. */
