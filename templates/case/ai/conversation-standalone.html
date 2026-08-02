@@ -81,7 +81,11 @@
           {% else %}
             <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
           {% endif %}
-          {% include "case/ai/vet-citations-pill.html" with conversation=conversation %}
+          {% comment %}
+            The vet-citations toggle was removed from the header: vetting
+            defaults on and nobody ever turned it off. The backend flag,
+            set view and pill template remain if it's ever wanted back.
+          {% endcomment %}
         </header>
         <div class="ai-chat-scroll">
           {% if conversation.summary %}
