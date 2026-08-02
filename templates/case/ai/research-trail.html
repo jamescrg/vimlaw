@@ -1,0 +1,83 @@
+{% comment %}
+Collapsible research trail under a research-chat answer: the plan, every
+search (query + hits), every opinion read (linked to the cluster viewer),
+and treatment checks. Data is Message.research_trail (list of events).
+{% endcomment %}
+<details class="ai-research-trail">
+  <summary>
+    <i class="icon-scale"></i>
+    Research trail ({{ message.research_trail|length }} step{{ message.research_trail|length|pluralize }})
+  </summary>
+  <ol class="ai-research-steps">
+    {% for event in message.research_trail %}
+      {% if event.type == "search" %}
+        <li class="ai-research-step">
+          <i class="icon-search"></i>
+          <div>
+            Searched <code>{{ event.query }}</code>
+            {% if event.court_ids %}<span class="detail-text">(courts: {{ event.court_ids }})</span>{% endif %}
+            <span class="detail-text">{{ event.result_count }} result{{ event.result_count|pluralize }}</span>
+            {% if event.results %}
+              <div class="ai-research-hits">
+                {% for hit in event.results %}
+                  <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id hit.cluster_id %}"
+                     target="_blank">{{ hit.case_name }}</a>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </li>
+      {% elif event.type == "read" %}
+        <li class="ai-research-step">
+          <i class="icon-book-open"></i>
+          <div>
+            Read
+            <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id event.cluster_id %}"
+               target="_blank">{{ event.case_name|default:event.cluster_id }}</a>
+            {% if event.citation %}<span class="detail-text">{{ event.citation }}</span>{% endif %}
+            {% if event.cached %}<span class="detail-text">(from earlier read)</span>{% endif %}
+          </div>
+        </li>
+      {% elif event.type == "treatment" %}
+        <li class="ai-research-step">
+          {% if event.has_negative_treatment %}
+            <i class="icon-alert-triangle"></i>
+          {% else %}
+            <i class="icon-shield-check"></i>
+          {% endif %}
+          <div>
+            Treatment check: {{ event.case_name|default:event.cluster_id }}
+            <span class="detail-text">
+              {% if not event.checked %}
+                could not be evaluated
+              {% elif event.has_negative_treatment %}
+                negative treatment: {{ event.reason }}
+              {% else %}
+                no negative treatment found
+              {% endif %}
+            </span>
+          </div>
+        </li>
+      {% elif event.type == "saved" %}
+        <li class="ai-research-step">
+          <i class="icon-bookmark"></i>
+          <div>Reviewed {{ event.count }} saved case{{ event.count|pluralize }} on this matter</div>
+        </li>
+      {% elif event.type == "grounding" and event.ungrounded_clusters %}
+        <li class="ai-research-step">
+          <i class="icon-alert-triangle"></i>
+          <div>
+            Warning: cited cluster{{ event.ungrounded_clusters|length|pluralize }}
+            {{ event.ungrounded_clusters|join:", " }} without retrieving
+            {% if event.ungrounded_clusters|length == 1 %}
+              it
+            {% else %}
+              them
+            {% endif %}
+            first.
+          </div>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ol>
+</details>

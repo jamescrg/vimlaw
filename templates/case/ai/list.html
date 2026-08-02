@@ -180,7 +180,10 @@
             </ul>
           </div>
         </td>
-        <td class="llm">{{ conv.get_llm_display }}</td>
+        <td class="llm">
+          {{ conv.get_llm_display }}
+          {% if conv.kind == "research" %}<span class="app-badge ai-research-badge">Research</span>{% endif %}
+        </td>
         <td class="messages">{{ conv.messages.count }}</td>
         <td class="participants">
           {% with participants=conv.get_participants %}

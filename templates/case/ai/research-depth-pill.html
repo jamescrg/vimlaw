@@ -1,0 +1,53 @@
+{% comment %}
+Research depth pill (research-kind conversations only). Cycles
+quick -> standard -> deep -> quick on click, mirroring the vet-citations
+pill's unsaved-preview / saved-toggle split.
+{% endcomment %}
+{% if not conversation.id %}
+  <span class="app-badge badge-lg ai-research-depth-pill"
+        title="Research depth: {{ conversation.get_research_depth_display }}. Send your first message to be able to change it.">
+    <i class="icon-search"></i>
+    Depth: {{ conversation.get_research_depth_display }}
+  </span>
+{% else %}
+  {% if conversation.research_depth == "quick" %}
+    {% with next_level="standard" %}
+      <button type="button"
+              id="researchDepthPill"
+              class="app-badge badge-lg ai-research-depth-pill"
+              hx-post="{% url 'case:ai-set-research-depth' conversation.id next_level %}"
+              hx-target="#researchDepthPill"
+              hx-swap="outerHTML"
+              title="Quick: a few searches, snippets only. Click for Standard.">
+        <i class="icon-search"></i>
+        Depth: Quick
+      </button>
+    {% endwith %}
+  {% elif conversation.research_depth == "deep" %}
+    {% with next_level="quick" %}
+      <button type="button"
+              id="researchDepthPill"
+              class="app-badge badge-lg ai-research-depth-pill"
+              hx-post="{% url 'case:ai-set-research-depth' conversation.id next_level %}"
+              hx-target="#researchDepthPill"
+              hx-swap="outerHTML"
+              title="Deep: plans first, many searches, reads and treatment-checks every authority. Click for Quick.">
+        <i class="icon-search"></i>
+        Depth: Deep
+      </button>
+    {% endwith %}
+  {% else %}
+    {% with next_level="deep" %}
+      <button type="button"
+              id="researchDepthPill"
+              class="app-badge badge-lg ai-research-depth-pill"
+              hx-post="{% url 'case:ai-set-research-depth' conversation.id next_level %}"
+              hx-target="#researchDepthPill"
+              hx-swap="outerHTML"
+              title="Standard: iterative searches, reads the leading opinions. Click for Deep.">
+        <i class="icon-search"></i>
+        Depth: Standard
+      </button>
+    {% endwith %}
+  {% endif %}
+{% endif %}

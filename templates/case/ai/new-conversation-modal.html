@@ -20,6 +20,38 @@
                  required
                  autofocus>
         </div>
+        <div class="form-group">
+          <label>Chat style</label>
+          <div class="ai-kind-options">
+            <label class="ai-kind-option">
+              <input type="radio"
+                     name="kind"
+                     value="classic"
+                     {% if default_kind != "research" %}checked{% endif %}
+                     onchange="document.getElementById('research-depth-group').classList.add('hide')">
+              <span>Classic</span>
+              <span class="detail-text">Answers from the case file and the model's knowledge.</span>
+            </label>
+            <label class="ai-kind-option">
+              <input type="radio"
+                     name="kind"
+                     value="research"
+                     {% if default_kind == "research" %}checked{% endif %}
+                     onchange="document.getElementById('research-depth-group').classList.remove('hide')">
+              <span>Research</span>
+              <span class="detail-text">Actively searches CourtListener, reads opinions, and cites only what it retrieved.</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group {% if default_kind != 'research' %}hide{% endif %}"
+             id="research-depth-group">
+          <label for="new-conversation-depth">Search depth</label>
+          <select id="new-conversation-depth">
+            <option value="quick">Quick</option>
+            <option value="standard" selected>Standard</option>
+            <option value="deep">Deep</option>
+          </select>
+        </div>
       </form>
     </div>
     <div class="modal-footer">
@@ -41,7 +73,9 @@
     }
     const baseUrl = '{% url "case:ai-new-conversation-view" matter.id %}';
     const llm = '{{ llm }}';
-    const url = `${baseUrl}?llm=${encodeURIComponent(llm)}&title=${encodeURIComponent(title)}`;
+    const kind = document.querySelector('input[name="kind"]:checked').value;
+    const depth = document.getElementById('new-conversation-depth').value;
+    const url = `${baseUrl}?llm=${encodeURIComponent(llm)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}&depth=${encodeURIComponent(depth)}`;
     window.open(url, '_blank');
     window.dispatchEvent(new CustomEvent('close-modal'));
     return false;

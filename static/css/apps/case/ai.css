@@ -2057,3 +2057,73 @@
   margin: auto;
   text-align: center;
 }
+
+/* Research chat: new-conversation style options, header badge, trail. */
+.ai-kind-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-kind-option {
+  align-items: baseline;
+  cursor: pointer;
+  display: grid;
+  gap: 0.25rem 0.5rem;
+  grid-template-columns: auto auto 1fr;
+}
+
+.ai-kind-option input[type="radio"] {
+  width: auto;
+}
+
+.ai-research-badge {
+  background: var(--selected-background);
+}
+
+.ai-research-trail {
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+}
+
+.ai-research-trail summary {
+  align-items: center;
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.ai-research-steps {
+  border-top: 1px solid var(--border-medium);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem;
+}
+
+.ai-research-step {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ai-research-step > i {
+  color: var(--color-muted);
+  margin-top: 0.25rem;
+}
+
+.ai-research-step .detail-text {
+  color: var(--color-muted);
+  margin-left: 0.5rem;
+}
+
+.ai-research-hits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.25rem;
+}

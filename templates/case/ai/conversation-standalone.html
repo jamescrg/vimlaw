@@ -77,6 +77,14 @@
           <span class="app-badge badge-purple">{{ matter.name }}</span>
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
           <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
+          {% if conversation.kind == "research" %}
+            <span class="app-badge badge-lg ai-research-badge"
+                  title="Research chat: actively searches CourtListener and cites only retrieved opinions.">
+              <i class="icon-scale"></i>
+              Research
+            </span>
+            {% include "case/ai/research-depth-pill.html" with conversation=conversation %}
+          {% endif %}
           {% include "case/ai/vet-citations-pill.html" with conversation=conversation %}
         </header>
         <div class="ai-chat-scroll">
@@ -104,6 +112,10 @@
                      id="conversationId"
                      value="{% if not is_new %}{{ conversation.id }}{% endif %}">
               <input type="hidden" name="llm" value="{{ conversation.llm }}">
+              <input type="hidden" name="kind" value="{{ conversation.kind }}">
+              <input type="hidden"
+                     name="research_depth"
+                     value="{{ conversation.research_depth }}">
               <input type="hidden"
                      name="title"
                      id="conversationTitleInput"

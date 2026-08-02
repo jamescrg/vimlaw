@@ -1053,6 +1053,11 @@ urlpatterns = [
         name="ai-set-ai-context",
     ),
     path(
+        "case/ai/conversations/<int:conv_id>/research-depth/<str:level>/",
+        ai.set_research_depth,
+        name="ai-set-research-depth",
+    ),
+    path(
         "case/ai/conversations/<int:conv_id>/vet-citations/<str:state>/",
         ai.set_vet_citations,
         name="ai-set-vet-citations",

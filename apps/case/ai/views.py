@@ -256,6 +256,16 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
+    # Chat style (classic vs research) + research depth, remembered per
+    # session like the model choice.
+    kind = request.GET.get("kind", "classic")
+    if kind not in dict(Conversation.KIND_CHOICES):
+        kind = "classic"
+    depth = request.GET.get("depth", "standard")
+    if depth not in dict(Conversation.DEPTH_CHOICES):
+        depth = "standard"
+    request.session["ai_new_chat_kind"] = kind
+
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
     # the display title; otherwise show the legacy "New Conversation" placeholder.
@@ -263,6 +273,8 @@ def new_conversation_view(request, matter_id):
         matter=matter,
         title=provided_title or "New Conversation",
         llm=llm,
+        kind=kind,
+        research_depth=depth,
     )
 
     context = {
@@ -288,7 +300,11 @@ def new_conversation_prompt(request, matter_id):
     return render(
         request,
         "case/ai/new-conversation-modal.html",
-        {"matter": matter, "llm": llm},
+        {
+            "matter": matter,
+            "llm": llm,
+            "default_kind": request.session.get("ai_new_chat_kind", "classic"),
+        },
     )
 
 
@@ -361,8 +377,19 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
+        kind = request.POST.get("kind", "classic")
+        if kind not in dict(Conversation.KIND_CHOICES):
+            kind = "classic"
+        research_depth = request.POST.get("research_depth", "standard")
+        if research_depth not in dict(Conversation.DEPTH_CHOICES):
+            research_depth = "standard"
         conversation = Conversation.objects.create(
-            matter=matter, title=title, llm=llm, user=request.user
+            matter=matter,
+            title=title,
+            llm=llm,
+            user=request.user,
+            kind=kind,
+            research_depth=research_depth,
         )
         is_new = True
 
@@ -834,6 +861,27 @@ def set_vet_citations(request, conv_id, state):
     return render(
         request,
         "case/ai/vet-citations-pill.html",
+        {"conversation": conversation},
+    )
+
+
+@login_required
+@require_POST
+def set_research_depth(request, conv_id, level):
+    """Set a research conversation's search depth (quick/standard/deep)."""
+    if level not in dict(Conversation.DEPTH_CHOICES):
+        return HttpResponse(status=400)
+
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter__in=get_accessible_matters()
+    )
+
+    conversation.research_depth = level
+    conversation.save(update_fields=["research_depth"])
+
+    return render(
+        request,
+        "case/ai/research-depth-pill.html",
         {"conversation": conversation},
     )
 
