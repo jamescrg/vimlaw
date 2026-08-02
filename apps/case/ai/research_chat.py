@@ -27,9 +27,24 @@ logger = logging.getLogger(__name__)
 CLUSTER_MARKER_RE = re.compile(r"\s*\[cluster:(\d+)\]")
 
 PROMPT_ROLE = (
-    "RESEARCH MODE. You are a careful legal research associate with live "
-    "access to the CourtListener opinion database through tools. Follow "
-    "this protocol in order:\n\n"
+    "RESEARCH MODE. You are a skilled legal research associate with live "
+    "access to the CourtListener opinion database through tools. This is "
+    "a research dialogue: adapt your method to what the attorney is "
+    "actually asking. FIRST classify the request and announce your "
+    "approach in one line:\n\n"
+    "- NEW QUESTION -> run the SURVEY protocol below.\n"
+    "- FOLLOW-UP on research earlier in this conversation -> do NOT "
+    "restart the survey. Build on the authorities already found above; "
+    "apply the attorney's adjustment directly (broaden the net, add "
+    "their terms, shift jurisdiction, chase a thread), run the adjusted "
+    "searches, and report what changed.\n"
+    "- SPECIFIC CASE question (a named case or citation) -> locate it "
+    "precisely (lookup_citation for a citation, quoted-name "
+    "search_caselaw otherwise), read it, and answer the question about "
+    "it. No survey.\n"
+    "- ELABORATION on a case already discussed -> re-read as needed "
+    "(re-reads are free) and go deeper on just that case.\n\n"
+    "SURVEY protocol (new questions):\n"
     "1. STRATEGY (one short paragraph): the legal issue(s), the "
     "controlling jurisdiction, and the doctrinal search terms you will "
     "start from.\n"
@@ -38,9 +53,9 @@ PROMPT_ROLE = (
     'doctrine phrase like "boundary by agreement" AND acquiescence). '
     "Discover the law from the database. Do NOT open by searching for "
     "case names or citations you already believe exist — your memory is "
-    "not a source; searching for a specific case is allowed ONLY after "
-    "prior tool results (a search hit, saved case law, or a case cited "
-    "inside an opinion you read) have surfaced it.\n"
+    "not a source; a specific-case search is allowed ONLY after prior "
+    "tool results (a search hit, saved case law, or a citation inside "
+    "an opinion you read) have surfaced it.\n"
     "3. ADJUST SCOPE: if a search returns few or off-point results, "
     "widen it (drop the least essential term, add OR synonyms, use "
     "stem* wildcards). If it returns many scattered results, narrow it "
@@ -56,6 +71,13 @@ PROMPT_ROLE = (
     "so in a few words.\n"
     "6. ANSWER concisely. No lengthy case summaries: the attorney will "
     "ask for elaboration on specific cases if wanted.\n\n"
+    "CITATION CHASING (all protocols): opinions you read cite the "
+    "authorities they rely on. When an on-point opinion rests its rule "
+    "on earlier cases, run down the one or two most load-bearing "
+    "citations (lookup_citation with the reporter citation from the "
+    "text, then read_opinion) — the seminal rule case is often one hop "
+    "behind the case you found. Boolean search is only the entry point; "
+    "the citation network is where thorough research happens.\n\n"
     "Check list_saved_caselaw before searching so prior research is "
     "reused. Prefer the matter's jurisdiction; broaden only when its law "
     "is sparse.\n\n"
@@ -201,36 +223,54 @@ def run_research_request(
 
     # Live research log: concise one-liners accumulated in the status
     # payload so the whole run stays visible in the conversation while it
-    # works (the one-line status alone loses history between polls). The
-    # persisted trail takes over once the answer lands.
+    # works. IMPORTANT: every status write in this function must go through
+    # set_status below — the classic update_status closure writes a fresh
+    # payload dict, which would wipe research_log out of the cache between
+    # tool results (the original "vanishing log" bug: planning-text updates
+    # fire per streamed chunk and kept erasing it).
     log_lines = []
 
-    def push_log(line):
-        log_lines.append(line)
+    def set_status(status, message):
         current = cache.get(cache_key, {})
-        if current.get("status") not in ("cancelled", None):
-            current["research_log"] = log_lines[-40:]
-            cache.set(cache_key, current, timeout=600)
+        if current.get("status") == "cancelled":
+            return
+        cache.set(
+            cache_key,
+            {
+                "status": status,
+                "message": message,
+                "started_at": current.get("started_at", time.time()),
+                "research_log": log_lines[-40:],
+            },
+            timeout=600,
+        )
+
+    def push_log(line, status=None, message=None):
+        log_lines.append(line)
+        set_status(status or "searching", message or line)
 
     def on_activity(kind, payload):
         if kind == "tool_call":
             name = payload.get("name", "")
             tool_input = payload.get("input") or {}
             if name == "search_caselaw":
-                update_status(
-                    "searching", f"Searching: `{tool_input.get('query', '')}`"
+                set_status("searching", f"Searching: `{tool_input.get('query', '')}`")
+            elif name == "lookup_citation":
+                set_status(
+                    "searching",
+                    f"Looking up citation {tool_input.get('citation', '')}...",
                 )
             elif name == "read_opinion":
-                update_status(
+                set_status(
                     "reading", f"Reading opinion {tool_input.get('cluster_id', '')}..."
                 )
             elif name == "check_treatment":
-                update_status(
+                set_status(
                     "reading",
                     f"Checking treatment of {tool_input.get('cluster_id', '')}...",
                 )
             else:
-                update_status("searching", "Reviewing saved case law...")
+                set_status("searching", "Reviewing saved case law...")
         elif kind == "tool_result":
             event = payload
             etype = event.get("type")
@@ -250,14 +290,20 @@ def run_research_request(
                     else "no negative treatment"
                 )
                 push_log(f"Treatment check *{name}*: {verdict}")
+            elif etype == "lookup":
+                name = event.get("case_name") or event.get("citation")
+                if event.get("found"):
+                    push_log(f"Located *{name}* by citation")
+                else:
+                    push_log(f"Citation {event.get('citation', '')} not found")
             elif etype == "saved":
                 push_log(f"Reviewed saved case law ({event.get('count', 0)})")
         elif kind == "text":
             text = payload.get("text", "")
             if text:
-                update_status("planning", text[-300:])
+                set_status("planning", text[-300:])
 
-    update_status("planning", "Planning research...")
+    set_status("planning", "Planning research...")
     time.sleep(0.2)
     if is_cancelled():
         return
@@ -288,7 +334,7 @@ def run_research_request(
     if is_cancelled():
         return
 
-    update_status("verifying", "Verifying citations...")
+    set_status("verifying", "Verifying citations...")
     try:
         citations_data = citations_to_dict(verify_all_citations(response_text))
     except Exception:

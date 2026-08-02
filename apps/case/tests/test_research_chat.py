@@ -401,7 +401,10 @@ def test_run_research_request_payload(matter, user, monkeypatch):
     assert payload["response"] == "Answer."
     assert payload["research_trail"][-1]["type"] == "grounding"
     assert payload["research_trail"][0]["cluster_id"] == 101
-    assert ("searching", "Searching: `q1`") in statuses
+    # The passed-in classic closure only handles the initial context status;
+    # research statuses go through the worker's atomic writer (which always
+    # carries the log — see test_research_log_survives_status_updates).
+    assert statuses == [("context", "Building context...")]
     # The live log accumulated concise lines during the run.
     assert "Searched `q1` (3 hits)" in payload["research_log"]
     assert "Read *Smith*" in payload["research_log"]
@@ -590,3 +593,68 @@ def test_gemini_loop_echoes_received_parts_verbatim(monkeypatch):
     # And the function response follows it.
     response_turn = seen_contents[1][-1]
     assert response_turn.parts[0].function_response.name == "search_caselaw"
+
+
+def test_executor_lookup_citation(matter, fake_cl, monkeypatch):
+    from apps.case.courtlistener import CaseLookupResult
+
+    monkeypatch.setattr(
+        research_tools,
+        "lookup_citation",
+        lambda citation: CaseLookupResult(
+            found=True,
+            case_name="Bradley v. Shelton",
+            citation=citation,
+            court="Supreme Court of Georgia",
+            cluster_id=3405938,
+        ),
+    )
+    execute = make_executor(matter, "standard")
+    result_json, event = execute("lookup_citation", {"citation": "189 Ga. 696"})
+    payload = json.loads(result_json)
+    assert payload["found"] is True
+    assert payload["cluster_id"] == 3405938
+    assert event["type"] == "lookup"
+    assert event["case_name"] == "Bradley v. Shelton"
+
+
+def test_research_log_survives_status_updates(matter, user, monkeypatch):
+    """Every status write during a research run carries the log (the
+    vanishing-log bug: classic update_status wrote fresh payloads that
+    wiped research_log between tool results)."""
+    from django.core.cache import cache
+
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", llm="claude-opus", kind="research", user=user
+    )
+    Message.objects.create(conversation=conversation, role="user", content="q")
+    monkeypatch.setattr(
+        research_chat,
+        "assemble_matter_context_with_selection",
+        lambda *a, **k: "CONTEXT",
+    )
+    monkeypatch.setattr(research_chat, "verify_all_citations", lambda text: [])
+
+    cache_key = f"ai_status_{conversation.id}"
+    cache.set(cache_key, {"status": "starting", "message": "..."}, 600)
+
+    def fake_loop(system, messages, tools, execute_tool, **kwargs):
+        on_activity = kwargs["on_activity"]
+        on_activity("tool_result", {"type": "search", "query": "q1", "result_count": 2})
+        # Streamed planning text used to wipe the log from the cache.
+        on_activity("text", {"text": "thinking about the results"})
+        assert "Searched `q1` (2 hits)" in cache.get(cache_key)["research_log"]
+        return "Answer.", 1, 1, []
+
+    monkeypatch.setattr(research_chat, "send_to_claude_with_tools", fake_loop)
+    research_chat.run_research_request(
+        conversation,
+        matter,
+        user,
+        "q",
+        "claude-opus",
+        lambda s, m: None,
+        lambda: False,
+        cache_key,
+    )
+    assert "Searched `q1` (2 hits)" in cache.get(cache_key)["research_log"]

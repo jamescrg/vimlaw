@@ -22,6 +22,7 @@ from apps.case.courtlistener import (
     fetch_cluster,
     fetch_opinion,
     format_citations_with_year,
+    lookup_citation,
 )
 from apps.case.models import CaseLaw
 from apps.case.research.courtlistener import search_opinions
@@ -118,6 +119,26 @@ def build_tools(depth):
                     }
                 },
                 "required": ["cluster_id"],
+            },
+        },
+        {
+            "name": "lookup_citation",
+            "description": (
+                "Resolve an exact reporter citation (e.g. '148 Ga. 616') to "
+                "its case. Use this to run down authorities cited inside "
+                "opinions you read — the citation network is where thorough "
+                "research happens. Returns the case and its cluster_id for "
+                "read_opinion."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "citation": {
+                        "type": "string",
+                        "description": "The reporter citation exactly as written.",
+                    }
+                },
+                "required": ["citation"],
             },
         },
         {
@@ -282,6 +303,29 @@ def make_executor(matter, depth):
         }
         return outcome, event
 
+    def _lookup(tool_input):
+        citation = str(tool_input.get("citation", "")).strip()
+        result = lookup_citation(citation)
+        payload = {
+            "found": result.found,
+            "case_name": result.case_name,
+            "citation": result.citation or citation,
+            "court": result.court,
+            "date_filed": result.date_filed,
+            "cluster_id": result.cluster_id,
+        }
+        if not result.found:
+            payload["error"] = result.error or "Citation not found."
+        event = {
+            "type": "lookup",
+            "citation": citation,
+            "found": result.found,
+            "case_name": result.case_name,
+            "cluster_id": result.cluster_id,
+            "ts": _now(),
+        }
+        return payload, event
+
     def _saved(tool_input):
         rows = [
             {
@@ -302,6 +346,7 @@ def make_executor(matter, depth):
         "search_caselaw": _search,
         "read_opinion": _read,
         "check_treatment": _treatment,
+        "lookup_citation": _lookup,
         "list_saved_caselaw": _saved,
     }
 

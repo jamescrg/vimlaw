@@ -39,6 +39,20 @@ and treatment checks. Data is Message.research_trail (list of events).
             {% if event.cached %}<span class="detail-text">(from earlier read)</span>{% endif %}
           </div>
         </li>
+      {% elif event.type == "lookup" %}
+        <li class="ai-research-step">
+          <i class="icon-crosshair"></i>
+          <div>
+            Citation lookup <code>{{ event.citation }}</code>
+            {% if event.found %}
+              &rsaquo;
+              <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id event.cluster_id %}"
+                 target="_blank">{{ event.case_name }}</a>
+            {% else %}
+              <span class="detail-text">not found</span>
+            {% endif %}
+          </div>
+        </li>
       {% elif event.type == "treatment" %}
         <li class="ai-research-step">
           {% if event.has_negative_treatment %}
