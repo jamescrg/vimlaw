@@ -323,6 +323,11 @@ def send_to_gemini_with_tools(
     for _turn in range(max_tool_calls + 4):
         text_parts = []
         function_calls = []
+        # Original Part objects, in arrival order, echoed back VERBATIM as
+        # the model turn: Gemini requires the thought_signature that rides
+        # on function_call (and some text) parts, and rebuilding parts by
+        # hand drops it -> 400 INVALID_ARGUMENT on the next turn.
+        echo_parts = []
         turn_input = 0
         turn_output = 0
 
@@ -343,12 +348,14 @@ def send_to_gemini_with_tools(
             for part in chunk.candidates[0].content.parts or []:
                 if part.function_call:
                     function_calls.append(part.function_call)
+                    echo_parts.append(part)
                 elif part.text:
                     if part.thought:
                         if on_activity:
                             on_activity("text", {"text": part.text})
                     else:
                         text_parts.append(part.text)
+                        echo_parts.append(part)
                         if on_activity:
                             on_activity("text", {"text": "".join(text_parts)})
 
@@ -359,12 +366,8 @@ def send_to_gemini_with_tools(
         if not function_calls:
             break
 
-        # Echo the model turn (text + function calls), then answer each
-        # call with a function response part.
-        echo_parts = []
-        if final_text:
-            echo_parts.append(types.Part(text=final_text))
-        echo_parts.extend(types.Part(function_call=fc) for fc in function_calls)
+        # Echo the model turn as received, then answer each call with a
+        # function response part.
         contents.append(types.Content(role="model", parts=echo_parts))
 
         response_parts = []

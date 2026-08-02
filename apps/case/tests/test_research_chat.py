@@ -513,3 +513,70 @@ def test_throttle_never_retries_400(monkeypatch):
     )
     assert throttle.throttled_request("get", "https://x").status_code == 400
     assert len(calls) == 1
+
+
+# --------------------------------------------------------------------------- #
+# Gemini tool loop (scripted fake client)
+# --------------------------------------------------------------------------- #
+def test_gemini_loop_echoes_received_parts_verbatim(monkeypatch):
+    """Gemini requires thought_signature on echoed function_call parts, so
+    the loop must send back the exact Part objects it received, never
+    reconstructions (dropping the signature 400s the next turn)."""
+    from types import SimpleNamespace
+
+    from google.genai import types as genai_types
+
+    from apps.case.ai import gemini_client
+
+    fc = genai_types.FunctionCall(name="search_caselaw", args={"query": "q"})
+    fc_part = genai_types.Part(function_call=fc)
+    final_part = genai_types.Part(text="Answer [cluster:101].")
+
+    def chunk(parts):
+        return SimpleNamespace(
+            usage_metadata=SimpleNamespace(
+                prompt_token_count=10, candidates_token_count=5
+            ),
+            candidates=[SimpleNamespace(content=SimpleNamespace(parts=parts))],
+        )
+
+    script = [[chunk([fc_part])], [chunk([final_part])]]
+    seen_contents = []
+
+    class FakeModels:
+        def generate_content_stream(self, model, contents, config):
+            seen_contents.append(list(contents))
+            return iter(script.pop(0))
+
+    class FakeClient:
+        def __init__(self, api_key=None):
+            self.models = FakeModels()
+
+    monkeypatch.setattr(gemini_client.genai, "Client", FakeClient)
+
+    text, in_tok, out_tok, trail = gemini_client.send_to_gemini_with_tools(
+        "system",
+        [{"role": "user", "content": "question"}],
+        [
+            {
+                "name": "search_caselaw",
+                "description": "d",
+                "input_schema": {"type": "object", "properties": {}},
+            }
+        ],
+        lambda name, tool_input: (
+            json.dumps({"results": []}),
+            {"type": "search", "query": "q"},
+        ),
+    )
+
+    assert text == "Answer [cluster:101]."
+    assert (in_tok, out_tok) == (20, 10)
+    assert trail == [{"type": "search", "query": "q"}]
+
+    # The second request's model turn contains the ORIGINAL part object.
+    model_turn = seen_contents[1][-2]
+    assert model_turn.parts[0] is fc_part
+    # And the function response follows it.
+    response_turn = seen_contents[1][-1]
+    assert response_turn.parts[0].function_response.name == "search_caselaw"
