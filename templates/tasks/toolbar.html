@@ -24,7 +24,6 @@
         </button>
       </div>
     {% else %}
-      {% include "tasks/form-quick.html" %}
       <button hx-get="{% url 'tasks:add' %}" hx-target="#htmx-modal-container">
         <i class="icon-plus"></i>
       </button>
@@ -53,41 +52,45 @@
                 hx-swap="#outerHTML">
           <i class="icon-list-filter"></i>Filter
         </button>
-        <div class="dropdown" x-data="dropdown()">
-          <button type="button"
-                  id="tasks-user-filter"
-                  class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
-                  x-ref="button"
-                  @click="toggle()"
-                  :aria-expanded="open">
-            <span><i class="icon-users with-text"></i>&nbsp;{{ selected_user|default:"All Users" }}</span>
-            <small>
-              <i class="icon-chevron-down"></i>
-            </small>
-          </button>
-          <ul class="dropdown-menu"
-              x-ref="menu"
-              x-show="open"
-              hx-target="#tasks-user-filter"
-              hx-swap="outerHTML">
-            <li>
-              <a class="dropdown-item"
-                 href="#"
-                 hx-post="{% url 'tasks:filter-user' 0 %}"
-                 hx-target="#tasks"
-                 hx-swap="#outerHTML"><i class="icon-users"></i> All Users</a>
-            </li>
-            {% for u in users %}
+        {% comment %} The panel's Users tab covers user filtering; the dropdown
+        stays for the classic layout and the board (no panel there). {% endcomment %}
+        {% if not panel_layout %}
+          <div class="dropdown" x-data="dropdown()">
+            <button type="button"
+                    id="tasks-user-filter"
+                    class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
+                    x-ref="button"
+                    @click="toggle()"
+                    :aria-expanded="open">
+              <span><i class="icon-users with-text"></i>&nbsp;{{ selected_user|default:"All Users" }}</span>
+              <small>
+                <i class="icon-chevron-down"></i>
+              </small>
+            </button>
+            <ul class="dropdown-menu"
+                x-ref="menu"
+                x-show="open"
+                hx-target="#tasks-user-filter"
+                hx-swap="outerHTML">
               <li>
-                <a class="dropdown-item {% if u.id == user_id %}active{% endif %}"
+                <a class="dropdown-item"
                    href="#"
-                   hx-post="{% url 'tasks:filter-user' u.id %}"
+                   hx-post="{% url 'tasks:filter-user' 0 %}"
                    hx-target="#tasks"
-                   hx-swap="#outerHTML"><i class="icon-user"></i> {{ u.username|title }}</a>
+                   hx-swap="#outerHTML"><i class="icon-users"></i> All Users</a>
               </li>
-            {% endfor %}
-          </ul>
-        </div>
+              {% for u in users %}
+                <li>
+                  <a class="dropdown-item {% if u.id == user_id %}active{% endif %}"
+                     href="#"
+                     hx-post="{% url 'tasks:filter-user' u.id %}"
+                     hx-target="#tasks"
+                     hx-swap="#outerHTML"><i class="icon-user"></i> {{ u.username|title }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
         <div class="dropdown" x-data="dropdown()">
           <button type="button"
                   id="tasks-date-filter"
@@ -159,6 +162,7 @@
           </ul>
         </div>
       </div>
+      {% include "tasks/form-quick.html" %}
     {% endif %}
   </div>
 </div>
