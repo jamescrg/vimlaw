@@ -230,11 +230,14 @@ tr > td.importance.complete .button-link {
 }
 
 
-/* Sits after the filter tools and grows into the remaining width, capped. */
+/* Grows into the remaining width up to its cap; the auto margin pairs with
+   the view toggle's so the leftover space splits evenly and the input sits
+   centered between the filter tools and the toggle. */
 .tasks-add-quick-input {
   background: var(--background-light);
   color: var(--color-primary);
   flex: 1 1 auto;
+  margin-left: auto;
   max-width: 30rem;
   min-width: 12rem;
   padding-left: 1rem;
