@@ -326,6 +326,8 @@ def test_apply_grounding_annotates_and_strips():
         "type": "grounding",
         "cited_clusters": [101],
         "ungrounded_clusters": [],
+        # Read but never treatment-checked: flagged.
+        "untreated_clusters": [101],
     }
 
 
@@ -333,6 +335,20 @@ def test_apply_grounding_flags_unretrieved():
     text = "Bogus v. Case [cluster:777]."
     display, cites, event = research_chat.apply_grounding(text, [], [])
     assert event["ungrounded_clusters"] == [777]
+    assert event["untreated_clusters"] == [777]
+
+
+def test_apply_grounding_treatment_satisfied_this_turn_or_prior():
+    text = "A [cluster:1]. B [cluster:2]. C [cluster:3]."
+    trail = [
+        {"type": "read", "cluster_id": 1},
+        {"type": "read", "cluster_id": 2},
+        {"type": "read", "cluster_id": 3},
+        {"type": "treatment", "cluster_id": 1, "checked": True},
+    ]
+    _, _, event = research_chat.apply_grounding(text, [], trail, prior_treated={2})
+    # 1 checked this turn, 2 checked in a prior turn, 3 never.
+    assert event["untreated_clusters"] == [3]
 
 
 # --------------------------------------------------------------------------- #

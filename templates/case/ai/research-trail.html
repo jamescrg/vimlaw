@@ -81,20 +81,38 @@ without crowding the dialogue.
           <i class="icon-bookmark"></i>
           <div>Reviewed {{ event.count }} saved case{{ event.count|pluralize }} on this matter</div>
         </li>
-      {% elif event.type == "grounding" and event.ungrounded_clusters %}
-        <li class="ai-research-step">
-          <i class="icon-alert-triangle"></i>
-          <div>
-            Warning: cited cluster{{ event.ungrounded_clusters|length|pluralize }}
-            {{ event.ungrounded_clusters|join:", " }} without retrieving
-            {% if event.ungrounded_clusters|length == 1 %}
-              it
-            {% else %}
-              them
-            {% endif %}
-            first.
-          </div>
-        </li>
+      {% elif event.type == "grounding" %}
+        {% if event.ungrounded_clusters %}
+          <li class="ai-research-step">
+            <i class="icon-alert-triangle"></i>
+            <div>
+              Warning: cited cluster{{ event.ungrounded_clusters|length|pluralize }}
+              {{ event.ungrounded_clusters|join:", " }} without retrieving
+              {% if event.ungrounded_clusters|length == 1 %}
+                it
+              {% else %}
+                them
+              {% endif %}
+              first.
+            </div>
+          </li>
+        {% endif %}
+        {% if event.untreated_clusters %}
+          <li class="ai-research-step">
+            <i class="icon-alert-triangle"></i>
+            <div>
+              Warning: relied on
+              cluster{{ event.untreated_clusters|length|pluralize }}
+              {{ event.untreated_clusters|join:", " }} without a treatment
+              check. Ask for one before relying on
+              {% if event.untreated_clusters|length == 1 %}
+                this authority.
+              {% else %}
+                these authorities.
+              {% endif %}
+            </div>
+          </li>
+        {% endif %}
       {% endif %}
     {% endfor %}
   </ol>
