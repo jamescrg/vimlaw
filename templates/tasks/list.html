@@ -1,111 +1,140 @@
 {% include "tasks/toolbar.html" %}
-<div class="table-container">
-  <table class="table tasks-table card-table">
-    <thead>
-      <tr>
-        <th class="col-select">
-          {% url 'tasks:select-all' as select_all_url %}
-          {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
-        </th>
-        <th class="importance">
-          <button class="btn-sort {% if current_order == 'importance' %}active{% endif %}"
-                  hx-target="#tasks"
-                  hx-swap="innerHTML"
-                  hx-post="{% url 'tasks:filter-sort' '-importance' %}">
-            <i class="icon-flag"></i>
-          </button>
-        </th>
-        <th class="matter">
-          Matter
-          <button class="btn-sort {% if current_order == 'matter__name' %}active{% endif %}"
-                  hx-target="#tasks"
-                  hx-swap="innerHTML"
-                  hx-post="{% url 'tasks:filter-sort' 'matter__name' %}">
-            <i class="icon-chevrons-up-down"></i>
-          </button>
-        </th>
-        <th class="description">
-          Description
-          <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
-                  hx-target="#tasks"
-                  hx-swap="innerHTML"
-                  hx-post="{% url 'tasks:filter-sort' 'description' %}">
-            <i class="icon-chevrons-up-down"></i>
-          </button>
-        </th>
-        <th class="status">
-          Status
-          <button class="btn-sort {% if current_order == 'status' %}active{% endif %}"
-                  hx-target="#tasks"
-                  hx-swap="innerHTML"
-                  hx-post="{% url 'tasks:filter-sort' 'status' %}">
-            <i class="icon-chevrons-up-down"></i>
-          </button>
-        </th>
-        <th class="user">
-          User
-          <button class="btn-sort {% if current_order == 'user__username' %}active{% endif %}"
-                  hx-target="#tasks"
-                  hx-swap="innerHTML"
-                  hx-post="{% url 'tasks:filter-sort' 'user__username' %}">
-            <i class="icon-chevrons-up-down"></i>
-          </button>
-        </th>
-        <th class="date">
-          Due
-          <button class="btn-sort {% if current_order == 'date_due' %}active{% endif %}"
-                  hx-target="#tasks"
-                  hx-swap="innerHTML"
-                  hx-post="{% url 'tasks:filter-sort' 'date_due' %}">
-            <i class="icon-chevrons-up-down"></i>
-          </button>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for task in objects %}
-        <tr class="importance-{{ task.importance }}{% if task.id in new_task_ids or task.id in edited_task_ids %} task-new-highlight{% endif %}{% if task.date_due and task.date_due < today and task.status != 'Complete' %} past-due{% endif %}">
-          <td class="col-select card-hide">
-            {% url 'tasks:toggle-select' task.id as toggle_url %}
-            {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=task.id selected_ids=selected_tasks %}
-          </td>
-          <td class="importance dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
-              data-label="Importance">{% include "tasks/importance.html" %}</td>
-          <td class="matter card-title {% if task.status == 'Complete' %}complete{% endif %}"
-              data-label="Matter">{% include "tasks/matter.html" %}</td>
-          <td class="description card-desc {% if task.status == 'Complete' %}complete{% endif %}"
-              data-label="Description">
-            <a href="#"
-               hx-get="{% url 'tasks:edit' id=task.id %}"
-               hx-target="#htmx-modal-container">{{ task.description }}</a>
-            <span class="task-decorators">
-              <a href="#"
-                 class="task-checklist-btn {% if task.has_checklist %}has-checklist{% endif %}"
-                 hx-get="{% if task.has_checklist %}{% url 'checklists:checklist-modal' task.id %}{% else %}{% url 'checklists:attach-checklist' task.id %}{% endif %}"
-                 hx-target="#htmx-modal-container">
-                <i class="icon-list-checks checklist-badge-icon {% if task.has_unviewed_checklist %}checklist-badge-new{% endif %}"></i>
-              </a>
-              <a href="#"
-                 class="task-notes-btn {% if task.has_notes %}has-notes{% endif %}"
-                 hx-get="{% url 'tasks:detail' id=task.id %}"
-                 hx-target="#htmx-modal-container">
-                <i class="icon-sticky-note note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
-              </a>
-            </span>
-          </td>
-          <td class="status dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
-              data-label="Status">{% include "tasks/status.html" %}</td>
-          <td class="user dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
-              data-label="User">{% include "tasks/user.html" %}</td>
-          <td class="date {% if task.status == 'Complete' %}complete{% endif %}"
-              data-label="Due">{% include "tasks/date-display.html" %}</td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="7" class="empty-message">No tasks found.</td>
-        </tr>
+{% if panel_layout %}
+  <div class="tasks-split">
+    <nav class="tasks-matters-panel">
+      <a class="tasks-panel-item {% if not matter_id and not no_matter %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'tasks:filter-matter' 0 %}"
+         hx-target="#tasks">All</a>
+      <a class="tasks-panel-item tasks-panel-admin {% if no_matter %}active{% endif %}"
+         href="#"
+         hx-post="{% url 'tasks:filter-matter-admin' %}"
+         hx-target="#tasks">Admin</a>
+      {% for m in matters %}
+        <a class="tasks-panel-item {% if m.id == matter_id %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'tasks:filter-matter' m.id %}"
+           hx-target="#tasks">{{ m.name }}</a>
       {% endfor %}
-    </tbody>
-  </table>
-  {% include "pagination.html" %}
-</div>
+    </nav>
+  {% endif %}
+  <div class="table-container">
+    <table class="table tasks-table card-table">
+      <thead>
+        <tr>
+          <th class="col-select">
+            {% url 'tasks:select-all' as select_all_url %}
+            {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
+          </th>
+          <th class="importance">
+            <button class="btn-sort {% if current_order == 'importance' %}active{% endif %}"
+                    hx-target="#tasks"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'tasks:filter-sort' '-importance' %}">
+              <i class="icon-flag"></i>
+            </button>
+          </th>
+          {% if not panel_layout %}
+            <th class="matter">
+              Matter
+              <button class="btn-sort {% if current_order == 'matter__name' %}active{% endif %}"
+                      hx-target="#tasks"
+                      hx-swap="innerHTML"
+                      hx-post="{% url 'tasks:filter-sort' 'matter__name' %}">
+                <i class="icon-chevrons-up-down"></i>
+              </button>
+            </th>
+          {% endif %}
+          <th class="description">
+            Description
+            <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
+                    hx-target="#tasks"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'tasks:filter-sort' 'description' %}">
+              <i class="icon-chevrons-up-down"></i>
+            </button>
+          </th>
+          <th class="status">
+            Status
+            <button class="btn-sort {% if current_order == 'status' %}active{% endif %}"
+                    hx-target="#tasks"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'tasks:filter-sort' 'status' %}">
+              <i class="icon-chevrons-up-down"></i>
+            </button>
+          </th>
+          <th class="user">
+            User
+            <button class="btn-sort {% if current_order == 'user__username' %}active{% endif %}"
+                    hx-target="#tasks"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'tasks:filter-sort' 'user__username' %}">
+              <i class="icon-chevrons-up-down"></i>
+            </button>
+          </th>
+          <th class="date">
+            Due
+            <button class="btn-sort {% if current_order == 'date_due' %}active{% endif %}"
+                    hx-target="#tasks"
+                    hx-swap="innerHTML"
+                    hx-post="{% url 'tasks:filter-sort' 'date_due' %}">
+              <i class="icon-chevrons-up-down"></i>
+            </button>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in objects %}
+          <tr class="importance-{{ task.importance }}{% if task.id in new_task_ids or task.id in edited_task_ids %} task-new-highlight{% endif %}{% if task.date_due and task.date_due < today and task.status != 'Complete' %} past-due{% endif %}">
+            <td class="col-select card-hide">
+              {% url 'tasks:toggle-select' task.id as toggle_url %}
+              {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=task.id selected_ids=selected_tasks %}
+            </td>
+            <td class="importance dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
+                data-label="Importance">{% include "tasks/importance.html" %}</td>
+            {% if not panel_layout %}
+              <td class="matter card-title {% if task.status == 'Complete' %}complete{% endif %}"
+                  data-label="Matter">{% include "tasks/matter.html" %}</td>
+            {% endif %}
+            <td class="description card-desc {% if task.status == 'Complete' %}complete{% endif %}"
+                data-label="Description">
+              {% if panel_layout %}
+                <span class="task-matter-inline">{% include "tasks/matter.html" %}</span>
+                <span class="task-matter-sep">&bull;</span>
+              {% endif %}
+              <a href="#"
+                 hx-get="{% url 'tasks:edit' id=task.id %}"
+                 hx-target="#htmx-modal-container">{{ task.description }}</a>
+              <span class="task-decorators">
+                <a href="#"
+                   class="task-checklist-btn {% if task.has_checklist %}has-checklist{% endif %}"
+                   hx-get="{% if task.has_checklist %}{% url 'checklists:checklist-modal' task.id %}{% else %}{% url 'checklists:attach-checklist' task.id %}{% endif %}"
+                   hx-target="#htmx-modal-container">
+                  <i class="icon-list-checks checklist-badge-icon {% if task.has_unviewed_checklist %}checklist-badge-new{% endif %}"></i>
+                </a>
+                <a href="#"
+                   class="task-notes-btn {% if task.has_notes %}has-notes{% endif %}"
+                   hx-get="{% url 'tasks:detail' id=task.id %}"
+                   hx-target="#htmx-modal-container">
+                  <i class="icon-sticky-note note-badge-icon {% if task.has_new_notes %}note-badge-new{% endif %}"></i>
+                </a>
+              </span>
+            </td>
+            <td class="status dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
+                data-label="Status">{% include "tasks/status.html" %}</td>
+            <td class="user dropdown-cell {% if task.status == 'Complete' %}complete{% endif %}"
+                data-label="User">{% include "tasks/user.html" %}</td>
+            <td class="date {% if task.status == 'Complete' %}complete{% endif %}"
+                data-label="Due">{% include "tasks/date-display.html" %}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="{% if panel_layout %}6{% else %}7{% endif %}"
+                class="empty-message">No tasks found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "pagination.html" %}
+  </div>
+  {% if panel_layout %}</div>{% endif %}

@@ -302,6 +302,77 @@ tr > td.importance.complete .button-link {
   top: 0.625rem;
 }
 
+/* ==========================================================================
+ Matters panel (opt-in tasks layout, Settings -> Appearance)
+
+ A rail of matters beside the list that drives the matter filter. The matter
+ column is dropped; each row leads with an inline matter link instead.
+========================================================================== */
+
+.tasks-split {
+  align-items: flex-start;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.tasks-split .table-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.tasks-matters-panel {
+  display: flex;
+  flex: 0 0 14rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: calc(100vh - 8rem);
+  overflow-y: auto;
+  position: sticky;
+  top: 1rem;
+}
+
+.tasks-panel-item {
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  display: block;
+  overflow: hidden;
+  padding: 0.25rem 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tasks-panel-item:hover {
+  background: var(--background-control);
+}
+
+.tasks-panel-item.active {
+  background: var(--selected-background);
+  color: var(--selected-color);
+}
+
+/* Set All + Admin apart from the matter list below them. */
+.tasks-panel-admin {
+  margin-bottom: 0.75rem;
+}
+
+/* Inline matter prefix in the description cell. */
+.task-matter-sep {
+  color: var(--color-muted-more);
+  margin: 0 0.25rem;
+}
+
+@media (width <= 768px) {
+  /* The rail has no room on mobile; the card's inline matter prefix
+     carries the matter instead. */
+  .tasks-split {
+    display: block;
+  }
+
+  .tasks-matters-panel {
+    display: none;
+  }
+}
+
 .tasks-table .status {
   width: 7rem;
 }

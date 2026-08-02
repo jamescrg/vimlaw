@@ -65,4 +65,32 @@
       <span>Horizontal <small>(top bar)</small></span>
     </label>
   </fieldset>
+  <h2 class="settings-section">Tasks</h2>
+  <hr />
+  <p class="detail-text">
+    The matters panel replaces the matter column in the tasks list with
+    a matter list beside it. Syncs across your devices.
+  </p>
+  <fieldset class="nav-options">
+    <label class="nav-option">
+      <input type="radio"
+             name="tasks-layout"
+             value="classic"
+             {% if user.tasks_layout == 'classic' %}checked{% endif %}
+             hx-post="{% url 'settings:tasks-layout' %}"
+             hx-trigger="change"
+             hx-swap="none">
+      <span>Classic <small>(matter column)</small></span>
+    </label>
+    <label class="nav-option">
+      <input type="radio"
+             name="tasks-layout"
+             value="panel"
+             {% if user.tasks_layout == 'panel' %}checked{% endif %}
+             hx-post="{% url 'settings:tasks-layout' %}"
+             hx-trigger="change"
+             hx-swap="none">
+      <span>Matters panel <small>(list view)</small></span>
+    </label>
+  </fieldset>
 {% endblock subcontent %}

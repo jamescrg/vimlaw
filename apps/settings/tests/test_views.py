@@ -15,6 +15,18 @@ def test_index(client):
     assertTemplateUsed(response, "settings/session/index.html")
 
 
+def test_set_tasks_layout(client, user):
+    response = client.post(reverse("settings:tasks-layout"), {"tasks-layout": "panel"})
+    assert response.status_code == 204
+    user.refresh_from_db()
+    assert user.tasks_layout == "panel"
+
+    response = client.post(reverse("settings:tasks-layout"), {"tasks-layout": "bogus"})
+    assert response.status_code == 204
+    user.refresh_from_db()
+    assert user.tasks_layout == "panel"
+
+
 # -----------------------------------------------------
 # User management tests
 # -----------------------------------------------------

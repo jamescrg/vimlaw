@@ -105,6 +105,14 @@ class TasksFilter(django_filters.FilterSet):
         lookup_expr="isnull",
         exclude=True,
     )
+    # Matterless ("Admin") tasks, driven by the matters panel rather than the
+    # filter modal — the hidden widget keeps it out of the modal form while
+    # letting every TasksFilter consumer (list, board, clear) honour it.
+    no_matter = django_filters.BooleanFilter(
+        field_name="matter",
+        lookup_expr="isnull",
+        widget=forms.HiddenInput,
+    )
 
     order_by = TasksOrderingFilter(
         fields=(
