@@ -28,22 +28,6 @@
         <i class="icon-plus"></i>
       </button>
       <div class="filter-tools">
-        <div class="view-toggle">
-          <button type="button"
-                  class="{% if view_mode != 'board' %}toggle-active{% endif %}"
-                  hx-post="{% url 'tasks:view-mode' 'list' %}"
-                  hx-swap="none"
-                  title="List view">
-            <i class="icon-list"></i>
-          </button>
-          <button type="button"
-                  class="{% if view_mode == 'board' %}toggle-active{% endif %}"
-                  hx-post="{% url 'tasks:view-mode' 'board' %}"
-                  hx-swap="none"
-                  title="Board view">
-            <i class="icon-kanban"></i>
-          </button>
-        </div>
         <button type="button"
                 class="btn-icon {% if custom_filter_active %}toggle-active{% endif %}"
                 hx-get="{% url 'tasks:filter' %}"
@@ -163,6 +147,22 @@
         </div>
       </div>
       {% include "tasks/form-quick.html" %}
+      <div class="view-toggle">
+        <button type="button"
+                class="{% if view_mode != 'board' %}toggle-active{% endif %}"
+                hx-post="{% url 'tasks:view-mode' 'list' %}"
+                hx-swap="none"
+                title="List view">
+          <i class="icon-list"></i>
+        </button>
+        <button type="button"
+                class="{% if view_mode == 'board' %}toggle-active{% endif %}"
+                hx-post="{% url 'tasks:view-mode' 'board' %}"
+                hx-swap="none"
+                title="Board view">
+          <i class="icon-kanban"></i>
+        </button>
+      </div>
     {% endif %}
   </div>
 </div>

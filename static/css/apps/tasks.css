@@ -218,6 +218,7 @@ tr > td.importance.complete .button-link {
   }
 
   .tasks-toolbar .view-toggle {
+    margin-left: 0;
     order: 5;
   }
 
@@ -229,13 +230,19 @@ tr > td.importance.complete .button-link {
 }
 
 
-/* Sits after the filter tools and grows into whatever width remains. */
+/* Sits after the filter tools and grows into the remaining width, capped. */
 .tasks-add-quick-input {
   background: var(--background-light);
   color: var(--color-primary);
   flex: 1 1 auto;
+  max-width: 30rem;
   min-width: 12rem;
   padding-left: 1rem;
+}
+
+/* The list/board toggle anchors to the toolbar's far right. */
+.tasks-toolbar .view-toggle {
+  margin-left: auto;
 }
 
 .tasks-add-quick-input::placeholder {
@@ -331,7 +338,7 @@ tr > td.importance.complete .button-link {
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
   display: flex;
-  flex: 0 0 20rem;
+  flex: 0 0 18rem;
   flex-direction: column;
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
