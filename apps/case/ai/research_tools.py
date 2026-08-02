@@ -191,22 +191,50 @@ def _opinion_for_cluster(cluster_id):
     return cluster, fetch_opinion(opinion_id)
 
 
-def make_executor(matter, depth):
+def make_executor(matter, depth, conversation_id=None):
     """Build the tool executor for one research request.
 
     Returns ``execute(name, tool_input) -> (result_json_str, trail_event)``.
     Never raises: failures become {"error": ...} results the model can react
-    to. Holds per-request state: an opinion cache (re-reads are free) and
-    the running opinion-text total against the depth's cap.
+    to. Holds per-request state: an opinion cache (re-reads are free), a
+    search/lookup dedupe map, and the running opinion-text total against
+    the depth's cap. With ``conversation_id``, opinions also cache across
+    the conversation's messages (django cache, 1h) so follow-up turns
+    re-read earlier authorities without another API round-trip.
     """
+    from django.core.cache import cache as django_cache
+
     budget = budget_for(depth)
     opinion_cache = {}
     state = {"chars_used": 0}
+    # Within-run dedupe: the model sometimes repeats a search or lookup it
+    # already ran (especially failed ones). Serve the stored result instead
+    # of re-hitting the API, and flag the repeat so it shows in the log.
+    seen_searches = {}
+    seen_lookups = {}
 
     def _search(tool_input):
         query = sanitize_query(str(tool_input.get("query", ""))[:300])
         court_ids = str(tool_input.get("court_ids", "") or "").strip()
         limit = min(int(tool_input.get("num_results") or budget["page_size"]), 10)
+
+        dedupe_key = (query, court_ids, limit)
+        if dedupe_key in seen_searches:
+            payload = dict(seen_searches[dedupe_key])
+            payload["note"] = (
+                "You already ran this exact search in this request; same "
+                "results. Adjust the query instead of repeating it."
+            )
+            event = {
+                "type": "search",
+                "query": query,
+                "court_ids": court_ids,
+                "result_count": len(payload.get("results", [])),
+                "repeat": True,
+                "ts": _now(),
+            }
+            return payload, event
+
         results, status = search_opinions(query, court=court_ids or None, limit=limit)
         rows = [
             {
@@ -223,6 +251,7 @@ def make_executor(matter, depth):
         payload = {"results": rows}
         if status != 200:
             payload["error"] = f"Search failed (status {status}). Adjust the query."
+        seen_searches[dedupe_key] = payload
         event = {
             "type": "search",
             "query": query,
@@ -235,6 +264,9 @@ def make_executor(matter, depth):
             "ts": _now(),
         }
         return payload, event
+
+    def _conv_cache_key(cluster_id):
+        return f"research_opinion_{conversation_id}_{cluster_id}"
 
     def _read(tool_input):
         cluster_id = int(tool_input.get("cluster_id") or 0)
@@ -257,6 +289,22 @@ def make_executor(matter, depth):
                 )
             }, None
 
+        # Read earlier in this conversation (a previous message's run)?
+        if conversation_id:
+            stored = django_cache.get(_conv_cache_key(cluster_id))
+            if stored:
+                state["chars_used"] += len(stored.get("text", ""))
+                opinion_cache[cluster_id] = stored
+                event = {
+                    "type": "read",
+                    "cluster_id": cluster_id,
+                    "case_name": stored.get("case_name", ""),
+                    "citation": stored.get("citation", ""),
+                    "cached": True,
+                    "ts": _now(),
+                }
+                return stored, event
+
         cluster, opinion = _opinion_for_cluster(cluster_id)
         if cluster is None or opinion is None or not opinion.found:
             return {"error": f"Opinion for cluster {cluster_id} not available."}, None
@@ -276,6 +324,8 @@ def make_executor(matter, depth):
             "truncated": len(opinion.plain_text or "") > len(text),
         }
         opinion_cache[cluster_id] = payload
+        if conversation_id:
+            django_cache.set(_conv_cache_key(cluster_id), payload, timeout=3600)
         event = {
             "type": "read",
             "cluster_id": cluster_id,
@@ -305,6 +355,21 @@ def make_executor(matter, depth):
 
     def _lookup(tool_input):
         citation = str(tool_input.get("citation", "")).strip()
+        if citation in seen_lookups:
+            payload = dict(seen_lookups[citation])
+            payload["note"] = (
+                "You already looked this citation up in this request; same result."
+            )
+            event = {
+                "type": "lookup",
+                "citation": citation,
+                "found": payload.get("found", False),
+                "case_name": payload.get("case_name", ""),
+                "cluster_id": payload.get("cluster_id"),
+                "repeat": True,
+                "ts": _now(),
+            }
+            return payload, event
         result = lookup_citation(citation)
         payload = {
             "found": result.found,
@@ -316,6 +381,7 @@ def make_executor(matter, depth):
         }
         if not result.found:
             payload["error"] = result.error or "Citation not found."
+        seen_lookups[citation] = payload
         event = {
             "type": "lookup",
             "citation": citation,

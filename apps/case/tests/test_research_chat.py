@@ -658,3 +658,62 @@ def test_research_log_survives_status_updates(matter, user, monkeypatch):
         cache_key,
     )
     assert "Searched `q1` (2 hits)" in cache.get(cache_key)["research_log"]
+
+
+def test_executor_repeat_search_served_from_cache(matter, fake_cl):
+    execute = make_executor(matter, "standard")
+    execute("search_caselaw", {"query": "partition"})
+    result_json, event = execute("search_caselaw", {"query": "partition"})
+    payload = json.loads(result_json)
+    assert "already ran this exact search" in payload["note"]
+    assert event["repeat"] is True
+    assert len(fake_cl.searches) == 1  # API hit only once
+
+
+def test_read_cached_across_conversation_messages(matter, fake_cl):
+    """A follow-up message's executor reuses opinions read earlier in the
+    same conversation without another API round-trip."""
+    first = make_executor(matter, "standard", conversation_id=555)
+    first("read_opinion", {"cluster_id": 101})
+
+    fake_cl.opinions.clear()  # API would now fail
+    second = make_executor(matter, "standard", conversation_id=555)
+    result_json, event = second("read_opinion", {"cluster_id": 101})
+    assert json.loads(result_json)["case_name"] == "Smith v. Jones"
+    assert event["cached"] is True
+
+
+def test_prior_research_section_built_from_trails(matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", kind="research", user=user
+    )
+    Message.objects.create(
+        conversation=conversation,
+        role="assistant",
+        content="answer",
+        research_trail=[
+            {"type": "search", "query": "boundary AND fence", "result_count": 4},
+            {
+                "type": "read",
+                "cluster_id": 3405938,
+                "case_name": "Bradley v. Shelton",
+                "citation": "189 Ga. 696",
+            },
+            {
+                "type": "treatment",
+                "cluster_id": 3405938,
+                "checked": True,
+                "has_negative_treatment": True,
+            },
+        ],
+    )
+    section = research_chat.prior_research_section(conversation)
+    assert "Bradley v. Shelton" in section
+    assert "cluster 3405938" in section
+    assert "NEGATIVE TREATMENT" in section
+    assert "`boundary AND fence` -> 4 hits" in section
+
+    empty = Conversation.objects.create(
+        matter=matter, title="E", kind="research", user=user
+    )
+    assert research_chat.prior_research_section(empty) == ""

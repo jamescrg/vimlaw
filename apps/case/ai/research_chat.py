@@ -111,7 +111,62 @@ def _depth_directive(depth):
     return lines + "\n"
 
 
-def build_research_system(context_text, depth):
+def prior_research_section(conversation):
+    """Structured memory of earlier research turns in this conversation.
+
+    Follow-ups need the cluster ids and queries from previous messages'
+    trails — the display text strips [cluster:n] markers, so without this
+    the model re-finds cases it already read (the conversation-799
+    failure: repeated searches, re-hunting known cases).
+    """
+    reads = {}
+    searches = []
+    treatments = {}
+    for message in conversation.messages.filter(role="assistant"):
+        for event in message.research_trail or []:
+            etype = event.get("type")
+            if etype == "read" and event.get("cluster_id"):
+                reads[event["cluster_id"]] = event
+            elif etype == "search" and not event.get("repeat"):
+                searches.append(event)
+            elif etype == "treatment" and event.get("checked"):
+                treatments[event.get("cluster_id")] = event
+
+    if not reads and not searches:
+        return ""
+
+    lines = [
+        "PRIOR RESEARCH IN THIS CONVERSATION (reuse it — do not repeat "
+        "these searches; read_opinion works directly on the cluster ids "
+        "below):\n"
+    ]
+    if reads:
+        lines.append("Cases already read:\n")
+        for cluster_id, event in reads.items():
+            treatment = treatments.get(cluster_id)
+            note = ""
+            if treatment:
+                note = (
+                    " [NEGATIVE TREATMENT]"
+                    if treatment.get("has_negative_treatment")
+                    else " [treatment checked: clean]"
+                )
+            citation = event.get("citation") or ""
+            lines.append(
+                f"- {event.get('case_name', '?')}"
+                f"{', ' + citation if citation else ''}"
+                f" (cluster {cluster_id}){note}\n"
+            )
+    if searches:
+        lines.append("Searches already run:\n")
+        for event in searches[-25:]:
+            lines.append(
+                f"- `{event.get('query', '')}` -> {event.get('result_count', 0)} hits\n"
+            )
+    return "".join(lines) + "\n"
+
+
+def build_research_system(context_text, depth, prior_research=""):
     """Matter context first (the stable, cacheable prefix), research
     contract after."""
     return (
@@ -121,6 +176,7 @@ def build_research_system(context_text, depth):
         + COURTLISTENER_SYNTAX_RULES
         + PROMPT_CONTRACT
         + _depth_directive(depth)
+        + prior_research
     )
 
 
@@ -217,9 +273,11 @@ def run_research_request(
     ):
         chat_history.pop(0)
 
-    system = build_research_system(context_text, depth)
+    system = build_research_system(
+        context_text, depth, prior_research_section(conversation)
+    )
     tools = build_tools(depth)
-    execute_tool = make_executor(matter, depth)
+    execute_tool = make_executor(matter, depth, conversation_id=conversation.id)
 
     # Live research log: concise one-liners accumulated in the status
     # payload so the whole run stays visible in the conversation while it
@@ -275,9 +333,10 @@ def run_research_request(
             event = payload
             etype = event.get("type")
             if etype == "search":
+                repeat = " — repeat, served from cache" if event.get("repeat") else ""
                 push_log(
                     f"Searched `{event.get('query', '')}` "
-                    f"({event.get('result_count', 0)} hits)"
+                    f"({event.get('result_count', 0)} hits){repeat}"
                 )
             elif etype == "read":
                 name = event.get("case_name") or event.get("cluster_id")
