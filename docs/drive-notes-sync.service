@@ -14,6 +14,9 @@ ExecStart=/home/<user>/law/.venv/bin/python manage.py sync_drive_notes
 #   is needed. pandoc must be on PATH (default /usr/bin/pandoc is fine).
 # - This is the incremental sync. It no-ops cleanly until an admin links a
 #   Drive account at /settings/integrations/.
+# - The same run also mirrors linked record folders (PDFs -> Record
+#   Documents per proceeding, append-only: Drive deletions never remove
+#   documents). No extra unit needed.
 # - Driven by drive-notes-sync.timer (every ~30s). The oneshot type means the
 #   timer naturally waits for the previous run to finish before starting another.
 # - Schedule a nightly `--full` run separately to reconcile folder renames/moves,

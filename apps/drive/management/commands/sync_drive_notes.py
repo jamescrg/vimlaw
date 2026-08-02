@@ -6,7 +6,10 @@ import apps.drive.google as google
 
 
 class Command(BaseCommand):
-    help = "Mirror Google Drive case notes (Matters - Open/*/Notes) to Markdown"
+    help = (
+        "Mirror Google Drive case notes (Matters - Open/*/Notes) to Markdown "
+        "and linked record folders' PDFs to Record Documents (append-only)."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(

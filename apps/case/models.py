@@ -95,6 +95,17 @@ class Document(AuditMixin, models.Model):
     file = models.FileField(upload_to=document_upload_path, max_length=500)
     labels = models.ManyToManyField(Label, related_name="documents", blank=True)
 
+    # Drive record-folder sync provenance (mirrors Note's drive_* fields).
+    # Set only on documents ingested from a proceeding's linked record
+    # folder; the sync upserts by drive_file_id and NEVER deletes — the
+    # record is append-only, so a Drive-side removal can't destroy OCR,
+    # highlights, or AI context.
+    drive_file_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    drive_path = models.CharField(max_length=1024, null=True, blank=True)
+    # RFC3339 modifiedTime snapshot; a mismatch triggers a file refresh.
+    drive_modified = models.CharField(max_length=64, null=True, blank=True)
+    drive_synced_at = models.DateTimeField(null=True, blank=True)
+
     # OCR fields
     ocr_status = models.CharField(
         max_length=20, choices=OCR_STATUS_CHOICES, default="pending"
@@ -126,6 +137,10 @@ class Document(AuditMixin, models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def is_drive_synced(self):
+        return bool(self.drive_file_id)
 
     @property
     def citation(self):

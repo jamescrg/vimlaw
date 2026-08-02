@@ -57,9 +57,16 @@
         </div>
         <div class="span2">
           <label>File</label>
-          <div id="document-dropzone"
-               class="dropzone"
-               {% if edit and document.file %}data-existing-file="{{ document.file.name }}"{% endif %}></div>
+          {% if edit and document.is_drive_synced %}
+            <p class="detail-text">
+              Synced from Google Drive ({{ document.drive_path }}). To replace
+              the file, update it in the Drive record folder.
+            </p>
+          {% else %}
+            <div id="document-dropzone"
+                 class="dropzone"
+                 {% if edit and document.file %}data-existing-file="{{ document.file.name }}"{% endif %}></div>
+          {% endif %}
           {% if form.non_field_errors %}
             {% for error in form.non_field_errors %}
               {% if error|stringformat:"s"|slice:":13" == "FILE_REQUIRED" %}
@@ -79,7 +86,7 @@
       {% if edit %}
         <button type="button"
                 class="btn btn-danger"
-                hx-confirm="Are you sure you want to delete this file?"
+                hx-confirm="{% if document.is_drive_synced %}Delete this synced document? The file stays in Drive but will not sync back in.{% else %}Are you sure you want to delete this file?{% endif %}"
                 hx-delete="{% url 'case:documents-delete' document.id %}"
                 hx-target="#htmx-modal-container">Delete</button>
       {% else %}

@@ -26,6 +26,12 @@ parent chain up to the root folder; only files whose path is
 ``<root>/<matter>/Notes/...`` with an allowed extension are mirrored. A note's
 matter is resolved via ``Matter.drive_folder`` (set by the link_drive_folders
 command); folders with no matching Matter are recorded as unmatched.
+
+This module owns the single changes-feed cursor and also dispatches to the
+record-folder mirror (apps/drive/records.py): PDFs under
+``<root>/<matter>/<linked record folder>/...`` become Record Documents on
+the linked proceeding. That mirror is append-only — removals and trashes
+only ever affect Notes here.
 """
 
 import json
@@ -44,7 +50,7 @@ from apps.matters.models import Matter
 from apps.notes.models import Note
 from utils.prepare_path import prepare_path
 
-from . import convert
+from . import convert, records
 from .models import DriveSyncState
 
 logger = logging.getLogger(__name__)
@@ -60,8 +66,9 @@ XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 ALLOWED_EXTENSIONS = (".docx", ".odt", ".md", ".xlsx", ".ods", ".csv")
 NOTES_FOLDER_NAME = "Notes"
 
-# Fields requested for a file in changes/listing responses.
-FILE_FIELDS = "id, name, mimeType, parents, trashed, modifiedTime"
+# Fields requested for a file in changes/listing responses. createdTime and
+# size feed the record mirror (fallback date; duplicate-adoption check).
+FILE_FIELDS = "id, name, mimeType, parents, trashed, modifiedTime, createdTime, size"
 
 
 # --------------------------------------------------------------------------- #
@@ -351,17 +358,48 @@ def _remove_note(file_id, debug_dir, dry_run, stats):
 # Bootstrap (full crawl) + incremental sync
 # --------------------------------------------------------------------------- #
 def _new_stats():
-    return {"converted": 0, "skipped": 0, "removed": 0, "would-convert": 0, "failed": 0}
+    return {
+        "converted": 0,
+        "skipped": 0,
+        "removed": 0,
+        "would-convert": 0,
+        "failed": 0,
+    } | records.new_record_stats()
 
 
-def bootstrap(service, root_id, matters, debug_dir, dry_run=False):
-    """Crawl every <root>/<matter>/Notes/** file and upsert Note rows.
+def _walk_record_folder(service, record_folder, prefix, links, dry_run, stats):
+    """DFS one linked record folder, ingesting PDFs (append-only mirror)."""
+    stack = [(record_folder["id"], prefix)]
+    while stack:
+        folder_id, path = stack.pop()
+        for child in _list_children(service, folder_id):
+            if child.get("mimeType") == FOLDER_MIME:
+                stack.append((child["id"], path + [child["name"]]))
+                continue
+            if not records.is_pdf(child):
+                stats["records_non_pdf"] += 1
+                continue
+            try:
+                records.ingest_record(
+                    service, child, path + [child["name"]], links, dry_run, stats
+                )
+            except Exception:
+                stats["records_failed"] += 1
+                logger.exception("Failed to sync record %s", child.get("name"))
 
-    Reconciles deletions: any synced Note whose Drive file is no longer present
-    is removed. Returns (stats, unmatched_folder_names).
+
+def bootstrap(service, root_id, matters, links, debug_dir, dry_run=False):
+    """Crawl every <root>/<matter>/Notes/** file and upsert Note rows, and
+    every linked record folder's PDFs into Record Documents.
+
+    Reconciles NOTE deletions: any synced Note whose Drive file is no longer
+    present is removed. Record Documents are never reconciled away — that
+    mirror is append-only. Returns (stats, unmatched_folder_names,
+    missing_record_folders).
     """
     stats = _new_stats()
     unmatched = set()
+    missing_records = set()
     seen = set()
 
     for matter_folder in _list_children(service, root_id):
@@ -371,46 +409,64 @@ def bootstrap(service, root_id, matters, debug_dir, dry_run=False):
             unmatched.add(matter_folder["name"])
             continue
 
+        children = [
+            c
+            for c in _list_children(service, matter_folder["id"])
+            if c.get("mimeType") == FOLDER_MIME
+        ]
         notes_folder = next(
-            (
-                c
-                for c in _list_children(service, matter_folder["id"])
-                if c.get("mimeType") == FOLDER_MIME
-                and c.get("name") == NOTES_FOLDER_NAME
-            ),
-            None,
+            (c for c in children if c.get("name") == NOTES_FOLDER_NAME), None
         )
-        if not notes_folder:
-            continue
 
-        stack = [(notes_folder["id"], [matter_folder["name"], NOTES_FOLDER_NAME])]
-        while stack:
-            folder_id, prefix = stack.pop()
-            for child in _list_children(service, folder_id):
-                if child.get("mimeType") == FOLDER_MIME:
-                    stack.append((child["id"], prefix + [child["name"]]))
-                    continue
-                if not _is_allowed(child):
-                    continue
-                # Mark seen before converting so a conversion failure doesn't
-                # delete a previously-synced note as "stale".
-                seen.add(child["id"])
-                try:
-                    _ingest(
-                        service,
-                        child,
-                        prefix + [child["name"]],
-                        matters,
-                        debug_dir,
-                        dry_run,
-                        stats,
-                        unmatched,
-                    )
-                except Exception:
-                    stats["failed"] += 1
-                    logger.exception("Failed to sync note %s", child.get("name"))
+        if notes_folder:
+            stack = [(notes_folder["id"], [matter_folder["name"], NOTES_FOLDER_NAME])]
+            while stack:
+                folder_id, prefix = stack.pop()
+                for child in _list_children(service, folder_id):
+                    if child.get("mimeType") == FOLDER_MIME:
+                        stack.append((child["id"], prefix + [child["name"]]))
+                        continue
+                    if not _is_allowed(child):
+                        continue
+                    # Mark seen before converting so a conversion failure
+                    # doesn't delete a previously-synced note as "stale".
+                    seen.add(child["id"])
+                    try:
+                        _ingest(
+                            service,
+                            child,
+                            prefix + [child["name"]],
+                            matters,
+                            debug_dir,
+                            dry_run,
+                            stats,
+                            unmatched,
+                        )
+                    except Exception:
+                        stats["failed"] += 1
+                        logger.exception("Failed to sync note %s", child.get("name"))
 
-    # Any synced Note not seen in the crawl is stale.
+        # Linked record folders for this matter.
+        for (m_folder, r_folder), _proceeding in links.items():
+            if m_folder != matter_folder["name"]:
+                continue
+            record_folder = next(
+                (c for c in children if c.get("name") == r_folder), None
+            )
+            if record_folder is None:
+                missing_records.add(f"{m_folder}/{r_folder}")
+                continue
+            _walk_record_folder(
+                service,
+                record_folder,
+                [m_folder, r_folder],
+                links,
+                dry_run,
+                stats,
+            )
+
+    # Any synced Note not seen in the crawl is stale. (Notes only — record
+    # Documents are append-only by contract.)
     stale = Note.objects.filter(drive_file_id__isnull=False).exclude(
         drive_file_id__in=seen
     )
@@ -421,7 +477,7 @@ def bootstrap(service, root_id, matters, debug_dir, dry_run=False):
             note.delete()
         stats["removed"] += 1
 
-    return stats, unmatched
+    return stats, unmatched, missing_records
 
 
 def _process_change(
@@ -429,6 +485,7 @@ def _process_change(
     change,
     root_id,
     matters,
+    links,
     folder_cache,
     debug_dir,
     dry_run,
@@ -439,6 +496,8 @@ def _process_change(
     file_meta = change.get("file")
 
     # Removal / trash: we only get a fileId, so use our bookkeeping to delete.
+    # Notes only — the record mirror is append-only, so a removed record PDF
+    # leaves its Document (and OCR/highlights) untouched.
     if change.get("removed") or (file_meta and file_meta.get("trashed")):
         _remove_note(file_id, debug_dir, dry_run, stats)
         return
@@ -447,23 +506,36 @@ def _process_change(
         # Folder renames/moves are reconciled by the periodic --full sync.
         return
 
-    if not _is_allowed(file_meta):
-        _remove_note(file_id, debug_dir, dry_run, stats)
-        return
-
     parts = _walk_to_root(service, file_meta, root_id, folder_cache)
-    if not _in_notes_scope(parts):
-        # Moved out of the Notes scope; clean up if we were tracking it.
-        _remove_note(file_id, debug_dir, dry_run, stats)
+
+    if _in_notes_scope(parts):
+        if not _is_allowed(file_meta):
+            # A note replaced by a disallowed type stops being a note.
+            _remove_note(file_id, debug_dir, dry_run, stats)
+            return
+        try:
+            _ingest(
+                service, file_meta, parts, matters, debug_dir, dry_run, stats, unmatched
+            )
+        except Exception:
+            stats["failed"] += 1
+            logger.exception("Failed to sync note %s", file_meta.get("name"))
         return
 
-    try:
-        _ingest(
-            service, file_meta, parts, matters, debug_dir, dry_run, stats, unmatched
-        )
-    except Exception:
-        stats["failed"] += 1
-        logger.exception("Failed to sync note %s", file_meta.get("name"))
+    if records.in_record_scope(parts, links):
+        if not records.is_pdf(file_meta):
+            stats["records_non_pdf"] += 1
+            return
+        try:
+            records.ingest_record(service, file_meta, parts, links, dry_run, stats)
+        except Exception:
+            stats["records_failed"] += 1
+            logger.exception("Failed to sync record %s", file_meta.get("name"))
+        return
+
+    # Out of every scope; clean up a note we may have been tracking (a
+    # record Document, by contract, stays).
+    _remove_note(file_id, debug_dir, dry_run, stats)
 
 
 def sync(dry_run=False, full=False, debug_dir=None):
@@ -486,22 +558,32 @@ def sync(dry_run=False, full=False, debug_dir=None):
     if debug_dir is None:
         debug_dir = settings.DRIVE_NOTES_DEBUG_DIR or ""
     matters = _matters_by_folder()
+    links = records.proceedings_by_folder()
     state, _ = DriveSyncState.objects.get_or_create(pk=1)
 
     # First run or forced full: crawl everything, then capture a start token.
     if full or not state.page_token:
-        stats, unmatched = bootstrap(service, root_id, matters, debug_dir, dry_run)
+        stats, unmatched, missing_records = bootstrap(
+            service, root_id, matters, links, debug_dir, dry_run
+        )
         token = service.changes().getStartPageToken(**_page_token_args()).execute()
         if not dry_run:
             state.page_token = token["startPageToken"]
             state.unmatched_folders = sorted(unmatched)
+            state.missing_record_folders = sorted(missing_records)
             state.save()
         logger.info(
-            "Drive notes bootstrap complete: %s (unmatched: %s)",
+            "Drive notes bootstrap complete: %s (unmatched: %s, missing record "
+            "folders: %s)",
             stats,
             sorted(unmatched),
+            sorted(missing_records),
         )
-        return {**stats, "unmatched": sorted(unmatched)}
+        return {
+            **stats,
+            "unmatched": sorted(unmatched),
+            "missing_record_folders": sorted(missing_records),
+        }
 
     # Incremental: consume the changes delta.
     stats = _new_stats()
@@ -530,6 +612,7 @@ def sync(dry_run=False, full=False, debug_dir=None):
                     change,
                     root_id,
                     matters,
+                    links,
                     folder_cache,
                     debug_dir,
                     dry_run,
@@ -561,15 +644,21 @@ def sync(dry_run=False, full=False, debug_dir=None):
 
 def get_sync_status():
     """Summary for the Settings > Integrations health panel (DB-only)."""
+    from apps.case.models import Document
+
     linked_matters = (
         Matter.objects.exclude(drive_folder__isnull=True)
         .exclude(drive_folder="")
         .count()
     )
+    state = DriveSyncState.objects.first()
     return {
         "linked": check_credentials(),
         "synced_count": Note.objects.filter(drive_file_id__isnull=False).count(),
         "linked_matters": linked_matters,
+        "synced_records": Document.objects.filter(drive_file_id__isnull=False).count(),
+        "linked_proceedings": len(records.proceedings_by_folder()),
+        "missing_record_folders": state.missing_record_folders if state else [],
     }
 
 
