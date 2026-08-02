@@ -78,6 +78,13 @@ PROMPT_ROLE = (
     "text, then read_opinion) — the seminal rule case is often one hop "
     "behind the case you found. Boolean search is only the entry point; "
     "the citation network is where thorough research happens.\n\n"
+    "ADVERSE AUTHORITY (all protocols): before endorsing any position — "
+    "ESPECIALLY one the attorney has proposed — run at least one search "
+    "framed to find authority AGAINST it: the case opposing counsel "
+    "would cite. Report what the adverse search surfaced, or say "
+    "explicitly that it came up empty. Agreement backed only by "
+    "supporting searches is advocacy, not diligence, and the attorney "
+    "needs diligence.\n\n"
     "Check list_saved_caselaw before searching so prior research is "
     "reused. Prefer the matter's jurisdiction; broaden only when its law "
     "is sparse.\n\n"
@@ -180,7 +187,7 @@ def build_research_system(context_text, depth, prior_research=""):
     )
 
 
-def apply_grounding(response_text, citations_data, trail_events):
+def apply_grounding(response_text, citations_data, trail_events, prior_treated=None):
     """Resolve [cluster:n] markers against the trail, annotate citations.
 
     Returns (display_text, citations_data, grounding_event). Markers are
@@ -188,11 +195,24 @@ def apply_grounding(response_text, citations_data, trail_events):
     ``grounded``/``cluster_id`` when a marker sits just after it in the raw
     text AND that cluster was actually retrieved. Missing or unretrieved
     markers degrade to grounded=False — never an error.
+
+    The grounding event also flags ``untreated_clusters``: cited
+    authorities never treatment-checked in this turn or (via
+    ``prior_treated``) any earlier turn — the mechanical backstop for the
+    prompt's check-everything-you-rely-on rule, which the model has been
+    seen skipping (conversation 799 rested on a 1908 case unchecked).
     """
     retrieved = set()
+    treated = set(prior_treated or ())
     for event in trail_events:
         if event.get("type") == "read" and event.get("cluster_id"):
             retrieved.add(int(event["cluster_id"]))
+        if (
+            event.get("type") == "treatment"
+            and event.get("checked")
+            and event.get("cluster_id")
+        ):
+            treated.add(int(event["cluster_id"]))
         for row in event.get("results", []) or []:
             if row.get("cluster_id"):
                 retrieved.add(int(row["cluster_id"]))
@@ -222,6 +242,7 @@ def apply_grounding(response_text, citations_data, trail_events):
         "type": "grounding",
         "cited_clusters": cited,
         "ungrounded_clusters": sorted(set(cited) - retrieved),
+        "untreated_clusters": sorted(set(cited) - treated),
     }
     display_text = CLUSTER_MARKER_RE.sub("", response_text)
     return display_text, citations_data, grounding_event
@@ -403,8 +424,18 @@ def run_research_request(
         )
         citations_data = []
 
+    prior_treated = set()
+    for message in conversation.messages.filter(role="assistant"):
+        for event in message.research_trail or []:
+            if (
+                event.get("type") == "treatment"
+                and event.get("checked")
+                and event.get("cluster_id")
+            ):
+                prior_treated.add(int(event["cluster_id"]))
+
     display_text, citations_data, grounding_event = apply_grounding(
-        response_text, citations_data, trail
+        response_text, citations_data, trail, prior_treated=prior_treated
     )
     trail = trail + [grounding_event]
 
