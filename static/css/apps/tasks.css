@@ -218,7 +218,6 @@ tr > td.importance.complete .button-link {
   }
 
   .tasks-toolbar .view-toggle {
-    margin-left: 0;
     order: 5;
   }
 
@@ -230,21 +229,20 @@ tr > td.importance.complete .button-link {
 }
 
 
-/* Grows into the remaining width up to its cap; the auto margin pairs with
-   the view toggle's so the leftover space splits evenly and the input sits
-   centered between the filter tools and the toggle. */
+/* Creation zone, left: the input sits beside the + button so it reads as
+   add, not search. 30rem basis, shrinkable when space tightens. */
 .tasks-add-quick-input {
   background: var(--background-light);
   color: var(--color-primary);
-  flex: 1 1 auto;
-  margin-left: auto;
-  max-width: 30rem;
+  flex: 0 1 30rem;
   min-width: 12rem;
   padding-left: 1rem;
 }
 
-/* The list/board toggle anchors to the toolbar's far right. */
-.tasks-toolbar .view-toggle {
+/* Viewing zone, right: Filter + date cluster with the list/board toggle at
+   the far edge. Scoped to the browse toolbar only — the bulk-selection
+   toolbar reuses .filter-tools and stays left. */
+.tasks-toolbar .tasks-view-tools {
   margin-left: auto;
 }
 
