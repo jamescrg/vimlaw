@@ -439,7 +439,8 @@ def ai_status(request, conv_id):
             conv_id,
         )
 
-        # Save assistant message with citations
+        # Save assistant message with citations (research-kind payloads also
+        # carry the research trail; classic payloads lack the key -> []).
         assistant_message = Message.objects.create(
             conversation=conversation,
             role="assistant",
@@ -447,6 +448,7 @@ def ai_status(request, conv_id):
             input_tokens=status_data.get("input_tokens"),
             output_tokens=status_data.get("output_tokens"),
             verified_citations=verified_citations,
+            research_trail=status_data.get("research_trail", []),
         )
 
         # Update conversation timestamp
