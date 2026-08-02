@@ -3,8 +3,11 @@ Collapsible research trail under a research-chat answer: the plan, every
 search (query + hits), every opinion read (linked to the cluster viewer),
 and treatment checks. Data is Message.research_trail (list of events).
 {% endcomment %}
-{% comment %} Open by default while the feature is under evaluation. {% endcomment %}
-<details class="ai-research-trail" open>
+{% comment %}
+Collapsed by default: each turn keeps its full trail one click away
+without crowding the dialogue.
+{% endcomment %}
+<details class="ai-research-trail">
   <summary>
     <i class="icon-scale"></i>
     Research trail ({{ message.research_trail|length }} step{{ message.research_trail|length|pluralize }})
