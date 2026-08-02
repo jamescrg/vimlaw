@@ -703,8 +703,8 @@ def tasks_filter_matter(request, matter_id):
 @login_required
 @require_POST
 def tasks_panel_tab(request, tab):
-    """Switch the matters panel between its Matters and Users tabs."""
-    if tab not in ("matters", "users"):
+    """Switch the matters panel between its Matters, Users, and Due tabs."""
+    if tab not in ("matters", "users", "dates"):
         raise Http404("Unknown panel tab")
     request.session["tasks_panel_tab"] = tab
     request.session.modified = True

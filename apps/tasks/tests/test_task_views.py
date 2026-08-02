@@ -129,6 +129,18 @@ def test_panel_tab_users(client, user, task):
     assert response.status_code == 404
 
 
+def test_panel_tab_dates(client, user, task):
+    user.tasks_layout = "panel"
+    user.save(update_fields=["tasks_layout"])
+    response = client.post(reverse("tasks:panel-tab", args=["dates"]))
+    assert response.status_code == 200
+    assert response.context["panel_tab"] == "dates"
+    assert b"Unscheduled" in response.content
+    assert b"Next Week" in response.content
+    # The toolbar's date dropdown yields to the Due tab in panel mode.
+    assert b"tasks-date-filter" not in response.content
+
+
 # -----------------------------------------------------
 # edge case tests - nonexistent records
 # -----------------------------------------------------

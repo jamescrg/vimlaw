@@ -11,8 +11,36 @@
                 class="tasks-panel-tab {% if panel_tab == 'users' %}active{% endif %}"
                 hx-post="{% url 'tasks:panel-tab' 'users' %}"
                 hx-target="#tasks">Users</button>
+        <button type="button"
+                class="tasks-panel-tab {% if panel_tab == 'dates' %}active{% endif %}"
+                hx-post="{% url 'tasks:panel-tab' 'dates' %}"
+                hx-target="#tasks">Due</button>
       </div>
-      {% if panel_tab == 'users' %}
+      {% if panel_tab == 'dates' %}
+        <a class="tasks-panel-item {% if not filter_label or filter_label == 'all' or filter_label == 'default' %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'tasks:filter-quick' 'all' %}"
+           hx-target="#tasks">All Tasks</a>
+        <a class="tasks-panel-item {% if filter_label == 'unscheduled' %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'tasks:filter-quick' 'unscheduled' %}"
+           hx-target="#tasks">Unscheduled</a>
+        <a class="tasks-panel-item {% if filter_label == 'today' %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'tasks:filter-quick' 'today' %}"
+           hx-target="#tasks">Today</a>
+        <a class="tasks-panel-item {% if filter_label == 'week' %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'tasks:filter-quick' 'week' %}"
+           hx-target="#tasks">This Week</a>
+        <a class="tasks-panel-item {% if filter_label == 'next_week' %}active{% endif %}"
+           href="#"
+           hx-post="{% url 'tasks:filter-quick' 'next_week' %}"
+           hx-target="#tasks">Next Week</a>
+        {% if filter_label == 'custom' %}
+          <span class="tasks-panel-item tasks-panel-note">Custom range (set in Filter)</span>
+        {% endif %}
+      {% elif panel_tab == 'users' %}
         <a class="tasks-panel-item {% if not user_id %}active{% endif %}"
            href="#"
            hx-post="{% url 'tasks:filter-user' 0 %}"
