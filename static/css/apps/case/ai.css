@@ -2059,34 +2059,29 @@
 }
 
 /* Research chat: new-conversation style options, header badge, trail.
-   Two-column layout, one row per style: name (with its radio) left,
-   description right, columns aligned across rows. display: contents
-   lifts each label's children into the shared grid while keeping the
-   label's click-to-select. */
+   One row per style — radio | name | description — sharing a single grid
+   so the description column starts at the same x for every row instead
+   of trailing each name inline. display: contents lifts each label's
+   children into the shared grid while keeping the label's
+   click-to-select. */
 .ai-kind-options {
   align-items: baseline;
   display: grid;
-  gap: 0.5rem 1rem;
-  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.75rem;
+  grid-template-columns: auto auto 1fr;
 }
 
 .ai-kind-option {
   display: contents;
 }
 
-.ai-kind-name {
-  align-items: center;
-  cursor: pointer;
-  display: flex;
-  gap: 0.5rem;
-  white-space: nowrap;
-}
-
-.ai-kind-option .ai-kind-name input[type="radio"] {
+.ai-kind-option input[type="radio"] {
   margin: 0;
   width: auto;
 }
 
+.ai-kind-option input[type="radio"],
+.ai-kind-option .ai-kind-name,
 .ai-kind-option .detail-text {
   cursor: pointer;
 }
