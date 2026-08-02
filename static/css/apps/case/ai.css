@@ -2160,3 +2160,12 @@
 .ai-status-content:has(.ai-research-log) {
   flex-wrap: wrap;
 }
+
+/* Conversation-list title cell: title left, kind badge pushed right so it
+   never crowds the neighboring columns. */
+.ai-title-cell {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
