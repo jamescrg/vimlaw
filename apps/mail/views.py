@@ -1,5 +1,9 @@
+import logging
+import threading
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -10,6 +14,8 @@ from apps.matters.models import Matter
 
 from .filters import EmailFilter
 from .models import Email, GmailAccount
+
+logger = logging.getLogger(__name__)
 
 
 def get_emails_data(request, matter, matter_id):
@@ -246,6 +252,78 @@ def _queue_resync(matter):
         async_task("apps.mail.google.resync_matter_by_id", matter.id)
     except Exception:
         mail_google.resync_matter(matter)
+
+
+def _refresh_cache_key(matter_id):
+    return f"emails_refresh_{matter_id}"
+
+
+def _start_refresh(matter):
+    """Run the per-matter resync on a daemon thread.
+
+    Deliberately NOT the django-q queue: an on-demand refresh must not sit
+    behind whatever the shared queue is chewing on (a wedged attachment
+    batch once stranded the button in its syncing state for the queue's
+    whole retry cycle). Completion is signalled through the cache, the
+    same pattern the AI status indicator uses — which also means it
+    assumes status polls land in the process that spawned the thread
+    (single gunicorn worker), exactly as the AI chat already does."""
+    key = _refresh_cache_key(matter.id)
+
+    def run():
+        try:
+            mail_google.resync_matter(matter)
+        except Exception:
+            logger.exception("On-demand email resync failed for matter %s", matter.id)
+        finally:
+            cache.delete(key)
+
+    threading.Thread(target=run, daemon=True).start()
+
+
+@login_required
+@require_POST
+def emails_refresh(request, matter_id):
+    """On-demand resync of this matter, ahead of the scheduled sync.
+
+    Swaps the Refresh button for a pill that polls emails_refresh_status
+    until the resync thread clears the running flag. A second click while
+    one is running just re-attaches to the run in flight."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    if not (matter.gmail_label_name and mail_google.check_credentials()):
+        return HttpResponse(status=204, headers={"HX-Trigger": "emailsChanged"})
+    key = _refresh_cache_key(matter.id)
+    if cache.get(key) != "running":
+        cache.set(key, "running", 600)
+        _start_refresh(matter)
+    return render(
+        request,
+        "case/emails/refresh-button.html",
+        {"matter": matter, "syncing": True, "polls": 0},
+    )
+
+
+@login_required
+def emails_refresh_status(request, matter_id):
+    """Poll target for the refresh pill: swap back + reload once the
+    resync thread finishes. The poll cap (150 × 2s, matching the running
+    flag's 600s timeout) backstops a thread that died without cleanup."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    try:
+        polls = int(request.GET.get("polls", 0))
+    except ValueError:
+        polls = 0
+
+    if cache.get(_refresh_cache_key(matter.id)) == "running" and polls < 150:
+        return render(
+            request,
+            "case/emails/refresh-button.html",
+            {"matter": matter, "syncing": True, "polls": polls + 1},
+        )
+
+    response = render(request, "case/emails/refresh-button.html", {"matter": matter})
+    response["HX-Trigger"] = "emailsChanged"
+    return response
 
 
 @login_required
