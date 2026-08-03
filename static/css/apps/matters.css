@@ -174,7 +174,7 @@ Matter Switcher
 /* The back chevron is a direct toolbar child here (no toolbar-left gap to
    space it), so give it its own gap before the switcher. */
 .matter-toolbar > .detail-back {
-  margin-right: 0.75rem;
+  margin-right: 0.5rem;
 }
 
 /* Prev/next as one segmented navigator, anchored to the far right (the back

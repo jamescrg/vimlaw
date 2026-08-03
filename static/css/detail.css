@@ -62,6 +62,16 @@ Detail Layout (header / subnav / body)
   color: var(--color-muted);
   display: inline-flex;
   font-size: 1.25rem;
+  /* Optical nudge onto the title's baseline. */
+  position: relative;
+  top: 1px;
+}
+
+/* Tuck the title closer: the icon-only toolbar padding (icons.css) is
+   0.5rem all round; the :has mirrors its specificity to win the right
+   side down to 0.25rem. */
+.toolbar a.detail-back:has(> i:only-child) {
+  padding-right: 0.25rem;
 }
 
 .toolbar a.detail-back:hover,
