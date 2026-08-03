@@ -423,9 +423,9 @@ tr > td.importance.complete .button-link {
   background: var(--violet-400);
   border-radius: var(--radius-full);
   display: inline-block;
-  height: 0.5rem;
+  height: 0.375rem;
   vertical-align: middle;
-  width: 0.5rem;
+  width: 0.375rem;
 }
 
 /* Same spacing and borders as table cells (td). flex-shrink: 0 because the
