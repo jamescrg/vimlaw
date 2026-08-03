@@ -4,6 +4,9 @@
       <div class="card">
         <div class="toolbar">
           <div class="toolbar-left">
+            <a class="detail-back"
+               href="{% url 'intakes:index' %}"
+               aria-label="Back to intakes"><i class="icon-chevron-left"></i></a>
             {# The same importance dropdown the list rows use, leading the name #}
             <div class="filter-tools intake-importance">{% include "intakes/intake-importance.html" %}</div>
             <h1>{{ intake.name|slice:":23" }}</h1>

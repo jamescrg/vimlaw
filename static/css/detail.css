@@ -51,6 +51,25 @@ Detail Layout (header / subnav / body)
   border: none;
 }
 
+/* Back-to-list chevron on detail title bars: a bare glyph, exempt from the
+   toolbar button chrome (the .detail-header variant outranks the border+fill
+   rule above; the plain variant beats toolbar.css by loading later). */
+.toolbar a.detail-back,
+.detail-header .toolbar a.detail-back {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  display: inline-flex;
+  font-size: 1.25rem;
+}
+
+.toolbar a.detail-back:hover,
+.detail-header .toolbar a.detail-back:hover {
+  background: none;
+  color: var(--color-primary);
+}
+
 .subnav .subnav-back {
   padding-left: 0.5rem;
   margin-right: 0;
