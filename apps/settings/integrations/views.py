@@ -12,11 +12,11 @@ import apps.mail.google as mail_google
 from apps.mail.models import GmailAccount
 from utils.prepare_path import prepare_path
 
-CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
-CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
-DRIVE_TOKEN_PATH = "google/drive_tokens.json"
-EMAIL_TOKEN_PATH = "google/email_tokens.json"
-GOOGLE_TOKEN_PATH = "google/google_tokens.json"
+CONTACTS_TOKEN_PATH = settings.GOOGLE_CONTACTS_TOKEN_PATH
+CALENDAR_TOKEN_PATH = settings.GOOGLE_CALENDAR_TOKEN_PATH
+DRIVE_TOKEN_PATH = settings.GOOGLE_DRIVE_TOKEN_PATH
+EMAIL_TOKEN_PATH = settings.GOOGLE_EMAIL_TOKEN_PATH
+GOOGLE_TOKEN_PATH = settings.GOOGLE_CLIENT_SECRET_PATH
 
 # Map the <app> URL segment to its token file.
 TOKEN_PATHS = {

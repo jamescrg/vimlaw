@@ -8,7 +8,7 @@ from apps.mail.models import Email, GmailAccount, GmailSyncState
 class Command(BaseCommand):
     help = (
         "One-time multi-account migration: turn the legacy shared token file "
-        "(google/email_tokens.json) into the given user's GmailAccount, move "
+        "(GOOGLE_DATA_DIR/email_tokens.json) into the given user's GmailAccount, move "
         "the sync cursor onto it, claim all existing Email rows, and backfill "
         "Email.message_id (the cross-mailbox dedupe key) from Gmail. Run "
         "BEFORE anyone else connects a mailbox."

@@ -1,7 +1,8 @@
-import os
 from itertools import chain
 from tempfile import NamedTemporaryFile
 from typing import Dict, Union
+
+from django.conf import settings
 
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
@@ -139,7 +140,7 @@ def _format_line(
 
     common_end_fields = {
         "TIMEKEEPER_ID": timekeeper_initials,
-        "LAW_FIRM_ID": os.getenv("LAW_FIRM_ID"),
+        "LAW_FIRM_ID": settings.LAW_FIRM_ID,
         "TIMEKEEPER_NAME": timekeeper_name,
         "TIMEKEEPER_CLASSIFICATION": "PT",
         "CLIENT_MATTER_ID": entry.matter.client_reference_id or "",

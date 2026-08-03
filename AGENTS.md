@@ -26,8 +26,8 @@ source .venv/bin/activate
 uv sync
 
 # Set up environment variables
-cp config/.env.example config/.env
-# Edit config/.env with your local settings
+cp config/.env.dev config/.env
+# The copied file has safe local defaults; adjust PostgreSQL values if needed
 
 # Run migrations
 python manage.py migrate
@@ -365,7 +365,8 @@ kosmos/
 
 ## Environment Variables
 
-Required environment variables (see `config/.env.example`):
+Required environment variables (see `config/.env.dev` for safe local defaults
+and `config/.env.example` for the complete configuration reference):
 
 - `SECRET_KEY`: Django secret key
 - `DEBUG`: Debug mode (True/False)

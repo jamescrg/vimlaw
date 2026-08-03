@@ -1,7 +1,6 @@
-from croniter import croniter
 from django.core.management.base import BaseCommand
-from django.utils import timezone
-from django_q.models import Schedule
+
+from apps.management.schedules import install_schedules
 
 
 class Command(BaseCommand):
@@ -23,40 +22,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         minute_hour = options["time"]
-
-        schedules = [
-            (
-                "auto-summary-nightly",
-                "apps.case.ai.auto_summary.scheduled_refresh_auto_summaries",
-                f"{minute_hour} * * 0,2-6",
-            ),
-            (
-                "auto-summary-weekly-rebuild",
-                "apps.case.ai.auto_summary.scheduled_refresh_auto_summaries_full",
-                f"{minute_hour} * * 1",
-            ),
-            # After the matter threads finish, per-user daily plans draw on
-            # that night's summaries and agendas
-            (
-                "auto-daily-plan",
-                "apps.dash.agenda.scheduled_refresh_daily_plans",
-                "45 2 * * *",
-            ),
-        ]
-
-        local_now = timezone.localtime(timezone.now())
-        for name, func, cron in schedules:
-            _, created = Schedule.objects.update_or_create(
-                name=name,
-                defaults={
-                    "func": func,
-                    "schedule_type": Schedule.CRON,
-                    "cron": cron,
-                    "repeats": -1,
-                    # A fresh row defaults next_run to now, which would fire
-                    # the schedule immediately; aim it at the real next slot.
-                    "next_run": croniter(cron, local_now).get_next(type(local_now)),
-                },
-            )
+        names = {
+            "auto-summary-nightly",
+            "auto-summary-weekly-rebuild",
+            "auto-daily-plan",
+        }
+        for spec, created in install_schedules(
+            names=names, auto_summary_time=minute_hour
+        ):
             action = "Created" if created else "Updated"
-            self.stdout.write(self.style.SUCCESS(f"{action} {name} (cron: {cron})"))
+            self.stdout.write(
+                self.style.SUCCESS(f"{action} {spec.name} (cron: {spec.cron})")
+            )

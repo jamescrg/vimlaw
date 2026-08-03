@@ -56,7 +56,7 @@ from .models import DriveSyncState
 
 logger = logging.getLogger(__name__)
 
-DRIVE_TOKEN_PATH = "google/drive_tokens.json"
+DRIVE_TOKEN_PATH = settings.GOOGLE_DRIVE_TOKEN_PATH
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
 GOOGLE_DOC_MIME = "application/vnd.google-apps.document"
@@ -726,6 +726,14 @@ def sync(dry_run=False, full=False, debug_dir=None):
 
     logger.info("Drive notes sync complete: %s", stats)
     return {**stats, "unmatched": sorted(unmatched)}
+
+
+def scheduled_sync():
+    return sync()
+
+
+def scheduled_sync_full():
+    return sync(full=True)
 
 
 def get_sync_status():

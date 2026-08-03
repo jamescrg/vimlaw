@@ -58,7 +58,7 @@ functionality.
   - [Prerequisites](#prerequisites)
   - [Connecting Drive and linking matters](#connecting-drive-and-linking-matters)
   - [Configuration](#configuration)
-  - [Keeping notes in sync (systemd)](#keeping-notes-in-sync-systemd)
+  - [Keeping notes in sync (Django-Q)](#keeping-notes-in-sync-django-q)
 
 ## Getting Started
 
@@ -208,15 +208,32 @@ shell and doesn't need separate installation.
 The project uses a number of environment variables to store either
 sensitive information or instance-specific configuration.
 
-An example of the `.env` file is provided in the configuration directory
-located at `config/.env.example`.
+Two `.env` templates are provided in the configuration directory:
 
-To set up the project environment correctly, create a new `.env` file
-in the same directory as the example file and copy the contents of the
-example file into the new `.env` file.
+- `config/.env.dev` contains safe, working development defaults. It uses local
+  file storage, console email, fake payments, and no external API credentials.
+- `config/.env.example` is the comprehensive reference for configuring other
+  environments and optional integrations.
 
-**The `.env.example` file has all the necessary environment variables,
-their types, examples and descriptions.**
+For local development, create the private environment file with:
+
+```bash
+cp config/.env.dev config/.env
+```
+
+The application only reads `config/.env`; `.env.dev` is a copy-ready template
+and is never loaded directly. Its PostgreSQL defaults are database `kosmos`,
+user `kosmos`, and password `kosmos` on `localhost:5432`.
+
+For staging or production, start from `config/.env.example` instead and supply
+real secrets and service configuration.
+
+For a credential-free local setup, keep `STORAGE_BACKEND=local` and
+`EMAIL_BACKEND=console`. Set `STORAGE_BACKEND=s3` to use DigitalOcean Spaces,
+or `EMAIL_BACKEND=smtp` for real email delivery; credentials for each service
+are only required when that mode is selected. Never expose a production local
+`MEDIA_ROOT` directly through a web server because it contains confidential
+client documents.
 
 ### Running Migrations
 
@@ -275,6 +292,17 @@ To process background tasks, run the following command in a separate terminal:
 ```bash
 python manage.py qcluster
 ```
+
+Recurring jobs are installed explicitly and idempotently after migrations:
+
+```bash
+python manage.py setup_schedules
+```
+
+This one command configures the digest, Google Calendar, Google Drive, Gmail,
+AI-summary, daily-plan, and chat-retention schedules. It is safe to run again
+after a deployment; migrations and schedule setup are never run automatically
+when the application starts.
 
 #### Production Setup (systemd)
 
@@ -468,9 +496,10 @@ the credentials file in JSON format.
 
 #### Step 2: Add the credentials file to the project
 
-There is an empty directory in the project root directory called `/google`.
+Google integration files live in `GOOGLE_DATA_DIR`, which defaults to the
+`google` directory in the project root.
 
-Add the credentials file to the `/google` directory and
+Add the credentials file to that directory and
 rename it to `google_tokens.json`.
 
 #### Step 3: Set up the environment variables
@@ -530,51 +559,12 @@ control the sync:
   local directory for inspection (off by default; the database is canonical).
 - `DRIVE_SHARED_DRIVE_ID` — set only if the root folder lives in a Shared Drive.
 
-### Keeping notes in sync (systemd)
+### Keeping notes in sync (Django-Q)
 
-Linking a matter syncs it once. To keep notes current as they change in Drive,
-run the sync on a timer (a `oneshot` service driven by a `.timer`). Django reads
-`config/.env` itself, so no `EnvironmentFile` is needed; pandoc must be on the
-service's `PATH` (it is by default at `/usr/bin/pandoc`).
-
-Create `/etc/systemd/system/drive-notes-sync.service`:
-
-```ini
-[Unit]
-Description=Kosmos Google Drive case-notes sync (oneshot)
-After=network.target
-
-[Service]
-Type=oneshot
-User=<your_user>
-Group=<your_group>
-WorkingDirectory=/path/to/law
-ExecStart=/path/to/law/.venv/bin/python manage.py sync_drive_notes
-```
-
-Create `/etc/systemd/system/drive-notes-sync.timer`:
-
-```ini
-[Unit]
-Description=Run Kosmos Google Drive case-notes sync every ~30s
-
-[Timer]
-OnBootSec=30s
-OnUnitActiveSec=30s
-AccuracySec=5s
-Persistent=true
-Unit=drive-notes-sync.service
-
-[Install]
-WantedBy=timers.target
-```
-
-Then enable and start the timer:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now drive-notes-sync.timer
-```
+Linking a matter syncs it once. `python manage.py setup_schedules` adds an
+incremental Drive sync every minute and a nightly full reconciliation to the
+same Django-Q cluster used by the rest of the app. No separate host timer is
+required. The jobs safely no-op until an admin connects Google Drive.
 
 The first run performs a one-time crawl of all linked matters and stores a
 Changes-API cursor; later runs process only the delta. You can also sync

@@ -605,6 +605,8 @@ def download_document(request, document_id):
 
     response["Content-Disposition"] = f'attachment; filename="{full_file_name}"'
     response["Content-Length"] = document.file.size
+    response["Cache-Control"] = "private, no-store"
+    response["X-Content-Type-Options"] = "nosniff"
 
     return response
 

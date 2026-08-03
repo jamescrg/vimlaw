@@ -30,37 +30,37 @@ def test_set_tasks_layout(client, user):
 # -----------------------------------------------------
 # User management tests
 # -----------------------------------------------------
-def test_users_index(client):
-    response = client.get("/settings/users/")
+def test_users_index(admin_client):
+    response = admin_client.get("/settings/users/")
     assert response.status_code == 200
     assertTemplateUsed(response, "settings/users/index.html")
 
 
-def test_user_list(client):
-    response = client.get("/settings/users/list/")
+def test_user_list(admin_client):
+    response = admin_client.get("/settings/users/list/")
     assert response.status_code == 200
     assertTemplateUsed(response, "settings/users/user-table.html")
 
 
-def test_user_filter_get(client):
-    response = client.get("/settings/users/filter/")
+def test_user_filter_get(admin_client):
+    response = admin_client.get("/settings/users/filter/")
     assert response.status_code == 200
     assertTemplateUsed(response, "settings/users/filter.html")
 
 
-def test_user_filter_post(client):
+def test_user_filter_post(admin_client):
     data = {"is_active": "true"}
-    response = client.post("/settings/users/filter/", data)
+    response = admin_client.post("/settings/users/filter/", data)
     assert response.status_code == 204
 
 
-def test_add_user_get(client):
-    response = client.get("/settings/users/add/")
+def test_add_user_get(admin_client):
+    response = admin_client.get("/settings/users/add/")
     assert response.status_code == 200
     assertTemplateUsed(response, "settings/users/new-user.html")
 
 
-def test_add_user_post(client):
+def test_add_user_post(admin_client):
     data = {
         "username": "newuser",
         "password": "testpass123",
@@ -69,18 +69,18 @@ def test_add_user_post(client):
         "email": "new@test.com",
         "role": "USER",
     }
-    response = client.post("/settings/users/add/", data)
+    response = admin_client.post("/settings/users/add/", data)
     assert response.status_code == 204
     assert CustomUser.objects.filter(username="newuser").exists()
 
 
-def test_edit_user_get(client, user):
-    response = client.get(f"/settings/users/edit/{user.id}/")
+def test_edit_user_get(admin_client, user):
+    response = admin_client.get(f"/settings/users/edit/{user.id}/")
     assert response.status_code == 200
     assertTemplateUsed(response, "settings/users/form.html")
 
 
-def test_edit_user_post(client, user):
+def test_edit_user_post(admin_client, user):
     data = {
         "username": user.username,
         "email": "updated@test.com",
@@ -92,22 +92,22 @@ def test_edit_user_post(client, user):
         "user_rate": 200,
         "is_active": True,
     }
-    response = client.post(f"/settings/users/edit/{user.id}/", data)
+    response = admin_client.post(f"/settings/users/edit/{user.id}/", data)
     assert response.status_code == 204
     user.refresh_from_db()
     assert user.email == "updated@test.com"
 
 
-def test_change_role(client, user):
-    response = client.post(f"/settings/users/change-role/{user.id}/ADMIN/")
+def test_change_role(admin_client, user):
+    response = admin_client.post(f"/settings/users/change-role/{user.id}/ADMIN/")
     assert response.status_code == 204
     user.refresh_from_db()
     assert user.role == "ADMIN"
 
 
-def test_switch_status(client, user):
+def test_switch_status(admin_client, user):
     original_status = user.is_active
-    response = client.get(f"/settings/users/switch-status/{user.id}/")
+    response = admin_client.get(f"/settings/users/switch-status/{user.id}/")
     assert response.status_code == 204
     user.refresh_from_db()
     assert user.is_active != original_status
