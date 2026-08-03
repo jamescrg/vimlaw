@@ -64,7 +64,7 @@ Detail Layout (header / subnav / body)
   font-size: 1.25rem;
   /* Optical nudge onto the title's baseline. */
   position: relative;
-  top: 2px;
+  top: 1px;
 }
 
 /* Tuck the title closer: the icon-only toolbar padding (icons.css) is
