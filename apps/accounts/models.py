@@ -17,7 +17,7 @@ NAV_LAYOUT_OPTIONS = (
 
 TASKS_LAYOUT_OPTIONS = (
     ("classic", "Classic"),
-    ("panel", "Matters panel"),
+    ("panel", "Panel"),
 )
 
 

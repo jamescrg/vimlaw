@@ -68,8 +68,9 @@
   <h2 class="settings-section">Tasks</h2>
   <hr />
   <p class="detail-text">
-    The matters panel replaces the matter column in the tasks list with
-    a matter list beside it. Syncs across your devices.
+    The panel replaces the matter column in the tasks list with a tabbed
+    panel beside it for filtering by matter, user, or due date. Syncs
+    across your devices.
   </p>
   <fieldset class="nav-options">
     <label class="nav-option">
@@ -90,7 +91,7 @@
              hx-post="{% url 'settings:tasks-layout' %}"
              hx-trigger="change"
              hx-swap="none">
-      <span>Matters panel <small>(list view)</small></span>
+      <span>Panel <small>(list view)</small></span>
     </label>
   </fieldset>
 {% endblock subcontent %}
