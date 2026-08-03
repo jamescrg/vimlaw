@@ -18,11 +18,12 @@ from apps.trust.trust import get_confirmed_client_balance
 
 
 def _static_file_url_fetcher(url):
-    """URL fetcher that resolves static files from the local filesystem.
+    """URL fetcher that resolves static and media files from the filesystem.
 
     Handles two issues with file:// URL resolution:
-    1. Absolute paths (/static/...) cause urljoin to ignore the base_url,
-       resolving to file:///static/... instead of file://<BASE_DIR>/static/...
+    1. Absolute paths (/static/..., /media/...) cause urljoin to ignore the
+       base_url, resolving to file:///static/... instead of
+       file://<BASE_DIR>/static/...
     2. Cache buster query strings (?v=...) break filesystem lookups.
     """
     parsed = urlparse(url)
@@ -44,6 +45,14 @@ def _static_file_url_fetcher(url):
                 static_root_path = os.path.join(settings.STATIC_ROOT, relative_path)
                 if os.path.isfile(static_root_path):
                     return default_url_fetcher(f"file://{static_root_path}")
+        # Media uploads (the firm logo in the PDF header) live under
+        # MEDIA_ROOT, which no finder covers
+        media_prefix = "/" + settings.MEDIA_URL.strip("/") + "/"
+        if media_prefix in clean_path:
+            relative_path = clean_path.split(media_prefix, 1)[1]
+            media_path = settings.MEDIA_ROOT / relative_path
+            if os.path.isfile(media_path):
+                return default_url_fetcher(f"file://{media_path}")
     return default_url_fetcher(url)
 
 

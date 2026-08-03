@@ -107,15 +107,25 @@ def _unavailable_for(request, exc):
 
 
 def _invoice_pdf_response(invoice, request):
-    """Stream an invoice's PDF as a download, generating it if missing."""
-    if not invoice.pdf_file:
-        from apps.invoicing.invoices.functions.generate_invoice import (
-            store_invoice_pdf,
-        )
+    """Stream an invoice's PDF as a download, generating it if missing.
 
+    Regenerates when the field is empty AND when the stored file is gone
+    from disk (a database row can outlive its file — the containerization
+    move lost the whole media/invoices tree while every pdf_file field
+    kept pointing at it)."""
+    from apps.invoicing.invoices.functions.generate_invoice import (
+        store_invoice_pdf,
+    )
+
+    if not invoice.pdf_file:
         store_invoice_pdf(invoice, request)
+    try:
+        pdf = invoice.pdf_file.open("rb")
+    except FileNotFoundError:
+        store_invoice_pdf(invoice, request)
+        pdf = invoice.pdf_file.open("rb")
     return FileResponse(
-        invoice.pdf_file.open("rb"),
+        pdf,
         as_attachment=True,
         filename=f"Invoice {invoice.id}.pdf",
         content_type="application/pdf",
