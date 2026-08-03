@@ -1,0 +1,24 @@
+{% comment %}
+Refresh button for the Emails toolbar: idle it queues an on-demand resync
+of this matter; while the queued task runs it becomes a disabled pill that
+polls the status endpoint and swaps itself back (firing emailsChanged)
+when the sync lands.
+{% endcomment %}
+{% if task_id %}
+  <button type="button"
+          class="btn-icon"
+          disabled
+          hx-get="{% url 'case:emails-refresh-status' matter.id %}?task={{ task_id }}&amp;polls={{ polls }}"
+          hx-trigger="load delay:2s"
+          hx-swap="outerHTML">
+    <i class="icon-refresh-cw with-text spin"></i>Syncing…
+  </button>
+{% else %}
+  <button type="button"
+          class="btn-icon"
+          hx-post="{% url 'case:emails-refresh' matter.id %}"
+          hx-swap="outerHTML"
+          title="Pull this matter's latest emails from every connected mailbox now">
+    <i class="icon-refresh-cw with-text"></i>Refresh
+  </button>
+{% endif %}

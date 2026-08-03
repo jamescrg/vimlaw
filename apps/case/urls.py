@@ -492,6 +492,16 @@ urlpatterns = [
         name="emails-label-unlink",
     ),
     path(
+        "case/<int:matter_id>/emails/refresh/",
+        mail.emails_refresh,
+        name="emails-refresh",
+    ),
+    path(
+        "case/<int:matter_id>/emails/refresh/status/",
+        mail.emails_refresh_status,
+        name="emails-refresh-status",
+    ),
+    path(
         "case/<int:matter_id>/emails/filter/",
         mail.emails_filter,
         name="emails-filter",

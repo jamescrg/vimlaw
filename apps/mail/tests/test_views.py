@@ -358,3 +358,57 @@ def test_label_link_create_from_matter_name(client, matter, fake_gmail, _inline_
     matter.refresh_from_db()
     assert matter.gmail_label_name == "Matters - Open/Smith v Jones"
     assert _inline_resync == [matter.id]
+
+
+def test_toolbar_shows_refresh_when_linked(client, matter, fake_gmail):
+    response = client.get(reverse("case:emails-index", args=[matter.id]))
+    assert "emails/refresh/" in response.content.decode()
+
+
+def test_refresh_queues_resync_and_returns_polling_pill(
+    client, matter, fake_gmail, monkeypatch
+):
+    monkeypatch.setattr("apps.mail.views._queue_resync", lambda m: "task-123")
+    response = client.post(reverse("case:emails-refresh", args=[matter.id]))
+    content = response.content.decode()
+    assert "Syncing" in content
+    assert "task=task-123" in content
+
+
+def test_refresh_inline_fallback_reloads_immediately(
+    client, matter, fake_gmail, _inline_resync
+):
+    # The autouse _inline_resync stub returns None: the no-queue path.
+    response = client.post(reverse("case:emails-refresh", args=[matter.id]))
+    assert response.status_code == 204
+    assert response.headers["HX-Trigger"] == "emailsChanged"
+    assert _inline_resync == [matter.id]
+
+
+def test_refresh_without_label_queues_nothing(
+    client, matter, fake_gmail, _inline_resync
+):
+    matter.gmail_label_name = None
+    matter.save()
+    response = client.post(reverse("case:emails-refresh", args=[matter.id]))
+    assert response.status_code == 204
+    assert _inline_resync == []
+
+
+def test_refresh_status_pending_keeps_polling(client, matter, fake_gmail, monkeypatch):
+    monkeypatch.setattr("django_q.tasks.fetch", lambda tid: None)
+    url = reverse("case:emails-refresh-status", args=[matter.id])
+    response = client.get(url, {"task": "task-123", "polls": "3"})
+    content = response.content.decode()
+    assert "Syncing" in content
+    assert "polls=4" in content
+
+
+def test_refresh_status_done_restores_button_and_reloads(
+    client, matter, fake_gmail, monkeypatch
+):
+    monkeypatch.setattr("django_q.tasks.fetch", lambda tid: object())
+    url = reverse("case:emails-refresh-status", args=[matter.id])
+    response = client.get(url, {"task": "task-123", "polls": "3"})
+    assert response.headers["HX-Trigger"] == "emailsChanged"
+    assert "Refresh" in response.content.decode()

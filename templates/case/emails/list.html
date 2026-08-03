@@ -28,6 +28,9 @@
         <i class="icon-alert-triangle with-text"></i>No matching label
       </span>
     {% endif %}
+    {% if matter.gmail_label_name and gmail_linked %}
+      {% include "case/emails/refresh-button.html" %}
+    {% endif %}
     <button type="button"
             class="btn-icon"
             hx-get="{% url 'case:emails-label-link-modal' matter.id %}"
