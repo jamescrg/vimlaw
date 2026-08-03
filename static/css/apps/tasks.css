@@ -407,10 +407,13 @@ tr > td.importance.complete .button-link {
   border-top-right-radius: calc(var(--radius-md) - 1px);
 }
 
-/* The active tab joins the list below: cell background, no dividing border. */
+/* The active tab joins the list below: cell background, no dividing border,
+   rounded top corners so it reads as a raised tab. */
 .tasks-panel-tab.active {
   background: var(--background-td);
   border-bottom-color: transparent;
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+  border-top-right-radius: calc(var(--radius-md) - 1px);
   color: var(--color-primary);
 }
 
