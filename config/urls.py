@@ -2,7 +2,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.static import serve
 
 from apps.tasks.views import tasks_index
 from config import health
@@ -70,4 +71,25 @@ def development_media_urlpatterns():
     return []
 
 
+def public_branding_media_urlpatterns():
+    """Keep media/company/ (the firm logo) routed in production.
+
+    Unrouting MEDIA_ROOT protects confidential uploads, but the logo is
+    deliberately public branding: the settings page, the public intake
+    form pages, and invoice PDF generation all load it by URL. Only this
+    one subdirectory - Firm.logo's upload_to - is exposed."""
+    if settings.STORAGE_BACKEND == "local":
+        media_prefix = settings.MEDIA_URL.lstrip("/")
+        return [
+            re_path(
+                rf"^{media_prefix}company/(?P<path>.*)$",
+                serve,
+                {"document_root": settings.MEDIA_ROOT / "company"},
+            )
+        ]
+
+    return []
+
+
 urlpatterns += development_media_urlpatterns()
+urlpatterns += public_branding_media_urlpatterns()
