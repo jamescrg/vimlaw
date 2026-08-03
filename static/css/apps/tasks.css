@@ -363,7 +363,7 @@ tr > td.importance.complete .button-link {
   border: solid 1px var(--border-medium);
   border-radius: var(--radius-md);
   display: flex;
-  flex: 0 0 18rem;
+  flex: 0 0 19rem;
   flex-direction: column;
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
