@@ -162,6 +162,22 @@ DATABASES = {
     }
 }
 
+# Cache. Same LocMemCache Django defaults to, but with the entry cap
+# raised: the default 300-entry cap culls a random third of the cache on
+# every write once full, and this cache holds AI chat status/completion
+# payloads (ai_status_*), CourtListener opinion payloads and rate-limit
+# counters. Under the default cap a mid-run cull could evict a research
+# run's live status (the trail flashing back to "Checking...") or, worse,
+# a finished run's completion payload before the browser polled it.
+# Per-process is fine here: gunicorn runs a single worker and AI requests
+# run on threads inside it.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "OPTIONS": {"MAX_ENTRIES": 10_000},
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
