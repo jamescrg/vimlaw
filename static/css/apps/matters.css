@@ -171,14 +171,18 @@ Matter Switcher
   justify-content: flex-start;
 }
 
-/* Prev/next as one segmented navigator, left of the title — a muted pill with
-   a hairline divider between the two chevrons. Grouped and left-anchored so
-   both buttons stay put (the title grows to their right) and read as a single
-   control, walking the open-matters list (wrapping at the ends). */
+/* The back chevron is a direct toolbar child here (no toolbar-left gap to
+   space it), so give it its own gap before the switcher. */
+.matter-toolbar > .detail-back {
+  margin-right: 0.5rem;
+}
+
+/* Prev/next as one segmented navigator, anchored to the far right (the back
+   chevron holds the left edge) — a muted pill with a hairline divider between
+   the two chevrons, walking the open-matters list (wrapping at the ends). */
 .matter-step-group {
   display: inline-flex;
-  margin-left: 0.75rem;
-  margin-right: 1rem;
+  margin-left: auto;
   overflow: hidden;
 }
 
@@ -211,6 +215,7 @@ Matter Switcher
 @media (width <= 768px) {
   .matter-toolbar .mode-pills,
   .matter-toolbar .expense-action,
+  .matter-toolbar .matter-step-group,
   .matter-toolbar .toolbar-right {
     display: none;
   }

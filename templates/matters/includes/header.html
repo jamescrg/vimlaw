@@ -3,11 +3,19 @@
   <div class="toolbar matter-toolbar">
     {% if mode == 'detail' %}
       {% get_adjacent_open_matters matter as adjacent %}
+      <a class="detail-back"
+         href="{% url 'matters:index' %}"
+         aria-label="Back to matters"><i class="icon-chevron-left"></i></a>
     {% endif %}
+    <div class="toolbar-left">
+      {% include "matters/includes/switcher.html" %}
+      {% include "matters/includes/mode-pills.html" %}
+      {% include "matters/includes/action_buttons.html" %}
+    </div>
     {% comment %}
-    Prev/next grouped as one segmented navigator, left of the title, so both
-    stay put (the title grows to their right) instead of shifting with the
-    matter name. The tag returns prev+next together or neither.
+    Prev/next grouped as one segmented navigator, pushed to the far right
+    (the back chevron holds the left edge). The tag returns prev+next
+    together or neither.
     {% endcomment %}
     {% if adjacent.prev %}
       <div class="matter-step-group">
@@ -21,10 +29,5 @@
            aria-label="Next matter"><i class="icon-chevron-right"></i></a>
       </div>
     {% endif %}
-    <div class="toolbar-left">
-      {% include "matters/includes/switcher.html" %}
-      {% include "matters/includes/mode-pills.html" %}
-      {% include "matters/includes/action_buttons.html" %}
-    </div>
   </div>
 </div>
