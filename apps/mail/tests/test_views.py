@@ -365,50 +365,90 @@ def test_toolbar_shows_refresh_when_linked(client, matter, fake_gmail):
     assert "emails/refresh/" in response.content.decode()
 
 
-def test_refresh_queues_resync_and_returns_polling_pill(
-    client, matter, fake_gmail, monkeypatch
+@pytest.fixture
+def _stub_refresh_thread(monkeypatch):
+    """Record refresh-thread starts instead of resyncing for real."""
+    starts = []
+    monkeypatch.setattr(
+        "apps.mail.views._start_refresh", lambda matter: starts.append(matter.id)
+    )
+    return starts
+
+
+@pytest.fixture(autouse=True)
+def _clear_refresh_flag(matter):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.delete(_refresh_cache_key(matter.id))
+    yield
+    cache.delete(_refresh_cache_key(matter.id))
+
+
+def test_refresh_starts_thread_and_returns_polling_pill(
+    client, matter, fake_gmail, _stub_refresh_thread
 ):
-    monkeypatch.setattr("apps.mail.views._queue_resync", lambda m: "task-123")
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
     response = client.post(reverse("case:emails-refresh", args=[matter.id]))
-    content = response.content.decode()
-    assert "Syncing" in content
-    assert "task=task-123" in content
+    assert "Syncing" in response.content.decode()
+    assert cache.get(_refresh_cache_key(matter.id)) == "running"
+    assert _stub_refresh_thread == [matter.id]
 
 
-def test_refresh_inline_fallback_reloads_immediately(
-    client, matter, fake_gmail, _inline_resync
+def test_refresh_reattaches_to_run_in_flight(
+    client, matter, fake_gmail, _stub_refresh_thread
 ):
-    # The autouse _inline_resync stub returns None: the no-queue path.
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.set(_refresh_cache_key(matter.id), "running", 60)
     response = client.post(reverse("case:emails-refresh", args=[matter.id]))
-    assert response.status_code == 204
-    assert response.headers["HX-Trigger"] == "emailsChanged"
-    assert _inline_resync == [matter.id]
+    assert "Syncing" in response.content.decode()
+    assert _stub_refresh_thread == []  # no second thread
 
 
-def test_refresh_without_label_queues_nothing(
-    client, matter, fake_gmail, _inline_resync
+def test_refresh_without_label_starts_nothing(
+    client, matter, fake_gmail, _stub_refresh_thread
 ):
     matter.gmail_label_name = None
     matter.save()
     response = client.post(reverse("case:emails-refresh", args=[matter.id]))
     assert response.status_code == 204
-    assert _inline_resync == []
+    assert _stub_refresh_thread == []
 
 
-def test_refresh_status_pending_keeps_polling(client, matter, fake_gmail, monkeypatch):
-    monkeypatch.setattr("django_q.tasks.fetch", lambda tid: None)
+def test_refresh_status_running_keeps_polling(client, matter, fake_gmail):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.set(_refresh_cache_key(matter.id), "running", 60)
     url = reverse("case:emails-refresh-status", args=[matter.id])
-    response = client.get(url, {"task": "task-123", "polls": "3"})
+    response = client.get(url, {"polls": "3"})
     content = response.content.decode()
     assert "Syncing" in content
     assert "polls=4" in content
 
 
-def test_refresh_status_done_restores_button_and_reloads(
-    client, matter, fake_gmail, monkeypatch
-):
-    monkeypatch.setattr("django_q.tasks.fetch", lambda tid: object())
+def test_refresh_status_done_restores_button_and_reloads(client, matter, fake_gmail):
     url = reverse("case:emails-refresh-status", args=[matter.id])
-    response = client.get(url, {"task": "task-123", "polls": "3"})
+    response = client.get(url, {"polls": "3"})
+    assert response.headers["HX-Trigger"] == "emailsChanged"
+    assert "Refresh" in response.content.decode()
+
+
+def test_refresh_status_poll_cap_gives_up(client, matter, fake_gmail):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.set(_refresh_cache_key(matter.id), "running", 60)
+    url = reverse("case:emails-refresh-status", args=[matter.id])
+    response = client.get(url, {"polls": "150"})
     assert response.headers["HX-Trigger"] == "emailsChanged"
     assert "Refresh" in response.content.decode()
