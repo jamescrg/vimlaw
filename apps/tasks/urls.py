@@ -28,6 +28,7 @@ from apps.tasks.views import (
     tasks_filter_default,
     tasks_filter_importance,
     tasks_filter_matter,
+    tasks_filter_matter_admin,
     tasks_filter_quick,
     tasks_filter_sort,
     tasks_filter_user,
@@ -35,6 +36,7 @@ from apps.tasks.views import (
     tasks_index,
     tasks_list,
     tasks_matter,
+    tasks_panel_tab,
     tasks_select,
     tasks_select_all,
     tasks_set_status,
@@ -107,6 +109,12 @@ urlpatterns = [
         tasks_filter_matter,
         name="filter-matter",
     ),
+    path(
+        "tasks/filter/matter/admin/",
+        tasks_filter_matter_admin,
+        name="filter-matter-admin",
+    ),
+    path("tasks/panel-tab/<str:tab>/", tasks_panel_tab, name="panel-tab"),
     path(
         "tasks/filter/user/<int:user_id>/",
         tasks_filter_user,

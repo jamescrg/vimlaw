@@ -33,9 +33,11 @@ class Task(AuditMixin, models.Model):
         else:
             old_status = None
 
-        # Set date_completed when status becomes Complete
+        # Set date_completed when status becomes Complete. localdate, not
+        # now().date(): the latter is the UTC date, which rolls over at 8pm
+        # ET and stamped evening completions with tomorrow's date.
         if self.status == "Complete" and old_status != "Complete":
-            self.date_completed = timezone.now().date()
+            self.date_completed = timezone.localdate()
         # Clear date_completed when status changes from Complete to something else
         elif self.status != "Complete" and old_status == "Complete":
             self.date_completed = None

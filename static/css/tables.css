@@ -341,12 +341,15 @@ tr.total td {
     min-width: 0;
   }
 
-  .card-table td.card-desc > a:first-child {
+  /* first-of-type, not first-child: the tasks matters-panel layout prefixes
+     the cell with an inline matter span, and the stretched link must still
+     land on the description link behind it. */
+  .card-table td.card-desc > a:first-of-type {
     color: inherit;
     text-decoration: none;
   }
 
-  .card-table td.card-desc > a:first-child::after {
+  .card-table td.card-desc > a:first-of-type::after {
     content: "";
     inset: 0;
     position: absolute;

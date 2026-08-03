@@ -556,6 +556,10 @@ def tasks_filter(request, user=None):
         # light the Filter button).
         if filter_data.get("has_due_date") == "unknown":
             filter_data["has_due_date"] = ""
+        # Picking a matter in the modal supersedes the panel's Admin
+        # (no-matter) state; together they'd always match nothing.
+        if filter_data.get("matter"):
+            filter_data["no_matter"] = ""
         filter_data["filter_label"] = _detect_filter_label(filter_data, date.today())
         request.session["tasks_filter"] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
@@ -685,7 +689,34 @@ def tasks_filter_quick(request, quick_filter):
 @login_required
 def tasks_filter_matter(request, matter_id):
     filter_data = request.session.get("tasks_filter", {})
-    filter_data["matter"] = matter_id
+    # The matters panel posts matter_id=0 for "All": clear the matter
+    # dimension entirely. Any real matter also clears the Admin (no-matter)
+    # state, so the two can't combine into an always-empty list.
+    filter_data["matter"] = "" if matter_id == 0 else matter_id
+    filter_data["no_matter"] = ""
+
+    request.session["tasks_filter"] = filter_data
+
+    return _render_tasks(request)
+
+
+@login_required
+@require_POST
+def tasks_panel_tab(request, tab):
+    """Switch the matters panel between its Matters, Users, and Due tabs."""
+    if tab not in ("matters", "users", "dates"):
+        raise Http404("Unknown panel tab")
+    request.session["tasks_panel_tab"] = tab
+    request.session.modified = True
+    return _render_tasks(request)
+
+
+@login_required
+def tasks_filter_matter_admin(request):
+    """Filter to matterless ("Admin") tasks, from the matters panel."""
+    filter_data = request.session.get("tasks_filter", {})
+    filter_data["matter"] = ""
+    filter_data["no_matter"] = "true"
 
     request.session["tasks_filter"] = filter_data
 
