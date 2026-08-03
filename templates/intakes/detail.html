@@ -7,9 +7,9 @@
             <a class="detail-back"
                href="{% url 'intakes:index' %}"
                aria-label="Back to intakes"><i class="icon-chevron-left"></i></a>
-            {# The same importance dropdown the list rows use, leading the name #}
-            <div class="filter-tools intake-importance">{% include "intakes/intake-importance.html" %}</div>
             <h1>{{ intake.name|slice:":23" }}</h1>
+            {# The same importance dropdown the list rows use, trailing the name #}
+            <div class="filter-tools intake-importance">{% include "intakes/intake-importance.html" %}</div>
           </div>
           <div class="toolbar-right">
             {# Same three-dot menu the folder rows use (folders/folder.html). #}

@@ -495,9 +495,10 @@ Importance flag in the detail header (beside the intake name)
   top: 3px;
 }
 
-/* Pull the name 0.25rem closer than the toolbar-left 1.25rem gap allows */
+/* The flag trails the name, pulled in close (0.5rem effective) against the
+   toolbar-left 1.25rem gap. */
 .intake-sidebar .toolbar-left .intake-importance {
-  margin-right: -0.25rem;
+  margin-left: -0.75rem;
 }
 
 /* Level colours, same ramp the list uses (which scopes them to
