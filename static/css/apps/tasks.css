@@ -371,19 +371,15 @@ tr > td.importance.complete .button-link {
   top: 1rem;
 }
 
-/* Panel head: the sub nav plus the current-view strip, sticky as one block
-   so both stay in sight while the panel scrolls. */
-.tasks-panel-head {
+/* Matters / Users sub nav, styled as the panel's header row (th). Sticky so
+   the tabs stay reachable while the panel scrolls. */
+.tasks-panel-tabs {
   border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
+  display: flex;
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 1;
-}
-
-/* Matters / Users / Due sub nav, styled as the panel's header row (th). */
-.tasks-panel-tabs {
-  display: flex;
 }
 
 .tasks-panel-tab {
@@ -454,43 +450,6 @@ tr > td.importance.complete .button-link {
 .tasks-panel-note:hover {
   background: var(--background-td);
   color: var(--color-muted);
-}
-
-/* Current-view strip: one row per non-default dimension, in the active-item
-   colours so it reads as the panel's selection map. The label jumps to its
-   tab; the x clears just that dimension. */
-.tasks-panel-summary {
-  border-bottom: solid 1px var(--border-medium);
-}
-
-.tasks-panel-chip {
-  align-items: center;
-  background: var(--selected-background);
-  display: flex;
-  gap: 0.5rem;
-  justify-content: space-between;
-  padding: 0.25rem 1rem;
-}
-
-.tasks-panel-chip + .tasks-panel-chip {
-  border-top: solid 1px var(--border-light);
-}
-
-.tasks-panel-chip > a {
-  color: var(--selected-color);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tasks-panel-chip > .tasks-panel-chip-clear {
-  color: var(--color-muted);
-  flex: none;
-}
-
-.tasks-panel-chip > .tasks-panel-chip-clear:hover {
-  color: var(--color-primary);
 }
 
 /* Inline matter prefix in the description cell. */

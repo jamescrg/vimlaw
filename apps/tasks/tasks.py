@@ -212,15 +212,6 @@ def get_list_data(request):
     panel_layout = request.user.tasks_layout == "panel"
     panel_tab = request.session.get("tasks_panel_tab", "matters")
     no_matter = filter_data.get("no_matter") in ("true", True)
-    # Display label for the active date filter, for the panel's current-view
-    # strip; empty when the date dimension is at its All default.
-    date_label = {
-        "today": "Today",
-        "week": "This Week",
-        "next_week": "Next Week",
-        "unscheduled": "Unscheduled",
-        "custom": "Custom range",
-    }.get(filter_data.get("filter_label") or "", "")
 
     list_data = {
         "pagination": pagination,
@@ -248,7 +239,6 @@ def get_list_data(request):
         "panel_layout": panel_layout,
         "panel_tab": panel_tab,
         "no_matter": no_matter,
-        "date_label": date_label,
         "custom_filter_active": bool(filter_data)
         and any(
             [
