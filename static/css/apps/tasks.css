@@ -371,54 +371,57 @@ tr > td.importance.complete .button-link {
   top: 1rem;
 }
 
-/* Matter / User / Date tabs, styled like the app's regular subnavs: a flat
-   subnav-toned bar with the active tab as a selected pill. Tabs carry no
-   fill of their own — the old th fill bled into the selected row below in
-   dark themes, where th and the selection wash resolve to the same surface.
-   Sticky so the tabs stay reachable while the panel scrolls. */
+/* Matter / User / Date tabs, styled as the panel's header row (th) — the
+   panel is a small widget, so cell-style tabs fit it better than the full
+   subnav signal. The active tab joins the list below it. Sticky so the
+   tabs stay reachable while the panel scrolls. */
 .tasks-panel-tabs {
-  background: var(--background-subnav);
-  border-bottom: solid 1px var(--border-medium-dark);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   display: flex;
   flex-shrink: 0;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-/* Transparent border so the active pill's border adds no layout shift. */
 .tasks-panel-tab {
-  background: none;
-  border: solid 1px transparent;
-  border-radius: var(--radius-md);
-  color: var(--color-nav);
+  background: var(--background-th);
+  border: none;
+  border-bottom: solid 1px var(--border-medium);
+  color: var(--color-muted);
   cursor: pointer;
   flex: 1;
   font-size: 1rem;
-  padding: 0.5rem 1rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
   text-align: center;
 }
 
+.tasks-panel-tab:not(:last-child) {
+  border-right: solid 1px var(--border-medium);
+}
+
+.tasks-panel-tab:first-child {
+  border-top-left-radius: var(--radius-md);
+}
+
+.tasks-panel-tab:last-child {
+  border-top-right-radius: var(--radius-md);
+}
+
+/* The active tab joins the list below: cell background, no dividing border. */
 .tasks-panel-tab.active {
-  background: var(--selected-background);
-  border-color: var(--selected-border);
-  color: var(--selected-color);
+  background: var(--background-td);
+  border-bottom-color: transparent;
+  color: var(--color-primary);
 }
 
-/* Dark mode — active tab takes the lighter fill with no border, mirroring
-   the regular subnav's dark treatment (detail.css). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .tasks-panel-tab.active {
-  background: var(--background-subnav-tab-active);
-  border-color: transparent;
-}
-
-/* Basic — the house emphasis pair, mirroring the regular subnav. */
-[data-theme="basic"] .tasks-panel-tab.active {
-  background: var(--control-active-bg);
-  border-color: var(--control-active-line);
-  color: var(--control-active-color);
+/* Dark mode — the th fill and the selection wash resolve to the same
+   surface (gb-dark1), so a selected row at the very top of the list would
+   bleed into the tabs above it; the stronger hairline keeps that seam
+   visible. The active tab keeps its transparent seam (it joins the list). */
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .tasks-panel-tab:not(.active) {
+  border-bottom-color: var(--border-medium-dark);
 }
 
 /* Dot on a tab whose dimension holds a non-default filter, so hidden filter
