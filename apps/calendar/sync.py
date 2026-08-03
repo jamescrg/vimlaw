@@ -120,3 +120,10 @@ def reconcile():
         summary,
     )
     return summary
+
+
+def scheduled_sync():
+    reconciled = reconcile()
+    pulled = google.sync_from_google()
+
+    return {"reconciled": reconciled, "pulled": pulled}

@@ -1,6 +1,5 @@
 import functools
 import json
-import os
 from datetime import datetime, timedelta
 from logging import getLogger
 from zoneinfo import ZoneInfo
@@ -16,8 +15,8 @@ from utils.prepare_path import prepare_path
 
 logger = getLogger(__name__)
 
-CALENDAR_TOKEN_PATH = "google/calendar_tokens.json"
-CALENDAR_ID = os.environ.get("CALENDAR_ID")
+CALENDAR_TOKEN_PATH = settings.GOOGLE_CALENDAR_TOKEN_PATH
+CALENDAR_ID = settings.CALENDAR_ID
 
 
 def best_effort(default):

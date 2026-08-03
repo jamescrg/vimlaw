@@ -2,6 +2,7 @@ import json
 import logging
 
 import google.oauth2.credentials
+from django.conf import settings
 
 # noinspection PyPackageRequirements
 from googleapiclient.discovery import build
@@ -10,7 +11,7 @@ from utils.prepare_path import prepare_path
 
 logger = logging.getLogger(__name__)
 
-CONTACTS_TOKEN_PATH = "google/contact_tokens.json"
+CONTACTS_TOKEN_PATH = settings.GOOGLE_CONTACTS_TOKEN_PATH
 
 
 def check_credentials():

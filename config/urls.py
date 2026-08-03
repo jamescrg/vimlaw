@@ -5,11 +5,14 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
 from apps.tasks.views import tasks_index
+from config import health
 
 # Override admin login to use 2FA
 admin.site.login_url = "/accounts/login/"
 
 urlpatterns = [
+    path("health/live/", health.live, name="health-live"),
+    path("health/ready/", health.ready, name="health-ready"),
     path("", tasks_index, name="tasks-index"),
     # Admin
     path("admin/", admin.site.urls),
@@ -58,5 +61,13 @@ urlpatterns = [
 
 urlpatterns += staticfiles_urlpatterns()
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+def development_media_urlpatterns():
+    """Serve local uploads only from Django's explicitly unsafe dev server."""
+    if settings.DEBUG and settings.STORAGE_BACKEND == "local":
+        return static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    return []
+
+
+urlpatterns += development_media_urlpatterns()

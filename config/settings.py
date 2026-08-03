@@ -4,6 +4,7 @@ from pathlib import Path
 
 # noinspection PyPackageRequirements
 import environ
+from django.core.exceptions import ImproperlyConfigured
 from django.forms.renderers import TemplatesSetting
 
 
@@ -161,23 +162,6 @@ DATABASES = {
     }
 }
 
-STORAGES = {
-    "default": {
-        # S3 Storage for Digital Ocean Spaces
-        "BACKEND": "storages.backends.s3.S3Storage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
-
-# Digital Ocean Spaces Settings
-AWS_S3_REGION_NAME = env("DIGITAL_OCEAN_REGION_NAME")
-AWS_S3_ENDPOINT_URL = env("DIGITAL_OCEAN_ENDPOINT_URL")
-AWS_STORAGE_BUCKET_NAME = env("DIGITAL_OCEAN_BUCKET_NAME")
-AWS_S3_ACCESS_KEY_ID = env("DIGITAL_OCEAN_ACCESS_KEY_ID")
-AWS_S3_SECRET_ACCESS_KEY = env("DIGITAL_OCEAN_SECRET_ACCESS_KEY")
-
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -209,7 +193,38 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 MEDIA_URL = "media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
+
+# User-uploaded media can live on the local filesystem or in an S3-compatible
+# object store such as DigitalOcean Spaces. Local is deliberately the default
+# so a checkout can run without cloud credentials. Production never exposes
+# MEDIA_ROOT through Django's public URL configuration; protected download
+# views continue to stream confidential files through Django's storage API.
+STORAGE_BACKEND = env("STORAGE_BACKEND", default="local").strip().lower()
+if STORAGE_BACKEND not in {"local", "s3"}:
+    raise ImproperlyConfigured("STORAGE_BACKEND must be either 'local' or 's3'.")
+
+STORAGES = {
+    "default": {
+        "BACKEND": (
+            "django.core.files.storage.FileSystemStorage"
+            if STORAGE_BACKEND == "local"
+            else "storages.backends.s3.S3Storage"
+        ),
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+if STORAGE_BACKEND == "s3":
+    AWS_S3_REGION_NAME = env("DIGITAL_OCEAN_REGION_NAME")
+    AWS_S3_ENDPOINT_URL = env("DIGITAL_OCEAN_ENDPOINT_URL")
+    AWS_STORAGE_BUCKET_NAME = env("DIGITAL_OCEAN_BUCKET_NAME")
+    AWS_S3_ACCESS_KEY_ID = env("DIGITAL_OCEAN_ACCESS_KEY_ID")
+    AWS_S3_SECRET_ACCESS_KEY = env("DIGITAL_OCEAN_SECRET_ACCESS_KEY")
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
 
 if DEBUG is False:
     STATIC_ROOT = os.path.join(BASE_DIR, "static")
@@ -231,14 +246,26 @@ INTERNAL_IPS = [
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
-# Email
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = env("EMAIL_HOST")
-EMAIL_USE_TLS = True
-EMAIL_PORT = 587
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-SERVER_EMAIL = env("SERVER_EMAIL")
+EMAIL_BACKEND_MODE = env(
+    "EMAIL_BACKEND", default="console" if DEBUG else "smtp"
+).strip()
+
+_EMAIL_BACKENDS = {
+    "console": "django.core.mail.backends.console.EmailBackend",
+    "locmem": "django.core.mail.backends.locmem.EmailBackend",
+    "smtp": "django.core.mail.backends.smtp.EmailBackend",
+}
+
+if EMAIL_BACKEND_MODE not in _EMAIL_BACKENDS:
+    raise ImproperlyConfigured("EMAIL_BACKEND must be one of: console, locmem, smtp.")
+
+EMAIL_BACKEND = _EMAIL_BACKENDS[EMAIL_BACKEND_MODE]
+EMAIL_HOST = env("EMAIL_HOST", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+SERVER_EMAIL = env("SERVER_EMAIL", default="webmaster@localhost")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=SERVER_EMAIL)
 # From address for client-facing billing email (invoice transmissions and
 # payment requests). Falls back to DEFAULT_FROM_EMAIL when unset.
@@ -337,6 +364,23 @@ ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 
 # Google Gemini API Configuration
 GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
+
+# Shared Google integration configuration. Keeping credentials beneath one
+# configurable directory makes host, container, and secret-volume layouts use
+# the same code paths.
+_google_data_dir = Path(
+    env("GOOGLE_DATA_DIR", default=str(BASE_DIR / "google"))
+).expanduser()
+GOOGLE_DATA_DIR = (
+    _google_data_dir if _google_data_dir.is_absolute() else BASE_DIR / _google_data_dir
+)
+GOOGLE_CLIENT_SECRET_PATH = GOOGLE_DATA_DIR / "google_tokens.json"
+GOOGLE_CONTACTS_TOKEN_PATH = GOOGLE_DATA_DIR / "contact_tokens.json"
+GOOGLE_CALENDAR_TOKEN_PATH = GOOGLE_DATA_DIR / "calendar_tokens.json"
+GOOGLE_DRIVE_TOKEN_PATH = GOOGLE_DATA_DIR / "drive_tokens.json"
+GOOGLE_EMAIL_TOKEN_PATH = GOOGLE_DATA_DIR / "email_tokens.json"
+CALENDAR_ID = env("CALENDAR_ID", default="")
+LAW_FIRM_ID = env("LAW_FIRM_ID", default="")
 
 # CourtListener API Configuration (for citation verification)
 COURTLISTENER_API_TOKEN = env("COURTLISTENER_API_KEY", default="")

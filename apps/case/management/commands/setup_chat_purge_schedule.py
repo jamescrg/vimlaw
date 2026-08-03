@@ -1,7 +1,6 @@
-from croniter import croniter
 from django.core.management.base import BaseCommand
-from django.utils import timezone
-from django_q.models import Schedule
+
+from apps.management.schedules import install_schedules
 
 
 class Command(BaseCommand):
@@ -13,19 +12,6 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        cron = "0 3 * * 0"
-        local_now = timezone.localtime(timezone.now())
-        _, created = Schedule.objects.update_or_create(
-            name="chat-purge-weekly",
-            defaults={
-                "func": "apps.case.ai.purge.scheduled_purge_closed_chats",
-                "schedule_type": Schedule.CRON,
-                "cron": cron,
-                "repeats": -1,
-                # A fresh row defaults next_run to now, which would fire the
-                # schedule immediately; aim it at the real next slot.
-                "next_run": croniter(cron, local_now).get_next(type(local_now)),
-            },
-        )
+        spec, created = install_schedules(names={"chat-purge-weekly"})[0]
         action = "Created" if created else "Updated"
-        self.stdout.write(self.style.SUCCESS(f"{action} chat-purge-weekly ({cron})"))
+        self.stdout.write(self.style.SUCCESS(f"{action} {spec.name} ({spec.cron})"))

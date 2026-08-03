@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 
 # Legacy single-mailbox token file — read only by the adopt_gmail_account
 # command, which migrates it into a GmailAccount row.
-GMAIL_TOKEN_PATH = "google/email_tokens.json"
+GMAIL_TOKEN_PATH = settings.GOOGLE_EMAIL_TOKEN_PATH
 
 # Applying TRASH is how deletion first appears in the history feed (permanent
 # removal arrives later as messagesDeleted).
