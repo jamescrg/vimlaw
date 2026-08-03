@@ -35,18 +35,23 @@ def test_detect_label_today():
 
 
 def test_detect_label_week():
+    today = date(2026, 5, 15)  # a Friday
+    # Weeks run Sunday through Saturday: this week ends Sat 2026-05-16.
+    assert _detect_filter_label({"date_due_max": "2026-05-16"}, today) == "week"
+
+
+def test_detect_label_next7():
     today = date(2026, 5, 15)
-    end_of_week = today + timedelta(days=6 - today.weekday())
-    assert _detect_filter_label({"date_due_max": str(end_of_week)}, today) == "week"
+    next7_end = today + timedelta(days=6)
+    assert _detect_filter_label({"date_due_max": str(next7_end)}, today) == "next7"
 
 
 def test_detect_label_next_week():
     today = date(2026, 5, 15)  # a Friday
-    next_monday = today + timedelta(days=7 - today.weekday())
-    next_sunday = next_monday + timedelta(days=6)
+    # Next week runs Sun 2026-05-17 through Sat 2026-05-23.
     assert (
         _detect_filter_label(
-            {"date_due_min": str(next_monday), "date_due_max": str(next_sunday)},
+            {"date_due_min": "2026-05-17", "date_due_max": "2026-05-23"},
             today,
         )
         == "next_week"
@@ -98,14 +103,29 @@ def test_quick_filter_next_week_sets_forward_window(client):
     client.post(reverse("tasks:filter-quick", args=["next_week"]))
     session = _session_for(client, "tasks_filter")
     today = date.today()
-    next_monday = today + timedelta(days=7 - today.weekday())
-    next_sunday = next_monday + timedelta(days=6)
+    # Weeks run Sunday through Saturday: weekday() is 6 for Sunday.
+    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
+    next_week_start = week_start + timedelta(days=7)
+    next_week_end = next_week_start + timedelta(days=6)
     assert session.get("filter_label") == "next_week"
-    assert session.get("date_due_min") == str(next_monday)
-    assert session.get("date_due_max") == str(next_sunday)
+    assert session.get("date_due_min") == str(next_week_start)
+    assert session.get("date_due_max") == str(next_week_end)
 
     response = client.get(reverse("tasks:list"))
     assert response.context["filter_label"] == "next_week"
+    assert response.context["custom_filter_active"] in (False, None, {})
+
+
+def test_quick_filter_next7_rolling_window(client):
+    client.post(reverse("tasks:filter-quick", args=["next7"]))
+    session = _session_for(client, "tasks_filter")
+    today = date.today()
+    assert session.get("filter_label") == "next7"
+    assert session.get("date_due_min") == ""
+    assert session.get("date_due_max") == str(today + timedelta(days=6))
+
+    response = client.get(reverse("tasks:list"))
+    assert response.context["filter_label"] == "next7"
     assert response.context["custom_filter_active"] in (False, None, {})
 
 
