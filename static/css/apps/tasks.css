@@ -371,9 +371,12 @@ tr > td.importance.complete .button-link {
   top: 1rem;
 }
 
-/* Matters / Users sub nav, styled as the panel's header row (th). Sticky so
-   the tabs stay reachable while the panel scrolls. */
+/* Matter / User / Date sub nav, styled as the panel's header row (th). Sticky
+   so the tabs stay reachable while the panel scrolls. The bar carries the th
+   fill itself so the active tab's rounded corners have contrast to reveal
+   (without it they cut into an identical background and vanish). */
 .tasks-panel-tabs {
+  background: var(--background-th);
   border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
   display: flex;
   flex-shrink: 0;
@@ -420,7 +423,7 @@ tr > td.importance.complete .button-link {
 /* Dot on a tab whose dimension holds a non-default filter, so hidden filter
    state stays visible from any tab. */
 .tasks-panel-tab-dot {
-  background: var(--violet-400);
+  background: var(--icon-muted);
   border-radius: var(--radius-full);
   display: inline-block;
   height: 0.375rem;
