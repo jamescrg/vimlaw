@@ -2,19 +2,67 @@
 {% if panel_layout %}
   <div class="tasks-split">
     <nav class="tasks-matters-panel">
-      <div class="tasks-panel-tabs">
-        <button type="button"
-                class="tasks-panel-tab {% if panel_tab == 'matters' %}active{% endif %}"
-                hx-post="{% url 'tasks:panel-tab' 'matters' %}"
-                hx-target="#tasks">Matters</button>
-        <button type="button"
-                class="tasks-panel-tab {% if panel_tab == 'users' %}active{% endif %}"
-                hx-post="{% url 'tasks:panel-tab' 'users' %}"
-                hx-target="#tasks">Users</button>
-        <button type="button"
-                class="tasks-panel-tab {% if panel_tab == 'dates' %}active{% endif %}"
-                hx-post="{% url 'tasks:panel-tab' 'dates' %}"
-                hx-target="#tasks">Due</button>
+      <div class="tasks-panel-head">
+        <div class="tasks-panel-tabs">
+          <button type="button"
+                  class="tasks-panel-tab {% if panel_tab == 'matters' %}active{% endif %}"
+                  hx-post="{% url 'tasks:panel-tab' 'matters' %}"
+                  hx-target="#tasks">Matters</button>
+          <button type="button"
+                  class="tasks-panel-tab {% if panel_tab == 'users' %}active{% endif %}"
+                  hx-post="{% url 'tasks:panel-tab' 'users' %}"
+                  hx-target="#tasks">Users</button>
+          <button type="button"
+                  class="tasks-panel-tab {% if panel_tab == 'dates' %}active{% endif %}"
+                  hx-post="{% url 'tasks:panel-tab' 'dates' %}"
+                  hx-target="#tasks">Due</button>
+        </div>
+        {% if matter_id or no_matter or user_id or date_label %}
+          <div class="tasks-panel-summary">
+            {% if matter_id or no_matter %}
+              <div class="tasks-panel-chip">
+                <a href="#"
+                   hx-post="{% url 'tasks:panel-tab' 'matters' %}"
+                   hx-target="#tasks">
+                  {% if no_matter %}
+                    Admin Tasks
+                  {% else %}
+                    {{ selected_matter }}
+                  {% endif %}
+                </a>
+                <a class="tasks-panel-chip-clear"
+                   href="#"
+                   title="Clear matter filter"
+                   hx-post="{% url 'tasks:filter-matter' 0 %}"
+                   hx-target="#tasks"><i class="icon-x"></i></a>
+              </div>
+            {% endif %}
+            {% if user_id %}
+              <div class="tasks-panel-chip">
+                <a href="#"
+                   hx-post="{% url 'tasks:panel-tab' 'users' %}"
+                   hx-target="#tasks">{{ selected_user }}</a>
+                <a class="tasks-panel-chip-clear"
+                   href="#"
+                   title="Clear user filter"
+                   hx-post="{% url 'tasks:filter-user' 0 %}"
+                   hx-target="#tasks"><i class="icon-x"></i></a>
+              </div>
+            {% endif %}
+            {% if date_label %}
+              <div class="tasks-panel-chip">
+                <a href="#"
+                   hx-post="{% url 'tasks:panel-tab' 'dates' %}"
+                   hx-target="#tasks">{{ date_label }}</a>
+                <a class="tasks-panel-chip-clear"
+                   href="#"
+                   title="Clear date filter"
+                   hx-post="{% url 'tasks:filter-quick' 'all' %}"
+                   hx-target="#tasks"><i class="icon-x"></i></a>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
       {% if panel_tab == 'dates' %}
         <a class="tasks-panel-item {% if not filter_label or filter_label == 'all' or filter_label == 'default' %}active{% endif %}"

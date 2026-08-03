@@ -143,6 +143,25 @@ def test_panel_tab_dates(client, user, task):
     assert response.content.count(b"tasks-panel-tab active") == 1
 
 
+def test_panel_summary_strip(client, user, task, matter):
+    user.tasks_layout = "panel"
+    user.save(update_fields=["tasks_layout"])
+    client.post(reverse("tasks:filter-quick", args=["all"]))
+    client.post(reverse("tasks:filter-user", args=[0]))
+    response = client.post(reverse("tasks:filter-matter", args=[0]))
+    assert b"tasks-panel-summary" not in response.content
+
+    response = client.post(reverse("tasks:filter-matter", args=[matter.id]))
+    assert b"tasks-panel-summary" in response.content
+    assert response.content.count(b"tasks-panel-chip-clear") == 1
+
+    client.post(reverse("tasks:filter-user", args=[user.id]))
+    response = client.post(reverse("tasks:filter-quick", args=["today"]))
+    assert response.content.count(b"tasks-panel-chip-clear") == 3
+    assert b"Ollie" in response.content
+    assert b"Today" in response.content
+
+
 # -----------------------------------------------------
 # edge case tests - nonexistent records
 # -----------------------------------------------------
