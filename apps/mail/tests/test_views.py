@@ -358,3 +358,97 @@ def test_label_link_create_from_matter_name(client, matter, fake_gmail, _inline_
     matter.refresh_from_db()
     assert matter.gmail_label_name == "Matters - Open/Smith v Jones"
     assert _inline_resync == [matter.id]
+
+
+def test_toolbar_shows_refresh_when_linked(client, matter, fake_gmail):
+    response = client.get(reverse("case:emails-index", args=[matter.id]))
+    assert "emails/refresh/" in response.content.decode()
+
+
+@pytest.fixture
+def _stub_refresh_thread(monkeypatch):
+    """Record refresh-thread starts instead of resyncing for real."""
+    starts = []
+    monkeypatch.setattr(
+        "apps.mail.views._start_refresh", lambda matter: starts.append(matter.id)
+    )
+    return starts
+
+
+@pytest.fixture(autouse=True)
+def _clear_refresh_flag(matter):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.delete(_refresh_cache_key(matter.id))
+    yield
+    cache.delete(_refresh_cache_key(matter.id))
+
+
+def test_refresh_starts_thread_and_returns_polling_pill(
+    client, matter, fake_gmail, _stub_refresh_thread
+):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    response = client.post(reverse("case:emails-refresh", args=[matter.id]))
+    assert "Syncing" in response.content.decode()
+    assert cache.get(_refresh_cache_key(matter.id)) == "running"
+    assert _stub_refresh_thread == [matter.id]
+
+
+def test_refresh_reattaches_to_run_in_flight(
+    client, matter, fake_gmail, _stub_refresh_thread
+):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.set(_refresh_cache_key(matter.id), "running", 60)
+    response = client.post(reverse("case:emails-refresh", args=[matter.id]))
+    assert "Syncing" in response.content.decode()
+    assert _stub_refresh_thread == []  # no second thread
+
+
+def test_refresh_without_label_starts_nothing(
+    client, matter, fake_gmail, _stub_refresh_thread
+):
+    matter.gmail_label_name = None
+    matter.save()
+    response = client.post(reverse("case:emails-refresh", args=[matter.id]))
+    assert response.status_code == 204
+    assert _stub_refresh_thread == []
+
+
+def test_refresh_status_running_keeps_polling(client, matter, fake_gmail):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.set(_refresh_cache_key(matter.id), "running", 60)
+    url = reverse("case:emails-refresh-status", args=[matter.id])
+    response = client.get(url, {"polls": "3"})
+    content = response.content.decode()
+    assert "Syncing" in content
+    assert "polls=4" in content
+
+
+def test_refresh_status_done_restores_button_and_reloads(client, matter, fake_gmail):
+    url = reverse("case:emails-refresh-status", args=[matter.id])
+    response = client.get(url, {"polls": "3"})
+    assert response.headers["HX-Trigger"] == "emailsChanged"
+    assert "Refresh" in response.content.decode()
+
+
+def test_refresh_status_poll_cap_gives_up(client, matter, fake_gmail):
+    from django.core.cache import cache
+
+    from apps.mail.views import _refresh_cache_key
+
+    cache.set(_refresh_cache_key(matter.id), "running", 60)
+    url = reverse("case:emails-refresh-status", args=[matter.id])
+    response = client.get(url, {"polls": "150"})
+    assert response.headers["HX-Trigger"] == "emailsChanged"
+    assert "Refresh" in response.content.decode()
