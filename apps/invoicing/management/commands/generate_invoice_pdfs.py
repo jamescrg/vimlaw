@@ -7,10 +7,12 @@ Usage:
     python manage.py generate_invoice_pdfs --overwrite  # regenerate all PDFs
     python manage.py generate_invoice_pdfs --limit 5    # only process 5 invoices
     python manage.py generate_invoice_pdfs --clear      # delete all stored PDFs and reset
+    python manage.py generate_invoice_pdfs --sent-since 2026-08-03  # re-do recent sends
 """
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from django.utils.dateparse import parse_date
 
 from apps.invoicing.invoices.functions.generate_invoice import store_invoice_pdf
 from apps.invoicing.invoices.models import Invoice
@@ -41,11 +43,24 @@ class Command(BaseCommand):
             action="store_true",
             help="Delete all stored invoice PDFs from storage and reset the database field",
         )
+        parser.add_argument(
+            "--sent-since",
+            help=(
+                "Regenerate PDFs for invoices sent on or after this date "
+                "(YYYY-MM-DD). Implies --overwrite for the matched invoices: "
+                "the point is replacing bad PDFs from a known window."
+            ),
+        )
 
     def handle(self, *args, **options):
         base_url = options["base_url"]
         overwrite = options["overwrite"]
         limit = options["limit"]
+        sent_since = None
+        if options["sent_since"]:
+            sent_since = parse_date(options["sent_since"])
+            if sent_since is None:
+                raise CommandError("--sent-since must be a YYYY-MM-DD date")
 
         if options["clear"]:
             self._clear_all_pdfs()
@@ -53,7 +68,9 @@ class Command(BaseCommand):
 
         invoices = Invoice.objects.exclude(status="VOID").select_related("matter")
 
-        if not overwrite:
+        if sent_since:
+            invoices = invoices.filter(date_sent__date__gte=sent_since)
+        elif not overwrite:
             invoices = invoices.filter(pdf_file="")
 
         if limit:
