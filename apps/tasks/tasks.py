@@ -212,6 +212,8 @@ def get_list_data(request):
     panel_layout = request.user.tasks_layout == "panel"
     panel_tab = request.session.get("tasks_panel_tab", "matters")
     no_matter = filter_data.get("no_matter") in ("true", True)
+    # Whether the date dimension deviates from All (drives the Due tab's dot).
+    date_filtered = filter_data.get("filter_label") not in (None, "", "all", "default")
 
     list_data = {
         "pagination": pagination,
@@ -239,6 +241,7 @@ def get_list_data(request):
         "panel_layout": panel_layout,
         "panel_tab": panel_tab,
         "no_matter": no_matter,
+        "date_filtered": date_filtered,
         "custom_filter_active": bool(filter_data)
         and any(
             [

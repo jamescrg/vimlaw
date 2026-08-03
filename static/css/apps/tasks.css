@@ -414,6 +414,17 @@ tr > td.importance.complete .button-link {
   color: var(--color-primary);
 }
 
+/* Dot on a tab whose dimension holds a non-default filter, so hidden filter
+   state stays visible from any tab. */
+.tasks-panel-tab-dot {
+  background: var(--violet-400);
+  border-radius: var(--radius-full);
+  display: inline-block;
+  height: 0.5rem;
+  vertical-align: middle;
+  width: 0.5rem;
+}
+
 /* Same spacing and borders as table cells (td). flex-shrink: 0 because the
    panel is a max-height flex column — shrinkable items would compress and
    overlap once the matter list outgrows the viewport. */

@@ -6,15 +6,24 @@
         <button type="button"
                 class="tasks-panel-tab {% if panel_tab == 'matters' %}active{% endif %}"
                 hx-post="{% url 'tasks:panel-tab' 'matters' %}"
-                hx-target="#tasks">Matters</button>
+                hx-target="#tasks">
+          Matter
+          {% if matter_id or no_matter %}<span class="tasks-panel-tab-dot"></span>{% endif %}
+        </button>
         <button type="button"
                 class="tasks-panel-tab {% if panel_tab == 'users' %}active{% endif %}"
                 hx-post="{% url 'tasks:panel-tab' 'users' %}"
-                hx-target="#tasks">Users</button>
+                hx-target="#tasks">
+          User
+          {% if user_id %}<span class="tasks-panel-tab-dot"></span>{% endif %}
+        </button>
         <button type="button"
                 class="tasks-panel-tab {% if panel_tab == 'dates' %}active{% endif %}"
                 hx-post="{% url 'tasks:panel-tab' 'dates' %}"
-                hx-target="#tasks">Due</button>
+                hx-target="#tasks">
+          Date
+          {% if date_filtered %}<span class="tasks-panel-tab-dot"></span>{% endif %}
+        </button>
       </div>
       {% if panel_tab == 'dates' %}
         <a class="tasks-panel-item {% if not filter_label or filter_label == 'all' or filter_label == 'default' %}active{% endif %}"
