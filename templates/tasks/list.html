@@ -97,13 +97,23 @@
             </th>
           {% endif %}
           <th class="description">
-            Description
-            <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
-                    hx-target="#tasks"
-                    hx-swap="innerHTML"
-                    hx-post="{% url 'tasks:filter-sort' 'description' %}">
-              <i class="icon-chevrons-up-down"></i>
-            </button>
+            {% if panel_layout %}
+              Matter <span class="task-matter-sep">&bull;</span> Description
+              <button class="btn-sort {% if current_order == 'matter__name' %}active{% endif %}"
+                      hx-target="#tasks"
+                      hx-swap="innerHTML"
+                      hx-post="{% url 'tasks:filter-sort' 'matter__name' %}">
+                <i class="icon-chevrons-up-down"></i>
+              </button>
+            {% else %}
+              Description
+              <button class="btn-sort {% if current_order == 'description' %}active{% endif %}"
+                      hx-target="#tasks"
+                      hx-swap="innerHTML"
+                      hx-post="{% url 'tasks:filter-sort' 'description' %}">
+                <i class="icon-chevrons-up-down"></i>
+              </button>
+            {% endif %}
           </th>
           <th class="status">
             Status
