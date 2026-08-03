@@ -420,6 +420,14 @@ tr > td.importance.complete .button-link {
   color: var(--color-primary);
 }
 
+/* A non-first active tab draws its own left border (overlapping the
+   neighbour's right divider) so the border curves with the top-left radius;
+   without it only the right corner reads as rounded. */
+.tasks-panel-tab.active:not(:first-child) {
+  border-left: solid 1px var(--border-medium);
+  margin-left: -1px;
+}
+
 /* Dot on a tab whose dimension holds a non-default filter, so hidden filter
    state stays visible from any tab. */
 .tasks-panel-tab-dot {
