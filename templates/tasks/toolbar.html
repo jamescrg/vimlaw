@@ -87,10 +87,12 @@
                 <i class="icon-calendar with-text"></i>
                 {% if filter_label == "today" %}
                   Today
+                {% elif filter_label == "next7" %}
+                  Next 7 Days
                 {% elif filter_label == "week" %}
-                  This Week
+                  This Calendar Week
                 {% elif filter_label == "next_week" %}
-                  Next Week
+                  Next Calendar Week
                 {% elif filter_label == "unscheduled" %}
                   Unscheduled
                 {% elif filter_label == "custom" %}
@@ -113,14 +115,6 @@
                 </a>
               </li>
               <li>
-                <a class="dropdown-item {% if filter_label == 'unscheduled' %}active{% endif %}"
-                   href="#"
-                   hx-post="{% url 'tasks:filter-quick' 'unscheduled' %}"
-                   hx-target="#tasks">
-                  <i class="icon-calendar"></i> Unscheduled
-                </a>
-              </li>
-              <li>
                 <a class="dropdown-item {% if filter_label == 'today' %}active{% endif %}"
                    href="#"
                    hx-post="{% url 'tasks:filter-quick' 'today' %}"
@@ -129,11 +123,19 @@
                 </a>
               </li>
               <li>
+                <a class="dropdown-item {% if filter_label == 'next7' %}active{% endif %}"
+                   href="#"
+                   hx-post="{% url 'tasks:filter-quick' 'next7' %}"
+                   hx-target="#tasks">
+                  <i class="icon-calendar"></i> Next 7 Days
+                </a>
+              </li>
+              <li>
                 <a class="dropdown-item {% if filter_label == 'week' %}active{% endif %}"
                    href="#"
                    hx-post="{% url 'tasks:filter-quick' 'week' %}"
                    hx-target="#tasks">
-                  <i class="icon-calendar"></i> This Week
+                  <i class="icon-calendar"></i> This Calendar Week
                 </a>
               </li>
               <li>
@@ -141,7 +143,15 @@
                    href="#"
                    hx-post="{% url 'tasks:filter-quick' 'next_week' %}"
                    hx-target="#tasks">
-                  <i class="icon-calendar"></i> Next Week
+                  <i class="icon-calendar"></i> Next Calendar Week
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item {% if filter_label == 'unscheduled' %}active{% endif %}"
+                   href="#"
+                   hx-post="{% url 'tasks:filter-quick' 'unscheduled' %}"
+                   hx-target="#tasks">
+                  <i class="icon-calendar"></i> Unscheduled
                 </a>
               </li>
             </ul>

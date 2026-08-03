@@ -136,7 +136,8 @@ def test_panel_tab_dates(client, user, task):
     assert response.status_code == 200
     assert response.context["panel_tab"] == "dates"
     assert b"Unscheduled" in response.content
-    assert b"Next Week" in response.content
+    assert b"Next 7 Days" in response.content
+    assert b"Next Calendar Week" in response.content
     # The toolbar's date dropdown yields to the Due tab in panel mode.
     assert b"tasks-date-filter" not in response.content
     # Only the Due tab may render as selected.

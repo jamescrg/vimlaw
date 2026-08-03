@@ -516,11 +516,13 @@ def _detect_filter_label(filter_data, today):
         return "unscheduled"
     if not date_due_min and not date_due_max and has_due_date in ("", "None"):
         return "all"
-    next_monday = today + timedelta(days=7 - today.weekday())
-    next_sunday = next_monday + timedelta(days=6)
+    # Calendar weeks run Sunday through Saturday; weekday() is 6 for Sunday.
+    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
+    next_week_start = week_start + timedelta(days=7)
+    next_week_end = next_week_start + timedelta(days=6)
     if (
-        date_due_min == str(next_monday)
-        and date_due_max == str(next_sunday)
+        date_due_min == str(next_week_start)
+        and date_due_max == str(next_week_end)
         and not has_due_date
     ):
         return "next_week"
@@ -530,11 +532,14 @@ def _detect_filter_label(filter_data, today):
         return "custom"
 
     today_s = str(today)
-    end_of_week_s = str(today + timedelta(days=6 - today.weekday()))
+    end_of_week_s = str(week_start + timedelta(days=6))
+    next7_s = str(today + timedelta(days=6))
     if date_due_max == today_s and not has_due_date:
         return "today"
     if date_due_max == end_of_week_s and not has_due_date:
         return "week"
+    if date_due_max == next7_s and not has_due_date:
+        return "next7"
     return "custom"
 
 
@@ -635,8 +640,9 @@ def tasks_filter(request, user=None):
 @login_required
 def tasks_filter_quick(request, quick_filter):
     today = date.today()
-    # Calendar week: Monday through Sunday. weekday() is 0 for Monday.
-    end_of_week = today + timedelta(days=6 - today.weekday())
+    # Calendar week: Sunday through Saturday. weekday() is 6 for Sunday.
+    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
+    end_of_week = week_start + timedelta(days=6)
 
     # Quick filters only touch the date dimension. status is intentionally
     # left alone so a "Complete" filter set via the modal isn't silently
@@ -658,6 +664,14 @@ def tasks_filter_quick(request, quick_filter):
             "filter_label": "today",
             "date_due_max": today.strftime("%Y-%m-%d"),
             "date_due_min": "",
+            "has_due_date": "",
+        },
+        # Rolling seven-day window (today plus six), open-ended at the start
+        # like today/week so overdue tasks stay visible.
+        "next7": {
+            "filter_label": "next7",
+            "date_due_min": "",
+            "date_due_max": (today + timedelta(days=6)).strftime("%Y-%m-%d"),
             "has_due_date": "",
         },
         "week": {
