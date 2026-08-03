@@ -158,7 +158,11 @@
           </div>
         {% endif %}
       </div>
-      {% include "tasks/form-quick.html" %}
+      {% comment %} The board has its own per-column quick-add; the plain
+      language input is list-only. {% endcomment %}
+      {% if view_mode != 'board' %}
+        {% include "tasks/form-quick.html" %}
+      {% endif %}
       <div class="view-toggle">
         <button type="button"
                 class="{% if view_mode != 'board' %}toggle-active{% endif %}"
