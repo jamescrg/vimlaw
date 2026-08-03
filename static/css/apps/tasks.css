@@ -398,8 +398,11 @@ tr > td.importance.complete .button-link {
   text-align: center;
 }
 
-.tasks-panel-tab:not(:last-child) {
-  border-right: solid 1px var(--border-medium);
+/* Dividers hang on the left edge (not the right) so both dividers touching
+   the active tab can be cleared without :has(): the active tab clears its
+   own, and the next-sibling combinator clears the following tab's. */
+.tasks-panel-tab:not(:first-child) {
+  border-left: solid 1px var(--border-medium);
 }
 
 .tasks-panel-tab:first-child {
@@ -420,12 +423,10 @@ tr > td.importance.complete .button-link {
   color: var(--color-primary);
 }
 
-/* No divider touches the raised active tab: it drops its own right divider
-   (the line at the next tab's left edge) and the preceding tab drops the one
-   at the active tab's left edge. */
+/* No divider touches the raised active tab. */
 .tasks-panel-tab.active,
-.tasks-panel-tab:has(+ .tasks-panel-tab.active) {
-  border-right-color: transparent;
+.tasks-panel-tab.active + .tasks-panel-tab {
+  border-left-color: transparent;
 }
 
 /* Dot on a tab whose dimension holds a non-default filter, so hidden filter
