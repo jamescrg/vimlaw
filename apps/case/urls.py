@@ -11,6 +11,7 @@ from apps.case.notes import views as notes
 from apps.case.research import views as research
 from apps.case.search import views as search
 from apps.case.witnesses import views as witnesses
+from apps.drafts import views as drafts
 from apps.mail import views as mail
 
 app_name = "case"
@@ -472,6 +473,47 @@ urlpatterns = [
         "case/<int:matter_id>/documents/drive/link/set/",
         documents.record_link,
         name="documents-record-link",
+    ),
+    # Drafts (matter-scoped AI drafting sessions on Drive ODT files)
+    path("case/<int:matter_id>/drafts/", drafts.drafts_index, name="drafts-index"),
+    path("case/<int:matter_id>/drafts/list/", drafts.drafts_list, name="drafts-list"),
+    path(
+        "case/<int:matter_id>/drafts/picker/",
+        drafts.draft_picker,
+        name="drafts-picker",
+    ),
+    path("case/<int:matter_id>/drafts/start/", drafts.draft_start, name="drafts-start"),
+    path(
+        "case/drafts/<int:session_id>/window/",
+        drafts.draft_window,
+        name="draft-window",
+    ),
+    path("case/drafts/<int:session_id>/send/", drafts.draft_send, name="draft-send"),
+    path(
+        "case/drafts/<int:session_id>/messages/",
+        drafts.draft_messages,
+        name="draft-messages",
+    ),
+    path("case/drafts/<int:session_id>/pane/", drafts.draft_pane, name="draft-pane"),
+    path(
+        "case/drafts/<int:session_id>/publish/",
+        drafts.draft_publish,
+        name="draft-publish",
+    ),
+    path(
+        "case/drafts/<int:session_id>/discard/",
+        drafts.draft_discard,
+        name="draft-discard",
+    ),
+    path(
+        "case/drafts/version/<int:version_id>/pdf/",
+        drafts.draft_version_pdf,
+        name="draft-version-pdf",
+    ),
+    path(
+        "case/drafts/version/<int:version_id>/odt/",
+        drafts.draft_version_odt,
+        name="draft-version-odt",
     ),
     # Emails (matter-scoped, synced from Gmail via apps.mail)
     path("case/<int:matter_id>/emails/", mail.emails_index, name="emails-index"),

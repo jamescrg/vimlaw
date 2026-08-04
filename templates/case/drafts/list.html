@@ -1,0 +1,66 @@
+{% load humanize %}
+<div class="drafts-toolbar">
+  {% if drive_ready %}
+    <button type="button"
+            class="btn btn-secondary"
+            hx-get="{% url 'case:drafts-picker' matter.id %}"
+            hx-target="#draft-picker"
+            hx-swap="innerHTML"
+            hx-indicator="#draft-picker-loading">
+      <i class="icon-file-pen-line"></i> New Draft Session
+    </button>
+    <span id="draft-picker-loading" class="htmx-indicator drafts-hint">Listing the matter's Drive files...</span>
+  {% else %}
+    <span class="drafts-hint">Connect Google Drive and link this matter's Drive folder to start a drafting session.</span>
+  {% endif %}
+</div>
+<div id="draft-picker"></div>
+{% if sessions %}
+  <table class="drafts-table">
+    <thead>
+      <tr>
+        <th>Draft</th>
+        <th>Status</th>
+        <th>Versions</th>
+        <th>Last activity</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for session in sessions %}
+        <tr>
+          <td class="drafts-name">{{ session.name }}</td>
+          <td>
+            {% if session.status == "drafting" %}
+              <span class="app-badge badge-blue">Drafting</span>
+            {% elif session.status == "published" %}
+              <span class="app-badge badge-green">Published</span>
+            {% else %}
+              <span class="app-badge">Discarded</span>
+            {% endif %}
+          </td>
+          <td>{{ session.versions.count }}</td>
+          <td>{{ session.updated_at|naturaltime }}</td>
+          <td class="drafts-actions">
+            <a href="{% url 'case:draft-window' session.id %}"
+               target="_blank"
+               class="btn btn-sm btn-secondary">Open</a>
+            {% if session.current_version.odt_file %}
+              <a href="{% url 'case:draft-version-odt' session.current_version.id %}"
+                 class="btn btn-sm btn-outline-primary"
+                 title="Download the redlined ODT">
+                <i class="icon-download"></i>
+              </a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="detail-text drafts-empty">
+    No drafting sessions yet. A session opens an ODT from this matter's Drive
+    folder in a window where you and the AI revise it together; changes land
+    as tracked changes for you to accept or reject in LibreOffice.
+  </p>
+{% endif %}

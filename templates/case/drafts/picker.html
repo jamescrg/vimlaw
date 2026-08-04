@@ -1,0 +1,30 @@
+<div class="draft-picker-card">
+  <div class="draft-picker-head">
+    <span>Pick a draft to work on (ODT files in this matter's Drive folder)</span>
+    <button type="button"
+            class="btn-icon"
+            title="Close"
+            onclick="document.getElementById('draft-picker').innerHTML = '';">
+      <i class="icon-x"></i>
+    </button>
+  </div>
+  {% if files %}
+    <ul class="draft-picker-list">
+      {% for file in files %}
+        <li>
+          <a href="{% url 'case:drafts-start' matter.id %}?file={{ file.id }}"
+             target="_blank"
+             onclick="setTimeout(function () { htmx.trigger(document.body, 'draftsChanged'); }, 4000);">
+            <i class="icon-file-text"></i>
+            <span class="draft-picker-path">{{ file.path }}</span>{{ file.name }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="detail-text">
+      No ODT files found in this matter's Drive folder. Save the draft there
+      first (any subfolder works), then reopen this list.
+    </p>
+  {% endif %}
+</div>

@@ -38,6 +38,12 @@
          hx-target=".detail-body"
          hx-push-url="{% url 'case:emails-index' matter.id %}">Emails</a>
     </li>
+    <li {% if subapp == "drafts" %}class="active"{% endif %}>
+      <a href="{% url 'case:drafts-index' matter.id %}"
+         hx-get="{% url 'case:tab-content' matter_id=matter.id tab='drafts' %}"
+         hx-target=".detail-body"
+         hx-push-url="{% url 'case:drafts-index' matter.id %}">Drafts</a>
+    </li>
     <li {% if subapp == "labels" %}class="active"{% endif %}>
       <a href="{% url 'case:labels-index' matter.id %}"
          hx-get="{% url 'case:tab-content' matter_id=matter.id tab='labels' %}"

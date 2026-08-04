@@ -1,0 +1,76 @@
+{% load static %}
+{% comment %}
+The right pane of the drafting window. Re-fetched after every message swap
+(with ?have=<seq>; the view answers 204 when nothing changed) and after
+publish/discard. The iframe is only re-rendered when this fragment swaps,
+so the PDF does not reload while the user reads.
+{% endcomment %}
+<div id="draft-side" data-seq="{{ latest.seq }}">
+  <header class="draft-pane-header">
+    <div class="draft-version-pills">
+      {% for version in versions %}
+        {% if version.pdf_file %}
+          <button type="button"
+                  class="draft-version-pill {% if version.seq == latest.seq %}active{% endif %}"
+                  data-pdf="{% static 'pdfjs/web/viewer.html' %}?file={% url 'case:draft-version-pdf' version.id %}"
+                  onclick="showDraftVersion(this);"
+                  title="{% if version.seq == 0 %}Original{% else %}{{ version.edits|length }} edit(s){% endif %}">
+            v{{ version.seq }}
+          </button>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="draft-pane-actions">
+      {% if session.status == "drafting" %}
+        {% if latest.odt_file %}
+          <a href="{% url 'case:draft-version-odt' latest.id %}"
+             class="btn btn-sm btn-outline-primary"
+             title="Download the current redlined ODT">
+            <i class="icon-download"></i>
+          </a>
+        {% endif %}
+        <button type="button"
+                class="btn btn-sm btn-secondary"
+                hx-post="{% url 'case:draft-discard' session.id %}"
+                hx-target="#draft-side"
+                hx-swap="outerHTML"
+                hx-confirm="Discard this drafting session? The working versions are deleted; the original file in Drive is untouched.">
+          Discard
+        </button>
+        <button type="button"
+                class="btn btn-sm btn-primary"
+                hx-post="{% url 'case:draft-publish' session.id %}"
+                hx-target="#draft-side"
+                hx-swap="outerHTML"
+                hx-confirm="Publish this draft? The session closes and the final redlined ODT becomes the download.">
+          Publish
+        </button>
+      {% elif session.status == "published" %}
+        <span class="app-badge badge-green">Published {{ session.published_at|date:"M j, g:i A" }}</span>
+        {% if latest.odt_file %}
+          <a href="{% url 'case:draft-version-odt' latest.id %}"
+             class="btn btn-sm btn-primary">
+            <i class="icon-download"></i> Redlined ODT
+          </a>
+        {% endif %}
+      {% else %}
+        <span class="app-badge">Session discarded</span>
+      {% endif %}
+    </div>
+  </header>
+  {% if latest.pdf_file %}
+    <iframe class="draft-pdf-frame"
+            id="draftPdfFrame"
+            title="Draft preview"
+            src="{% static 'pdfjs/web/viewer.html' %}?file={% url 'case:draft-version-pdf' latest.id %}"></iframe>
+  {% else %}
+    <div class="draft-pdf-empty detail-text">
+      {% if session.status == "abandoned" %}
+        This session was discarded and its previews were cleaned up. The
+        conversation above is kept for reference.
+      {% else %}
+        No preview available for this version.
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

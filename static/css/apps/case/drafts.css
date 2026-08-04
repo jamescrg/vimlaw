@@ -1,0 +1,180 @@
+/* Case Drafts tab + the standalone drafting window (apps/drafts): AI
+   drafting sessions on Drive ODT files. The window reuses the ai.css chat
+   column on the left and adds a version-pill strip over a pdf.js preview on
+   the right. Token-driven throughout, so no co-located dark block. */
+
+/* ---- Drafts tab ---- */
+.drafts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.drafts-hint {
+  color: var(--color-muted);
+}
+
+.drafts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.drafts-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--color-muted);
+  padding: 0.25rem 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.drafts-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.drafts-name {
+  font-weight: 500;
+}
+
+.drafts-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.drafts-empty {
+  max-width: 40rem;
+  padding: 1rem 0;
+}
+
+/* ---- File picker ---- */
+.draft-picker-card {
+  border: 1px solid var(--border-light);
+  border-radius: 0.375rem;
+  background: var(--background-medium-light);
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.draft-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--color-muted);
+  margin-bottom: 0.5rem;
+}
+
+.draft-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.draft-picker-list a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+}
+
+.draft-picker-list a:hover {
+  background: var(--background-section);
+}
+
+.draft-picker-path {
+  color: var(--color-muted);
+}
+
+/* ---- Drafting window ---- */
+.draft-layout {
+  display: grid;
+  grid-template-columns: minmax(24rem, 2fr) minmax(0, 3fr);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.draft-chat-col {
+  min-width: 0;
+  border-right: 1px solid var(--border-light);
+}
+
+.ai-llm-select {
+  margin-left: auto;
+  max-width: 12rem;
+}
+
+#draft-side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  background: var(--background-medium-light);
+}
+
+.draft-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+}
+
+.draft-version-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.draft-version-pill {
+  border: 1px solid var(--border-light);
+  border-radius: 1rem;
+  background: transparent;
+  color: var(--color-muted);
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+}
+
+.draft-version-pill:hover {
+  background: var(--background-section);
+}
+
+.draft-version-pill.active {
+  border-color: var(--focus-ring);
+  color: inherit;
+}
+
+.draft-pane-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.draft-pdf-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  min-height: 0;
+}
+
+.draft-pdf-empty {
+  margin: auto;
+  max-width: 24rem;
+  text-align: center;
+}
+
+/* ---- Standalone error page ---- */
+.draft-window-error {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 0 1rem;
+}
