@@ -17,6 +17,12 @@ as the audit trail.
 
 from django.db import models
 
+# Imported for the class (not a string label): Conversation lives in
+# apps/case/ai/models.py, which is NOT loaded by apps.case's models.py, so a
+# lazy 'case.Conversation' reference only resolves if something else has
+# imported that module first. The web app always has; a bare shell or a
+# management command may not.
+from apps.case.ai.models import Conversation
 from utils.models import AuditMixin
 
 
@@ -40,7 +46,7 @@ class DraftSession(AuditMixin, models.Model):
         "matters.Matter", on_delete=models.CASCADE, related_name="draft_sessions"
     )
     conversation = models.OneToOneField(
-        "case.Conversation",
+        Conversation,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

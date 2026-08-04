@@ -20,7 +20,12 @@ import threading
 from django.core.cache import cache
 
 from apps.drafts import services
-from apps.drive.redline import RedlineEdit, RedlineError
+from apps.drive.redline import (
+    DeleteParagraph,
+    InsertParagraphs,
+    RedlineEdit,
+    RedlineError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,25 +42,35 @@ Keep replies brief and pointed: answer the question asked, propose the
 language discussed, and stop. The attorney will ask when they want depth."""
 
 EDIT_PROTOCOL = """PROPOSING EDITS. Only when the user directs you to change the draft, end
-your reply with exactly one fenced block:
+your reply with exactly one fenced block containing a JSON list of
+operations, applied in order:
 
 ```draft-edits
-[{"old": "<exact text now in the draft>", "new": "<replacement text>", "replace_all": false}]
+[{"old": "<exact text now in the draft>", "new": "<replacement text>", "replace_all": false},
+ {"op": "delete_paragraph", "text": "<text identifying the paragraph>"},
+ {"op": "insert_after", "anchor": "<text identifying an existing paragraph>", "paragraphs": ["<new paragraph>", "<another new paragraph>"]}]
 ```
+
+The three operations:
+- Replace (no "op" key): rewrites text inside ONE paragraph. "old" must
+  occur exactly once in the draft (set "replace_all": true to change every
+  occurrence); "new" replaces it outright, and an empty "new" deletes just
+  that text. Quote only the text that changes plus enough surrounding words
+  to be unique.
+- "delete_paragraph": removes one whole paragraph, heading or body. "text"
+  is any quote found in exactly one paragraph. Removing a section means one
+  op for its heading and one per body paragraph.
+- "insert_after": adds new paragraphs immediately after the paragraph
+  identified by "anchor". Each list item is the full plain text of one new
+  paragraph.
 
 Rules:
 - The block is applied immediately as tracked changes (redlines), creating
   a new version of the file. Discussing or suggesting a change is NOT
   direction to make it. Never emit the block unprompted.
-- "old" must quote the draft exactly as PLAIN TEXT: strip the facsimile's
-  Markdown markers (**, *, #, etc.), which do not exist in the underlying
-  file. No newlines; an edit stays inside one paragraph, so use several
-  edits for a multi-paragraph change.
-- Each "old" must occur exactly once in the draft; set "replace_all": true
-  to change every occurrence of a repeated phrase.
-- "new" replaces "old" outright. An empty "new" deletes the text. Keep
-  edits minimal: quote only the text that actually changes, plus enough
-  surrounding words to be unique.
+- All quoted text is PLAIN TEXT exactly as it reads in the draft: strip the
+  facsimile's Markdown markers (**, *, #, etc.), which do not exist in the
+  underlying file, and never include newlines inside a string.
 - Outside the block, summarize the intent of the edits in a sentence or
   two. Do not restate them line by line."""
 
@@ -94,21 +109,39 @@ def build_system_prompt(session, user):
 
 
 def _parse_edit_block(raw):
-    """Parse one block's JSON into RedlineEdits, or raise ValueError."""
+    """Parse one block's JSON into redline op objects, or raise ValueError."""
     data = json.loads(raw)
     if not isinstance(data, list) or not data:
         raise ValueError("draft-edits block is not a non-empty list")
     edits = []
     for entry in data:
-        if not isinstance(entry, dict) or "old" not in entry:
-            raise ValueError("draft-edits entry is not an object with 'old'")
-        edits.append(
-            RedlineEdit(
-                old=str(entry["old"]),
-                new=str(entry.get("new", "")),
-                replace_all=bool(entry.get("replace_all", False)),
+        if not isinstance(entry, dict):
+            raise ValueError("draft-edits entry is not an object")
+        op = entry.get("op", "replace")
+        if op == "replace":
+            if "old" not in entry:
+                raise ValueError("replace entry has no 'old'")
+            edits.append(
+                RedlineEdit(
+                    old=str(entry["old"]),
+                    new=str(entry.get("new", "")),
+                    replace_all=bool(entry.get("replace_all", False)),
+                )
             )
-        )
+        elif op == "delete_paragraph":
+            edits.append(DeleteParagraph(text=str(entry.get("text", ""))))
+        elif op == "insert_after":
+            paragraphs = entry.get("paragraphs")
+            if not isinstance(paragraphs, list):
+                raise ValueError("insert_after entry has no paragraphs list")
+            edits.append(
+                InsertParagraphs(
+                    anchor=str(entry.get("anchor", "")),
+                    paragraphs=[str(p) for p in paragraphs],
+                )
+            )
+        else:
+            raise ValueError(f"unknown draft-edits op: {op!r}")
     return edits
 
 

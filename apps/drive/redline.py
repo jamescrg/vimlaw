@@ -17,9 +17,12 @@ Atomicity: the driver only ever writes a fresh output file; in-place edits are
 an os.replace() after the whole edit list succeeds. A failed edit (text not
 found, or ambiguous without replace_all) means nothing changes on disk.
 
-Edits are single-paragraph by design (v1): old/new must not contain newlines.
-Restructuring — renumbering, reordering, table surgery — stays manual until
-the simple case is proven.
+Three operations: RedlineEdit (plain-text replacement inside one paragraph),
+DeleteParagraph (remove a whole paragraph, mark included), and
+InsertParagraphs (new paragraphs after an anchor paragraph). No operation's
+text may contain newlines; paragraph structure is expressed through the
+structural ops, never through embedded line breaks. Table surgery and
+reordering stay manual.
 """
 
 import json
@@ -56,7 +59,7 @@ class RedlineError(Exception):
 
 @dataclass(frozen=True)
 class RedlineEdit:
-    """One plain-text replacement; empty ``new`` is a pure deletion."""
+    """One plain-text replacement inside a paragraph; empty ``new`` deletes."""
 
     old: str
     new: str
@@ -64,9 +67,55 @@ class RedlineEdit:
 
 
 @dataclass(frozen=True)
+class DeleteParagraph:
+    """Remove one whole paragraph (its mark included), as a tracked deletion.
+
+    ``text`` is any quote that identifies exactly one paragraph.
+    """
+
+    text: str
+
+
+@dataclass(frozen=True)
+class InsertParagraphs:
+    """Insert new paragraphs after an anchor paragraph, as tracked insertions.
+
+    ``anchor`` is any quote that identifies exactly one existing paragraph;
+    ``paragraphs`` is one string per new paragraph.
+    """
+
+    anchor: str
+    paragraphs: tuple
+
+    def __init__(self, anchor, paragraphs):
+        object.__setattr__(self, "anchor", anchor)
+        object.__setattr__(self, "paragraphs", tuple(paragraphs))
+
+
+@dataclass(frozen=True)
 class AppliedEdit:
-    edit: RedlineEdit
+    edit: object
     replacements: int
+
+
+def edit_to_dict(edit):
+    """The op's wire form: the driver job entry, also stored on DraftVersion."""
+    if isinstance(edit, RedlineEdit):
+        return {
+            "op": "replace",
+            "old": edit.old,
+            "new": edit.new,
+            "replace_all": edit.replace_all,
+        }
+    if isinstance(edit, DeleteParagraph):
+        return {"op": "delete_paragraph", "text": edit.text}
+    if isinstance(edit, InsertParagraphs):
+        return {
+            "op": "insert_after",
+            "anchor": edit.anchor,
+            "paragraphs": list(edit.paragraphs),
+        }
+    raise TypeError(f"not a redline edit: {edit!r}")
 
 
 @lru_cache(maxsize=1)
@@ -85,22 +134,43 @@ def is_available() -> bool:
     return probe.returncode == 0
 
 
+def _no_newlines(index, *texts):
+    if any("\n" in text or "\r" in text for text in texts):
+        raise RedlineError(
+            "an edit's text must not contain newlines; replacements stay "
+            "within one paragraph, and each inserted paragraph is its own "
+            "list item",
+            index,
+        )
+
+
 def _validate(edits):
     if not edits:
         raise RedlineError("no edits to apply")
     for index, edit in enumerate(edits):
-        if not edit.old:
-            raise RedlineError("edit has empty old text", index)
-        if edit.old == edit.new:
-            raise RedlineError(
-                "edit changes nothing (old and new are identical)", index
-            )
-        if any("\n" in text or "\r" in text for text in (edit.old, edit.new)):
-            raise RedlineError(
-                "edits must stay within one paragraph (no newlines); split a "
-                "multi-paragraph change into one edit per paragraph",
-                index,
-            )
+        if isinstance(edit, RedlineEdit):
+            if not edit.old:
+                raise RedlineError("edit has empty old text", index)
+            if edit.old == edit.new:
+                raise RedlineError(
+                    "edit changes nothing (old and new are identical)", index
+                )
+            _no_newlines(index, edit.old, edit.new)
+        elif isinstance(edit, DeleteParagraph):
+            if not edit.text:
+                raise RedlineError("delete_paragraph has empty text", index)
+            _no_newlines(index, edit.text)
+        elif isinstance(edit, InsertParagraphs):
+            if not edit.anchor or not edit.paragraphs:
+                raise RedlineError(
+                    "insert_after needs an anchor and at least one paragraph",
+                    index,
+                )
+            if not all(edit.paragraphs):
+                raise RedlineError("insert_after has an empty paragraph", index)
+            _no_newlines(index, edit.anchor, *edit.paragraphs)
+        else:
+            raise RedlineError(f"not a redline edit: {edit!r}", index)
 
 
 def apply_redline_edits(
@@ -158,10 +228,7 @@ def apply_redline_edits(
                 "output": output,
                 "pdf": str(pdf_path) if pdf_path else None,
                 "author": author,
-                "edits": [
-                    {"old": e.old, "new": e.new, "replace_all": e.replace_all}
-                    for e in edits
-                ],
+                "edits": [edit_to_dict(e) for e in edits],
             },
             timeout,
         )

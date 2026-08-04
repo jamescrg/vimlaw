@@ -102,6 +102,12 @@
 
 .draft-chat-col {
   min-width: 0;
+  /* Grid items default to min-height:auto, which would let the message list
+     grow past the viewport (clipped by the layout's overflow:hidden, so the
+     text became unreachable). Pin the column to the viewport and let
+     .ai-chat-scroll's own overflow do the scrolling. */
+  min-height: 0;
+  height: 100vh;
   border-right: 1px solid var(--border-light);
 }
 

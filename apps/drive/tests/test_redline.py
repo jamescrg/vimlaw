@@ -11,7 +11,13 @@ import zipfile
 import pytest
 
 from apps.drive import convert, redline
-from apps.drive.redline import AppliedEdit, RedlineEdit, RedlineError
+from apps.drive.redline import (
+    AppliedEdit,
+    DeleteParagraph,
+    InsertParagraphs,
+    RedlineEdit,
+    RedlineError,
+)
 
 needs_uno = pytest.mark.skipif(
     not redline.is_available(),
@@ -84,6 +90,19 @@ class TestValidation:
     def test_noop_edit(self, draft):
         with pytest.raises(RedlineError, match="changes nothing"):
             redline.apply_redline_edits(draft, [RedlineEdit(old="a", new="a")])
+
+    def test_structural_op_validation(self, draft):
+        with pytest.raises(RedlineError, match="empty text"):
+            redline.apply_redline_edits(draft, [DeleteParagraph(text="")])
+        with pytest.raises(RedlineError, match="anchor and at least one"):
+            redline.apply_redline_edits(
+                draft, [InsertParagraphs(anchor="x", paragraphs=[])]
+            )
+        with pytest.raises(RedlineError, match="not contain newlines"):
+            redline.apply_redline_edits(
+                draft,
+                [InsertParagraphs(anchor="x", paragraphs=["one\ntwo"])],
+            )
 
     def test_newlines_rejected(self, draft):
         with pytest.raises(RedlineError, match="one paragraph") as excinfo:
@@ -168,6 +187,40 @@ class TestApply:
         markdown = _markdown(draft)
         assert "must accept all well-pleaded facts" in markdown
         assert DELETABLE not in markdown
+
+    def test_structural_ops_track_and_apply(self, draft):
+        applied = redline.apply_redline_edits(
+            draft,
+            [
+                DeleteParagraph(text="will be deleted"),
+                InsertParagraphs(
+                    anchor="upon which relief can be granted",
+                    paragraphs=[
+                        "The deposit here fails that test.",
+                        "Enforcement is therefore barred.",
+                    ],
+                ),
+            ],
+        )
+        assert [item.replacements for item in applied] == [1, 1]
+
+        xml = _content_xml(draft)
+        assert "tracked-changes" in xml
+
+        markdown = _markdown(draft)
+        # Accepted view: the paragraph is gone, the new ones follow the anchor.
+        assert DELETABLE not in markdown
+        claim = markdown.index(OLD_CLAIM)
+        first = markdown.index("The deposit here fails that test.")
+        second = markdown.index("Enforcement is therefore barred.")
+        assert claim < first < second
+        assert second < markdown.index(BOLD_RUN.rstrip("."))
+
+    def test_ambiguous_paragraph_needle_fails(self, draft):
+        original = draft.read_bytes()
+        with pytest.raises(RedlineError, match="paragraphs contain"):
+            redline.apply_redline_edits(draft, [DeleteParagraph(text="The")])
+        assert draft.read_bytes() == original
 
     def test_unmatched_edit_is_atomic(self, draft):
         original = draft.read_bytes()

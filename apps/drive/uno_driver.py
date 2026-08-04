@@ -14,8 +14,17 @@ Job spec:
       "output": "/path/out.odt",       # ODT written on success (optional)
       "pdf": "/path/out.pdf",          # PDF export of the result (optional)
       "author": "Kosmos AI",           # tracked-change attribution
-      "edits": [{"old": ..., "new": ..., "replace_all": false}, ...]
+      "edits": [
+        {"op": "replace", "old": ..., "new": ..., "replace_all": false},
+        {"op": "delete_paragraph", "text": ...},
+        {"op": "insert_after", "anchor": ..., "paragraphs": [...]}
+      ]
     }
+
+"op" defaults to "replace". delete_paragraph/insert_after locate the single
+body paragraph containing their quote (ambiguity is an error) and edit via
+text cursors, so LibreOffice records them as tracked paragraph deletions/
+insertions like any other change.
 
 With "edits": [] the document is only re-exported (used for a session's
 version 0 PDF); at least one of "output"/"pdf" must be set. The PDF is
@@ -105,36 +114,92 @@ def _set_author(ctx, author):
     access.commitChanges()
 
 
+def _apply_replace(doc, edit, index):
+    old, new = edit["old"], edit["new"]
+
+    finder = doc.createSearchDescriptor()
+    finder.SearchString = old
+    finder.setPropertyValue("SearchCaseSensitive", True)
+    finder.setPropertyValue("SearchRegularExpression", False)
+    matches = doc.findAll(finder).Count
+    if matches == 0:
+        raise DriverError(f"text not found in draft: {old[:120]!r}", index)
+    if matches > 1 and not edit.get("replace_all"):
+        raise DriverError(
+            f"ambiguous edit: {matches} occurrences of {old[:120]!r} "
+            "(set replace_all to change every occurrence)",
+            index,
+        )
+
+    replacer = doc.createReplaceDescriptor()
+    replacer.SearchString = old
+    replacer.ReplaceString = new
+    replacer.setPropertyValue("SearchCaseSensitive", True)
+    replacer.setPropertyValue("SearchRegularExpression", False)
+    replaced = doc.replaceAll(replacer)
+    if replaced != matches:
+        raise DriverError(f"expected {matches} replacement(s), made {replaced}", index)
+    return replaced
+
+
+def _find_paragraph(doc, needle, index):
+    """The single body paragraph containing ``needle`` (tables are skipped)."""
+    matches = []
+    enum = doc.getText().createEnumeration()
+    while enum.hasMoreElements():
+        par = enum.nextElement()
+        if par.supportsService("com.sun.star.text.Paragraph") and needle in (
+            par.getString()
+        ):
+            matches.append(par)
+    if not matches:
+        raise DriverError(f"no paragraph contains: {needle[:120]!r}", index)
+    if len(matches) > 1:
+        raise DriverError(
+            f"ambiguous: {len(matches)} paragraphs contain {needle[:120]!r} "
+            "(quote more of the paragraph)",
+            index,
+        )
+    return matches[0]
+
+
+def _apply_delete_paragraph(doc, edit, index):
+    par = _find_paragraph(doc, edit["text"], index)
+    text = doc.getText()
+    cursor = text.createTextCursorByRange(par.getStart())
+    cursor.gotoEndOfParagraph(True)
+    # Swallow the paragraph mark too (False at document end: text-only delete
+    # there, which is still the right outcome for a final paragraph).
+    cursor.goRight(1, True)
+    text.insertString(cursor, "", True)
+
+
+def _apply_insert_after(doc, edit, index):
+    from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
+
+    par = _find_paragraph(doc, edit["anchor"], index)
+    text = doc.getText()
+    cursor = text.createTextCursorByRange(par.getEnd())
+    for ptext in edit["paragraphs"]:
+        text.insertControlCharacter(cursor, PARAGRAPH_BREAK, False)
+        text.insertString(cursor, ptext, False)
+
+
 def _apply_edits(doc, edits):
     results = []
     for index, edit in enumerate(edits):
-        old, new = edit["old"], edit["new"]
-
-        finder = doc.createSearchDescriptor()
-        finder.SearchString = old
-        finder.setPropertyValue("SearchCaseSensitive", True)
-        finder.setPropertyValue("SearchRegularExpression", False)
-        matches = doc.findAll(finder).Count
-        if matches == 0:
-            raise DriverError(f"text not found in draft: {old[:120]!r}", index)
-        if matches > 1 and not edit.get("replace_all"):
-            raise DriverError(
-                f"ambiguous edit: {matches} occurrences of {old[:120]!r} "
-                "(set replace_all to change every occurrence)",
-                index,
-            )
-
-        replacer = doc.createReplaceDescriptor()
-        replacer.SearchString = old
-        replacer.ReplaceString = new
-        replacer.setPropertyValue("SearchCaseSensitive", True)
-        replacer.setPropertyValue("SearchRegularExpression", False)
-        replaced = doc.replaceAll(replacer)
-        if replaced != matches:
-            raise DriverError(
-                f"expected {matches} replacement(s), made {replaced}", index
-            )
-        results.append({"replacements": replaced})
+        op = edit.get("op", "replace")
+        if op == "replace":
+            replaced = _apply_replace(doc, edit, index)
+        elif op == "delete_paragraph":
+            _apply_delete_paragraph(doc, edit, index)
+            replaced = 1
+        elif op == "insert_after":
+            _apply_insert_after(doc, edit, index)
+            replaced = 1
+        else:
+            raise DriverError(f"unknown edit op: {op!r}", index)
+        results.append({"op": op, "replacements": replaced})
     return results
 
 

@@ -3,7 +3,12 @@
 import pytest
 
 from apps.drafts import chat, services
-from apps.drive.redline import RedlineEdit, RedlineError
+from apps.drive.redline import (
+    DeleteParagraph,
+    InsertParagraphs,
+    RedlineEdit,
+    RedlineError,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -58,6 +63,43 @@ def test_malformed_block_left_in_place(session, monkeypatch):
     assert chat.apply_edit_blocks(text, session) == text
     # A list of non-objects is also malformed.
     text = '```draft-edits\n["just strings"]\n```'
+    assert chat.apply_edit_blocks(text, session) == text
+
+
+def test_structural_ops_parse(session, monkeypatch):
+    block = """```draft-edits
+[{"op": "delete_paragraph", "text": "COUNT FOUR"},
+ {"op": "delete_paragraph", "text": "entitled to recover attorney fees"},
+ {"op": "insert_after", "anchor": "incorporates paragraphs 1 through 40", "paragraphs": ["87. New paragraph.", "88. Another."]},
+ {"old": "liquidated damages", "new": "a penalty"}]
+```"""
+    seen = {}
+
+    def fake_apply(sess, edits):
+        seen["edits"] = edits
+        return sess.versions.get(seq=0)
+
+    monkeypatch.setattr(services, "apply_edit_round", fake_apply)
+    result = chat.apply_edit_blocks(block, session)
+
+    assert seen["edits"] == [
+        DeleteParagraph(text="COUNT FOUR"),
+        DeleteParagraph(text="entitled to recover attorney fees"),
+        InsertParagraphs(
+            anchor="incorporates paragraphs 1 through 40",
+            paragraphs=["87. New paragraph.", "88. Another."],
+        ),
+        RedlineEdit(old="liquidated damages", new="a penalty", replace_all=False),
+    ]
+    assert "Applied 4 edits as tracked changes" in result
+
+
+def test_unknown_op_leaves_block_in_place(session, monkeypatch):
+    def boom(sess, edits):  # pragma: no cover - must not be reached
+        raise AssertionError("apply_edit_round called for unknown op")
+
+    monkeypatch.setattr(services, "apply_edit_round", boom)
+    text = '```draft-edits\n[{"op": "reorder_sections", "text": "x"}]\n```'
     assert chat.apply_edit_blocks(text, session) == text
 
 

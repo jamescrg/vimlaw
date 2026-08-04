@@ -160,7 +160,7 @@ def apply_edit_round(session, edits):
         current.seq + 1,
         odt_bytes,
         pdf_bytes,
-        [{"old": e.old, "new": e.new, "replace_all": e.replace_all} for e in edits],
+        [redline.edit_to_dict(e) for e in edits],
     )
     session.save(update_fields=["updated_at"])
     return version
