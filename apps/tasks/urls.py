@@ -42,6 +42,7 @@ from apps.tasks.views import (
     tasks_set_status,
     tasks_set_view_mode,
     tasks_status,
+    tasks_toggle_chip,
     tasks_toggle_select,
     tasks_toolbar,
     tasks_user,
@@ -124,6 +125,11 @@ urlpatterns = [
         "tasks/cycle-user/<str:direction>/",
         tasks_cycle_user,
         name="cycle-user",
+    ),
+    path(
+        "tasks/chips/toggle/<int:user_id>/",
+        tasks_toggle_chip,
+        name="toggle-chip",
     ),
     path(
         "tasks/filter/importance/<int:importance_value>/",

@@ -177,6 +177,46 @@ tr > td.importance.complete .button-link {
   padding-right: 0.5rem;
 }
 
+/* One-click user filter chips (replacing the user dropdown): a tight row of
+   monogram buttons; toggle-active carries the selected state. */
+.user-chips {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tasks-toolbar .user-chips .user-chip {
+  justify-content: center;
+  min-width: 2.5rem;
+  padding: 0.5rem;
+}
+
+/* Overflow rows: filter link + pin toggle side by side. The pin button sits
+   inside the dropdown menu, so the toolbar chrome already skips it. */
+.user-chip-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.user-chip-row .dropdown-item {
+  flex: 1;
+}
+
+.user-chip-row .user-chip-pin {
+  color: var(--color-muted-more);
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+}
+
+.user-chip-row .user-chip-pin:hover {
+  color: var(--color-primary);
+}
+
+.user-chip-row .user-chip-pin.pinned {
+  color: var(--link);
+}
+
 /* Mobile: lay the toolbar out as a tidy 2-column grid — Add | Filter on the top
    row, the date | user dropdowns below, and the list/board toggle on its own
    row. (The default flex `wrap-reverse` dropped Add awkwardly beneath the
@@ -213,7 +253,8 @@ tr > td.importance.complete .button-link {
     order: 4;
   }
 
-  .tasks-toolbar .filter-tools > .dropdown:has(#tasks-user-filter) {
+  .tasks-toolbar .filter-tools > .user-chips {
+    justify-content: center;
     order: 3;
   }
 

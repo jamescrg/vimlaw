@@ -159,6 +159,59 @@ def test_panel_tab_dots(client, user, task, matter):
 
 
 # -----------------------------------------------------
+# user filter chips
+# -----------------------------------------------------
+def test_user_chips_render_small_firm(client, user, task):
+    """<= cap active users: everyone is a chip, no legacy dropdown."""
+    response = client.get(reverse("tasks:index"))
+    assert b"user-chips" in response.content
+    assert b">OL</button>" in response.content
+    assert b"tasks-user-filter" not in response.content
+
+
+def test_toggle_chip_pins_and_unpins(client, user):
+    from apps.accounts.models import CustomUser
+
+    other = CustomUser.objects.create(username="zed", email="z@example.com")
+    response = client.post(reverse("tasks:toggle-chip", args=[other.id]))
+    assert response.status_code == 200
+    user.refresh_from_db()
+    assert user.task_user_chips == [other.id]
+
+    client.post(reverse("tasks:toggle-chip", args=[other.id]))
+    user.refresh_from_db()
+    assert user.task_user_chips == []
+
+
+def test_toggle_chip_cap(client, user):
+    from apps.accounts.models import CustomUser
+
+    extras = [
+        CustomUser.objects.create(username=f"extra{i}", email=f"e{i}@example.com")
+        for i in range(6)
+    ]
+    for extra in extras[:5]:
+        client.post(reverse("tasks:toggle-chip", args=[extra.id]))
+    client.post(reverse("tasks:toggle-chip", args=[extras[5].id]))
+    user.refresh_from_db()
+    assert len(user.task_user_chips) == 5
+    assert extras[5].id not in user.task_user_chips
+
+
+def test_filtered_unchipped_user_surfaces_as_chip(client, user, task):
+    """Large firm, nothing pinned: filtering to a user still lights a chip."""
+    from apps.accounts.models import CustomUser
+
+    extras = [
+        CustomUser.objects.create(username=f"extra{i}", email=f"e{i}@example.com")
+        for i in range(6)
+    ]
+    target = extras[0]
+    response = client.post(reverse("tasks:filter-user", args=[target.id]))
+    assert b">EX</button>" in response.content
+
+
+# -----------------------------------------------------
 # edge case tests - nonexistent records
 # -----------------------------------------------------
 def test_edit_nonexistent(client):

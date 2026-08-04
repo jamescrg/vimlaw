@@ -756,6 +756,30 @@ def tasks_filter_user(request, user_id):
 
 @login_required
 @require_POST
+def tasks_toggle_chip(request, user_id):
+    """Pin or unpin a user on the toolbar's chip row (per-viewer, capped)."""
+    from apps.tasks.tasks import TASK_CHIPS_CAP
+
+    get_object_or_404(CustomUser, pk=user_id, is_active=True)
+    pinned = list(request.user.task_user_chips or [])
+    if user_id in pinned:
+        pinned.remove(user_id)
+    elif len(pinned) >= TASK_CHIPS_CAP:
+        response = _render_tasks(request)
+        toast_warning(
+            response,
+            f"Chips are limited to {TASK_CHIPS_CAP}. Unpin one first.",
+        )
+        return response
+    else:
+        pinned.append(user_id)
+    request.user.task_user_chips = pinned
+    request.user.save(update_fields=["task_user_chips"])
+    return _render_tasks(request)
+
+
+@login_required
+@require_POST
 def tasks_cycle_user(request, direction):
     """Cycle the task user filter (u / U keyboard shortcut)."""
     cycle_user_filter(request, "tasks_filter", direction)

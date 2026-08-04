@@ -27,6 +27,34 @@ from apps.tasks.models import (
     UserTaskNoteView,
 )
 
+# Most pinned user chips allowed on the tasks toolbar.
+TASK_CHIPS_CAP = 5
+
+
+def get_user_chips(request, users, user_id):
+    """Users rendered as one-click filter chips on the tasks toolbar.
+
+    The user's pinned picks when they have any; otherwise everyone, while
+    the firm is small enough (<= cap) that pinning would be busywork.
+    Larger firms start with no chips and pin a working set from the
+    overflow menu. A filtered-but-unchipped user is appended so the
+    active filter is always visible as a lit chip.
+    """
+    users = list(users)
+    pinned_ids = request.user.task_user_chips or []
+    if pinned_ids:
+        by_id = {u.id: u for u in users}
+        chips = [by_id[i] for i in pinned_ids if i in by_id]
+    elif len(users) <= TASK_CHIPS_CAP:
+        chips = users
+    else:
+        chips = []
+    if user_id and user_id not in {c.id for c in chips}:
+        selected = next((u for u in users if u.id == user_id), None)
+        if selected:
+            chips.append(selected)
+    return chips
+
 
 def resolve_task_filter(request):
     """Resolve the session task filter into a queryset and selected dimensions.
@@ -241,6 +269,8 @@ def get_list_data(request):
         "panel_layout": panel_layout,
         "panel_tab": panel_tab,
         "no_matter": no_matter,
+        "user_chips": get_user_chips(request, users, user_id),
+        "chip_pinned_ids": request.user.task_user_chips or [],
         "date_filtered": date_filtered,
         "custom_filter_active": bool(filter_data)
         and any(
@@ -339,6 +369,8 @@ def get_board_data(request):
         "trigger_key": "tasksListChanged",
         "today": today,
         "users": users,
+        "user_chips": get_user_chips(request, users, user_id),
+        "chip_pinned_ids": request.user.task_user_chips or [],
         "importances": list(range(7, 0, -1)),
         "user_id": user_id,
         "matter_id": matter_id,
