@@ -197,8 +197,9 @@ def draft_pane(request, session_id):
 @require_http_methods(["POST"])
 def draft_publish(request, session_id):
     session = get_object_or_404(DraftSession, pk=session_id)
+    accept = request.POST.get("accept") == "1"
     try:
-        services.publish_session(session)
+        services.publish_session(session, accept=accept)
     except services.DraftError as exc:
         logger.warning("Publish refused for session %s: %s", session_id, exc)
     return _pane_response(request, session)
@@ -250,11 +251,12 @@ def draft_version_odt(request, version_id):
     if not version.odt_file:
         return HttpResponse("This version's file has been cleaned up.", status=410)
     stem = version.session.name.rsplit(".", 1)[0]
+    label = "final" if version.is_accepted else "redline"
     response = FileResponse(
         version.odt_file.open("rb"),
         content_type="application/vnd.oasis.opendocument.text",
         as_attachment=True,
-        filename=f"{stem} (redline v{version.seq}).odt",
+        filename=f"{stem} ({label} v{version.seq}).odt",
     )
     response["Cache-Control"] = "private, no-store"
     return response

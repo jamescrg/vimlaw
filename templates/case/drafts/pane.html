@@ -38,19 +38,31 @@ so the PDF does not reload while the user reads.
           Discard
         </button>
         <button type="button"
-                class="btn btn-sm btn-primary"
+                class="btn btn-sm btn-secondary"
                 hx-post="{% url 'case:draft-publish' session.id %}"
                 hx-target="#draft-side"
                 hx-swap="outerHTML"
-                hx-confirm="Publish this draft? The session closes and the final redlined ODT becomes the download.">
-          Publish
-        </button>
+                hx-confirm="Publish with the changes still tracked? The session closes and the redlined ODT becomes the download (accept or reject each change in LibreOffice)."
+                title="Keep the redlines for review in LibreOffice">Publish Redlined</button>
+        <button type="button"
+                class="btn btn-sm btn-primary"
+                hx-post="{% url 'case:draft-publish' session.id %}"
+                hx-vals='{"accept": "1"}'
+                hx-target="#draft-side"
+                hx-swap="outerHTML"
+                hx-confirm="Accept every tracked change and publish? The session closes and the clean ODT becomes the download."
+                title="Accept all tracked changes; the download is the clean document">Accept &amp; Publish</button>
       {% elif session.status == "published" %}
         <span class="app-badge badge-green">Published {{ session.published_at|date:"M j, g:i A" }}</span>
         {% if latest.odt_file %}
           <a href="{% url 'case:draft-version-odt' latest.id %}"
              class="btn btn-sm btn-primary">
-            <i class="icon-download"></i> Redlined ODT
+            <i class="icon-download"></i>
+            {% if latest.is_accepted %}
+              Final ODT
+            {% else %}
+              Redlined ODT
+            {% endif %}
           </a>
         {% endif %}
       {% else %}

@@ -27,7 +27,10 @@ text cursors, so LibreOffice records them as tracked paragraph deletions/
 insertions like any other change.
 
 With "edits": [] the document is only re-exported (used for a session's
-version 0 PDF); at least one of "output"/"pdf" must be set. The PDF is
+version 0 PDF); at least one of "output"/"pdf" must be set. With
+"accept_changes": true, every tracked change is accepted after the edits
+are applied and before saving, yielding a clean document (used by
+accept-and-publish). The PDF is
 exported while the document is still open, so it costs no extra soffice
 start, and — because change display is on — it shows the redlines exactly
 as LibreOffice would print them.
@@ -244,6 +247,16 @@ def run(job):
                     "tracked-changes protection on?)"
                 )
             results = _apply_edits(doc, job["edits"])
+
+        if job.get("accept_changes"):
+            # Recording off first so acceptance itself isn't tracked, then
+            # accept every redline in the document.
+            doc.setPropertyValue("RecordChanges", False)
+            dispatcher = ctx.ServiceManager.createInstanceWithContext(
+                "com.sun.star.frame.DispatchHelper", ctx
+            )
+            frame = doc.getCurrentController().getFrame()
+            dispatcher.executeDispatch(frame, ".uno:AcceptAllTrackedChanges", "", 0, ())
 
         if job.get("output"):
             doc.storeToURL(

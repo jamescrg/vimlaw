@@ -109,3 +109,8 @@ class DraftVersion(models.Model):
 
     def __str__(self):
         return f"{self.session.name} v{self.seq}"
+
+    @property
+    def is_accepted(self):
+        """True for the clean copy accept-and-publish appends."""
+        return self.edits == [{"op": "accept_all"}]

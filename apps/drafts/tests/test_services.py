@@ -114,6 +114,33 @@ class TestLifecycle:
         with pytest.raises(services.DraftError):
             services.publish_session(session)
 
+    def test_accept_and_publish(self, matter, user, fake_drive_file):
+        session = services.create_session(matter, "file1", user)
+        services.apply_edit_round(
+            session,
+            [RedlineEdit(old="upon which relief can be granted", new="whatsoever")],
+        )
+
+        final = services.publish_session(session, accept=True)
+        session.refresh_from_db()
+
+        assert session.status == "published"
+        assert final.seq == 2
+        assert final.is_accepted
+        assert "whatsoever" in final.facsimile
+        # The clean copy has no redline structures left.
+        import io
+        import zipfile
+
+        with final.odt_file.open("rb") as fh:
+            xml = zipfile.ZipFile(io.BytesIO(fh.read())).read("content.xml").decode()
+        assert "tracked-changes" not in xml
+        assert "upon which relief can be granted" not in xml
+        # Earlier versions (redlined v1 included) lost their blobs.
+        for seq in (0, 1):
+            version = session.versions.get(seq=seq)
+            assert not version.odt_file and not version.pdf_file
+
     def test_failed_round_creates_no_version(self, matter, user, fake_drive_file):
         session = services.create_session(matter, "file1", user)
         with pytest.raises(RedlineError):

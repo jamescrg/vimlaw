@@ -252,6 +252,31 @@ def apply_redline_edits(
             os.unlink(output)
 
 
+def accept_all_changes(
+    source_path, output_path, pdf_path=None, *, timeout=DEFAULT_TIMEOUT
+):
+    """Write a clean copy of the ODT with every tracked change accepted.
+
+    Used by accept-and-publish: the redlined source is untouched; the output
+    (and optional PDF) contain the settled text with no redline marks.
+    """
+    source = Path(source_path)
+    if not source.is_file():
+        raise RedlineError(f"source file not found: {source}")
+    _run_driver(
+        {
+            "soffice": settings.SOFFICE_BIN,
+            "source": str(source),
+            "output": str(output_path),
+            "pdf": str(pdf_path) if pdf_path else None,
+            "author": DEFAULT_AUTHOR,
+            "edits": [],
+            "accept_changes": True,
+        },
+        timeout,
+    )
+
+
 def export_pdf(source_path, pdf_path, *, timeout=DEFAULT_TIMEOUT):
     """Export the ODT at ``source_path`` to PDF without applying any edits.
 

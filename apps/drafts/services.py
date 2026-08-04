@@ -175,26 +175,52 @@ def _save_version(session, seq, odt_bytes, pdf_bytes, edits):
     return version
 
 
-def publish_session(session):
+def publish_session(session, accept=False):
     """The human gate: settle the session and purge working blobs.
 
-    The final version's files are kept for download; every earlier version
-    keeps only its facsimile and edit list. (Drive write-back is the planned
-    next phase; until then "publish" means the redlined ODT is final and
-    downloadable.)
+    With ``accept=True`` every tracked change is first accepted into one
+    more version (the clean document), which becomes the published final;
+    otherwise the redlined current version is final. The final version's
+    files are kept for download; every earlier version keeps only its
+    facsimile and edit list. (Drive write-back is the planned next phase;
+    until then "publish" means the final ODT is the download.)
     """
     if session.status != "drafting":
         raise DraftError("This session was already settled.")
     final = session.current_version
     if final is None:
         raise DraftError("Nothing to publish.")
+
+    if accept:
+        final = _accept_version(session, final)
+
     for version in session.versions.exclude(pk=final.pk):
         _purge_blobs(version)
     session.status = "published"
     session.published_at = timezone.now()
     session.save()
-    logger.info("Published draft session %s at v%s", session.id, final.seq)
+    logger.info(
+        "Published draft session %s at v%s (accept=%s)", session.id, final.seq, accept
+    )
     return final
+
+
+def _accept_version(session, current):
+    """One more version with every tracked change accepted (clean copy)."""
+    if not current.odt_file:
+        raise DraftError("The session has no working copy to accept.")
+    with tempfile.TemporaryDirectory(prefix="draft-accept-") as tmp:
+        src = Path(tmp) / "src.odt"
+        with current.odt_file.open("rb") as handle:
+            src.write_bytes(handle.read())
+        out = Path(tmp) / "out.odt"
+        pdf = Path(tmp) / "out.pdf"
+        redline.accept_all_changes(src, out, pdf)
+        odt_bytes = out.read_bytes()
+        pdf_bytes = pdf.read_bytes()
+    return _save_version(
+        session, current.seq + 1, odt_bytes, pdf_bytes, [{"op": "accept_all"}]
+    )
 
 
 def abandon_session(session):

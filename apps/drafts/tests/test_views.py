@@ -87,3 +87,20 @@ def test_publish_endpoint(client, session):
     assert response["HX-Trigger"] == "draftsChanged"
     session.refresh_from_db()
     assert session.status == "published"
+    # No accept flag: the redlined current version stays final, no new one.
+    assert session.versions.count() == 1
+
+
+def test_publish_accept_flag_reaches_services(client, session, monkeypatch):
+    calls = {}
+
+    def fake_publish(sess, accept=False):
+        calls["accept"] = accept
+        sess.status = "published"
+        sess.save()
+        return sess.current_version
+
+    monkeypatch.setattr("apps.drafts.views.services.publish_session", fake_publish)
+    response = client.post(f"/case/drafts/{session.id}/publish/", {"accept": "1"})
+    assert response.status_code == 200
+    assert calls["accept"] is True

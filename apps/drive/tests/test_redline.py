@@ -188,6 +188,24 @@ class TestApply:
         assert "must accept all well-pleaded facts" in markdown
         assert DELETABLE not in markdown
 
+    def test_accept_all_changes_produces_clean_copy(self, draft, tmp_path):
+        redline.apply_redline_edits(draft, [RedlineEdit(old=OLD_CLAIM, new=NEW_CLAIM)])
+        assert "tracked-changes" in _content_xml(draft)
+
+        clean = tmp_path / "clean.odt"
+        pdf = tmp_path / "clean.pdf"
+        redline.accept_all_changes(draft, clean, pdf)
+
+        xml = _content_xml(clean)
+        # No redline structures survive; the deleted text is really gone.
+        assert "tracked-changes" not in xml
+        assert "changed-region" not in xml
+        assert OLD_CLAIM not in xml
+        assert NEW_CLAIM in xml
+        assert pdf.read_bytes()[:5] == b"%PDF-"
+        # The redlined source itself is untouched.
+        assert "tracked-changes" in _content_xml(draft)
+
     def test_structural_ops_track_and_apply(self, draft):
         applied = redline.apply_redline_edits(
             draft,
