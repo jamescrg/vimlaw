@@ -40,6 +40,40 @@ def test_detect_label_week():
     assert _detect_filter_label({"date_due_max": "2026-05-16"}, today) == "week"
 
 
+def test_detect_label_next_workday():
+    # Friday: next workday is Monday, three days out.
+    friday = date(2026, 5, 15)
+    assert (
+        _detect_filter_label(
+            {"date_due_min": "2026-05-18", "date_due_max": "2026-05-18"}, friday
+        )
+        == "next_workday"
+    )
+    # Wednesday: plain tomorrow.
+    wednesday = date(2026, 5, 13)
+    assert (
+        _detect_filter_label(
+            {"date_due_min": "2026-05-14", "date_due_max": "2026-05-14"}, wednesday
+        )
+        == "next_workday"
+    )
+
+
+def test_quick_filter_next_workday_single_day_window(client):
+    from apps.tasks.views import _next_workday
+
+    client.post(reverse("tasks:filter-quick", args=["next_workday"]))
+    session = _session_for(client, "tasks_filter")
+    expected = str(_next_workday(date.today()))
+    assert session.get("filter_label") == "next_workday"
+    assert session.get("date_due_min") == expected
+    assert session.get("date_due_max") == expected
+
+    response = client.get(reverse("tasks:list"))
+    assert response.context["filter_label"] == "next_workday"
+    assert response.context["custom_filter_active"] in (False, None, {})
+
+
 def test_detect_label_next7():
     today = date(2026, 5, 15)
     next7_end = today + timedelta(days=6)

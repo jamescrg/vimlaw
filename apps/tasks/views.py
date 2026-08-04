@@ -509,6 +509,14 @@ def tasks_delete(request, id):
     return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
+def _next_workday(today):
+    """Tomorrow, or Monday when tomorrow lands on the weekend."""
+    day = today + timedelta(days=1)
+    while day.weekday() >= 5:
+        day += timedelta(days=1)
+    return day
+
+
 def _detect_filter_label(filter_data, today):
     """Reconcile the date-dropdown label from filter_data's date / has_due_date state.
 
@@ -535,6 +543,13 @@ def _detect_filter_label(filter_data, today):
         and not has_due_date
     ):
         return "next_week"
+    next_workday_s = str(_next_workday(today))
+    if (
+        date_due_min == next_workday_s
+        and date_due_max == next_workday_s
+        and not has_due_date
+    ):
+        return "next_workday"
     if date_due_min:
         return "custom"
     if not date_due_max:
@@ -669,6 +684,13 @@ def tasks_filter_quick(request, quick_filter):
             "filter_label": "today",
             "date_due_max": today.strftime("%Y-%m-%d"),
             "date_due_min": "",
+            "has_due_date": "",
+        },
+        # A forward single-day window: tomorrow, skipping the weekend.
+        "next_workday": {
+            "filter_label": "next_workday",
+            "date_due_min": _next_workday(today).strftime("%Y-%m-%d"),
+            "date_due_max": _next_workday(today).strftime("%Y-%m-%d"),
             "has_due_date": "",
         },
         # Rolling seven-day window (today plus six), open-ended at the start
