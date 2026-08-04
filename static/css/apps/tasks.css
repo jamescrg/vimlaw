@@ -222,25 +222,21 @@ tr > td.importance.complete .button-link {
    row. (The default flex `wrap-reverse` dropped Add awkwardly beneath the
    filters.) The inline quick-add input is hidden; the Add button covers it. */
 @media (width <= 768px) {
-  .tasks-toolbar .tasks-add-quick-input {
-    display: none;
-  }
-
   .tasks-toolbar-left {
     display: grid;
     gap: 0.5rem;
     grid-template-columns: 1fr 1fr;
   }
 
-  /* Flatten .filter-tools so Filter, the dropdowns and the toggle become grid
-     cells alongside the Add button (a direct child of .tasks-toolbar-left). */
+  /* Flatten .filter-tools so the controls become grid cells. */
   .tasks-toolbar .filter-tools {
     display: contents;
   }
 
-  /* Cell order: Add, Filter, user, date, then the view toggle. */
-  .tasks-toolbar .tasks-add-btn {
-    justify-content: center;
+  /* Cell order: quick-add input (full row), Filter, user chips, date, then
+     the view toggle. */
+  .tasks-toolbar .tasks-add-quick-input {
+    grid-column: 1 / -1;
     order: 1;
   }
 
@@ -282,7 +278,8 @@ tr > td.importance.complete .button-link {
   padding-left: 1rem;
 }
 
-.tasks-toolbar .view-toggle {
+/* Right cluster: Filter + the view toggle. */
+.tasks-toolbar .tasks-view-tools {
   margin-left: auto;
 }
 
@@ -305,7 +302,7 @@ tr > td.importance.complete .button-link {
     width: 100%;
   }
 
-  .tasks-toolbar-left:has(.tasks-add-quick-input) .view-toggle {
+  .tasks-toolbar-left:has(.tasks-add-quick-input) .tasks-view-tools {
     justify-self: end;
     margin-left: 0;
   }
@@ -315,11 +312,6 @@ tr > td.importance.complete .button-link {
   color: var(--border-medium);
 }
 
-@media (width <= 1200px) {
-  .tasks-add-quick-input {
-    display: none;
-  }
-}
 
 .tasks-btn-status {
   color: var(--icon-muted);
