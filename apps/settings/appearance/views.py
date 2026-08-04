@@ -25,18 +25,3 @@ def set_nav_layout(request):
         request.user.nav_layout = layout
         request.user.save(update_fields=["nav_layout"])
     return HttpResponse(status=204)
-
-
-@login_required
-@require_POST
-def set_tasks_layout(request):
-    """Persist the user's tasks list layout (synced across their devices).
-
-    The list is server-rendered from this field on every load, so a 204
-    (no swap) is all that's needed.
-    """
-    layout = request.POST.get("tasks-layout")
-    if layout in {"classic", "panel"}:
-        request.user.tasks_layout = layout
-        request.user.save(update_fields=["tasks_layout"])
-    return HttpResponse(status=204)

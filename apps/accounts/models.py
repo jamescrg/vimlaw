@@ -15,11 +15,6 @@ NAV_LAYOUT_OPTIONS = (
     ("horizontal", "Horizontal"),
 )
 
-TASKS_LAYOUT_OPTIONS = (
-    ("classic", "Classic"),
-    ("panel", "Panel"),
-)
-
 
 class CustomUser(AbstractUser):
     google_contacts_credentials = models.TextField(null=True, blank=True)
@@ -29,11 +24,6 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=5, choices=ROLE_OPTIONS, default="USER")
     nav_layout = models.CharField(
         max_length=20, choices=NAV_LAYOUT_OPTIONS, default="vertical"
-    )
-    # Opt-in tasks list layout: "panel" swaps the matter column for a
-    # matters rail beside the list (Settings -> Appearance).
-    tasks_layout = models.CharField(
-        max_length=20, choices=TASKS_LAYOUT_OPTIONS, default="classic"
     )
     # User ids shown as one-click filter chips on the tasks toolbar (max
     # TASK_CHIPS_CAP, enforced at the toggle endpoint). Empty means "no

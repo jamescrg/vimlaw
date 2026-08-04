@@ -234,15 +234,6 @@ def get_list_data(request):
     visible_ids = [task.id for task in task_list]
     all_selected = all_visible_selected(selected_tasks, visible_ids)
 
-    # Opt-in matters-panel layout (Settings -> Appearance). With the panel on,
-    # the matter dimension is a visible first-class control, so it stops
-    # counting toward the Filter button's "custom filter" signal.
-    panel_layout = request.user.tasks_layout == "panel"
-    panel_tab = request.session.get("tasks_panel_tab", "matters")
-    no_matter = filter_data.get("no_matter") in ("true", True)
-    # Whether the date dimension deviates from All (drives the Due tab's dot).
-    date_filtered = filter_data.get("filter_label") not in (None, "", "all", "default")
-
     list_data = {
         "pagination": pagination,
         "session_key": "tasks_pagination",
@@ -266,18 +257,13 @@ def get_list_data(request):
         # Filter button is the superset signal for the modal-only dimensions.
         # Date, user, and importance have their own toolbar dropdowns (date
         # covers date_due via "Custom range" too) so they're excluded here.
-        "panel_layout": panel_layout,
-        "panel_tab": panel_tab,
-        "no_matter": no_matter,
         "user_chips": get_user_chips(request, users, user_id),
         "chip_pinned_ids": request.user.task_user_chips or [],
-        "date_filtered": date_filtered,
         "custom_filter_active": bool(filter_data)
         and any(
             [
                 status_is_custom(filter_data.get("status")),
-                not panel_layout
-                and (filter_data.get("matter") not in (None, "") or no_matter),
+                filter_data.get("matter") not in (None, ""),
                 filter_data.get("date_completed_min") not in (None, ""),
                 filter_data.get("date_completed_max") not in (None, ""),
             ]
@@ -381,14 +367,11 @@ def get_board_data(request):
         if importance_value
         else "",
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,
-        # The board has no matters panel, so a matter (or Admin) filter set
-        # from the list's panel still lights the Filter button here.
         "custom_filter_active": bool(filter_data)
         and any(
             [
                 status_is_custom(filter_data.get("status")),
                 filter_data.get("matter") not in (None, ""),
-                filter_data.get("no_matter") in ("true", True),
                 filter_data.get("date_completed_min") not in (None, ""),
                 filter_data.get("date_completed_max") not in (None, ""),
             ]
