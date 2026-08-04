@@ -267,9 +267,10 @@ tr > td.importance.complete .button-link {
 }
 
 
-/* Toolbar zones: [+ | Filter] cluster left (plus the user/date dropdowns
-   when the panel is off), quick-add input centred, list/board toggle far
-   right. */
+/* Toolbar reads left to right: quick-add input anchors the bar, the chips
+   and date dropdown follow, Filter + view toggle at the right edge. The
+   input's width is what balances the row - it shrinks before anything
+   moves. */
 .tasks-add-quick-input {
   background: var(--background-light);
   color: var(--color-primary);
@@ -281,31 +282,6 @@ tr > td.importance.complete .button-link {
 /* Right cluster: Filter + the view toggle. */
 .tasks-toolbar .tasks-view-tools {
   margin-left: auto;
-}
-
-/* True-centre the input: a grid with equal flexible side columns. Scoped to
-   toolbars that have the input (the bulk-selection toolbar stays flex) and to
-   widths where it's visible. When a side outgrows its share (classic layout's
-   extra dropdowns) the columns yield instead of overlapping, so the input
-   just drifts off-centre rather than colliding. */
-@media (width > 1200px) {
-  .tasks-toolbar-left:has(.tasks-add-quick-input) {
-    display: grid;
-    grid-template-columns: 1fr minmax(12rem, 30rem) 1fr;
-  }
-
-  .tasks-toolbar-left:has(.tasks-add-quick-input) .tasks-primary-tools {
-    justify-self: start;
-  }
-
-  .tasks-toolbar-left:has(.tasks-add-quick-input) .tasks-add-quick-input {
-    width: 100%;
-  }
-
-  .tasks-toolbar-left:has(.tasks-add-quick-input) .tasks-view-tools {
-    justify-self: end;
-    margin-left: 0;
-  }
 }
 
 .tasks-add-quick-input::placeholder {
