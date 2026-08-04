@@ -46,116 +46,56 @@ def test_edit_post(client, folder, task, user):
 
 
 # -----------------------------------------------------
-# matters panel (opt-in tasks layout)
+# user filter chips
 # -----------------------------------------------------
-def test_filter_matter_admin(client, user, folder, task):
-    admin_task = Task.objects.create(
-        user=user,
-        folder=folder,
-        description="Renew CLE credits",
-        date_due="2024-12-07",
-        status="Pending",
-    )
-    response = client.post(reverse("tasks:filter-matter-admin"))
-    assert response.status_code == 200
-    ids = [t.id for t in response.context["objects"]]
-    assert admin_task.id in ids
-    assert task.id not in ids
-
-
-def test_filter_matter_all_clears_admin(client, user, folder, task):
-    admin_task = Task.objects.create(
-        user=user,
-        folder=folder,
-        description="Renew CLE credits",
-        date_due="2024-12-07",
-        status="Pending",
-    )
-    client.post(reverse("tasks:filter-matter-admin"))
-    response = client.post(reverse("tasks:filter-matter", args=[0]))
-    assert response.status_code == 200
-    ids = [t.id for t in response.context["objects"]]
-    assert admin_task.id in ids
-    assert task.id in ids
-
-
-def test_filter_matter_clears_admin(client, task, matter):
-    client.post(reverse("tasks:filter-matter-admin"))
-    response = client.post(reverse("tasks:filter-matter", args=[matter.id]))
-    assert response.status_code == 200
-    ids = [t.id for t in response.context["objects"]]
-    assert task.id in ids
-
-
-def test_filter_modal_matter_clears_admin(client, task, matter):
-    client.post(reverse("tasks:filter-matter-admin"))
-    response = client.post(reverse("tasks:filter"), {"matter": matter.id})
-    assert response.status_code == 204
-    session_filter = client.session["tasks_filter"]
-    assert session_filter["no_matter"] == ""
-
-
-def test_list_classic_layout(client, task):
+def test_user_chips_render_small_firm(client, user, task):
+    """<= cap active users: everyone is a chip, no legacy dropdown."""
     response = client.get(reverse("tasks:index"))
-    assert response.context["panel_layout"] is False
-    assert b"tasks-matters-panel" not in response.content
+    assert b"user-chips" in response.content
+    assert b">OL</button>" in response.content
+    assert b"tasks-user-filter" not in response.content
 
 
-def test_list_panel_layout(client, user, task, matter):
-    user.tasks_layout = "panel"
-    user.save(update_fields=["tasks_layout"])
-    response = client.get(reverse("tasks:index"))
-    assert response.context["panel_layout"] is True
-    assert b"tasks-matters-panel" in response.content
-    assert b"task-matter-sep" in response.content
-    assert b"All Matters" in response.content
-    assert b"Admin Tasks" in response.content
+def test_toggle_chip_pins_and_unpins(client, user):
+    from apps.accounts.models import CustomUser
 
-
-def test_panel_tab_users(client, user, task):
-    user.tasks_layout = "panel"
-    user.save(update_fields=["tasks_layout"])
-    response = client.post(reverse("tasks:panel-tab", args=["users"]))
+    other = CustomUser.objects.create(username="zed", email="z@example.com")
+    response = client.post(reverse("tasks:toggle-chip", args=[other.id]))
     assert response.status_code == 200
-    assert response.context["panel_tab"] == "users"
-    assert b"All Users" in response.content
-    assert b"All Matters" not in response.content
+    user.refresh_from_db()
+    assert user.task_user_chips == [other.id]
 
-    response = client.post(reverse("tasks:panel-tab", args=["matters"]))
-    assert response.context["panel_tab"] == "matters"
-    assert b"All Matters" in response.content
-
-    response = client.post(reverse("tasks:panel-tab", args=["bogus"]))
-    assert response.status_code == 404
+    client.post(reverse("tasks:toggle-chip", args=[other.id]))
+    user.refresh_from_db()
+    assert user.task_user_chips == []
 
 
-def test_panel_tab_dates(client, user, task):
-    user.tasks_layout = "panel"
-    user.save(update_fields=["tasks_layout"])
-    response = client.post(reverse("tasks:panel-tab", args=["dates"]))
-    assert response.status_code == 200
-    assert response.context["panel_tab"] == "dates"
-    assert b"Unscheduled" in response.content
-    assert b"Next 7 Days" in response.content
-    assert b"Next Calendar Week" in response.content
-    # The toolbar's date dropdown yields to the Due tab in panel mode.
-    assert b"tasks-date-filter" not in response.content
-    # Only the Due tab may render as selected.
-    assert response.content.count(b"tasks-panel-tab active") == 1
+def test_toggle_chip_cap(client, user):
+    from apps.accounts.models import CustomUser
+
+    extras = [
+        CustomUser.objects.create(username=f"extra{i}", email=f"e{i}@example.com")
+        for i in range(6)
+    ]
+    for extra in extras[:5]:
+        client.post(reverse("tasks:toggle-chip", args=[extra.id]))
+    client.post(reverse("tasks:toggle-chip", args=[extras[5].id]))
+    user.refresh_from_db()
+    assert len(user.task_user_chips) == 5
+    assert extras[5].id not in user.task_user_chips
 
 
-def test_panel_tab_dots(client, user, task, matter):
-    user.tasks_layout = "panel"
-    user.save(update_fields=["tasks_layout"])
-    client.post(reverse("tasks:filter-quick", args=["all"]))
-    client.post(reverse("tasks:filter-user", args=[0]))
-    response = client.post(reverse("tasks:filter-matter", args=[0]))
-    assert b"tasks-panel-tab-dot" not in response.content
+def test_filtered_unchipped_user_surfaces_as_chip(client, user, task):
+    """Large firm, nothing pinned: filtering to a user still lights a chip."""
+    from apps.accounts.models import CustomUser
 
-    client.post(reverse("tasks:filter-matter", args=[matter.id]))
-    client.post(reverse("tasks:filter-user", args=[user.id]))
-    response = client.post(reverse("tasks:filter-quick", args=["today"]))
-    assert response.content.count(b"tasks-panel-tab-dot") == 3
+    extras = [
+        CustomUser.objects.create(username=f"extra{i}", email=f"e{i}@example.com")
+        for i in range(6)
+    ]
+    target = extras[0]
+    response = client.post(reverse("tasks:filter-user", args=[target.id]))
+    assert b">EX</button>" in response.content
 
 
 # -----------------------------------------------------

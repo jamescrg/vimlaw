@@ -15,11 +15,6 @@ NAV_LAYOUT_OPTIONS = (
     ("horizontal", "Horizontal"),
 )
 
-TASKS_LAYOUT_OPTIONS = (
-    ("classic", "Classic"),
-    ("panel", "Panel"),
-)
-
 
 class CustomUser(AbstractUser):
     google_contacts_credentials = models.TextField(null=True, blank=True)
@@ -30,11 +25,11 @@ class CustomUser(AbstractUser):
     nav_layout = models.CharField(
         max_length=20, choices=NAV_LAYOUT_OPTIONS, default="vertical"
     )
-    # Opt-in tasks list layout: "panel" swaps the matter column for a
-    # matters rail beside the list (Settings -> Appearance).
-    tasks_layout = models.CharField(
-        max_length=20, choices=TASKS_LAYOUT_OPTIONS, default="classic"
-    )
+    # User ids shown as one-click filter chips on the tasks toolbar (max
+    # TASK_CHIPS_CAP, enforced at the toggle endpoint). Empty means "no
+    # explicit picks": small firms show everyone, large ones fall back to
+    # the overflow menu until the user pins a working set.
+    task_user_chips = models.JSONField(default=list, blank=True)
     is_attorney = models.BooleanField(default=True)
     # Free-text job title ("Attorney", "Paralegal", "Office Manager", ...).
     # Shown in the users table and fed to the AI context so the model never
@@ -79,6 +74,11 @@ class CustomUser(AbstractUser):
     @property
     def role_display(self):
         return dict(ROLE_OPTIONS)[self.role]
+
+    @property
+    def chip_initials(self):
+        """Two-ish letter monogram for toolbar filter chips."""
+        return (self.initials or self.username[:2]).upper()
 
     @property
     def title_display(self):

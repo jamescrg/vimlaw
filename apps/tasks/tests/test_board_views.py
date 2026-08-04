@@ -110,8 +110,8 @@ def test_cycle_user_skips_all_users(client, user):
 def test_toolbar_has_user_filter(client, user):
     client.post("/tasks/view-mode/board/")
     body = client.get("/").content.decode()
-    # Single user dropdown: All Users plus an entry per user.
-    assert 'id="tasks-user-filter"' in body
+    # User chips: an All chip plus one per user.
+    assert "user-chips" in body
     assert "/tasks/filter/user/0/" in body
     assert f"/tasks/filter/user/{user.id}/" in body
 

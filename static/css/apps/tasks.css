@@ -177,30 +177,66 @@ tr > td.importance.complete .button-link {
   padding-right: 0.5rem;
 }
 
+/* One-click user filter chips (replacing the user dropdown): a tight row of
+   monogram buttons; toggle-active carries the selected state. */
+.user-chips {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tasks-toolbar .user-chips .user-chip {
+  justify-content: center;
+  min-width: 2.5rem;
+  padding: 0.5rem;
+}
+
+/* Overflow rows: filter link + pin toggle side by side. The pin button sits
+   inside the dropdown menu, so the toolbar chrome already skips it. */
+.user-chip-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.user-chip-row .dropdown-item {
+  flex: 1;
+}
+
+.user-chip-row .user-chip-pin {
+  color: var(--color-muted-more);
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+}
+
+.user-chip-row .user-chip-pin:hover {
+  color: var(--color-primary);
+}
+
+.user-chip-row .user-chip-pin.pinned {
+  color: var(--link);
+}
+
 /* Mobile: lay the toolbar out as a tidy 2-column grid — Add | Filter on the top
    row, the date | user dropdowns below, and the list/board toggle on its own
    row. (The default flex `wrap-reverse` dropped Add awkwardly beneath the
    filters.) The inline quick-add input is hidden; the Add button covers it. */
 @media (width <= 768px) {
-  .tasks-toolbar .tasks-add-quick-input {
-    display: none;
-  }
-
   .tasks-toolbar-left {
     display: grid;
     gap: 0.5rem;
     grid-template-columns: 1fr 1fr;
   }
 
-  /* Flatten .filter-tools so Filter, the dropdowns and the toggle become grid
-     cells alongside the Add button (a direct child of .tasks-toolbar-left). */
+  /* Flatten .filter-tools so the controls become grid cells. */
   .tasks-toolbar .filter-tools {
     display: contents;
   }
 
-  /* Cell order: Add, Filter, user, date, then the view toggle. */
-  .tasks-toolbar .tasks-add-btn {
-    justify-content: center;
+  /* Cell order: quick-add input (full row), Filter, user chips, date, then
+     the view toggle. */
+  .tasks-toolbar .tasks-add-quick-input {
+    grid-column: 1 / -1;
     order: 1;
   }
 
@@ -213,7 +249,8 @@ tr > td.importance.complete .button-link {
     order: 4;
   }
 
-  .tasks-toolbar .filter-tools > .dropdown:has(#tasks-user-filter) {
+  .tasks-toolbar .filter-tools > .user-chips {
+    justify-content: center;
     order: 3;
   }
 
@@ -230,9 +267,10 @@ tr > td.importance.complete .button-link {
 }
 
 
-/* Toolbar zones: [+ | Filter] cluster left (plus the user/date dropdowns
-   when the panel is off), quick-add input centred, list/board toggle far
-   right. */
+/* Toolbar reads left to right: quick-add input anchors the bar, the chips
+   and date dropdown follow, Filter + view toggle at the right edge. The
+   input's width is what balances the row - it shrinks before anything
+   moves. */
 .tasks-add-quick-input {
   background: var(--background-light);
   color: var(--color-primary);
@@ -241,44 +279,15 @@ tr > td.importance.complete .button-link {
   padding-left: 1rem;
 }
 
-.tasks-toolbar .view-toggle {
+/* Right cluster: Filter + the view toggle. */
+.tasks-toolbar .tasks-view-tools {
   margin-left: auto;
-}
-
-/* True-centre the input: a grid with equal flexible side columns. Scoped to
-   toolbars that have the input (the bulk-selection toolbar stays flex) and to
-   widths where it's visible. When a side outgrows its share (classic layout's
-   extra dropdowns) the columns yield instead of overlapping, so the input
-   just drifts off-centre rather than colliding. */
-@media (width > 1200px) {
-  .tasks-toolbar-left:has(.tasks-add-quick-input) {
-    display: grid;
-    grid-template-columns: 1fr minmax(12rem, 30rem) 1fr;
-  }
-
-  .tasks-toolbar-left:has(.tasks-add-quick-input) .tasks-primary-tools {
-    justify-self: start;
-  }
-
-  .tasks-toolbar-left:has(.tasks-add-quick-input) .tasks-add-quick-input {
-    width: 100%;
-  }
-
-  .tasks-toolbar-left:has(.tasks-add-quick-input) .view-toggle {
-    justify-self: end;
-    margin-left: 0;
-  }
 }
 
 .tasks-add-quick-input::placeholder {
   color: var(--border-medium);
 }
 
-@media (width <= 1200px) {
-  .tasks-add-quick-input {
-    display: none;
-  }
-}
 
 .tasks-btn-status {
   color: var(--icon-muted);
@@ -337,158 +346,6 @@ tr > td.importance.complete .button-link {
   position: absolute;
   right: 0.625rem;
   top: 0.625rem;
-}
-
-/* ==========================================================================
- Matters panel (opt-in tasks layout, Settings -> Appearance)
-
- A rail of matters beside the list that drives the matter filter. The matter
- column is dropped; each row leads with an inline matter link instead.
-========================================================================== */
-
-.tasks-split {
-  align-items: flex-start;
-  display: flex;
-  gap: 1.25rem;
-}
-
-.tasks-split .table-container {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Framed and filled like .table; items are styled as its cells. */
-.tasks-matters-panel {
-  background: var(--background-body);
-  border: solid 1px var(--border-medium);
-  border-radius: var(--radius-md);
-  display: flex;
-  flex: 0 0 20rem;
-  flex-direction: column;
-  max-height: calc(100vh - 8rem);
-  overflow-y: auto;
-  position: sticky;
-  top: 1rem;
-}
-
-/* Matter / User / Date tabs, styled as the panel's header row (th) — the
-   panel is a small widget, so cell-style tabs fit it better than the full
-   subnav signal. The active tab joins the list below it. Sticky so the
-   tabs stay reachable while the panel scrolls. */
-.tasks-panel-tabs {
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  display: flex;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.tasks-panel-tab {
-  background: var(--background-th);
-  border: none;
-  border-bottom: solid 1px var(--border-medium);
-  color: var(--color-muted);
-  cursor: pointer;
-  flex: 1;
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 0.625rem 1rem;
-  text-align: center;
-}
-
-.tasks-panel-tab:not(:last-child) {
-  border-right: solid 1px var(--border-medium);
-}
-
-.tasks-panel-tab:first-child {
-  border-top-left-radius: var(--radius-md);
-}
-
-.tasks-panel-tab:last-child {
-  border-top-right-radius: var(--radius-md);
-}
-
-/* The active tab joins the list below: cell background, no dividing border. */
-.tasks-panel-tab.active {
-  background: var(--background-td);
-  border-bottom-color: transparent;
-  color: var(--color-primary);
-}
-
-/* Dark mode — the th fill and the selection wash resolve to the same
-   surface (gb-dark1), so a selected row at the very top of the list would
-   bleed into the tabs above it; the stronger hairline keeps that seam
-   visible. The active tab keeps its transparent seam (it joins the list). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .tasks-panel-tab:not(.active) {
-  border-bottom-color: var(--border-medium-dark);
-}
-
-/* Dot on a tab whose dimension holds a non-default filter, so hidden filter
-   state stays visible from any tab. */
-.tasks-panel-tab-dot {
-  background: var(--icon-muted);
-  border-radius: var(--radius-full);
-  display: inline-block;
-  height: 0.375rem;
-  vertical-align: middle;
-  width: 0.375rem;
-}
-
-/* Same spacing and borders as table cells (td). flex-shrink: 0 because the
-   panel is a max-height flex column — shrinkable items would compress and
-   overlap once the matter list outgrows the viewport. */
-.tasks-panel-item {
-  background: var(--background-td);
-  border-bottom: solid 1px var(--border-medium);
-  color: var(--link);
-  display: block;
-  flex-shrink: 0;
-  overflow: hidden;
-  padding: 0.625rem 1rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tasks-panel-item:last-child {
-  border-bottom: none;
-  border-bottom-left-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
-}
-
-.tasks-panel-item:hover {
-  background: var(--background-control);
-  color: var(--link-hover);
-}
-
-.tasks-panel-item.active {
-  background: var(--selected-background);
-  color: var(--selected-color);
-}
-
-/* Non-clickable status row (custom date range set via the Filter modal). */
-.tasks-panel-note,
-.tasks-panel-note:hover {
-  background: var(--background-td);
-  color: var(--color-muted);
-}
-
-/* Inline matter prefix in the description cell. */
-.task-matter-sep {
-  color: var(--color-muted-more);
-  margin: 0 0.25rem;
-}
-
-@media (width <= 768px) {
-  /* The rail has no room on mobile; the card's inline matter prefix
-     carries the matter instead. */
-  .tasks-split {
-    display: block;
-  }
-
-  .tasks-matters-panel {
-    display: none;
-  }
 }
 
 .tasks-table .status {

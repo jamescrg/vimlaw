@@ -166,11 +166,6 @@ urlpatterns = [
         appearance_urls.set_nav_layout,
         name="nav-layout",
     ),
-    path(
-        "settings/appearance/tasks-layout/",
-        appearance_urls.set_tasks_layout,
-        name="tasks-layout",
-    ),
     # Contacts (Groups and Roles)
     path("settings/contacts/", contact_urls.contacts_index, name="contacts-index"),
     path("settings/contacts/roles/", contact_urls.role_list, name="role-list"),
