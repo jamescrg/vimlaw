@@ -25,9 +25,13 @@ def get_emails_data(request, matter, matter_id):
 
     # dedup: the same message synced from two mailboxes shows once
     # (first-synced row wins; provenance rows stay in the DB).
+    # Bodies are deferred: the list renders sender/subject/date only, and a
+    # big matter's full bodies are megabytes per load (the preview pane
+    # fetches each email on click).
     queryset = (
         Email.objects.filter(matter=matter)
         .dedup()
+        .defer("body_text", "body_html")
         .order_by("-date")
         .select_related("account")
         .prefetch_related("attachment_files")
