@@ -80,7 +80,11 @@ class TestQuickAddView:
         assert task.date_due == date.today()
 
     def test_ai_failure_falls_back_to_legacy(self, client, user, monkeypatch):
-        def boom(text, user, recent_matter=None):
+        from apps.settings.models import Firm
+
+        Firm.objects.create(name="Test Firm", quick_task_ai=True)
+
+        def boom(text, user, recent_matter=None, model="gemini-flash"):
             raise Exception("Gemini down")
 
         monkeypatch.setattr("apps.tasks.ai.interpret_quick_add", boom)
@@ -91,3 +95,36 @@ class TestQuickAddView:
         task = Task.objects.get()
         assert task.description == "Plain legacy task"
         assert task.date_due == date.today()
+
+
+class TestQuickAddAiOptIn:
+    """The AI interpreter is a firm-level opt-in; fuzzy is the default."""
+
+    def test_off_by_default_never_calls_ai(self, client, user, monkeypatch):
+        called = []
+        monkeypatch.setattr(
+            "apps.tasks.ai.interpret_quick_add",
+            lambda *args, **kwargs: called.append(1),
+        )
+        response = client.post(
+            reverse("tasks:add-quick"), {"description": "Plain fuzzy task"}
+        )
+        assert response.status_code == 204
+        assert not called
+        assert Task.objects.get().description == "Plain fuzzy task"
+
+    def test_opted_in_firm_routes_to_configured_model(self, client, user, monkeypatch):
+        from apps.settings.models import Firm
+
+        Firm.objects.create(
+            name="Test Firm", quick_task_ai=True, quick_task_ai_model="claude-sonnet"
+        )
+        monkeypatch.setattr(
+            "apps.case.ai.anthropic_client.send_to_claude",
+            lambda *args, **kwargs: ('{"description": "Call the client"}', 10, 5),
+        )
+        response = client.post(
+            reverse("tasks:add-quick"), {"description": "call the client"}
+        )
+        assert response.status_code == 204
+        assert Task.objects.get().description == "Call the client"

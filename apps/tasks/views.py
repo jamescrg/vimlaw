@@ -413,9 +413,15 @@ def tasks_add_quick(request):
 
 
 def _quick_add_ai_entry(request):
-    """Interpret the quick-add line with Gemini; None on any failure so the
-    caller falls back to the legacy prefix matcher."""
+    """Interpret the quick-add line with AI; None whenever the firm hasn't
+    opted in or the call fails, so the caller falls back to the fuzzy
+    prefix matcher (the default)."""
+    from apps.settings.models import Firm
     from apps.tasks.ai import interpret_quick_add
+
+    firm = Firm.objects.first()
+    if not (firm and firm.quick_task_ai):
+        return None
 
     recent_matter = None
     last_matter_id = request.session.get("last_quick_task_matter")
@@ -427,7 +433,10 @@ def _quick_add_ai_entry(request):
         )
     try:
         entry = interpret_quick_add(
-            request.POST["description"], request.user, recent_matter=recent_matter
+            request.POST["description"],
+            request.user,
+            recent_matter=recent_matter,
+            model=firm.quick_task_ai_model,
         )
     except Exception:
         logger.exception("Quick-add AI interpretation failed; using legacy parser")

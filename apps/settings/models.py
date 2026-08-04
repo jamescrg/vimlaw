@@ -2,6 +2,14 @@ from django.db import models
 
 from utils.models import AuditMixin
 
+# Models offered for AI quick task entry - the cheap tier of each provider
+# the app integrates. The picked model only matters when quick_task_ai is on;
+# a missing API key just fails the call and the fuzzy matcher takes over.
+QUICK_TASK_AI_MODELS = (
+    ("gemini-flash", "Gemini Flash"),
+    ("claude-sonnet", "Claude Sonnet"),
+)
+
 
 class Firm(AuditMixin):
     name = models.CharField(max_length=255)
@@ -25,6 +33,12 @@ class Firm(AuditMixin):
     intake_email = models.EmailField(blank=True)
     logo = models.ImageField(upload_to="company/", blank=True, null=True)
     jurisdiction = models.CharField(max_length=100, blank=True)
+    # Quick task entry: the fuzzy "Matter - description" prefix matcher is
+    # the default; AI interpretation of the whole line is an opt-in add-on.
+    quick_task_ai = models.BooleanField(default=False)
+    quick_task_ai_model = models.CharField(
+        max_length=20, choices=QUICK_TASK_AI_MODELS, default="gemini-flash"
+    )
 
     class Meta:
         verbose_name_plural = "firms"

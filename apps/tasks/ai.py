@@ -50,10 +50,9 @@ def _matter_lines():
     return "## Matters (Pending and Open)\n" + "\n".join(f"- {n}" for n in names)
 
 
-def interpret_quick_add(text, user, recent_matter=None):
+def interpret_quick_add(text, user, recent_matter=None, model="gemini-flash"):
     """One quick-add line to a create-entry dict; None when unusable."""
     from apps.case.ai.context import build_request_info
-    from apps.case.ai.gemini_client import send_to_gemini
 
     hint = ""
     if recent_matter:
@@ -72,11 +71,21 @@ def interpret_quick_add(text, user, recent_matter=None):
             _matter_lines(),
         ]
     )
-    response, _, _ = send_to_gemini(
-        system_context=system_context,
-        messages=[{"role": "user", "content": text}],
-        model="gemini-2.5-flash",
-    )
+    messages = [{"role": "user", "content": text}]
+    if model == "claude-sonnet":
+        from apps.case.ai.anthropic_client import send_to_claude
+
+        response, _, _ = send_to_claude(
+            system_context, messages, model="claude-sonnet-4-6"
+        )
+    else:
+        from apps.case.ai.gemini_client import send_to_gemini
+
+        response, _, _ = send_to_gemini(
+            system_context=system_context,
+            messages=messages,
+            model="gemini-2.5-flash",
+        )
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", response.strip())
     try:
         entry = json.loads(cleaned)
