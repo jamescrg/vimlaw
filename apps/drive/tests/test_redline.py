@@ -133,6 +133,20 @@ class TestApply:
         assert BOLD_RUN in markdown
         assert 'font-weight="bold"' in xml
 
+    def test_pdf_export_alongside_edits(self, draft, tmp_path):
+        pdf = tmp_path / "motion.pdf"
+        redline.apply_redline_edits(
+            draft, [RedlineEdit(old=OLD_CLAIM, new=NEW_CLAIM)], pdf_path=pdf
+        )
+        assert pdf.read_bytes()[:5] == b"%PDF-"
+
+    def test_export_pdf_without_edits(self, draft, tmp_path):
+        pdf = tmp_path / "v0.pdf"
+        original = draft.read_bytes()
+        redline.export_pdf(draft, pdf)
+        assert pdf.read_bytes()[:5] == b"%PDF-"
+        assert draft.read_bytes() == original
+
     def test_in_place_multiple_edits_and_deletion(self, draft):
         applied = redline.apply_redline_edits(
             draft,

@@ -109,6 +109,7 @@ def apply_redline_edits(
     *,
     author=DEFAULT_AUTHOR,
     output_path=None,
+    pdf_path=None,
     timeout=DEFAULT_TIMEOUT,
 ):
     """Apply ``edits`` to the ODT at ``source_path`` as tracked changes.
@@ -120,6 +121,9 @@ def apply_redline_edits(
         author: tracked-change attribution shown in LibreOffice.
         output_path: write the redlined document here, leaving the source
             untouched (the "new version" mode). None edits in place.
+        pdf_path: also export a PDF of the redlined result — rendered with the
+            tracked changes shown, while the document is still open (no extra
+            soffice start).
         timeout: seconds before the job (including soffice startup) is killed.
 
     Returns:
@@ -146,22 +150,70 @@ def apply_redline_edits(
     else:
         output = str(output_path)
 
+    try:
+        result = _run_driver(
+            {
+                "soffice": settings.SOFFICE_BIN,
+                "source": str(source),
+                "output": output,
+                "pdf": str(pdf_path) if pdf_path else None,
+                "author": author,
+                "edits": [
+                    {"old": e.old, "new": e.new, "replace_all": e.replace_all}
+                    for e in edits
+                ],
+            },
+            timeout,
+        )
+        applied = [
+            AppliedEdit(edit=edit, replacements=item["replacements"])
+            for edit, item in zip(edits, result["edits"])
+        ]
+        if in_place:
+            os.replace(output, source)
+        logger.info(
+            "applied %d redline edit(s) to %s (author=%s, in_place=%s, pdf=%s)",
+            len(applied),
+            source,
+            author,
+            in_place,
+            bool(pdf_path),
+        )
+        return applied
+    finally:
+        if in_place and os.path.exists(output):
+            os.unlink(output)
+
+
+def export_pdf(source_path, pdf_path, *, timeout=DEFAULT_TIMEOUT):
+    """Export the ODT at ``source_path`` to PDF without applying any edits.
+
+    Used for a drafting session's version 0 preview. Existing tracked changes
+    in the document are rendered as shown (redline marks), matching how later
+    versions' PDFs look.
+    """
+    source = Path(source_path)
+    if not source.is_file():
+        raise RedlineError(f"source file not found: {source}")
+    _run_driver(
+        {
+            "soffice": settings.SOFFICE_BIN,
+            "source": str(source),
+            "output": None,
+            "pdf": str(pdf_path),
+            "author": DEFAULT_AUTHOR,
+            "edits": [],
+        },
+        timeout,
+    )
+
+
+def _run_driver(job, timeout):
+    """Run uno_driver.py with ``job``, returning the parsed result dict."""
     spec_fd, spec_path = tempfile.mkstemp(prefix="redline-job-", suffix=".json")
     try:
         with os.fdopen(spec_fd, "w", encoding="utf-8") as handle:
-            json.dump(
-                {
-                    "soffice": settings.SOFFICE_BIN,
-                    "source": str(source),
-                    "output": output,
-                    "author": author,
-                    "edits": [
-                        {"old": e.old, "new": e.new, "replace_all": e.replace_all}
-                        for e in edits
-                    ],
-                },
-                handle,
-            )
+            json.dump(job, handle)
 
         # start_new_session makes the driver a process-group leader, so a
         # timeout kill also takes down the soffice it spawned.
@@ -184,25 +236,9 @@ def apply_redline_edits(
                 result.get("error", "unknown redline driver failure"),
                 result.get("edit_index"),
             )
-
-        applied = [
-            AppliedEdit(edit=edit, replacements=item["replacements"])
-            for edit, item in zip(edits, result["edits"])
-        ]
-        if in_place:
-            os.replace(output, source)
-        logger.info(
-            "applied %d redline edit(s) to %s (author=%s, in_place=%s)",
-            len(applied),
-            source,
-            author,
-            in_place,
-        )
-        return applied
+        return result
     finally:
         os.unlink(spec_path)
-        if in_place and os.path.exists(output):
-            os.unlink(output)
 
 
 def _parse_result(stdout: bytes, stderr: bytes) -> dict:

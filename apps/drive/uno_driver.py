@@ -11,10 +11,17 @@ Job spec:
     {
       "soffice": "soffice",            # binary to launch
       "source": "/path/draft.odt",     # never modified by this script
-      "output": "/path/out.odt",       # always written on success
+      "output": "/path/out.odt",       # ODT written on success (optional)
+      "pdf": "/path/out.pdf",          # PDF export of the result (optional)
       "author": "Kosmos AI",           # tracked-change attribution
       "edits": [{"old": ..., "new": ..., "replace_all": false}, ...]
     }
+
+With "edits": [] the document is only re-exported (used for a session's
+version 0 PDF); at least one of "output"/"pdf" must be set. The PDF is
+exported while the document is still open, so it costs no extra soffice
+start, and — because change display is on — it shows the redlines exactly
+as LibreOffice would print them.
 
 The script launches a throwaway headless soffice with its own user profile
 (concurrency-safe, no profile-lock contention), enables change recording, and
@@ -163,19 +170,26 @@ def run(job):
         if doc is None:
             raise DriverError(f"soffice could not open {job['source']}")
 
-        doc.setPropertyValue("RecordChanges", True)
-        if not doc.getPropertyValue("RecordChanges"):
-            raise DriverError(
-                "change recording could not be enabled (is the document's "
-                "tracked-changes protection on?)"
+        results = []
+        if job["edits"]:
+            doc.setPropertyValue("RecordChanges", True)
+            if not doc.getPropertyValue("RecordChanges"):
+                raise DriverError(
+                    "change recording could not be enabled (is the document's "
+                    "tracked-changes protection on?)"
+                )
+            results = _apply_edits(doc, job["edits"])
+
+        if job.get("output"):
+            doc.storeToURL(
+                _file_url(job["output"]),
+                (_prop("FilterName", "writer8"), _prop("Overwrite", True)),
             )
-
-        results = _apply_edits(doc, job["edits"])
-
-        doc.storeToURL(
-            _file_url(job["output"]),
-            (_prop("FilterName", "writer8"), _prop("Overwrite", True)),
-        )
+        if job.get("pdf"):
+            doc.storeToURL(
+                _file_url(job["pdf"]),
+                (_prop("FilterName", "writer_pdf_Export"), _prop("Overwrite", True)),
+            )
         return {"ok": True, "edits": results}
     finally:
         try:
