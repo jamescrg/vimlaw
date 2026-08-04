@@ -61,6 +61,7 @@ class Command(BaseCommand):
 
         matters = list(Matter.objects.all().order_by("name"))
         names = [m.name or "" for m in matters]
+        linked_now = []
 
         for label in unmatched:
             self.stdout.write(
@@ -101,8 +102,24 @@ class Command(BaseCommand):
 
             matter.gmail_label_name = label["name"]
             matter.save(update_fields=["gmail_label_name"])
+            linked_now.append(matter)
             self.stdout.write(
                 self.style.SUCCESS(
                     f"  Linked '{label['short_name']}' -> [{matter.id}] {matter.name}"
                 )
             )
+
+        # Backfill what's already under the freshly linked labels. The
+        # scheduled sync is history-based (it only sees NEW label events),
+        # so without this the label's existing messages never arrive - the
+        # Emails-tab link button queues the same resync.
+        for matter in linked_now:
+            self.stdout.write(f"Backfilling {matter.name}...")
+            stats = google.resync_matter(matter)
+            if stats:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"  {stats['created']} created, "
+                        f"{stats['skipped']} already synced"
+                    )
+                )
