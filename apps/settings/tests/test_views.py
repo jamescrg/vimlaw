@@ -16,6 +16,34 @@ def test_index(client):
 
 
 # -----------------------------------------------------
+# Tasks settings tests
+# -----------------------------------------------------
+def test_tasks_settings_index(client):
+    response = client.get("/settings/tasks/")
+    assert response.status_code == 200
+    assertTemplateUsed(response, "settings/tasks/index.html")
+
+
+def test_tasks_settings_save(client):
+    from apps.settings.models import Firm
+
+    response = client.post(
+        "/settings/tasks/",
+        {"quick_task_ai": "True", "quick_task_ai_model": "claude-sonnet"},
+    )
+    assert response.status_code == 200
+    firm = Firm.objects.first()
+    assert firm.quick_task_ai is True
+    assert firm.quick_task_ai_model == "claude-sonnet"
+
+    # A partial post reads as the safe defaults.
+    client.post("/settings/tasks/", {})
+    firm.refresh_from_db()
+    assert firm.quick_task_ai is False
+    assert firm.quick_task_ai_model == "gemini-flash"
+
+
+# -----------------------------------------------------
 # User management tests
 # -----------------------------------------------------
 def test_users_index(admin_client):

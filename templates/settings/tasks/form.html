@@ -1,0 +1,20 @@
+<div id="tasks-settings-fields" class="form-responsive form-spacious">
+  {% for field in form %}
+    {{ field.label_tag }}
+    <div>
+      {{ field }}
+      {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <br />
+  <div class="flex-center-space">
+    <div>
+      <button type="button"
+              class="btn btn-success"
+              hx-post="{% url 'settings:tasks-index' %}"
+              hx-target="#tasks-settings"
+              hx-include="#tasks-settings-fields">Save Task Settings</button>
+    </div>
+  </div>
+</div>
