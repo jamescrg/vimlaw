@@ -1,6 +1,6 @@
 <input type="text"
        class="tasks-add-quick-input"
-       placeholder="Describe a task in plain language"
+       placeholder="{% if quick_add_ai %}Describe a task in plain language{% else %}Matter - Description{% endif %}"
        name="description"
        hx-post="{% url 'tasks:add-quick' %}"
        hx-trigger="keyup[keyCode==13]"

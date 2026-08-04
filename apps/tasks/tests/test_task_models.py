@@ -94,3 +94,9 @@ def test_task_notes_cascade_delete(task, user):
 
     task.delete()
     assert TaskNote.objects.count() == 0
+
+
+def test_description_first_letter_capitalized(task):
+    task.description = "call the clerk about ACH forms"
+    task.save()
+    assert task.description == "Call the clerk about ACH forms"

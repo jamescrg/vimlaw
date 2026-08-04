@@ -23,6 +23,11 @@ class Task(AuditMixin, models.Model):
     history = HistoricalRecords(table_name="agenda_historicaltask")
 
     def save(self, *args, **kwargs):
+        # Descriptions always read as sentences: first letter capitalized,
+        # the rest untouched (unlike str.capitalize, which lowercases it).
+        if self.description:
+            self.description = self.description[:1].upper() + self.description[1:]
+
         # Auto-set date_completed when status changes to Complete
         if self.pk:
             try:

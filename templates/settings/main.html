@@ -35,6 +35,9 @@
             <li {% if subapp == "matters" %}class="active"{% endif %}>
               <a href="{% url 'settings:matters-index' %}">Practice Areas</a>
             </li>
+            <li {% if subapp == "tasks" %}class="active"{% endif %}>
+              <a href="{% url 'settings:tasks-index' %}">Tasks</a>
+            </li>
           {% endif %}
           {% comment %}
             Everyone: non-admins see only the Case Email (Gmail) section on

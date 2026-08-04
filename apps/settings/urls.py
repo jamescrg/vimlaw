@@ -10,6 +10,7 @@ import apps.settings.notifications.views as notification_urls
 import apps.settings.permissions.views as permission_urls
 import apps.settings.profile.views as profile_urls
 import apps.settings.session.views as session_urls
+import apps.settings.tasks.views as tasks_urls
 import apps.settings.users.views as user_urls
 
 app_name = "settings"
@@ -62,6 +63,7 @@ urlpatterns = [
     ),
     # Firm
     path("settings/firm/", firm_urls.firm_index, name="firm-index"),
+    path("settings/tasks/", tasks_urls.tasks_index, name="tasks-index"),
     path(
         "settings/firm/logo/upload/",
         firm_urls.firm_upload_logo,
