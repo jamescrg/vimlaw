@@ -31,6 +31,15 @@ from apps.tasks.models import (
 TASK_CHIPS_CAP = 5
 
 
+def quick_add_ai_enabled():
+    """Whether the firm has opted into AI quick task entry (the input's
+    placeholder teaches the active syntax)."""
+    from apps.settings.models import Firm
+
+    firm = Firm.objects.first()
+    return bool(firm and firm.quick_task_ai)
+
+
 def get_user_chips(request, users, user_id):
     """Users rendered as one-click filter chips on the tasks toolbar.
 
@@ -259,6 +268,7 @@ def get_list_data(request):
         # covers date_due via "Custom range" too) so they're excluded here.
         "user_chips": get_user_chips(request, users, user_id),
         "chip_pinned_ids": request.user.task_user_chips or [],
+        "quick_add_ai": quick_add_ai_enabled(),
         "custom_filter_active": bool(filter_data)
         and any(
             [

@@ -100,6 +100,16 @@ class TestQuickAddView:
 class TestQuickAddAiOptIn:
     """The AI interpreter is a firm-level opt-in; fuzzy is the default."""
 
+    def test_placeholder_teaches_the_active_syntax(self, client, user, task):
+        from apps.settings.models import Firm
+
+        response = client.get(reverse("tasks:index"))
+        assert b"Matter - Description" in response.content
+
+        Firm.objects.create(name="Test Firm", quick_task_ai=True)
+        response = client.get(reverse("tasks:index"))
+        assert b"Describe a task in plain language" in response.content
+
     def test_off_by_default_never_calls_ai(self, client, user, monkeypatch):
         called = []
         monkeypatch.setattr(
