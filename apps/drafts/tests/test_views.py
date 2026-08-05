@@ -91,6 +91,19 @@ def test_missing_blob_serves_410_not_500(client, session):
     assert client.get(f"/case/drafts/version/{version.id}/odt/").status_code == 410
 
 
+def test_refresh_endpoint(client, session, monkeypatch):
+    called = {}
+
+    def fake_refresh(sess):
+        called["session"] = sess.id
+        return sess.current_version
+
+    monkeypatch.setattr("apps.drafts.views.services.refresh_from_drive", fake_refresh)
+    response = client.post(f"/case/drafts/{session.id}/refresh/")
+    assert response.status_code == 200
+    assert called["session"] == session.id
+
+
 def test_publish_endpoint(client, session):
     response = client.post(f"/case/drafts/{session.id}/publish/")
     assert response.status_code == 200

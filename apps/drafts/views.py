@@ -195,6 +195,18 @@ def draft_pane(request, session_id):
 
 @login_required
 @require_http_methods(["POST"])
+def draft_refresh(request, session_id):
+    """Pull the current Drive copy in as the next working version."""
+    session = get_object_or_404(DraftSession, pk=session_id)
+    try:
+        services.refresh_from_drive(session)
+    except services.DraftError as exc:
+        logger.warning("Drive sync refused for session %s: %s", session_id, exc)
+    return _pane_response(request, session)
+
+
+@login_required
+@require_http_methods(["POST"])
 def draft_publish(request, session_id):
     session = get_object_or_404(DraftSession, pk=session_id)
     accept = request.POST.get("accept") == "1"

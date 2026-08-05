@@ -175,6 +175,55 @@ def _save_version(session, seq, odt_bytes, pdf_bytes, edits):
     return version
 
 
+def refresh_from_drive(session):
+    """Pull the current Drive copy in as the session's next version.
+
+    The manual-edit loop: the user downloads the redlined ODT, accepts and
+    rejects changes and hand-edits locally, saves it back to the matter's
+    Drive folder, then syncs. The fresh bytes become the working copy, so
+    the AI's next round sees the document as the user left it. Redlines not
+    carried into the Drive copy drop out of the working lineage; earlier
+    versions remain in the history.
+    """
+    if session.status != "drafting":
+        raise DraftError("This session is no longer accepting changes.")
+    current = session.current_version
+    if current is None:
+        raise DraftError("The session has no working copy to replace.")
+    service = google.build_service() if google.check_credentials() else None
+    if not service:
+        raise DraftError("Google Drive is not connected.")
+
+    try:
+        meta = (
+            service.files()
+            .get(
+                fileId=session.drive_file_id,
+                fields=google.FILE_FIELDS,
+                supportsAllDrives=True,
+            )
+            .execute()
+        )
+        content = google._download(service, meta)
+    except HttpError as exc:
+        raise DraftError(f"Could not fetch the file from Drive: {exc}") from exc
+
+    with tempfile.TemporaryDirectory(prefix="draft-sync-") as tmp:
+        src = Path(tmp) / "draft.odt"
+        src.write_bytes(content)
+        pdf = Path(tmp) / "draft.pdf"
+        redline.export_pdf(src, pdf)
+        pdf_bytes = pdf.read_bytes()
+
+    version = _save_version(
+        session, current.seq + 1, content, pdf_bytes, [{"op": "refresh_from_drive"}]
+    )
+    session.drive_modified = meta.get("modifiedTime", session.drive_modified)
+    session.save()
+    logger.info("Synced session %s from Drive as v%s", session.id, version.seq)
+    return version
+
+
 def publish_session(session, accept=False):
     """The human gate: settle the session and purge working blobs.
 

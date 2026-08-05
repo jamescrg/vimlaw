@@ -114,3 +114,8 @@ class DraftVersion(models.Model):
     def is_accepted(self):
         """True for the clean copy accept-and-publish appends."""
         return self.edits == [{"op": "accept_all"}]
+
+    @property
+    def is_drive_sync(self):
+        """True for a version pulled in from the current Drive copy."""
+        return self.edits == [{"op": "refresh_from_drive"}]

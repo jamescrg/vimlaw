@@ -496,6 +496,11 @@ urlpatterns = [
     ),
     path("case/drafts/<int:session_id>/pane/", drafts.draft_pane, name="draft-pane"),
     path(
+        "case/drafts/<int:session_id>/refresh/",
+        drafts.draft_refresh,
+        name="draft-refresh",
+    ),
+    path(
         "case/drafts/<int:session_id>/publish/",
         drafts.draft_publish,
         name="draft-publish",
