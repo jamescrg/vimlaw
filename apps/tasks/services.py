@@ -217,6 +217,137 @@ def clamp_importance(value, default=4):
         return default
 
 
+# ── Date-window quick filters ────────────────────────────────────────────────
+# Shared by the tasks app and the matter Tasks tab, whose toolbars both carry
+# the same date-preset dropdown over their respective session filters.
+
+
+def next_workday(today):
+    """Tomorrow, or Monday when tomorrow lands on the weekend."""
+    from datetime import timedelta
+
+    day = today + timedelta(days=1)
+    while day.weekday() >= 5:
+        day += timedelta(days=1)
+    return day
+
+
+def detect_filter_label(filter_data, today):
+    """Reconcile the date-dropdown label from filter_data's date / has_due_date state.
+
+    Lets the date dropdown stay truthful when a date setting comes from the
+    modal: matches today / week / unscheduled / all presets exactly, otherwise
+    returns "custom" so the dropdown shows "Custom range" instead of silently
+    mislabeling the state as "All Tasks".
+    """
+    from datetime import timedelta
+
+    has_due_date = str(filter_data.get("has_due_date", ""))
+    date_due_min = filter_data.get("date_due_min", "")
+    date_due_max = filter_data.get("date_due_max", "")
+
+    if has_due_date.lower() == "false" and not date_due_min and not date_due_max:
+        return "unscheduled"
+    if not date_due_min and not date_due_max and has_due_date in ("", "None"):
+        return "all"
+    # Calendar weeks run Sunday through Saturday; weekday() is 6 for Sunday.
+    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
+    next_week_start = week_start + timedelta(days=7)
+    next_week_end = next_week_start + timedelta(days=6)
+    if (
+        date_due_min == str(next_week_start)
+        and date_due_max == str(next_week_end)
+        and not has_due_date
+    ):
+        return "next_week"
+    next_workday_s = str(next_workday(today))
+    if (
+        date_due_min == next_workday_s
+        and date_due_max == next_workday_s
+        and not has_due_date
+    ):
+        return "next_workday"
+    if date_due_min:
+        return "custom"
+    if not date_due_max:
+        return "custom"
+
+    today_s = str(today)
+    end_of_week_s = str(week_start + timedelta(days=6))
+    next7_s = str(today + timedelta(days=6))
+    if date_due_max == today_s and not has_due_date:
+        return "today"
+    if date_due_max == end_of_week_s and not has_due_date:
+        return "week"
+    if date_due_max == next7_s and not has_due_date:
+        return "next7"
+    return "custom"
+
+
+def quick_date_filters(today):
+    """The date dropdown's presets: filter_label -> date-dimension values.
+
+    Quick filters only touch the date dimension. status is intentionally
+    left alone so a "Complete" filter set via the modal isn't silently
+    destroyed when the user clicks Today / This Week / etc.
+    """
+    from datetime import timedelta
+
+    # Calendar week: Sunday through Saturday. weekday() is 6 for Sunday.
+    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
+    end_of_week = week_start + timedelta(days=6)
+
+    return {
+        "all": {
+            "filter_label": "all",
+            "date_due_min": "",
+            "date_due_max": "",
+            "has_due_date": "",
+        },
+        "unscheduled": {
+            "filter_label": "unscheduled",
+            "has_due_date": "false",
+            "date_due_min": "",
+            "date_due_max": "",
+        },
+        "today": {
+            "filter_label": "today",
+            "date_due_max": today.strftime("%Y-%m-%d"),
+            "date_due_min": "",
+            "has_due_date": "",
+        },
+        # A forward single-day window: tomorrow, skipping the weekend.
+        "next_workday": {
+            "filter_label": "next_workday",
+            "date_due_min": next_workday(today).strftime("%Y-%m-%d"),
+            "date_due_max": next_workday(today).strftime("%Y-%m-%d"),
+            "has_due_date": "",
+        },
+        # Rolling seven-day window (today plus six), open-ended at the start
+        # like today/week so overdue tasks stay visible.
+        "next7": {
+            "filter_label": "next7",
+            "date_due_min": "",
+            "date_due_max": (today + timedelta(days=6)).strftime("%Y-%m-%d"),
+            "has_due_date": "",
+        },
+        "week": {
+            "filter_label": "week",
+            "date_due_min": "",
+            "date_due_max": end_of_week.strftime("%Y-%m-%d"),
+            "has_due_date": "",
+        },
+        # Unlike today/week (open-ended so overdue tasks stay visible), next
+        # week is a forward window: both bounds are set.
+        "next_week": {
+            "filter_label": "next_week",
+            "date_due_min": (end_of_week + timedelta(days=1)).strftime("%Y-%m-%d"),
+            "date_due_max": (end_of_week + timedelta(days=7)).strftime("%Y-%m-%d"),
+            "has_due_date": "",
+        },
+    }
+
+
 def create_task_from_ai_entry(entry, requesting_user):
     """Create a Task from an AI-emitted entry dict; None when unusable."""
     from apps.tasks.constants import STATUS_PENDING

@@ -357,9 +357,19 @@ urlpatterns = [
     ),
     path("matters/<int:id>/tasks/filter", tasks.tasks_filter, name="tasks-filter"),
     path(
+        "matters/<int:id>/tasks/filter-quick/<str:quick_filter>",
+        tasks.tasks_filter_quick,
+        name="tasks-filter-quick",
+    ),
+    path(
         "matters/<int:id>/tasks/filter-user/<int:user_id>",
         tasks.tasks_filter_user,
         name="tasks-filter-user",
+    ),
+    path(
+        "matters/<int:id>/tasks/toggle-chip/<int:user_id>",
+        tasks.tasks_toggle_chip,
+        name="tasks-toggle-chip",
     ),
     path(
         "matters/<int:id>/tasks/filter-importance/<int:importance_value>",
