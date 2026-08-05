@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "apps.management",
     "apps.notes",
     "apps.drive",
+    "apps.drafts",
     "apps.mail",
     "django_filters",
     "django_cleanup.apps.CleanupConfig",
@@ -414,6 +415,13 @@ DRIVE_SHARED_DRIVE_ID = env("DRIVE_SHARED_DRIVE_ID", default="")
 # ingestion point: its PDFs sync in as Evidence documents (drag a file in to
 # add it to the app). Convention-based; no per-matter linking. Blank disables.
 DRIVE_KEY_DOCUMENTS_FOLDER = env("DRIVE_KEY_DOCUMENTS_FOLDER", default="Key Documents")
+
+# Headless LibreOffice, used to apply AI-proposed edits to ODT drafts as
+# tracked changes (apps/drive/redline.py). UNO_PYTHON must be an interpreter
+# with UNO bindings — the system python3 with the python3-uno package, not the
+# project venv (apt-get install libreoffice-writer-nogui python3-uno).
+SOFFICE_BIN = env("SOFFICE_BIN", default="soffice")
+UNO_PYTHON = env("UNO_PYTHON", default="/usr/bin/python3")
 
 # Gmail case-email sync
 # Parent label whose children are offered in the label-to-matter picker (shown

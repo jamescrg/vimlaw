@@ -74,7 +74,7 @@ The application needs additional software to be installed on the machine
 where the application will be running:
 
 ```bash
-sudo apt-get install -y libpangocairo-1.0-0 tesseract-ocr ghostscript poppler-utils pandoc
+sudo apt-get install -y libpangocairo-1.0-0 tesseract-ocr ghostscript poppler-utils pandoc libreoffice-writer-nogui python3-uno
 ```
 
 - **Pango** (`libpangocairo-1.0-0`) - Required by WeasyPrint for PDF
@@ -89,6 +89,11 @@ sudo apt-get install -y libpangocairo-1.0-0 tesseract-ocr ghostscript poppler-ut
   (Google Sheets / `.xlsx` / `.ods` / `.csv`) in the same `Notes` folder are also
   synced, rendered as Markdown tables (one per sheet) via the `openpyxl` and
   `odfpy` Python packages — no extra system binary required.
+- **LibreOffice Writer** (`libreoffice-writer-nogui` + `python3-uno`) - Applies
+  AI-proposed edits to `.odt` drafts as native tracked changes
+  (`apps/drive/redline.py`). The driver runs under the system python3 (which
+  has the UNO bindings), not the project venv; override the binaries with the
+  `SOFFICE_BIN` / `UNO_PYTHON` env vars if they live elsewhere.
 
 ### Setting up PostgreSQL
 

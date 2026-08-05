@@ -3,7 +3,15 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def use_local_storage(settings, tmp_path):
-    """Use local file system storage for tests instead of S3."""
+    """Use local file system storage for tests instead of S3.
+
+    MEDIA_ROOT is overridden as well: depending on how the storage handler
+    rebuilds the default storage after the STORAGES override, the OPTIONS
+    location can be dropped and FileSystemStorage falls back to MEDIA_ROOT —
+    which leaked test files into the real media/ directory (found as
+    media/drafts/<test-matter-ids> on dev, 2026-08-05).
+    """
+    settings.MEDIA_ROOT = str(tmp_path / "media")
     settings.STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",

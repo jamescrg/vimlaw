@@ -25,6 +25,11 @@ CLAUDE_MODELS = {
     "claude-opus-4-6": "claude-opus-4-6",
 }
 
+# Model ID used when a conversation carries a picker key that is in neither
+# dispatch table (e.g. a key retired without a mapping). Not a default: new
+# conversations get their default from the surface that creates them.
+CLAUDE_FALLBACK_MODEL = "claude-sonnet-4-6"
+
 # Picker choice -> Gemini model ID. "gemini-pro" is the retired 2.5 Pro pin.
 GEMINI_MODELS = {
     "gemini-flash": "gemini-2.5-flash",
@@ -204,7 +209,7 @@ def process_ai_request(
             # Claude - show elapsed time updates
             update_status("generating", "Generating response...")
 
-            claude_model = CLAUDE_MODELS.get(llm, "claude-sonnet-4-6")
+            claude_model = CLAUDE_MODELS.get(llm, CLAUDE_FALLBACK_MODEL)
 
             response_text, input_tokens, output_tokens = send_to_claude(
                 context_text,

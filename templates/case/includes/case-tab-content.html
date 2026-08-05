@@ -23,6 +23,11 @@
        hx-trigger="notesChanged from:body"
        hx-get="{% url 'case:notes-list' matter.id %}"
        hx-target="this">{% include tab_template %}</div>
+{% elif subapp == "drafts" %}
+  <div id="drafts"
+       hx-trigger="draftsChanged from:body"
+       hx-get="{% url 'case:drafts-list' matter.id %}"
+       hx-target="this">{% include tab_template %}</div>
 {% elif subapp == "labels" %}
   <div id="labels"
        hx-trigger="labelsChanged from:body"
