@@ -77,6 +77,7 @@ class TestLifecycle:
         assert session.status == "drafting"
         assert session.drive_modified == "2026-08-01T12:00:00.000Z"
         assert session.conversation is not None
+        assert session.conversation.llm == "gemini-pro-latest"
         version = session.current_version
         assert version.seq == 0
         assert "MOTION TO DISMISS" in version.facsimile

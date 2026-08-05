@@ -194,7 +194,11 @@ def process_draft_chat(conversation_id, session_id, user_id):
     from apps.case.ai.context import build_chat_history
     from apps.case.ai.gemini_client import send_to_gemini_streaming
     from apps.case.ai.models import Conversation
-    from apps.case.ai.tasks import CLAUDE_MODELS, GEMINI_MODELS
+    from apps.case.ai.tasks import (
+        CLAUDE_FALLBACK_MODEL,
+        CLAUDE_MODELS,
+        GEMINI_MODELS,
+    )
     from apps.drafts.models import DraftSession
 
     cache_key = f"ai_status_{conversation_id}"
@@ -244,7 +248,7 @@ def process_draft_chat(conversation_id, session_id, user_id):
             response_text, input_tokens, output_tokens = send_to_claude(
                 system_context,
                 chat_history,
-                model=CLAUDE_MODELS.get(llm, "claude-sonnet-4-6"),
+                model=CLAUDE_MODELS.get(llm, CLAUDE_FALLBACK_MODEL),
                 is_cancelled=is_cancelled,
             )
 
