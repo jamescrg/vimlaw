@@ -14,7 +14,7 @@ so the PDF does not reload while the user reads.
                   class="draft-version-pill {% if version.seq == latest.seq %}active{% endif %}"
                   data-pdf="{% static 'pdfjs/web/viewer.html' %}?file={% url 'case:draft-version-pdf' version.id %}"
                   onclick="showDraftVersion(this);"
-                  title="{% if version.seq == 0 %}Original{% else %}{{ version.edits|length }} edit(s){% endif %}">
+                  title="{% if version.seq == 0 %}Original{% elif version.is_drive_sync %}Synced from Drive{% elif version.is_accepted %}All changes accepted{% else %}{{ version.edits|length }} edit(s){% endif %}">
             v{{ version.seq }}
           </button>
         {% endif %}
@@ -29,6 +29,15 @@ so the PDF does not reload while the user reads.
             <i class="icon-download"></i>
           </a>
         {% endif %}
+        <button type="button"
+                class="btn btn-sm btn-outline-primary"
+                hx-post="{% url 'case:draft-refresh' session.id %}"
+                hx-target="#draft-side"
+                hx-swap="outerHTML"
+                hx-confirm="Sync from Drive? The current Drive copy becomes the working version, so the AI sees your hand edits. Redlines you have not saved into the Drive copy drop out of the working copy (earlier versions stay in the history)."
+                title="Pull the current Drive copy in as the working version (brings in your hand edits)">
+          <i class="icon-refresh-cw"></i>
+        </button>
         <button type="button"
                 class="btn btn-sm btn-secondary"
                 hx-post="{% url 'case:draft-discard' session.id %}"

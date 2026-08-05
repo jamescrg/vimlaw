@@ -142,6 +142,41 @@ class TestLifecycle:
             version = session.versions.get(seq=seq)
             assert not version.odt_file and not version.pdf_file
 
+    def test_refresh_from_drive_absorbs_hand_edits(
+        self, matter, user, fake_drive_file, monkeypatch
+    ):
+        session = services.create_session(matter, "file1", user)
+        services.apply_edit_round(
+            session,
+            [RedlineEdit(old="upon which relief can be granted", new="whatsoever")],
+        )
+
+        # The user hand-edited the Drive copy; the fake now serves new bytes.
+        import tempfile
+        from pathlib import Path
+
+        from odf.opendocument import OpenDocumentText
+        from odf.text import P
+
+        doc = OpenDocumentText()
+        doc.text.addElement(P(text="Hand-edited body from Drive."))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "m.odt"
+            doc.save(str(path))
+            new_bytes = path.read_bytes()
+        monkeypatch.setattr(
+            "apps.drafts.services.google._download", lambda svc, m: new_bytes
+        )
+
+        version = services.refresh_from_drive(session)
+
+        assert version.seq == 2
+        assert version.is_drive_sync
+        assert "Hand-edited body from Drive." in version.facsimile
+        assert session.current_version.pk == version.pk
+        # The next AI round drafts against the synced copy; history keeps v1.
+        assert session.versions.get(seq=1).odt_file
+
     def test_failed_round_creates_no_version(self, matter, user, fake_drive_file):
         session = services.create_session(matter, "file1", user)
         with pytest.raises(RedlineError):
