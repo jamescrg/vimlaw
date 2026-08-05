@@ -237,7 +237,13 @@ def draft_version_pdf(request, version_id):
     version = get_object_or_404(DraftVersion, pk=version_id)
     if not version.pdf_file:
         return HttpResponse("This version's preview has been cleaned up.", status=410)
-    response = FileResponse(version.pdf_file.open("rb"), content_type="application/pdf")
+    try:
+        handle = version.pdf_file.open("rb")
+    except FileNotFoundError:
+        # Row survived but the blob is gone (on dev, the nightly media mirror
+        # prunes drafts/* until the feature ships to prod).
+        return HttpResponse("This version's preview file is missing.", status=410)
+    response = FileResponse(handle, content_type="application/pdf")
     response["Cache-Control"] = "private, max-age=3600"
     return response
 
@@ -252,8 +258,12 @@ def draft_version_odt(request, version_id):
         return HttpResponse("This version's file has been cleaned up.", status=410)
     stem = version.session.name.rsplit(".", 1)[0]
     label = "final" if version.is_accepted else "redline"
+    try:
+        handle = version.odt_file.open("rb")
+    except FileNotFoundError:
+        return HttpResponse("This version's file is missing.", status=410)
     response = FileResponse(
-        version.odt_file.open("rb"),
+        handle,
         content_type="application/vnd.oasis.opendocument.text",
         as_attachment=True,
         filename=f"{stem} ({label} v{version.seq}).odt",

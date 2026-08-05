@@ -244,7 +244,7 @@ def process_draft_chat(conversation_id, session_id, user_id):
             response_text, input_tokens, output_tokens = send_to_claude(
                 system_context,
                 chat_history,
-                model=CLAUDE_MODELS.get(llm, CLAUDE_MODELS[services.DEFAULT_DRAFT_LLM]),
+                model=CLAUDE_MODELS.get(llm, "claude-sonnet-4-6"),
                 is_cancelled=is_cancelled,
             )
 

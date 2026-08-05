@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 MAX_LIST_DEPTH = 4
 
 # Default model for new draft conversations (an existing dispatch key).
-DEFAULT_DRAFT_LLM = "claude-opus"
+DEFAULT_DRAFT_LLM = "gemini-pro-latest"
 
 
 class DraftError(Exception):

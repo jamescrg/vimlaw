@@ -81,6 +81,16 @@ def test_version_files_served_and_gone_when_purged(client, session):
     assert client.get(f"/case/drafts/version/{version.id}/odt/").status_code == 410
 
 
+def test_missing_blob_serves_410_not_500(client, session):
+    """Rows can outlive blobs (dev's nightly media prune); degrade, not 500."""
+    version = session.versions.get(seq=0)
+    version.odt_file.name = "drafts/nowhere/v0.odt"
+    version.pdf_file.name = "drafts/nowhere/v0.pdf"
+    version.save(update_fields=["odt_file", "pdf_file"])
+    assert client.get(f"/case/drafts/version/{version.id}/pdf/").status_code == 410
+    assert client.get(f"/case/drafts/version/{version.id}/odt/").status_code == 410
+
+
 def test_publish_endpoint(client, session):
     response = client.post(f"/case/drafts/{session.id}/publish/")
     assert response.status_code == 200
