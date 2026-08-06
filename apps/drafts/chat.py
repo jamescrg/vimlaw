@@ -76,6 +76,13 @@ Rules:
 - The block is applied immediately as tracked changes (redlines), creating
   a new version of the file. Discussing or suggesting a change is NOT
   direction to make it. Never emit the block unprompted.
+- Everything in "old" renders as struck-out text in the redline, even the
+  parts "new" repeats verbatim, so a wide "old" buries the real change in
+  visual noise. Keep the rewritten span minimal: to add a sentence to a
+  paragraph, anchor on the last few words of the preceding sentence (e.g.
+  "old": "end of prior sentence.", "new": "end of prior sentence. New
+  sentence."), not the whole sentence. Never re-quote a full sentence to
+  append after it, and use insert_after (not replace) for new paragraphs.
 - All quoted text is PLAIN TEXT exactly as it reads in the draft: strip the
   facsimile's Markdown markers (**, *, #, etc.), which do not exist in the
   underlying file, and never include newlines inside a string.
