@@ -2245,3 +2245,17 @@
   align-items: center;
   gap: 0.25rem;
 }
+
+/* The link-a-draft button: bordered and link-colored so it reads as an
+   action, not a status badge. */
+.draft-link-btn {
+  border: 1px solid var(--link);
+  border-radius: var(--radius-md);
+  color: var(--link);
+  padding: 0.25rem 0.5rem;
+}
+
+.draft-link-btn:hover {
+  color: var(--link-hover);
+  border-color: var(--link-hover);
+}

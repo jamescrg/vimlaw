@@ -16,10 +16,10 @@
         </p>
       {% elif files %}
         <p class="detail-text">
-          Pick an ODT from this matter's Drive folder. The AI reads the
-          draft in this conversation; open the same file in LibreOffice
-          Writer with the Kosmos companion connected and approved edits
-          land there as tracked changes.
+          Pick an ODT file from this matter's Drafts folder. Uses the
+          <a href="#"
+             hx-get="{% url 'case:draft-companion-setup' %}"
+             hx-target="#htmx-modal-container">LibreOffice companion extension</a>.
         </p>
         <ul class="draft-picker-list">
           {% for file in files %}
@@ -42,13 +42,6 @@
           there first (any subfolder works), then reopen this list.
         </p>
       {% endif %}
-      <p class="detail-text companion-note">
-        First time?
-        <a href="#"
-           hx-get="{% url 'case:draft-companion-setup' %}"
-           hx-target="#htmx-modal-container">Install the LibreOffice companion extension</a>
-        to receive edits in your open document.
-      </p>
     </div>
   </div>
 </div>

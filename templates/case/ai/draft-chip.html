@@ -8,10 +8,10 @@ draft support (their worker path skips the edit protocol).
 {% if conversation.kind == "research" %}
 {% elif not conversation.id %}
   <button type="button"
-          class="btn-icon"
+          class="btn-icon draft-link-btn"
           onclick="linkDraftForNewChat()"
           title="Link a draft (an ODT from this matter's Drive folder)">
-    <i class="icon-paperclip"></i>
+    <i class="icon-file-plus-2"></i>
   </button>
 {% else %}
   {% if conversation.draft_link %}
@@ -31,11 +31,11 @@ draft support (their worker path skips the edit protocol).
     </button>
   {% else %}
     <button type="button"
-            class="btn-icon"
+            class="btn-icon draft-link-btn"
             hx-get="{% url 'case:draft-picker' conversation.id %}"
             hx-target="#htmx-modal-container"
             title="Link a draft (an ODT from this matter's Drive folder)">
-      <i class="icon-paperclip"></i>
+      <i class="icon-file-plus-2"></i>
     </button>
   {% endif %}
 {% endif %}
