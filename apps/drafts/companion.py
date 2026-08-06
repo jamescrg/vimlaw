@@ -80,25 +80,28 @@ def _json_body(request):
 
 
 def _store_document(link, payload):
-    """Decode a pushed ODT and store its Markdown facsimile as the link's
-    draft text. Fails soft: a bad push never breaks the poll loop."""
+    """Decode a pushed ODT and store its Markdown facsimile as the draft
+    text on the link AND its siblings (other conversations linking the same
+    file read the same live document). Fails soft: a bad push never breaks
+    the poll loop."""
     odt_b64 = payload.get("odt_b64")
     if not odt_b64:
         return
     try:
         odt_bytes = base64.b64decode(odt_b64)
-        link.doc_text = convert.to_markdown(odt_bytes, ".odt")
-        link.doc_text_at = timezone.now()
+        text = convert.to_markdown(odt_bytes, ".odt")
     except Exception:
         logger.exception("Companion document push failed for link %s", link.id)
+        return
+    now = timezone.now()
+    link.sibling_links().update(doc_text=text, doc_text_at=now)
+    link.doc_text = text
+    link.doc_text_at = now
 
 
-def _touch(link, with_text=False):
+def _touch(link):
     link.companion_seen = timezone.now()
-    fields = ["companion_seen"]
-    if with_text:
-        fields += ["doc_text", "doc_text_at"]
-    link.save(update_fields=fields)
+    link.save(update_fields=["companion_seen"])
 
 
 @companion_auth
@@ -130,7 +133,7 @@ def api_hello(request, link_id):
     """Register the companion (and on later calls, refresh the document)."""
     link = _get_link(request, link_id)
     _store_document(link, _json_body(request))
-    _touch(link, with_text=True)
+    _touch(link)
     logger.info("Companion connected to draft link %s", link.id)
     matter = link.conversation.matter
     return JsonResponse(
@@ -154,7 +157,11 @@ def api_ops(request, link_id):
     link = _get_link(request, link_id)
     _touch(link)
     round_ = (
-        link.rounds.filter(status="pending", delivered_at__isnull=True)
+        CompanionRound.objects.filter(
+            link__in=link.sibling_links(),
+            status="pending",
+            delivered_at__isnull=True,
+        )
         .order_by("created_at")
         .first()
     )
@@ -172,7 +179,9 @@ def api_ops(request, link_id):
 def api_result(request, link_id, round_id):
     """Record a round's outcome and the resulting document."""
     link = _get_link(request, link_id)
-    round_ = get_object_or_404(CompanionRound, pk=round_id, link=link)
+    round_ = get_object_or_404(
+        CompanionRound, pk=round_id, link__in=link.sibling_links()
+    )
     payload = _json_body(request)
     if round_.status == "pending":
         if payload.get("ok"):
@@ -185,7 +194,7 @@ def api_result(request, link_id, round_id):
             round_.edit_index = index if isinstance(index, int) else None
         round_.save()
     _store_document(link, payload)
-    _touch(link, with_text=True)
+    _touch(link)
     return JsonResponse({"status": "drafting"})
 
 

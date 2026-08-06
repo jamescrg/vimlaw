@@ -147,3 +147,72 @@ def test_oxt_download_is_personalized_zip(client, user, settings):
     config = json.loads(archive.read("config.json"))
     assert config["server"] == "https://kosmos.example"
     assert config["token"] == CompanionToken.for_user(user).key
+
+
+@pytest.fixture
+def sibling(link, matter, user):
+    """A second conversation linking the same Drive file."""
+    from apps.case.ai.models import Conversation
+    from apps.drafts.models import DraftLink
+
+    conv = Conversation.objects.create(
+        matter=matter, title="Second chat", llm="gemini-pro-latest", user=user
+    )
+    return DraftLink.objects.create(
+        conversation=conv, drive_file_id="file1", name="motion.odt"
+    )
+
+
+def test_connection_is_shared_across_sibling_links(api, link, sibling):
+    """Polling one link makes the whole document count as connected."""
+    api.get(f"/case/drafts/companion/api/{link.id}/ops/")
+    sibling.refresh_from_db()
+    assert sibling.companion_active
+
+
+def test_ops_serves_sibling_rounds(api, link, sibling):
+    """A round queued by the new conversation reaches the old connection."""
+    round_ = CompanionRound.objects.create(
+        link=sibling, edits=[{"op": "replace", "old": "a", "new": "b"}]
+    )
+    data = json.loads(api.get(f"/case/drafts/companion/api/{link.id}/ops/").content)
+    assert data["round"]["id"] == round_.id
+
+
+def test_result_accepts_sibling_round(api, link, sibling):
+    round_ = CompanionRound.objects.create(link=sibling, edits=[])
+    response = api.post(
+        f"/case/drafts/companion/api/{link.id}/rounds/{round_.id}/",
+        json.dumps({"ok": True, "results": []}),
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+    round_.refresh_from_db()
+    assert round_.status == "applied"
+
+
+def test_document_push_updates_all_siblings(api, link, sibling, monkeypatch):
+    monkeypatch.setattr(companion.convert, "to_markdown", lambda b, ext: "SHARED")
+    payload = {"odt_b64": base64.b64encode(b"x").decode()}
+    api.post(
+        f"/case/drafts/companion/api/{link.id}/hello/",
+        json.dumps(payload),
+        content_type="application/json",
+    )
+    sibling.refresh_from_db()
+    assert sibling.doc_text == "SHARED"
+
+
+def test_other_file_links_do_not_share(api, link, matter, user):
+    from apps.case.ai.models import Conversation
+    from apps.drafts.models import DraftLink
+
+    conv = Conversation.objects.create(
+        matter=matter, title="Other doc chat", llm="gemini-pro-latest", user=user
+    )
+    other = DraftLink.objects.create(
+        conversation=conv, drive_file_id="file-OTHER", name="brief.odt"
+    )
+    api.get(f"/case/drafts/companion/api/{link.id}/ops/")
+    other.refresh_from_db()
+    assert not other.companion_active

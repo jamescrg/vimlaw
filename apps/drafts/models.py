@@ -63,13 +63,23 @@ class DraftLink(models.Model):
     def matter(self):
         return self.conversation.matter
 
+    def sibling_links(self):
+        """All links to this Drive file by this user, self included.
+
+        The companion connection is per-document, not per-conversation: the
+        extension polls whichever link it paired with, but its heartbeat,
+        ops queue, and document pushes are shared across siblings, so a new
+        conversation linking the same file needs no reconnect in Writer.
+        """
+        return DraftLink.objects.filter(
+            drive_file_id=self.drive_file_id,
+            conversation__user_id=self.conversation.user_id,
+        )
+
     @property
     def companion_active(self):
-        return bool(
-            self.companion_seen
-            and timezone.now() - self.companion_seen
-            < timedelta(seconds=COMPANION_WINDOW_SECONDS)
-        )
+        cutoff = timezone.now() - timedelta(seconds=COMPANION_WINDOW_SECONDS)
+        return self.sibling_links().filter(companion_seen__gte=cutoff).exists()
 
 
 def _new_token_key():
