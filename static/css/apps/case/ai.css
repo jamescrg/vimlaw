@@ -2233,17 +2233,14 @@
   margin-top: 0.75rem;
 }
 
-/* Matter badge + draft-link chip travel together at the header's left. */
-.ai-header-matter {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
+/* The draft-link control sits at the input row's lower left, opposite the
+   expand button; the row top-aligns its children, so pin this one down. */
 #draftChip {
   display: inline-flex;
   align-items: center;
+  align-self: flex-end;
   gap: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 /* The link-a-draft button: bordered and link-colored so it reads as an
