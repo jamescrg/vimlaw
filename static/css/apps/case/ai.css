@@ -2233,26 +2233,25 @@
   margin-top: 0.75rem;
 }
 
-/* The draft-link control sits at the input row's lower left, opposite the
-   expand button; the row top-aligns its children, so pin this one down. */
+/* The draft-link control at the input row's left, opposite the expand
+   button and dressed identically to it. */
 #draftChip {
   display: inline-flex;
   align-items: center;
-  align-self: flex-end;
   gap: 0.25rem;
-  margin-bottom: 0.25rem;
 }
 
-/* The link-a-draft button: bordered and link-colored so it reads as an
-   action, not a status badge. */
+/* The link-a-draft button wears the expand button's exact clothes. */
 .draft-link-btn {
-  border: 1px solid var(--link);
-  border-radius: var(--radius-md);
-  color: var(--link);
-  padding: 0.25rem 0.5rem;
+  background: var(--background-light);
+  border: 1px solid var(--border-medium-dark);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  font-size: 1rem;
+  padding: 0.5rem;
 }
 
 .draft-link-btn:hover {
-  color: var(--link-hover);
-  border-color: var(--link-hover);
+  background: var(--ai-raised);
+  color: var(--color-primary);
 }
