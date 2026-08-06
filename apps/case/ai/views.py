@@ -64,7 +64,7 @@ def get_llm_display(llm_key):
 
 def annotate_last_activity(queryset):
     """Annotate conversations with last message timestamp, falling back to created_at."""
-    return queryset.annotate(
+    return queryset.select_related("draft_link").annotate(
         last_activity=Coalesce(Max("messages__created_at"), F("created_at"))
     )
 

@@ -121,6 +121,14 @@ def process_ai_request(
             conversation=conversation,
         )
 
+        # A linked draft appends its text and the edit protocol; the AI can
+        # then propose tracked changes applied via the LibreOffice companion.
+        draft_link = getattr(conversation, "draft_link", None)
+        if draft_link:
+            from apps.drafts import chat as drafts_chat
+
+            context_text += drafts_chat.build_draft_section(draft_link)
+
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)
             return
@@ -222,6 +230,15 @@ def process_ai_request(
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)
             return
+
+        # Apply draft edits before citation verification, so the stored
+        # message carries the outcome text instead of the raw block.
+        if draft_link:
+            from apps.drafts import chat as drafts_chat
+
+            if drafts_chat.DRAFT_EDITS_RE.search(response_text):
+                update_status("applying", "Applying edits to the draft...")
+                response_text = drafts_chat.apply_edit_blocks(response_text, draft_link)
 
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")

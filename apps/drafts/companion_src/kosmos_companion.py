@@ -313,6 +313,12 @@ class _Connection:
             except DisposedException:
                 self.last_note = "document was closed"
                 break
+            except urllib.error.HTTPError as exc:
+                if exc.code in (404, 410):
+                    # The draft was unlinked in Kosmos; nothing to poll for.
+                    self.last_note = "draft was unlinked in Kosmos"
+                    break
+                self.last_note = f"retrying after server error: {exc}"
             except Exception as exc:
                 # Network blip or server hiccup: note it and keep polling.
                 self.last_note = f"retrying after error: {exc}"
@@ -394,7 +400,7 @@ class Companion(unohelper.Base, XJobExecutor):
         except Exception:
             self._message(
                 "No configuration found. Download the extension from the "
-                "Kosmos Drafts tab (Companion button) so it carries your "
+                "link-a-draft dialog in Kosmos chat so it carries your "
                 "server address and token, then reinstall it."
             )
             return
@@ -420,7 +426,7 @@ class Companion(unohelper.Base, XJobExecutor):
             if exc.code == 401:
                 self._message(
                     "The server rejected this extension's token. Download a "
-                    "fresh copy from the Kosmos Drafts tab and reinstall it."
+                    "fresh copy from Kosmos and reinstall it."
                 )
             else:
                 self._message(f"The Kosmos server answered with an error: {exc}")
@@ -432,9 +438,9 @@ class Companion(unohelper.Base, XJobExecutor):
         matches = [s for s in sessions if s["name"] == doc_name]
         if not matches:
             self._message(
-                f'No active drafting session found for "{doc_name}". Start '
-                "one from the matter's Drafts tab in Kosmos, then connect "
-                "again."
+                f'No draft link found for "{doc_name}". In the Kosmos chat, '
+                "link this document to a conversation (the paperclip button "
+                "in the chat header), then connect again."
             )
             return
         session = matches[0]
@@ -451,11 +457,11 @@ class Companion(unohelper.Base, XJobExecutor):
             _connection.thread.start()
 
         self._message(
-            f'Connected to the drafting session for "{session["name"]}" '
+            f'Connected to the draft link for "{session["name"]}" '
             f"(matter: {session['matter']}). Edits you approve in the Kosmos "
-            "drafting window now appear here as tracked changes, and the AI "
-            "reads this document as you have it (hand edits included). "
-            "Keep the document open; save whenever you are satisfied."
+            "chat now appear here as tracked changes, and the AI reads this "
+            "document as you have it (hand edits included). Keep the "
+            "document open; save whenever you are satisfied."
         )
 
     def _disconnect(self, quiet=False):

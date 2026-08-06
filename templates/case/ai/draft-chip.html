@@ -1,0 +1,31 @@
+{% comment %}
+The draft-link control in the chat header. Swapped via #draftChip after
+link/unlink. An unsaved conversation (no id yet) renders nothing; the chip
+loads once the first message creates the row.
+{% endcomment %}
+{% if conversation.id %}
+  {% if conversation.draft_link %}
+    <span class="app-badge ai-draft-badge"
+          title="Edits apply to this document in your open LibreOffice window">
+      <i class="icon-file-text"></i>
+      {{ conversation.draft_link.name }}
+    </span>
+    <button type="button"
+            class="btn-icon btn-sm"
+            hx-post="{% url 'case:draft-unlink' conversation.id %}"
+            hx-target="#draftChip"
+            hx-swap="innerHTML"
+            hx-confirm="Unlink this draft from the conversation? The document itself is untouched."
+            title="Unlink draft">
+      <i class="icon-x"></i>
+    </button>
+  {% else %}
+    <button type="button"
+            class="btn-icon"
+            hx-get="{% url 'case:draft-picker' conversation.id %}"
+            hx-target="#htmx-modal-container"
+            title="Link a draft (an ODT from this matter's Drive folder)">
+      <i class="icon-paperclip"></i>
+    </button>
+  {% endif %}
+{% endif %}

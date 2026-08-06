@@ -1,53 +1,46 @@
-"""Draft chat: converse about an ODT draft; edits land as tracked changes.
+"""Draft editing inside case AI chat.
 
-Reuses the case-chat machinery (Conversation/Message, the cache status
-protocol polled by case:ai-status, the shared message templates) with a
-drafting system prompt built around the current version's Markdown facsimile.
+When a conversation has a DraftLink, the case chat worker appends
+build_draft_section() to its system context and runs apply_edit_blocks()
+over the response. The AI proposes changes in a ```draft-edits``` fenced
+block; each block is replaced in the stored message with the outcome text,
+so both the user and the AI's later turns see what happened.
 
-The AI proposes changes in a ```draft-edits``` fenced block. The worker
-applies the block synchronously through the redline applier (a new
-DraftVersion with accumulated tracked changes) and replaces the block in the
-stored message with a confirmation, or with the failure reason so both the
-user and the AI's later turns can see what went wrong. The draft is never
-touched silently: a failed round changes nothing.
+Application is companion-only: a connected LibreOffice companion receives
+the round and applies it to the live document as tracked changes; with no
+companion connected the block is refused with instructions, and the
+document is untouched. There is no server-side fallback, because there is
+no server-side working copy.
 """
 
 import json
 import logging
 import re
-import threading
 import time
 
-from django.core.cache import cache
-
-from apps.drafts import services
 from apps.drafts.models import CompanionRound
 from apps.drive.redline import (
     DeleteParagraph,
     InsertParagraphs,
     RedlineEdit,
-    RedlineError,
     edit_to_dict,
 )
 
 logger = logging.getLogger(__name__)
+
+DRAFT_EDITS_RE = re.compile(r"```draft-edits\s*\n(.*?)```", re.DOTALL)
 
 # How long the worker waits for a connected companion to apply a round. The
 # extension polls every ~2.5 s and application itself is sub-second, so a
 # healthy companion answers well inside this.
 COMPANION_WAIT_SECONDS = 30
 
-DRAFT_EDITS_RE = re.compile(r"```draft-edits\s*\n(.*?)```", re.DOTALL)
-
-CHAT_PREAMBLE = """You are collaborating with the firm on a DRAFT document (a work in
-progress, not a filed or executed instrument). Help the attorney improve
-it: discuss structure and substance, weigh alternative language, and
-propose concrete edits when directed. The draft's current text follows
-below as a Markdown facsimile of the underlying word-processor file;
-tracked changes from earlier rounds are already reflected in it.
-
-Keep replies brief and pointed: answer the question asked, propose the
-language discussed, and stop. The attorney will ask when they want depth."""
+DRAFT_PREAMBLE = """A DRAFT DOCUMENT is linked to this conversation (a work in progress,
+not a filed or executed instrument). The attorney has it open in
+LibreOffice Writer; help improve it: discuss structure and substance,
+weigh alternative language, and propose concrete edits when directed.
+The draft's current text follows below as a plain-text facsimile of the
+word-processor file, refreshed as the attorney works."""
 
 EDIT_PROTOCOL = """PROPOSING EDITS. Only when the user directs you to change the draft, end
 your reply with exactly one fenced block containing a JSON list of
@@ -80,8 +73,8 @@ one in a specific count. Count the matches yourself in the draft text
 below before choosing N.
 
 Rules:
-- The block is applied immediately as tracked changes (redlines), creating
-  a new version of the file. Discussing or suggesting a change is NOT
+- The block is applied immediately to the attorney's open document as
+  tracked changes (redlines). Discussing or suggesting a change is NOT
   direction to make it. Never emit the block unprompted.
 - Everything in "old" renders as struck-out text in the redline, even the
   parts "new" repeats verbatim, so a wide "old" buries the real change in
@@ -90,8 +83,8 @@ Rules:
   "old": "end of prior sentence.", "new": "end of prior sentence. New
   sentence."), not the whole sentence. Never re-quote a full sentence to
   append after it, and use insert_after (not replace) for new paragraphs.
-- All quoted text is PLAIN TEXT exactly as it reads in the draft: strip the
-  facsimile's Markdown markers (**, *, #, etc.), which do not exist in the
+- All quoted text is PLAIN TEXT exactly as it reads in the draft: strip
+  any Markdown markers (**, *, #, etc.), which do not exist in the
   underlying file, and never include newlines inside a string.
 - Outside the block, summarize the intent of the edits in a sentence or
   two. Do not restate them line by line.
@@ -104,55 +97,28 @@ Rules:
   of paragraphs."""
 
 
-def build_system_prompt(session, user):
-    from apps.case.ai.context import (
-        build_request_info,
-        format_matter_overview,
-        load_legal_prompt,
-    )
-    from apps.settings.models import Firm
+def build_draft_section(link):
+    """The draft context appended to the case system prompt when linked.
 
-    company = Firm.objects.first()
-    jurisdiction = (company.jurisdiction if company else "") or (
-        "United States common law"
-    )
-    current = session.current_version
-    if _companion_text_is_newer(session):
-        facsimile = session.companion_text
-        heading = (
-            f'THE DRAFT: "{session.name}" (live copy from the attorney\'s '
-            "open LibreOffice window)"
-        )
-    else:
-        facsimile = current.facsimile if current else "(no working copy)"
-        heading = (
-            f'THE DRAFT: "{session.name}" (version {current.seq if current else 0})'
-        )
+    Refreshes the stored text from Drive first when it has gone stale with
+    no companion connected (the user may have edited and synced the file
+    since the last push).
+    """
+    from apps.drafts import services
+
+    services.refresh_if_stale(link)
     return "\n".join(
         [
-            build_request_info(user),
-            load_legal_prompt(jurisdiction),
             "\n---\n",
-            CHAT_PREAMBLE,
+            DRAFT_PREAMBLE,
             "",
             EDIT_PROTOCOL,
             "",
-            format_matter_overview(session.matter),
+            f'THE DRAFT: "{link.name}"',
             "",
-            heading,
-            "",
-            facsimile,
+            link.doc_text or "(the draft's text could not be read)",
         ]
     )
-
-
-def _companion_text_is_newer(session):
-    """True when the companion's pushed document is fresher than the newest
-    server-side version, i.e. it is the working copy the AI should read."""
-    if not session.companion_text_at or not session.companion_text:
-        return False
-    current = session.current_version
-    return current is None or session.companion_text_at > current.created_at
 
 
 def _parse_edit_block(raw):
@@ -199,21 +165,16 @@ def _parse_edit_block(raw):
     return edits
 
 
-def apply_edit_blocks(response_text, session):
+def apply_edit_blocks(response_text, link):
     """Apply any draft-edits blocks, replacing each with the outcome text.
 
     A malformed block is left in place as visible text and changes nothing
-    (mirrors the agenda/intake block contract). A valid block that fails to
-    apply is replaced with the failure reason; the AI sees that text in the
-    conversation history on the next turn and can correct itself.
-
-    With a companion connected, the round is queued for the live LibreOffice
-    document instead of the headless applier and the worker waits for the
-    outcome, so the confirmation semantics are the same either way.
+    (mirrors the agenda/intake block contract). A valid block either goes to
+    the connected companion (which applies it to the live document and
+    reports back) or is refused with instructions when no companion is
+    connected.
     """
-    # The session row was loaded before the (long) model call; the companion
-    # may have connected or dropped since.
-    session.refresh_from_db()
+    link.refresh_from_db()
 
     def replace(match):
         try:
@@ -222,47 +183,21 @@ def apply_edit_blocks(response_text, session):
             logger.warning("Unparseable draft-edits block left in place")
             return match.group(0)
 
-        if session.companion_active:
-            return _apply_via_companion(session, edits)
-        if _companion_text_is_newer(session):
-            # The live document moved past the server copy and its companion
-            # is gone; applying headlessly would edit stale text.
+        if not link.companion_active:
             return (
-                "**The proposed edits were not applied.** The LibreOffice "
-                "companion has newer text than the server's working copy but "
-                "is no longer connected. Reconnect it (Kosmos menu in "
-                "LibreOffice), or save the file and use Sync from Drive, "
-                "then ask again."
+                "**The proposed edits were not applied**: the draft is not "
+                "connected. Open the document in LibreOffice Writer and use "
+                "Kosmos, Connect to drafting session, then ask again."
             )
-
-        try:
-            version = services.apply_edit_round(session, edits)
-        except RedlineError as exc:
-            if exc.edit_index is not None:
-                detail = f"edit {exc.edit_index + 1}: {exc}"
-            else:
-                detail = str(exc)
-            return (
-                f"**The proposed edits were not applied** ({detail}). "
-                "The draft is unchanged."
-            )
-        except services.DraftError as exc:
-            return f"**The proposed edits were not applied** ({exc})."
-
-        count = len(edits)
-        plural = "s" if count != 1 else ""
-        return (
-            f"**Applied {count} edit{plural} as tracked changes "
-            f"(version {version.seq}).** The preview has been updated."
-        )
+        return _apply_via_companion(link, edits)
 
     return DRAFT_EDITS_RE.sub(replace, response_text)
 
 
-def _apply_via_companion(session, edits):
+def _apply_via_companion(link, edits):
     """Queue one round for the connected companion and wait for its outcome."""
     round_ = CompanionRound.objects.create(
-        session=session, edits=[edit_to_dict(e) for e in edits]
+        link=link, edits=[edit_to_dict(e) for e in edits]
     )
     deadline = time.monotonic() + COMPANION_WAIT_SECONDS
     while time.monotonic() < deadline:
@@ -290,117 +225,9 @@ def _apply_via_companion(session, edits):
         )
     round_.status = "expired"
     round_.save(update_fields=["status"])
-    logger.warning("Companion round %s expired for session %s", round_.id, session.id)
+    logger.warning("Companion round %s expired for link %s", round_.id, link.id)
     return (
         "**The proposed edits were not applied**: the LibreOffice companion "
         "did not respond in time. Check that the document is still open and "
         "connected, then ask again."
     )
-
-
-def process_draft_chat(conversation_id, session_id, user_id):
-    """Background thread body; same cache protocol as process_ai_request so
-    the shared case:ai-status polling cycle works unchanged."""
-    from django.contrib.auth import get_user_model
-
-    from apps.case.ai.anthropic_client import send_to_claude
-    from apps.case.ai.context import build_chat_history
-    from apps.case.ai.gemini_client import send_to_gemini_streaming
-    from apps.case.ai.models import Conversation
-    from apps.case.ai.tasks import (
-        CLAUDE_FALLBACK_MODEL,
-        CLAUDE_MODELS,
-        GEMINI_MODELS,
-    )
-    from apps.drafts.models import DraftSession
-
-    cache_key = f"ai_status_{conversation_id}"
-
-    def is_cancelled():
-        current = cache.get(cache_key)
-        return bool(current) and current.get("status") == "cancelled"
-
-    def update_status(status, message):
-        if is_cancelled():
-            return
-        import time as _time
-
-        current = cache.get(cache_key) or {}
-        payload = {
-            "status": status,
-            "message": message,
-            "started_at": current.get("started_at", _time.time()),
-        }
-        cache.set(cache_key, payload, timeout=600)
-
-    try:
-        update_status("context", "Reading the draft...")
-        session = DraftSession.objects.get(id=session_id)
-        conversation = Conversation.objects.get(id=conversation_id)
-        user = get_user_model().objects.get(id=user_id)
-        system_context = build_system_prompt(session, user)
-        chat_history = build_chat_history(conversation)
-
-        update_status("connecting", "Connecting to AI...")
-        llm = conversation.llm
-        if llm in GEMINI_MODELS:
-
-            def on_thought(thought):
-                update_status("thinking", thought[:300])
-
-            response_text, input_tokens, output_tokens = send_to_gemini_streaming(
-                system_context,
-                chat_history,
-                model=GEMINI_MODELS[llm],
-                on_thought=on_thought,
-                is_cancelled=is_cancelled,
-                conversation_id=conversation.id,
-            )
-        else:
-            update_status("generating", "Generating response...")
-            response_text, input_tokens, output_tokens = send_to_claude(
-                system_context,
-                chat_history,
-                model=CLAUDE_MODELS.get(llm, CLAUDE_FALLBACK_MODEL),
-                is_cancelled=is_cancelled,
-            )
-
-        if is_cancelled():
-            return
-
-        if DRAFT_EDITS_RE.search(response_text):
-            update_status("applying", "Applying edits to the draft...")
-            response_text = apply_edit_blocks(response_text, session)
-
-        cache.set(
-            cache_key,
-            {
-                "status": "complete",
-                "message": "Complete",
-                "response": response_text,
-                "input_tokens": input_tokens,
-                "output_tokens": output_tokens,
-                "citations": [],
-            },
-            timeout=600,
-        )
-    except InterruptedError:
-        pass
-    except Exception as exc:
-        logger.exception("Draft chat request failed")
-        if not is_cancelled():
-            cache.set(cache_key, {"status": "error", "message": str(exc)}, timeout=600)
-
-
-def start_worker(conversation, session, user):
-    """Seed the status cache and spawn the worker thread."""
-    cache.set(
-        f"ai_status_{conversation.id}",
-        {"status": "starting", "message": "Starting..."},
-        timeout=600,
-    )
-    threading.Thread(
-        target=process_draft_chat,
-        args=(conversation.id, session.id, user.id),
-        daemon=True,
-    ).start()

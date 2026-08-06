@@ -111,7 +111,7 @@ class AppliedEdit:
 
 
 def edit_to_dict(edit):
-    """The op's wire form: the driver job entry, also stored on DraftVersion."""
+    """The op's wire form: the driver job entry, also stored on CompanionRound."""
     if isinstance(edit, RedlineEdit):
         data = {
             "op": "replace",

@@ -1,30 +1,28 @@
-"""Draft-session mechanics: Drive listing/snapshot, edit rounds, publish.
+"""Draft-link mechanics: Drive listing, link creation, text refresh.
 
-Every version's ODT and PDF live on default storage (S3 in prod), so the UNO
-work round-trips through a temp directory: pull bytes from storage, run
-LibreOffice, save the results back. The applier itself is atomic; a failed
-round creates no version and leaves the session on its current one.
+The AI's view of the draft is one text field (DraftLink.doc_text), written
+from three sources with one freshness story: a Drive fetch at link time,
+every companion push, and a re-fetch here when the text has gone stale with
+no companion connected.
 """
 
 import logging
-import tempfile
-from pathlib import Path
+from datetime import timedelta
 
-from django.core.files.base import ContentFile
 from django.utils import timezone
 from googleapiclient.errors import HttpError
 
-from apps.case.ai.models import Conversation
-from apps.drafts.models import DraftSession, DraftVersion
-from apps.drive import convert, google, redline
+from apps.drafts.models import DraftLink
+from apps.drive import convert, google
 
 logger = logging.getLogger(__name__)
 
 # How deep under the matter's Drive folder the ODT listing will walk.
 MAX_LIST_DEPTH = 4
 
-# Default model for new draft conversations (an existing dispatch key).
-DEFAULT_DRAFT_LLM = "gemini-pro-latest"
+# With no companion connected, re-fetch the draft from Drive when the stored
+# text is older than this (the user may have edited and synced the file).
+STALE_AFTER = timedelta(minutes=5)
 
 
 class DraftError(Exception):
@@ -76,14 +74,13 @@ def list_matter_odt_files(matter):
         return []
 
 
-def create_session(matter, drive_file_id, user):
-    """Open a drafting session: snapshot the Drive ODT and build version 0."""
+def _fetch_drive_text(drive_file_id):
+    """(name, markdown) for a Drive ODT, or raise DraftError."""
     if not google.check_credentials():
         raise DraftError("Google Drive is not connected.")
     service = google.build_service()
     if not service:
         raise DraftError("Google Drive is not connected.")
-
     try:
         meta = (
             service.files()
@@ -95,198 +92,44 @@ def create_session(matter, drive_file_id, user):
         content = google._download(service, meta)
     except HttpError as exc:
         raise DraftError(f"Could not fetch the file from Drive: {exc}") from exc
+    name = meta.get("name", "")
+    if not name.lower().endswith(".odt"):
+        raise DraftError("Drafts must be .odt files.")
+    return name, convert.to_markdown(content, ".odt")
 
-    if not meta.get("name", "").lower().endswith(".odt"):
-        raise DraftError("Drafting sessions only support .odt files.")
 
-    conversation = Conversation.objects.create(
-        title=f"Draft: {meta['name']}"[:200],
-        llm=DEFAULT_DRAFT_LLM,
-        vet_citations=False,
-        user=user,
-    )
-    session = DraftSession.objects.create(
-        matter=matter,
+def create_link(conversation, drive_file_id):
+    """Link the conversation to a Drive ODT, snapshotting its text."""
+    if getattr(conversation, "draft_link", None):
+        raise DraftError("This conversation already has a linked draft.")
+    name, text = _fetch_drive_text(drive_file_id)
+    link = DraftLink.objects.create(
         conversation=conversation,
-        user=user,
         drive_file_id=drive_file_id,
-        name=meta["name"],
-        drive_modified=meta.get("modifiedTime", ""),
+        name=name,
+        doc_text=text,
+        doc_text_at=timezone.now(),
     )
-    try:
-        _create_version_zero(session, content)
-    except Exception:
-        # No version 0 means no usable session; don't leave a husk behind.
-        session.delete()
-        conversation.delete()
-        raise
-    return session
+    logger.info("Linked draft %r to conversation %s", name, conversation.id)
+    return link
 
 
-def _create_version_zero(session, odt_bytes):
-    with tempfile.TemporaryDirectory(prefix="draft-v0-") as tmp:
-        src = Path(tmp) / "draft.odt"
-        src.write_bytes(odt_bytes)
-        pdf = Path(tmp) / "draft.pdf"
-        redline.export_pdf(src, pdf)
-        pdf_bytes = pdf.read_bytes()
-    return _save_version(session, 0, odt_bytes, pdf_bytes, [])
+def refresh_if_stale(link):
+    """Re-fetch the draft text from Drive when it is stale and unwatched.
 
-
-def apply_edit_round(session, edits):
-    """Apply one round of RedlineEdits to the current version → new version.
-
-    Raises redline.RedlineError (unmatched/ambiguous/LibreOffice failure) or
-    DraftError; on failure no version is created.
+    With a companion connected the pushes keep doc_text fresh and Drive may
+    lag the live document, so never re-fetch then. Fails soft: the stored
+    text is still a usable context.
     """
-    if session.status != "drafting":
-        raise DraftError("This session is no longer accepting edits.")
-    current = session.current_version
-    if current is None or not current.odt_file:
-        raise DraftError("The session has no working copy to edit.")
-
-    with tempfile.TemporaryDirectory(prefix="draft-edit-") as tmp:
-        src = Path(tmp) / "src.odt"
-        with current.odt_file.open("rb") as handle:
-            src.write_bytes(handle.read())
-        out = Path(tmp) / "out.odt"
-        pdf = Path(tmp) / "out.pdf"
-        redline.apply_redline_edits(src, edits, output_path=out, pdf_path=pdf)
-        odt_bytes = out.read_bytes()
-        pdf_bytes = pdf.read_bytes()
-
-    version = _save_version(
-        session,
-        current.seq + 1,
-        odt_bytes,
-        pdf_bytes,
-        [redline.edit_to_dict(e) for e in edits],
-    )
-    session.save(update_fields=["updated_at"])
-    return version
-
-
-def _save_version(session, seq, odt_bytes, pdf_bytes, edits):
-    facsimile = convert.to_markdown(odt_bytes, ".odt")
-    version = DraftVersion(session=session, seq=seq, facsimile=facsimile, edits=edits)
-    version.odt_file.save(f"v{seq}.odt", ContentFile(odt_bytes), save=False)
-    version.pdf_file.save(f"v{seq}.pdf", ContentFile(pdf_bytes), save=False)
-    version.save()
-    return version
-
-
-def refresh_from_drive(session):
-    """Pull the current Drive copy in as the session's next version.
-
-    The manual-edit loop: the user downloads the redlined ODT, accepts and
-    rejects changes and hand-edits locally, saves it back to the matter's
-    Drive folder, then syncs. The fresh bytes become the working copy, so
-    the AI's next round sees the document as the user left it. Redlines not
-    carried into the Drive copy drop out of the working lineage; earlier
-    versions remain in the history.
-    """
-    if session.status != "drafting":
-        raise DraftError("This session is no longer accepting changes.")
-    current = session.current_version
-    if current is None:
-        raise DraftError("The session has no working copy to replace.")
-    service = google.build_service() if google.check_credentials() else None
-    if not service:
-        raise DraftError("Google Drive is not connected.")
-
-    try:
-        meta = (
-            service.files()
-            .get(
-                fileId=session.drive_file_id,
-                fields=google.FILE_FIELDS,
-                supportsAllDrives=True,
-            )
-            .execute()
-        )
-        content = google._download(service, meta)
-    except HttpError as exc:
-        raise DraftError(f"Could not fetch the file from Drive: {exc}") from exc
-
-    with tempfile.TemporaryDirectory(prefix="draft-sync-") as tmp:
-        src = Path(tmp) / "draft.odt"
-        src.write_bytes(content)
-        pdf = Path(tmp) / "draft.pdf"
-        redline.export_pdf(src, pdf)
-        pdf_bytes = pdf.read_bytes()
-
-    version = _save_version(
-        session, current.seq + 1, content, pdf_bytes, [{"op": "refresh_from_drive"}]
-    )
-    session.drive_modified = meta.get("modifiedTime", session.drive_modified)
-    session.save()
-    logger.info("Synced session %s from Drive as v%s", session.id, version.seq)
-    return version
-
-
-def publish_session(session, accept=False):
-    """The human gate: settle the session and purge working blobs.
-
-    With ``accept=True`` every tracked change is first accepted into one
-    more version (the clean document), which becomes the published final;
-    otherwise the redlined current version is final. The final version's
-    files are kept for download; every earlier version keeps only its
-    facsimile and edit list. (Drive write-back is the planned next phase;
-    until then "publish" means the final ODT is the download.)
-    """
-    if session.status != "drafting":
-        raise DraftError("This session was already settled.")
-    final = session.current_version
-    if final is None:
-        raise DraftError("Nothing to publish.")
-
-    if accept:
-        final = _accept_version(session, final)
-
-    for version in session.versions.exclude(pk=final.pk):
-        _purge_blobs(version)
-    session.status = "published"
-    session.published_at = timezone.now()
-    session.save()
-    logger.info(
-        "Published draft session %s at v%s (accept=%s)", session.id, final.seq, accept
-    )
-    return final
-
-
-def _accept_version(session, current):
-    """One more version with every tracked change accepted (clean copy)."""
-    if not current.odt_file:
-        raise DraftError("The session has no working copy to accept.")
-    with tempfile.TemporaryDirectory(prefix="draft-accept-") as tmp:
-        src = Path(tmp) / "src.odt"
-        with current.odt_file.open("rb") as handle:
-            src.write_bytes(handle.read())
-        out = Path(tmp) / "out.odt"
-        pdf = Path(tmp) / "out.pdf"
-        redline.accept_all_changes(src, out, pdf)
-        odt_bytes = out.read_bytes()
-        pdf_bytes = pdf.read_bytes()
-    return _save_version(
-        session, current.seq + 1, odt_bytes, pdf_bytes, [{"op": "accept_all"}]
-    )
-
-
-def abandon_session(session):
-    """Discard the session's working blobs; keep the paper trail."""
-    if session.status == "published":
-        raise DraftError("A published session cannot be discarded.")
-    for version in session.versions.all():
-        _purge_blobs(version)
-    session.status = "abandoned"
-    session.save()
-
-
-def _purge_blobs(version):
-    """Clear the version's file fields; django_cleanup deletes the storage
-    objects on save."""
-    if not version.odt_file and not version.pdf_file:
+    if link.companion_active:
         return
-    version.odt_file = None
-    version.pdf_file = None
-    version.save(update_fields=["odt_file", "pdf_file"])
+    if link.doc_text_at and timezone.now() - link.doc_text_at < STALE_AFTER:
+        return
+    try:
+        _, text = _fetch_drive_text(link.drive_file_id)
+    except DraftError as exc:
+        logger.warning("Stale-refresh failed for link %s: %s", link.id, exc)
+        return
+    link.doc_text = text
+    link.doc_text_at = timezone.now()
+    link.save(update_fields=["doc_text", "doc_text_at"])

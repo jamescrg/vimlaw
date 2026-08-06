@@ -1,10 +1,10 @@
 import pytest
-from django.core.files.base import ContentFile
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.case.ai.models import Conversation
-from apps.drafts.models import DraftSession, DraftVersion
+from apps.drafts.models import DraftLink
 from apps.matters.models import Matter
 
 
@@ -34,24 +34,18 @@ def matter(db):
 
 
 @pytest.fixture
-def session(matter, user):
-    """A drafting session with a version 0 carrying dummy blobs (no
-    LibreOffice involved)."""
-    conversation = Conversation.objects.create(
-        title="Draft: motion.odt", llm="claude-opus", vet_citations=False, user=user
+def conversation(matter, user):
+    return Conversation.objects.create(
+        matter=matter, title="Drafting the motion", llm="gemini-pro-latest", user=user
     )
-    session = DraftSession.objects.create(
-        matter=matter,
+
+
+@pytest.fixture
+def link(conversation):
+    return DraftLink.objects.create(
         conversation=conversation,
-        user=user,
         drive_file_id="file1",
         name="motion.odt",
-        drive_modified="2026-08-01T12:00:00.000Z",
+        doc_text="# MOTION\n\nSome text.",
+        doc_text_at=timezone.now(),
     )
-    version = DraftVersion(
-        session=session, seq=0, facsimile="# MOTION\n\nSome text.", edits=[]
-    )
-    version.odt_file.save("v0.odt", ContentFile(b"fake-odt"), save=False)
-    version.pdf_file.save("v0.pdf", ContentFile(b"%PDF-fake"), save=False)
-    version.save()
-    return session
