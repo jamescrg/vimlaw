@@ -11,7 +11,7 @@ draft support (their worker path skips the edit protocol).
           class="btn-icon draft-link-btn"
           onclick="linkDraftForNewChat()"
           title="Link a draft (an ODT from this matter's Drive folder)">
-    <i class="icon-file-plus-2"></i>
+    <i class="icon-pencil-sparkles"></i>
   </button>
 {% else %}
   {% if conversation.draft_link %}
@@ -35,7 +35,7 @@ draft support (their worker path skips the edit protocol).
             hx-get="{% url 'case:draft-picker' conversation.id %}"
             hx-target="#htmx-modal-container"
             title="Link a draft (an ODT from this matter's Drive folder)">
-      <i class="icon-file-plus-2"></i>
+      <i class="icon-pencil-sparkles"></i>
     </button>
   {% endif %}
 {% endif %}
