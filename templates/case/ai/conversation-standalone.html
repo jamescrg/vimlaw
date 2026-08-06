@@ -223,6 +223,34 @@
     // BroadcastChannel for cross-tab communication
     const aiChannel = new BroadcastChannel('ai-conversations');
 
+    // Linking a draft in a fresh chat window: the conversation row doesn't
+    // exist yet (send_message normally creates it), so materialize it first
+    // with the same fields the chat form carries, then open the picker.
+    function linkDraftForNewChat() {
+      const form = document.getElementById('chatForm');
+      const params = new URLSearchParams();
+      params.set('llm', form.querySelector('[name="llm"]').value);
+      params.set('kind', form.querySelector('[name="kind"]').value);
+      params.set('research_depth', form.querySelector('[name="research_depth"]').value);
+      params.set('title', document.getElementById('conversationTitleInput').value);
+      fetch('{% url "case:ai-create-conversation" matter.id %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      }).then(r => r.json()).then(data => {
+        document.getElementById('conversationId').value = data.id;
+        window.history.replaceState({}, '', '/case/ai/conversations/' + data.id + '/view/');
+        aiChannel.postMessage({ type: 'conversationsChanged', matterId: {{ matter.id }} });
+        htmx.ajax('GET', '/case/ai/conversations/' + data.id + '/draft/chip/',
+                  {target: '#draftChip', swap: 'innerHTML'});
+        htmx.ajax('GET', '/case/ai/conversations/' + data.id + '/draft/picker/',
+                  {target: '#htmx-modal-container', swap: 'innerHTML'});
+      });
+    }
+
     function handleConversationCreated(event) {
       // When a new conversation is created, update the hidden field with the ID
       const xhr = event.detail.xhr;

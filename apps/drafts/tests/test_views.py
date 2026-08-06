@@ -93,3 +93,26 @@ def test_companion_setup_modal(client):
 
 def test_drafts_tab_is_gone(client, matter):
     assert client.get(f"/case/{matter.id}/drafts/").status_code == 404
+
+
+def test_new_chat_window_shows_paperclip_before_first_message(client, matter):
+    response = client.get(f"/case/{matter.id}/ai/conversations/new/")
+    assert response.status_code == 200
+    assert b"linkDraftForNewChat" in response.content
+    assert b"icon-paperclip" in response.content
+
+
+def test_create_conversation_endpoint(client, matter):
+    import json
+
+    from apps.case.ai.models import Conversation
+
+    response = client.post(
+        f"/case/{matter.id}/ai/conversations/create/",
+        {"llm": "gemini-pro-latest", "kind": "classic", "title": "Draft chat"},
+    )
+    assert response.status_code == 200
+    conv = Conversation.objects.get(id=json.loads(response.content)["id"])
+    assert conv.matter == matter
+    assert conv.title == "Draft chat"
+    assert conv.kind == "classic"
