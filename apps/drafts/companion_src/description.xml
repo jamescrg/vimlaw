@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://openoffice.org/extensions/description/2006"
+             xmlns:d="http://openoffice.org/extensions/description/2006"
+             xmlns:xlink="http://www.w3.org/1999/xlink">
+  <identifier value="law.kosmos.companion"/>
+  <version value="0.1.0"/>
+  <display-name>
+    <name lang="en">Kosmos Drafting Companion</name>
+  </display-name>
+  <dependencies>
+    <OpenOffice.org-minimal-version value="4.1" d:name="OpenOffice.org 4.1"/>
+  </dependencies>
+</description>

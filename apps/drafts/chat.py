@@ -16,18 +16,26 @@ import json
 import logging
 import re
 import threading
+import time
 
 from django.core.cache import cache
 
 from apps.drafts import services
+from apps.drafts.models import CompanionRound
 from apps.drive.redline import (
     DeleteParagraph,
     InsertParagraphs,
     RedlineEdit,
     RedlineError,
+    edit_to_dict,
 )
 
 logger = logging.getLogger(__name__)
+
+# How long the worker waits for a connected companion to apply a round. The
+# extension polls every ~2.5 s and application itself is sub-second, so a
+# healthy companion answers well inside this.
+COMPANION_WAIT_SECONDS = 30
 
 DRAFT_EDITS_RE = re.compile(r"```draft-edits\s*\n(.*?)```", re.DOTALL)
 
@@ -88,8 +96,17 @@ def build_system_prompt(session, user):
         "United States common law"
     )
     current = session.current_version
-    facsimile = current.facsimile if current else "(no working copy)"
-    seq = current.seq if current else 0
+    if _companion_text_is_newer(session):
+        facsimile = session.companion_text
+        heading = (
+            f'THE DRAFT: "{session.name}" (live copy from the attorney\'s '
+            "open LibreOffice window)"
+        )
+    else:
+        facsimile = current.facsimile if current else "(no working copy)"
+        heading = (
+            f'THE DRAFT: "{session.name}" (version {current.seq if current else 0})'
+        )
     return "\n".join(
         [
             build_request_info(user),
@@ -101,11 +118,20 @@ def build_system_prompt(session, user):
             "",
             format_matter_overview(session.matter),
             "",
-            f'THE DRAFT: "{session.name}" (version {seq})',
+            heading,
             "",
             facsimile,
         ]
     )
+
+
+def _companion_text_is_newer(session):
+    """True when the companion's pushed document is fresher than the newest
+    server-side version, i.e. it is the working copy the AI should read."""
+    if not session.companion_text_at or not session.companion_text:
+        return False
+    current = session.current_version
+    return current is None or session.companion_text_at > current.created_at
 
 
 def _parse_edit_block(raw):
@@ -152,7 +178,14 @@ def apply_edit_blocks(response_text, session):
     (mirrors the agenda/intake block contract). A valid block that fails to
     apply is replaced with the failure reason; the AI sees that text in the
     conversation history on the next turn and can correct itself.
+
+    With a companion connected, the round is queued for the live LibreOffice
+    document instead of the headless applier and the worker waits for the
+    outcome, so the confirmation semantics are the same either way.
     """
+    # The session row was loaded before the (long) model call; the companion
+    # may have connected or dropped since.
+    session.refresh_from_db()
 
     def replace(match):
         try:
@@ -160,6 +193,19 @@ def apply_edit_blocks(response_text, session):
         except (ValueError, TypeError):
             logger.warning("Unparseable draft-edits block left in place")
             return match.group(0)
+
+        if session.companion_active:
+            return _apply_via_companion(session, edits)
+        if _companion_text_is_newer(session):
+            # The live document moved past the server copy and its companion
+            # is gone; applying headlessly would edit stale text.
+            return (
+                "**The proposed edits were not applied.** The LibreOffice "
+                "companion has newer text than the server's working copy but "
+                "is no longer connected. Reconnect it (Kosmos menu in "
+                "LibreOffice), or save the file and use Sync from Drive, "
+                "then ask again."
+            )
 
         try:
             version = services.apply_edit_round(session, edits)
@@ -183,6 +229,45 @@ def apply_edit_blocks(response_text, session):
         )
 
     return DRAFT_EDITS_RE.sub(replace, response_text)
+
+
+def _apply_via_companion(session, edits):
+    """Queue one round for the connected companion and wait for its outcome."""
+    round_ = CompanionRound.objects.create(
+        session=session, edits=[edit_to_dict(e) for e in edits]
+    )
+    deadline = time.monotonic() + COMPANION_WAIT_SECONDS
+    while time.monotonic() < deadline:
+        time.sleep(0.5)
+        round_.refresh_from_db()
+        if round_.status != "pending":
+            break
+
+    if round_.status == "applied":
+        count = len(edits)
+        plural = "s" if count != 1 else ""
+        return (
+            f"**Applied {count} edit{plural} as tracked changes in the open "
+            "LibreOffice document.** Review them there; save the file when "
+            "you are satisfied."
+        )
+    if round_.status == "failed":
+        if round_.edit_index is not None:
+            detail = f"edit {round_.edit_index + 1}: {round_.error}"
+        else:
+            detail = round_.error
+        return (
+            f"**The proposed edits were not applied** ({detail}). "
+            "The document is unchanged."
+        )
+    round_.status = "expired"
+    round_.save(update_fields=["status"])
+    logger.warning("Companion round %s expired for session %s", round_.id, session.id)
+    return (
+        "**The proposed edits were not applied**: the LibreOffice companion "
+        "did not respond in time. Check that the document is still open and "
+        "connected, then ask again."
+    )
 
 
 def process_draft_chat(conversation_id, session_id, user_id):

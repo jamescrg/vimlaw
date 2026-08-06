@@ -18,7 +18,7 @@ from apps.case.ai.models import Message
 from apps.case.ai.views import VALID_LLMS
 from apps.case.views import get_matter_from_url, set_last_tab
 from apps.drafts import chat, services
-from apps.drafts.models import DraftSession, DraftVersion
+from apps.drafts.models import CompanionToken, DraftSession, DraftVersion
 from apps.drive import google
 
 logger = logging.getLogger(__name__)
@@ -94,6 +94,16 @@ def draft_start(request, matter_id):
                 status=502,
             )
     return redirect("case:draft-window", session_id=session.id)
+
+
+@login_required
+def draft_companion_setup(request):
+    """Modal with the personalized extension download and install steps."""
+    return render(
+        request,
+        "case/drafts/companion-setup.html",
+        {"token": CompanionToken.for_user(request.user)},
+    )
 
 
 @login_required

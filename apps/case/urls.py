@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from apps.case import views
@@ -11,7 +12,10 @@ from apps.case.notes import views as notes
 from apps.case.research import views as research
 from apps.case.search import views as search
 from apps.case.witnesses import views as witnesses
-from apps.drafts import views as drafts
+from apps.drafts import (
+    companion as drafts_companion,
+    views as drafts,
+)
 from apps.mail import views as mail
 
 app_name = "case"
@@ -519,6 +523,38 @@ urlpatterns = [
         "case/drafts/version/<int:version_id>/odt/",
         drafts.draft_version_odt,
         name="draft-version-odt",
+    ),
+    # LibreOffice companion: setup modal + personalized .oxt (browser,
+    # logged-in) and the token-authed JSON API the extension polls.
+    path(
+        "case/drafts/companion/setup/",
+        drafts.draft_companion_setup,
+        name="draft-companion-setup",
+    ),
+    path(
+        "case/drafts/companion/kosmos-companion.oxt",
+        login_required(drafts_companion.companion_oxt),
+        name="draft-companion-oxt",
+    ),
+    path(
+        "case/drafts/companion/api/sessions/",
+        drafts_companion.api_sessions,
+        name="companion-api-sessions",
+    ),
+    path(
+        "case/drafts/companion/api/<int:session_id>/hello/",
+        drafts_companion.api_hello,
+        name="companion-api-hello",
+    ),
+    path(
+        "case/drafts/companion/api/<int:session_id>/ops/",
+        drafts_companion.api_ops,
+        name="companion-api-ops",
+    ),
+    path(
+        "case/drafts/companion/api/<int:session_id>/rounds/<int:round_id>/",
+        drafts_companion.api_result,
+        name="companion-api-result",
     ),
     # Emails (matter-scoped, synced from Gmail via apps.mail)
     path("case/<int:matter_id>/emails/", mail.emails_index, name="emails-index"),

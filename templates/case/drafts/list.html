@@ -11,6 +11,14 @@
                 hx-trigger="click">
           <i class="icon-plus"></i>
         </button>
+        <button type="button"
+                class="btn-icon"
+                title="LibreOffice companion extension"
+                hx-get="{% url 'case:draft-companion-setup' %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click">
+          <i class="icon-puzzle"></i>
+        </button>
       {% else %}
         <span class="drafts-hint">Connect Google Drive and link this matter's Drive folder to start a drafting session.</span>
       {% endif %}

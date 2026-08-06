@@ -79,6 +79,13 @@ so the PDF does not reload while the user reads.
       {% endif %}
     </div>
   </header>
+  {% if session.status == "drafting" and session.companion_active %}
+    <div class="companion-banner">
+      LibreOffice companion connected. Edits land in your open document as
+      tracked changes; the preview below shows the last server version and
+      may lag behind it.
+    </div>
+  {% endif %}
   {% if latest.pdf_file %}
     <iframe class="draft-pdf-frame"
             id="draftPdfFrame"

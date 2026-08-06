@@ -130,6 +130,26 @@
   text-align: center;
 }
 
+/* ---- LibreOffice companion ---- */
+.companion-steps {
+  margin: 0.75rem 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.companion-note {
+  margin-top: 0.75rem;
+}
+
+.companion-banner {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--background-section);
+  color: var(--color-muted);
+}
+
 /* ---- Standalone error page ---- */
 .draft-window-error {
   max-width: 32rem;

@@ -1,0 +1,49 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">LibreOffice Companion</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p class="detail-text">
+        The companion extension connects your local LibreOffice Writer to a
+        drafting session. Edits you approve in the drafting window appear in
+        the open document as tracked changes, and the AI reads the document
+        as you have it (your hand edits included). No more downloading and
+        syncing between rounds.
+      </p>
+      <p>
+        <a href="{% url 'case:draft-companion-oxt' %}" class="btn btn-primary">
+          <i class="icon-download"></i>
+          Download kosmos-companion.oxt
+        </a>
+      </p>
+      <ol class="companion-steps">
+        <li>
+          Install the downloaded file in LibreOffice: Tools, Extension
+          Manager, Add (or double-click the file). Then restart LibreOffice.
+          On Ubuntu or Debian, if the install fails with an error, run
+          <code>sudo apt-get install libreoffice-script-provider-python python3-uno</code>
+          and try again.
+        </li>
+        <li>
+          Open the draft ODT from the matter's Drive folder on your computer,
+          and start a drafting session for the same file here in Kosmos.
+        </li>
+        <li>
+          In Writer, choose Kosmos, then Connect to drafting session. The
+          document pairs with the session by filename.
+        </li>
+      </ol>
+      <p class="detail-text companion-note">
+        The download is personal: it carries your server address and access
+        token, so it works with no configuration. Do not share the file.
+        Each user should download their own copy from this dialog.
+      </p>
+    </div>
+  </div>
+</div>
