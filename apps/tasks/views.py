@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 import markdown
 from django.contrib.auth.decorators import login_required
@@ -38,8 +38,10 @@ from apps.tasks.models import (
 )
 from apps.tasks.services import (
     clamp_importance,
+    detect_filter_label as _detect_filter_label,
     parse_due_date,
     process_quick_task_description,
+    quick_date_filters,
     resolve_assignee_name,
     resolve_matter_name,
 )
@@ -509,64 +511,6 @@ def tasks_delete(request, id):
     return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
 
-def _next_workday(today):
-    """Tomorrow, or Monday when tomorrow lands on the weekend."""
-    day = today + timedelta(days=1)
-    while day.weekday() >= 5:
-        day += timedelta(days=1)
-    return day
-
-
-def _detect_filter_label(filter_data, today):
-    """Reconcile the date-dropdown label from filter_data's date / has_due_date state.
-
-    Lets the date dropdown stay truthful when a date setting comes from the
-    modal: matches today / week / unscheduled / all presets exactly, otherwise
-    returns "custom" so the dropdown shows "Custom range" instead of silently
-    mislabeling the state as "All Tasks".
-    """
-    has_due_date = str(filter_data.get("has_due_date", ""))
-    date_due_min = filter_data.get("date_due_min", "")
-    date_due_max = filter_data.get("date_due_max", "")
-
-    if has_due_date.lower() == "false" and not date_due_min and not date_due_max:
-        return "unscheduled"
-    if not date_due_min and not date_due_max and has_due_date in ("", "None"):
-        return "all"
-    # Calendar weeks run Sunday through Saturday; weekday() is 6 for Sunday.
-    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
-    next_week_start = week_start + timedelta(days=7)
-    next_week_end = next_week_start + timedelta(days=6)
-    if (
-        date_due_min == str(next_week_start)
-        and date_due_max == str(next_week_end)
-        and not has_due_date
-    ):
-        return "next_week"
-    next_workday_s = str(_next_workday(today))
-    if (
-        date_due_min == next_workday_s
-        and date_due_max == next_workday_s
-        and not has_due_date
-    ):
-        return "next_workday"
-    if date_due_min:
-        return "custom"
-    if not date_due_max:
-        return "custom"
-
-    today_s = str(today)
-    end_of_week_s = str(week_start + timedelta(days=6))
-    next7_s = str(today + timedelta(days=6))
-    if date_due_max == today_s and not has_due_date:
-        return "today"
-    if date_due_max == end_of_week_s and not has_due_date:
-        return "week"
-    if date_due_max == next7_s and not has_due_date:
-        return "next7"
-    return "custom"
-
-
 @login_required
 def tasks_filter(request, user=None):
     if request.method == "POST":
@@ -659,63 +603,7 @@ def tasks_filter(request, user=None):
 
 @login_required
 def tasks_filter_quick(request, quick_filter):
-    today = date.today()
-    # Calendar week: Sunday through Saturday. weekday() is 6 for Sunday.
-    week_start = today - timedelta(days=(today.weekday() + 1) % 7)
-    end_of_week = week_start + timedelta(days=6)
-
-    # Quick filters only touch the date dimension. status is intentionally
-    # left alone so a "Complete" filter set via the modal isn't silently
-    # destroyed when the user clicks Today / This Week / etc.
-    quick_filters = {
-        "all": {
-            "filter_label": "all",
-            "date_due_min": "",
-            "date_due_max": "",
-            "has_due_date": "",
-        },
-        "unscheduled": {
-            "filter_label": "unscheduled",
-            "has_due_date": "false",
-            "date_due_min": "",
-            "date_due_max": "",
-        },
-        "today": {
-            "filter_label": "today",
-            "date_due_max": today.strftime("%Y-%m-%d"),
-            "date_due_min": "",
-            "has_due_date": "",
-        },
-        # A forward single-day window: tomorrow, skipping the weekend.
-        "next_workday": {
-            "filter_label": "next_workday",
-            "date_due_min": _next_workday(today).strftime("%Y-%m-%d"),
-            "date_due_max": _next_workday(today).strftime("%Y-%m-%d"),
-            "has_due_date": "",
-        },
-        # Rolling seven-day window (today plus six), open-ended at the start
-        # like today/week so overdue tasks stay visible.
-        "next7": {
-            "filter_label": "next7",
-            "date_due_min": "",
-            "date_due_max": (today + timedelta(days=6)).strftime("%Y-%m-%d"),
-            "has_due_date": "",
-        },
-        "week": {
-            "filter_label": "week",
-            "date_due_min": "",
-            "date_due_max": end_of_week.strftime("%Y-%m-%d"),
-            "has_due_date": "",
-        },
-        # Unlike today/week (open-ended so overdue tasks stay visible), next
-        # week is a forward window: both bounds are set.
-        "next_week": {
-            "filter_label": "next_week",
-            "date_due_min": (end_of_week + timedelta(days=1)).strftime("%Y-%m-%d"),
-            "date_due_max": (end_of_week + timedelta(days=7)).strftime("%Y-%m-%d"),
-            "has_due_date": "",
-        },
-    }
+    quick_filters = quick_date_filters(date.today())
 
     filter_data = request.session.get("tasks_filter", {})
     filter_data.update(quick_filters[quick_filter])

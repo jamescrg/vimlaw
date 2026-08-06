@@ -60,11 +60,11 @@ def test_detect_label_next_workday():
 
 
 def test_quick_filter_next_workday_single_day_window(client):
-    from apps.tasks.views import _next_workday
+    from apps.tasks.services import next_workday
 
     client.post(reverse("tasks:filter-quick", args=["next_workday"]))
     session = _session_for(client, "tasks_filter")
-    expected = str(_next_workday(date.today()))
+    expected = str(next_workday(date.today()))
     assert session.get("filter_label") == "next_workday"
     assert session.get("date_due_min") == expected
     assert session.get("date_due_max") == expected

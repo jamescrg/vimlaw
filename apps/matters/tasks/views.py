@@ -36,6 +36,9 @@ from apps.tasks.models import (
     TaskNote,
     UserTaskNoteView,
 )
+from apps.tasks.services import detect_filter_label, quick_date_filters
+from apps.tasks.tasks import TASK_CHIPS_CAP, get_user_chips
+from utils.toasts import toast_warning
 
 TASKS_TRIGGER = "tasksListChanged"
 
@@ -169,6 +172,15 @@ def get_matter_tasks_data(request, matter_id):
     visible_ids = [task.id for task in task_list]
     all_selected = all_visible_selected(selected_tasks, visible_ids)
 
+    users = CustomUser.objects.filter(is_active=True).order_by("username")
+
+    # Self-heal sessions whose date bounds predate the date dropdown (set via
+    # the modal before filter_label was recorded) so the dropdown reads
+    # "Custom range" instead of "All Tasks".
+    filter_label = filter_data.get("filter_label") if filter_data else None
+    if filter_label is None and has_existing_filter:
+        filter_label = detect_filter_label(filter_data, today)
+
     list_data = {
         "pagination": pagination,
         "session_key": "matter_tasks_pagination",
@@ -176,7 +188,9 @@ def get_matter_tasks_data(request, matter_id):
         "objects": task_list,
         "matter": matter,
         "today": today,
-        "users": CustomUser.objects.filter(is_active=True).order_by("username"),
+        "users": users,
+        "user_chips": get_user_chips(request, users, user_id),
+        "chip_pinned_ids": request.user.task_user_chips or [],
         "user_id": user_id,
         "selected_user": selected_user.username.capitalize() if selected_user else None,
         "importances": list(range(7, 0, -1)),
@@ -195,19 +209,19 @@ def get_matter_tasks_data(request, matter_id):
             else ""
         ),
         "focus": focus,
-        "filter_label": filter_data.get("filter_label", None) if filter_data else None,
-        # Filter button is the superset signal for modal-only dimensions on this
-        # page. Importance / user / focus / sort have their own toolbar
-        # dropdowns (matter is scoped to this page), so they're excluded here.
+        "filter_label": filter_label,
+        # Filter button is the superset signal for modal-only dimensions on
+        # this page, mirroring the main tasks toolbar. Date and user have
+        # their own toolbar controls (date covers date_due via "Custom range"
+        # too) and matter is scoped to this page, so they're excluded here;
+        # importance lost its dropdown, so it lights the button now.
         "custom_filter_active": bool(filter_data)
         and any(
             [
                 status_is_custom(filter_data.get("status")),
-                filter_data.get("date_due_min") not in (None, ""),
-                filter_data.get("date_due_max") not in (None, ""),
+                filter_data.get("importance") not in (None, "", 0, "0"),
                 filter_data.get("date_completed_min") not in (None, ""),
                 filter_data.get("date_completed_max") not in (None, ""),
-                str(filter_data.get("has_due_date", "")) not in ("", "None"),
             ]
         ),
         "current_order": current_order,
@@ -435,6 +449,7 @@ def tasks_filter(request, id):
         # a real value (which would light the Filter button).
         if filter_data.get("has_due_date") == "unknown":
             filter_data["has_due_date"] = ""
+        filter_data["filter_label"] = detect_filter_label(filter_data, date.today())
         filter_data["matter"] = id  # Ensure matter is always set
         request.session["matter_tasks_filter"] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
@@ -469,6 +484,21 @@ def tasks_filter(request, id):
 
 @login_required
 @matter_access_required
+def tasks_filter_quick(request, id, quick_filter):
+    """Quick date-window filters from the toolbar's date dropdown."""
+    presets = quick_date_filters(date.today())
+    if quick_filter not in presets:
+        raise Http404("Unknown quick filter")
+
+    filter_data = request.session.get("matter_tasks_filter", {})
+    filter_data.update(presets[quick_filter])
+    filter_data["matter"] = id
+    request.session["matter_tasks_filter"] = filter_data
+    return HttpResponse(status=204, headers={"HX-Trigger": TASKS_TRIGGER})
+
+
+@login_required
+@matter_access_required
 def tasks_filter_user(request, id, user_id):
     """Filter tasks by user for a matter"""
     filter_data = request.session.get("matter_tasks_filter", {})
@@ -477,6 +507,33 @@ def tasks_filter_user(request, id, user_id):
 
     request.session["matter_tasks_filter"] = filter_data
     return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
+
+
+@login_required
+@matter_access_required
+@require_POST
+def tasks_toggle_chip(request, id, user_id):
+    """Pin or unpin a user on the toolbar's chip row.
+
+    The pinned set is the viewer's task_user_chips, shared with the main
+    tasks toolbar so one working set follows the user across both pages.
+    """
+    get_object_or_404(CustomUser, pk=user_id, is_active=True)
+    pinned = list(request.user.task_user_chips or [])
+    if user_id in pinned:
+        pinned.remove(user_id)
+    elif len(pinned) >= TASK_CHIPS_CAP:
+        response = HttpResponse(status=204, headers={"HX-Trigger": TASKS_TRIGGER})
+        toast_warning(
+            response,
+            f"Chips are limited to {TASK_CHIPS_CAP}. Unpin one first.",
+        )
+        return response
+    else:
+        pinned.append(user_id)
+    request.user.task_user_chips = pinned
+    request.user.save(update_fields=["task_user_chips"])
+    return HttpResponse(status=204, headers={"HX-Trigger": TASKS_TRIGGER})
 
 
 @login_required

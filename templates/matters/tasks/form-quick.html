@@ -3,4 +3,5 @@
        placeholder=" + Quick Task"
        name="description"
        hx-post="{% url 'matters:tasks-add-quick' matter.id %}"
-       hx-trigger="keyup[keyCode==13]">
+       hx-trigger="keyup[keyCode==13]"
+       hx-disabled-elt="this">

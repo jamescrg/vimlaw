@@ -1,5 +1,5 @@
-<div class="toolbar mobile-min-toolbar">
-  <div class="toolbar-left">
+<div class="toolbar tasks-toolbar">
+  <div class="toolbar-left tasks-toolbar-left">
     {% if selected_tasks %}
       <div class="filter-tools">
         <button type="button"
@@ -24,9 +24,157 @@
         </button>
       </div>
     {% else %}
+      {% comment %} Mirrors the main tasks toolbar's left-to-right sentence:
+      the quick-add input anchors the bar, the everyday filters follow
+      (chips, then the elastic date label last so the chips never jitter),
+      and Add + Filter sit on the right (this tab has no board view, so the
+      view toggle's spot holds the full-form Add button instead).
+      {% endcomment %}
       {% include "matters/tasks/form-quick.html" %}
-      <div class="filter-tools">
-        <button hx-get="{% url 'matters:tasks-add' matter.id %}"
+      <div class="filter-tools tasks-primary-tools">
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  id="tasks-date-filter"
+                  class="select-btn filter-dropdown-button {% if filter_label == 'today' or filter_label == 'next_workday' or filter_label == 'next7' or filter_label == 'week' or filter_label == 'next_week' or filter_label == 'unscheduled' or filter_label == 'custom' %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            <span>
+              <i class="icon-calendar with-text"></i>
+              {% if filter_label == "today" %}
+                Today
+              {% elif filter_label == "next_workday" %}
+                Next Workday
+              {% elif filter_label == "next7" %}
+                Next 7 Days
+              {% elif filter_label == "week" %}
+                This Calendar Week
+              {% elif filter_label == "next_week" %}
+                Next Calendar Week
+              {% elif filter_label == "unscheduled" %}
+                Unscheduled
+              {% elif filter_label == "custom" %}
+                Custom range
+              {% else %}
+                All Tasks
+              {% endif %}
+            </span>
+            <small>
+              <i class="icon-chevron-down"></i>
+            </small>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open">
+            <li>
+              <a class="dropdown-item {% if not filter_label or filter_label == 'all' or filter_label == 'default' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'matters:tasks-filter-quick' matter.id 'all' %}"
+                 hx-swap="none">
+                <i class="icon-calendar"></i> All Tasks
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if filter_label == 'today' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'matters:tasks-filter-quick' matter.id 'today' %}"
+                 hx-swap="none">
+                <i class="icon-calendar"></i> Today
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if filter_label == 'next_workday' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'matters:tasks-filter-quick' matter.id 'next_workday' %}"
+                 hx-swap="none">
+                <i class="icon-calendar"></i> Next Workday
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if filter_label == 'next7' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'matters:tasks-filter-quick' matter.id 'next7' %}"
+                 hx-swap="none">
+                <i class="icon-calendar"></i> Next 7 Days
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if filter_label == 'week' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'matters:tasks-filter-quick' matter.id 'week' %}"
+                 hx-swap="none">
+                <i class="icon-calendar"></i> This Calendar Week
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if filter_label == 'next_week' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'matters:tasks-filter-quick' matter.id 'next_week' %}"
+                 hx-swap="none">
+                <i class="icon-calendar"></i> Next Calendar Week
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if filter_label == 'unscheduled' %}active{% endif %}"
+                 href="#"
+                 hx-post="{% url 'matters:tasks-filter-quick' matter.id 'unscheduled' %}"
+                 hx-swap="none">
+                <i class="icon-calendar"></i> Unscheduled
+              </a>
+            </li>
+          </ul>
+        </div>
+        {% comment %} One-click user chips, shared (pins included) with the
+        main tasks toolbar: the viewer's pinned set (or everyone in a small
+        firm), with an overflow menu for the rest + pin management. A
+        filtered-but-unchipped user appears as a lit chip, so the active
+        filter always reads. {% endcomment %}
+        <div class="user-chips" role="group" aria-label="Filter by user">
+          <button type="button"
+                  class="user-chip {% if not user_id %}toggle-active{% endif %}"
+                  title="All users"
+                  hx-post="{% url 'matters:tasks-filter-user' matter.id 0 %}"
+                  hx-swap="none">All</button>
+          {% for u in user_chips %}
+            <button type="button"
+                    class="user-chip {% if u.id == user_id %}toggle-active{% endif %}"
+                    title="{{ u.full_name }}"
+                    hx-post="{% url 'matters:tasks-filter-user' matter.id u.id %}"
+                    hx-swap="none">{{ u.chip_initials }}</button>
+          {% endfor %}
+          {% if chip_pinned_ids or users|length > user_chips|length %}
+            <div class="dropdown" x-data="dropdown()">
+              <button type="button"
+                      class="user-chip user-chip-more"
+                      title="More users"
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open">
+                <i class="icon-ellipsis"></i>
+              </button>
+              <ul class="dropdown-menu" x-ref="menu" x-show="open">
+                {% for u in users %}
+                  <li class="user-chip-row">
+                    <a class="dropdown-item {% if u.id == user_id %}active{% endif %}"
+                       href="#"
+                       hx-post="{% url 'matters:tasks-filter-user' matter.id u.id %}"
+                       hx-swap="none"><i class="icon-user"></i> {{ u.username|title }}</a>
+                    <button type="button"
+                            class="user-chip-pin {% if u.id in chip_pinned_ids %}pinned{% endif %}"
+                            title="{% if u.id in chip_pinned_ids %}Unpin from chips{% else %}Pin to chips{% endif %}"
+                            hx-post="{% url 'matters:tasks-toggle-chip' matter.id u.id %}"
+                            hx-swap="none">
+                      <i class="icon-pin"></i>
+                    </button>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="filter-tools tasks-view-tools">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'matters:tasks-add' matter.id %}"
                 hx-target="#htmx-modal-container">
           <i class="icon-plus"></i>
         </button>
@@ -36,97 +184,11 @@
                 hx-target="#htmx-modal-container"
                 hx-trigger="click"
                 hx-swap="#outerHTML">
-          <i class="icon-list-filter with-text"></i>Filter
+          <i class="icon-list-filter"></i>Filter
         </button>
-        <div class="dropdown" x-data="dropdown()">
-          <button type="button"
-                  id="tasks-importance-filter"
-                  class="select-btn filter-dropdown-button importance-dropdown {% if importance_value %}toggle-active{% endif %}"
-                  x-ref="button"
-                  @click="toggle()"
-                  :aria-expanded="open">
-          <span><i class="icon-flag with-text"></i>
-          {% if importance_value %}
-            {% if importance_value == 1 %}
-              1 only
-            {% else %}
-              {{ importance_value }} and above
-            {% endif %}
-          {% else %}
-            Importance
-          {% endif %}
-        </span>
-        <small>
-          <i class="icon-chevron-down"></i>
-        </small>
-      </button>
-      <ul class="dropdown-menu"
-          x-ref="menu"
-          x-show="open"
-          hx-target="#tasks-importance-filter"
-          hx-swap="outerHTML">
-        {% for level in importances %}
-          <li>
-          <a class="dropdown-item {% if level == importance_value %}active{% endif %}"
-             href="#"
-             hx-post="{% url 'matters:tasks-filter-importance' matter.id level %}"
-             hx-target="#matterTasks"
-             hx-swap="#outerHTML"><i class="icon-flag"></i>
-          {% if level == 1 %}
-            1 only
-          {% else %}
-            {{ level }} and above
-          {% endif %}
-        </a>
-      </li>
-    {% endfor %}
-    <li>
-      <a class="dropdown-item {% if not importance_value %}active{% endif %}"
-         href="#"
-         hx-post="{% url 'matters:tasks-filter-importance' matter.id 0 %}"
-         hx-target="#matterTasks"
-         hx-swap="#outerHTML"><i class="icon-flag"></i> All Levels</a>
-    </li>
-  </ul>
-</div>
-<div class="dropdown" x-data="dropdown()">
-  <button type="button"
-          id="tasks-user-filter"
-          class="select-btn filter-dropdown-button {% if user_id %}toggle-active{% endif %}"
-          x-ref="button"
-          @click="toggle()"
-          :aria-expanded="open">
-    <span><i class="icon-{% if user_id %}user{% else %}users{% endif %} with-text"></i>{{ selected_user|default:"All Users" }}</span>
-    <small>
-      <i class="icon-chevron-down"></i>
-    </small>
-  </button>
-  <ul class="dropdown-menu"
-      x-ref="menu"
-      x-show="open"
-      hx-target="#matterTasks"
-      hx-swap="outerHTML">
-    <li>
-      <a class="dropdown-item"
-         href="#"
-         hx-post="{% url 'matters:tasks-filter-user' matter.id 0 %}"
-         hx-target="#matterTasks"
-         hx-swap="#outerHTML"><i class="icon-users"></i> All Users</a>
-    </li>
-    {% for user in users %}
-      <li>
-        <a class="dropdown-item {% if user.id == user_id %}active{% endif %}"
-           href="#"
-           hx-post="{% url 'matters:tasks-filter-user' matter.id user.id %}"
-           hx-target="#matterTasks"
-           hx-swap="#outerHTML"><i class="icon-user"></i> {{ user.username|title }}</a>
-      </li>
-    {% endfor %}
-  </ul>
-</div>
-</div>
-{% endif %}
-</div>
+      </div>
+    {% endif %}
+  </div>
 </div>
 <div class="table-container">
   <table class="table tasks-table card-table">
