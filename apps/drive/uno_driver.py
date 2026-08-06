@@ -119,18 +119,35 @@ def _set_author(ctx, author):
 
 def _apply_replace(doc, edit, index):
     old, new = edit["old"], edit["new"]
+    occurrence = edit.get("occurrence")
 
     finder = doc.createSearchDescriptor()
     finder.SearchString = old
     finder.setPropertyValue("SearchCaseSensitive", True)
     finder.setPropertyValue("SearchRegularExpression", False)
-    matches = doc.findAll(finder).Count
+    found = doc.findAll(finder)
+    matches = found.Count
     if matches == 0:
         raise DriverError(f"text not found in draft: {old[:120]!r}", index)
+
+    if occurrence:
+        if occurrence > matches:
+            raise DriverError(
+                f"occurrence {occurrence} of {old[:120]!r} requested but only "
+                f"{matches} found",
+                index,
+            )
+        target = found.getByIndex(occurrence - 1)
+        cursor = target.getText().createTextCursorByRange(target)
+        # insertString over a selection replaces it; recorded as a tracked
+        # delete+insert like replaceAll's changes.
+        target.getText().insertString(cursor, new, True)
+        return 1
+
     if matches > 1 and not edit.get("replace_all"):
         raise DriverError(
             f"ambiguous edit: {matches} occurrences of {old[:120]!r} "
-            "(set replace_all to change every occurrence)",
+            "(set occurrence to pick one, or replace_all to change every one)",
             index,
         )
 
@@ -145,8 +162,11 @@ def _apply_replace(doc, edit, index):
     return replaced
 
 
-def _find_paragraph(doc, needle, index):
-    """The single body paragraph containing ``needle`` (tables are skipped)."""
+def _find_paragraph(doc, needle, index, occurrence=None):
+    """The body paragraph containing ``needle`` (tables are skipped).
+
+    Requires a unique match unless ``occurrence`` picks the Nth (1-based).
+    """
     matches = []
     enum = doc.getText().createEnumeration()
     while enum.hasMoreElements():
@@ -157,17 +177,25 @@ def _find_paragraph(doc, needle, index):
             matches.append(par)
     if not matches:
         raise DriverError(f"no paragraph contains: {needle[:120]!r}", index)
+    if occurrence:
+        if occurrence > len(matches):
+            raise DriverError(
+                f"occurrence {occurrence} requested but only {len(matches)} "
+                f"paragraphs contain {needle[:120]!r}",
+                index,
+            )
+        return matches[occurrence - 1]
     if len(matches) > 1:
         raise DriverError(
             f"ambiguous: {len(matches)} paragraphs contain {needle[:120]!r} "
-            "(quote more of the paragraph)",
+            "(quote more of the paragraph, or set occurrence to pick one)",
             index,
         )
     return matches[0]
 
 
 def _apply_delete_paragraph(doc, edit, index):
-    par = _find_paragraph(doc, edit["text"], index)
+    par = _find_paragraph(doc, edit["text"], index, edit.get("occurrence"))
     text = doc.getText()
     cursor = text.createTextCursorByRange(par.getStart())
     cursor.gotoEndOfParagraph(True)
@@ -180,7 +208,7 @@ def _apply_delete_paragraph(doc, edit, index):
 def _apply_insert_after(doc, edit, index):
     from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
 
-    par = _find_paragraph(doc, edit["anchor"], index)
+    par = _find_paragraph(doc, edit["anchor"], index, edit.get("occurrence"))
     text = doc.getText()
     cursor = text.createTextCursorByRange(par.getEnd())
     for ptext in edit["paragraphs"]:

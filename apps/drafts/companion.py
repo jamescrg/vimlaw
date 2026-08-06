@@ -41,7 +41,7 @@ from apps.drive import convert
 logger = logging.getLogger(__name__)
 
 COMPANION_SRC = Path(__file__).resolve().parent / "companion_src"
-EXTENSION_VERSION = "0.1.0"
+EXTENSION_VERSION = "0.2.0"
 
 
 def companion_auth(view):

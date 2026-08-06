@@ -72,6 +72,13 @@ The three operations:
   identified by "anchor". Each list item is the full plain text of one new
   paragraph.
 
+Any operation may add "occurrence": N when its quoted text appears more
+than once in the draft. N counts matches from the top of the document,
+1-based. Pleadings repeat boilerplate verbatim (each count's
+incorporation paragraph, for example); occurrence is how you target the
+one in a specific count. Count the matches yourself in the draft text
+below before choosing N.
+
 Rules:
 - The block is applied immediately as tracked changes (redlines), creating
   a new version of the file. Discussing or suggesting a change is NOT
@@ -87,7 +94,14 @@ Rules:
   facsimile's Markdown markers (**, *, #, etc.), which do not exist in the
   underlying file, and never include newlines inside a string.
 - Outside the block, summarize the intent of the edits in a sentence or
-  two. Do not restate them line by line."""
+  two. Do not restate them line by line.
+- The draft below may show numbered-list markers, but they are this
+  rendering's own count and can differ from the paragraph numbers the
+  attorney sees in the document. When the attorney cites a paragraph
+  number, locate the paragraph by its text (ask for a quote if you cannot
+  tell which one is meant), and in replies refer to paragraphs by quoting
+  their text or using the attorney's numbering. Never cite your own count
+  of paragraphs."""
 
 
 def build_system_prompt(session, user):
@@ -151,6 +165,9 @@ def _parse_edit_block(raw):
         if not isinstance(entry, dict):
             raise ValueError("draft-edits entry is not an object")
         op = entry.get("op", "replace")
+        occurrence = entry.get("occurrence")
+        if occurrence is not None:
+            occurrence = int(occurrence)
         if op == "replace":
             if "old" not in entry:
                 raise ValueError("replace entry has no 'old'")
@@ -159,10 +176,13 @@ def _parse_edit_block(raw):
                     old=str(entry["old"]),
                     new=str(entry.get("new", "")),
                     replace_all=bool(entry.get("replace_all", False)),
+                    occurrence=occurrence,
                 )
             )
         elif op == "delete_paragraph":
-            edits.append(DeleteParagraph(text=str(entry.get("text", ""))))
+            edits.append(
+                DeleteParagraph(text=str(entry.get("text", "")), occurrence=occurrence)
+            )
         elif op == "insert_after":
             paragraphs = entry.get("paragraphs")
             if not isinstance(paragraphs, list):
@@ -171,6 +191,7 @@ def _parse_edit_block(raw):
                 InsertParagraphs(
                     anchor=str(entry.get("anchor", "")),
                     paragraphs=[str(p) for p in paragraphs],
+                    occurrence=occurrence,
                 )
             )
         else:

@@ -59,37 +59,49 @@ class RedlineError(Exception):
 
 @dataclass(frozen=True)
 class RedlineEdit:
-    """One plain-text replacement inside a paragraph; empty ``new`` deletes."""
+    """One plain-text replacement inside a paragraph; empty ``new`` deletes.
+
+    ``occurrence`` targets the Nth match (1-based, top of document down)
+    when ``old`` appears more than once; None requires a unique match
+    (unless ``replace_all``).
+    """
 
     old: str
     new: str
     replace_all: bool = False
+    occurrence: int | None = None
 
 
 @dataclass(frozen=True)
 class DeleteParagraph:
     """Remove one whole paragraph (its mark included), as a tracked deletion.
 
-    ``text`` is any quote that identifies exactly one paragraph.
+    ``text`` is any quote that identifies the paragraph; when several
+    paragraphs contain it (pleading boilerplate repeats verbatim),
+    ``occurrence`` picks the Nth from the top.
     """
 
     text: str
+    occurrence: int | None = None
 
 
 @dataclass(frozen=True)
 class InsertParagraphs:
     """Insert new paragraphs after an anchor paragraph, as tracked insertions.
 
-    ``anchor`` is any quote that identifies exactly one existing paragraph;
-    ``paragraphs`` is one string per new paragraph.
+    ``anchor`` is any quote that identifies one existing paragraph
+    (``occurrence`` disambiguates repeats); ``paragraphs`` is one string per
+    new paragraph.
     """
 
     anchor: str
     paragraphs: tuple
+    occurrence: int | None = None
 
-    def __init__(self, anchor, paragraphs):
+    def __init__(self, anchor, paragraphs, occurrence=None):
         object.__setattr__(self, "anchor", anchor)
         object.__setattr__(self, "paragraphs", tuple(paragraphs))
+        object.__setattr__(self, "occurrence", occurrence)
 
 
 @dataclass(frozen=True)
@@ -101,21 +113,25 @@ class AppliedEdit:
 def edit_to_dict(edit):
     """The op's wire form: the driver job entry, also stored on DraftVersion."""
     if isinstance(edit, RedlineEdit):
-        return {
+        data = {
             "op": "replace",
             "old": edit.old,
             "new": edit.new,
             "replace_all": edit.replace_all,
         }
-    if isinstance(edit, DeleteParagraph):
-        return {"op": "delete_paragraph", "text": edit.text}
-    if isinstance(edit, InsertParagraphs):
-        return {
+    elif isinstance(edit, DeleteParagraph):
+        data = {"op": "delete_paragraph", "text": edit.text}
+    elif isinstance(edit, InsertParagraphs):
+        data = {
             "op": "insert_after",
             "anchor": edit.anchor,
             "paragraphs": list(edit.paragraphs),
         }
-    raise TypeError(f"not a redline edit: {edit!r}")
+    else:
+        raise TypeError(f"not a redline edit: {edit!r}")
+    if edit.occurrence is not None:
+        data["occurrence"] = edit.occurrence
+    return data
 
 
 @lru_cache(maxsize=1)
@@ -144,16 +160,29 @@ def _no_newlines(index, *texts):
         )
 
 
+def _check_occurrence(index, edit):
+    if edit.occurrence is not None and (
+        not isinstance(edit.occurrence, int) or edit.occurrence < 1
+    ):
+        raise RedlineError("occurrence must be a positive integer", index)
+
+
 def _validate(edits):
     if not edits:
         raise RedlineError("no edits to apply")
     for index, edit in enumerate(edits):
+        if isinstance(edit, (RedlineEdit, DeleteParagraph, InsertParagraphs)):
+            _check_occurrence(index, edit)
         if isinstance(edit, RedlineEdit):
             if not edit.old:
                 raise RedlineError("edit has empty old text", index)
             if edit.old == edit.new:
                 raise RedlineError(
                     "edit changes nothing (old and new are identical)", index
+                )
+            if edit.replace_all and edit.occurrence is not None:
+                raise RedlineError(
+                    "replace_all and occurrence are mutually exclusive", index
                 )
             _no_newlines(index, edit.old, edit.new)
         elif isinstance(edit, DeleteParagraph):

@@ -94,6 +94,28 @@ def test_structural_ops_parse(session, monkeypatch):
     assert "Applied 4 edits as tracked changes" in result
 
 
+def test_occurrence_parses_on_every_op(session, monkeypatch):
+    block = """```draft-edits
+[{"old": "restates and incorporates", "new": "incorporates", "occurrence": 3},
+ {"op": "delete_paragraph", "text": "boilerplate", "occurrence": 2},
+ {"op": "insert_after", "anchor": "boilerplate", "paragraphs": ["New."], "occurrence": 1}]
+```"""
+    seen = {}
+
+    def fake_apply(sess, edits):
+        seen["edits"] = edits
+        return sess.versions.get(seq=0)
+
+    monkeypatch.setattr(services, "apply_edit_round", fake_apply)
+    chat.apply_edit_blocks(block, session)
+
+    assert seen["edits"] == [
+        RedlineEdit(old="restates and incorporates", new="incorporates", occurrence=3),
+        DeleteParagraph(text="boilerplate", occurrence=2),
+        InsertParagraphs(anchor="boilerplate", paragraphs=["New."], occurrence=1),
+    ]
+
+
 def test_unknown_op_leaves_block_in_place(session, monkeypatch):
     def boom(sess, edits):  # pragma: no cover - must not be reached
         raise AssertionError("apply_edit_round called for unknown op")

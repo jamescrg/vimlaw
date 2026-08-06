@@ -104,6 +104,21 @@ class TestValidation:
                 [InsertParagraphs(anchor="x", paragraphs=["one\ntwo"])],
             )
 
+    def test_occurrence_validation(self, draft):
+        with pytest.raises(RedlineError, match="positive integer"):
+            redline.apply_redline_edits(
+                draft, [RedlineEdit(old="a", new="b", occurrence=0)]
+            )
+        with pytest.raises(RedlineError, match="positive integer"):
+            redline.apply_redline_edits(
+                draft, [DeleteParagraph(text="a", occurrence=-1)]
+            )
+        with pytest.raises(RedlineError, match="mutually exclusive"):
+            redline.apply_redline_edits(
+                draft,
+                [RedlineEdit(old="a", new="b", replace_all=True, occurrence=1)],
+            )
+
     def test_newlines_rejected(self, draft):
         with pytest.raises(RedlineError, match="one paragraph") as excinfo:
             redline.apply_redline_edits(
@@ -253,6 +268,65 @@ class TestApply:
         assert excinfo.value.edit_index == 1
         # First edit was valid, but nothing may be written on failure.
         assert draft.read_bytes() == original
+
+    def test_occurrence_targets_one_match(self, draft):
+        # DUPLICATED appears twice in one paragraph; change only the second.
+        applied = redline.apply_redline_edits(
+            draft,
+            [RedlineEdit(old=DUPLICATED, new="Reply briefing remains.", occurrence=2)],
+        )
+        assert applied[0].replacements == 1
+        markdown = _markdown(draft)
+        assert markdown.count(DUPLICATED) == 1
+        assert markdown.count("Reply briefing remains.") == 1
+        assert markdown.index(DUPLICATED) < markdown.index("Reply briefing remains.")
+        assert "tracked-changes" in _content_xml(draft)
+
+    def test_occurrence_out_of_range_is_atomic(self, draft):
+        original = draft.read_bytes()
+        with pytest.raises(RedlineError, match="only 2 found"):
+            redline.apply_redline_edits(
+                draft, [RedlineEdit(old=DUPLICATED, new="x", occurrence=3)]
+            )
+        assert draft.read_bytes() == original
+
+    def test_occurrence_disambiguates_paragraph_ops(self, tmp_path):
+        """Identical boilerplate paragraphs (the pleading case): occurrence
+        picks which one an insert anchors on."""
+        from odf.opendocument import OpenDocumentText
+        from odf.text import P
+
+        boiler = "Plaintiff restates and incorporates all previous allegations."
+        doc = OpenDocumentText()
+        doc.text.addElement(P(text="COUNT 1"))
+        doc.text.addElement(P(text=boiler))
+        doc.text.addElement(P(text="COUNT 2"))
+        doc.text.addElement(P(text=boiler))
+        doc.text.addElement(P(text="COUNT 3"))
+        doc.text.addElement(P(text=boiler))
+        path = tmp_path / "pleading.odt"
+        doc.save(str(path))
+
+        with pytest.raises(RedlineError, match="3 paragraphs contain"):
+            redline.apply_redline_edits(
+                path, [InsertParagraphs(anchor=boiler, paragraphs=["New text."])]
+            )
+
+        redline.apply_redline_edits(
+            path,
+            [
+                InsertParagraphs(
+                    anchor=boiler, paragraphs=["This is a test 3."], occurrence=2
+                )
+            ],
+        )
+        markdown = _markdown(path)
+        # The insertion lands after the second boilerplate, before COUNT 3.
+        assert (
+            markdown.index("COUNT 2")
+            < markdown.index("This is a test 3.")
+            < markdown.index("COUNT 3")
+        )
 
     def test_ambiguous_edit_requires_replace_all(self, draft):
         original = draft.read_bytes()
