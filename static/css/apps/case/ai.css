@@ -2232,3 +2232,16 @@
 .companion-note {
   margin-top: 0.75rem;
 }
+
+/* Matter badge + draft-link chip travel together at the header's left. */
+.ai-header-matter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#draftChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}

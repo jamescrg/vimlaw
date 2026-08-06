@@ -74,10 +74,12 @@
       </aside>
       <main class="ai-chat-main">
         <header class="ai-chat-header">
-          <span class="app-badge badge-purple">{{ matter.name }}</span>
+          <span class="ai-header-matter">
+            <span class="app-badge badge-purple">{{ matter.name }}</span>
+            <span id="draftChip">{% include "case/ai/draft-chip.html" %}</span>
+          </span>
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
           <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
-          <span id="draftChip">{% include "case/ai/draft-chip.html" %}</span>
           {% if conversation.kind == "research" %}
             {% include "case/ai/research-depth-pill.html" with conversation=conversation %}
           {% endif %}
