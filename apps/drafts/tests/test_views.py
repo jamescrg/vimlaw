@@ -99,7 +99,7 @@ def test_new_chat_window_shows_paperclip_before_first_message(client, matter):
     response = client.get(f"/case/{matter.id}/ai/conversations/new/")
     assert response.status_code == 200
     assert b"linkDraftForNewChat" in response.content
-    assert b"icon-pencil-sparkles" in response.content
+    assert b"icon-wifi-pen" in response.content
 
 
 def test_create_conversation_endpoint(client, matter):
