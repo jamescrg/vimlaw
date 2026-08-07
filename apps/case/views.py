@@ -13,7 +13,6 @@ VALID_TABS = [
     "witnesses",
     "notes",
     "emails",
-    "drafts",
     "labels",
     "search",
     "ai",
@@ -197,14 +196,6 @@ def _get_case_tab_data(request, matter, matters, matter_id, tab):
         return {
             "tab_template": "case/emails/list.html",
             **get_emails_data(request, matter, matter_id),
-        }
-
-    elif tab == "drafts":
-        from apps.drafts.views import get_drafts_data
-
-        return {
-            "tab_template": "case/drafts/list.html",
-            **get_drafts_data(request, matter, matter_id),
         }
 
     elif tab == "labels":

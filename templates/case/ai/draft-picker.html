@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">New Draft Session</h1>
+      <h1 class="modal-title">Link a Draft</h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
@@ -9,20 +9,30 @@
       </div>
     </div>
     <div class="modal-body">
-      {% if files %}
+      {% if not drive_ready %}
         <p class="detail-text">
-          Pick an ODT file from this matter's Drive folder. The drafting
-          window opens in a new tab.
+          Connect Google Drive and link this matter's Drive folder to use
+          drafts.
+        </p>
+      {% elif files %}
+        <p class="detail-text">
+          Pick an ODT file from this matter's Drafts folder. Uses the
+          <a href="#"
+             hx-get="{% url 'case:draft-companion-setup' %}"
+             hx-target="#htmx-modal-container">LibreOffice companion extension</a>.
         </p>
         <ul class="draft-picker-list">
           {% for file in files %}
             <li>
-              <a href="{% url 'case:drafts-start' matter.id %}?file={{ file.id }}"
-                 target="_blank"
-                 @click="$dispatch('close-modal'); setTimeout(() => htmx.trigger(document.body, 'draftsChanged'), 4000)">
+              <button type="button"
+                      hx-post="{% url 'case:draft-link' conversation.id %}"
+                      hx-vals='{"file": "{{ file.id }}"}'
+                      hx-target="#draftChip"
+                      hx-swap="innerHTML"
+                      @click="$dispatch('close-modal')">
                 <i class="icon-file-text"></i>
                 <span class="draft-picker-path">{{ file.path }}</span>{{ file.name }}
-              </a>
+              </button>
             </li>
           {% endfor %}
         </ul>

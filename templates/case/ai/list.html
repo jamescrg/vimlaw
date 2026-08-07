@@ -181,6 +181,9 @@
               </ul>
             </div>
             {% if conv.kind == "research" %}<span class="app-badge ai-research-badge">Research</span>{% endif %}
+            {% if conv.draft_link %}
+              <span class="app-badge ai-draft-badge" title="{{ conv.draft_link.name }}"><i class="icon-file-text"></i> Draft</span>
+            {% endif %}
           </div>
         </td>
         <td class="llm">{{ conv.get_llm_display }}</td>

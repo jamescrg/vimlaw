@@ -1,0 +1,41 @@
+{% comment %}
+The draft-link control in the chat header. Swapped via #draftChip after
+link/unlink. In an unsaved conversation (no id yet) the paperclip first
+materializes the row via linkDraftForNewChat() (standalone window only),
+so a draft can be linked before the first prompt. Research chats have no
+draft support (their worker path skips the edit protocol).
+{% endcomment %}
+{% if conversation.kind == "research" %}
+{% elif not conversation.id %}
+  <button type="button"
+          class="btn-icon draft-link-btn"
+          onclick="linkDraftForNewChat()"
+          title="Link a draft (an ODT from this matter's Drive folder)">
+    <i class="icon-pencil-sparkles"></i>
+  </button>
+{% else %}
+  {% if conversation.draft_link %}
+    <span class="app-badge ai-draft-badge"
+          title="Edits apply to this document in your open LibreOffice window">
+      <i class="icon-file-text"></i>
+      {{ conversation.draft_link.name }}
+    </span>
+    <button type="button"
+            class="btn-icon btn-sm"
+            hx-post="{% url 'case:draft-unlink' conversation.id %}"
+            hx-target="#draftChip"
+            hx-swap="innerHTML"
+            hx-confirm="Unlink this draft from the conversation? The document itself is untouched."
+            title="Unlink draft">
+      <i class="icon-x"></i>
+    </button>
+  {% else %}
+    <button type="button"
+            class="btn-icon draft-link-btn"
+            hx-get="{% url 'case:draft-picker' conversation.id %}"
+            hx-target="#htmx-modal-container"
+            title="Link a draft (an ODT from this matter's Drive folder)">
+      <i class="icon-pencil-sparkles"></i>
+    </button>
+  {% endif %}
+{% endif %}

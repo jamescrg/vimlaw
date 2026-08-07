@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from apps.case import views
@@ -11,7 +12,10 @@ from apps.case.notes import views as notes
 from apps.case.research import views as research
 from apps.case.search import views as search
 from apps.case.witnesses import views as witnesses
-from apps.drafts import views as drafts
+from apps.drafts import (
+    companion as drafts_companion,
+    views as drafts,
+)
 from apps.mail import views as mail
 
 app_name = "case"
@@ -474,51 +478,59 @@ urlpatterns = [
         documents.record_link,
         name="documents-record-link",
     ),
-    # Drafts (matter-scoped AI drafting sessions on Drive ODT files)
-    path("case/<int:matter_id>/drafts/", drafts.drafts_index, name="drafts-index"),
-    path("case/<int:matter_id>/drafts/list/", drafts.drafts_list, name="drafts-list"),
+    # Draft links (a conversation pinned to a Drive ODT; edits apply via
+    # the LibreOffice companion)
     path(
-        "case/<int:matter_id>/drafts/picker/",
+        "case/ai/conversations/<int:conv_id>/draft/picker/",
         drafts.draft_picker,
-        name="drafts-picker",
-    ),
-    path("case/<int:matter_id>/drafts/start/", drafts.draft_start, name="drafts-start"),
-    path(
-        "case/drafts/<int:session_id>/window/",
-        drafts.draft_window,
-        name="draft-window",
-    ),
-    path("case/drafts/<int:session_id>/send/", drafts.draft_send, name="draft-send"),
-    path(
-        "case/drafts/<int:session_id>/messages/",
-        drafts.draft_messages,
-        name="draft-messages",
-    ),
-    path("case/drafts/<int:session_id>/pane/", drafts.draft_pane, name="draft-pane"),
-    path(
-        "case/drafts/<int:session_id>/refresh/",
-        drafts.draft_refresh,
-        name="draft-refresh",
+        name="draft-picker",
     ),
     path(
-        "case/drafts/<int:session_id>/publish/",
-        drafts.draft_publish,
-        name="draft-publish",
+        "case/ai/conversations/<int:conv_id>/draft/link/",
+        drafts.draft_link,
+        name="draft-link",
     ),
     path(
-        "case/drafts/<int:session_id>/discard/",
-        drafts.draft_discard,
-        name="draft-discard",
+        "case/ai/conversations/<int:conv_id>/draft/unlink/",
+        drafts.draft_unlink,
+        name="draft-unlink",
     ),
     path(
-        "case/drafts/version/<int:version_id>/pdf/",
-        drafts.draft_version_pdf,
-        name="draft-version-pdf",
+        "case/ai/conversations/<int:conv_id>/draft/chip/",
+        drafts.draft_chip,
+        name="draft-chip",
+    ),
+    # LibreOffice companion: setup modal + personalized .oxt (browser,
+    # logged-in) and the token-authed JSON API the extension polls.
+    path(
+        "case/drafts/companion/setup/",
+        drafts.draft_companion_setup,
+        name="draft-companion-setup",
     ),
     path(
-        "case/drafts/version/<int:version_id>/odt/",
-        drafts.draft_version_odt,
-        name="draft-version-odt",
+        "case/drafts/companion/kosmos-companion.oxt",
+        login_required(drafts_companion.companion_oxt),
+        name="draft-companion-oxt",
+    ),
+    path(
+        "case/drafts/companion/api/sessions/",
+        drafts_companion.api_sessions,
+        name="companion-api-sessions",
+    ),
+    path(
+        "case/drafts/companion/api/<int:link_id>/hello/",
+        drafts_companion.api_hello,
+        name="companion-api-hello",
+    ),
+    path(
+        "case/drafts/companion/api/<int:link_id>/ops/",
+        drafts_companion.api_ops,
+        name="companion-api-ops",
+    ),
+    path(
+        "case/drafts/companion/api/<int:link_id>/rounds/<int:round_id>/",
+        drafts_companion.api_result,
+        name="companion-api-result",
     ),
     # Emails (matter-scoped, synced from Gmail via apps.mail)
     path("case/<int:matter_id>/emails/", mail.emails_index, name="emails-index"),
@@ -645,6 +657,11 @@ urlpatterns = [
         "case/<int:matter_id>/ai/conversations/new/",
         ai.new_conversation_view,
         name="ai-new-conversation-view",
+    ),
+    path(
+        "case/<int:matter_id>/ai/conversations/create/",
+        ai.create_conversation,
+        name="ai-create-conversation",
     ),
     path(
         "case/<int:matter_id>/ai/conversations/new/prompt/",
