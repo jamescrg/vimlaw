@@ -1,6 +1,5 @@
-from datetime import date
-
 from django.db.models import F
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.checklists.models import Checklist, UserChecklistView
@@ -26,6 +25,7 @@ from apps.tasks.models import (
     TaskNote,
     UserTaskNoteView,
 )
+from apps.tasks.services import refresh_date_preset
 
 # Most pinned user chips allowed on the tasks toolbar.
 TASK_CHIPS_CAP = 5
@@ -70,9 +70,11 @@ def resolve_task_filter(request):
 
     Shared by the list view and the board view so both honour the same active
     filters. Seeds a default "today" filter in the session on first visit.
+    Date presets are semantic: the stored filter_label is re-derived into
+    fresh dates on every read, so a session's "Today" never goes stale.
     Returns (tasks, filter_data, user_id, matter_id, importance_value).
     """
-    today = date.today()
+    today = timezone.localdate()
 
     filter_data = request.session.get("tasks_filter", {})
 
@@ -84,10 +86,13 @@ def resolve_task_filter(request):
         request.session["tasks_filter"] = filter_data
 
     if filter_data:
+        refreshed = refresh_date_preset(filter_data, today)
+        if refreshed != filter_data:
+            request.session["tasks_filter"] = refreshed
         filter_data = {
-            **filter_data,
-            "status": coerce_status(filter_data.get("status")) or ACTIVE_STATUSES,
-            "order_by": filter_data.get("order_by", "date_due"),
+            **refreshed,
+            "status": coerce_status(refreshed.get("status")) or ACTIVE_STATUSES,
+            "order_by": refreshed.get("order_by", "date_due"),
         }
 
         filter = TasksFilter(filter_data)
@@ -194,7 +199,7 @@ def enrich_tasks(request, task_list):
 def get_list_data(request):
     list_data = {}
 
-    today = date.today()
+    today = timezone.localdate()
 
     tasks, filter_data, user_id, matter_id, importance_value = resolve_task_filter(
         request
@@ -297,7 +302,7 @@ def get_board_data(request):
     are laid out in BOARD_STATUS_ORDER and tasks within a column are ordered by
     custom_order (manual drag order) then due date.
     """
-    today = date.today()
+    today = timezone.localdate()
 
     _, filter_data, user_id, matter_id, importance_value = resolve_task_filter(request)
 

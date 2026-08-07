@@ -57,7 +57,7 @@
               {% elif filter_label == "custom" %}
                 Custom range
               {% else %}
-                All Tasks
+                All Dates
               {% endif %}
             </span>
             <small>
@@ -70,7 +70,7 @@
                  href="#"
                  hx-post="{% url 'tasks:filter-quick' 'all' %}"
                  hx-target="#tasks">
-                <i class="icon-calendar"></i> All Tasks
+                <i class="icon-calendar"></i> All Dates
               </a>
             </li>
             <li>
