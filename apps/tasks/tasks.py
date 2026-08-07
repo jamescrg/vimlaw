@@ -27,8 +27,28 @@ from apps.tasks.models import (
 )
 from apps.tasks.services import refresh_date_preset
 
-# Most pinned user chips allowed on the tasks toolbar.
+# Most pinned user chips allowed on a toolbar's chip row. The pinned set
+# (CustomUser.task_user_chips) is shared by every tab that renders chips:
+# tasks and the Activity tabs — one working set of people per viewer.
 TASK_CHIPS_CAP = 5
+
+
+def toggle_chip_pin(user, target_id):
+    """Pin or unpin target_id on user's chip row.
+
+    Returns False when the cap blocks a new pin (the caller warns the
+    user); True otherwise.
+    """
+    pinned = list(user.task_user_chips or [])
+    if target_id in pinned:
+        pinned.remove(target_id)
+    elif len(pinned) >= TASK_CHIPS_CAP:
+        return False
+    else:
+        pinned.append(target_id)
+    user.task_user_chips = pinned
+    user.save(update_fields=["task_user_chips"])
+    return True
 
 
 def quick_add_ai_enabled():

@@ -178,14 +178,16 @@ tr > td.importance.complete .button-link {
 }
 
 /* One-click user filter chips (replacing the user dropdown): a tight row of
-   monogram buttons; toggle-active carries the selected state. */
+   monogram buttons; toggle-active carries the selected state. Shared by the
+   tasks and Activity toolbars via components/user-chips.html, so these rules
+   are unscoped. */
 .user-chips {
   align-items: center;
   display: flex;
   gap: 0.25rem;
 }
 
-.tasks-toolbar .user-chips .user-chip {
+.user-chips .user-chip {
   justify-content: center;
   min-width: 2.5rem;
   padding: 0.5rem;

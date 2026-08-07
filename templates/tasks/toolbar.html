@@ -123,53 +123,7 @@
             </li>
           </ul>
         </div>
-        {% comment %} One-click user chips: the viewer's pinned set (or
-        everyone in a small firm), with an overflow menu for the rest +
-        pin management. A filtered-but-unchipped user appears as a lit
-        chip, so the active filter always reads. {% endcomment %}
-        <div class="user-chips" role="group" aria-label="Filter by user">
-          <button type="button"
-                  class="user-chip {% if not user_id %}toggle-active{% endif %}"
-                  title="All users"
-                  hx-post="{% url 'tasks:filter-user' 0 %}"
-                  hx-target="#tasks">All</button>
-          {% for u in user_chips %}
-            <button type="button"
-                    class="user-chip {% if u.id == user_id %}toggle-active{% endif %}"
-                    title="{{ u.full_name }}"
-                    hx-post="{% url 'tasks:filter-user' u.id %}"
-                    hx-target="#tasks">{{ u.chip_initials }}</button>
-          {% endfor %}
-          {% if chip_pinned_ids or users|length > user_chips|length %}
-            <div class="dropdown" x-data="dropdown()">
-              <button type="button"
-                      class="user-chip user-chip-more"
-                      title="More users"
-                      x-ref="button"
-                      @click="toggle()"
-                      :aria-expanded="open">
-                <i class="icon-ellipsis"></i>
-              </button>
-              <ul class="dropdown-menu" x-ref="menu" x-show="open">
-                {% for u in users %}
-                  <li class="user-chip-row">
-                    <a class="dropdown-item {% if u.id == user_id %}active{% endif %}"
-                       href="#"
-                       hx-post="{% url 'tasks:filter-user' u.id %}"
-                       hx-target="#tasks"><i class="icon-user"></i> {{ u.username|title }}</a>
-                    <button type="button"
-                            class="user-chip-pin {% if u.id in chip_pinned_ids %}pinned{% endif %}"
-                            title="{% if u.id in chip_pinned_ids %}Unpin from chips{% else %}Pin to chips{% endif %}"
-                            hx-post="{% url 'tasks:toggle-chip' u.id %}"
-                            hx-target="#tasks">
-                      <i class="icon-pin"></i>
-                    </button>
-                  </li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endif %}
-        </div>
+        {% include "components/user-chips.html" with filter_user_url="tasks:filter-user" toggle_chip_url="tasks:toggle-chip" chips_target="#tasks" %}
       </div>
       <div class="filter-tools tasks-view-tools">
         <button type="button"

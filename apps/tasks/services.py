@@ -348,16 +348,19 @@ def quick_date_filters(today):
     }
 
 
-def refresh_date_preset(filter_data, today):
+def refresh_date_preset(filter_data, today, presets=None):
     """Re-stamp a semantic date preset's date dimensions from today.
 
     filter_label is the source of truth: when it names a quick preset, the
-    stored date_due_min/max + has_due_date are re-derived so "Today" always
-    means today, however long ago it was clicked. "custom" (and unknown or
-    missing labels) are left untouched. Returns a new dict; the input is not
-    mutated.
+    stored date bounds are re-derived so "Today" always means today, however
+    long ago it was clicked. "custom" (and unknown or missing labels) are
+    left untouched. Returns a new dict; the input is not mutated.
+
+    presets defaults to the tasks tab's quick_date_filters; the Activity
+    tabs pass their own vocabulary (apps.activity.presets).
     """
-    presets = quick_date_filters(today)
+    if presets is None:
+        presets = quick_date_filters(today)
     label = filter_data.get("filter_label")
     if label in presets:
         return {**filter_data, **presets[label]}

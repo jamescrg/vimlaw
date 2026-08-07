@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.activity.categories.views import set_category
+from apps.activity.chips import activity_toggle_chip
 from apps.activity.expenses.views import (
     expenses_add,
     expenses_bulk_update_comp,
@@ -106,6 +107,11 @@ urlpatterns = [
         "activity/time/filter/user/<int:user_id>/",
         time_filter_user,
         name="time-filter-user",
+    ),
+    path(
+        "activity/chips/<int:user_id>/toggle/",
+        activity_toggle_chip,
+        name="toggle-chip",
     ),
     path(
         "activity/time/cycle-user/<str:direction>/",
