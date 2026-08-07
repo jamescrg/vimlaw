@@ -1,10 +1,10 @@
 import json
-from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.accounts.access import matter_access_required
@@ -36,7 +36,11 @@ from apps.tasks.models import (
     TaskNote,
     UserTaskNoteView,
 )
-from apps.tasks.services import detect_filter_label, quick_date_filters
+from apps.tasks.services import (
+    detect_filter_label,
+    quick_date_filters,
+    refresh_date_preset,
+)
 from apps.tasks.tasks import TASK_CHIPS_CAP, get_user_chips
 from utils.toasts import toast_warning
 
@@ -46,7 +50,7 @@ TASKS_TRIGGER = "tasksListChanged"
 def get_matter_tasks_data(request, matter_id):
     """Get filtered task data for a specific matter"""
     matter = get_object_or_404(Matter, pk=matter_id)
-    today = date.today()
+    today = timezone.localdate()
 
     # Get filter data from session, but ensure it's scoped to this matter
     filter_data = request.session.get("matter_tasks_filter", {})
@@ -58,6 +62,10 @@ def get_matter_tasks_data(request, matter_id):
     matter_queryset = Task.objects.filter(matter=matter)
 
     if has_existing_filter:
+        # Re-derive semantic date presets (a stored "Today" always means
+        # today). Only a stored filter_label triggers this; label-less
+        # legacy sessions keep their literal dates.
+        filter_data = refresh_date_preset(filter_data, today)
         filter_data = {
             **filter_data,
             "status": coerce_status(filter_data.get("status")) or ACTIVE_STATUSES,
@@ -176,7 +184,7 @@ def get_matter_tasks_data(request, matter_id):
 
     # Self-heal sessions whose date bounds predate the date dropdown (set via
     # the modal before filter_label was recorded) so the dropdown reads
-    # "Custom range" instead of "All Tasks".
+    # "Custom range" instead of "All Dates".
     filter_label = filter_data.get("filter_label") if filter_data else None
     if filter_label is None and has_existing_filter:
         filter_label = detect_filter_label(filter_data, today)
@@ -300,7 +308,7 @@ def tasks_add(request, id):
             initial={
                 "user": initial_user,
                 "matter": matter,
-                "date_due": date.today(),
+                "date_due": timezone.localdate(),
                 "focus": focus if focus else "Long Term",  # Default to Long Term
             },
             user=request.user,
@@ -343,7 +351,7 @@ def tasks_add_quick(request, id):
     # set task description and some property values
     task.description = request.POST["description"]
     task.status = STATUS_PENDING
-    task.date_due = date.today()
+    task.date_due = timezone.localdate()
     task.matter = matter  # Always assign to the current matter
 
     # auto populate importance from filter
@@ -449,7 +457,9 @@ def tasks_filter(request, id):
         # a real value (which would light the Filter button).
         if filter_data.get("has_due_date") == "unknown":
             filter_data["has_due_date"] = ""
-        filter_data["filter_label"] = detect_filter_label(filter_data, date.today())
+        filter_data["filter_label"] = detect_filter_label(
+            filter_data, timezone.localdate()
+        )
         filter_data["matter"] = id  # Ensure matter is always set
         request.session["matter_tasks_filter"] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
@@ -463,6 +473,9 @@ def tasks_filter(request, id):
             filter_data["status"] = (
                 coerce_status(filter_data.get("status")) or ACTIVE_STATUSES
             )
+            # Re-derive semantic date presets so the modal's date inputs show
+            # the current window (a stored "Today" always means today).
+            filter_data = refresh_date_preset(filter_data, timezone.localdate())
             # Create a queryset filtered by matter
             queryset = Task.objects.filter(matter=matter)
             filter = TasksFilter(filter_data, queryset=queryset)
@@ -486,7 +499,7 @@ def tasks_filter(request, id):
 @matter_access_required
 def tasks_filter_quick(request, id, quick_filter):
     """Quick date-window filters from the toolbar's date dropdown."""
-    presets = quick_date_filters(date.today())
+    presets = quick_date_filters(timezone.localdate())
     if quick_filter not in presets:
         raise Http404("Unknown quick filter")
 

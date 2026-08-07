@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
+from apps.activity.presets import activity_date_filters
 from apps.activity.time.filter import TimeEntryFilter
 from apps.activity.time.models import TimeEntry
 from apps.activity.time.summary import calculate_summary
@@ -11,6 +12,8 @@ from apps.management.selection import (
     get_session_key,
 )
 from apps.matters.models import Matter
+from apps.tasks.services import refresh_date_preset
+from apps.tasks.tasks import get_user_chips
 
 
 def get_time_data(request):
@@ -22,7 +25,8 @@ def get_time_data(request):
 
     number_entries = entries.count()
 
-    today_str = datetime.now().date().strftime("%Y-%m-%d")
+    today = timezone.localdate()
+    today_str = today.strftime("%Y-%m-%d")
     default_filter = {
         "filter_label": "today",
         "date_min": today_str,
@@ -42,38 +46,13 @@ def get_time_data(request):
         filter_data.pop("user", None)
 
     if filter_data:
+        # Semantic date presets: re-derive the stored window from today so a
+        # session's "Today" / "This Week" never goes stale (same mechanism as
+        # the tasks tab; activity vocabulary from apps.activity.presets).
+        filter_data = refresh_date_preset(
+            filter_data, today, presets=activity_date_filters(today)
+        )
         filter = TimeEntryFilter(filter_data, queryset=entries)
-
-        current_date = datetime.now().date()
-        filter_label = filter.data.get("filter_label", None)
-
-        # Recalculate dates for relative quick filters
-        if filter_label == "today":
-            filter.data["date_min"] = str(current_date)
-            filter.data["date_max"] = str(current_date)
-        elif filter_label == "yesterday":
-            yesterday = current_date - timedelta(days=1)
-            filter.data["date_min"] = str(yesterday)
-            filter.data["date_max"] = str(yesterday)
-        elif filter_label == "this_week":
-            monday = current_date - timedelta(days=current_date.weekday())
-            filter.data["date_min"] = str(monday)
-            filter.data["date_max"] = str(current_date)
-        elif filter_label == "last_week":
-            monday = current_date - timedelta(days=current_date.weekday())
-            last_monday = monday - timedelta(days=7)
-            last_sunday = monday - timedelta(days=1)
-            filter.data["date_min"] = str(last_monday)
-            filter.data["date_max"] = str(last_sunday)
-        elif filter_label == "this_month":
-            filter.data["date_min"] = str(current_date.replace(day=1))
-            filter.data["date_max"] = str(current_date)
-        elif filter_label == "last_month":
-            month_start = current_date.replace(day=1)
-            last_month_end = month_start - timedelta(days=1)
-            last_month_start = last_month_end.replace(day=1)
-            filter.data["date_min"] = str(last_month_start)
-            filter.data["date_max"] = str(last_month_end)
 
         entries = filter.qs
         user_id = filter_data.get("user")
@@ -144,6 +123,8 @@ def get_time_data(request):
         "number_entries": number_entries,
         "summary": summary,
         "users": users,
+        "user_chips": get_user_chips(request, users, user_id),
+        "chip_pinned_ids": request.user.task_user_chips or [],
         "selected_user": selected_user,
         "user_id": user_id,
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,

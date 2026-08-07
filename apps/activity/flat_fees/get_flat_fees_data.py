@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.activity.flat_fees.filter import FlatFeeEntryFilter
 from apps.activity.flat_fees.models import FlatFeeEntry
 from apps.activity.flat_fees.summary import calculate_summary
+from apps.activity.presets import activity_date_filters
 from apps.management.pagination import CustomPaginator
 from apps.management.selection import (
     all_visible_selected,
@@ -11,6 +12,8 @@ from apps.management.selection import (
     get_session_key,
 )
 from apps.matters.models import Matter
+from apps.tasks.services import refresh_date_preset
+from apps.tasks.tasks import get_user_chips
 
 
 def get_flat_fees_data(request):
@@ -38,25 +41,14 @@ def get_flat_fees_data(request):
         filter_data.pop("user", None)
 
     if filter_data:
+        # Semantic date presets: re-derive the stored window from today so a
+        # session's "Today" / "This Week" never goes stale (same mechanism as
+        # the tasks tab; activity vocabulary from apps.activity.presets).
+        today = timezone.localdate()
+        filter_data = refresh_date_preset(
+            filter_data, today, presets=activity_date_filters(today)
+        )
         filter = FlatFeeEntryFilter(filter_data, queryset=entries)
-
-        current_date = datetime.now().date()
-        filter_label = filter.data.get("filter_label", None)
-
-        if filter_label == "today":
-            filter.data["date_min"] = str(current_date)
-            filter.data["date_max"] = str(current_date)
-        elif filter_label == "yesterday":
-            yesterday = current_date - timedelta(days=1)
-            filter.data["date_min"] = str(yesterday)
-            filter.data["date_max"] = str(yesterday)
-        elif filter_label == "this_week":
-            monday = current_date - timedelta(days=current_date.weekday())
-            filter.data["date_min"] = str(monday)
-            filter.data["date_max"] = str(current_date)
-        elif filter_label == "this_month":
-            filter.data["date_min"] = str(current_date.replace(day=1))
-            filter.data["date_max"] = str(current_date)
 
         entries = filter.qs
         user_id = filter_data.get("user")
@@ -70,7 +62,7 @@ def get_flat_fees_data(request):
     request.session.modified = True
 
     summary = calculate_summary(entries)
-    users = CustomUser.objects.filter(is_active=True)
+    users = CustomUser.objects.filter(is_active=True).order_by("username")
 
     pagination = CustomPaginator(
         entries, per_page=10, request=request, session_key="flat_fees_pagination"
@@ -108,6 +100,8 @@ def get_flat_fees_data(request):
         "number_entries": number_entries,
         "summary": summary,
         "users": users,
+        "user_chips": get_user_chips(request, users, user_id),
+        "chip_pinned_ids": request.user.task_user_chips or [],
         "selected_user": selected_user,
         "user_id": user_id,
         "filter_label": filter_data.get("filter_label", None) if filter_data else None,

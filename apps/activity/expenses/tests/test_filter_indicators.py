@@ -10,7 +10,7 @@ from datetime import date, timedelta
 import pytest
 from django.urls import reverse
 
-from apps.activity.expenses.views import _detect_filter_label
+from apps.activity.presets import detect_filter_label as _detect_filter_label
 
 pytestmark = pytest.mark.django_db
 

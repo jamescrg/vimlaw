@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
@@ -52,7 +54,9 @@ def test_user_chips_render_small_firm(client, user, task):
     """<= cap active users: everyone is a chip, no legacy dropdown."""
     response = client.get(reverse("tasks:index"))
     assert b"user-chips" in response.content
-    assert b">OL</button>" in response.content
+    # Whitespace-tolerant: djLint formats the shared chip component with the
+    # monogram on its own line.
+    assert re.search(rb">\s*OL\s*</button>", response.content)
     assert b"tasks-user-filter" not in response.content
 
 
@@ -95,7 +99,7 @@ def test_filtered_unchipped_user_surfaces_as_chip(client, user, task):
     ]
     target = extras[0]
     response = client.post(reverse("tasks:filter-user", args=[target.id]))
-    assert b">EX</button>" in response.content
+    assert re.search(rb">\s*EX\s*</button>", response.content)
 
 
 # -----------------------------------------------------

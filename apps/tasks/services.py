@@ -348,6 +348,25 @@ def quick_date_filters(today):
     }
 
 
+def refresh_date_preset(filter_data, today, presets=None):
+    """Re-stamp a semantic date preset's date dimensions from today.
+
+    filter_label is the source of truth: when it names a quick preset, the
+    stored date bounds are re-derived so "Today" always means today, however
+    long ago it was clicked. "custom" (and unknown or missing labels) are
+    left untouched. Returns a new dict; the input is not mutated.
+
+    presets defaults to the tasks tab's quick_date_filters; the Activity
+    tabs pass their own vocabulary (apps.activity.presets).
+    """
+    if presets is None:
+        presets = quick_date_filters(today)
+    label = filter_data.get("filter_label")
+    if label in presets:
+        return {**filter_data, **presets[label]}
+    return dict(filter_data)
+
+
 def create_task_from_ai_entry(entry, requesting_user):
     """Create a Task from an AI-emitted entry dict; None when unusable."""
     from apps.tasks.constants import STATUS_PENDING

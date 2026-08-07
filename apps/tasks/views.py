@@ -1,11 +1,12 @@
 import json
 import logging
-from datetime import date, datetime
+from datetime import datetime
 
 import markdown
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import CustomUser
@@ -42,6 +43,7 @@ from apps.tasks.services import (
     parse_due_date,
     process_quick_task_description,
     quick_date_filters,
+    refresh_date_preset,
     resolve_assignee_name,
     resolve_matter_name,
 )
@@ -274,7 +276,7 @@ def tasks_add(request):
             initial={
                 "user": initial_user,
                 "matter": tasks_matter,
-                "date_due": date.today(),
+                "date_due": timezone.localdate(),
             },
             user=request.user,
             use_required_attribute=False,
@@ -316,7 +318,7 @@ def tasks_add_quick(request):
         task = Task(status=STATUS_PENDING)
         task.description = str(entry.get("description"))[:200]
 
-        task.date_due = parse_due_date(entry.get("due")) or date.today()
+        task.date_due = parse_due_date(entry.get("due")) or timezone.localdate()
 
         if entry.get("importance") is not None:
             task.importance = clamp_importance(entry.get("importance"))
@@ -371,7 +373,7 @@ def tasks_add_quick(request):
     task = Task()
     task.description = description
     task.status = STATUS_PENDING
-    task.date_due = date.today()
+    task.date_due = timezone.localdate()
 
     # auto populate importance from filter
     filter_importance = filter_data.get("importance")
@@ -529,7 +531,9 @@ def tasks_filter(request, user=None):
         # light the Filter button).
         if filter_data.get("has_due_date") == "unknown":
             filter_data["has_due_date"] = ""
-        filter_data["filter_label"] = _detect_filter_label(filter_data, date.today())
+        filter_data["filter_label"] = _detect_filter_label(
+            filter_data, timezone.localdate()
+        )
         request.session["tasks_filter"] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": "tasksListChanged"})
 
@@ -573,6 +577,10 @@ def tasks_filter(request, user=None):
                 coerce_status(sanitized_data.get("status")) or ACTIVE_STATUSES
             )
 
+            # Re-derive semantic date presets so the modal's date inputs show
+            # the current window (a stored "Today" always means today).
+            sanitized_data = refresh_date_preset(sanitized_data, timezone.localdate())
+
             # Persist the cleanup so legacy poisoned sessions self-heal.
             if sanitized_data != filter_data:
                 request.session["tasks_filter"] = sanitized_data
@@ -603,7 +611,7 @@ def tasks_filter(request, user=None):
 
 @login_required
 def tasks_filter_quick(request, quick_filter):
-    quick_filters = quick_date_filters(date.today())
+    quick_filters = quick_date_filters(timezone.localdate())
 
     filter_data = request.session.get("tasks_filter", {})
     filter_data.update(quick_filters[quick_filter])
@@ -647,24 +655,17 @@ def tasks_filter_user(request, user_id):
 @require_POST
 def tasks_toggle_chip(request, user_id):
     """Pin or unpin a user on the toolbar's chip row (per-viewer, capped)."""
-    from apps.tasks.tasks import TASK_CHIPS_CAP
+    from apps.tasks.tasks import TASK_CHIPS_CAP, toggle_chip_pin
 
     get_object_or_404(CustomUser, pk=user_id, is_active=True)
-    pinned = list(request.user.task_user_chips or [])
-    if user_id in pinned:
-        pinned.remove(user_id)
-    elif len(pinned) >= TASK_CHIPS_CAP:
-        response = _render_tasks(request)
+    pinned = toggle_chip_pin(request.user, user_id)
+    response = _render_tasks(request)
+    if not pinned:
         toast_warning(
             response,
             f"Chips are limited to {TASK_CHIPS_CAP}. Unpin one first.",
         )
-        return response
-    else:
-        pinned.append(user_id)
-    request.user.task_user_chips = pinned
-    request.user.save(update_fields=["task_user_chips"])
-    return _render_tasks(request)
+    return response
 
 
 @login_required
@@ -691,7 +692,7 @@ def tasks_filter_default(request):
     filter_data = {
         "filter_label": "today",
         "status": ACTIVE_STATUSES,
-        "date_due_max": date.today().strftime("%Y-%m-%d"),
+        "date_due_max": timezone.localdate().strftime("%Y-%m-%d"),
         "date_due_min": "",
         "has_due_date": "",
         "matter": None,
@@ -861,7 +862,7 @@ def tasks_add_note(request, id):
     else:
         form = TaskNoteForm(
             initial={
-                "date": date.today(),
+                "date": timezone.localdate(),
                 "time": datetime.now().strftime("%H:%M"),
             },
             use_required_attribute=False,

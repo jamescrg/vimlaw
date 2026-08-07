@@ -1,14 +1,19 @@
-from datetime import date, datetime, timedelta
-
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.activity.expenses.models import ExpenseEntry
+from apps.activity.presets import activity_date_filters, detect_filter_label
 from apps.activity.time.get_time_data import get_time_data
 from apps.management.pagination import CustomPaginator
 from apps.management.selection import (
@@ -78,44 +83,6 @@ def time_list(request):
     return render(request, "activity/time/list.html", context)
 
 
-def _detect_filter_label(filter_data, today):
-    """Match filter_data's date / entered / invoice state to a quick-filter preset.
-
-    Lets the date-dropdown stay truthful even when the user sets dates via the
-    Filter modal: if posted dates happen to match a known preset, we store that
-    label; otherwise "custom" so the dropdown shows "Custom range" instead of
-    silently mislabeling the state as "All Dates".
-    """
-    date_min = filter_data.get("date_min", "")
-    date_max = filter_data.get("date_max", "")
-    entered = str(filter_data.get("entered", ""))
-    invoice = str(filter_data.get("invoice", ""))
-
-    if not date_min and not date_max:
-        if entered == "0" and invoice == "0":
-            return "unbilled"
-        return "all"
-
-    if not date_min or not date_max:
-        return "custom"
-
-    monday = today - timedelta(days=today.weekday())
-    month_start = today.replace(day=1)
-    last_month_end = month_start - timedelta(days=1)
-    presets = {
-        "today": (today, today),
-        "yesterday": (today - timedelta(days=1), today - timedelta(days=1)),
-        "this_week": (monday, today),
-        "last_week": (monday - timedelta(days=7), monday - timedelta(days=1)),
-        "this_month": (month_start, today),
-        "last_month": (last_month_end.replace(day=1), last_month_end),
-    }
-    for label, (lo, hi) in presets.items():
-        if date_min == str(lo) and date_max == str(hi):
-            return label
-    return "custom"
-
-
 @login_required
 def time_filter(request):
     def get_filter(request):
@@ -133,7 +100,9 @@ def time_filter(request):
             if key == "csrfmiddlewaretoken":
                 continue
             filter_data[key] = val
-        filter_data["filter_label"] = _detect_filter_label(filter_data, date.today())
+        filter_data["filter_label"] = detect_filter_label(
+            filter_data, timezone.localdate()
+        )
         request.session["time_filter"] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": "timeChanged"})
 
@@ -177,59 +146,14 @@ def time_filter_matter(request, matter_id):
 
 @login_required
 def time_filter_quick(request, quick_filter):
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    month_start = today.replace(day=1)
-    last_monday = monday - timedelta(days=7)
-    last_sunday = monday - timedelta(days=1)
-    last_month_end = month_start - timedelta(days=1)
-    last_month_start = last_month_end.replace(day=1)
+    presets = activity_date_filters(timezone.localdate())
+    if quick_filter not in presets:
+        raise Http404("Unknown quick filter")
 
-    # Each quick filter only defines the fields it controls.
-    # All other session filter state (user, comp, matter, keyword, etc.) is preserved.
-    quick_filters = {
-        "all": {"date_min": "", "date_max": "", "filter_label": "all"},
-        "unbilled": {
-            "date_min": "",
-            "date_max": "",
-            "entered": 0,
-            "invoice": 0,
-            "filter_label": "unbilled",
-        },
-        "today": {
-            "date_min": str(today),
-            "date_max": str(today),
-            "filter_label": "today",
-        },
-        "yesterday": {
-            "date_min": str(today - timedelta(days=1)),
-            "date_max": str(today - timedelta(days=1)),
-            "filter_label": "yesterday",
-        },
-        "this_week": {
-            "date_min": str(monday),
-            "date_max": str(today),
-            "filter_label": "this_week",
-        },
-        "last_week": {
-            "date_min": str(last_monday),
-            "date_max": str(last_sunday),
-            "filter_label": "last_week",
-        },
-        "this_month": {
-            "date_min": str(month_start),
-            "date_max": str(today),
-            "filter_label": "this_month",
-        },
-        "last_month": {
-            "date_min": str(last_month_start),
-            "date_max": str(last_month_end),
-            "filter_label": "last_month",
-        },
-    }
-
+    # Each quick filter only defines the fields it controls. All other
+    # session filter state (user, comp, matter, keyword, etc.) is preserved.
     filter_data = request.session.get("time_filter", {})
-    filter_data.update(quick_filters[quick_filter])
+    filter_data.update(presets[quick_filter])
 
     # When switching away from "unbilled", clear its entered/invoice overrides
     if quick_filter != "unbilled" and filter_data.get("entered") == 0:
@@ -330,7 +254,7 @@ def time_add(request, id=None, request_app="activity"):
                 if request.GET.get("from") == "palette":
                     today_total = (
                         TimeEntry.objects.filter(
-                            user=request.user, date=date.today()
+                            user=request.user, date=timezone.localdate()
                         ).aggregate(total=models.Sum("hours"))["total"]
                         or 0
                     )
@@ -350,7 +274,7 @@ def time_add(request, id=None, request_app="activity"):
 
     # if no post data has been submitted, show the entry form
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         if id:
             matter = get_object_or_404(Matter, pk=id)
             rate = calculate_rate_for_matter(matter, request.user)
@@ -552,7 +476,7 @@ def export_old(request):
 @login_required
 def time_export_to_csv(request, format):
     # Set the file name
-    current_day_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    current_day_and_time = timezone.localtime().strftime("%Y-%m-%d %H:%M:%S")
     filename = f"Time Entries - {current_day_and_time} - {format.title()}"
 
     # Create the HttpResponse object with the appropriate CSV header.

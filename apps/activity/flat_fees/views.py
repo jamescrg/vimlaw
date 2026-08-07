@@ -1,12 +1,12 @@
-from datetime import date, datetime, timedelta
-
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.activity.flat_fees.get_flat_fees_data import get_flat_fees_data
+from apps.activity.presets import activity_date_filters, detect_filter_label
 from apps.management.selection import (
     clear_selected_ids,
     get_selected_ids,
@@ -59,7 +59,9 @@ def flat_fees_filter(request):
 
     if request.method == "POST":
         filter_data = {key: val for key, val in request.POST.items()}
-        filter_data["filter_label"] = "custom"
+        filter_data["filter_label"] = detect_filter_label(
+            filter_data, timezone.localdate()
+        )
         request.session["flat_fees_filter"] = filter_data
         return HttpResponse(status=204, headers={"HX-Trigger": FLAT_FEES_TRIGGER})
 
@@ -89,44 +91,14 @@ def flat_fees_filter_matter(request, matter_id):
 
 @login_required
 def flat_fees_filter_quick(request, quick_filter):
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    month_start = today.replace(day=1)
-
-    quick_filters = {
-        "all": {"date_min": "", "date_max": "", "filter_label": "all"},
-        "unbilled": {
-            "date_min": "",
-            "date_max": "",
-            "entered": 0,
-            "invoice": 0,
-            "filter_label": "unbilled",
-        },
-        "today": {
-            "date_min": str(today),
-            "date_max": str(today),
-            "filter_label": "today",
-        },
-        "yesterday": {
-            "date_min": str(today - timedelta(days=1)),
-            "date_max": str(today - timedelta(days=1)),
-            "filter_label": "yesterday",
-        },
-        "this_week": {
-            "date_min": str(monday),
-            "date_max": str(today),
-            "filter_label": "this_week",
-        },
-        "this_month": {
-            "date_min": str(month_start),
-            "date_max": str(today),
-            "filter_label": "this_month",
-        },
-    }
+    presets = activity_date_filters(timezone.localdate())
+    if quick_filter not in presets:
+        raise Http404("Unknown quick filter")
 
     filter_data = request.session.get("flat_fees_filter", {})
-    filter_data.update(quick_filters[quick_filter])
+    filter_data.update(presets[quick_filter])
 
+    # When switching away from "unbilled", clear its entered/invoice overrides
     if quick_filter != "unbilled" and filter_data.get("entered") == 0:
         filter_data.pop("entered", None)
         filter_data.pop("invoice", None)
@@ -189,7 +161,7 @@ def flat_fees_add(request, id=None, request_app="activity"):
                 url = reverse("activity:flat-fees-index")
                 return HttpResponse(status=200, headers={"HX-Redirect": url})
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         if id:
             matter = get_object_or_404(Matter, pk=id)
             initial = {"date": today, "matter": matter}
@@ -291,7 +263,7 @@ def matter_amount(request, matter_id):
 
 @login_required
 def flat_fees_export_to_csv(request, format):
-    current_day_and_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    current_day_and_time = timezone.localtime().strftime("%Y-%m-%d %H:%M:%S")
     filename = f"Flat Fees - {current_day_and_time} - {format.title()}"
     response = HttpResponse(
         content_type="text/csv",
