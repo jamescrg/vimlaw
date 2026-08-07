@@ -1,6 +1,7 @@
 import django_filters
 
 from apps.accounts.models import CustomUser
+from apps.activity.filters import include_selected_matter
 from apps.contacts.models import Contact
 from apps.matters.models import Matter
 from config.helpers import MultipleOrderingFilter
@@ -60,6 +61,7 @@ class TimeEntryFilter(django_filters.FilterSet):
         self.form.fields["user"].label_from_instance = lambda obj: (
             obj.username.capitalize()
         )
+        include_selected_matter(self)
 
     def filter_invoice(self, queryset, _, value):
         if value == "1":
