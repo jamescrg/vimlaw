@@ -420,6 +420,9 @@ body:has(.note-page.standalone) {
 .note-outline .outline-item.active > .outline-text {
   background: var(--selected-background);
   border-radius: var(--radius-sm);
+  /* The selected border as an inset ring: a real border would grow the
+     box and nudge the label 1px as the highlight moves between rows. */
+  box-shadow: inset 0 0 0 1px var(--selected-border);
   color: var(--selected-color);
   margin: 0 -0.25rem;
   /* Same vertical padding as the base .outline-text - the pill must not
