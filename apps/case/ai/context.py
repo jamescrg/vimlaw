@@ -485,6 +485,9 @@ MATTER_CONTEXT_TEMPLATE = """
 ## Contacts & Parties
 {contacts}
 
+## Witnesses
+{witnesses}
+
 ## Court Proceedings
 {proceedings}
 
@@ -569,6 +572,9 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     # Contacts
     sections["contacts"] = format_contacts(matter)
 
+    # Witnesses
+    sections["witnesses"] = format_witnesses(matter)
+
     # Proceedings
     sections["proceedings"] = format_proceedings(matter)
 
@@ -643,6 +649,7 @@ def assemble_matter_context_with_selection(
     sections = {}
     sections["matter_overview"] = format_matter_overview(matter)
     sections["contacts"] = format_contacts(matter)
+    sections["witnesses"] = format_witnesses(matter)
     sections["proceedings"] = format_proceedings(matter)
 
     sections["tasks"] = format_tasks(matter)
@@ -677,6 +684,7 @@ def assemble_matter_context_with_selection(
         + legal_prompt
         + sections["matter_overview"]
         + sections["contacts"]
+        + sections["witnesses"]
         + sections["proceedings"]
         + always_critical
         + always_high
@@ -829,6 +837,28 @@ def format_contacts(matter) -> str:
             line += f" - {contact.company}"
         if contact.email:
             line += f" [{contact.email}]"
+        lines.append(line)
+
+    return "\n".join(lines)
+
+
+def format_witnesses(matter) -> str:
+    """Format the witness list."""
+    witnesses = matter.witnesses.all()
+
+    if not witnesses:
+        return "No witnesses recorded."
+
+    lines = []
+    for witness in witnesses:
+        line = (
+            f"- {witness.name} ({witness.get_alignment_display()},"
+            f" importance {witness.importance})"
+        )
+        if witness.affiliation:
+            line += f" - {witness.affiliation}"
+        if witness.knowledge:
+            line += f"\n  Knows: {witness.knowledge[:300]}"
         lines.append(line)
 
     return "\n".join(lines)

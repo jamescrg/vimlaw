@@ -129,11 +129,16 @@ def process_ai_request(
 
             context_text += drafts_chat.build_draft_section(draft_link)
 
-        # The AI can record timeline facts when directed; the fenced
-        # blocks it emits are applied after the response arrives.
+        # The AI can record timeline facts and witnesses when directed;
+        # the fenced blocks it emits are applied after the response arrives.
         from .fact_blocks import FACT_BLOCK_RE, FACTS_PROTOCOL, apply_fact_blocks
+        from .witness_blocks import (
+            WITNESS_BLOCK_RE,
+            WITNESSES_PROTOCOL,
+            apply_witness_blocks,
+        )
 
-        context_text += "\n\n" + FACTS_PROTOCOL
+        context_text += "\n\n" + FACTS_PROTOCOL + "\n\n" + WITNESSES_PROTOCOL
 
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)
@@ -246,11 +251,15 @@ def process_ai_request(
                 update_status("applying", "Applying edits to the draft...")
                 response_text = drafts_chat.apply_edit_blocks(response_text, draft_link)
 
-        # Create any facts the AI was directed to record, replacing the
-        # block with confirmation lines before the message is stored.
+        # Create any facts and witnesses the AI was directed to record,
+        # replacing each block with confirmation lines before the message
+        # is stored.
         if FACT_BLOCK_RE.search(response_text):
             update_status("applying", "Adding facts to the timeline...")
             response_text = apply_fact_blocks(response_text, matter, user)
+        if WITNESS_BLOCK_RE.search(response_text):
+            update_status("applying", "Adding witnesses...")
+            response_text = apply_witness_blocks(response_text, matter, user)
 
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")
