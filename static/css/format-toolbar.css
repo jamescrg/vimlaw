@@ -107,21 +107,15 @@
   border-color: var(--border-dark);
 }
 
-/* "None" is a swatch like the rest (far-left slot): paper ground with a
-   diagonal slash. Chip chrome (size, border, hover) comes from .hl-color. */
-.format-toolbar .hl-menu .hl-none {
-  background-color: var(--background-light);
-  background-image: linear-gradient(
-    to top right,
-    transparent calc(50% - 1px),
-    var(--urgent) calc(50% - 1px),
-    var(--urgent) calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
-}
-
-/* One fill map for both the button swatch and the menu chips */
+/* One fill map for both the button swatch and the menu chips. "none"
+   (far-left chip, remove-highlight mode) paints as the canvas ground -
+   the ring alone outlines it, reading as an empty swatch. */
 :is(.format-toolbar .hl-swatch, .format-toolbar .hl-menu .hl-color) {
+  &[data-color="none"],
+  &[data-hl-color="none"] {
+    background: var(--background-light);
+  }
+
   &[data-color=""],
   &[data-hl-color=""] {
     background: var(--yellow-100);
