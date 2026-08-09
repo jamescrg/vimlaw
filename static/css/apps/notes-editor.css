@@ -32,10 +32,16 @@
   scroll-margin-top: 4rem;
 }
 
+/* Heading hierarchy: h2 and h3 both hang 1rem into the gutter, aligning
+   with the title/meta outdent (the canvas's signature move); the
+   underline is h2's alone and marks the major section break. h4 sits
+   flush in the text column, so the outdent itself separates it from h3,
+   with a 3px size step (1.25 vs 1.0625) backing that up. The canvas
+   gutter is a constant 3rem, so the hangs always have room. */
 #note-editor .ProseMirror h1 {
   color: var(--color-primary);
   font-size: 1.75rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.3;
   margin-top: 2.5rem;
@@ -45,39 +51,40 @@
   border-bottom: 1px solid var(--border-medium);
   color: var(--color-primary);
   font-size: 1.375rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.3;
+  margin-left: -1rem;
   margin-top: 2.25rem;
   padding-bottom: 0.25rem;
 }
 
 #note-editor .ProseMirror h3 {
-  border-bottom: 1px solid var(--border-medium);
   color: var(--color-primary);
-  font-size: 1.1875rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.3;
+  margin-left: -1rem;
   margin-top: 2rem;
-  padding-bottom: 0.25rem;
 }
 
 #note-editor .ProseMirror h4 {
-  border-bottom: 1px solid var(--border-medium);
   color: var(--color-primary);
   font-size: 1.0625rem;
-  font-weight: 600;
+  /* 550, not 600: Noto Sans loads as a variable font, so the half-step
+     renders genuinely - enough presence to mark a minor heading at body
+     scale without breaching the 500 weight ceiling the way 600 would. */
+  font-weight: 550;
   letter-spacing: -0.01em;
   line-height: 1.3;
   margin-top: 2rem;
-  padding-bottom: 0.25rem;
 }
 
 #note-editor .ProseMirror h5 {
   color: var(--color-primary);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.3;
   margin-top: 1.75rem;

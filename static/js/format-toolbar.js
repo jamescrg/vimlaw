@@ -77,7 +77,9 @@ function wireHighlight(toolbar, editor) {
 
   toggleBtn.onclick = () => {
     menu.hidden = true;
-    if (editor.isActive("highlight")) {
+    // "none" is a sticky mode like any color: the button becomes a
+    // repeatable remove-highlight action until another color is picked.
+    if (current === "none" || editor.isActive("highlight")) {
       editor.chain().focus().unsetHighlight().run();
     } else if (current) {
       editor.chain().focus().setHighlight({ color: current }).run();
@@ -92,16 +94,13 @@ function wireHighlight(toolbar, editor) {
 
   for (const btn of menu.querySelectorAll("[data-hl-color]")) {
     btn.onclick = () => {
-      const value = btn.dataset.hlColor;
+      current = btn.dataset.hlColor;
       menu.hidden = true;
-      if (value === "none") {
-        editor.chain().focus().unsetHighlight().run();
-        return;
-      }
-      current = value;
       localStorage.setItem(HL_STORAGE_KEY, current);
       paintSwatch();
-      if (current) {
+      if (current === "none") {
+        editor.chain().focus().unsetHighlight().run();
+      } else if (current) {
         editor.chain().focus().setHighlight({ color: current }).run();
       } else {
         editor.chain().focus().setHighlight().run();

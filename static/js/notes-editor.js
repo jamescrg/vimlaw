@@ -52,6 +52,7 @@ import {
   buildOutline,
   scheduleOutlineUpdate,
   setupOutlineCollapseAll,
+  updateOutlineActive,
 } from "./notes/outline.js";
 
 // ─── Code Block Language Selector ────────────────────────────────────────────
@@ -200,6 +201,7 @@ function initEditor() {
     },
     onSelectionUpdate() {
       updateCodeBlockLangSelector();
+      updateOutlineActive();
     },
   });
 
