@@ -373,7 +373,7 @@ body:has(.note-page.standalone) {
   flex-wrap: wrap;
   font-size: 1rem;
   gap: 0.25rem;
-  padding: 0 0.75rem;
+  padding: 0.25rem 0.75rem;
 }
 
 .note-outline .outline-toggle,
