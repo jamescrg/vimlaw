@@ -124,19 +124,42 @@ def test_documents_attached_as_sources(user, matter, document):
     assert f"source: {document.name}" in text
 
 
-def test_foreign_and_bad_document_ids_dropped(user, matter, document, contact):
+def test_highlights_attached_as_sources(user, matter, highlight):
+    text = apply_fact_blocks(
+        block(
+            [
+                {
+                    "date": "2024-03-15",
+                    "description": "Complaint filed",
+                    "highlights": [highlight.id],
+                }
+            ]
+        ),
+        matter,
+        user,
+    )
+    fact = Fact.objects.get()
+    assert [hl.id for hl in fact.highlights.all()] == [highlight.id]
+    assert f"source: {highlight.citation}" in text
+
+
+def test_foreign_and_bad_source_ids_dropped(user, matter, document, highlight, contact):
     from apps.matters.models import Matter
 
     other = Matter.objects.create(name="Other Matter", client=contact)
-    foreign = document.__class__.objects.create(
+    foreign_doc = document.__class__.objects.create(
         matter=other, name="Foreign Doc", ocr_status="not_applicable"
+    )
+    foreign_hl = highlight.__class__.objects.create(
+        document=foreign_doc, slug="Foreign", text="other matter text"
     )
     apply_fact_blocks(
         block(
             [
                 {
                     "description": "Complaint filed",
-                    "documents": [foreign.id, "abc", None, 999999],
+                    "documents": [foreign_doc.id, "abc", None, 999999],
+                    "highlights": [foreign_hl.id, "xyz", 999999],
                 }
             ]
         ),
@@ -145,6 +168,7 @@ def test_foreign_and_bad_document_ids_dropped(user, matter, document, contact):
     )
     fact = Fact.objects.get()
     assert fact.documents.count() == 0
+    assert fact.highlights.count() == 0
 
 
 def test_multiple_entries_in_order(user, matter):
@@ -160,6 +184,15 @@ def test_multiple_entries_in_order(user, matter):
     )
     assert Fact.objects.count() == 2
     assert text.index("Contract signed") < text.index("First missed payment")
+
+
+def test_context_exposes_source_handles(matter, document, highlight):
+    from apps.case.ai.context import collect_context_items
+
+    items = collect_context_items(matter, include_auto=True)
+    joined = "\n".join(item.content for item in items)
+    assert f"[doc:{document.id}]" in joined
+    assert f"[hl:{highlight.id}]" in joined
 
 
 # ── Worker wiring ────────────────────────────────────────────────────────────
@@ -191,7 +224,7 @@ def test_classic_chat_applies_fact_blocks(user, matter, monkeypatch):
     )
 
     assert "RECORDING TIMELINE FACTS" in captured["context"]
-    assert "CITING DOCUMENTS" in captured["context"]
+    assert "CITING SOURCES" in captured["context"]
     fact = Fact.objects.get()
     assert fact.description == "Complaint filed"
     assert fact.matter_id == matter.id

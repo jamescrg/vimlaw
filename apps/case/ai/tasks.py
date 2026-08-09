@@ -131,8 +131,8 @@ def process_ai_request(
 
         # The AI can record timeline facts and witnesses when directed;
         # the fenced blocks it emits are applied after the response arrives.
-        # DOCUMENT_LINKING teaches inline source links for prose answers.
-        from .context import DOCUMENT_LINKING
+        # SOURCE_LINKING teaches inline source links for prose answers.
+        from .context import SOURCE_LINKING
         from .fact_blocks import FACT_BLOCK_RE, FACTS_PROTOCOL, apply_fact_blocks
         from .witness_blocks import (
             WITNESS_BLOCK_RE,
@@ -142,7 +142,7 @@ def process_ai_request(
 
         context_text += (
             "\n\n"
-            + DOCUMENT_LINKING
+            + SOURCE_LINKING
             + "\n\n"
             + FACTS_PROTOCOL
             + "\n\n"

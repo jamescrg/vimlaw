@@ -209,9 +209,12 @@ def collect_context_items(
         if hl.text and len(hl.text) > 500:
             text_preview += "..."
 
-        content = f'**Highlight:** "{text_preview}" — {hl.citation}'
+        content = f'**Highlight [hl:{hl.id}]:** "{text_preview}" — {hl.citation}'
         if hl.slug:
-            content = f'**Highlight ({hl.slug}):** "{text_preview}" — {hl.citation}'
+            content = (
+                f"**Highlight [hl:{hl.id}] ({hl.slug}):**"
+                f' "{text_preview}" — {hl.citation}'
+            )
 
         items.append(
             ContextItem(
@@ -476,15 +479,22 @@ def build_chat_history(conversation) -> list[dict]:
     return history
 
 
-# Conventions for citing matter documents in chat prose. Appended to the
+# Conventions for citing matter sources in chat prose. Appended to the
 # classic chat context in tasks.py alongside the write protocols; chat
 # messages render as markdown, so the links are clickable.
-DOCUMENT_LINKING = """CITING DOCUMENTS. Documents in the context above carry a [doc:ID]
-handle next to their name. When your answer draws on a document, cite
-it inline as a markdown link to its viewer page:
-[Engagement Letter](/case/documents/17/view/). Use only ids that appear
-as [doc:ID] handles in this context; never invent or guess an id, and
-never write the [doc:ID] handle itself in your reply."""
+SOURCE_LINKING = """CITING SOURCES. Documents and highlights in the context above carry
+[doc:ID] and [hl:ID] handles next to their names. When your answer
+draws on one, cite it inline as a markdown link:
+- highlight: [Smith Dep. p.34](/case/highlights/88/link/) - the link
+  opens the source document positioned at the highlight; use the
+  highlight's citation as the link text.
+- document: [Engagement Letter](/case/documents/17/view/) - only when
+  no highlight covers the point.
+Prefer the highlight whenever one supports the point. A highlight link
+already identifies its document, so never add a second link to the
+document itself for the same point. Use only ids whose handles appear
+in this context; never invent or guess an id, and never write the raw
+[doc:ID] or [hl:ID] handles in your reply."""
 
 MATTER_CONTEXT_TEMPLATE = """
 ## Current Matter: {matter_name}

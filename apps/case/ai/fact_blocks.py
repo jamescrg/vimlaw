@@ -17,7 +17,9 @@ from datetime import (
     time as time_cls,
 )
 
-from apps.case.models import Document, Fact
+from django.db.models import Q
+
+from apps.case.models import Document, Fact, Highlight
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +34,7 @@ timeline", "record these facts", "put that on the timeline") end your
 reply with exactly one fenced block in this form:
 
 ```create-facts
-[{"date": "YYYY-MM-DD", "time": "HH:MM or null", "description": "<up to 150 chars>", "color": null, "importance": 4, "documents": [<doc ids>]}]
+[{"date": "YYYY-MM-DD", "time": "HH:MM or null", "description": "<up to 150 chars>", "color": null, "importance": 4, "highlights": [<hl ids>], "documents": [<doc ids>]}]
 ```
 
 Being asked to "create a timeline", "build a chronology", or lay out
@@ -47,10 +49,13 @@ entire timeline row (150-char cap): state the event plainly, past
 tense, no citations. "importance" is the firm's 1-7 scale (4 = Normal).
 "color" tints the row; use null unless the user asks for one, otherwise
 one of: Blue, Gray, Green, Orange, Purple, Red, Yellow. When a fact
-comes from documents in the context, list their ids in "documents"
-(taken from the [doc:ID] handles) so the timeline row links to its
-sources; use [] when no document supports it, and never guess an id.
-Never re-create a fact already in the timeline above."""
+comes from the materials in the context, link its sources: prefer
+"highlights" ids (from the [hl:ID] handles) when a highlight supports
+the fact, and use "documents" ids ([doc:ID]) only when no highlight
+covers it. A highlight already identifies its document, so never list
+that document as well. Use [] when nothing in the context supports the
+fact, and never guess an id. Never re-create a fact already in the
+timeline above."""
 
 
 def _parse_date(value):
@@ -69,6 +74,19 @@ def _parse_time(value):
         return time_cls.fromisoformat(str(value).strip())
     except ValueError:
         return None
+
+
+def _int_list(value):
+    """Coerce a block entry's id list to ints, dropping anything else."""
+    if not isinstance(value, list):
+        return []
+    ids = []
+    for item in value:
+        try:
+            ids.append(int(item))
+        except (TypeError, ValueError):
+            continue
+    return ids
 
 
 def _create_fact_from_entry(entry, matter, requesting_user):
@@ -103,18 +121,20 @@ def _create_fact_from_entry(entry, matter, requesting_user):
         importance=importance,
     )
 
-    # Attach document sources, silently dropping ids that are not this
-    # matter's documents (hallucinated or cross-matter ids must not link).
-    raw_ids = entry.get("documents")
-    if isinstance(raw_ids, list):
-        doc_ids = []
-        for value in raw_ids:
-            try:
-                doc_ids.append(int(value))
-            except (TypeError, ValueError):
-                continue
-        if doc_ids:
-            fact.documents.set(Document.objects.filter(matter=matter, id__in=doc_ids))
+    # Attach sources, silently dropping ids that do not belong to this
+    # matter (hallucinated or cross-matter ids must not link). Highlights
+    # scope through their parent document or caselaw.
+    doc_ids = _int_list(entry.get("documents"))
+    if doc_ids:
+        fact.documents.set(Document.objects.filter(matter=matter, id__in=doc_ids))
+
+    hl_ids = _int_list(entry.get("highlights"))
+    if hl_ids:
+        fact.highlights.set(
+            Highlight.objects.filter(id__in=hl_ids).filter(
+                Q(document__matter=matter) | Q(caselaw__matter=matter)
+            )
+        )
 
     return fact
 
@@ -139,7 +159,9 @@ def apply_fact_blocks(response_text, matter, requesting_user):
                 continue
             fact = _create_fact_from_entry(entry, matter, requesting_user)
             if fact is not None:
-                source_names = [doc.name for doc in fact.documents.all()[:3]]
+                source_names = [hl.citation for hl in fact.highlights.all()[:3]]
+                source_names += [doc.name for doc in fact.documents.all()[:3]]
+                source_names = source_names[:3]
                 sources = f", source: {', '.join(source_names)}" if source_names else ""
                 lines.append(
                     f"- Added to timeline: **{fact.description}**"
