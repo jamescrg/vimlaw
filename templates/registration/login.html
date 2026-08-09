@@ -1,13 +1,12 @@
 {% extends "registration/base.html" %}
+{% load firm_tags %}
 {% block title %}
   Log In
 {% endblock title %}
 {% block content %}
   <div class="auth-container">
     <div class="auth-card">
-      <div class="auth-title">
-        <span class="visually-hidden">{{ site_handle }}</span>
-      </div>
+      {% auth_brand %}
       <div class="auth-subtitle">Log in to your account</div>
       {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
       <form id="login-form" class="account-form" method="post">
