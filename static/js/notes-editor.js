@@ -26,6 +26,7 @@ import {
 } from "./vendor/tiptap.bundle.js";
 
 import { HighlightMark } from "./highlight-mark.js";
+import { PlainCopy } from "./plain-copy.js";
 
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
@@ -190,6 +191,7 @@ function initEditor() {
       HorizontalRule,
       NoteRef,
       SearchHighlight,
+      PlainCopy,
     ],
     content: initialContent,
     onUpdate() {
