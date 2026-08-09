@@ -43,6 +43,12 @@
       <aside class="ai-chat-sidebar" id="historySidebar">
         <div class="ai-sidebar-header">
           <h2>History</h2>
+          <button type="button"
+                  class="btn-icon ai-sidebar-rail-btn"
+                  onclick="toggleSidebar()"
+                  title="Expand history">
+            <i class="icon-history"></i>
+          </button>
         </div>
         <div class="ai-sidebar-list" id="promptList">
           {% for message in messages %}

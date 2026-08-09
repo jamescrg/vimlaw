@@ -115,6 +115,13 @@
   transition: none;
 }
 
+/* Collapsed-rail mark: a history glyph at the top of the rail, click to
+   expand — the counterpart of the notes editor's rail tabs. */
+.ai-sidebar-rail-btn {
+  color: var(--color-muted);
+  display: none;
+}
+
 .ai-chat-sidebar.collapsed {
   width: 3rem;
 }
@@ -123,6 +130,15 @@
 .ai-chat-sidebar.collapsed .ai-sidebar-list,
 .ai-chat-sidebar.collapsed .ai-sidebar-resizer {
   display: none;
+}
+
+.ai-chat-sidebar.collapsed .ai-sidebar-rail-btn {
+  display: block;
+}
+
+.ai-chat-sidebar.collapsed .ai-sidebar-header {
+  justify-content: center;
+  padding: 0.75rem 0;
 }
 
 .ai-sidebar-header h2 {
