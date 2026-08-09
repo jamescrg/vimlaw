@@ -62,8 +62,9 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  position: relative;
   transition: width 0.2s ease;
-  width: 16rem;
+  width: var(--ai-sidebar-width, 16rem);
 }
 
 .ai-sidebar-header {
@@ -73,13 +74,45 @@
   padding: 0.75rem 1rem;
 }
 
+/* Bottom toggle — same treatment as the main nav's .sidebar-toggle and the
+   notes editor's .panel-toggle. */
 .ai-sidebar-toggle {
-  opacity: 0.6;
-  padding: 0.25rem;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border-medium);
+  color: var(--color-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 0.75rem;
+  text-align: center;
+  transition: color 100ms ease;
 }
 
 .ai-sidebar-toggle:hover {
-  opacity: 1;
+  color: var(--color-primary);
+}
+
+/* Drag handle on the panel's right edge; width persists per user. */
+.ai-sidebar-resizer {
+  bottom: 0;
+  cursor: col-resize;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 0.25rem;
+  z-index: 10;
+}
+
+.ai-sidebar-resizer:hover,
+.ai-chat-sidebar.resizing .ai-sidebar-resizer {
+  background: var(--border-medium);
+}
+
+/* Width snaps instantly while dragging — the open/close transition would
+   make the handle feel rubbery. */
+.ai-chat-sidebar.resizing {
+  transition: none;
 }
 
 .ai-chat-sidebar.collapsed {
@@ -87,21 +120,16 @@
 }
 
 .ai-chat-sidebar.collapsed .ai-sidebar-header h2,
-.ai-chat-sidebar.collapsed .ai-sidebar-list {
+.ai-chat-sidebar.collapsed .ai-sidebar-list,
+.ai-chat-sidebar.collapsed .ai-sidebar-resizer {
   display: none;
-}
-
-.ai-chat-sidebar.collapsed .ai-sidebar-header {
-  justify-content: center;
 }
 
 .ai-sidebar-header h2 {
   color: var(--color-muted);
   font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-weight: 500;
   margin: 0;
-  text-transform: uppercase;
 }
 
 .ai-sidebar-list {

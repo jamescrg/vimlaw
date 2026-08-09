@@ -43,12 +43,6 @@
       <aside class="ai-chat-sidebar" id="historySidebar">
         <div class="ai-sidebar-header">
           <h2>History</h2>
-          <button type="button"
-                  class="btn-icon ai-sidebar-toggle"
-                  onclick="toggleSidebar()"
-                  title="Collapse sidebar">
-            <i class="icon-chevron-left"></i>
-          </button>
         </div>
         <div class="ai-sidebar-list" id="promptList">
           {% for message in messages %}
@@ -71,6 +65,14 @@
             <div class="ai-sidebar-empty">No prompts yet</div>
           {% endfor %}
         </div>
+        <button type="button"
+                class="ai-sidebar-toggle"
+                onclick="toggleSidebar()"
+                title="Toggle sidebar">
+          <i class="icon-panel-left-close"></i>
+        </button>
+        <div class="ai-sidebar-resizer"
+             title="Drag to resize; double-click to reset"></div>
       </aside>
       <main class="ai-chat-main">
         <header class="ai-chat-header">
@@ -139,6 +141,7 @@
       </main>
     </div>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="{% static_v 'js/ai-history-panel.js' %}"></script>
     <script>
     function scrollToMessage(messageId) {
       const element = document.getElementById(messageId);
@@ -302,16 +305,6 @@
       }
     });
 
-    function toggleSidebar() {
-      const sidebar = document.getElementById('historySidebar');
-      const icon = sidebar.querySelector('.ai-sidebar-toggle i');
-      sidebar.classList.toggle('collapsed');
-      if (sidebar.classList.contains('collapsed')) {
-        icon.className = 'icon-chevron-right';
-      } else {
-        icon.className = 'icon-chevron-left';
-      }
-    }
 
     // Tooltip positioning for sidebar items
     document.getElementById('promptList').addEventListener('mouseover', function(e) {

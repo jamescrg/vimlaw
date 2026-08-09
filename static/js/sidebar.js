@@ -29,13 +29,30 @@
     if (activeLink) activeLink.closest("li").classList.add("active");
   }
 
+  // Point the toggle's icon at the action it will perform, matching the
+  // notes editor's panel: an open sidebar shows the "close" glyph, a
+  // collapsed one the "open" glyph. The markup ships the close cut; this
+  // corrects it on load when the stored state is collapsed.
+  function syncToggleIcon() {
+    const icon = toggle.querySelector("i");
+    if (icon)
+      icon.className =
+        "icon-panel-left-" +
+        (document.documentElement.classList.contains("sidebar-collapsed")
+          ? "open"
+          : "close");
+  }
+
   // Desktop collapse toggle
   toggle.addEventListener("click", function () {
     const collapsed =
       document.documentElement.classList.toggle("sidebar-collapsed");
 
     localStorage.setItem(STORAGE_KEY, collapsed);
+    syncToggleIcon();
   });
+
+  syncToggleIcon();
 
   document.addEventListener("click", function (e) {
     if (e.target.closest("#sidebar-mobile-trigger")) openMobile();
