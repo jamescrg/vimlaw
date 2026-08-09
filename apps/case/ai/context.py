@@ -28,6 +28,8 @@ from enum import Enum
 from pathlib import Path
 
 from django.conf import settings
+from django.core.cache import cache
+from django.db.models import Count, Max, Q
 from django.utils import timezone
 
 from apps.accounts.models import CustomUser
@@ -671,6 +673,45 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     return f"{request_info}{legal_prompt}\n\n---\n{matter_context}"
 
 
+# How long a conversation may reuse its previously assembled context. Long
+# enough to cover the quick follow-ups that dominate live chat ("now save
+# that to a note"), short enough that a new line of questioning soon gets a
+# fresh selector pass.
+CONTEXT_REUSE_SECONDS = 600
+
+
+def _context_fingerprint(matter, include_library, llm, user):
+    """Cheap change marker for the matter's AI-visible material.
+
+    Count + latest-updated_at per source table. Any write to the material
+    the context is built from (including the AI's own note/fact/witness
+    writes) changes the fingerprint and forces a rebuild, so reuse never
+    hides a change. Sections that merely decorate the prompt (tasks,
+    events, time entries) are deliberately not fingerprinted — staleness
+    there is harmless within the TTL.
+    """
+    from apps.notes.models import get_library_notes
+
+    querysets = {
+        "doc": Document.objects.filter(matter=matter),
+        "hl": Highlight.objects.filter(
+            Q(document__matter=matter) | Q(caselaw__matter=matter)
+        ),
+        "fact": Fact.objects.filter(matter=matter),
+        "note": Note.objects.filter(matter=matter),
+        "case": CaseLaw.objects.filter(matter=matter),
+        "wit": matter.witnesses.all(),
+    }
+    if include_library:
+        querysets["lib"] = get_library_notes()
+
+    parts = [llm, str(include_library), str(user.id if user else "")]
+    for label, qs in querysets.items():
+        agg = qs.aggregate(n=Count("id"), latest=Max("updated_at"))
+        parts.append(f"{label}:{agg['n']}:{agg['latest']}")
+    return "|".join(parts)
+
+
 def assemble_matter_context_with_selection(
     matter, user_message, llm, user=None, conversation=None, include_library=True
 ) -> str:
@@ -700,6 +741,21 @@ def assemble_matter_context_with_selection(
         estimate_tokens,
         select_context,
     )
+
+    # Quick follow-ups reuse the context assembled for the previous turn
+    # (skipping the expensive Flash selection) as long as nothing the
+    # context is built from has changed. A stable context also keeps the
+    # provider-side prompt caches warm between turns.
+    ctx_cache_key = f"ai_ctx_{conversation.id}" if conversation else None
+    fingerprint = None
+    if ctx_cache_key:
+        fingerprint = _context_fingerprint(matter, include_library, llm, user)
+        entry = cache.get(ctx_cache_key)
+        if entry and entry.get("fingerprint") == fingerprint:
+            logger.info(
+                "Reusing assembled context for conversation %s", conversation.id
+            )
+            return entry["context"]
 
     # Build the fixed sections (same as assemble_matter_context)
     sections = {}
@@ -857,10 +913,17 @@ def assemble_matter_context_with_selection(
                 )
             also_available = "\n".join(lines)
 
-    return (
+    assembled = (
         f"{request_info}{legal_prompt}\n\n---\n{matter_context}"
         f"{selected_section}{also_available}"
     )
+    if ctx_cache_key:
+        cache.set(
+            ctx_cache_key,
+            {"context": assembled, "fingerprint": fingerprint},
+            timeout=CONTEXT_REUSE_SECONDS,
+        )
+    return assembled
 
 
 def format_matter_overview(matter) -> str:
