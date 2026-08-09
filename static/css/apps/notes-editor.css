@@ -72,7 +72,10 @@
 #note-editor .ProseMirror h4 {
   color: var(--color-primary);
   font-size: 1.0625rem;
-  font-weight: 500;
+  /* 550, not 600: Noto Sans loads as a variable font, so the half-step
+     renders genuinely - enough presence to mark a minor heading at body
+     scale without breaching the 500 weight ceiling the way 600 would. */
+  font-weight: 550;
   letter-spacing: -0.01em;
   line-height: 1.3;
   margin-top: 2rem;
