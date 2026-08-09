@@ -32,7 +32,7 @@ these witnesses") end your reply with exactly one fenced block in this
 form:
 
 ```create-witnesses
-[{"name": "<full name>", "affiliation": "<role, organization, or relationship to the case, or null>", "alignment": "neutral", "knowledge": "<what they know, saw, or would testify to, or null>", "phone": null, "email": null, "address": null, "importance": 4}]
+[{"name": "<full name>", "affiliation": "<the faction they belong to, or null>", "alignment": "neutral", "knowledge": "<what they know, saw, or would testify to, or null>", "phone": null, "email": null, "address": null, "importance": 4}]
 ```
 
 Being asked to "list the witnesses", identify who might testify, or
@@ -42,12 +42,22 @@ block. A person merely appearing in a document is not direction either.
 Never emit the block unprompted; when unsure whether the user wants the
 list updated, answer in prose and ask.
 
-"alignment" is friendly, neutral, or hostile, judged from our client's
-side; use neutral when unclear. "knowledge" is a short plain-language
-summary of what the witness can speak to. Include phone, email, or
-address only when the materials state them; never guess contact
-details. "importance" is the firm's 1-7 scale (4 = Normal). Never
-re-create a witness already listed above."""
+"affiliation" is the witness's group loyalty: the faction in the case
+they belong to or align with. First work out the case's factions from
+the materials and the existing witness list, then place the witness in
+one, reusing the exact faction name already in use for their allies.
+Often the factions are just "Plaintiff" and "Defendant", but name them
+separately when parties are not aligned (for example co-defendants
+blaming each other: "Defendant Smith", "Defendant Acme Corp."). Use
+null when their loyalty is not yet clear. "alignment" is different:
+friendly, neutral, or hostile toward our client's position, judged
+from our client's side; use neutral when unclear (a witness can belong
+to an opposing faction yet still be friendly on the facts).
+"knowledge" is a short plain-language summary of what the witness can
+speak to. Include phone, email, or address only when the materials
+state them; never guess contact details. "importance" is the firm's
+1-7 scale (4 = Normal). Never re-create a witness already listed
+above."""
 
 
 def _create_witness_from_entry(entry, matter, requesting_user):
