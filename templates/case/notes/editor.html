@@ -27,13 +27,13 @@
     <!-- Main Editor Area -->
     <main class="note-main">
       <div class="note-toolbar-wrapper">
+        <button class="panel-btn"
+                type="button"
+                onclick="togglePanel('note-sidebar')"
+                title="Toggle notes panel">
+          <i class="icon-panel-left"></i>
+        </button>
         <div class="note-toolbar">
-          <button class="panel-btn"
-                  type="button"
-                  onclick="togglePanel('note-sidebar')"
-                  title="Toggle notes panel">
-            <i class="icon-panel-left"></i>
-          </button>
           <div class="toolbar-left">
             <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
               <i class="icon-cloud"></i>
@@ -64,13 +64,13 @@
               <i class="icon-keyboard"></i>
             </a>
           </div>
-          <button class="panel-btn"
-                  type="button"
-                  onclick="togglePanel('note-outline')"
-                  title="Toggle outline panel">
-            <i class="icon-panel-left-reverse"></i>
-          </button>
         </div>
+        <button class="panel-btn"
+                type="button"
+                onclick="togglePanel('note-outline')"
+                title="Toggle outline panel">
+          <i class="icon-panel-left-reverse"></i>
+        </button>
       </div>
       <!-- Search and Replace Bar -->
       <div id="search-replace-bar" class="search-replace-bar">

@@ -355,6 +355,23 @@ body:has(.note-page.standalone) {
   z-index: 50;
 }
 
+/* The panel toggles sit in the full-width wrapper, not the centered
+   toolbar strip, pinned to the edges — so closing a panel drops its
+   toggle all the way to that side of the window. */
+.note-toolbar-wrapper > .panel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.note-toolbar-wrapper > .panel-btn:first-child {
+  left: 0.75rem;
+}
+
+.note-toolbar-wrapper > .panel-btn:last-child {
+  right: 0.75rem;
+}
+
 /* =============================================================================
    Toolbar - Constrained Width
    ============================================================================= */
