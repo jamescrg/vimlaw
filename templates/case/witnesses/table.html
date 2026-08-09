@@ -1,6 +1,10 @@
 <div class="table-container">
   <table id="witnesses-list" class="table witnesses-list">
     <tr>
+      <th class="col-select">
+        {% url 'case:witnesses-select-all' matter.id as select_all_url %}
+        {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
+      </th>
       <th class="alignment">
         Alignment
         <button class="btn-sort {% if 'alignment' in current_order %}active{% endif %}"
@@ -41,7 +45,7 @@
       {% include "case/witnesses/witness-row.html" %}
     {% empty %}
       <tr>
-        <td colspan="7" class="empty-message">No witnesses found for this matter.</td>
+        <td colspan="8" class="empty-message">No witnesses found for this matter.</td>
       </tr>
     {% endfor %}
   </table>

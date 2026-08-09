@@ -90,3 +90,14 @@
 .witnesses-list td.email {
   overflow: hidden;
 }
+
+/* ------------------------------------------------
+Multi-select
+------------------------------------------------ */
+
+.witnesses-list .col-select {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  width: 2.5rem;
+}

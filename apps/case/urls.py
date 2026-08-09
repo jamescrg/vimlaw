@@ -421,6 +421,41 @@ urlpatterns = [
         name="witnesses-sort",
     ),
     path(
+        "case/<int:matter_id>/witnesses/toggle-select/<int:witness_id>/",
+        witnesses.toggle_witness_select,
+        name="witnesses-toggle-select",
+    ),
+    path(
+        "case/<int:matter_id>/witnesses/select-all/",
+        witnesses.select_all_witnesses,
+        name="witnesses-select-all",
+    ),
+    path(
+        "case/<int:matter_id>/witnesses/clear-selection/",
+        witnesses.clear_witness_selection,
+        name="witnesses-clear-selection",
+    ),
+    path(
+        "case/<int:matter_id>/witnesses/bulk-delete/",
+        witnesses.bulk_witnesses_delete,
+        name="witnesses-bulk-delete",
+    ),
+    path(
+        "case/<int:matter_id>/witnesses/bulk-importance/",
+        witnesses.bulk_witnesses_importance,
+        name="witnesses-bulk-importance",
+    ),
+    path(
+        "case/<int:matter_id>/witnesses/bulk-alignment/",
+        witnesses.bulk_witnesses_alignment,
+        name="witnesses-bulk-alignment",
+    ),
+    path(
+        "case/<int:matter_id>/witnesses/bulk-affiliation/",
+        witnesses.bulk_witnesses_affiliation,
+        name="witnesses-bulk-affiliation",
+    ),
+    path(
         "case/witnesses/apply/<str:object_type>/<int:object_id>/",
         witnesses.witnesses_apply_modal,
         name="witnesses-apply-modal",

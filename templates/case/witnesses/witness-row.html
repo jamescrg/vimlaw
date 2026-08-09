@@ -1,6 +1,10 @@
 {% load phone_numbers %}
 <tr id="witness-{{ witness.id }}"
     class="importance-{{ witness.importance }}">
+  <td class="col-select">
+    {% url 'case:witnesses-toggle-select' matter.id witness.id as toggle_url %}
+    {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=witness.id selected_ids=selected_witnesses %}
+  </td>
   <td class="alignment dropdown-cell">{% include "case/witnesses/alignment-display.html" %}</td>
   <td class="name">
     <a href="#"
