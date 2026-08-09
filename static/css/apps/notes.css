@@ -359,7 +359,7 @@ body:has(.note-page.standalone) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
   list-style: none;
   margin: 0;
   overflow-y: auto;
@@ -373,7 +373,7 @@ body:has(.note-page.standalone) {
   flex-wrap: wrap;
   font-size: 1rem;
   gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
+  padding: 0 0.75rem;
 }
 
 .note-outline .outline-toggle,
@@ -385,6 +385,9 @@ body:has(.note-page.standalone) {
 .note-outline .outline-toggle {
   color: var(--color-muted);
   cursor: pointer;
+  /* Track .outline-text's vertical padding so the chevron stays on the
+     label's first line (the row aligns flex-start). */
+  padding-top: 0.25rem;
 }
 
 .note-outline .outline-toggle:hover {
@@ -403,6 +406,7 @@ body:has(.note-page.standalone) {
 .note-outline .outline-text {
   cursor: pointer;
   flex: 1;
+  padding: 0.25rem 0;
 }
 
 .note-outline .outline-text:hover {
@@ -418,14 +422,16 @@ body:has(.note-page.standalone) {
   border-radius: var(--radius-sm);
   color: var(--selected-color);
   margin: 0 -0.25rem;
-  padding: 0 0.25rem;
+  /* Same vertical padding as the base .outline-text - the pill must not
+     collapse it - plus the horizontal the negative margin cancels. */
+  padding: 0.25rem;
 }
 
 .note-outline .outline-children {
   border-left: 1px solid rgb(0 0 0 / 15%);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
   list-style: none;
   margin: 0;
   margin-left: 7px;
