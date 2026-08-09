@@ -44,17 +44,31 @@ far cheaper per token.
 
 ## Search strategy
 
-The prompt encodes narrow-first triangulation: specific doctrinal
-queries, two or three rephrasings before any broadening (vocabulary
-mismatch is the usual failure, and searches are cheap while reads are
-expensive), scatter handled by narrowing or by one deeper result list
-instead of repeated near-identical queries. Citation chasing runs both
-directions: lookup_citation walks backward to the authorities an
-opinion rests on; find_citing_cases (tool-side `cites:(cluster_id)`
-query, optionally AND-filtered) walks forward from a seminal case to
-the current statement of the rule. A LEARNED VOCABULARY rule has the
-model re-search with the courts' own terms of art once its first reads
-teach it better language.
+The survey protocol is library-first (secondary sources before primary,
+the classic research structure): on a new question the model checks the
+FIRM LIBRARY listing (free — it sits in the system prompt), reads the
+relevant notes, and mines them for two things — the courts' vocabulary,
+which seeds its search terms, and the notes' cited authorities, which
+seed its reading list. Seeds are verified live (read + check_treatment;
+notes are a map, not authority) and crawled: find_citing_cases forward
+to the current statement, lookup_citation backward to the rule's
+foundation. The doctrinal survey then fills gaps (full survey when the
+library has nothing on point). The adverse-authority search is
+deliberately independent of the library — a note records the firm's own
+position. Specific-case questions, follow-ups, and explicit "search the
+caselaw" requests skip the library pass.
+
+Within searches the prompt encodes narrow-first triangulation: specific
+doctrinal queries, two or three rephrasings before any broadening
+(vocabulary mismatch is the usual failure, and searches are cheap while
+reads are expensive), scatter handled by narrowing or by one deeper
+result list instead of repeated near-identical queries. Citation
+chasing runs both directions: lookup_citation walks backward to the
+authorities an opinion rests on; find_citing_cases (tool-side
+`cites:(cluster_id)` query, optionally AND-filtered) walks forward from
+a seminal case to the current statement of the rule. A LEARNED
+VOCABULARY rule has the model re-search with the courts' own terms of
+art once its reads teach it better language.
 
 ## Firm library
 
