@@ -6,33 +6,33 @@
       Recent
     {% endif %}
   </span>
-</div>
-<div class="sidebar-panel-toolbar">
-  <button class="panel-btn"
-          hx-get="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
-          hx-target="#htmx-modal-container"
-          title="New Note">
-    <i class="icon-square-pen"></i>
-  </button>
-  <div class="dropdown" x-data="dropdown()">
+  <div class="sidebar-header-actions">
     <button class="panel-btn"
-            type="button"
-            x-ref="button"
-            @click="toggle()"
-            :aria-expanded="open"
-            title="Sort notes">
-      <i class="icon-arrow-up-down"></i>
+            hx-get="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
+            hx-target="#htmx-modal-container"
+            title="New Note">
+      <i class="icon-square-pen"></i>
     </button>
-    <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
-      {% for key, label in sidebar_sort_options %}
-        <li>
-          <a class="dropdown-item {% if current_sort == key %}active{% endif %}"
-             href="#"
-             hx-get="{% if note.matter %}{% url 'case:note-sidebar-sort' note.id key %}{% else %}{% url 'notes:note-sidebar-sort' note.id key %}{% endif %}"
-             hx-target="#sidebar-list-container">{{ label }}</a>
-        </li>
-      {% endfor %}
-    </ul>
+    <div class="dropdown" x-data="dropdown()">
+      <button class="panel-btn"
+              type="button"
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open"
+              title="Sort notes">
+        <i class="icon-arrow-up-down"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+        {% for key, label in sidebar_sort_options %}
+          <li>
+            <a class="dropdown-item {% if current_sort == key %}active{% endif %}"
+               href="#"
+               hx-get="{% if note.matter %}{% url 'case:note-sidebar-sort' note.id key %}{% else %}{% url 'notes:note-sidebar-sort' note.id key %}{% endif %}"
+               hx-target="#sidebar-list-container">{{ label }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 </div>
 <ul class="sidebar-notes-list">

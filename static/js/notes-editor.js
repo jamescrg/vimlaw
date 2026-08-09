@@ -268,17 +268,18 @@ function setupTitleEdit() {
 // ─── Toolbar ─────────────────────────────────────────────────────────────────
 
 function setupToolbar() {
-  const wrapper = document.querySelector(".note-format-toolbar-wrapper");
-  if (!wrapper) return;
+  const cluster = document.querySelector(".note-toolbar .format-toolbar");
+  if (!cluster) return;
 
   // Synced notes are read-only, but TipTap still applies programmatic
-  // commands to a non-editable editor — hide the bar entirely. The wrapper
-  // survives note switches, so re-show it when an editable note loads.
+  // commands to a non-editable editor — hide the format cluster (the rest
+  // of the bar stays useful). The element survives note switches, so
+  // re-show it when an editable note loads.
   const readOnly = !!(window.NOTE_DATA && window.NOTE_DATA.readOnly);
-  wrapper.style.display = readOnly ? "none" : "";
+  cluster.style.display = readOnly ? "none" : "";
   if (readOnly) return;
 
-  connectFormatToolbar(wrapper.querySelector(".format-toolbar"), state.editor);
+  connectFormatToolbar(cluster, state.editor);
 }
 
 // ─── Keyboard Shortcuts ──────────────────────────────────────────────────────

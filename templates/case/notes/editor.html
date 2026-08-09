@@ -35,35 +35,48 @@
           <i class="icon-panel-left-close"></i>
         </button>
         <div class="note-toolbar">
-          <div class="toolbar-left">
-            <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
-              <i class="icon-cloud"></i>
-            </a>
-          </div>
-          <div class="toolbar-center"></div>
+          <div class="format-toolbar">{% include "components/format-toolbar.html" %}</div>
           <div class="toolbar-right">
             <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
               <i class="icon-search"></i>
             </a>
-            <a href="#"
-               hx-get="{% url 'case:note-import-modal' note.id %}"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"
-               title="Import from markdown">
-              <i class="icon-upload"></i>
+            <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
+              <i class="icon-cloud"></i>
             </a>
-            <a href="#" id="export-btn" title="Export to markdown">
-              <i class="icon-download"></i>
-            </a>
-            <a href="#"
-               hx-get="{% url 'case:notes-shortcuts' matter.id %}"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"
-               title="Keyboard shortcuts">
-              <i class="icon-keyboard"></i>
-            </a>
+            <div class="dropdown" x-data="dropdown()">
+              <button class="btn-icon"
+                      type="button"
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open"
+                      title="More actions">
+                <i class="icon-ellipsis"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end"
+                  x-ref="menu"
+                  x-show="open"
+                  @click="close()">
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-get="{% url 'case:note-import-modal' note.id %}"
+                     hx-target="#htmx-modal-container"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container"><i class="icon-upload"></i> Import from markdown</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="#" id="export-btn"><i class="icon-download"></i> Export to markdown</a>
+                </li>
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-get="{% url 'case:notes-shortcuts' matter.id %}"
+                     hx-target="#htmx-modal-container"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container"><i class="icon-keyboard"></i> Keyboard shortcuts</a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
         <button class="panel-btn"
@@ -73,10 +86,6 @@
                 title="Toggle outline panel">
           <i class="icon-panel-right-close"></i>
         </button>
-      </div>
-      <!-- Formatting Toolbar -->
-      <div class="note-format-toolbar-wrapper">
-        <div class="format-toolbar">{% include "components/format-toolbar.html" %}</div>
       </div>
       <!-- Search and Replace Bar -->
       <div id="search-replace-bar" class="search-replace-bar">
