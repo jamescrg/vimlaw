@@ -202,9 +202,11 @@ i.icon-plus {
    box-shadow glow. Re-arms .btn, whose own rule zeroed the outline.
    Text inputs are deliberately EXCLUDED (browsers fire :focus-visible on
    click-focus for them, the classic ring-on-every-click annoyance) — they
-   signal focus via a border recolor in forms.css instead.
+   signal focus via a border recolor in forms.css instead. Contenteditable
+   surfaces (TipTap adds tabindex="0" to its ProseMirror div) are the same
+   click-to-ring case, so they're excluded too.
    ========================================================================== */
-:is(a, button, summary, [tabindex]:not(input, textarea, select)):focus-visible,
+:is(a, button, summary, [tabindex]:not(input, textarea, select, [contenteditable="true"])):focus-visible,
 input:is([type="checkbox"], [type="radio"]):focus-visible,
 .btn:focus-visible {
   /* --focus-ring (colors.css) is the theme accent normalized to mid
