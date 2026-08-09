@@ -1,6 +1,6 @@
 <tr id="fact-{{ fact.id }}"
     class="importance-{{ fact.importance }}{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
-  <td class="col-select">
+  <td class="col-select{% if fact.color %} hl-{{ fact.color|lower }}{% endif %}">
     {% url 'case:facts-toggle-select' matter.id fact.id as toggle_url %}
     {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=fact.id selected_ids=selected_facts %}
   </td>
