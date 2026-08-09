@@ -35,19 +35,22 @@
           <i class="icon-panel-left-close"></i>
         </button>
         <div class="note-toolbar">
-          <div class="format-toolbar">{% include "components/format-toolbar.html" %}</div>
-          <div class="toolbar-right">
+          <div class="toolbar-left">
             <a href="#"
                hx-get="{% url 'case:notes-add' note.matter.id %}"
                hx-target="#htmx-modal-container"
                title="New note">
               <i class="icon-square-pen"></i>
             </a>
-            <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
-              <i class="icon-search"></i>
-            </a>
             <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
               <i class="icon-save"></i>
+            </a>
+            <span class="toolbar-divider"></span>
+            <div class="format-toolbar">{% include "components/format-toolbar.html" %}</div>
+          </div>
+          <div class="toolbar-right">
+            <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
+              <i class="icon-search"></i>
             </a>
             <div class="dropdown" x-data="dropdown()">
               <button class="btn-icon"

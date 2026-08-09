@@ -392,6 +392,22 @@ body:has(.note-page.standalone) {
   padding: 0;
 }
 
+/* New-note and save sit just left of the format cluster, set off by a
+   divider matching the cluster's own. */
+.note-toolbar .toolbar-left {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.note-toolbar .toolbar-left > .toolbar-divider {
+  background: var(--border-medium);
+  height: 1.25rem;
+  margin: 0 0.25rem;
+  width: 1px;
+}
+
 .note-toolbar .toolbar-right {
   align-items: center;
   display: flex;
@@ -400,8 +416,9 @@ body:has(.note-page.standalone) {
   justify-content: flex-end;
 }
 
-/* Right-cluster actions speak the same idiom as the format buttons. */
-.note-toolbar .toolbar-right > a,
+/* Left- and right-cluster actions speak the same idiom as the format
+   buttons. */
+.note-toolbar :is(.toolbar-left, .toolbar-right) > a,
 .note-toolbar .toolbar-right .btn-icon {
   align-items: center;
   background: transparent;
@@ -418,7 +435,7 @@ body:has(.note-page.standalone) {
   transition: all 0.15s ease;
 }
 
-.note-toolbar .toolbar-right > a:hover,
+.note-toolbar :is(.toolbar-left, .toolbar-right) > a:hover,
 .note-toolbar .toolbar-right .btn-icon:hover {
   background: var(--background-control);
   color: var(--color-darker);
