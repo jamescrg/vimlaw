@@ -355,11 +355,13 @@ body:has(.note-page.standalone) {
 
 /* Outline pane (inside the merged panel; .note-outline scopes the list
    styles below) */
+/* Vertical rhythm comes solely from .outline-text's 0.25rem paddings
+   (0.5rem label-to-label everywhere) - no list gaps, which would stack
+   on top of the paddings and open uneven seams. */
 .note-outline .outline-list {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.25rem;
   list-style: none;
   margin: 0;
   overflow-y: auto;
@@ -372,7 +374,9 @@ body:has(.note-page.standalone) {
   display: flex;
   flex-wrap: wrap;
   font-size: 1rem;
-  gap: 0.25rem;
+  /* Column gap only (chevron <-> label). A row gap here would open extra
+     space between a heading's label line and its wrapped children list. */
+  gap: 0 0.25rem;
   padding: 0 0.75rem;
 }
 
@@ -434,13 +438,11 @@ body:has(.note-page.standalone) {
   border-left: 1px solid rgb(0 0 0 / 15%);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
   list-style: none;
   margin: 0;
   margin-left: 7px;
   padding: 0;
   padding-left: 1rem;
-  padding-top: 0.25rem;
   width: 100%;
 }
 
