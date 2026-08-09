@@ -30,6 +30,7 @@
           <i class="icon-chevrons-up-down"></i>
         </button>
       </th>
+      <th class="ai-context">AI</th>
       <th class="importance">
         <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
                 hx-get="{% url 'notes:order-by' '-importance' %}"
@@ -43,7 +44,7 @@
       {% include "notes/row.html" %}
     {% empty %}
       <tr>
-        <td colspan="6" class="empty-message">No notes found.</td>
+        <td colspan="7" class="empty-message">No notes found.</td>
       </tr>
     {% endfor %}
   </table>

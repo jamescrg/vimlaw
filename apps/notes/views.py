@@ -19,6 +19,7 @@ from apps.management.selection import (
 from .filters import NotesFilter
 from .forms import NoteFolderForm, NoteFolderMoveForm, NoteForm
 from .models import Note, NoteFolder, NoteView
+from .tasks import queue_library_summary_sweep, queue_note_summary
 
 NOTES_TRIGGER = "notesChanged"
 
@@ -40,7 +41,8 @@ def build_note_folder_tree_flat(folders_qs, expanded_ids):
 
     Returns list of dicts:
         {"folder": f, "level": 0-3, "parent_id": int|None,
-         "has_children": bool, "is_expanded": bool, "is_visible": bool}
+         "has_children": bool, "is_expanded": bool, "is_visible": bool,
+         "in_library": bool, "own_library_flag": bool}
     """
     folders = list(folders_qs.select_related("parent").order_by("name"))
 
@@ -53,11 +55,12 @@ def build_note_folder_tree_flat(folders_qs, expanded_ids):
     # Build flat list via DFS
     result = []
 
-    def _walk(parent_id, parent_visible):
+    def _walk(parent_id, parent_visible, parent_in_library):
         for f in children_map.get(parent_id, []):
             is_expanded = f.pk in expanded_ids
             has_children = f.pk in children_map
             is_visible = parent_visible
+            in_library = f.ai_library or parent_in_library
             result.append(
                 {
                     "folder": f,
@@ -66,12 +69,14 @@ def build_note_folder_tree_flat(folders_qs, expanded_ids):
                     "has_children": has_children,
                     "is_expanded": is_expanded,
                     "is_visible": is_visible,
+                    "in_library": in_library,
+                    "own_library_flag": f.ai_library,
                 }
             )
             child_visible = is_visible and is_expanded
-            _walk(f.pk, child_visible)
+            _walk(f.pk, child_visible, in_library)
 
-    _walk(None, True)  # Root folders always visible
+    _walk(None, True, False)  # Root folders always visible
     return result
 
 
@@ -556,6 +561,7 @@ def note_content(request, note_id):
         content = request.POST.get("content", "")
         note.content = content
         note.save()
+        queue_note_summary(note.id)
         return HttpResponse(status=204)
 
     return HttpResponse(note.content, content_type="text/plain; charset=utf-8")
@@ -572,6 +578,7 @@ def note_autosave(request, note_id):
     # updated_by is set by AuditMixin.save; include it in update_fields so the
     # change is actually persisted.
     note.save(update_fields=["content", "updated_at", "updated_by"])
+    queue_note_summary(note.id)
 
     return JsonResponse({"saved": True, "updated_at": note.updated_at.isoformat()})
 
@@ -589,6 +596,22 @@ def note_title(request, note_id):
         return JsonResponse({"saved": True, "title": note.title})
 
     return JsonResponse({"saved": False, "error": "Title cannot be empty"}, status=400)
+
+
+@login_required
+@require_POST
+def note_set_ai(request, note_id, state):
+    """Set the ai_context state on a standalone note (auto/always/never)."""
+    if state not in ("auto", "always", "never"):
+        return HttpResponse(status=400)
+
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note.ai_context = state
+    note.save(update_fields=["ai_context", "updated_at", "updated_by"])
+    if state != "never":
+        queue_note_summary(note.id)
+
+    return render(request, "notes/ai-context-cell.html", {"note": note})
 
 
 @login_required
@@ -669,6 +692,8 @@ def note_folder_add(request):
         form = NoteFolderForm(request.POST)
         if form.is_valid():
             form.save()
+            if form.cleaned_data.get("ai_library"):
+                queue_library_summary_sweep()
             context = get_note_folders_data(request)
             response = render(request, "note_folders/list.html", context)
             response.status_code = 202
@@ -710,6 +735,8 @@ def note_folder_edit(request, folder_id):
             folder = form.save()
             if folder.parent_id != old_parent_id:
                 folder.update_descendant_depths()
+            if "ai_library" in form.changed_data or "parent" in form.changed_data:
+                queue_library_summary_sweep()
             context = get_note_folders_data(request)
             response = render(request, "note_folders/list.html", context)
             response.status_code = 202
@@ -795,6 +822,7 @@ def note_folder_move(request, folder_id):
             folder.depth = destination.depth + 1 if destination else 0
             folder.save(update_fields=["parent", "depth"])
             folder.update_descendant_depths()
+            queue_library_summary_sweep()
 
             context = get_note_folders_data(request)
             response = render(request, "note_folders/list.html", context)
@@ -855,6 +883,7 @@ def note_move(request, note_id):
         else:
             note.folder = None
         note.save(update_fields=["folder"])
+        queue_note_summary(note.id)
         return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
 
     # Build tree — expand ancestors of current folder so selection is visible
@@ -937,6 +966,7 @@ def notes_bulk_move(request):
             folder = None
         Note.objects.filter(id__in=selected, matter__isnull=True).update(folder=folder)
         clear_selected_ids(request, key)
+        queue_library_summary_sweep()
         return HttpResponse(status=204, headers={"HX-Trigger": NOTES_TRIGGER})
 
     all_folders = NoteFolder.objects.all()

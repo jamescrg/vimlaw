@@ -39,6 +39,7 @@
   <td class="user">{{ note.author.get_short_name|default:note.author.username|default:"—" }}</td>
   <td class="created">{{ note.created_at|date:"Y-m-d" }}</td>
   <td class="updated">{{ note.updated_at|date:"Y-m-d" }}</td>
+  <td class="ai-context dropdown-cell" id="note-ai-{{ note.id }}">{% include "notes/ai-context-cell.html" %}</td>
   <td class="importance dropdown-cell">
     <div class="dropdown" x-data="dropdown()">
       <button class="button-link"

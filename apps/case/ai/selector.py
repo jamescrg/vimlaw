@@ -19,7 +19,7 @@ from apps.mail.ai import (
     thread_word_count,
 )
 from apps.mail.models import Email
-from apps.notes.models import Note
+from apps.notes.models import Note, get_library_notes
 
 from .gemini_client import send_to_gemini
 from .models import Conversation
@@ -65,7 +65,7 @@ and a manifest of available case materials, select which materials should be \
 included in context to answer the question effectively.
 
 Return ONLY a JSON object with this format:
-{"selected": [{"type": "document", "id": 123}, {"type": "note", "id": 89}, {"type": "caselaw", "id": 45}, {"type": "conversation", "id": 67}, {"type": "email", "id": 12}, {"type": "invoice", "id": 42}]}
+{"selected": [{"type": "document", "id": 123}, {"type": "note", "id": 89}, {"type": "caselaw", "id": 45}, {"type": "conversation", "id": 67}, {"type": "email", "id": 12}, {"type": "invoice", "id": 42}, {"type": "library", "id": 7}]}
 
 Rules:
 - Select materials that are relevant to the user's question.
@@ -74,6 +74,9 @@ Rules:
 - When in doubt about relevance, include rather than exclude.
 - Invoices are billing/financial records — only include them if the user is \
 asking about billing, fees, payments, balances, or specific invoices.
+- Library items are firm-wide reference notes (research outlines and practice \
+guides), not case materials. Include one only when its topic clearly bears on \
+the legal question being asked, and select at most 5 library items.
 - Return ONLY the JSON object, no other text."""
 
 
@@ -81,7 +84,7 @@ asking about billing, fees, payments, balances, or specific invoices.
 class ManifestItem:
     """A lightweight description of a material for the selector."""
 
-    item_type: str  # "document", "caselaw", or "conversation"
+    item_type: str  # "document", "caselaw", "conversation", "note", "email", "invoice", "library"
     item_id: int
     name: str
     category: str
@@ -96,7 +99,14 @@ def estimate_tokens(text: str) -> int:
     return len(text) // 4
 
 
-def build_manifest(matter, current_conversation=None):
+def library_folder_path(folder):
+    """Human-readable folder path for a library note, e.g. "Research/Evidence"."""
+    if folder is None:
+        return ""
+    return "/".join(f.name for f in folder.get_ancestors() + [folder])
+
+
+def build_manifest(matter, current_conversation=None, include_library=True):
     """
     Build a lightweight manifest of all ai_context="auto" items.
 
@@ -330,6 +340,48 @@ def build_manifest(matter, current_conversation=None):
         # queries for invoices the selector ends up not picking.
         content_map[("invoice", invoice.id)] = invoice
 
+    # Firm library — standalone notes in AI-library folders. Offered on every
+    # matter; the selector includes one only when its topic bears on the
+    # question. ai_context="always" library notes are injected by
+    # collect_context_items instead, so only "auto" goes in the manifest.
+    if include_library:
+        library_notes = (
+            get_library_notes()
+            .filter(ai_context="auto")
+            .select_related(
+                "folder",
+                "folder__parent",
+                "folder__parent__parent",
+                "folder__parent__parent__parent",
+            )
+        )
+        for note in library_notes:
+            content_text = note.content or ""
+            if not content_text.strip():
+                continue
+
+            desc = note.summary or content_text[:200].strip()
+            if not note.summary and len(content_text) > 200:
+                desc += "..."
+
+            folder_path = library_folder_path(note.folder)
+
+            manifest_items.append(
+                ManifestItem(
+                    item_type="library",
+                    item_id=note.id,
+                    name=note.title,
+                    category=f"Library: {folder_path}",
+                    date=str(note.updated_at.date()) if note.updated_at else None,
+                    description=desc,
+                    word_count=len(content_text.split()),
+                    importance=note.importance,
+                )
+            )
+            content_map[("library", note.id)] = (
+                f"**Library note: {note.title}** ({folder_path})\n{content_text}"
+            )
+
     return manifest_items, content_map
 
 
@@ -344,6 +396,7 @@ def format_manifest_for_prompt(items: list[ManifestItem], token_budget: int) -> 
             "conversation": "CONV",
             "note": "NOTE",
             "email": "EMAIL",
+            "library": "LIB",
         }.get(item.item_type, item.item_type.upper())
         date_str = f", {item.date}" if item.date else ""
         lines.append(
@@ -381,17 +434,26 @@ def select_context(
     # Check if everything fits — skip selector API call. Invoices are never
     # auto-included even on small matters: they're financial records that
     # should only enter context when the user's question is about billing.
-    non_invoice_items = [i for i in manifest_items if i.item_type != "invoice"]
+    # Library items likewise never ride the short-circuit: the firm library
+    # is matter-independent bulk that must always pass relevance selection.
+    matter_items = [
+        i for i in manifest_items if i.item_type not in ("invoice", "library")
+    ]
     invoice_items = [i for i in manifest_items if i.item_type == "invoice"]
-    total_words = sum(item.word_count for item in non_invoice_items)
-    if total_words <= SMALL_MATTER_THRESHOLD and not invoice_items:
+    library_items = [i for i in manifest_items if i.item_type == "library"]
+    total_words = sum(item.word_count for item in matter_items)
+    if (
+        total_words <= SMALL_MATTER_THRESHOLD
+        and not invoice_items
+        and not library_items
+    ):
         logger.info(
             "Small matter (%d words across %d auto items) — including all",
             total_words,
             len(manifest_items),
         )
         all_contents = []
-        for item in non_invoice_items:
+        for item in matter_items:
             key = (item.item_type, item.item_id)
             if key in content_map:
                 content = _resolve_content(key, content_map)
@@ -461,7 +523,15 @@ def _parse_selector_response(response_text: str) -> list[tuple[str, int]]:
         item_id = item.get("id")
         if (
             item_type
-            in ("document", "caselaw", "conversation", "invoice", "note", "email")
+            in (
+                "document",
+                "caselaw",
+                "conversation",
+                "invoice",
+                "note",
+                "email",
+                "library",
+            )
             and item_id is not None
         ):
             keys.append((item_type, int(item_id)))
@@ -515,10 +585,13 @@ def _fallback_by_importance(
 ) -> list[tuple[str, int]]:
     """Fallback: select items by importance until budget is filled.
 
-    Invoices are skipped — they're explicit-only and should never sneak in
-    via the importance fallback when the selector model fails.
+    Invoices and library items are skipped — invoices are explicit-only, and
+    the firm library is question-blind bulk that would flood a matter chat if
+    importance-ranked in when the selector model fails.
     """
-    eligible = [item for item in manifest_items if item.item_type != "invoice"]
+    eligible = [
+        item for item in manifest_items if item.item_type not in ("invoice", "library")
+    ]
     sorted_items = sorted(eligible, key=lambda x: x.importance, reverse=True)
     selected = []
     used_tokens = 0

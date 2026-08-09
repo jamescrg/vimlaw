@@ -81,6 +81,16 @@ without crowding the dialogue.
           <i class="icon-bookmark"></i>
           <div>Reviewed {{ event.count }} saved case{{ event.count|pluralize }} on this matter</div>
         </li>
+      {% elif event.type == "library_read" %}
+        <li class="ai-research-step">
+          <i class="icon-notebook-pen"></i>
+          <div>
+            Read library note
+            <a href="{% url 'notes:note-view' event.note_id %}" target="_blank">{{ event.title|default:event.note_id }}</a>
+            {% if event.truncated %}<span class="detail-text">(truncated)</span>{% endif %}
+            {% if event.cached %}<span class="detail-text">(from earlier read)</span>{% endif %}
+          </div>
+        </li>
       {% elif event.type == "grounding" %}
         {% if event.ungrounded_clusters %}
           <li class="ai-research-step">

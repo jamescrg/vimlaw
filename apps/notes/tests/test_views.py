@@ -145,3 +145,88 @@ class TestNoteTitle:
         response = client_with_matter.post(url, {"title": ""})
         assert response.status_code == 400
         assert response.json()["saved"] is False
+
+
+class TestNoteSetAi:
+    @pytest.fixture
+    def standalone_note(self, user):
+        return Note.objects.create(author=user, title="Standalone", content="text")
+
+    def test_set_ai_states(self, client, standalone_note):
+        for state in ("always", "never", "auto"):
+            url = reverse("notes:note-set-ai", args=[standalone_note.id, state])
+            response = client.post(url)
+            assert response.status_code == 200
+            standalone_note.refresh_from_db()
+            assert standalone_note.ai_context == state
+
+    def test_set_ai_invalid_state(self, client, standalone_note):
+        url = reverse("notes:note-set-ai", args=[standalone_note.id, "sometimes"])
+        assert client.post(url).status_code == 400
+
+    def test_set_ai_rejects_matter_notes(self, client, note):
+        url = reverse("notes:note-set-ai", args=[note.id, "always"])
+        assert client.post(url).status_code == 404
+
+
+class TestAiLibraryFolderFlag:
+    def test_folder_add_saves_flag_and_queues_sweep(self, client):
+        from unittest.mock import patch
+
+        from apps.notes.models import NoteFolder
+
+        with patch("django_q.tasks.async_task") as async_task:
+            response = client.post(
+                reverse("notes:folder-add"),
+                {"name": "Library Test Folder", "ai_library": "True"},
+            )
+        assert response.status_code == 202
+        folder = NoteFolder.objects.get(name="Library Test Folder")
+        assert folder.ai_library is True
+        assert async_task.called
+
+    def test_folder_add_without_flag_skips_sweep(self, client):
+        from unittest.mock import patch
+
+        with patch("django_q.tasks.async_task") as async_task:
+            response = client.post(
+                reverse("notes:folder-add"),
+                {"name": "Journal", "ai_library": "False"},
+            )
+        assert response.status_code == 202
+        assert not async_task.called
+
+    def test_folder_edit_flag_change_queues_sweep(self, client):
+        from unittest.mock import patch
+
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Guides")
+        with patch("django_q.tasks.async_task") as async_task:
+            response = client.post(
+                reverse("notes:folder-edit", args=[folder.id]),
+                {"name": "Guides", "ai_library": "True"},
+            )
+        assert response.status_code == 202
+        folder.refresh_from_db()
+        assert folder.ai_library is True
+        assert async_task.called
+
+    def test_autosave_queues_summary_for_library_note(self, client, user):
+        from unittest.mock import patch
+
+        from django.core.cache import cache
+
+        from apps.notes.models import NoteFolder
+
+        cache.clear()
+        folder = NoteFolder.objects.create(name="Research", ai_library=True)
+        note = Note.objects.create(
+            author=user, title="Lib", folder=folder, content="v1"
+        )
+        with patch("django_q.tasks.async_task") as async_task:
+            response = client.post(
+                reverse("notes:note-autosave", args=[note.id]), {"content": "v2"}
+            )
+        assert response.status_code == 200
+        assert async_task.called

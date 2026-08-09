@@ -107,3 +107,14 @@
 .move-tree-item.move-current { background: var(--violet-100); }
 .move-tree-item.move-selected { background: var(--lime-100); }
 .move-tree-item.move-current.move-selected { background: var(--violet-100); }
+
+/* AI library indicator — sparkle after the folder name. Accent when the
+   folder itself is flagged, muted when inherited from an ancestor. */
+.folder-ai-library {
+  margin-left: 0.25rem;
+  color: var(--accent-link);
+}
+
+.folder-ai-library-inherited {
+  color: var(--icon-muted-more);
+}

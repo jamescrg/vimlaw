@@ -62,6 +62,12 @@
           <span class="sidebar-label">Activity</span>
         </a>
       </li>
+      <li {% if app == 'notes' %}class="active"{% endif %}>
+        <a id="nav-notes" href="{% url 'notes:index' %}" data-tooltip="Notes">
+          <i class="icon-notebook-pen"></i>
+          <span class="sidebar-label">Notes</span>
+        </a>
+      </li>
       {% if user.is_admin or user.perm_financial %}
         <li class="nav-item-invoicing{% if app == 'invoicing' %} active{% endif %}">
           <a id="nav-invoicing"

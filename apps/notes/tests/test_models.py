@@ -81,3 +81,61 @@ class TestNote:
             title="No Content Note",
         )
         assert note.content == ""
+
+
+class TestAiLibrary:
+    def _folder(self, name, parent=None, ai_library=False):
+        from apps.notes.models import NoteFolder
+
+        return NoteFolder.objects.create(
+            name=name, parent=parent, ai_library=ai_library
+        )
+
+    def test_ai_library_defaults_false(self):
+        folder = self._folder("Plain")
+        assert folder.ai_library is False
+        assert folder.in_ai_library is False
+
+    def test_in_ai_library_inherits_from_ancestor(self):
+        root = self._folder("Research", ai_library=True)
+        child = self._folder("Evidence", parent=root)
+        grandchild = self._folder("Hearsay", parent=child)
+        assert child.in_ai_library is True
+        assert grandchild.in_ai_library is True
+
+    def test_library_folder_ids_includes_descendants(self):
+        from apps.notes.models import library_folder_ids
+
+        root = self._folder("Research", ai_library=True)
+        child = self._folder("Evidence", parent=root)
+        other = self._folder("Groceries")
+        ids = library_folder_ids()
+        assert root.id in ids
+        assert child.id in ids
+        assert other.id not in ids
+
+    def test_get_library_notes_filters(self, user, matter):
+        from apps.notes.models import get_library_notes
+
+        library = self._folder("Research", ai_library=True)
+        sub = self._folder("Evidence", parent=library)
+        plain = self._folder("Journal")
+
+        in_root = Note.objects.create(author=user, title="Root", folder=library)
+        in_sub = Note.objects.create(author=user, title="Nested", folder=sub)
+        never = Note.objects.create(
+            author=user, title="Never", folder=library, ai_context="never"
+        )
+        journal = Note.objects.create(author=user, title="Journal", folder=plain)
+        unfoldered = Note.objects.create(author=user, title="Loose")
+        matter_note = Note.objects.create(
+            author=user, title="Matter", folder=library, matter=matter
+        )
+
+        notes = set(get_library_notes())
+        assert in_root in notes
+        assert in_sub in notes
+        assert never not in notes
+        assert journal not in notes
+        assert unfoldered not in notes
+        assert matter_note not in notes

@@ -40,6 +40,19 @@ Tool results are resent every model turn, so the total text cap is the
 token-cost lever. Deep on Claude Opus is dollars per question; Gemini is
 far cheaper per token.
 
+## Firm library
+
+Standalone notes in AI-library folders (NoteFolder.ai_library, see
+apps/notes/models.get_library_notes) are listed in a FIRM LIBRARY
+section of the system prompt (research_chat.build_library_section: id,
+folder path, title, summary excerpt) and readable via the
+read_library_note tool at every depth. Reads count against the same
+read/total char caps as opinions; the trail shows a library_read event
+linking to the note. The prompt frames library notes as internal work
+product: consult before external search, never citable, no [cluster:n]
+markers. The listing sits in the stable prefix, so prompt caching still
+covers it across tool turns.
+
 ## Grounded-citation contract
 
 Research answers may cite ONLY retrieved opinions and must tag each
@@ -69,3 +82,6 @@ with classic citation verification.
 - Save-to-matter from the trail (reuse caselaws_save).
 - Statute retrieval tool.
 - Phase out classic once research proves superior (kind default flip).
+- search_library tool (watson full-text over library notes) if the firm
+  library outgrows a listable size (~500 notes); today the full listing
+  is ~10k tokens and cheaper than tool round-trips.

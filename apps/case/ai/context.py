@@ -87,6 +87,7 @@ TYPE_ICONS = {
     "caselaw": "⚖️",
     "conversation": "💬",
     "email": "✉️",
+    "library": "📚",
 }
 
 
@@ -150,7 +151,11 @@ def _fetch_caselaw_opinion_text(caselaw) -> str:
 
 
 def collect_context_items(
-    matter, current_conversation=None, since=None, include_auto=False
+    matter,
+    current_conversation=None,
+    since=None,
+    include_auto=False,
+    include_library_always=False,
 ) -> list[ContextItem]:
     """
     Collect items that are always included in context (ai_context="always"
@@ -166,6 +171,9 @@ def collect_context_items(
             (used by the nightly auto-summary to build an incremental delta)
         include_auto: Include ai_context="auto" Documents/Notes/CaseLaw with
             full content instead of leaving them to the selector
+        include_library_always: Include ai_context="always" firm-library notes
+            (standalone notes in AI-library folders). Off by default so the
+            nightly auto-summary and baseline assembly stay matter-only.
 
     Returns a list of ContextItem objects sorted by importance (most important first).
     """
@@ -277,6 +285,31 @@ def collect_context_items(
                 source_id=note.id,
             )
         )
+
+    # Collect firm-library notes pinned to "always" — the library's "auto"
+    # notes go through the selector manifest instead (selector.build_manifest).
+    if include_library_always:
+        from apps.case.ai.selector import library_folder_path
+        from apps.notes.models import get_library_notes
+
+        library_always = get_library_notes().filter(ai_context="always")
+        if since:
+            library_always = library_always.filter(updated_at__gte=since)
+        for note in library_always:
+            if not note.content:
+                continue
+            folder_path = library_folder_path(note.folder)
+            items.append(
+                ContextItem(
+                    importance=note.importance,
+                    item_type="library",
+                    content=(
+                        f"**Library note: {note.title}** ({folder_path})\n"
+                        f"{note.content}"
+                    ),
+                    source_id=note.id,
+                )
+            )
 
     # Collect Case Law — only "always" items
     caselaw_qs = CaseLaw.objects.filter(matter=matter).exclude(ai_context="never")
@@ -639,7 +672,7 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
 
 
 def assemble_matter_context_with_selection(
-    matter, user_message, llm, user=None, conversation=None
+    matter, user_message, llm, user=None, conversation=None, include_library=True
 ) -> str:
     """
     Assemble context using intelligent selection for ai_context="auto" items.
@@ -656,6 +689,9 @@ def assemble_matter_context_with_selection(
         llm: The LLM key (for token budget)
         user: The requesting user
         conversation: Optional Conversation (excluded from reference conversations)
+        include_library: Offer firm-library notes (standalone notes in
+            AI-library folders) to the selector, and inject "always" library
+            notes. The nightly auto-summary turns this off.
     """
     from .selector import (
         MODEL_CONTEXT_LIMITS,
@@ -679,7 +715,11 @@ def assemble_matter_context_with_selection(
 
     # Collect "always" items (Documents/CaseLaw with ai_context="always",
     # plus all Highlights, Facts, Notes, Conversations)
-    always_items = collect_context_items(matter, current_conversation=conversation)
+    always_items = collect_context_items(
+        matter,
+        current_conversation=conversation,
+        include_library_always=include_library,
+    )
 
     # Build request info and legal prompt
     company = Firm.objects.first()
@@ -724,7 +764,7 @@ def assemble_matter_context_with_selection(
 
     # Build manifest and run selector for "auto" items
     manifest_items, content_map = build_manifest(
-        matter, current_conversation=conversation
+        matter, current_conversation=conversation, include_library=include_library
     )
 
     selected_contents = []

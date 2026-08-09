@@ -149,6 +149,26 @@ def build_tools(depth):
             ),
             "input_schema": {"type": "object", "properties": {}},
         },
+        {
+            "name": "read_library_note",
+            "description": (
+                "Read the full text of an internal firm library note listed "
+                "in the FIRM LIBRARY section (research outlines and practice "
+                "guides). Consult relevant library notes early: they record "
+                "prior research and often name the controlling authorities. "
+                "They are internal work product, never citable authority."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "note_id": {
+                        "type": "integer",
+                        "description": "The library note id from the FIRM LIBRARY list.",
+                    }
+                },
+                "required": ["note_id"],
+            },
+        },
     ]
     if budget["treatment_tool"]:
         tools.append(
@@ -206,6 +226,7 @@ def make_executor(matter, depth, conversation_id=None):
 
     budget = budget_for(depth)
     opinion_cache = {}
+    library_cache = {}
     state = {"chars_used": 0}
     # Within-run dedupe: the model sometimes repeats a search or lookup it
     # already ran (especially failed ones). Serve the stored result instead
@@ -392,6 +413,56 @@ def make_executor(matter, depth, conversation_id=None):
         }
         return payload, event
 
+    def _library_read(tool_input):
+        from apps.case.ai.selector import library_folder_path
+        from apps.notes.models import get_library_notes
+
+        note_id = int(tool_input.get("note_id") or 0)
+        if note_id in library_cache:
+            cached = library_cache[note_id]
+            event = {
+                "type": "library_read",
+                "note_id": note_id,
+                "title": cached.get("title", ""),
+                "cached": True,
+                "ts": _now(),
+            }
+            return cached, event
+
+        if state["chars_used"] >= budget["total_char_cap"]:
+            return {
+                "error": (
+                    "Research reading budget exhausted. Answer from the "
+                    "material you have already read."
+                )
+            }, None
+
+        note = get_library_notes().select_related("folder").filter(pk=note_id).first()
+        if note is None or not note.content:
+            return {
+                "error": f"Library note {note_id} not found or not in the AI library."
+            }, None
+
+        text = note.content[: budget["read_char_cap"]]
+        state["chars_used"] += len(text)
+        payload = {
+            "note_id": note_id,
+            "title": note.title,
+            "folder": library_folder_path(note.folder),
+            "text": text,
+            "truncated": len(note.content) > len(text),
+        }
+        library_cache[note_id] = payload
+        event = {
+            "type": "library_read",
+            "note_id": note_id,
+            "title": note.title,
+            "chars": len(text),
+            "truncated": payload["truncated"],
+            "ts": _now(),
+        }
+        return payload, event
+
     def _saved(tool_input):
         rows = [
             {
@@ -414,6 +485,7 @@ def make_executor(matter, depth, conversation_id=None):
         "check_treatment": _treatment,
         "lookup_citation": _lookup,
         "list_saved_caselaw": _saved,
+        "read_library_note": _library_read,
     }
 
     def execute(name, tool_input):

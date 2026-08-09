@@ -733,3 +733,90 @@ def test_prior_research_section_built_from_trails(matter, user):
         matter=matter, title="E", kind="research", user=user
     )
     assert research_chat.prior_research_section(empty) == ""
+
+
+# ---------------------------------------------------------------------------
+# Firm library tool
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def library_note(user):
+    from apps.notes.models import Note, NoteFolder
+
+    folder = NoteFolder.objects.create(name="Firm Research", ai_library=True)
+    return Note.objects.create(
+        author=user,
+        title="Restrictive Covenants",
+        folder=folder,
+        summary="Enforceability of non-competes in Georgia.",
+        content="OCGA 13-8-53 governs. " * 50,
+    )
+
+
+def test_read_library_note_tool_present_at_all_depths():
+    for depth in ("quick", "standard", "deep"):
+        names = [t["name"] for t in build_tools(depth)]
+        assert "read_library_note" in names
+
+
+@pytest.mark.django_db
+def test_executor_reads_library_note(matter, library_note):
+    execute = make_executor(matter, "standard")
+    result, event = execute("read_library_note", {"note_id": library_note.id})
+    payload = json.loads(result)
+    assert payload["title"] == "Restrictive Covenants"
+    assert payload["folder"] == "Firm Research"
+    assert "OCGA 13-8-53" in payload["text"]
+    assert event["type"] == "library_read"
+    assert event["note_id"] == library_note.id
+
+    # Second read is served from the per-run cache
+    result2, event2 = execute("read_library_note", {"note_id": library_note.id})
+    assert event2["cached"] is True
+
+
+@pytest.mark.django_db
+def test_executor_library_note_not_found(matter, user):
+    from apps.notes.models import Note
+
+    loose = Note.objects.create(author=user, title="Loose", content="text")
+    execute = make_executor(matter, "standard")
+    result, event = execute("read_library_note", {"note_id": loose.id})
+    assert "error" in json.loads(result)
+    assert event is None
+
+
+@pytest.mark.django_db
+def test_executor_library_read_respects_caps(matter, library_note, monkeypatch):
+    monkeypatch.setitem(research_tools.DEPTH_BUDGETS["standard"], "read_char_cap", 100)
+    execute = make_executor(matter, "standard")
+    result, _ = execute("read_library_note", {"note_id": library_note.id})
+    payload = json.loads(result)
+    assert len(payload["text"]) == 100
+    assert payload["truncated"] is True
+
+
+@pytest.mark.django_db
+def test_build_library_section_lists_notes(library_note):
+    section = research_chat.build_library_section()
+    assert "FIRM LIBRARY" in section
+    assert f"[id {library_note.id}]" in section
+    assert "Restrictive Covenants" in section
+    assert "Enforceability of non-competes" in section
+
+
+@pytest.mark.django_db
+def test_build_library_section_empty_without_flags(user):
+    from apps.notes.models import Note
+
+    Note.objects.create(author=user, title="Loose", content="text")
+    assert research_chat.build_library_section() == ""
+
+
+def test_build_research_system_embeds_library():
+    system = research_chat.build_research_system(
+        "CONTEXT", "standard", library_section="FIRM LIBRARY: stuff\n\n"
+    )
+    assert system.index("CONTEXT") < system.index("FIRM LIBRARY: stuff")
+    assert system.index("FIRM LIBRARY: stuff") < system.index("RESEARCH MODE")

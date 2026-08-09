@@ -458,6 +458,9 @@ def _refresh_thread(matter, spec, force_full=False):
                 LLM_KEY,
                 user=None,
                 conversation=conversation,
+                # The nightly summary describes the matter record; firm-library
+                # reference notes would pollute it and inflate the run.
+                include_library=False,
             )
         if discussion:
             system_context += FEEDBACK_TEMPLATE.format(

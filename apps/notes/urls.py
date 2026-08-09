@@ -47,6 +47,11 @@ urlpatterns = [
         views.note_importance,
         name="note-importance",
     ),
+    path(
+        "notes/<int:note_id>/set-ai/<str:state>/",
+        views.note_set_ai,
+        name="note-set-ai",
+    ),
     # Editor views
     path("notes/<int:note_id>/", views.note_view, name="note-view"),
     path(
