@@ -50,7 +50,10 @@
   --mask-tab-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M8,0 L8,8 L0,8 A8,8 0 0,0 8,0 Z' fill='white'/%3E%3C/svg%3E");
   --mask-tab-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M0,0 L0,8 L8,8 A8,8 0 0,1 0,0 Z' fill='white'/%3E%3C/svg%3E");
 
-  /* Border radius */
+  /* Border radius. --radius-xs was referenced across the app for years but
+     never defined — every var(--radius-xs) corner silently rendered square.
+     Defined here so those chips and buttons actually round. */
+  --radius-xs: 0.25rem;
   --radius-sm: 0.25rem;
   --radius-md: 0.25rem;
   --radius-lg: 0.75rem;

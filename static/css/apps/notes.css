@@ -76,8 +76,31 @@ body:has(.note-page.standalone) {
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
+  position: relative;
   transition: width 0.2s ease;
-  width: 17rem;
+  width: var(--panel-width, 17rem);
+}
+
+/* Drag handle on the panel's right edge; width persists per user. */
+.note-panel .panel-resizer {
+  bottom: 0;
+  cursor: col-resize;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 0.25rem;
+  z-index: 10;
+}
+
+.note-panel .panel-resizer:hover,
+.note-panel.resizing .panel-resizer {
+  background: var(--border-medium);
+}
+
+/* Width snaps instantly while dragging — the open/close transition would
+   make the handle feel rubbery. */
+.note-panel.resizing {
+  transition: none;
 }
 
 /* Collapsed = a slim rail with the bottom toggle still reachable, matching
@@ -94,7 +117,8 @@ body:has(.note-page.standalone) {
 
 .note-panel.collapsed .panel-header,
 .note-panel.collapsed .panel-pane.files-pane,
-.note-panel.collapsed .panel-pane.outline-pane {
+.note-panel.collapsed .panel-pane.outline-pane,
+.note-panel.collapsed .panel-resizer {
   display: none;
 }
 
@@ -114,7 +138,8 @@ body:has(.note-page.standalone) {
 
   .note-panel:not(.expanded) .panel-header,
   .note-panel:not(.expanded) .panel-pane.files-pane,
-  .note-panel:not(.expanded) .panel-pane.outline-pane {
+  .note-panel:not(.expanded) .panel-pane.outline-pane,
+  .note-panel:not(.expanded) .panel-resizer {
     display: none;
   }
 
@@ -196,6 +221,12 @@ body:has(.note-page.standalone) {
   display: flex;
   flex-shrink: 0;
   gap: 0.25rem;
+}
+
+/* Header action icons (sort, collapse-all) match the 1rem tab text rather
+   than the chunkier 1.25rem panel-btn default. */
+.note-panel .panel-header .panel-btn {
+  font-size: 1rem;
 }
 
 .note-panel .panel-header-actions :is(.files-actions, .outline-actions) {

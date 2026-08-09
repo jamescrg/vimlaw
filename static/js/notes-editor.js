@@ -618,9 +618,12 @@ function updateSidebarActive(noteId) {
 
 const PANEL_STATE_KEY = "notes-editor-note-panel";
 const PANEL_TAB_KEY = "notes-editor-panel-tab";
+const PANEL_WIDTH_KEY = "notes-editor-panel-width";
 // Collapsed leaves a 3rem rail (so the bottom toggle stays reachable) —
 // only widths beyond it count as "open".
 const PANEL_RAIL_PX = 64;
+const PANEL_MIN_WIDTH = 180;
+const PANEL_MAX_WIDTH = 560;
 
 // Point the toggle's icon at the action it will perform: an open panel
 // gets the "close" glyph, a collapsed one the "open" glyph.
@@ -696,6 +699,44 @@ function setupPanelTabs() {
     });
 }
 
+function setupPanelResize() {
+  const panel = document.querySelector(".note-panel");
+  const resizer = panel && panel.querySelector(".panel-resizer");
+  if (!resizer) return;
+
+  const storedWidth = parseInt(localStorage.getItem(PANEL_WIDTH_KEY), 10);
+  if (storedWidth) panel.style.setProperty("--panel-width", storedWidth + "px");
+
+  resizer.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    resizer.setPointerCapture(e.pointerId);
+    panel.classList.add("resizing");
+    const startX = e.clientX;
+    const startWidth = panel.offsetWidth;
+
+    const onMove = (ev) => {
+      const width = Math.min(
+        PANEL_MAX_WIDTH,
+        Math.max(PANEL_MIN_WIDTH, startWidth + ev.clientX - startX),
+      );
+      panel.style.setProperty("--panel-width", width + "px");
+    };
+    const onUp = () => {
+      resizer.removeEventListener("pointermove", onMove);
+      resizer.removeEventListener("pointerup", onUp);
+      panel.classList.remove("resizing");
+      localStorage.setItem(PANEL_WIDTH_KEY, String(panel.offsetWidth));
+    };
+    resizer.addEventListener("pointermove", onMove);
+    resizer.addEventListener("pointerup", onUp);
+  });
+
+  resizer.addEventListener("dblclick", () => {
+    panel.style.removeProperty("--panel-width");
+    localStorage.removeItem(PANEL_WIDTH_KEY);
+  });
+}
+
 function restorePanelStates() {
   const panel = document.querySelector(".note-panel");
   if (panel) {
@@ -714,6 +755,7 @@ window.togglePanel = togglePanel;
 document.addEventListener("DOMContentLoaded", () => {
   restorePanelStates();
   setupPanelTabs();
+  setupPanelResize();
   syncPanelIcons();
   initEditor();
   setupHtmxHandlers();
