@@ -45,6 +45,13 @@ export const NoteRef = TiptapNode.create({
       node.attrs.label,
     ];
   },
+
+  // Atom nodes contribute NOTHING to the clipboard's text/plain unless
+  // told how — copied chips silently vanished when pasting into
+  // LibreOffice or any plain-text target. Hand the label over.
+  renderText({ node }) {
+    return node.attrs.label;
+  },
 });
 
 // ─── Reference Clicks ────────────────────────────────────────────────────────
