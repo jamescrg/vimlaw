@@ -20,18 +20,65 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
   <div class="note-editor-layout">
-    <!-- Sidebar -->
-    <aside class="note-sidebar">
-      <div id="sidebar-list-container">{% include "case/notes/sidebar-list.html" %}</div>
+    <!-- Left Panel - Files / Outline -->
+    <aside class="note-panel">
+      <div class="panel-header">
+        <div class="panel-tabs">
+          <button type="button" class="panel-tab active" data-tab="files">Files</button>
+          <button type="button" class="panel-tab" data-tab="outline">Outline</button>
+        </div>
+        <div class="panel-header-actions">
+          <div class="files-actions">
+            <div class="dropdown" x-data="dropdown()">
+              <button class="panel-btn"
+                      type="button"
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open"
+                      title="Sort notes">
+                <i class="icon-arrow-down-up"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end panel-sort-menu"
+                  x-ref="menu"
+                  x-show="open"
+                  @click="close()">
+                {% for key, label in sidebar_sort_options %}
+                  <li>
+                    <a class="dropdown-item {% if current_sort == key %}active{% endif %}"
+                       href="#"
+                       hx-get="{% url 'case:note-sidebar-sort' note.id key %}"
+                       hx-target="#sidebar-list-container">{{ label }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <div class="outline-actions">
+            <button type="button"
+                    class="panel-btn"
+                    id="outline-collapse-btn"
+                    title="Collapse/Expand all">
+              <i class="icon-chevrons-down-up"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-pane files-pane note-sidebar">
+        <div id="sidebar-list-container">{% include "case/notes/sidebar-list.html" %}</div>
+      </div>
+      <div class="panel-pane outline-pane note-outline">
+        <ul class="outline-list" id="outline-list">
+        </ul>
+      </div>
     </aside>
     <!-- Main Editor Area -->
     <main class="note-main">
       <div class="note-toolbar-wrapper">
         <button class="panel-btn"
-                id="sidebar-toggle-btn"
+                id="panel-toggle-btn"
                 type="button"
-                onclick="togglePanel('note-sidebar')"
-                title="Toggle notes panel">
+                onclick="togglePanel()"
+                title="Toggle panel">
           <i class="icon-panel-left-close"></i>
         </button>
         <div class="note-toolbar">
@@ -88,13 +135,6 @@
             </div>
           </div>
         </div>
-        <button class="panel-btn"
-                id="outline-toggle-btn"
-                type="button"
-                onclick="togglePanel('note-outline')"
-                title="Toggle outline panel">
-          <i class="icon-panel-right-close"></i>
-        </button>
       </div>
       <!-- Search and Replace Bar -->
       <div id="search-replace-bar" class="search-replace-bar">
@@ -129,20 +169,6 @@
         </li>
       </div>
     </main>
-    <!-- Right Panel - Outline -->
-    <aside class="note-outline">
-      <div class="outline-header">
-        <span>This Note</span>
-        <button type="button"
-                class="panel-btn"
-                id="outline-collapse-btn"
-                title="Collapse/Expand all">
-          <i class="icon-chevrons-down-up"></i>
-        </button>
-      </div>
-      <ul class="outline-list" id="outline-list">
-      </ul>
-    </aside>
   </div>
   <script type="module" src="{% static_v 'js/notes-editor.js' %}"></script>
 {% endblock content %}

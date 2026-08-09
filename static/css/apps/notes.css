@@ -67,8 +67,9 @@ body:has(.note-page.standalone) {
   margin-top: 1.75rem;
 }
 
-/* Left Panel - Notes List */
-.note-sidebar {
+/* Left Panel - Files / Outline (Typora-style: one full-height panel, the
+   tab row sharing the toolbar's 3rem band) */
+.note-panel {
   background: var(--background-section);
   border-right: 1px solid var(--border-medium);
   display: flex;
@@ -79,38 +80,107 @@ body:has(.note-page.standalone) {
   width: 17rem;
 }
 
-.note-sidebar.collapsed {
+.note-panel.collapsed {
   border-right: none;
   width: 0;
 }
 
-/* Collapse sidebar by default on smaller screens */
+/* Collapse the panel by default on smaller screens */
 @media (width <= 1199px) {
-  .note-sidebar:not(.expanded) {
+  .note-panel:not(.expanded) {
     border-right: none;
     width: 0;
   }
 }
 
-.note-sidebar .sidebar-header {
+.note-panel .panel-header {
   align-items: center;
   background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium);
-  color: var(--color-secondary);
   display: flex;
   flex-shrink: 0;
-  font-size: 1rem;
-  font-weight: 600;
   gap: 0.5rem;
   height: 3rem;
   justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0 0.75rem;
 }
 
-.note-sidebar .sidebar-header > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.note-panel .panel-tabs {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.note-panel .panel-tab {
+  background: none;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.note-panel .panel-tab:hover {
+  color: var(--color-primary);
+}
+
+.note-panel .panel-tab.active {
+  background: var(--background-control);
+  color: var(--color-primary);
+}
+
+.note-panel .panel-header-actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+
+.note-panel .panel-header-actions :is(.files-actions, .outline-actions) {
+  display: flex;
+}
+
+.note-panel .panel-header .panel-btn:hover {
+  background: var(--background-section);
+}
+
+.note-panel .panel-header .panel-btn i {
+  color: inherit;
+}
+
+/* The active tab decides which pane shows and which header action rides
+   along (sort for Files, collapse-all for Outline). */
+.note-panel .panel-pane {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.note-panel:not(.tab-outline) .files-pane {
+  display: flex;
+}
+
+.note-panel.tab-outline .outline-pane {
+  display: flex;
+}
+
+.note-panel.tab-outline .panel-header .files-actions {
+  display: none;
+}
+
+.note-panel:not(.tab-outline) .panel-header .outline-actions {
+  display: none;
+}
+
+.note-panel #sidebar-list-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Common panel button style */
@@ -131,23 +201,6 @@ body:has(.note-page.standalone) {
 .panel-btn:hover {
   background: var(--background-section);
   color: var(--color-primary);
-}
-
-/* New-note + sort live inside the header row itself — the sidebar header,
-   toolbar, and outline header form one continuous 3rem band. */
-.note-sidebar .sidebar-header-actions {
-  align-items: center;
-  display: flex;
-  flex-shrink: 0;
-  gap: 0.25rem;
-}
-
-.note-sidebar .sidebar-header-actions .panel-btn:hover {
-  background: var(--background-section);
-}
-
-.note-sidebar .sidebar-header-actions .panel-btn i {
-  color: inherit;
 }
 
 .note-sidebar .sidebar-notes-list {
@@ -210,45 +263,8 @@ body:has(.note-page.standalone) {
   padding: 2rem 3rem 8rem;
 }
 
-/* Right Panel - Outline */
-.note-outline {
-  background: var(--background-section);
-  border-left: 1px solid var(--border-medium);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  overflow: hidden;
-  transition: width 0.2s ease;
-  width: 17rem;
-}
-
-.note-outline.collapsed {
-  border-left: none;
-  width: 0;
-}
-
-/* Collapse outline by default on mobile screens */
-@media (width <= 767px) {
-  .note-outline:not(.expanded) {
-    border-left: none;
-    width: 0;
-  }
-}
-
-.note-outline .outline-header {
-  align-items: center;
-  background: var(--background-subnav);
-  border-bottom: 1px solid var(--border-medium);
-  color: var(--color-secondary);
-  display: flex;
-  flex-shrink: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  height: 3rem;
-  justify-content: space-between;
-  padding: 0 1rem;
-}
-
+/* Outline pane (inside the merged panel; .note-outline scopes the list
+   styles below) */
 .note-outline .outline-list {
   display: flex;
   flex: 1;

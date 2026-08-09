@@ -614,67 +614,76 @@ function updateSidebarActive(noteId) {
   if (activeItem) activeItem.classList.add("active");
 }
 
-// ─── Panel Collapse ──────────────────────────────────────────────────────────
+// ─── Panel Collapse + Tabs ───────────────────────────────────────────────────
 
-const PANEL_TOGGLES = {
-  "note-sidebar": { btnId: "sidebar-toggle-btn", side: "left" },
-  "note-outline": { btnId: "outline-toggle-btn", side: "right" },
-};
+const PANEL_STATE_KEY = "notes-editor-note-panel";
+const PANEL_TAB_KEY = "notes-editor-panel-tab";
 
 // Point the toggle's icon at the action it will perform: an open panel
 // gets the "close" glyph, a collapsed one the "open" glyph.
-function syncPanelIcon(panelClass, isOpen) {
-  const toggle = PANEL_TOGGLES[panelClass];
-  const icon = document.querySelector("#" + toggle.btnId + " i");
-  if (!icon) return;
-  icon.className =
-    "icon-panel-" + toggle.side + "-" + (isOpen ? "close" : "open");
+function syncPanelIcon(isOpen) {
+  const icon = document.querySelector("#panel-toggle-btn i");
+  if (icon) icon.className = "icon-panel-left-" + (isOpen ? "close" : "open");
 }
 
-// Measured width is the ground truth (media queries collapse panels
+// Measured width is the ground truth (media queries collapse the panel
 // without touching the classes), so re-sync from it on load and resize.
 function syncPanelIcons() {
-  for (const panelClass of Object.keys(PANEL_TOGGLES)) {
-    const panel = document.querySelector("." + panelClass);
-    if (panel) syncPanelIcon(panelClass, panel.offsetWidth > 0);
-  }
+  const panel = document.querySelector(".note-panel");
+  if (panel) syncPanelIcon(panel.offsetWidth > 0);
 }
 
-function togglePanel(panelClass) {
-  const panel = document.querySelector("." + panelClass);
+function togglePanel() {
+  const panel = document.querySelector(".note-panel");
   if (!panel) return;
 
   const isVisible = panel.offsetWidth > 0;
-  if (isVisible) {
-    panel.classList.add("collapsed");
-    panel.classList.remove("expanded");
-    localStorage.setItem("notes-editor-" + panelClass, "collapsed");
-  } else {
-    panel.classList.remove("collapsed");
-    panel.classList.add("expanded");
-    localStorage.setItem("notes-editor-" + panelClass, "expanded");
-  }
-  syncPanelIcon(panelClass, !isVisible);
+  panel.classList.toggle("collapsed", isVisible);
+  panel.classList.toggle("expanded", !isVisible);
+  localStorage.setItem(PANEL_STATE_KEY, isVisible ? "collapsed" : "expanded");
+  syncPanelIcon(!isVisible);
+}
+
+function setPanelTab(tab) {
+  const panel = document.querySelector(".note-panel");
+  if (!panel) return;
+
+  panel.classList.toggle("tab-outline", tab === "outline");
+  panel
+    .querySelectorAll(".panel-tab")
+    .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
+  localStorage.setItem(PANEL_TAB_KEY, tab);
+}
+
+function setupPanelTabs() {
+  document.querySelectorAll(".note-panel .panel-tab").forEach((btn) => {
+    btn.addEventListener("click", () => setPanelTab(btn.dataset.tab));
+  });
+
+  // The sort menu lives in the static panel header while the list swaps
+  // elsewhere, so move its checkmark client-side.
+  document
+    .querySelectorAll(".panel-sort-menu .dropdown-item")
+    .forEach((item) => {
+      item.addEventListener("click", () => {
+        item
+          .closest(".panel-sort-menu")
+          .querySelectorAll(".dropdown-item")
+          .forEach((el) => el.classList.remove("active"));
+        item.classList.add("active");
+      });
+    });
 }
 
 function restorePanelStates() {
-  const screenWidth = window.innerWidth;
-
-  const sidebarState = localStorage.getItem("notes-editor-note-sidebar");
-  const sidebar = document.querySelector(".note-sidebar");
-  if (sidebar) {
-    if (sidebarState === "collapsed") sidebar.classList.add("collapsed");
-    else if (sidebarState === "expanded" && screenWidth >= 1200)
-      sidebar.classList.add("expanded");
+  const panel = document.querySelector(".note-panel");
+  if (panel) {
+    const stored = localStorage.getItem(PANEL_STATE_KEY);
+    if (stored === "collapsed") panel.classList.add("collapsed");
+    else if (stored === "expanded" && window.innerWidth >= 1200)
+      panel.classList.add("expanded");
   }
-
-  const outlineState = localStorage.getItem("notes-editor-note-outline");
-  const outline = document.querySelector(".note-outline");
-  if (outline) {
-    if (outlineState === "collapsed") outline.classList.add("collapsed");
-    else if (outlineState === "expanded" && screenWidth >= 768)
-      outline.classList.add("expanded");
-  }
+  setPanelTab(localStorage.getItem(PANEL_TAB_KEY) || "files");
 }
 
 window.togglePanel = togglePanel;
@@ -683,6 +692,7 @@ window.togglePanel = togglePanel;
 
 document.addEventListener("DOMContentLoaded", () => {
   restorePanelStates();
+  setupPanelTabs();
   syncPanelIcons();
   initEditor();
   setupHtmxHandlers();

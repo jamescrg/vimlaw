@@ -1,34 +1,8 @@
-<div class="sidebar-header">
-  <span>
-    {% if note.matter %}
-      {{ note.matter.name }}
-    {% else %}
-      Notes
-    {% endif %}
-  </span>
-  <div class="sidebar-header-actions">
-    <div class="dropdown" x-data="dropdown()">
-      <button class="panel-btn"
-              type="button"
-              x-ref="button"
-              @click="toggle()"
-              :aria-expanded="open"
-              title="Sort notes">
-        <i class="icon-arrow-down-up"></i>
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
-        {% for key, label in sidebar_sort_options %}
-          <li>
-            <a class="dropdown-item {% if current_sort == key %}active{% endif %}"
-               href="#"
-               hx-get="{% url 'case:note-sidebar-sort' note.id key %}"
-               hx-target="#sidebar-list-container">{{ label }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-</div>
+{% comment %}
+Files-tab list for the merged note panel. The panel header (tabs + sort)
+lives in editor.html; this partial is the htmx swap target for sorting
+(#sidebar-list-container), so it renders the list alone.
+{% endcomment %}
 <ul class="sidebar-notes-list">
   {% for n in notes %}
     <li class="{% if n.id == note.id %}active{% endif %}"
