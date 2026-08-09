@@ -31,6 +31,27 @@ without crowding the dialogue.
             {% endif %}
           </div>
         </li>
+      {% elif event.type == "citing" %}
+        <li class="ai-research-step">
+          <i class="icon-git-branch"></i>
+          <div>
+            Cases citing
+            {% if event.case_name %}
+              {{ event.case_name }}
+            {% else %}
+              cluster {{ event.cluster_id }}
+            {% endif %}
+            <span class="detail-text">{{ event.result_count }} result{{ event.result_count|pluralize }}</span>
+            {% if event.results %}
+              <div class="ai-research-hits">
+                {% for hit in event.results %}
+                  <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id hit.cluster_id %}"
+                     target="_blank">{{ hit.case_name }}</a>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </li>
       {% elif event.type == "read" %}
         <li class="ai-research-step">
           <i class="icon-book-open"></i>

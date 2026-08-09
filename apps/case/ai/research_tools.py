@@ -32,10 +32,15 @@ logger = logging.getLogger(__name__)
 
 SNIPPET_LIMIT = 500
 
+# Hard ceiling on results per search. The default page size is the depth's
+# page_size; the model may ask for more (up to this cap) when a survey needs
+# depth. Result rows are resent every model turn, so the cap bounds cost.
+MAX_SEARCH_RESULTS = 20
+
 DEPTH_BUDGETS = {
     "quick": {
         "max_tool_calls": 5,
-        "page_size": 4,
+        "page_size": 6,
         "read_char_cap": 20_000,
         "treatment_tool": False,
         "plan_first": False,
@@ -43,7 +48,7 @@ DEPTH_BUDGETS = {
     },
     "standard": {
         "max_tool_calls": 12,
-        "page_size": 6,
+        "page_size": 8,
         "read_char_cap": 30_000,
         "treatment_tool": True,
         "plan_first": False,
@@ -51,7 +56,7 @@ DEPTH_BUDGETS = {
     },
     "deep": {
         "max_tool_calls": 25,
-        "page_size": 8,
+        "page_size": 10,
         "read_char_cap": 40_000,
         "treatment_tool": True,
         "plan_first": True,
@@ -97,10 +102,58 @@ def build_tools(depth):
                     },
                     "num_results": {
                         "type": "integer",
-                        "description": "How many results to return.",
+                        "description": (
+                            "How many results to return (up to "
+                            f"{MAX_SEARCH_RESULTS}). Ask for more than the "
+                            "default when surveying a broad doctrine — one "
+                            "deep result list beats several near-identical "
+                            "queries."
+                        ),
                     },
                 },
                 "required": ["query"],
+            },
+        },
+        {
+            "name": "find_citing_cases",
+            "description": (
+                "Forward citation search: find later cases that cite a given "
+                "case. Use this to get from an old or seminal case to the "
+                "current controlling statement of its rule, to see how a "
+                "doctrine developed, or to test whether an authority is "
+                "still being followed. Optionally filter the citing cases "
+                "with query terms."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "cluster_id": {
+                        "type": "integer",
+                        "description": "The CourtListener cluster id of the cited case.",
+                    },
+                    "query": {
+                        "type": "string",
+                        "description": (
+                            "Optional search terms to filter the citing "
+                            "cases (same syntax as search_caselaw). Omit to "
+                            "see the most relevant citing cases overall."
+                        ),
+                    },
+                    "court_ids": {
+                        "type": "string",
+                        "description": (
+                            "Optional space-separated CourtListener court ids "
+                            "to restrict the search. Omit to search all courts."
+                        ),
+                    },
+                    "num_results": {
+                        "type": "integer",
+                        "description": (
+                            f"How many results to return (up to {MAX_SEARCH_RESULTS})."
+                        ),
+                    },
+                },
+                "required": ["cluster_id"],
             },
         },
         {
@@ -234,11 +287,9 @@ def make_executor(matter, depth, conversation_id=None):
     seen_searches = {}
     seen_lookups = {}
 
-    def _search(tool_input):
-        query = sanitize_query(str(tool_input.get("query", ""))[:300])
-        court_ids = str(tool_input.get("court_ids", "") or "").strip()
-        limit = min(int(tool_input.get("num_results") or budget["page_size"]), 10)
-
+    def _run_query(query, court_ids, limit, event_type, event_extra=None):
+        """Shared body of search_caselaw and find_citing_cases: dedupe,
+        query CourtListener, shape rows, emit the trail event."""
         dedupe_key = (query, court_ids, limit)
         if dedupe_key in seen_searches:
             payload = dict(seen_searches[dedupe_key])
@@ -247,12 +298,13 @@ def make_executor(matter, depth, conversation_id=None):
                 "results. Adjust the query instead of repeating it."
             )
             event = {
-                "type": "search",
+                "type": event_type,
                 "query": query,
                 "court_ids": court_ids,
                 "result_count": len(payload.get("results", [])),
                 "repeat": True,
                 "ts": _now(),
+                **(event_extra or {}),
             }
             return payload, event
 
@@ -274,7 +326,7 @@ def make_executor(matter, depth, conversation_id=None):
             payload["error"] = f"Search failed (status {status}). Adjust the query."
         seen_searches[dedupe_key] = payload
         event = {
-            "type": "search",
+            "type": event_type,
             "query": query,
             "court_ids": court_ids,
             "result_count": len(rows),
@@ -283,8 +335,45 @@ def make_executor(matter, depth, conversation_id=None):
                 for r in rows
             ],
             "ts": _now(),
+            **(event_extra or {}),
         }
         return payload, event
+
+    def _search(tool_input):
+        query = sanitize_query(str(tool_input.get("query", ""))[:300])
+        court_ids = str(tool_input.get("court_ids", "") or "").strip()
+        limit = min(
+            int(tool_input.get("num_results") or budget["page_size"]),
+            MAX_SEARCH_RESULTS,
+        )
+        return _run_query(query, court_ids, limit, "search")
+
+    def _citing(tool_input):
+        cluster_id = int(tool_input.get("cluster_id") or 0)
+        if not cluster_id:
+            return {"error": "find_citing_cases needs a cluster_id."}, None
+        filter_terms = sanitize_query(str(tool_input.get("query", "") or "")[:300])
+        court_ids = str(tool_input.get("court_ids", "") or "").strip()
+        limit = min(
+            int(tool_input.get("num_results") or budget["page_size"]),
+            MAX_SEARCH_RESULTS,
+        )
+        # cites:() is composed tool-side so the model never writes fielded
+        # queries itself (the syntax rules forbid them).
+        query = f"cites:({cluster_id})"
+        if filter_terms:
+            query += f" AND ({filter_terms})"
+        known = opinion_cache.get(cluster_id, {})
+        return _run_query(
+            query,
+            court_ids,
+            limit,
+            "citing",
+            event_extra={
+                "cluster_id": cluster_id,
+                "case_name": known.get("case_name", ""),
+            },
+        )
 
     def _conv_cache_key(cluster_id):
         return f"research_opinion_{conversation_id}_{cluster_id}"
@@ -481,6 +570,7 @@ def make_executor(matter, depth, conversation_id=None):
 
     handlers = {
         "search_caselaw": _search,
+        "find_citing_cases": _citing,
         "read_opinion": _read,
         "check_treatment": _treatment,
         "lookup_citation": _lookup,
