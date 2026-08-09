@@ -54,13 +54,13 @@ function updateSaveStatus(status) {
   const icon = btn.querySelector("i");
   if (!icon) return;
 
+  // Same disk glyph either way — the .active urgent tint signals unsaved
+  icon.className = "icon-save";
   if (status === "saved") {
     btn.classList.remove("active");
     btn.title = "Saved";
-    icon.className = "icon-cloud";
   } else {
     btn.classList.add("active");
     btn.title = status === "saving" ? "Saving..." : "Unsaved changes";
-    icon.className = "icon-cloud-upload";
   }
 }

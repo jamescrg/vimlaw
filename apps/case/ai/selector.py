@@ -185,7 +185,7 @@ def build_manifest(matter, current_conversation=None, include_library=True):
         )
 
         # Full note content (no truncation) — same shape as collect_context_items
-        content_parts = [f"**Note: {note.title}**"]
+        content_parts = [f"**Note [note:{note.id}]: {note.title}**"]
         if note.category:
             content_parts[0] += f" [{note.get_category_display()}]"
         if note.topic:
@@ -379,7 +379,8 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                 )
             )
             content_map[("library", note.id)] = (
-                f"**Library note: {note.title}** ({folder_path})\n{content_text}"
+                f"**Library note [note:{note.id}]: {note.title}**"
+                f" ({folder_path})\n{content_text}"
             )
 
     return manifest_items, content_map

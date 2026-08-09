@@ -23,10 +23,13 @@ import {
   History,
   Dropcursor,
   Gapcursor,
-  Highlight,
 } from "./vendor/tiptap.bundle.js";
 
+import { HighlightMark } from "./highlight-mark.js";
+import { PlainCopy } from "./plain-copy.js";
+
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
+import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
 import {
   getMarkdownContent,
@@ -182,12 +185,13 @@ function initEditor() {
       History,
       Dropcursor,
       Gapcursor,
-      Highlight.configure({ multicolor: true }),
+      HighlightMark.configure({ multicolor: true }),
       Code,
       CodeBlockLowlight.configure({ lowlight: createLowlight(lowlightAll) }),
       HorizontalRule,
       NoteRef,
       SearchHighlight,
+      PlainCopy,
     ],
     content: initialContent,
     onUpdate() {
@@ -267,32 +271,18 @@ function setupTitleEdit() {
 // ─── Toolbar ─────────────────────────────────────────────────────────────────
 
 function setupToolbar() {
-  const toolbarActions = {
-    "btn-bold": () => state.editor.chain().focus().toggleBold().run(),
-    "btn-italic": () => state.editor.chain().focus().toggleItalic().run(),
-    "btn-strike": () => state.editor.chain().focus().toggleStrike().run(),
-    "btn-heading-1": () =>
-      state.editor.chain().focus().toggleHeading({ level: 1 }).run(),
-    "btn-heading-2": () =>
-      state.editor.chain().focus().toggleHeading({ level: 2 }).run(),
-    "btn-heading-3": () =>
-      state.editor.chain().focus().toggleHeading({ level: 3 }).run(),
-    "btn-bullet-list": () =>
-      state.editor.chain().focus().toggleBulletList().run(),
-    "btn-ordered-list": () =>
-      state.editor.chain().focus().toggleOrderedList().run(),
-    "btn-blockquote": () =>
-      state.editor.chain().focus().toggleBlockquote().run(),
-  };
+  const cluster = document.querySelector(".note-toolbar .format-toolbar");
+  if (!cluster) return;
 
-  for (const [id, handler] of Object.entries(toolbarActions)) {
-    bindClick(id, handler);
-  }
+  // Synced notes are read-only, but TipTap still applies programmatic
+  // commands to a non-editable editor — hide the format cluster (the rest
+  // of the bar stays useful). The element survives note switches, so
+  // re-show it when an editable note loads.
+  const readOnly = !!(window.NOTE_DATA && window.NOTE_DATA.readOnly);
+  cluster.style.display = readOnly ? "none" : "";
+  if (readOnly) return;
 
-  bindClick("insert-source-btn", (e) => {
-    e.preventDefault();
-    openReferencePicker();
-  });
+  connectFormatToolbar(cluster, state.editor);
 }
 
 // ─── Keyboard Shortcuts ──────────────────────────────────────────────────────
@@ -627,42 +617,138 @@ function updateSidebarActive(noteId) {
   if (activeItem) activeItem.classList.add("active");
 }
 
-// ─── Panel Collapse ──────────────────────────────────────────────────────────
+// ─── Panel Collapse + Tabs ───────────────────────────────────────────────────
 
-function togglePanel(panelClass) {
-  const panel = document.querySelector("." + panelClass);
+const PANEL_STATE_KEY = "notes-editor-note-panel";
+const PANEL_TAB_KEY = "notes-editor-panel-tab";
+const PANEL_WIDTH_KEY = "notes-editor-panel-width";
+// Collapsed leaves a 3rem rail (so the bottom toggle stays reachable) —
+// only widths beyond it count as "open".
+const PANEL_RAIL_PX = 64;
+const PANEL_MIN_WIDTH = 180;
+const PANEL_MAX_WIDTH = 560;
+
+// Point the toggle's icon at the action it will perform: an open panel
+// gets the "close" glyph, a collapsed one the "open" glyph.
+function syncPanelIcon(isOpen) {
+  const icon = document.querySelector("#panel-toggle-btn i");
+  if (icon) icon.className = "icon-panel-left-" + (isOpen ? "close" : "open");
+}
+
+// Measured width is the ground truth (media queries collapse the panel
+// without touching the classes), so re-sync from it on load and resize.
+function syncPanelIcons() {
+  const panel = document.querySelector(".note-panel");
+  if (panel) syncPanelIcon(panel.offsetWidth > PANEL_RAIL_PX);
+}
+
+function togglePanel() {
+  const panel = document.querySelector(".note-panel");
   if (!panel) return;
 
-  const isVisible = panel.offsetWidth > 0;
-  if (isVisible) {
-    panel.classList.add("collapsed");
-    panel.classList.remove("expanded");
-    localStorage.setItem("notes-editor-" + panelClass, "collapsed");
-  } else {
-    panel.classList.remove("collapsed");
-    panel.classList.add("expanded");
-    localStorage.setItem("notes-editor-" + panelClass, "expanded");
-  }
+  const isVisible = panel.offsetWidth > PANEL_RAIL_PX;
+  panel.classList.toggle("collapsed", isVisible);
+  panel.classList.toggle("expanded", !isVisible);
+  localStorage.setItem(PANEL_STATE_KEY, isVisible ? "collapsed" : "expanded");
+  syncPanelIcon(!isVisible);
+}
+
+function openPanel() {
+  const panel = document.querySelector(".note-panel");
+  if (!panel) return;
+
+  panel.classList.remove("collapsed");
+  panel.classList.add("expanded");
+  localStorage.setItem(PANEL_STATE_KEY, "expanded");
+  syncPanelIcon(true);
+}
+
+function setPanelTab(tab) {
+  const panel = document.querySelector(".note-panel");
+  if (!panel) return;
+
+  panel.classList.toggle("tab-outline", tab === "outline");
+  panel
+    .querySelectorAll(".panel-tab, .rail-tab")
+    .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
+  localStorage.setItem(PANEL_TAB_KEY, tab);
+}
+
+function setupPanelTabs() {
+  document.querySelectorAll(".note-panel .panel-tab").forEach((btn) => {
+    btn.addEventListener("click", () => setPanelTab(btn.dataset.tab));
+  });
+
+  // Rail icons expand the collapsed panel straight onto their tab
+  document.querySelectorAll(".note-panel .rail-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setPanelTab(btn.dataset.tab);
+      openPanel();
+    });
+  });
+
+  // The sort menu lives in the static panel header while the list swaps
+  // elsewhere, so move its checkmark client-side.
+  document
+    .querySelectorAll(".panel-sort-menu .dropdown-item")
+    .forEach((item) => {
+      item.addEventListener("click", () => {
+        item
+          .closest(".panel-sort-menu")
+          .querySelectorAll(".dropdown-item")
+          .forEach((el) => el.classList.remove("active"));
+        item.classList.add("active");
+      });
+    });
+}
+
+function setupPanelResize() {
+  const panel = document.querySelector(".note-panel");
+  const resizer = panel && panel.querySelector(".panel-resizer");
+  if (!resizer) return;
+
+  const storedWidth = parseInt(localStorage.getItem(PANEL_WIDTH_KEY), 10);
+  if (storedWidth) panel.style.setProperty("--panel-width", storedWidth + "px");
+
+  resizer.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    resizer.setPointerCapture(e.pointerId);
+    panel.classList.add("resizing");
+    const startX = e.clientX;
+    const startWidth = panel.offsetWidth;
+
+    const onMove = (ev) => {
+      const width = Math.min(
+        PANEL_MAX_WIDTH,
+        Math.max(PANEL_MIN_WIDTH, startWidth + ev.clientX - startX),
+      );
+      panel.style.setProperty("--panel-width", width + "px");
+    };
+    const onUp = () => {
+      resizer.removeEventListener("pointermove", onMove);
+      resizer.removeEventListener("pointerup", onUp);
+      panel.classList.remove("resizing");
+      localStorage.setItem(PANEL_WIDTH_KEY, String(panel.offsetWidth));
+    };
+    resizer.addEventListener("pointermove", onMove);
+    resizer.addEventListener("pointerup", onUp);
+  });
+
+  resizer.addEventListener("dblclick", () => {
+    panel.style.removeProperty("--panel-width");
+    localStorage.removeItem(PANEL_WIDTH_KEY);
+  });
 }
 
 function restorePanelStates() {
-  const screenWidth = window.innerWidth;
-
-  const sidebarState = localStorage.getItem("notes-editor-note-sidebar");
-  const sidebar = document.querySelector(".note-sidebar");
-  if (sidebar) {
-    if (sidebarState === "collapsed") sidebar.classList.add("collapsed");
-    else if (sidebarState === "expanded" && screenWidth >= 1200)
-      sidebar.classList.add("expanded");
+  const panel = document.querySelector(".note-panel");
+  if (panel) {
+    const stored = localStorage.getItem(PANEL_STATE_KEY);
+    if (stored === "collapsed") panel.classList.add("collapsed");
+    else if (stored === "expanded" && window.innerWidth >= 1200)
+      panel.classList.add("expanded");
   }
-
-  const outlineState = localStorage.getItem("notes-editor-note-outline");
-  const outline = document.querySelector(".note-outline");
-  if (outline) {
-    if (outlineState === "collapsed") outline.classList.add("collapsed");
-    else if (outlineState === "expanded" && screenWidth >= 768)
-      outline.classList.add("expanded");
-  }
+  setPanelTab(localStorage.getItem(PANEL_TAB_KEY) || "files");
 }
 
 window.togglePanel = togglePanel;
@@ -671,7 +757,12 @@ window.togglePanel = togglePanel;
 
 document.addEventListener("DOMContentLoaded", () => {
   restorePanelStates();
+  setupPanelTabs();
+  setupPanelResize();
+  syncPanelIcons();
   initEditor();
   setupHtmxHandlers();
   setupOutlineCollapseAll();
 });
+
+window.addEventListener("resize", syncPanelIcons);

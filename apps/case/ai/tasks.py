@@ -142,6 +142,13 @@ def process_ai_request(
             FACTS_TRIGGER_RE,
             apply_fact_blocks,
         )
+        from .note_blocks import (
+            NOTE_BLOCKS_RE,
+            NOTES_PROTOCOL,
+            NOTES_TRIGGER_RE,
+            apply_note_blocks,
+            strip_fake_note_confirmations,
+        )
         from .witness_blocks import (
             WITNESS_BLOCK_RE,
             WITNESS_TRIGGER_RE,
@@ -166,6 +173,8 @@ def process_ai_request(
             context_text += "\n\n" + FACTS_PROTOCOL
         if WITNESS_TRIGGER_RE.search(recent_user_text):
             context_text += "\n\n" + WITNESSES_PROTOCOL
+        if NOTES_TRIGGER_RE.search(recent_user_text):
+            context_text += "\n\n" + NOTES_PROTOCOL
 
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)
@@ -287,6 +296,23 @@ def process_ai_request(
         if WITNESS_BLOCK_RE.search(response_text):
             update_status("applying", "Adding witnesses...")
             response_text = apply_witness_blocks(response_text, matter, user)
+        # Order matters: imitation confirmations are scrubbed from the raw
+        # response first (only model-written lines can match at this
+        # point), then real blocks are applied and produce the genuine
+        # confirmation lines.
+        response_text = strip_fake_note_confirmations(response_text)
+        if NOTE_BLOCKS_RE.search(response_text):
+            update_status("applying", "Writing notes...")
+            response_text = apply_note_blocks(response_text, matter, user)
+
+        # Any raw [doc:]/[hl:]/[note:] handles the model leaked into prose
+        # become human-readable markdown links (hallucinated ids are
+        # omitted). Runs after the write blocks so their content has
+        # already been consumed.
+        from .handles import HANDLE_RE, resolve_handles_for_chat
+
+        if HANDLE_RE.search(response_text):
+            response_text = resolve_handles_for_chat(response_text, matter)
 
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")

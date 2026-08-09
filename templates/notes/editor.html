@@ -20,56 +20,136 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
   <div class="note-editor-layout">
-    <!-- Sidebar -->
-    <aside class="note-sidebar">
-      <div id="sidebar-list-container">{% include "notes/sidebar-list.html" %}</div>
+    <!-- Left Panel - Files / Outline -->
+    <aside class="note-panel">
+      <div class="panel-header">
+        <div class="panel-tabs">
+          <button type="button" class="panel-tab active" data-tab="files">Files</button>
+          <button type="button" class="panel-tab" data-tab="outline">Outline</button>
+        </div>
+        <div class="panel-header-actions">
+          <div class="files-actions">
+            <div class="dropdown" x-data="dropdown()">
+              <button class="panel-btn"
+                      type="button"
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open"
+                      title="Sort notes">
+                <i class="icon-arrow-up-down"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end panel-sort-menu"
+                  x-ref="menu"
+                  x-show="open"
+                  @click="close()">
+                {% for key, label in sidebar_sort_options %}
+                  <li>
+                    <a class="dropdown-item {% if current_sort == key %}active{% endif %}"
+                       href="#"
+                       hx-get="{% if note.matter %}{% url 'case:note-sidebar-sort' note.id key %}{% else %}{% url 'notes:note-sidebar-sort' note.id key %}{% endif %}"
+                       hx-target="#sidebar-list-container">{{ label }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <div class="outline-actions">
+            <button type="button"
+                    class="panel-btn"
+                    id="outline-collapse-btn"
+                    title="Collapse/Expand all">
+              <i class="icon-chevrons-down-up"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-pane files-pane note-sidebar">
+        <div id="sidebar-list-container">{% include "notes/sidebar-list.html" %}</div>
+      </div>
+      <div class="panel-pane outline-pane note-outline">
+        <ul class="outline-list" id="outline-list">
+        </ul>
+      </div>
+      <!-- Collapsed-rail shortcuts: expand the panel onto the chosen tab -->
+      <div class="panel-rail">
+        <button type="button"
+                class="panel-btn rail-tab"
+                data-tab="files"
+                title="Files">
+          <i class="icon-files"></i>
+        </button>
+        <button type="button"
+                class="panel-btn rail-tab"
+                data-tab="outline"
+                title="Outline">
+          <i class="icon-list-tree"></i>
+        </button>
+      </div>
+      <button class="panel-toggle"
+              id="panel-toggle-btn"
+              type="button"
+              onclick="togglePanel()"
+              title="Toggle panel">
+        <i class="icon-panel-left-close"></i>
+      </button>
+      <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>
     </aside>
     <!-- Main Editor Area -->
     <main class="note-main">
       <div class="note-toolbar-wrapper">
         <div class="note-toolbar">
-          <button class="panel-btn"
-                  type="button"
-                  onclick="togglePanel('note-sidebar')"
-                  title="Toggle notes panel">
-            <i class="icon-panel-left"></i>
-          </button>
           <div class="toolbar-left">
-            <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
-              <i class="icon-cloud"></i>
+            <a href="#"
+               hx-get="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
+               hx-target="#htmx-modal-container"
+               title="New note">
+              <i class="icon-square-pen"></i>
             </a>
+            <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
+              <i class="icon-save"></i>
+            </a>
+            <span class="toolbar-divider"></span>
+            <div class="format-toolbar">{% include "components/format-toolbar.html" %}</div>
           </div>
-          <div class="toolbar-center"></div>
           <div class="toolbar-right">
             <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
               <i class="icon-search"></i>
             </a>
-            <a href="#"
-               hx-get="{% if note.matter %}{% url 'case:note-import-modal' note.id %}{% else %}{% url 'notes:note-import-modal' note.id %}{% endif %}"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"
-               title="Import from markdown">
-              <i class="icon-upload"></i>
-            </a>
-            <a href="#" id="export-btn" title="Export to markdown">
-              <i class="icon-download"></i>
-            </a>
-            <a href="#"
-               hx-get="{% if note.matter %}{% url 'case:notes-shortcuts' note.matter.id %}{% else %}{% url 'notes:notes-shortcuts' %}{% endif %}"
-               hx-target="#htmx-modal-container"
-               data-bs-toggle="modal"
-               data-bs-target="#htmx-modal-container"
-               title="Keyboard shortcuts">
-              <i class="icon-keyboard"></i>
-            </a>
+            <div class="dropdown" x-data="dropdown()">
+              <button class="btn-icon"
+                      type="button"
+                      x-ref="button"
+                      @click="toggle()"
+                      :aria-expanded="open"
+                      title="More actions">
+                <i class="icon-ellipsis"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end"
+                  x-ref="menu"
+                  x-show="open"
+                  @click="close()">
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-get="{% if note.matter %}{% url 'case:note-import-modal' note.id %}{% else %}{% url 'notes:note-import-modal' note.id %}{% endif %}"
+                     hx-target="#htmx-modal-container"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container"><i class="icon-upload"></i> Import from markdown</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="#" id="export-btn"><i class="icon-download"></i> Export to markdown</a>
+                </li>
+                <li>
+                  <a class="dropdown-item"
+                     href="#"
+                     hx-get="{% if note.matter %}{% url 'case:notes-shortcuts' note.matter.id %}{% else %}{% url 'notes:notes-shortcuts' %}{% endif %}"
+                     hx-target="#htmx-modal-container"
+                     data-bs-toggle="modal"
+                     data-bs-target="#htmx-modal-container"><i class="icon-keyboard"></i> Keyboard shortcuts</a>
+                </li>
+              </ul>
+            </div>
           </div>
-          <button class="panel-btn"
-                  type="button"
-                  onclick="togglePanel('note-outline')"
-                  title="Toggle outline panel">
-            <i class="icon-panel-right"></i>
-          </button>
         </div>
       </div>
       <!-- Search and Replace Bar -->
@@ -109,20 +189,6 @@
         </li>
       </div>
     </main>
-    <!-- Right Panel - Outline -->
-    <aside class="note-outline">
-      <div class="outline-header">
-        <span>This Note</span>
-        <button type="button"
-                class="panel-btn"
-                id="outline-collapse-btn"
-                title="Collapse/Expand all">
-          <i class="icon-chevrons-down-up"></i>
-        </button>
-      </div>
-      <ul class="outline-list" id="outline-list">
-      </ul>
-    </aside>
   </div>
   <script type="module" src="{% static_v 'js/notes-editor.js' %}"></script>
 {% endblock content %}

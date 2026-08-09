@@ -397,6 +397,12 @@ export function htmlToMarkdown(html) {
           if (refType === "highlight")
             return "[[hl:" + refId + "|" + label + "]]";
         }
+        // Highlights render as span.note-hl (highlight-mark.js) — same
+        // colored syntax the <mark> case below covers for legacy HTML.
+        if (node.classList.contains("note-hl")) {
+          const color = node.dataset.color || "";
+          return (HIGHLIGHT_PREFIXES[color] || "==") + getChildren() + "==";
+        }
         return getChildren();
       default:
         return getChildren();

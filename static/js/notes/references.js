@@ -45,6 +45,13 @@ export const NoteRef = TiptapNode.create({
       node.attrs.label,
     ];
   },
+
+  // Atom nodes contribute NOTHING to the clipboard's text/plain unless
+  // told how — copied chips silently vanished when pasting into
+  // LibreOffice or any plain-text target. Hand the label over.
+  renderText({ node }) {
+    return node.attrs.label;
+  },
 });
 
 // ─── Reference Clicks ────────────────────────────────────────────────────────
@@ -113,7 +120,7 @@ export function setupReferenceClicks() {
     if (!refId) return;
 
     if (refType === "document") {
-      window.open("/documents/view/" + refId + "/", "_blank");
+      window.open("/case/documents/" + refId + "/view/", "_blank");
     } else if (refType === "highlight" && dropdown) {
       currentHighlightId = refId;
       const rect = ref.getBoundingClientRect();

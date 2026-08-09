@@ -1,0 +1,83 @@
+{% comment %}
+Shared rich-text formatting buttons (TipTap) — used by the notes editor
+formatting bar and the AI compose-prompt modal. Include inside a container
+carrying the .format-toolbar class, then wire it to an editor instance with
+connectFormatToolbar() from js/format-toolbar.js (buttons match by data-cmd).
+{% endcomment %}
+<button type="button" class="btn-icon" data-cmd="bold" title="Bold">
+  <i class="icon-bold"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="italic" title="Italic">
+  <i class="icon-italic"></i>
+</button>
+<button type="button"
+        class="btn-icon"
+        data-cmd="strike"
+        title="Strikethrough">
+  <i class="icon-strikethrough"></i>
+</button>
+<span class="toolbar-divider"></span>
+<button type="button" class="btn-icon" data-cmd="h2" title="Heading 2">
+  <i class="icon-heading-2"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="h3" title="Heading 3">
+  <i class="icon-heading-3"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="h4" title="Heading 4">
+  <i class="icon-heading-4"></i>
+</button>
+<span class="toolbar-divider"></span>
+<button type="button" class="btn-icon" data-cmd="bullet" title="Bullet List">
+  <i class="icon-list"></i>
+</button>
+<button type="button"
+        class="btn-icon"
+        data-cmd="ordered"
+        title="Numbered List">
+  <i class="icon-list-ordered"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="quote" title="Blockquote">
+  <i class="icon-quote"></i>
+</button>
+<span class="toolbar-divider"></span>
+{% comment %}
+LibreOffice-style split button: the main half toggles the current highlight
+color on the selection, the caret opens the color menu. Hidden by
+connectFormatToolbar() when the editor lacks the Highlight extension.
+{% endcomment %}
+<div class="hl-split">
+  <button type="button"
+          class="btn-icon hl-toggle"
+          data-hl-toggle
+          title="Toggle highlight">
+    <i class="icon-highlighter"></i>
+    <span class="hl-swatch" data-hl-swatch></span>
+  </button>
+  <button type="button"
+          class="btn-icon hl-caret"
+          data-hl-caret
+          title="Highlight color">
+    <i class="icon-chevron-down"></i>
+  </button>
+  <div class="hl-menu" data-hl-menu hidden>
+    <button type="button" class="hl-color" data-hl-color="" title="Yellow"></button>
+    <button type="button"
+            class="hl-color"
+            data-hl-color="mark-green"
+            title="Green"></button>
+    <button type="button" class="hl-color" data-hl-color="mark-red" title="Red"></button>
+    <button type="button"
+            class="hl-color"
+            data-hl-color="mark-purple"
+            title="Purple"></button>
+    <button type="button"
+            class="hl-color"
+            data-hl-color="mark-orange"
+            title="Orange"></button>
+    <button type="button" class="hl-color" data-hl-color="mark-gray" title="Gray"></button>
+    <button type="button"
+            class="hl-none"
+            data-hl-color="none"
+            title="Remove highlight">None</button>
+  </div>
+</div>
