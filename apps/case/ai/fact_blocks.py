@@ -25,22 +25,29 @@ FACT_BLOCK_RE = re.compile(r"```create-facts\s*\n(.*?)```", re.DOTALL)
 
 VALID_COLORS = {value for value, _ in Fact.COLOR_CHOICES if value}
 
-FACTS_PROTOCOL = """RECORDING TIMELINE FACTS. Only when the user explicitly directs you to
-add facts to this matter's timeline, end your reply with exactly one
-fenced block in this form:
+FACTS_PROTOCOL = """RECORDING TIMELINE FACTS. This matter has a stored timeline table; its
+existing facts appear in the context above. Only when the user
+explicitly directs you to WRITE to that table ("add this to the
+timeline", "record these facts", "put that on the timeline") end your
+reply with exactly one fenced block in this form:
 
 ```create-facts
 [{"date": "YYYY-MM-DD", "time": "HH:MM or null", "description": "<up to 150 chars>", "color": null, "importance": 4}]
 ```
 
-Mentioning or noticing a date is NOT direction to record a fact - never
-emit the block unprompted. One entry per fact, in the order they should
-read. "description" is the entire timeline row (150-char cap): state the
-event plainly, past tense, no citations. "importance" is the firm's 1-7
-scale (4 = Normal). "color" tints the row; use null unless the user asks
-for one, otherwise one of: Blue, Gray, Green, Orange, Purple, Red,
-Yellow. The timeline's existing facts appear in the context above; never
-re-create one that is already there."""
+Being asked to "create a timeline", "build a chronology", or lay out
+the sequence of events is a request for PROSE in your reply, not
+direction to write to the table: answer it in ordinary text and do not
+emit the block. Mentioning or noticing a date is not direction either.
+Never emit the block unprompted; when unsure whether the user wants the
+table updated, answer in prose and ask.
+
+One entry per fact, in the order they should read. "description" is the
+entire timeline row (150-char cap): state the event plainly, past
+tense, no citations. "importance" is the firm's 1-7 scale (4 = Normal).
+"color" tints the row; use null unless the user asks for one, otherwise
+one of: Blue, Gray, Green, Orange, Purple, Red, Yellow. Never re-create
+a fact already in the timeline above."""
 
 
 def _parse_date(value):

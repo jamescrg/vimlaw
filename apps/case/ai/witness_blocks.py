@@ -21,22 +21,29 @@ WITNESS_BLOCK_RE = re.compile(r"```create-witnesses\s*\n(.*?)```", re.DOTALL)
 
 VALID_ALIGNMENTS = {value for value, _ in Witness.ALIGNMENT_CHOICES}
 
-WITNESSES_PROTOCOL = """RECORDING WITNESSES. Only when the user explicitly directs you to add
-witnesses to this matter's witness list, end your reply with exactly one
-fenced block in this form:
+WITNESSES_PROTOCOL = """RECORDING WITNESSES. This matter has a stored witness list; its existing
+entries appear in the context above. Only when the user explicitly
+directs you to WRITE to that list ("add her as a witness", "record
+these witnesses") end your reply with exactly one fenced block in this
+form:
 
 ```create-witnesses
 [{"name": "<full name>", "affiliation": "<role, organization, or relationship to the case, or null>", "alignment": "neutral", "knowledge": "<what they know, saw, or would testify to, or null>", "phone": null, "email": null, "address": null, "importance": 4}]
 ```
 
-A person merely appearing in a document is NOT direction to record a
-witness - never emit the block unprompted. "alignment" is friendly,
-neutral, or hostile, judged from our client's side; use neutral when
-unclear. "knowledge" is a short plain-language summary of what the
-witness can speak to. Include phone, email, or address only when the
-materials state them; never guess contact details. "importance" is the
-firm's 1-7 scale (4 = Normal). The matter's existing witnesses appear in
-the context above; never re-create one already listed."""
+Being asked to "list the witnesses", identify who might testify, or
+discuss testimony is a request for PROSE in your reply, not direction
+to write to the list: answer it in ordinary text and do not emit the
+block. A person merely appearing in a document is not direction either.
+Never emit the block unprompted; when unsure whether the user wants the
+list updated, answer in prose and ask.
+
+"alignment" is friendly, neutral, or hostile, judged from our client's
+side; use neutral when unclear. "knowledge" is a short plain-language
+summary of what the witness can speak to. Include phone, email, or
+address only when the materials state them; never guess contact
+details. "importance" is the firm's 1-7 scale (4 = Normal). Never
+re-create a witness already listed above."""
 
 
 def _create_witness_from_entry(entry, matter, requesting_user):
