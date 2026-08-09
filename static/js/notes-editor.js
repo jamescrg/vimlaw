@@ -23,8 +23,9 @@ import {
   History,
   Dropcursor,
   Gapcursor,
-  Highlight,
 } from "./vendor/tiptap.bundle.js";
+
+import { HighlightMark } from "./highlight-mark.js";
 
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
@@ -183,7 +184,7 @@ function initEditor() {
       History,
       Dropcursor,
       Gapcursor,
-      Highlight.configure({ multicolor: true }),
+      HighlightMark.configure({ multicolor: true }),
       Code,
       CodeBlockLowlight.configure({ lowlight: createLowlight(lowlightAll) }),
       HorizontalRule,

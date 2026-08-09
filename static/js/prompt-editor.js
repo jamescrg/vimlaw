@@ -19,11 +19,11 @@ import {
   Blockquote,
   HardBreak,
   History,
-  Highlight,
   Placeholder,
 } from "./vendor/tiptap.bundle.js";
 
 import { connectFormatToolbar } from "./format-toolbar.js";
+import { HighlightMark } from "./highlight-mark.js";
 
 let promptEditor = null;
 
@@ -51,7 +51,7 @@ export function initPromptEditor(container) {
       Blockquote,
       HardBreak,
       History,
-      Highlight.configure({ multicolor: true }),
+      HighlightMark.configure({ multicolor: true }),
       Placeholder.configure({
         placeholder: "Compose your prompt here...",
       }),
