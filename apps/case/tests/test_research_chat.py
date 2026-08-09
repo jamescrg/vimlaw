@@ -996,3 +996,23 @@ def test_modal_launch_uses_model_select():
 
     source = pathlib.Path("templates/case/ai/new-conversation-modal.html").read_text()
     assert "getElementById('new-conversation-llm').value" in source
+
+
+def test_survey_protocol_is_library_first():
+    """The survey protocol must keep its library-first structure."""
+    role = research_chat.PROMPT_ROLE
+    assert "LIBRARY PASS" in role
+    assert "SEED AND CRAWL" in role
+    # Library pass comes before the doctrinal survey, which comes before
+    # scope adjustment.
+    assert role.index("LIBRARY PASS") < role.index("4. SURVEY")
+    assert role.index("4. SURVEY") < role.index("5. ADJUST SCOPE")
+    # The note is a lead sheet, never authority.
+    assert "map, not authority" in role
+    # Adverse search must be independent of the note's own citations.
+    assert "the note does NOT mention" in role
+
+
+def test_library_listing_includes_note_date(library_note):
+    section = research_chat.build_library_section()
+    assert f"updated {library_note.updated_at.date()}" in section
