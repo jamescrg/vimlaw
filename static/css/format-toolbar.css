@@ -1,0 +1,148 @@
+/* ==========================================================================
+   Formatting toolbar — shared rich-text buttons for TipTap editors
+   (components/format-toolbar.html + js/format-toolbar.js). One look for
+   every editing surface: notes editor bar, AI compose-prompt modal.
+   Surface-specific chrome (background, borders, alignment) stays with the
+   surface's own stylesheet.
+
+   Standalone windows build their own <head>, so every page that renders the
+   component must link this file explicitly — base.html covers the main app;
+   conversation-standalone.html links it for the compose-prompt modal.
+   ========================================================================== */
+.format-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.format-toolbar .btn-icon {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.format-toolbar .btn-icon:hover {
+  background: var(--background-control);
+  color: var(--color-darker);
+}
+
+.format-toolbar .btn-icon.active {
+  background: var(--violet-100);
+  color: var(--violet-700);
+}
+
+.format-toolbar .toolbar-divider {
+  background: var(--border-medium);
+  height: 1.25rem;
+  margin: 0 0.25rem;
+  width: 1px;
+}
+
+/* Highlight split button — LibreOffice-style: main half toggles the current
+   color (shown as a bar under the highlighter glyph), caret opens the menu.
+   Swatches use the same light-palette fills as the marks themselves, which
+   deliberately stay light in dark themes (paper-highlighter look). */
+.format-toolbar .hl-split {
+  display: flex;
+  position: relative;
+}
+
+.format-toolbar .hl-toggle {
+  position: relative;
+}
+
+.format-toolbar .hl-swatch {
+  background: var(--yellow-100);
+  bottom: 0;
+  height: 0.25rem;
+  left: 0.5rem;
+  position: absolute;
+  right: 0.5rem;
+}
+
+.format-toolbar .hl-caret {
+  padding: 0.25rem 0;
+}
+
+.format-toolbar .hl-menu {
+  align-items: center;
+  background: var(--background-light);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  display: flex;
+  gap: 0.25rem;
+  left: 0;
+  padding: 0.5rem;
+  position: absolute;
+  top: 100%;
+  z-index: 60;
+}
+
+.format-toolbar .hl-menu[hidden] {
+  display: none;
+}
+
+.format-toolbar .hl-menu .hl-color {
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  height: 1.25rem;
+  padding: 0;
+  width: 1.25rem;
+}
+
+.format-toolbar .hl-menu .hl-color:hover {
+  border-color: var(--border-dark);
+}
+
+.format-toolbar .hl-menu .hl-none {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+}
+
+.format-toolbar .hl-menu .hl-none:hover {
+  color: var(--color-primary);
+}
+
+/* One fill map for both the button swatch and the menu chips */
+:is(.format-toolbar .hl-swatch, .format-toolbar .hl-menu .hl-color) {
+  &[data-color=""],
+  &[data-hl-color=""] {
+    background: var(--yellow-100);
+  }
+
+  &[data-color="mark-green"],
+  &[data-hl-color="mark-green"] {
+    background: var(--lime-100);
+  }
+
+  &[data-color="mark-red"],
+  &[data-hl-color="mark-red"] {
+    background: var(--red-100);
+  }
+
+  &[data-color="mark-purple"],
+  &[data-hl-color="mark-purple"] {
+    background: var(--purple-100);
+  }
+
+  &[data-color="mark-orange"],
+  &[data-hl-color="mark-orange"] {
+    background: var(--orange-100);
+  }
+
+  &[data-color="mark-gray"],
+  &[data-hl-color="mark-gray"] {
+    background: var(--stone-200);
+  }
+}
