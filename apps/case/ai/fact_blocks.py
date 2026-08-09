@@ -17,7 +17,7 @@ from datetime import (
     time as time_cls,
 )
 
-from apps.case.models import Fact
+from apps.case.models import Document, Fact
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ timeline", "record these facts", "put that on the timeline") end your
 reply with exactly one fenced block in this form:
 
 ```create-facts
-[{"date": "YYYY-MM-DD", "time": "HH:MM or null", "description": "<up to 150 chars>", "color": null, "importance": 4}]
+[{"date": "YYYY-MM-DD", "time": "HH:MM or null", "description": "<up to 150 chars>", "color": null, "importance": 4, "documents": [<doc ids>]}]
 ```
 
 Being asked to "create a timeline", "build a chronology", or lay out
@@ -46,8 +46,11 @@ One entry per fact, in the order they should read. "description" is the
 entire timeline row (150-char cap): state the event plainly, past
 tense, no citations. "importance" is the firm's 1-7 scale (4 = Normal).
 "color" tints the row; use null unless the user asks for one, otherwise
-one of: Blue, Gray, Green, Orange, Purple, Red, Yellow. Never re-create
-a fact already in the timeline above."""
+one of: Blue, Gray, Green, Orange, Purple, Red, Yellow. When a fact
+comes from documents in the context, list their ids in "documents"
+(taken from the [doc:ID] handles) so the timeline row links to its
+sources; use [] when no document supports it, and never guess an id.
+Never re-create a fact already in the timeline above."""
 
 
 def _parse_date(value):
@@ -90,7 +93,7 @@ def _create_fact_from_entry(entry, matter, requesting_user):
         importance = 4
     importance = min(7, max(1, importance))
 
-    return Fact.objects.create(
+    fact = Fact.objects.create(
         matter=matter,
         user=requesting_user,
         date=_parse_date(entry.get("date")),
@@ -99,6 +102,21 @@ def _create_fact_from_entry(entry, matter, requesting_user):
         color=color,
         importance=importance,
     )
+
+    # Attach document sources, silently dropping ids that are not this
+    # matter's documents (hallucinated or cross-matter ids must not link).
+    raw_ids = entry.get("documents")
+    if isinstance(raw_ids, list):
+        doc_ids = []
+        for value in raw_ids:
+            try:
+                doc_ids.append(int(value))
+            except (TypeError, ValueError):
+                continue
+        if doc_ids:
+            fact.documents.set(Document.objects.filter(matter=matter, id__in=doc_ids))
+
+    return fact
 
 
 def apply_fact_blocks(response_text, matter, requesting_user):
@@ -121,9 +139,11 @@ def apply_fact_blocks(response_text, matter, requesting_user):
                 continue
             fact = _create_fact_from_entry(entry, matter, requesting_user)
             if fact is not None:
+                source_names = [doc.name for doc in fact.documents.all()[:3]]
+                sources = f", source: {', '.join(source_names)}" if source_names else ""
                 lines.append(
                     f"- Added to timeline: **{fact.description}**"
-                    f" ({fact.date or 'no date'})"
+                    f" ({fact.date or 'no date'}{sources})"
                 )
         return "\n".join(lines) if lines else "(no facts created)"
 

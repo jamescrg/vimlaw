@@ -131,6 +131,8 @@ def process_ai_request(
 
         # The AI can record timeline facts and witnesses when directed;
         # the fenced blocks it emits are applied after the response arrives.
+        # DOCUMENT_LINKING teaches inline source links for prose answers.
+        from .context import DOCUMENT_LINKING
         from .fact_blocks import FACT_BLOCK_RE, FACTS_PROTOCOL, apply_fact_blocks
         from .witness_blocks import (
             WITNESS_BLOCK_RE,
@@ -138,7 +140,14 @@ def process_ai_request(
             apply_witness_blocks,
         )
 
-        context_text += "\n\n" + FACTS_PROTOCOL + "\n\n" + WITNESSES_PROTOCOL
+        context_text += (
+            "\n\n"
+            + DOCUMENT_LINKING
+            + "\n\n"
+            + FACTS_PROTOCOL
+            + "\n\n"
+            + WITNESSES_PROTOCOL
+        )
 
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)

@@ -139,7 +139,7 @@ def build_manifest(matter, current_conversation=None):
         )
 
         # Build full content for this document (same format as context.py)
-        content_parts = [f"**Document: {doc.name}** ({doc.category})"]
+        content_parts = [f"**Document [doc:{doc.id}]: {doc.name}** ({doc.category})"]
         if doc.date:
             content_parts[0] += f" - {doc.date}"
         if doc.description:

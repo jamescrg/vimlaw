@@ -181,7 +181,7 @@ def collect_context_items(
             continue  # Handled by selector
 
         # ai_context="always" — include full content
-        content_parts = [f"**Document: {doc.name}** ({doc.category})"]
+        content_parts = [f"**Document [doc:{doc.id}]: {doc.name}** ({doc.category})"]
         if doc.date:
             content_parts[0] += f" - {doc.date}"
         if doc.description:
@@ -475,6 +475,16 @@ def build_chat_history(conversation) -> list[dict]:
         history.append({"role": msg.role, "content": f"[{stamp}] {content}"})
     return history
 
+
+# Conventions for citing matter documents in chat prose. Appended to the
+# classic chat context in tasks.py alongside the write protocols; chat
+# messages render as markdown, so the links are clickable.
+DOCUMENT_LINKING = """CITING DOCUMENTS. Documents in the context above carry a [doc:ID]
+handle next to their name. When your answer draws on a document, cite
+it inline as a markdown link to its viewer page:
+[Engagement Letter](/case/documents/17/view/). Use only ids that appear
+as [doc:ID] handles in this context; never invent or guess an id, and
+never write the [doc:ID] handle itself in your reply."""
 
 MATTER_CONTEXT_TEMPLATE = """
 ## Current Matter: {matter_name}

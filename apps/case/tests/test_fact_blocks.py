@@ -105,6 +105,48 @@ def test_non_list_left_alone(user, matter):
     assert Fact.objects.count() == 0
 
 
+def test_documents_attached_as_sources(user, matter, document):
+    text = apply_fact_blocks(
+        block(
+            [
+                {
+                    "date": "2024-03-15",
+                    "description": "Complaint filed",
+                    "documents": [document.id],
+                }
+            ]
+        ),
+        matter,
+        user,
+    )
+    fact = Fact.objects.get()
+    assert [doc.id for doc in fact.documents.all()] == [document.id]
+    assert f"source: {document.name}" in text
+
+
+def test_foreign_and_bad_document_ids_dropped(user, matter, document, contact):
+    from apps.matters.models import Matter
+
+    other = Matter.objects.create(name="Other Matter", client=contact)
+    foreign = document.__class__.objects.create(
+        matter=other, name="Foreign Doc", ocr_status="not_applicable"
+    )
+    apply_fact_blocks(
+        block(
+            [
+                {
+                    "description": "Complaint filed",
+                    "documents": [foreign.id, "abc", None, 999999],
+                }
+            ]
+        ),
+        matter,
+        user,
+    )
+    fact = Fact.objects.get()
+    assert fact.documents.count() == 0
+
+
 def test_multiple_entries_in_order(user, matter):
     text = apply_fact_blocks(
         block(
@@ -149,6 +191,7 @@ def test_classic_chat_applies_fact_blocks(user, matter, monkeypatch):
     )
 
     assert "RECORDING TIMELINE FACTS" in captured["context"]
+    assert "CITING DOCUMENTS" in captured["context"]
     fact = Fact.objects.get()
     assert fact.description == "Complaint filed"
     assert fact.matter_id == matter.id
