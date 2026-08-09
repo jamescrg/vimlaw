@@ -46,9 +46,11 @@ body {
 /* Brand — the wordmark itself (the fullstar cut), drawn as a mask filled
    with the theme's link colour so it matches the sidebar in every theme (a
    background image can't take currentColor, and the inverted favicon badge
-   belongs to the taskbar, not the card). NOTE: a CSS url can't ride
-   static_v — bump the literal ?v below whenever the SVG is regenerated. */
-.auth-title::before {
+   belongs to the taskbar, not the card). Fallback only: when the firm has
+   an uploaded logo, auth-brand.html adds has-logo and the image replaces
+   the wordmark. NOTE: a CSS url can't ride static_v — bump the literal ?v
+   below whenever the SVG is regenerated. */
+.auth-title:not(.has-logo)::before {
   background: var(--brand-ink);
   content: "";
   display: inline-block;
@@ -56,6 +58,13 @@ body {
   mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg?v=2") center / contain no-repeat;
   -webkit-mask: url("../../images/brand/kosmos-wm-fullstar-inline.svg?v=2") center / contain no-repeat;
   width: 12rem;
+}
+
+/* The firm's uploaded logo (any aspect ratio), held to the wordmark's
+   visual scale. */
+.auth-logo {
+  max-height: 3.75rem;
+  max-width: 100%;
 }
 
 /* Standard screen-reader-only clip pattern. */

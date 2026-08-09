@@ -1,4 +1,4 @@
-{% load static cache_buster %}
+{% load static cache_buster firm_tags %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -32,9 +32,7 @@
     <div class="container vertical-center">
       <div class="auth-container">
         <div class="auth-card">
-          <div class="auth-title">
-            <span class="visually-hidden">Kosmos</span>
-          </div>
+          {% auth_brand %}
           <div class="auth-info">
             {% block message %}
             {% endblock message %}
