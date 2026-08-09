@@ -45,6 +45,12 @@ logger = logging.getLogger(__name__)
 RETIRED_LLMS = ("claude", "gemini-pro")
 VALID_LLMS = {key for key, _ in Conversation.LLM_CHOICES} | set(RETIRED_LLMS)
 
+# Default model for research-style chats. The research loop resends every
+# tool result on each model turn, so per-token price dominates run cost;
+# Gemini is the economical default and Claude remains an explicit choice
+# in the new-conversation modal.
+RESEARCH_DEFAULT_LLM = "gemini-pro-latest"
+
 
 def get_accessible_matters():
     """Get all matters accessible to logged-in users."""
@@ -328,13 +334,21 @@ def new_conversation_prompt(request, matter_id):
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
 
+    default_kind = request.session.get("ai_new_chat_kind", "classic")
+    # Research defaults to Gemini: the agentic loop resends tool results
+    # every turn, which is far cheaper per token there, and quality holds.
+    # Claude stays one explicit pick away in the modal's model select.
+    initial_llm = RESEARCH_DEFAULT_LLM if default_kind == "research" else llm
     return render(
         request,
         "case/ai/new-conversation-modal.html",
         {
             "matter": matter,
             "llm": llm,
-            "default_kind": request.session.get("ai_new_chat_kind", "classic"),
+            "initial_llm": initial_llm,
+            "research_default_llm": RESEARCH_DEFAULT_LLM,
+            "llm_choices": Conversation.LLM_CHOICES,
+            "default_kind": default_kind,
         },
     )
 
