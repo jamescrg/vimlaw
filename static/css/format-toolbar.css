@@ -33,6 +33,9 @@
 
 .format-toolbar .btn-icon.active {
   background: var(--violet-100);
+  /* The selected ring as an inset shadow - a real border would resize
+     the button relative to its inactive neighbours. */
+  box-shadow: inset 0 0 0 1px var(--selected-border);
   color: var(--violet-700);
 }
 
@@ -59,6 +62,9 @@
 .format-toolbar .hl-swatch {
   background: var(--yellow-100);
   bottom: 0;
+  /* Ring, not border: the rail is only 0.25rem tall, and the light mark
+     fills need an edge against the toolbar ground in every theme. */
+  box-shadow: 0 0 0 1px var(--border-medium);
   height: 0.25rem;
   left: 0.5rem;
   position: absolute;
@@ -101,17 +107,17 @@
   border-color: var(--border-dark);
 }
 
+/* "None" is a swatch like the rest (far-left slot): paper ground with a
+   diagonal slash. Chip chrome (size, border, hover) comes from .hl-color. */
 .format-toolbar .hl-menu .hl-none {
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0 0.25rem;
-}
-
-.format-toolbar .hl-menu .hl-none:hover {
-  color: var(--color-primary);
+  background-color: var(--background-light);
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    var(--urgent) calc(50% - 1px),
+    var(--urgent) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
 }
 
 /* One fill map for both the button swatch and the menu chips */
