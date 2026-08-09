@@ -269,7 +269,7 @@ def collect_context_items(
     if since:
         notes = notes.filter(updated_at__gte=since)
     for note in notes:
-        content_parts = [f"**Note: {note.title}**"]
+        content_parts = [f"**Note [note:{note.id}]: {note.title}**"]
         if note.category:
             content_parts[0] += f" [{note.get_category_display()}]"
         if note.topic:
@@ -304,8 +304,8 @@ def collect_context_items(
                     importance=note.importance,
                     item_type="library",
                     content=(
-                        f"**Library note: {note.title}** ({folder_path})\n"
-                        f"{note.content}"
+                        f"**Library note [note:{note.id}]: {note.title}**"
+                        f" ({folder_path})\n{note.content}"
                     ),
                     source_id=note.id,
                 )

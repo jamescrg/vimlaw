@@ -142,6 +142,12 @@ def process_ai_request(
             FACTS_TRIGGER_RE,
             apply_fact_blocks,
         )
+        from .note_blocks import (
+            NOTE_BLOCKS_RE,
+            NOTES_PROTOCOL,
+            NOTES_TRIGGER_RE,
+            apply_note_blocks,
+        )
         from .witness_blocks import (
             WITNESS_BLOCK_RE,
             WITNESS_TRIGGER_RE,
@@ -166,6 +172,8 @@ def process_ai_request(
             context_text += "\n\n" + FACTS_PROTOCOL
         if WITNESS_TRIGGER_RE.search(recent_user_text):
             context_text += "\n\n" + WITNESSES_PROTOCOL
+        if NOTES_TRIGGER_RE.search(recent_user_text):
+            context_text += "\n\n" + NOTES_PROTOCOL
 
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)
@@ -287,6 +295,9 @@ def process_ai_request(
         if WITNESS_BLOCK_RE.search(response_text):
             update_status("applying", "Adding witnesses...")
             response_text = apply_witness_blocks(response_text, matter, user)
+        if NOTE_BLOCKS_RE.search(response_text):
+            update_status("applying", "Writing notes...")
+            response_text = apply_note_blocks(response_text, matter, user)
 
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")
