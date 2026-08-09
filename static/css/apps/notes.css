@@ -346,30 +346,25 @@ body:has(.note-page.standalone) {
    ============================================================================= */
 
 .note-toolbar-wrapper {
+  align-items: center;
   background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium);
+  display: flex;
   flex-shrink: 0;
   height: 3rem;
+  padding: 0 0.75rem;
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
 /* The panel toggles sit in the full-width wrapper, not the centered
-   toolbar strip, pinned to the edges — so closing a panel drops its
-   toggle all the way to that side of the window. */
+   toolbar strip, flanking it in flex flow — closing a panel drops its
+   toggle all the way to that side of the window, and when both panels
+   squeeze the main area the strip shrinks between the toggles instead
+   of sliding underneath them. */
 .note-toolbar-wrapper > .panel-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.note-toolbar-wrapper > .panel-btn:first-child {
-  left: 0.75rem;
-}
-
-.note-toolbar-wrapper > .panel-btn:last-child {
-  right: 0.75rem;
+  flex-shrink: 0;
 }
 
 /* =============================================================================
@@ -379,10 +374,12 @@ body:has(.note-page.standalone) {
 .note-toolbar {
   align-items: center;
   display: flex;
+  flex: 1;
   gap: 1rem;
   height: 100%;
   margin: 0 auto;
   max-width: 62rem;
+  min-width: 0;
   padding: 0 1.5rem;
 }
 

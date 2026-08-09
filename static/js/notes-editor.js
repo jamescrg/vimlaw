@@ -629,6 +629,30 @@ function updateSidebarActive(noteId) {
 
 // ─── Panel Collapse ──────────────────────────────────────────────────────────
 
+const PANEL_TOGGLES = {
+  "note-sidebar": { btnId: "sidebar-toggle-btn", side: "left" },
+  "note-outline": { btnId: "outline-toggle-btn", side: "right" },
+};
+
+// Point the toggle's icon at the action it will perform: an open panel
+// gets the "close" glyph, a collapsed one the "open" glyph.
+function syncPanelIcon(panelClass, isOpen) {
+  const toggle = PANEL_TOGGLES[panelClass];
+  const icon = document.querySelector("#" + toggle.btnId + " i");
+  if (!icon) return;
+  icon.className =
+    "icon-panel-" + toggle.side + "-" + (isOpen ? "close" : "open");
+}
+
+// Measured width is the ground truth (media queries collapse panels
+// without touching the classes), so re-sync from it on load and resize.
+function syncPanelIcons() {
+  for (const panelClass of Object.keys(PANEL_TOGGLES)) {
+    const panel = document.querySelector("." + panelClass);
+    if (panel) syncPanelIcon(panelClass, panel.offsetWidth > 0);
+  }
+}
+
 function togglePanel(panelClass) {
   const panel = document.querySelector("." + panelClass);
   if (!panel) return;
@@ -643,6 +667,7 @@ function togglePanel(panelClass) {
     panel.classList.add("expanded");
     localStorage.setItem("notes-editor-" + panelClass, "expanded");
   }
+  syncPanelIcon(panelClass, !isVisible);
 }
 
 function restorePanelStates() {
@@ -671,7 +696,10 @@ window.togglePanel = togglePanel;
 
 document.addEventListener("DOMContentLoaded", () => {
   restorePanelStates();
+  syncPanelIcons();
   initEditor();
   setupHtmxHandlers();
   setupOutlineCollapseAll();
 });
+
+window.addEventListener("resize", syncPanelIcons);
