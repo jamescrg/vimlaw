@@ -409,6 +409,12 @@ body:has(.note-page.standalone) {
   color: var(--color-primary);
 }
 
+/* Cursor tracking: the heading the selection sits under. Direct child
+   only - the colour must not cascade into .outline-children. */
+.note-outline .outline-item.active > .outline-text {
+  color: var(--link);
+}
+
 .note-outline .outline-children {
   border-left: 1px solid rgb(0 0 0 / 15%);
   display: flex;

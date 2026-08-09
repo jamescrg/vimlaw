@@ -127,6 +127,35 @@ export function buildOutline() {
     });
 
   updateCollapseButtonIcon();
+  updateOutlineActive();
+}
+
+// Highlight the heading the cursor sits under: the last outline heading at
+// or before the selection start. Runs on every selection change (cheap -
+// one doc walk) and after each outline rebuild, whose fresh data-pos
+// values it needs; between keystroke and debounced rebuild the positions
+// can be momentarily stale, in which case no item matches and the
+// highlight simply catches up on the rebuild.
+export function updateOutlineActive() {
+  const outlineList = document.getElementById("outline-list");
+  if (!outlineList || !state.editor) return;
+
+  const from = state.editor.state.selection.from;
+  let activePos = null;
+  state.editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === "heading" && node.attrs.level >= 2 && pos <= from) {
+      activePos = pos;
+    }
+  });
+
+  let activeItem = null;
+  outlineList.querySelectorAll(".outline-item").forEach((item) => {
+    const isActive = parseInt(item.dataset.pos, 10) === activePos;
+    item.classList.toggle("active", isActive);
+    if (isActive) activeItem = item;
+  });
+
+  if (activeItem) activeItem.scrollIntoView({ block: "nearest" });
 }
 
 function scrollToHeading(pos) {
