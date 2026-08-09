@@ -19,6 +19,7 @@ import {
   Blockquote,
   HardBreak,
   History,
+  Highlight,
   Placeholder,
 } from "./vendor/tiptap.bundle.js";
 
@@ -43,13 +44,14 @@ export function initPromptEditor(container) {
       Bold,
       Italic,
       Strike,
-      Heading.configure({ levels: [1, 2, 3] }),
+      Heading.configure({ levels: [1, 2, 3, 4] }),
       BulletList,
       OrderedList,
       ListItem,
       Blockquote,
       HardBreak,
       History,
+      Highlight.configure({ multicolor: true }),
       Placeholder.configure({
         placeholder: "Compose your prompt here...",
       }),
@@ -95,6 +97,8 @@ function htmlToMarkdown(html) {
         return "## " + getChildren() + "\n\n";
       case "h3":
         return "### " + getChildren() + "\n\n";
+      case "h4":
+        return "#### " + getChildren() + "\n\n";
       case "p":
         if (listDepth > 0) {
           return getChildren();
@@ -106,6 +110,18 @@ function htmlToMarkdown(html) {
         return "*" + getChildren() + "*";
       case "s":
         return "~~" + getChildren() + "~~";
+      case "mark": {
+        // Same colored-highlight syntax the notes editor round-trips
+        const prefixes = {
+          "mark-green": "g==",
+          "mark-red": "r==",
+          "mark-purple": "p==",
+          "mark-orange": "o==",
+          "mark-gray": "a==",
+        };
+        const color = node.dataset.color || "";
+        return (prefixes[color] || "==") + getChildren() + "==";
+      }
       case "blockquote":
         return (
           getChildren()
