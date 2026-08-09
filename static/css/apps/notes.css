@@ -80,17 +80,48 @@ body:has(.note-page.standalone) {
   width: 17rem;
 }
 
+/* Collapsed = a slim rail with the bottom toggle still reachable, matching
+   the main nav sidebar (the toggle lives in the panel, so the rail must
+   never shrink to nothing). */
 .note-panel.collapsed {
-  border-right: none;
-  width: 0;
+  width: 3rem;
+}
+
+.note-panel.collapsed .panel-header,
+.note-panel.collapsed .panel-pane.files-pane,
+.note-panel.collapsed .panel-pane.outline-pane {
+  display: none;
 }
 
 /* Collapse the panel by default on smaller screens */
 @media (width <= 1199px) {
   .note-panel:not(.expanded) {
-    border-right: none;
-    width: 0;
+    width: 3rem;
   }
+
+  .note-panel:not(.expanded) .panel-header,
+  .note-panel:not(.expanded) .panel-pane.files-pane,
+  .note-panel:not(.expanded) .panel-pane.outline-pane {
+    display: none;
+  }
+}
+
+/* Bottom toggle — same treatment as the main nav's .sidebar-toggle */
+.note-panel .panel-toggle {
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border-medium);
+  color: var(--color-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 0.75rem;
+  text-align: center;
+  transition: color 100ms ease;
+}
+
+.note-panel .panel-toggle:hover {
+  color: var(--color-primary);
 }
 
 .note-panel .panel-header {
@@ -114,7 +145,7 @@ body:has(.note-page.standalone) {
 
 .note-panel .panel-tab {
   background: none;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-xs);
   color: var(--color-muted);
   cursor: pointer;
@@ -127,9 +158,11 @@ body:has(.note-page.standalone) {
   color: var(--color-primary);
 }
 
+/* Active tab wears the nav's selected-item convention (see sidebar.css) */
 .note-panel .panel-tab.active {
-  background: var(--background-control);
-  color: var(--color-primary);
+  background: var(--selected-background);
+  border-color: var(--selected-border);
+  color: var(--selected-color);
 }
 
 .note-panel .panel-header-actions {
@@ -374,14 +407,6 @@ body:has(.note-page.standalone) {
   z-index: 50;
 }
 
-/* The panel toggles sit in the full-width wrapper, not the centered
-   toolbar strip, flanking it in flex flow — closing a panel drops its
-   toggle all the way to that side of the window, and when both panels
-   squeeze the main area the strip shrinks between the toggles instead
-   of sliding underneath them. */
-.note-toolbar-wrapper > .panel-btn {
-  flex-shrink: 0;
-}
 
 /* =============================================================================
    Toolbar - Constrained Width
@@ -997,4 +1022,19 @@ body:has(.note-page.standalone) {
 .error-text {
   margin-top: 0.5rem;
   color: var(--error);
+}
+
+/* Dark mode — active panel tab follows the nav convention: hover-fill
+   background, no border, the colored text alone marks it (sidebar.css). */
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .note-panel .panel-tab.active {
+  background: var(--background-sidebar-active);
+  border-color: transparent;
+}
+
+/* Basic — the active tab takes the azure fill under inverted text, matching
+   the nav's signature move. */
+[data-theme="basic"] .note-panel .panel-tab.active {
+  background: var(--control-active-bg);
+  border-color: var(--control-active-line);
+  color: var(--control-active-color);
 }

@@ -618,6 +618,9 @@ function updateSidebarActive(noteId) {
 
 const PANEL_STATE_KEY = "notes-editor-note-panel";
 const PANEL_TAB_KEY = "notes-editor-panel-tab";
+// Collapsed leaves a 3rem rail (so the bottom toggle stays reachable) —
+// only widths beyond it count as "open".
+const PANEL_RAIL_PX = 64;
 
 // Point the toggle's icon at the action it will perform: an open panel
 // gets the "close" glyph, a collapsed one the "open" glyph.
@@ -630,14 +633,14 @@ function syncPanelIcon(isOpen) {
 // without touching the classes), so re-sync from it on load and resize.
 function syncPanelIcons() {
   const panel = document.querySelector(".note-panel");
-  if (panel) syncPanelIcon(panel.offsetWidth > 0);
+  if (panel) syncPanelIcon(panel.offsetWidth > PANEL_RAIL_PX);
 }
 
 function togglePanel() {
   const panel = document.querySelector(".note-panel");
   if (!panel) return;
 
-  const isVisible = panel.offsetWidth > 0;
+  const isVisible = panel.offsetWidth > PANEL_RAIL_PX;
   panel.classList.toggle("collapsed", isVisible);
   panel.classList.toggle("expanded", !isVisible);
   localStorage.setItem(PANEL_STATE_KEY, isVisible ? "collapsed" : "expanded");
