@@ -1292,16 +1292,17 @@ def context_preview(request, matter_id):
     total_tokens = baseline_tokens + auto_pool_tokens
 
     # --- Cost estimates per model ---
+    # One row per picker choice (LLM_CHOICES), input price per 1M tokens.
     model_costs = [
         {"name": "Gemini 2.5 Flash", "input_price": 0.15, "context_limit": 1_000_000},
-        {"name": "Gemini 2.5 Pro", "input_price": 1.25, "context_limit": 1_000_000},
         {
             "name": "Gemini Pro (Latest)",
             "input_price": 2.00,
             "context_limit": 1_000_000,
         },
-        {"name": "Claude Sonnet 4", "input_price": 3.00, "context_limit": 1_000_000},
-        {"name": "Claude Opus 4.5", "input_price": 15.00, "context_limit": 1_000_000},
+        {"name": "Claude Sonnet 4.6", "input_price": 3.00, "context_limit": 1_000_000},
+        {"name": "Claude Opus 4.8", "input_price": 5.00, "context_limit": 1_000_000},
+        {"name": "Claude Opus 4.6", "input_price": 5.00, "context_limit": 1_000_000},
     ]
 
     for model in model_costs:
