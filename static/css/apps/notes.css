@@ -359,7 +359,7 @@ body:has(.note-page.standalone) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   list-style: none;
   margin: 0;
   overflow-y: auto;
@@ -409,17 +409,23 @@ body:has(.note-page.standalone) {
   color: var(--color-primary);
 }
 
-/* Cursor tracking: the heading the selection sits under. Direct child
-   only - the colour must not cascade into .outline-children. */
+/* Cursor tracking: the heading the selection sits under wears the panel's
+   selected convention (rail tabs, files list). Direct child only - the
+   styling must not cascade into .outline-children. The negative margin
+   cancels the pill's padding so the label doesn't shift when selected. */
 .note-outline .outline-item.active > .outline-text {
-  color: var(--link);
+  background: var(--selected-background);
+  border-radius: var(--radius-sm);
+  color: var(--selected-color);
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
 }
 
 .note-outline .outline-children {
   border-left: 1px solid rgb(0 0 0 / 15%);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   list-style: none;
   margin: 0;
   margin-left: 7px;

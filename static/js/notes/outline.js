@@ -161,6 +161,10 @@ export function updateOutlineActive() {
 function scrollToHeading(pos) {
   if (!state.editor) return;
 
+  // Place the cursor in the heading (pos + 1 = inside the node): typing
+  // continues there, and the selection change drives the active highlight.
+  state.editor.commands.focus(pos + 1);
+
   const domAtPos = state.editor.view.domAtPos(pos + 1);
   if (!domAtPos || !domAtPos.node) return;
 
