@@ -647,13 +647,23 @@ function togglePanel() {
   syncPanelIcon(!isVisible);
 }
 
+function openPanel() {
+  const panel = document.querySelector(".note-panel");
+  if (!panel) return;
+
+  panel.classList.remove("collapsed");
+  panel.classList.add("expanded");
+  localStorage.setItem(PANEL_STATE_KEY, "expanded");
+  syncPanelIcon(true);
+}
+
 function setPanelTab(tab) {
   const panel = document.querySelector(".note-panel");
   if (!panel) return;
 
   panel.classList.toggle("tab-outline", tab === "outline");
   panel
-    .querySelectorAll(".panel-tab")
+    .querySelectorAll(".panel-tab, .rail-tab")
     .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
   localStorage.setItem(PANEL_TAB_KEY, tab);
 }
@@ -661,6 +671,14 @@ function setPanelTab(tab) {
 function setupPanelTabs() {
   document.querySelectorAll(".note-panel .panel-tab").forEach((btn) => {
     btn.addEventListener("click", () => setPanelTab(btn.dataset.tab));
+  });
+
+  // Rail icons expand the collapsed panel straight onto their tab
+  document.querySelectorAll(".note-panel .rail-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setPanelTab(btn.dataset.tab);
+      openPanel();
+    });
   });
 
   // The sort menu lives in the static panel header while the list swaps

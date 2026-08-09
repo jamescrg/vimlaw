@@ -82,7 +82,12 @@ body:has(.note-page.standalone) {
 
 /* Collapsed = a slim rail with the bottom toggle still reachable, matching
    the main nav sidebar (the toggle lives in the panel, so the rail must
-   never shrink to nothing). */
+   never shrink to nothing). The rail shows one icon per tab; clicking one
+   expands the panel onto that tab. */
+.note-panel .panel-rail {
+  display: none;
+}
+
 .note-panel.collapsed {
   width: 3rem;
 }
@@ -91,6 +96,14 @@ body:has(.note-page.standalone) {
 .note-panel.collapsed .panel-pane.files-pane,
 .note-panel.collapsed .panel-pane.outline-pane {
   display: none;
+}
+
+.note-panel.collapsed .panel-rail {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0;
 }
 
 /* Collapse the panel by default on smaller screens */
@@ -104,6 +117,19 @@ body:has(.note-page.standalone) {
   .note-panel:not(.expanded) .panel-pane.outline-pane {
     display: none;
   }
+
+  .note-panel:not(.expanded) .panel-rail {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 0;
+  }
+}
+
+.note-panel .rail-tab.active {
+  background: var(--selected-background);
+  color: var(--selected-color);
 }
 
 /* Bottom toggle — same treatment as the main nav's .sidebar-toggle */
@@ -1024,16 +1050,18 @@ body:has(.note-page.standalone) {
   color: var(--error);
 }
 
-/* Dark mode — active panel tab follows the nav convention: hover-fill
-   background, no border, the colored text alone marks it (sidebar.css). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .note-panel .panel-tab.active {
+/* Dark mode — active panel tab (and rail icon) follows the nav convention:
+   hover-fill background, no border, the colored text alone marks it
+   (sidebar.css). */
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .note-panel :is(.panel-tab, .rail-tab).active {
   background: var(--background-sidebar-active);
   border-color: transparent;
+  color: var(--selected-color);
 }
 
 /* Basic — the active tab takes the azure fill under inverted text, matching
    the nav's signature move. */
-[data-theme="basic"] .note-panel .panel-tab.active {
+[data-theme="basic"] .note-panel :is(.panel-tab, .rail-tab).active {
   background: var(--control-active-bg);
   border-color: var(--control-active-line);
   color: var(--control-active-color);
