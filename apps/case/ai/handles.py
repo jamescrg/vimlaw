@@ -33,6 +33,17 @@ MD_SOURCE_LINK_RE = re.compile(
     r"\[([^\]]+)\]\(/case/(documents|highlights)/(\d+)/(?:view|link)/\)"
 )
 
+# Invented handle-style citations to records that are not citable
+# (observed live: "[fact:2026-03-17]"). Only documents and highlights
+# are citation targets; these are stripped along with any space before
+# them. The colon requirement keeps ordinary bracketed prose ("[Fact
+# Sheet]") safe.
+PSEUDO_HANDLE_RE = re.compile(
+    r"\s*\[(?:facts?|tasks?|events?|time|entry|entries|conv|conversations?|emails?)"
+    r":[^\]]*\]",
+    re.IGNORECASE,
+)
+
 
 def _clean_label(text, fallback):
     """Strip the characters that would break markdown links or chip syntax."""
@@ -82,6 +93,7 @@ def resolve_handles_for_chat(text, matter):
         label, url = resolved
         return f"[{label}]({url})"
 
+    text = PSEUDO_HANDLE_RE.sub("", text)
     return HANDLE_RE.sub(sub, text)
 
 
@@ -109,5 +121,6 @@ def resolve_handles_for_note(text, matter):
             return f"[[{kind}:{item_id}|{label}]]"
         return label
 
+    text = PSEUDO_HANDLE_RE.sub("", text)
     text = MD_SOURCE_LINK_RE.sub(sub_md_link, text)
     return HANDLE_RE.sub(sub_handle, text)

@@ -106,3 +106,21 @@ def test_note_markdown_link_bad_id_omitted(matter):
 def test_note_ordinary_markdown_link_untouched(matter):
     text = "See [the statute](https://law.example.com/ocga)."
     assert resolve_handles_for_note(text, matter) == text
+
+
+# ── Invented pseudo-handles stripped in both directions ──────────────────────
+
+
+def test_pseudo_fact_handle_stripped(matter):
+    text = "C&B issued a 10-day notice [fact:2026-03-17]."
+    assert resolve_handles_for_note(text, matter) == "C&B issued a 10-day notice."
+    assert resolve_handles_for_chat(text, matter) == "C&B issued a 10-day notice."
+
+
+def test_pseudo_task_handle_stripped(matter):
+    assert resolve_handles_for_chat("Done [task:12].", matter) == "Done."
+
+
+def test_bracketed_prose_not_stripped(matter):
+    text = "The [Fact Sheet] and [sic] remain."
+    assert resolve_handles_for_chat(text, matter) == text
