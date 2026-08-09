@@ -1,0 +1,40 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Set Affiliation ({{ selected_count }} witness{{ selected_count|pluralize:"es" }})</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="bulk-affiliation-form"
+            hx-post="{% url 'case:witnesses-bulk-affiliation' matter.id %}"
+            hx-swap="none">
+        {% csrf_token %}
+        <p class="text-muted">
+          Affiliation is the witness's faction in the case (for example
+          Plaintiff, or a particular defendant). Reuse an existing faction
+          name where one fits; leave blank to clear.
+        </p>
+        <input type="text"
+               name="affiliation"
+               class="form-control"
+               list="existing-affiliations"
+               maxlength="255"
+               placeholder="Affiliation"
+               autofocus>
+        <datalist id="existing-affiliations">
+          {% for affiliation in existing_affiliations %}<option value="{{ affiliation }}"></option>{% endfor %}
+        </datalist>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit" form="bulk-affiliation-form" class="btn btn-primary">Apply</button>
+    </div>
+  </div>
+</div>

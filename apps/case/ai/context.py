@@ -181,7 +181,7 @@ def collect_context_items(
             continue  # Handled by selector
 
         # ai_context="always" — include full content
-        content_parts = [f"**Document: {doc.name}** ({doc.category})"]
+        content_parts = [f"**Document [doc:{doc.id}]: {doc.name}** ({doc.category})"]
         if doc.date:
             content_parts[0] += f" - {doc.date}"
         if doc.description:
@@ -209,9 +209,12 @@ def collect_context_items(
         if hl.text and len(hl.text) > 500:
             text_preview += "..."
 
-        content = f'**Highlight:** "{text_preview}" — {hl.citation}'
+        content = f'**Highlight [hl:{hl.id}]:** "{text_preview}" — {hl.citation}'
         if hl.slug:
-            content = f'**Highlight ({hl.slug}):** "{text_preview}" — {hl.citation}'
+            content = (
+                f"**Highlight [hl:{hl.id}] ({hl.slug}):**"
+                f' "{text_preview}" — {hl.citation}'
+            )
 
         items.append(
             ContextItem(
@@ -476,6 +479,23 @@ def build_chat_history(conversation) -> list[dict]:
     return history
 
 
+# Conventions for citing matter sources in chat prose. Appended to the
+# classic chat context in tasks.py alongside the write protocols; chat
+# messages render as markdown, so the links are clickable.
+SOURCE_LINKING = """CITING SOURCES. Documents and highlights in the context above carry
+[doc:ID] and [hl:ID] handles next to their names. When your answer
+draws on one, cite it inline as a markdown link:
+- highlight: [Smith Dep. p.34](/case/highlights/88/link/) - the link
+  opens the source document positioned at the highlight; use the
+  highlight's citation as the link text.
+- document: [Engagement Letter](/case/documents/17/view/) - only when
+  no highlight covers the point.
+Prefer the highlight whenever one supports the point. A highlight link
+already identifies its document, so never add a second link to the
+document itself for the same point. Use only ids whose handles appear
+in this context; never invent or guess an id, and never write the raw
+[doc:ID] or [hl:ID] handles in your reply."""
+
 MATTER_CONTEXT_TEMPLATE = """
 ## Current Matter: {matter_name}
 
@@ -484,6 +504,9 @@ MATTER_CONTEXT_TEMPLATE = """
 
 ## Contacts & Parties
 {contacts}
+
+## Witnesses
+{witnesses}
 
 ## Court Proceedings
 {proceedings}
@@ -569,6 +592,9 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
     # Contacts
     sections["contacts"] = format_contacts(matter)
 
+    # Witnesses
+    sections["witnesses"] = format_witnesses(matter)
+
     # Proceedings
     sections["proceedings"] = format_proceedings(matter)
 
@@ -643,6 +669,7 @@ def assemble_matter_context_with_selection(
     sections = {}
     sections["matter_overview"] = format_matter_overview(matter)
     sections["contacts"] = format_contacts(matter)
+    sections["witnesses"] = format_witnesses(matter)
     sections["proceedings"] = format_proceedings(matter)
 
     sections["tasks"] = format_tasks(matter)
@@ -677,6 +704,7 @@ def assemble_matter_context_with_selection(
         + legal_prompt
         + sections["matter_overview"]
         + sections["contacts"]
+        + sections["witnesses"]
         + sections["proceedings"]
         + always_critical
         + always_high
@@ -829,6 +857,28 @@ def format_contacts(matter) -> str:
             line += f" - {contact.company}"
         if contact.email:
             line += f" [{contact.email}]"
+        lines.append(line)
+
+    return "\n".join(lines)
+
+
+def format_witnesses(matter) -> str:
+    """Format the witness list."""
+    witnesses = matter.witnesses.all()
+
+    if not witnesses:
+        return "No witnesses recorded."
+
+    lines = []
+    for witness in witnesses:
+        line = (
+            f"- {witness.name} ({witness.get_alignment_display()},"
+            f" importance {witness.importance})"
+        )
+        if witness.affiliation:
+            line += f" - {witness.affiliation}"
+        if witness.knowledge:
+            line += f"\n  Knows: {witness.knowledge[:300]}"
         lines.append(line)
 
     return "\n".join(lines)

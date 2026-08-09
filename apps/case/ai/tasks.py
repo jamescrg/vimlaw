@@ -129,6 +129,44 @@ def process_ai_request(
 
             context_text += drafts_chat.build_draft_section(draft_link)
 
+        # The AI can record timeline facts and witnesses when directed;
+        # the fenced blocks it emits are applied after the response arrives.
+        # SOURCE_LINKING (inline source links for prose) always rides
+        # along, but each write protocol is included only when the recent
+        # user messages actually point at timeline or witness work, so
+        # unrelated conversations carry no standing write instructions.
+        from .context import SOURCE_LINKING
+        from .fact_blocks import (
+            FACT_BLOCK_RE,
+            FACTS_PROTOCOL,
+            FACTS_TRIGGER_RE,
+            apply_fact_blocks,
+        )
+        from .witness_blocks import (
+            WITNESS_BLOCK_RE,
+            WITNESS_TRIGGER_RE,
+            WITNESSES_PROTOCOL,
+            apply_witness_blocks,
+        )
+
+        context_text += "\n\n" + SOURCE_LINKING
+
+        # Current message plus a few before it, so follow-up directives
+        # ("also add the crash date") keep the protocol from a turn or
+        # two after the one that named the timeline.
+        recent_user_text = "\n".join(
+            [user_message]
+            + list(
+                conversation.messages.filter(role="user")
+                .order_by("-created_at")
+                .values_list("content", flat=True)[:4]
+            )
+        )
+        if FACTS_TRIGGER_RE.search(recent_user_text):
+            context_text += "\n\n" + FACTS_PROTOCOL
+        if WITNESS_TRIGGER_RE.search(recent_user_text):
+            context_text += "\n\n" + WITNESSES_PROTOCOL
+
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)
             return
@@ -239,6 +277,16 @@ def process_ai_request(
             if drafts_chat.DRAFT_EDITS_RE.search(response_text):
                 update_status("applying", "Applying edits to the draft...")
                 response_text = drafts_chat.apply_edit_blocks(response_text, draft_link)
+
+        # Create any facts and witnesses the AI was directed to record,
+        # replacing each block with confirmation lines before the message
+        # is stored.
+        if FACT_BLOCK_RE.search(response_text):
+            update_status("applying", "Adding facts to the timeline...")
+            response_text = apply_fact_blocks(response_text, matter, user)
+        if WITNESS_BLOCK_RE.search(response_text):
+            update_status("applying", "Adding witnesses...")
+            response_text = apply_witness_blocks(response_text, matter, user)
 
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")

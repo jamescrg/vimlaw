@@ -319,6 +319,9 @@ def add_label_to(request, object_type, object_id):
     elif object_type == "highlight" and matter:
         selected_session_key = get_session_key("selected_highlights", matter.id)
         context["selected_highlights"] = request.session.get(selected_session_key, [])
+    elif object_type == "fact" and matter:
+        selected_session_key = get_session_key("selected_facts", matter.id)
+        context["selected_facts"] = request.session.get(selected_session_key, [])
 
     return render(request, row_template, context)
 
@@ -354,6 +357,9 @@ def remove_label_from(request, object_type, object_id):
     elif object_type == "highlight" and matter:
         selected_session_key = get_session_key("selected_highlights", matter.id)
         context["selected_highlights"] = request.session.get(selected_session_key, [])
+    elif object_type == "fact" and matter:
+        selected_session_key = get_session_key("selected_facts", matter.id)
+        context["selected_facts"] = request.session.get(selected_session_key, [])
 
     return render(request, row_template, context)
 
@@ -388,6 +394,9 @@ def labels_create_and_apply(request, object_type, object_id):
     elif object_type == "highlight" and matter:
         selected_session_key = get_session_key("selected_highlights", matter.id)
         context["selected_highlights"] = request.session.get(selected_session_key, [])
+    elif object_type == "fact" and matter:
+        selected_session_key = get_session_key("selected_facts", matter.id)
+        context["selected_facts"] = request.session.get(selected_session_key, [])
 
     return render(request, row_template, context)
 

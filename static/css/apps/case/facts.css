@@ -327,3 +327,26 @@ Responsive
     width: 100%;
   }
 }
+
+/* ------------------------------------------------
+Multi-select
+------------------------------------------------ */
+
+.facts-list .col-select {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  width: 2.5rem;
+}
+
+/* Color chips in the bulk-color dropdown; the bare chip (no hl- class)
+   is the "None" option showing the plain row ground. */
+.fact-color-swatch {
+  background: var(--background-td);
+  border: 1px solid var(--border-medium);
+  border-radius: 0.25rem;
+  display: inline-block;
+  height: 1rem;
+  vertical-align: middle;
+  width: 1rem;
+}

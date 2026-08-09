@@ -222,3 +222,168 @@ class TestFactsPrint:
         response = client_with_matter.get(f"/case/{matter_id}/facts/print/")
         assert response.status_code == 200
         assertTemplateUsed(response, "case/facts/print.html")
+
+
+class TestFactsSelection:
+    def test_toggle_select(self, client_with_matter, fact):
+        matter_id = client_with_matter.matter.id
+        response = client_with_matter.post(
+            f"/case/{matter_id}/facts/toggle-select/{fact.id}/"
+        )
+        assert response.status_code == 204
+        assert response.headers["HX-Trigger"] == "factsChanged"
+        assert client_with_matter.session[f"selected_facts_{matter_id}"] == [fact.id]
+
+        # Toggling again deselects
+        client_with_matter.post(f"/case/{matter_id}/facts/toggle-select/{fact.id}/")
+        assert client_with_matter.session[f"selected_facts_{matter_id}"] == []
+
+    def test_toggle_select_scopes_to_matter(self, client_with_matter, fact, contact):
+        from apps.matters.models import Matter
+
+        other = Matter.objects.create(name="Other Matter", client=contact)
+        response = client_with_matter.post(
+            f"/case/{other.id}/facts/toggle-select/{fact.id}/"
+        )
+        assert response.status_code == 404
+
+    def test_select_all_and_clear(self, client_with_matter, fact, user, matter):
+        matter_id = client_with_matter.matter.id
+        other_fact = Fact.objects.create(
+            user=user, matter=matter, date="2024-02-01", description="Second event"
+        )
+        client_with_matter.post(f"/case/{matter_id}/facts/select-all/")
+        assert sorted(client_with_matter.session[f"selected_facts_{matter_id}"]) == [
+            fact.id,
+            other_fact.id,
+        ]
+
+        # Select-all again deselects everything
+        client_with_matter.post(f"/case/{matter_id}/facts/select-all/")
+        assert client_with_matter.session[f"selected_facts_{matter_id}"] == []
+
+        client_with_matter.post(f"/case/{matter_id}/facts/toggle-select/{fact.id}/")
+        client_with_matter.post(f"/case/{matter_id}/facts/clear-selection/")
+        assert client_with_matter.session[f"selected_facts_{matter_id}"] == []
+
+    def test_list_shows_bulk_toolbar_when_selected(self, client_with_matter, fact):
+        matter_id = client_with_matter.matter.id
+        client_with_matter.post(f"/case/{matter_id}/facts/toggle-select/{fact.id}/")
+        response = client_with_matter.get(f"/case/{matter_id}/facts/list/")
+        assert b"bulk-clear-icon" in response.content
+        assert b"bulk-color" in response.content
+
+    def test_single_delete_prunes_selection(self, client_with_matter, fact):
+        matter_id = client_with_matter.matter.id
+        client_with_matter.post(f"/case/{matter_id}/facts/toggle-select/{fact.id}/")
+        client_with_matter.post(f"/case/facts/{fact.id}/delete/")
+        assert client_with_matter.session[f"selected_facts_{matter_id}"] == []
+
+
+class TestFactsBulkActions:
+    def _select(self, client, matter_id, *facts):
+        for fact in facts:
+            client.post(f"/case/{matter_id}/facts/toggle-select/{fact.id}/")
+
+    def test_bulk_requires_selection(self, client_with_matter):
+        matter_id = client_with_matter.matter.id
+        for path in ("bulk-delete", "bulk-importance", "bulk-color", "bulk-labels"):
+            response = client_with_matter.post(f"/case/{matter_id}/facts/{path}/")
+            assert response.status_code == 400
+
+    def test_bulk_delete(self, client_with_matter, fact, user, matter):
+        matter_id = client_with_matter.matter.id
+        other_fact = Fact.objects.create(
+            user=user, matter=matter, date="2024-02-01", description="Second event"
+        )
+        self._select(client_with_matter, matter_id, fact, other_fact)
+        response = client_with_matter.post(f"/case/{matter_id}/facts/bulk-delete/")
+        assert response.status_code == 204
+        assert Fact.objects.count() == 0
+        assert client_with_matter.session[f"selected_facts_{matter_id}"] == []
+
+    def test_bulk_importance(self, client_with_matter, fact):
+        matter_id = client_with_matter.matter.id
+        self._select(client_with_matter, matter_id, fact)
+        response = client_with_matter.post(
+            f"/case/{matter_id}/facts/bulk-importance/", {"importance": "6"}
+        )
+        assert response.status_code == 204
+        fact.refresh_from_db()
+        assert fact.importance == 6
+        assert client_with_matter.session[f"selected_facts_{matter_id}"] == []
+
+    def test_bulk_color_set_and_clear(self, client_with_matter, fact):
+        matter_id = client_with_matter.matter.id
+        self._select(client_with_matter, matter_id, fact)
+        response = client_with_matter.post(
+            f"/case/{matter_id}/facts/bulk-color/", {"color": "Red"}
+        )
+        assert response.status_code == 204
+        fact.refresh_from_db()
+        assert fact.color == "Red"
+
+        self._select(client_with_matter, matter_id, fact)
+        response = client_with_matter.post(
+            f"/case/{matter_id}/facts/bulk-color/", {"color": ""}
+        )
+        assert response.status_code == 204
+        fact.refresh_from_db()
+        assert fact.color is None
+
+    def test_bulk_color_rejects_invalid(self, client_with_matter, fact):
+        matter_id = client_with_matter.matter.id
+        self._select(client_with_matter, matter_id, fact)
+        response = client_with_matter.post(
+            f"/case/{matter_id}/facts/bulk-color/", {"color": "Chartreuse"}
+        )
+        assert response.status_code == 400
+        fact.refresh_from_db()
+        assert fact.color is None
+
+    def test_bulk_labels_modal_tristate(self, client_with_matter, fact, user, matter):
+        from apps.case.models import Label
+
+        matter_id = client_with_matter.matter.id
+        other_fact = Fact.objects.create(
+            user=user, matter=matter, date="2024-02-01", description="Second event"
+        )
+        partial = Label.objects.create(matter=matter, name="Key", color="red")
+        fact.labels.add(partial)
+
+        self._select(client_with_matter, matter_id, fact, other_fact)
+        response = client_with_matter.get(f"/case/{matter_id}/facts/bulk-labels/")
+        assert response.status_code == 200
+        assert b"state-some" in response.content
+        assert b"partial" in response.content
+
+    def test_bulk_label_add_and_remove(self, client_with_matter, fact, user, matter):
+        from apps.case.models import Label
+
+        matter_id = client_with_matter.matter.id
+        other_fact = Fact.objects.create(
+            user=user, matter=matter, date="2024-02-01", description="Second event"
+        )
+        label = Label.objects.create(matter=matter, name="Key", color="red")
+
+        self._select(client_with_matter, matter_id, fact, other_fact)
+        response = client_with_matter.post(
+            f"/case/{matter_id}/facts/bulk-label-action/",
+            {"label_id": label.id, "action": "add"},
+        )
+        assert response.status_code == 200
+        assert response.headers["HX-Trigger"] == "factsChanged"
+        assert label in fact.labels.all()
+        assert label in other_fact.labels.all()
+        # Selection survives so more labels can be toggled
+        assert sorted(
+            client_with_matter.session[f"selected_facts_{matter_id}"]
+        ) == sorted([fact.id, other_fact.id])
+
+        response = client_with_matter.post(
+            f"/case/{matter_id}/facts/bulk-label-action/",
+            {"label_id": label.id, "action": "remove"},
+        )
+        assert response.status_code == 200
+        assert fact.labels.count() == 0
+        assert other_fact.labels.count() == 0

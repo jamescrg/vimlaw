@@ -6,6 +6,14 @@ from django.views.decorators.http import require_POST
 
 from apps.case.models import Highlight, Witness
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
+from apps.management.selection import (
+    all_visible_selected,
+    clear_selected_ids,
+    get_selected_ids,
+    select_all_ids,
+    selection_response,
+    toggle_id,
+)
 
 from .filters import WitnessesFilter
 from .forms import WitnessForm
@@ -43,8 +51,15 @@ def get_witnesses_data(request, matter, matter_id):
         int(importance_value) if importance_value not in (None, "", 0) else None
     )
 
+    selected_key = get_session_key("selected_witnesses", matter_id)
+    selected_witnesses = get_selected_ids(request, selected_key)
+    visible_ids = [witness.id for witness in witnesses]
+    all_selected = all_visible_selected(selected_witnesses, visible_ids)
+
     return {
         "witnesses": witnesses,
+        "selected_witnesses": selected_witnesses,
+        "all_selected": all_selected,
         "current_order": current_order,
         "keyword": keyword,
         "importances": list(range(7, 0, -1)),
@@ -158,9 +173,152 @@ def witnesses_edit(request, witness_id):
 def witnesses_delete(request, witness_id):
     """Delete a witness."""
     witness = get_object_or_404(Witness, pk=witness_id)
+
+    # Prune the id from any current selection so the bulk count stays honest.
+    key = get_session_key("selected_witnesses", witness.matter_id)
+    selected = get_selected_ids(request, key)
+    if witness.id in selected:
+        selected.remove(witness.id)
+        request.session[key] = selected
+
     witness.delete()
 
     return HttpResponse(status=204, headers={"HX-Trigger": "witnessesChanged"})
+
+
+# ── Selection & bulk actions ─────────────────────────────────────────────────
+
+
+def _selected_witnesses_qs(matter, selected):
+    return Witness.objects.filter(matter=matter, id__in=selected)
+
+
+@login_required
+@require_POST
+def toggle_witness_select(request, matter_id, witness_id):
+    """Toggle selection of a single witness."""
+    get_object_or_404(Witness, id=witness_id, matter_id=matter_id)
+    key = get_session_key("selected_witnesses", matter_id)
+    toggle_id(request, key, witness_id)
+    return selection_response("witnessesChanged")
+
+
+@login_required
+@require_POST
+def select_all_witnesses(request, matter_id):
+    """Select all visible (filtered) witnesses, or deselect if all selected."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_witnesses", matter_id)
+    visible_ids = [
+        witness.id
+        for witness in get_witnesses_data(request, matter, matter_id)["witnesses"]
+    ]
+    select_all_ids(request, key, visible_ids)
+    return selection_response("witnessesChanged")
+
+
+@login_required
+@require_POST
+def clear_witness_selection(request, matter_id):
+    """Clear the witness selection."""
+    clear_selected_ids(request, get_session_key("selected_witnesses", matter_id))
+    return selection_response("witnessesChanged")
+
+
+@login_required
+@require_POST
+def bulk_witnesses_delete(request, matter_id):
+    """Delete all selected witnesses."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_witnesses", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No witnesses selected.")
+
+    _selected_witnesses_qs(matter, selected).delete()
+    clear_selected_ids(request, key)
+
+    return selection_response("witnessesChanged")
+
+
+@login_required
+@require_POST
+def bulk_witnesses_importance(request, matter_id):
+    """Bulk set importance on selected witnesses."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_witnesses", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No witnesses selected.")
+
+    importance = request.POST.get("importance")
+    if importance:
+        _selected_witnesses_qs(matter, selected).update(importance=int(importance))
+
+    clear_selected_ids(request, key)
+    return selection_response("witnessesChanged")
+
+
+@login_required
+@require_POST
+def bulk_witnesses_alignment(request, matter_id):
+    """Bulk set alignment on selected witnesses."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_witnesses", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No witnesses selected.")
+
+    alignment = request.POST.get("alignment")
+    valid_alignments = {value for value, _ in Witness.ALIGNMENT_CHOICES}
+    if alignment not in valid_alignments:
+        return HttpResponse(status=400, content="Invalid alignment.")
+
+    _selected_witnesses_qs(matter, selected).update(alignment=alignment)
+
+    clear_selected_ids(request, key)
+    return selection_response("witnessesChanged")
+
+
+@login_required
+def bulk_witnesses_affiliation(request, matter_id):
+    """Bulk set affiliation: GET shows the modal, POST applies.
+
+    Affiliation is the witness's faction, so the modal offers the
+    matter's existing affiliations for reuse; an empty value clears."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_witnesses", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No witnesses selected.")
+
+    if request.method == "POST":
+        affiliation = request.POST.get("affiliation", "").strip()[:255]
+        _selected_witnesses_qs(matter, selected).update(affiliation=affiliation)
+        clear_selected_ids(request, key)
+        return selection_response("witnessesChanged")
+
+    existing_affiliations = (
+        Witness.objects.filter(matter=matter)
+        .exclude(affiliation="")
+        .order_by("affiliation")
+        .values_list("affiliation", flat=True)
+        .distinct()
+    )
+
+    return render(
+        request,
+        "case/witnesses/bulk_affiliation_modal.html",
+        {
+            "matter": matter,
+            "selected_count": len(selected),
+            "existing_affiliations": existing_affiliations,
+        },
+    )
 
 
 @login_required
