@@ -516,6 +516,14 @@ body:has(.note-page.standalone) {
   width: 100%;
 }
 
+/* The canvas is a borderless "paper" page — the site-wide focused-field
+   treatment (forms.css: border recolor + inset shadow) would draw a ring
+   around the title while typing in it. The caret is signal enough here. */
+.note-header .note-title-input:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .note-header .app-badge {
   margin-left: auto;
 }

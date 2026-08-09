@@ -215,6 +215,8 @@
 
 #code-lang-selector:focus {
   border-color: var(--link);
+  /* cancel the site-wide focused-field inset shadow (forms.css) */
+  box-shadow: none;
   outline: none;
 }
 
