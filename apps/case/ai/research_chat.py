@@ -88,6 +88,14 @@ PROMPT_ROLE = (
     "Check list_saved_caselaw before searching so prior research is "
     "reused. Prefer the matter's jurisdiction; broaden only when its law "
     "is sparse.\n\n"
+    "FIRM LIBRARY (when a FIRM LIBRARY section is present above): those "
+    "are the firm's own research outlines and practice guides. Before "
+    "searching externally on a question a library note covers, "
+    "read_library_note it — it records prior research and often names "
+    "the controlling authorities, which you can then verify and read "
+    "through your CourtListener tools. Library notes are internal work "
+    "product: never cite one as authority and never attach a "
+    "[cluster:n] marker to one.\n\n"
 )
 
 PROMPT_CONTRACT = (
@@ -173,12 +181,52 @@ def prior_research_section(conversation):
     return "".join(lines) + "\n"
 
 
-def build_research_system(context_text, depth, prior_research=""):
+def build_library_section():
+    """Listing of the firm's AI-library notes for the research system prompt.
+
+    One line per note (id, folder path, title, summary excerpt) so the
+    model can plan read_library_note calls. Sits in the stable prefix
+    right after the matter context, so prompt caching still applies
+    across tool turns.
+    """
+    from apps.case.ai.selector import library_folder_path
+    from apps.notes.models import get_library_notes
+
+    lines = []
+    notes = (
+        get_library_notes()
+        .select_related(
+            "folder",
+            "folder__parent",
+            "folder__parent__parent",
+            "folder__parent__parent__parent",
+        )
+        .order_by("folder__name", "title")
+    )
+    for note in notes:
+        if not note.content:
+            continue
+        excerpt = (note.summary or note.content)[:160].replace("\n", " ").strip()
+        folder_path = library_folder_path(note.folder)
+        lines.append(f"- [id {note.id}] {folder_path}: {note.title} ({excerpt})")
+
+    if not lines:
+        return ""
+    return (
+        "FIRM LIBRARY (internal research outlines and practice guides; "
+        "read one with read_library_note(note_id) before relying on it):\n"
+        + "\n".join(lines)
+        + "\n\n"
+    )
+
+
+def build_research_system(context_text, depth, prior_research="", library_section=""):
     """Matter context first (the stable, cacheable prefix), research
     contract after."""
     return (
         context_text
         + "\n\n"
+        + library_section
         + PROMPT_ROLE
         + COURTLISTENER_SYNTAX_RULES
         + PROMPT_CONTRACT
@@ -295,7 +343,10 @@ def run_research_request(
         chat_history.pop(0)
 
     system = build_research_system(
-        context_text, depth, prior_research_section(conversation)
+        context_text,
+        depth,
+        prior_research_section(conversation),
+        library_section=build_library_section(),
     )
     tools = build_tools(depth)
     execute_tool = make_executor(matter, depth, conversation_id=conversation.id)
@@ -348,6 +399,11 @@ def run_research_request(
                     "reading",
                     f"Checking treatment of {tool_input.get('cluster_id', '')}...",
                 )
+            elif name == "read_library_note":
+                set_status(
+                    "reading",
+                    f"Reading library note {tool_input.get('note_id', '')}...",
+                )
             else:
                 set_status("searching", "Reviewing saved case law...")
         elif kind == "tool_result":
@@ -378,6 +434,9 @@ def run_research_request(
                     push_log(f"Citation {event.get('citation', '')} not found")
             elif etype == "saved":
                 push_log(f"Reviewed saved case law ({event.get('count', 0)})")
+            elif etype == "library_read":
+                title = event.get("title") or event.get("note_id")
+                push_log(f"Read library note *{title}*")
         elif kind == "text":
             text = payload.get("text", "")
             if text:
