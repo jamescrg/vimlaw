@@ -527,9 +527,10 @@ draws on one, cite it inline as a markdown link:
   no highlight covers the point.
 Prefer the highlight whenever one supports the point. A highlight link
 already identifies its document, so never add a second link to the
-document itself for the same point. Use only ids whose handles appear
-in this context; never invent or guess an id, and never write the raw
-[doc:ID] or [hl:ID] handles in your reply."""
+document itself for the same point. Notes carry [note:ID] handles the
+same way; cite one as [its title](/case/notes/ID/). Use only ids whose
+handles appear in this context; never invent or guess an id, and never
+write the raw [doc:ID], [hl:ID], or [note:ID] handles in your reply."""
 
 MATTER_CONTEXT_TEMPLATE = """
 ## Current Matter: {matter_name}

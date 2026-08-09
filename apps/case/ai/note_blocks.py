@@ -21,6 +21,8 @@ import re
 
 from apps.notes.models import Note, library_folder_ids
 
+from .handles import resolve_handles_for_note
+
 logger = logging.getLogger(__name__)
 
 CREATE_NOTE_RE = re.compile(r"```create-note\s*\n(.*?)```", re.DOTALL)
@@ -82,6 +84,8 @@ def _apply_create(match, matter, requesting_user):
     content = str(entry.get("content") or "").strip()
     if len(title) < 3 or not content:
         return match.group(0)
+    # Raw [doc:]/[hl:] handles become the note's native reference chips
+    content = resolve_handles_for_note(content, matter)
 
     category = str(entry.get("category") or "note").strip().lower()
     if category not in VALID_CATEGORIES:
@@ -128,6 +132,7 @@ def _apply_edit(match, matter):
     content = str(entry.get("content") or "").strip()
     if not content:
         return match.group(0)
+    content = resolve_handles_for_note(content, matter)
 
     note = _editable_note(entry.get("id"), matter)
     if note is None:

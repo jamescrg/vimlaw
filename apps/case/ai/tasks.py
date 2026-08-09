@@ -299,6 +299,15 @@ def process_ai_request(
             update_status("applying", "Writing notes...")
             response_text = apply_note_blocks(response_text, matter, user)
 
+        # Any raw [doc:]/[hl:]/[note:] handles the model leaked into prose
+        # become human-readable markdown links (hallucinated ids are
+        # omitted). Runs after the write blocks so their content has
+        # already been consumed.
+        from .handles import HANDLE_RE, resolve_handles_for_chat
+
+        if HANDLE_RE.search(response_text):
+            response_text = resolve_handles_for_chat(response_text, matter)
+
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")
         logger.info(
