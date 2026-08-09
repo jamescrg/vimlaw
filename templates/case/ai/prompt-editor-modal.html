@@ -15,7 +15,7 @@
         {% include "components/format-toolbar.html" %}
         <span class="toolbar-divider"></span>
         <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
-          <i class="icon-cloud"></i>
+          <i class="icon-save"></i>
         </a>
       </div>
       <div id="promptEditorContainer" class="prompt-editor-content"></div>
@@ -92,11 +92,11 @@
     if (status === 'unsaved') {
       btn.classList.add('active');
       btn.title = 'Unsaved changes';
-      icon.className = 'icon-cloud-upload';
+      icon.className = 'icon-save-pen';
     } else {
       btn.classList.remove('active');
       btn.title = 'Saved';
-      icon.className = 'icon-cloud';
+      icon.className = 'icon-save';
     }
   }
 

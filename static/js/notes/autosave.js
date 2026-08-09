@@ -57,10 +57,10 @@ function updateSaveStatus(status) {
   if (status === "saved") {
     btn.classList.remove("active");
     btn.title = "Saved";
-    icon.className = "icon-cloud";
+    icon.className = "icon-save";
   } else {
     btn.classList.add("active");
     btn.title = status === "saving" ? "Saving..." : "Unsaved changes";
-    icon.className = "icon-cloud-upload";
+    icon.className = "icon-save-pen";
   }
 }

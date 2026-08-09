@@ -7,12 +7,6 @@
     {% endif %}
   </span>
   <div class="sidebar-header-actions">
-    <button class="panel-btn"
-            hx-get="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
-            hx-target="#htmx-modal-container"
-            title="New Note">
-      <i class="icon-square-pen"></i>
-    </button>
     <div class="dropdown" x-data="dropdown()">
       <button class="panel-btn"
               type="button"

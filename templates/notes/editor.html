@@ -37,11 +37,17 @@
         <div class="note-toolbar">
           <div class="format-toolbar">{% include "components/format-toolbar.html" %}</div>
           <div class="toolbar-right">
+            <a href="#"
+               hx-get="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
+               hx-target="#htmx-modal-container"
+               title="New note">
+              <i class="icon-square-pen"></i>
+            </a>
             <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
               <i class="icon-search"></i>
             </a>
             <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
-              <i class="icon-cloud"></i>
+              <i class="icon-save"></i>
             </a>
             <div class="dropdown" x-data="dropdown()">
               <button class="btn-icon"
