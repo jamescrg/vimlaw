@@ -32,14 +32,12 @@
   scroll-margin-top: 4rem;
 }
 
-/* Heading hierarchy: three axes, one device each. h2 owns the only
-   underline (major section break) and hangs a full step into the gutter,
-   aligning with the title/meta outdent (-1rem, the canvas's signature
-   move). h3 hangs a half step, no rule. h4 sits flush and goes muted so
-   it can't be confused with h3 - the 2px size difference alone never
-   distinguished them. Outdent steps are 0.5rem: a 0.25rem step reads as
-   an accident, not structure. The canvas gutter is a constant 3rem, so
-   the hangs always have room. */
+/* Heading hierarchy: h2 and h3 both hang 1rem into the gutter, aligning
+   with the title/meta outdent (the canvas's signature move); the
+   underline is h2's alone and marks the major section break. h4 sits
+   flush in the text column, so the outdent itself separates it from h3,
+   with a 3px size step (1.25 vs 1.0625) backing that up. The canvas
+   gutter is a constant 3rem, so the hangs always have room. */
 #note-editor .ProseMirror h1 {
   color: var(--color-primary);
   font-size: 1.75rem;
@@ -63,16 +61,16 @@
 
 #note-editor .ProseMirror h3 {
   color: var(--color-primary);
-  font-size: 1.1875rem;
+  font-size: 1.25rem;
   font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.3;
-  margin-left: -0.5rem;
+  margin-left: -1rem;
   margin-top: 2rem;
 }
 
 #note-editor .ProseMirror h4 {
-  color: var(--color-muted);
+  color: var(--color-primary);
   font-size: 1.0625rem;
   font-weight: 500;
   letter-spacing: -0.01em;
