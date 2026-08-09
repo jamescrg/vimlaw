@@ -27,6 +27,7 @@ import {
 } from "./vendor/tiptap.bundle.js";
 
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
+import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
 import {
   getMarkdownContent,
@@ -267,32 +268,17 @@ function setupTitleEdit() {
 // ─── Toolbar ─────────────────────────────────────────────────────────────────
 
 function setupToolbar() {
-  const toolbarActions = {
-    "btn-bold": () => state.editor.chain().focus().toggleBold().run(),
-    "btn-italic": () => state.editor.chain().focus().toggleItalic().run(),
-    "btn-strike": () => state.editor.chain().focus().toggleStrike().run(),
-    "btn-heading-1": () =>
-      state.editor.chain().focus().toggleHeading({ level: 1 }).run(),
-    "btn-heading-2": () =>
-      state.editor.chain().focus().toggleHeading({ level: 2 }).run(),
-    "btn-heading-3": () =>
-      state.editor.chain().focus().toggleHeading({ level: 3 }).run(),
-    "btn-bullet-list": () =>
-      state.editor.chain().focus().toggleBulletList().run(),
-    "btn-ordered-list": () =>
-      state.editor.chain().focus().toggleOrderedList().run(),
-    "btn-blockquote": () =>
-      state.editor.chain().focus().toggleBlockquote().run(),
-  };
+  const wrapper = document.querySelector(".note-format-toolbar-wrapper");
+  if (!wrapper) return;
 
-  for (const [id, handler] of Object.entries(toolbarActions)) {
-    bindClick(id, handler);
-  }
+  // Synced notes are read-only, but TipTap still applies programmatic
+  // commands to a non-editable editor — hide the bar entirely. The wrapper
+  // survives note switches, so re-show it when an editable note loads.
+  const readOnly = !!(window.NOTE_DATA && window.NOTE_DATA.readOnly);
+  wrapper.style.display = readOnly ? "none" : "";
+  if (readOnly) return;
 
-  bindClick("insert-source-btn", (e) => {
-    e.preventDefault();
-    openReferencePicker();
-  });
+  connectFormatToolbar(wrapper.querySelector(".format-toolbar"), state.editor);
 }
 
 // ─── Keyboard Shortcuts ──────────────────────────────────────────────────────

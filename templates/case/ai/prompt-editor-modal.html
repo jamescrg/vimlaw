@@ -11,36 +11,8 @@
       </div>
     </div>
     <div class="modal-body">
-      <div class="prompt-editor-toolbar">
-        <button type="button" id="btn-bold" class="btn-icon" title="Bold">
-          <i class="icon-bold"></i>
-        </button>
-        <button type="button" id="btn-italic" class="btn-icon" title="Italic">
-          <i class="icon-italic"></i>
-        </button>
-        <button type="button" id="btn-strike" class="btn-icon" title="Strikethrough">
-          <i class="icon-strikethrough"></i>
-        </button>
-        <span class="toolbar-divider"></span>
-        <button type="button" id="btn-h1" class="btn-icon" title="Heading 1">
-          <i class="icon-heading-1"></i>
-        </button>
-        <button type="button" id="btn-h2" class="btn-icon" title="Heading 2">
-          <i class="icon-heading-2"></i>
-        </button>
-        <button type="button" id="btn-h3" class="btn-icon" title="Heading 3">
-          <i class="icon-heading-3"></i>
-        </button>
-        <span class="toolbar-divider"></span>
-        <button type="button" id="btn-bullet" class="btn-icon" title="Bullet List">
-          <i class="icon-list"></i>
-        </button>
-        <button type="button" id="btn-ordered" class="btn-icon" title="Numbered List">
-          <i class="icon-list-ordered"></i>
-        </button>
-        <button type="button" id="btn-quote" class="btn-icon" title="Blockquote">
-          <i class="icon-quote"></i>
-        </button>
+      <div class="prompt-editor-toolbar format-toolbar">
+        {% include "components/format-toolbar.html" %}
         <span class="toolbar-divider"></span>
         <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
           <i class="icon-cloud"></i>

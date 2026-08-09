@@ -368,6 +368,25 @@ body:has(.note-page.standalone) {
 }
 
 /* =============================================================================
+   Formatting Toolbar - shared format-toolbar bar below the main toolbar
+   ============================================================================= */
+
+.note-format-toolbar-wrapper {
+  background: var(--background-subnav);
+  border-bottom: 1px solid var(--border-medium);
+  flex-shrink: 0;
+  position: sticky;
+  top: 3rem;
+  z-index: 49;
+}
+
+.note-format-toolbar-wrapper .format-toolbar {
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: 0.25rem 1.5rem;
+}
+
+/* =============================================================================
    Toolbar - Constrained Width
    ============================================================================= */
 

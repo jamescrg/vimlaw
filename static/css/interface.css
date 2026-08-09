@@ -217,3 +217,44 @@ input:is([type="checkbox"], [type="radio"]):focus-visible,
      not a blur, so it reads soft without the fuzzy Bootstrap glow. */
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus-ring) 18%, transparent);
 }
+
+/* ==========================================================================
+   Formatting toolbar — shared rich-text buttons for TipTap editors
+   (components/format-toolbar.html + js/format-toolbar.js). One look for
+   every editing surface: notes editor bar, AI compose-prompt modal.
+   Surface-specific chrome (background, borders, alignment) stays with the
+   surface's own stylesheet.
+   ========================================================================== */
+.format-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.format-toolbar .btn-icon {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.format-toolbar .btn-icon:hover {
+  background: var(--background-control);
+  color: var(--color-darker);
+}
+
+.format-toolbar .btn-icon.active {
+  background: var(--violet-100);
+  color: var(--violet-700);
+}
+
+.format-toolbar .toolbar-divider {
+  background: var(--border-medium);
+  height: 1.25rem;
+  margin: 0 0.25rem;
+  width: 1px;
+}

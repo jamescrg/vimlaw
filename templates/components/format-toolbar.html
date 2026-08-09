@@ -1,0 +1,41 @@
+{% comment %}
+Shared rich-text formatting buttons (TipTap) — used by the notes editor
+formatting bar and the AI compose-prompt modal. Include inside a container
+carrying the .format-toolbar class, then wire it to an editor instance with
+connectFormatToolbar() from js/format-toolbar.js (buttons match by data-cmd).
+{% endcomment %}
+<button type="button" class="btn-icon" data-cmd="bold" title="Bold">
+  <i class="icon-bold"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="italic" title="Italic">
+  <i class="icon-italic"></i>
+</button>
+<button type="button"
+        class="btn-icon"
+        data-cmd="strike"
+        title="Strikethrough">
+  <i class="icon-strikethrough"></i>
+</button>
+<span class="toolbar-divider"></span>
+<button type="button" class="btn-icon" data-cmd="h1" title="Heading 1">
+  <i class="icon-heading-1"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="h2" title="Heading 2">
+  <i class="icon-heading-2"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="h3" title="Heading 3">
+  <i class="icon-heading-3"></i>
+</button>
+<span class="toolbar-divider"></span>
+<button type="button" class="btn-icon" data-cmd="bullet" title="Bullet List">
+  <i class="icon-list"></i>
+</button>
+<button type="button"
+        class="btn-icon"
+        data-cmd="ordered"
+        title="Numbered List">
+  <i class="icon-list-ordered"></i>
+</button>
+<button type="button" class="btn-icon" data-cmd="quote" title="Blockquote">
+  <i class="icon-quote"></i>
+</button>

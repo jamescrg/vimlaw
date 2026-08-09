@@ -1274,41 +1274,12 @@
   padding: 0;
 }
 
+/* Buttons and layout come from the shared .format-toolbar (interface.css);
+   only the modal's chrome lives here. */
 .prompt-editor-toolbar {
-  align-items: center;
   background: var(--ai-raised);
   border: none;
   border-bottom: 1px solid var(--border-medium);
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.5rem;
-}
-
-.prompt-editor-toolbar .btn-icon {
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-xs);
-  color: var(--color-primary);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.375rem 0.5rem;
-}
-
-.prompt-editor-toolbar .btn-icon:hover {
-  background: var(--background-control);
-  color: var(--color-darker);
-}
-
-.prompt-editor-toolbar .btn-icon.active {
-  background: var(--violet-100);
-  color: var(--violet-700);
-}
-
-.prompt-editor-toolbar .toolbar-divider {
-  background: var(--border-medium);
-  height: 1.25rem;
-  margin: 0 0.25rem;
-  width: 1px;
 }
 
 .prompt-editor-toolbar #save-status-btn {
@@ -1318,7 +1289,7 @@
   font-size: 1rem;
   justify-content: center;
   margin-left: auto;
-  padding: 0.375rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   text-decoration: none;
 }
 

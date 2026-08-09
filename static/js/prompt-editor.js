@@ -22,6 +22,8 @@ import {
   Placeholder,
 } from "./vendor/tiptap.bundle.js";
 
+import { connectFormatToolbar } from "./format-toolbar.js";
+
 let promptEditor = null;
 
 /**
@@ -55,143 +57,13 @@ export function initPromptEditor(container) {
     content: "",
   });
 
-  // Set up toolbar buttons
-  setupToolbar();
+  // Wire the shared formatting toolbar to this editor instance
+  connectFormatToolbar(
+    document.querySelector(".prompt-editor-toolbar"),
+    promptEditor,
+  );
 
   return promptEditor;
-}
-
-/**
- * Set up toolbar button click handlers
- */
-function setupToolbar() {
-  if (!promptEditor) return;
-
-  const toolbar = document.querySelector(".prompt-editor-toolbar");
-  if (!toolbar) return;
-
-  // Bold
-  const btnBold = toolbar.querySelector("#btn-bold");
-  if (btnBold) {
-    btnBold.addEventListener("click", () => {
-      promptEditor.chain().focus().toggleBold().run();
-      updateToolbarState();
-    });
-  }
-
-  // Italic
-  const btnItalic = toolbar.querySelector("#btn-italic");
-  if (btnItalic) {
-    btnItalic.addEventListener("click", () => {
-      promptEditor.chain().focus().toggleItalic().run();
-      updateToolbarState();
-    });
-  }
-
-  // Strike
-  const btnStrike = toolbar.querySelector("#btn-strike");
-  if (btnStrike) {
-    btnStrike.addEventListener("click", () => {
-      promptEditor.chain().focus().toggleStrike().run();
-      updateToolbarState();
-    });
-  }
-
-  // Headings
-  [1, 2, 3].forEach((level) => {
-    const btn = toolbar.querySelector(`#btn-h${level}`);
-    if (btn) {
-      btn.addEventListener("click", () => {
-        promptEditor.chain().focus().toggleHeading({ level }).run();
-        updateToolbarState();
-      });
-    }
-  });
-
-  // Bullet list
-  const btnBullet = toolbar.querySelector("#btn-bullet");
-  if (btnBullet) {
-    btnBullet.addEventListener("click", () => {
-      promptEditor.chain().focus().toggleBulletList().run();
-      updateToolbarState();
-    });
-  }
-
-  // Ordered list
-  const btnOrdered = toolbar.querySelector("#btn-ordered");
-  if (btnOrdered) {
-    btnOrdered.addEventListener("click", () => {
-      promptEditor.chain().focus().toggleOrderedList().run();
-      updateToolbarState();
-    });
-  }
-
-  // Blockquote
-  const btnQuote = toolbar.querySelector("#btn-quote");
-  if (btnQuote) {
-    btnQuote.addEventListener("click", () => {
-      promptEditor.chain().focus().toggleBlockquote().run();
-      updateToolbarState();
-    });
-  }
-
-  // Update toolbar state on selection change
-  promptEditor.on("selectionUpdate", updateToolbarState);
-  promptEditor.on("update", updateToolbarState);
-}
-
-/**
- * Update toolbar button active states based on current selection
- */
-function updateToolbarState() {
-  if (!promptEditor) return;
-
-  const toolbar = document.querySelector(".prompt-editor-toolbar");
-  if (!toolbar) return;
-
-  // Bold
-  const btnBold = toolbar.querySelector("#btn-bold");
-  if (btnBold) {
-    btnBold.classList.toggle("active", promptEditor.isActive("bold"));
-  }
-
-  // Italic
-  const btnItalic = toolbar.querySelector("#btn-italic");
-  if (btnItalic) {
-    btnItalic.classList.toggle("active", promptEditor.isActive("italic"));
-  }
-
-  // Strike
-  const btnStrike = toolbar.querySelector("#btn-strike");
-  if (btnStrike) {
-    btnStrike.classList.toggle("active", promptEditor.isActive("strike"));
-  }
-
-  // Headings
-  [1, 2, 3].forEach((level) => {
-    const btn = toolbar.querySelector(`#btn-h${level}`);
-    if (btn) {
-      btn.classList.toggle("active", promptEditor.isActive("heading", { level }));
-    }
-  });
-
-  // Bullet list
-  const btnBullet = toolbar.querySelector("#btn-bullet");
-  if (btnBullet) {
-    btnBullet.classList.toggle("active", promptEditor.isActive("bulletList"));
-  }
-
-  // Ordered list
-  const btnOrdered = toolbar.querySelector("#btn-ordered");
-  if (btnOrdered) {
-    btnOrdered.classList.toggle("active", promptEditor.isActive("orderedList"));
-  }
-
-  // Blockquote
-  const btnQuote = toolbar.querySelector("#btn-quote");
-  if (btnQuote) {
-    btnQuote.classList.toggle("active", promptEditor.isActive("blockquote"));
-  }
 }
 
 /**
