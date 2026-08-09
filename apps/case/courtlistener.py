@@ -45,6 +45,7 @@ class OpinionResult:
     plain_text: str = ""
     html_with_citations: str = ""
     author: str = ""
+    cluster_id: Optional[int] = None
     error: str = ""
 
 
@@ -208,12 +209,22 @@ def fetch_opinion(opinion_id: int) -> OpinionResult:
 
             plain_text = re.sub(r"<[^>]+>", "", plain_text)
 
+        # The cluster (case-level) id rides on the opinion as a URL; parse it
+        # out so treatment checks can fetch the citing case's name and date.
+        cluster_id = None
+        cluster_url = data.get("cluster") or ""
+        try:
+            cluster_id = int(str(cluster_url).rstrip("/").split("/")[-1])
+        except (ValueError, IndexError):
+            pass
+
         return OpinionResult(
             found=True,
             opinion_id=data.get("id"),
             plain_text=plain_text,
             html_with_citations=data.get("html_with_citations", ""),
             author=data.get("author_str", ""),
+            cluster_id=cluster_id,
         )
 
     except requests.RequestException as e:

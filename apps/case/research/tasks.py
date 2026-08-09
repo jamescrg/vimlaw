@@ -502,14 +502,74 @@ def _evaluate_full(result, query_text):
         )
 
 
+# Treatment-check tuning. Depth is CourtListener's per-citing-opinion count
+# of how many times it cites the case: a depth-1 citer is a single passing
+# citation, and no court overrules or disapproves a case in one mention, so
+# those are skipped entirely. Among substantial citers we read the FULL
+# opinion text (capped only to keep a freak 500-page opinion bounded) —
+# disapproval buried past an excerpt window was the old check's blind spot.
+TREATMENT_MIN_DEPTH = 2
+TREATMENT_MAX_READS = 5
+TREATMENT_CANDIDATE_POOL = 12
+TREATMENT_OPINION_CHAR_CAP = 250_000
+
+TREATMENT_SYSTEM_PROMPT = (
+    "You are a legal research assistant assessing how a citing opinion "
+    "treats a cited case. Respond ONLY with valid JSON."
+)
+
+
+def _classify_treatment(case_name, citation, citing):
+    """Ask Flash how one citing opinion treats the cited case.
+
+    Returns {"treatment": "negative"|"good_law"|"neutral", "reason": str}.
+    """
+    text = citing["text"][:TREATMENT_OPINION_CHAR_CAP]
+    truncated = " ... (opinion continues)" if len(citing["text"]) > len(text) else ""
+    user_prompt = (
+        f"The opinion below cites {case_name} ({citation}).\n"
+        f"Read the ENTIRE opinion and classify its treatment of the cited case:\n"
+        f'- "negative": it overrules, abrogates, disapproves, limits, '
+        f"questions, or otherwise negatively treats the cited case, anywhere "
+        f"in the text (including in passing or in a footnote).\n"
+        f'- "good_law": it affirmatively follows, applies, or relies on the '
+        f"cited case as good law.\n"
+        f'- "neutral": it merely mentions or distinguishes the cited case '
+        f"without endorsing or undermining it.\n\n"
+        f"Citing opinion ({citing['name']}, {citing['date'] or 'date unknown'}):\n"
+        f"{text}{truncated}\n\n"
+        f'Respond with JSON: {{"treatment": "negative" | "good_law" | '
+        f'"neutral", "reason": "one sentence explanation"}}'
+    )
+    response_text, _, _ = send_to_gemini(
+        TREATMENT_SYSTEM_PROMPT, [{"role": "user", "content": user_prompt}]
+    )
+    cleaned = response_text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+    parsed = json.loads(cleaned)
+    treatment = parsed.get("treatment", "neutral")
+    if treatment not in ("negative", "good_law", "neutral"):
+        treatment = "neutral"
+    return {"treatment": treatment, "reason": parsed.get("reason", "")}
+
+
 def check_negative_treatment(cluster_id, case_name="", citation=""):
-    """Pure negative-treatment check against top forward citations.
+    """Pure negative-treatment check against substantial forward citations.
 
     Returns {"checked": bool, "has_negative_treatment": bool, "reason": str}.
     checked=False means the chain couldn't be evaluated (no cluster/opinion);
     no forward citations at all counts as checked with no negative treatment.
     Shared by the research pipeline and the research chat's check_treatment
     tool.
+
+    Method: take the most-cited-by citing opinions (CourtListener depth =
+    how many times each citing opinion cites the case), drop single-mention
+    citers, then read the full text of up to TREATMENT_MAX_READS of them in
+    most-recent-first order. A negative verdict returns immediately; a
+    citing case that affirmatively treats the case as good law also stops
+    the walk — everything older predates that endorsement, so it can't
+    change the currency verdict. Only neutral mentions keep the walk going.
     """
     if not cluster_id:
         return {"checked": False, "has_negative_treatment": False, "reason": ""}
@@ -524,7 +584,7 @@ def check_negative_treatment(cluster_id, case_name="", citation=""):
     except (ValueError, IndexError):
         return {"checked": False, "has_negative_treatment": False, "reason": ""}
 
-    forward_cites = get_forward_citations(opinion_id, limit=3)
+    forward_cites = get_forward_citations(opinion_id, limit=TREATMENT_CANDIDATE_POOL)
     if not forward_cites:
         return {
             "checked": True,
@@ -532,43 +592,79 @@ def check_negative_treatment(cluster_id, case_name="", citation=""):
             "reason": "No citing opinions found.",
         }
 
-    excerpts = []
-    for cite in forward_cites:
-        citing_opinion = fetch_opinion(cite["citing_opinion_id"])
-        if citing_opinion.found:
-            excerpts.append(citing_opinion.plain_text[:3000])
+    substantial = [
+        cite for cite in forward_cites if cite.get("depth", 0) >= TREATMENT_MIN_DEPTH
+    ][:TREATMENT_MAX_READS]
+    if not substantial:
+        return {
+            "checked": True,
+            "has_negative_treatment": False,
+            "reason": (
+                "Only passing citations found (each citing opinion cites the "
+                "case once); no substantial treatment to evaluate."
+            ),
+        }
 
-    if not excerpts:
+    # Read each substantial citer in full and collect its case name + filing
+    # date so the walk can run most-recent-first.
+    candidates = []
+    for cite in substantial:
+        citing_opinion = fetch_opinion(cite["citing_opinion_id"])
+        if not citing_opinion.found or not citing_opinion.plain_text:
+            continue
+        name = ""
+        date_filed = ""
+        if citing_opinion.cluster_id:
+            citing_cluster = fetch_cluster(citing_opinion.cluster_id) or {}
+            name = citing_cluster.get("case_name", "")
+            date_filed = str(citing_cluster.get("date_filed") or "")
+        candidates.append(
+            {
+                "name": name or f"opinion {cite['citing_opinion_id']}",
+                "date": date_filed,
+                "depth": cite.get("depth", 0),
+                "text": citing_opinion.plain_text,
+            }
+        )
+
+    if not candidates:
         return {
             "checked": True,
             "has_negative_treatment": False,
             "reason": "Citing opinions could not be read.",
         }
 
-    combined = "\n\n---\n\n".join(
-        f"Citing Opinion {i + 1}:\n{e}" for i, e in enumerate(excerpts)
-    )
+    # Most recent first; undated citers go last.
+    candidates.sort(key=lambda c: c["date"] or "0000-00-00", reverse=True)
 
-    system_prompt = "You are a legal research assistant. Respond ONLY with valid JSON."
-    user_prompt = (
-        f"The following opinions cite {case_name} ({citation}). "
-        f"Do any of them overrule, disapprove, limit, or negatively treat the cited case?\n\n"
-        f"{combined}\n\n"
-        f'Respond with JSON: {{"has_negative_treatment": true or false, '
-        f'"reason": "one sentence explanation"}}'
-    )
+    neutral_seen = 0
+    for citing in candidates:
+        verdict = _classify_treatment(case_name, citation, citing)
+        label = f"{citing['name']} ({citing['date'] or 'date unknown'})"
+        if verdict["treatment"] == "negative":
+            return {
+                "checked": True,
+                "has_negative_treatment": True,
+                "reason": f"{label}: {verdict['reason']}",
+            }
+        if verdict["treatment"] == "good_law":
+            return {
+                "checked": True,
+                "has_negative_treatment": False,
+                "reason": (
+                    f"Treated as good law by {label}; no newer substantial "
+                    f"citer disapproves it, so older citers were not read."
+                ),
+            }
+        neutral_seen += 1
 
-    response_text, _, _ = send_to_gemini(
-        system_prompt, [{"role": "user", "content": user_prompt}]
-    )
-    cleaned = response_text.strip()
-    if cleaned.startswith("```"):
-        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-    parsed = json.loads(cleaned)
     return {
         "checked": True,
-        "has_negative_treatment": parsed.get("has_negative_treatment", False),
-        "reason": parsed.get("reason", ""),
+        "has_negative_treatment": False,
+        "reason": (
+            f"No negative treatment found in the {neutral_seen} most "
+            f"substantial citing opinions (read in full, most recent first)."
+        ),
     }
 
 

@@ -1,6 +1,8 @@
 """Research chat: throttle, tool executor, provider loop, worker, views."""
 
+import copy
 import json
+import re
 
 import pytest
 from django.urls import reverse
@@ -115,9 +117,9 @@ def test_executor_search_and_read(matter, fake_cl):
 def test_executor_page_size_clamped_by_depth(matter, fake_cl):
     execute = make_executor(matter, "quick")
     execute("search_caselaw", {"query": "q", "num_results": 99})
-    assert fake_cl.searches[0]["limit"] == 10  # absolute clamp
+    assert fake_cl.searches[0]["limit"] == 20  # absolute clamp
     execute("search_caselaw", {"query": "q"})
-    assert fake_cl.searches[1]["limit"] == 4  # quick default page size
+    assert fake_cl.searches[1]["limit"] == 6  # quick default page size
 
 
 def test_executor_total_char_cap(matter, fake_cl, monkeypatch):
@@ -217,16 +219,23 @@ class _FakeStream:
 
 
 class FakeAnthropic:
-    """Scripted messages.stream: pops the next final message per call."""
+    """Scripted messages.stream: pops the next final message per call.
+
+    ``calls`` stores kwargs by reference (the loop mutates its convo list in
+    place across turns); ``snapshots`` deep-copies the messages at call time
+    for assertions about per-call request state.
+    """
 
     script = []
     calls = []
+    snapshots = []
 
     def __init__(self, api_key=None):
 
         class _Messages:
             def stream(self, **kwargs):
                 FakeAnthropic.calls.append(kwargs)
+                FakeAnthropic.snapshots.append(copy.deepcopy(kwargs.get("messages")))
                 return _FakeStream(FakeAnthropic.script.pop(0))
 
         self.messages = _Messages()
@@ -236,6 +245,7 @@ class FakeAnthropic:
 def fake_anthropic(monkeypatch):
     FakeAnthropic.script = []
     FakeAnthropic.calls = []
+    FakeAnthropic.snapshots = []
     monkeypatch.setattr(anthropic_client.anthropic, "Anthropic", FakeAnthropic)
     return FakeAnthropic
 
@@ -820,3 +830,169 @@ def test_build_research_system_embeds_library():
     )
     assert system.index("CONTEXT") < system.index("FIRM LIBRARY: stuff")
     assert system.index("FIRM LIBRARY: stuff") < system.index("RESEARCH MODE")
+
+
+# ---------------------------------------------------------------------------
+# Forward citation tool
+# ---------------------------------------------------------------------------
+
+
+def test_find_citing_cases_tool_present_at_all_depths():
+    for depth in ("quick", "standard", "deep"):
+        names = [t["name"] for t in build_tools(depth)]
+        assert "find_citing_cases" in names
+
+
+def test_executor_citing_composes_cites_query(matter, fake_cl):
+    execute = make_executor(matter, "standard")
+    result_json, event = execute("find_citing_cases", {"cluster_id": 101})
+    assert fake_cl.searches[0]["query"] == "cites:(101)"
+    payload = json.loads(result_json)
+    assert payload["results"][0]["cluster_id"] == 101
+    assert event["type"] == "citing"
+    assert event["cluster_id"] == 101
+    assert event["query"] == "cites:(101)"
+
+
+def test_executor_citing_with_filter_terms(matter, fake_cl):
+    execute = make_executor(matter, "standard")
+    execute(
+        "find_citing_cases",
+        {"cluster_id": 101, "query": "adverse possession", "num_results": 5},
+    )
+    assert fake_cl.searches[0]["query"] == "cites:(101) AND (adverse possession)"
+    assert fake_cl.searches[0]["limit"] == 5
+
+
+def test_executor_citing_includes_read_case_name(matter, fake_cl):
+    execute = make_executor(matter, "standard")
+    execute("read_opinion", {"cluster_id": 101})
+    _, event = execute("find_citing_cases", {"cluster_id": 101})
+    assert event["case_name"] == "Smith v. Jones"
+
+
+def test_executor_citing_missing_cluster_id(matter, fake_cl):
+    execute = make_executor(matter, "standard")
+    result_json, event = execute("find_citing_cases", {})
+    assert "cluster_id" in json.loads(result_json)["error"]
+    assert event is None
+
+
+def test_executor_citing_dedupes_repeats(matter, fake_cl):
+    execute = make_executor(matter, "standard")
+    execute("find_citing_cases", {"cluster_id": 101})
+    _, event = execute("find_citing_cases", {"cluster_id": 101})
+    assert event["repeat"] is True
+    assert len(fake_cl.searches) == 1
+
+
+def test_prior_research_includes_citing_searches():
+    conversation = type(
+        "C",
+        (),
+        {
+            "messages": type(
+                "M",
+                (),
+                {
+                    "filter": lambda self, **kw: [
+                        type(
+                            "Msg",
+                            (),
+                            {
+                                "research_trail": [
+                                    {
+                                        "type": "citing",
+                                        "query": "cites:(101)",
+                                        "result_count": 3,
+                                    }
+                                ]
+                            },
+                        )()
+                    ]
+                },
+            )()
+        },
+    )()
+    section = research_chat.prior_research_section(conversation)
+    assert "cites:(101)" in section
+
+
+# ---------------------------------------------------------------------------
+# Message-history prompt caching in the Claude tool loop
+# ---------------------------------------------------------------------------
+
+
+def test_claude_loop_rolls_cache_marker(fake_anthropic):
+    FakeAnthropic.script = [
+        _FinalMessage(
+            [_ToolUseBlock("tu_1", "search_caselaw", {"query": "a"})], "tool_use"
+        ),
+        _FinalMessage(
+            [_ToolUseBlock("tu_2", "read_opinion", {"cluster_id": 1})], "tool_use"
+        ),
+        _FinalMessage([_TextBlock("Done.")], "end_turn"),
+    ]
+    anthropic_client.send_to_claude_with_tools(
+        "system",
+        [{"role": "user", "content": "q"}],
+        [],
+        lambda n, i: (json.dumps({"ok": True}), None),
+    )
+
+    def markers(messages):
+        found = []
+        for msg in messages:
+            if isinstance(msg["content"], list):
+                for block in msg["content"]:
+                    if isinstance(block, dict) and "cache_control" in block:
+                        found.append(block)
+        return found
+
+    # First call: plain-string history, no message marker (system covers it).
+    assert markers(FakeAnthropic.snapshots[0]) == []
+
+    # Later calls: exactly ONE marker, on the newest tool_result block —
+    # older markers must be stripped so the 4-breakpoint limit holds.
+    for snapshot in FakeAnthropic.snapshots[1:]:
+        found = markers(snapshot)
+        assert len(found) == 1
+        last_block = snapshot[-1]["content"][-1]
+        assert found[0] == last_block
+        assert last_block["cache_control"] == {"type": "ephemeral"}
+        assert last_block["type"] == "tool_result"
+
+
+# ---------------------------------------------------------------------------
+# Research default model in the new-conversation modal
+# ---------------------------------------------------------------------------
+
+
+def _prompt_html(client, matter, llm="claude-opus", kind=None):
+    if kind is not None:
+        session = client.session
+        session["ai_new_chat_kind"] = kind
+        session.save()
+    url = reverse("case:ai-new-conversation-prompt", args=[matter.id])
+    response = client.get(url, {"llm": llm})
+    assert response.status_code == 200
+    return response.content.decode()
+
+
+def test_modal_defaults_to_gemini_when_research_remembered(client, matter):
+    html = _prompt_html(client, matter, llm="claude-opus", kind="research")
+    assert re.search(r'value="gemini-pro-latest"\s+selected', html)
+
+
+def test_modal_keeps_sticky_llm_for_classic(client, matter):
+    html = _prompt_html(client, matter, llm="claude-opus", kind="classic")
+    assert re.search(r'value="claude-opus"\s+selected', html)
+    assert not re.search(r'value="gemini-pro-latest"\s+selected', html)
+
+
+def test_modal_launch_uses_model_select():
+    """The launch JS must read the select, not the sticky template value."""
+    import pathlib
+
+    source = pathlib.Path("templates/case/ai/new-conversation-modal.html").read_text()
+    assert "getElementById('new-conversation-llm').value" in source

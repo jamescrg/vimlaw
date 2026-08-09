@@ -32,13 +32,29 @@ cluster viewer. Claim-support vetting (vet_citations) runs unchanged.
 
 | depth | tool calls | search page | read cap | treatment tool | plan first | total text cap |
 |---|---|---|---|---|---|---|
-| quick | 5 | 4 | 20k chars | no | no | 120k chars |
-| standard | 12 | 6 | 30k | yes | no | 300k |
-| deep | 25 | 8 | 40k | yes | yes | 600k |
+| quick | 5 | 6 | 20k chars | no | no | 120k chars |
+| standard | 12 | 8 | 30k | yes | no | 300k |
+| deep | 25 | 10 | 40k | yes | yes | 600k |
 
-Tool results are resent every model turn, so the total text cap is the
+The search page is the default; the model may request up to
+MAX_SEARCH_RESULTS (20) per search when a survey needs depth. Tool
+results are resent every model turn, so the total text cap is the
 token-cost lever. Deep on Claude Opus is dollars per question; Gemini is
 far cheaper per token.
+
+## Search strategy
+
+The prompt encodes narrow-first triangulation: specific doctrinal
+queries, two or three rephrasings before any broadening (vocabulary
+mismatch is the usual failure, and searches are cheap while reads are
+expensive), scatter handled by narrowing or by one deeper result list
+instead of repeated near-identical queries. Citation chasing runs both
+directions: lookup_citation walks backward to the authorities an
+opinion rests on; find_citing_cases (tool-side `cites:(cluster_id)`
+query, optionally AND-filtered) walks forward from a seminal case to
+the current statement of the rule. A LEARNED VOCABULARY rule has the
+model re-search with the courts' own terms of art once its first reads
+teach it better language.
 
 ## Firm library
 

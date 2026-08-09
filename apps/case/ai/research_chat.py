@@ -57,10 +57,18 @@ PROMPT_ROLE = (
     "tool results (a search hit, saved case law, or a citation inside "
     "an opinion you read) have surfaced it.\n"
     "3. ADJUST SCOPE: if a search returns few or off-point results, "
-    "widen it (drop the least essential term, add OR synonyms, use "
-    "stem* wildcards). If it returns many scattered results, narrow it "
-    "(add an AND term for the disputed element or the procedural "
-    "posture). Say which way you are adjusting and why, in one line.\n"
+    "TRIANGULATE before broadening: run two or three differently-phrased "
+    "specific queries — synonyms for the doctrine, the standard's "
+    "operative language, the way courts phrase the rule. Vocabulary "
+    "mismatch, not over-specificity, is the usual reason a specific "
+    "search misses; searches are cheap and reads are expensive. Broaden "
+    "(drop the least essential term, add OR synonyms, use stem* "
+    "wildcards) only after rephrasings also miss. If a search returns "
+    "many scattered results, narrow it (add an AND term for the "
+    "disputed element or the procedural posture) or re-run it with a "
+    "larger num_results and triage the deeper list — one deep result "
+    "list beats several near-identical queries. Say which way you are "
+    "adjusting and why, in one line.\n"
     "4. SELECT: once results look on point, state a shortlist — "
     "'Candidates:' with each case on one line (name, court, year, and a "
     "few words on why it made the list).\n"
@@ -76,8 +84,20 @@ PROMPT_ROLE = (
     "on earlier cases, run down the one or two most load-bearing "
     "citations (lookup_citation with the reporter citation from the "
     "text, then read_opinion) — the seminal rule case is often one hop "
-    "behind the case you found. Boolean search is only the entry point; "
-    "the citation network is where thorough research happens.\n\n"
+    "behind the case you found. Chase forward too: find_citing_cases on "
+    "a seminal or dated authority surfaces the later cases that applied "
+    "it, which is the fastest route to the current controlling "
+    "statement of the rule and to how the doctrine has developed since. "
+    "Boolean search is only the entry point; the citation network is "
+    "where thorough research happens.\n\n"
+    "LEARNED VOCABULARY (all protocols): opinions teach you the terms "
+    "of art courts actually use — the doctrine's proper name, the "
+    "phrase the standard turns on, the statute always cited beside it. "
+    "After your first few reads, compare that learned vocabulary "
+    "against the queries you have run; if your answer still needs "
+    "better authority, re-search with the courts' own language rather "
+    "than the wording you started from. Say what new term you are "
+    "trying, in one line.\n\n"
     "ADVERSE AUTHORITY (all protocols): before endorsing any position — "
     "ESPECIALLY one the attorney has proposed — run at least one search "
     "framed to find authority AGAINST it: the case opposing counsel "
@@ -142,7 +162,7 @@ def prior_research_section(conversation):
             etype = event.get("type")
             if etype == "read" and event.get("cluster_id"):
                 reads[event["cluster_id"]] = event
-            elif etype == "search" and not event.get("repeat"):
+            elif etype in ("search", "citing") and not event.get("repeat"):
                 searches.append(event)
             elif etype == "treatment" and event.get("checked"):
                 treatments[event.get("cluster_id")] = event
@@ -385,6 +405,11 @@ def run_research_request(
             tool_input = payload.get("input") or {}
             if name == "search_caselaw":
                 set_status("searching", f"Searching: `{tool_input.get('query', '')}`")
+            elif name == "find_citing_cases":
+                set_status(
+                    "searching",
+                    f"Finding cases citing {tool_input.get('cluster_id', '')}...",
+                )
             elif name == "lookup_citation":
                 set_status(
                     "searching",
@@ -415,6 +440,9 @@ def run_research_request(
                     f"Searched `{event.get('query', '')}` "
                     f"({event.get('result_count', 0)} hits){repeat}"
                 )
+            elif etype == "citing":
+                cited = event.get("case_name") or event.get("cluster_id")
+                push_log(f"Found {event.get('result_count', 0)} cases citing *{cited}*")
             elif etype == "read":
                 name = event.get("case_name") or event.get("cluster_id")
                 push_log(f"Read *{name}*")

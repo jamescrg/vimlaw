@@ -4,6 +4,9 @@ Anthropic Claude API client for AI chat.
 Uses streaming to support cancellation mid-request, and marks the system
 prompt as cacheable so repeat messages in the same conversation benefit
 from Anthropic's prompt-cache pricing (~10% of input cost on cache hits).
+The tool loop additionally rolls a cache breakpoint through the message
+history, so accumulated tool results are read from cache on each turn
+instead of being re-billed at full input price.
 """
 
 import logging
@@ -43,6 +46,35 @@ def _build_system(system_context: str):
             }
         ]
     return system_context
+
+
+def _roll_message_cache_marker(convo: list[dict]) -> None:
+    """Move the rolling cache breakpoint to the conversation's last block.
+
+    The tool loop resends the whole conversation — including every
+    accumulated tool result — on every model turn, and without a breakpoint
+    in the messages Anthropic bills all of it at full input price each time
+    (the system-prompt marker only covers the prefix up to the system
+    block). Marking the newest block caches everything before it, so the
+    next turn reads the prior turns at ~10% of the input rate and pays full
+    price only for what was just appended.
+
+    One marker rolls forward each turn (older ones are stripped so the
+    4-breakpoint request limit is never hit); the cache lookup still finds
+    the previous turn's entry by walking back from the new marker. Plain
+    string content (the initial chat history) is left unmarked — the system
+    marker already covers the prefix on the first turn.
+    """
+    for msg in convo:
+        if isinstance(msg["content"], list):
+            for block in msg["content"]:
+                if isinstance(block, dict):
+                    block.pop("cache_control", None)
+    last_content = convo[-1]["content"]
+    if isinstance(last_content, list) and last_content:
+        last_block = last_content[-1]
+        if isinstance(last_block, dict):
+            last_block["cache_control"] = {"type": "ephemeral"}
 
 
 def send_to_claude(
@@ -164,6 +196,7 @@ def send_to_claude_with_tools(
     # Ceiling on model turns: even if the model ignores the budget notice,
     # the loop terminates.
     for _turn in range(max_tool_calls + 4):
+        _roll_message_cache_marker(convo)
         text_parts = []
         with client.messages.stream(
             model=model,
@@ -182,10 +215,14 @@ def send_to_claude_with_tools(
 
         input_tokens += final_message.usage.input_tokens
         output_tokens += final_message.usage.output_tokens
+        cache_created = (
+            getattr(final_message.usage, "cache_creation_input_tokens", 0) or 0
+        )
         cache_read = getattr(final_message.usage, "cache_read_input_tokens", 0) or 0
-        if cache_read:
+        if cache_created or cache_read:
             logger.info(
-                "Claude research cache read=%d turn_input=%d model=%s",
+                "Claude research cache created=%d read=%d turn_input=%d model=%s",
+                cache_created,
                 cache_read,
                 final_message.usage.input_tokens,
                 model,
