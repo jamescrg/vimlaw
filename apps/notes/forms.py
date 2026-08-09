@@ -17,9 +17,14 @@ class NoteForm(forms.ModelForm):
 
 
 class NoteFolderForm(forms.ModelForm):
+    YESNO_CHOICES = (
+        (False, "No"),
+        (True, "Yes"),
+    )
+
     class Meta:
         model = NoteFolder
-        fields = ["name", "parent"]
+        fields = ["name", "parent", "ai_library"]
 
         widgets = {
             "name": forms.TextInput(
@@ -35,6 +40,7 @@ class NoteFolderForm(forms.ModelForm):
         labels = {
             "name": "Folder Name",
             "parent": "Parent Folder",
+            "ai_library": "Include in AI Library",
         }
 
     def __init__(self, *args, exclude_folder=None, **kwargs):
@@ -42,6 +48,9 @@ class NoteFolderForm(forms.ModelForm):
         self.fields["name"].required = True
         self.fields["parent"].required = False
         self.fields["parent"].empty_label = "— None (root level) —"
+        self.fields["ai_library"].widget = forms.Select(
+            choices=self.YESNO_CHOICES, attrs={"class": "form-control"}
+        )
 
         qs = NoteFolder.objects.filter(depth__lt=3).order_by("name")
         if exclude_folder and exclude_folder.pk:

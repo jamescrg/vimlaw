@@ -1184,7 +1184,7 @@ def context_preview(request, matter_id):
     )
 
     # --- Always-included items grouped by type ---
-    all_items = collect_context_items(matter)
+    all_items = collect_context_items(matter, include_library_always=True)
 
     # Add timeline/facts as a flat section in case details
     fact_items = [item for item in all_items if item.item_type == "fact"]
@@ -1204,6 +1204,7 @@ def context_preview(request, matter_id):
             ("caselaw", "Case Law"),
             ("highlight", "Highlights"),
             ("note", "Notes"),
+            ("library", "Library Notes"),
             ("conversation", "Reference Conversations"),
         ]
     )

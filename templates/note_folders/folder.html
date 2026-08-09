@@ -13,6 +13,12 @@
     {% endif %}
     <i class="icon-folder"></i>
     <a href="{% url 'notes:folder-select' folder_id=node.folder.id %}">{{ node.folder.name|truncatechars:28 }}</a>
+    {% if node.own_library_flag %}
+      <i class="icon-sparkles folder-ai-library" title="In AI library"></i>
+    {% elif node.in_library %}
+      <i class="icon-sparkles folder-ai-library folder-ai-library-inherited"
+         title="In AI library (from parent folder)"></i>
+    {% endif %}
   </div>
   <div class="dropdown" x-data="dropdown()">
     <button class="btn-icon menu-icon"

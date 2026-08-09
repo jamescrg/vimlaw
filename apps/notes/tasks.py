@@ -86,6 +86,21 @@ def queue_note_summary(note_id):
     )
 
 
+def queue_library_summary_sweep():
+    """Queue the stale-summary sweep itself as a background task.
+
+    Called from folder views when a flag or parent changes; the sweep can
+    touch every library note, so it should not run in the request cycle.
+    """
+    from django_q.tasks import async_task
+
+    async_task(
+        "apps.notes.tasks.queue_stale_library_summaries",
+        task_name="NoteSummarySweep",
+        group="summary_generation",
+    )
+
+
 def queue_stale_library_summaries():
     """Queue regeneration for every library note whose summary is missing or stale.
 

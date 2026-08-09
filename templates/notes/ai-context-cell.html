@@ -1,0 +1,29 @@
+<div class="dropdown" x-data="dropdown()">
+  <button class="ai-context-btn{% if note.ai_context == 'always' %} ai-context-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open">{{ note.get_ai_context_display }}</button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    <li>
+      <a class="dropdown-item{% if note.ai_context == 'auto' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'notes:note-set-ai' note.id 'auto' %}"
+         hx-target="#note-ai-{{ note.id }}"
+         hx-swap="innerHTML">Auto</a>
+    </li>
+    <li>
+      <a class="dropdown-item{% if note.ai_context == 'always' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'notes:note-set-ai' note.id 'always' %}"
+         hx-target="#note-ai-{{ note.id }}"
+         hx-swap="innerHTML">Always</a>
+    </li>
+    <li>
+      <a class="dropdown-item{% if note.ai_context == 'never' %} active{% endif %}"
+         href="#"
+         hx-post="{% url 'notes:note-set-ai' note.id 'never' %}"
+         hx-target="#note-ai-{{ note.id }}"
+         hx-swap="innerHTML">Never</a>
+    </li>
+  </ul>
+</div>

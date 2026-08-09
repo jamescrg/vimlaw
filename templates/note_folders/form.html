@@ -36,6 +36,14 @@
             {% if form.name.errors %}<div class="text-danger">{{ form.name.errors }}</div>{% endif %}
           </div>
         </div>
+        <div class="form-group">
+          <label for="{{ form.ai_library.id_for_label }}">{{ form.ai_library.label }}</label>
+          <div>
+            {{ form.ai_library }}
+            <div class="detail-text">Notes in this folder and its subfolders become available to the matter AI.</div>
+            {% if form.ai_library.errors %}<div class="text-danger">{{ form.ai_library.errors }}</div>{% endif %}
+          </div>
+        </div>
       </form>
     </div>
     <div class="modal-footer">
