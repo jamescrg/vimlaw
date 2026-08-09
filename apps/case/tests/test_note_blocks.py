@@ -150,3 +150,38 @@ def test_edit_unknown_id_reports(user, matter):
 def test_malformed_edit_left_in_place(user, matter):
     raw = "Done.\n\n```edit-note\n{broken\n```"
     assert apply_note_blocks(raw, matter, user) == raw
+
+
+# ── Fake confirmation scrubbing ──────────────────────────────────────────────
+
+
+def test_fake_confirmation_without_block_becomes_notice(user, matter):
+    from apps.case.ai.note_blocks import strip_fake_note_confirmations
+
+    raw = "[Aug 09, 2026 03:04 PM] - Created note: **Matter Summary 3** [Analysis]"
+    text = strip_fake_note_confirmations(raw)
+    assert "Matter Summary 3" not in text
+    assert "no note was changed" in text
+
+
+def test_fake_confirmation_beside_real_block_is_deleted(user, matter):
+    from apps.case.ai.note_blocks import strip_fake_note_confirmations
+
+    raw = (
+        "- Created note: **Imitation** [Analysis]\n\n"
+        '```create-note\n{"title": "Real note", "content": "body"}\n```'
+    )
+    text = strip_fake_note_confirmations(raw)
+    assert "Imitation" not in text
+    assert "no note was changed" not in text
+    assert "```create-note" in text  # real block untouched, applies next
+    applied = apply_note_blocks(text, matter, user)
+    assert "Created note: **Real note**" in applied
+    assert Note.objects.filter(title="Real note").exists()
+
+
+def test_ordinary_prose_untouched_by_scrubber(user, matter):
+    from apps.case.ai.note_blocks import strip_fake_note_confirmations
+
+    raw = "I previously created note files for you.\nThe note: important."
+    assert strip_fake_note_confirmations(raw) == raw

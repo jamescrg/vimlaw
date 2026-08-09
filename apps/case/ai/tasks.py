@@ -147,6 +147,7 @@ def process_ai_request(
             NOTES_PROTOCOL,
             NOTES_TRIGGER_RE,
             apply_note_blocks,
+            strip_fake_note_confirmations,
         )
         from .witness_blocks import (
             WITNESS_BLOCK_RE,
@@ -295,6 +296,11 @@ def process_ai_request(
         if WITNESS_BLOCK_RE.search(response_text):
             update_status("applying", "Adding witnesses...")
             response_text = apply_witness_blocks(response_text, matter, user)
+        # Order matters: imitation confirmations are scrubbed from the raw
+        # response first (only model-written lines can match at this
+        # point), then real blocks are applied and produce the genuine
+        # confirmation lines.
+        response_text = strip_fake_note_confirmations(response_text)
         if NOTE_BLOCKS_RE.search(response_text):
             update_status("applying", "Writing notes...")
             response_text = apply_note_blocks(response_text, matter, user)
