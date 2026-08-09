@@ -25,6 +25,14 @@ from apps.notes.models import Note, library_folder_ids
 
 HANDLE_RE = re.compile(r"\[(doc|hl|note):(\d+)\]")
 
+# SOURCE_LINKING-style markdown citations. The notes protocol says to use
+# raw handles in note content, but a model steeped in the chat convention
+# will still write these — convert them too rather than leaving dead
+# markdown in a note.
+MD_SOURCE_LINK_RE = re.compile(
+    r"\[([^\]]+)\]\(/case/(documents|highlights)/(\d+)/(?:view|link)/\)"
+)
+
 
 def _clean_label(text, fallback):
     """Strip the characters that would break markdown links or chip syntax."""
@@ -79,9 +87,19 @@ def resolve_handles_for_chat(text, matter):
 
 def resolve_handles_for_note(text, matter):
     """Replace raw handles with note reference chips ([[doc:ID|label]] /
-    [[hl:ID|label]]); [note:ID] becomes the title; omit unresolvable ones."""
+    [[hl:ID|label]]); [note:ID] becomes the title; omit unresolvable ones.
+    Chat-style markdown source links become chips as well, keeping the
+    model's own citation text as the chip label."""
 
-    def sub(match):
+    def sub_md_link(match):
+        label_text, path_kind, item_id = match.groups()
+        kind = "doc" if path_kind == "documents" else "hl"
+        if _resolve(kind, int(item_id), matter) is None:
+            return ""
+        label = _clean_label(label_text, f"{kind}:{item_id}")
+        return f"[[{kind}:{item_id}|{label}]]"
+
+    def sub_handle(match):
         kind, item_id = match.group(1), int(match.group(2))
         resolved = _resolve(kind, item_id, matter)
         if resolved is None:
@@ -91,4 +109,5 @@ def resolve_handles_for_note(text, matter):
             return f"[[{kind}:{item_id}|{label}]]"
         return label
 
-    return HANDLE_RE.sub(sub, text)
+    text = MD_SOURCE_LINK_RE.sub(sub_md_link, text)
+    return HANDLE_RE.sub(sub_handle, text)

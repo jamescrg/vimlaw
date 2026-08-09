@@ -79,3 +79,30 @@ def test_note_note_handle_becomes_title(matter):
 
 def test_note_unknown_handle_omitted(matter):
     assert resolve_handles_for_note("See [hl:999999].", matter) == "See ."
+
+
+def test_note_markdown_hl_link_becomes_chip(matter, highlight):
+    text = resolve_handles_for_note(
+        f"Service failed. [Smith Dep. p.34](/case/highlights/{highlight.id}/link/)",
+        matter,
+    )
+    assert text == f"Service failed. [[hl:{highlight.id}|Smith Dep. p.34]]"
+
+
+def test_note_markdown_doc_link_becomes_chip(matter, document):
+    text = resolve_handles_for_note(
+        f"Signed. [Engagement Letter](/case/documents/{document.id}/view/)", matter
+    )
+    assert text == f"Signed. [[doc:{document.id}|Engagement Letter]]"
+
+
+def test_note_markdown_link_bad_id_omitted(matter):
+    text = resolve_handles_for_note(
+        "Signed. [Letter](/case/documents/999999/view/)", matter
+    )
+    assert text == "Signed. "
+
+
+def test_note_ordinary_markdown_link_untouched(matter):
+    text = "See [the statute](https://law.example.com/ocga)."
+    assert resolve_handles_for_note(text, matter) == text

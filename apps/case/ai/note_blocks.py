@@ -68,7 +68,15 @@ note — only when the user explicitly says to rewrite or replace it).
 Edit only notes whose [note:ID] handle appears in the context; never
 guess an id. Notes synced from Google Drive are read-only and cannot be
 edited. Content is markdown; write it as a working file memo, not as a
-chat reply."""
+chat reply.
+
+When a sentence in note content draws on a document or highlight from
+the context, cite it with the raw [hl:ID] or [doc:ID] handle, placed
+after the sentence's closing period ("Service was defective under the
+statute. [hl:88]"). Each handle becomes a clickable source chip in the
+note. Do not use markdown links inside note content. Documents and
+highlights are the ONLY citable sources in a note — never cite tasks,
+time entries, timeline facts, events, or other case records."""
 
 
 def _apply_create(match, matter, requesting_user):
