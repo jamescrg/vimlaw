@@ -280,6 +280,11 @@ EMAIL_BACKEND = _EMAIL_BACKENDS[EMAIL_BACKEND_MODE]
 EMAIL_HOST = env("EMAIL_HOST", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+# Fail a dead SMTP connection in seconds. Without this, a blocked port hangs
+# the request until gunicorn SIGKILLs the worker (bare "Internal Server
+# Error") - synchronous sends like the login verification code must surface
+# a real error page instead.
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 SERVER_EMAIL = env("SERVER_EMAIL", default="webmaster@localhost")
