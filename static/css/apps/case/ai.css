@@ -1124,14 +1124,16 @@
   margin: 1rem 0;
 }
 
-/* Links */
+/* Links — the theme's link tokens, not the AI purple: these point at real
+   app destinations (highlights, documents, notes), so they should read
+   like every other link in the app. */
 .ai-markdown a {
-  color: var(--purple-600);
+  color: var(--link);
   text-decoration: underline;
 }
 
 .ai-markdown a:hover {
-  color: var(--purple-800);
+  color: var(--link-hover);
 }
 
 /* Bold and italic */
