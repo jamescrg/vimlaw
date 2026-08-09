@@ -120,7 +120,7 @@ export function setupReferenceClicks() {
     if (!refId) return;
 
     if (refType === "document") {
-      window.open("/documents/view/" + refId + "/", "_blank");
+      window.open("/case/documents/" + refId + "/view/", "_blank");
     } else if (refType === "highlight" && dropdown) {
       currentHighlightId = refId;
       const rect = ref.getBoundingClientRect();
