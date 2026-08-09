@@ -1,0 +1,53 @@
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Apply Labels ({{ selected_count }} fact{{ selected_count|pluralize }})</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      {% if has_labels %}
+        <div class="bulk-labels-section">
+          <div class="bulk-labels-section-header">Available</div>
+          <div class="labels-flow bulk-labels-flow">
+            {% for label in available_labels %}
+              <a href="#"
+                 class="app-badge label-{{ label.color }} bulk-label-action state-{{ label.state }}"
+                 title="{% if label.state == 'some' %}Applied to some. Click to add to the rest.{% else %}Add to all selected facts{% endif %}"
+                 hx-post="{% url 'case:facts-bulk-label-action' matter.id %}"
+                 hx-vals='{"label_id": "{{ label.id }}", "action": "add"}'
+                 hx-target="#htmx-modal-container">
+                <i class="icon-tag"></i>{{ label.name }}
+                {% if label.state == 'some' %}<span class="bulk-label-some-tag">partial</span>{% endif %}
+              </a>
+            {% empty %}
+              <span class="bulk-labels-empty">All labels applied.</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="bulk-labels-section">
+          <div class="bulk-labels-section-header">Applied</div>
+          <div class="labels-flow bulk-labels-flow">
+            {% for label in applied_labels %}
+              <a href="#"
+                 class="app-badge label-{{ label.color }} bulk-label-action state-all"
+                 title="Remove from all selected facts"
+                 hx-post="{% url 'case:facts-bulk-label-action' matter.id %}"
+                 hx-vals='{"label_id": "{{ label.id }}", "action": "remove"}'
+                 hx-target="#htmx-modal-container">
+                <i class="icon-tag"></i>{{ label.name }}
+              </a>
+            {% empty %}
+              <span class="bulk-labels-empty">None applied yet.</span>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted">No labels available. Create labels in the Labels tab first.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>

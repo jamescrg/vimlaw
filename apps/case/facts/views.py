@@ -1,10 +1,19 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from apps.case.models import Document, Fact, Highlight
+from apps.case.models import Document, Fact, Highlight, Label
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
+from apps.management.selection import (
+    all_visible_selected,
+    clear_selected_ids,
+    get_selected_ids,
+    select_all_ids,
+    selection_response,
+    toggle_id,
+)
 
 from .filters import FactsFilter
 from .forms import FactForm
@@ -43,8 +52,16 @@ def get_facts_data(request, matter, matter_id):
         int(importance_value) if importance_value not in (None, "", 0) else None
     )
 
+    selected_key = get_session_key("selected_facts", matter_id)
+    selected_facts = get_selected_ids(request, selected_key)
+    visible_ids = [fact.id for fact in facts]
+    all_selected = all_visible_selected(selected_facts, visible_ids)
+
     return {
         "facts": facts,
+        "selected_facts": selected_facts,
+        "all_selected": all_selected,
+        "fact_colors": [value for value, _ in Fact.COLOR_CHOICES if value],
         "current_order": current_order,
         "keyword": keyword,
         "importances": list(range(7, 0, -1)),
@@ -158,9 +175,208 @@ def facts_edit(request, fact_id):
 def facts_delete(request, fact_id):
     """Delete a fact."""
     fact = get_object_or_404(Fact, pk=fact_id)
+
+    # Prune the id from any current selection so the bulk count stays honest.
+    key = get_session_key("selected_facts", fact.matter_id)
+    selected = get_selected_ids(request, key)
+    if fact.id in selected:
+        selected.remove(fact.id)
+        request.session[key] = selected
+
     fact.delete()
 
     return HttpResponse(status=204, headers={"HX-Trigger": "factsChanged"})
+
+
+# ── Selection & bulk actions ─────────────────────────────────────────────────
+
+
+def _selected_facts_qs(matter, selected):
+    return Fact.objects.filter(matter=matter, id__in=selected)
+
+
+def _fact_selection_context(request, fact):
+    """Selection state for standalone fact-row renders, so a row swap
+    doesn't lose its checkbox state."""
+    key = get_session_key("selected_facts", fact.matter_id)
+    return {"selected_facts": get_selected_ids(request, key)}
+
+
+@login_required
+@require_POST
+def toggle_fact_select(request, matter_id, fact_id):
+    """Toggle selection of a single fact."""
+    get_object_or_404(Fact, id=fact_id, matter_id=matter_id)
+    key = get_session_key("selected_facts", matter_id)
+    toggle_id(request, key, fact_id)
+    return selection_response("factsChanged")
+
+
+@login_required
+@require_POST
+def select_all_facts(request, matter_id):
+    """Select all visible (filtered) facts, or deselect if all selected."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_facts", matter_id)
+    visible_ids = [
+        fact.id for fact in get_facts_data(request, matter, matter_id)["facts"]
+    ]
+    select_all_ids(request, key, visible_ids)
+    return selection_response("factsChanged")
+
+
+@login_required
+@require_POST
+def clear_fact_selection(request, matter_id):
+    """Clear the fact selection."""
+    clear_selected_ids(request, get_session_key("selected_facts", matter_id))
+    return selection_response("factsChanged")
+
+
+@login_required
+@require_POST
+def bulk_facts_delete(request, matter_id):
+    """Delete all selected facts."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_facts", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No facts selected.")
+
+    _selected_facts_qs(matter, selected).delete()
+    clear_selected_ids(request, key)
+
+    return selection_response("factsChanged")
+
+
+@login_required
+@require_POST
+def bulk_facts_importance(request, matter_id):
+    """Bulk set importance on selected facts."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_facts", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No facts selected.")
+
+    importance = request.POST.get("importance")
+    if importance:
+        _selected_facts_qs(matter, selected).update(importance=int(importance))
+
+    clear_selected_ids(request, key)
+    return selection_response("factsChanged")
+
+
+@login_required
+@require_POST
+def bulk_facts_color(request, matter_id):
+    """Bulk set (or clear) the row color on selected facts."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_facts", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No facts selected.")
+
+    color = request.POST.get("color", "")
+    valid_colors = {value for value, _ in Fact.COLOR_CHOICES if value}
+    if color and color not in valid_colors:
+        return HttpResponse(status=400, content="Invalid color.")
+
+    _selected_facts_qs(matter, selected).update(color=color or None)
+
+    clear_selected_ids(request, key)
+    return selection_response("factsChanged")
+
+
+def _render_bulk_labels_modal(request, matter, matter_id, extra_headers=None):
+    """Render the bulk-labels modal for the facts currently selected."""
+    key = get_session_key("selected_facts", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No facts selected.")
+
+    labels = Label.objects.filter(Q(matter=None) | Q(matter=matter)).order_by(
+        "matter", "name"
+    )
+    facts = _selected_facts_qs(matter, selected)
+    selected_count = facts.count()
+
+    applied_labels = []
+    available_labels = []
+    for label in labels:
+        with_label = facts.filter(labels=label).count()
+        if with_label == 0:
+            state = "none"
+        elif with_label == selected_count:
+            state = "all"
+        else:
+            state = "some"
+        item = {
+            "id": label.id,
+            "name": label.name,
+            "color": label.color,
+            "state": state,
+        }
+        if state == "all":
+            applied_labels.append(item)
+        else:
+            available_labels.append(item)
+
+    response = render(
+        request,
+        "case/facts/bulk_labels_modal.html",
+        {
+            "matter": matter,
+            "applied_labels": applied_labels,
+            "available_labels": available_labels,
+            "has_labels": labels.exists(),
+            "selected_count": selected_count,
+        },
+    )
+    if extra_headers:
+        for header, value in extra_headers.items():
+            response[header] = value
+    return response
+
+
+@login_required
+def bulk_facts_labels_modal(request, matter_id):
+    """Open the bulk-labels modal."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    return _render_bulk_labels_modal(request, matter, matter_id)
+
+
+@login_required
+@require_POST
+def bulk_facts_label_action(request, matter_id):
+    """Add or remove a single label from all selected facts."""
+    matter, _ = get_matter_from_url(request, matter_id)
+    key = get_session_key("selected_facts", matter_id)
+    selected = get_selected_ids(request, key)
+
+    if not selected:
+        return HttpResponse(status=400, content="No facts selected.")
+
+    label = get_object_or_404(Label, id=request.POST.get("label_id"))
+    action = request.POST.get("action")
+    facts = _selected_facts_qs(matter, selected)
+
+    if action == "add":
+        for fact in facts:
+            fact.labels.add(label)
+    elif action == "remove":
+        for fact in facts:
+            fact.labels.remove(label)
+    else:
+        return HttpResponse(status=400, content="Invalid action.")
+
+    return _render_bulk_labels_modal(
+        request, matter, matter_id, extra_headers={"HX-Trigger": "factsChanged"}
+    )
 
 
 @login_required
@@ -220,7 +436,7 @@ def facts_update_description(request, fact_id):
     context = {
         "matter": fact.matter,
         "fact": fact,
-    }
+    } | _fact_selection_context(request, fact)
     return render(request, "case/facts/fact-row.html", context)
 
 
@@ -288,7 +504,7 @@ def fact_add_source(request, fact_id):
     context = {
         "matter": matter,
         "fact": fact,
-    }
+    } | _fact_selection_context(request, fact)
     return render(request, "case/facts/fact-row.html", context)
 
 
@@ -312,7 +528,7 @@ def fact_remove_source(request, fact_id):
     context = {
         "matter": matter,
         "fact": fact,
-    }
+    } | _fact_selection_context(request, fact)
     return render(request, "case/facts/fact-row.html", context)
 
 

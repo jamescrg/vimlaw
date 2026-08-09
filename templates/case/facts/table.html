@@ -1,6 +1,10 @@
 <div class="table-container">
   <table id="facts-list" class="table facts-list">
     <tr>
+      <th class="col-select">
+        {% url 'case:facts-select-all' matter.id as select_all_url %}
+        {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
+      </th>
       <th class="date-time">
         Date and Time
         <button class="btn-sort {% if 'date' in current_order %}active{% endif %}"
@@ -25,7 +29,7 @@
       {% include "case/facts/fact-row.html" %}
     {% empty %}
       <tr>
-        <td colspan="5" class="empty-message">No facts found for this matter.</td>
+        <td colspan="6" class="empty-message">No facts found for this matter.</td>
       </tr>
     {% endfor %}
   </table>

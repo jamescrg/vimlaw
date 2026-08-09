@@ -1,108 +1,221 @@
 {% load humanize %}
 <div class="toolbar facts-toolbar">
   <div class="toolbar-left">
-    <div class="filter-tools">
-      <button type="button"
-              class="btn-icon"
-              hx-get="{% url 'case:facts-add' matter.id %}"
-              hx-target="#htmx-modal-container"
-              hx-trigger="click">
-        <i class="icon-plus"></i>
-      </button>
-      <button type="button"
-              class="btn-icon"
-              hx-get="{% url 'case:facts-filter' matter.id %}"
-              hx-target="#htmx-modal-container"
-              hx-trigger="click">
-        <i class="icon-list-filter with-text"></i>Filter
-      </button>
-      <div class="dropdown" x-data="dropdown()">
+    {% if selected_facts %}
+      <div class="filter-tools">
         <button type="button"
-                id="facts-importance-filter"
-                class="select-btn filter-dropdown-button importance-dropdown {% if importance_value %}toggle-active{% endif %}"
-                x-ref="button"
-                @click="toggle()"
-                :aria-expanded="open">
-        <span><i class="icon-flag with-text"></i>
-        {% if importance_value == 7 %}
-          Highest
-        {% elif importance_value == 6 %}
-          Higher
-        {% elif importance_value == 5 %}
-          High
-        {% elif importance_value == 4 %}
-          Normal
-        {% elif importance_value == 3 %}
-          Low
-        {% elif importance_value == 2 %}
-          Lower
-        {% elif importance_value == 1 %}
-          Lowest
-        {% else %}
-          Importance
-        {% endif %}
-      </span>
-      <small>
-        <i class="icon-chevron-down"></i>
-      </small>
-    </button>
-    <ul class="dropdown-menu" x-ref="menu" x-show="open">
-      <li>
-        <a class="dropdown-item {% if importance_value == 7 %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:facts-filter-importance' matter.id 7 %}"
-           hx-target="#facts"><i class="icon-chevrons-up importance-7"></i> Highest</a>
-      </li>
-      <li>
-        <a class="dropdown-item {% if importance_value == 6 %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:facts-filter-importance' matter.id 6 %}"
-           hx-target="#facts"><i class="icon-chevron-up importance-6"></i> Higher</a>
-      </li>
-      <li>
-        <a class="dropdown-item {% if importance_value == 5 %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:facts-filter-importance' matter.id 5 %}"
-           hx-target="#facts"><i class="icon-chevron-up importance-5"></i> High</a>
-      </li>
-      <li>
-        <a class="dropdown-item {% if importance_value == 4 %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:facts-filter-importance' matter.id 4 %}"
-           hx-target="#facts"><i class="icon-equal"></i> Normal</a>
-      </li>
-      <li>
-        <a class="dropdown-item {% if importance_value == 3 %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:facts-filter-importance' matter.id 3 %}"
-           hx-target="#facts"><i class="icon-chevron-down importance-3"></i> Low</a>
-      </li>
-      <li>
-        <a class="dropdown-item {% if importance_value == 2 %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:facts-filter-importance' matter.id 2 %}"
-           hx-target="#facts"><i class="icon-chevron-down importance-2"></i> Lower</a>
-      </li>
-      <li>
-        <a class="dropdown-item {% if not importance_value %}active{% endif %}"
-           href="#"
-           hx-get="{% url 'case:facts-filter-importance' matter.id 0 %}"
-           hx-target="#facts"><i class="icon-flag"></i> All Levels</a>
-      </li>
-    </ul>
+                class="btn-icon toggle-active"
+                hx-post="{% url 'case:facts-clear-selection' matter.id %}"
+                hx-swap="none">
+          {{ selected_facts|length }} <i class="icon-x bulk-clear-icon"></i>
+        </button>
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'case:facts-bulk-labels' matter.id %}"
+                hx-target="#htmx-modal-container">
+          <i class="icon-tag with-text"></i> Labels
+        </button>
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  class="btn-icon"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            <span><i class="icon-flag with-text"></i> Importance</span>
+            <small><i class="icon-chevron-down"></i></small>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-importance' matter.id %}"
+                 hx-vals='{"importance": "7"}'
+                 hx-swap="none"><i class="icon-chevrons-up importance-7"></i> Highest</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-importance' matter.id %}"
+                 hx-vals='{"importance": "6"}'
+                 hx-swap="none"><i class="icon-chevron-up importance-6"></i> Higher</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-importance' matter.id %}"
+                 hx-vals='{"importance": "5"}'
+                 hx-swap="none"><i class="icon-chevron-up importance-5"></i> High</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-importance' matter.id %}"
+                 hx-vals='{"importance": "4"}'
+                 hx-swap="none"><i class="icon-equal"></i> Normal</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-importance' matter.id %}"
+                 hx-vals='{"importance": "3"}'
+                 hx-swap="none"><i class="icon-chevron-down importance-3"></i> Low</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-importance' matter.id %}"
+                 hx-vals='{"importance": "2"}'
+                 hx-swap="none"><i class="icon-chevron-down importance-2"></i> Lower</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-importance' matter.id %}"
+                 hx-vals='{"importance": "1"}'
+                 hx-swap="none"><i class="icon-chevrons-down importance-1"></i> Lowest</a>
+            </li>
+          </ul>
+        </div>
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  class="btn-icon"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            <span><i class="icon-highlighter with-text"></i> Color</span>
+            <small><i class="icon-chevron-down"></i></small>
+          </button>
+          <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-post="{% url 'case:facts-bulk-color' matter.id %}"
+                 hx-vals='{"color": ""}'
+                 hx-swap="none"><span class="fact-color-swatch"></span> None</a>
+            </li>
+            {% for color in fact_colors %}
+              <li>
+                <a class="dropdown-item"
+                   href="#"
+                   hx-post="{% url 'case:facts-bulk-color' matter.id %}"
+                   hx-vals='{"color": "{{ color }}"}'
+                   hx-swap="none"><span class="fact-color-swatch hl-{{ color|lower }}"></span> {{ color }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <button type="button"
+                class="btn-icon"
+                hx-post="{% url 'case:facts-bulk-delete' matter.id %}"
+                hx-confirm="Delete {{ selected_facts|length }} selected fact(s)? This cannot be undone."
+                hx-swap="none">
+          <i class="icon-trash-2"></i>
+        </button>
+      </div>
+    {% else %}
+      <div class="filter-tools">
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'case:facts-add' matter.id %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click">
+          <i class="icon-plus"></i>
+        </button>
+        <button type="button"
+                class="btn-icon"
+                hx-get="{% url 'case:facts-filter' matter.id %}"
+                hx-target="#htmx-modal-container"
+                hx-trigger="click">
+          <i class="icon-list-filter with-text"></i>Filter
+        </button>
+        <div class="dropdown" x-data="dropdown()">
+          <button type="button"
+                  id="facts-importance-filter"
+                  class="select-btn filter-dropdown-button importance-dropdown {% if importance_value %}toggle-active{% endif %}"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+          <span><i class="icon-flag with-text"></i>
+          {% if importance_value == 7 %}
+            Highest
+          {% elif importance_value == 6 %}
+            Higher
+          {% elif importance_value == 5 %}
+            High
+          {% elif importance_value == 4 %}
+            Normal
+          {% elif importance_value == 3 %}
+            Low
+          {% elif importance_value == 2 %}
+            Lower
+          {% elif importance_value == 1 %}
+            Lowest
+          {% else %}
+            Importance
+          {% endif %}
+        </span>
+        <small>
+          <i class="icon-chevron-down"></i>
+        </small>
+      </button>
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
+        <li>
+          <a class="dropdown-item {% if importance_value == 7 %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:facts-filter-importance' matter.id 7 %}"
+             hx-target="#facts"><i class="icon-chevrons-up importance-7"></i> Highest</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if importance_value == 6 %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:facts-filter-importance' matter.id 6 %}"
+             hx-target="#facts"><i class="icon-chevron-up importance-6"></i> Higher</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if importance_value == 5 %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:facts-filter-importance' matter.id 5 %}"
+             hx-target="#facts"><i class="icon-chevron-up importance-5"></i> High</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if importance_value == 4 %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:facts-filter-importance' matter.id 4 %}"
+             hx-target="#facts"><i class="icon-equal"></i> Normal</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if importance_value == 3 %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:facts-filter-importance' matter.id 3 %}"
+             hx-target="#facts"><i class="icon-chevron-down importance-3"></i> Low</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if importance_value == 2 %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:facts-filter-importance' matter.id 2 %}"
+             hx-target="#facts"><i class="icon-chevron-down importance-2"></i> Lower</a>
+        </li>
+        <li>
+          <a class="dropdown-item {% if not importance_value %}active{% endif %}"
+             href="#"
+             hx-get="{% url 'case:facts-filter-importance' matter.id 0 %}"
+             hx-target="#facts"><i class="icon-flag"></i> All Levels</a>
+        </li>
+      </ul>
+    </div>
+    <input type="text"
+           id="facts-keyword-input"
+           name="keyword"
+           placeholder="Keyword Search"
+           value="{{ keyword }}"
+           class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
+           hx-get="{% url 'case:facts-filter-keyword' matter.id %}"
+           hx-target="#facts-table"
+           hx-trigger="keyup changed delay:500ms"
+           hx-include="this"
+           oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
   </div>
-  <input type="text"
-         id="facts-keyword-input"
-         name="keyword"
-         placeholder="Keyword Search"
-         value="{{ keyword }}"
-         class="filter-input keyword-input {% if keyword %}toggle-active{% endif %}"
-         hx-get="{% url 'case:facts-filter-keyword' matter.id %}"
-         hx-target="#facts-table"
-         hx-trigger="keyup changed delay:500ms"
-         hx-include="this"
-         oninput="this.classList.toggle('toggle-active', this.value.trim() !== '')">
-</div>
+{% endif %}
 </div>
 <div class="toolbar-right">
   {% if facts %}

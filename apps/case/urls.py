@@ -282,6 +282,46 @@ urlpatterns = [
     ),
     path("case/<int:matter_id>/facts/print/", facts.facts_print, name="facts-print"),
     path("case/<int:matter_id>/facts/pdf/", facts.facts_pdf, name="facts-pdf"),
+    path(
+        "case/<int:matter_id>/facts/toggle-select/<int:fact_id>/",
+        facts.toggle_fact_select,
+        name="facts-toggle-select",
+    ),
+    path(
+        "case/<int:matter_id>/facts/select-all/",
+        facts.select_all_facts,
+        name="facts-select-all",
+    ),
+    path(
+        "case/<int:matter_id>/facts/clear-selection/",
+        facts.clear_fact_selection,
+        name="facts-clear-selection",
+    ),
+    path(
+        "case/<int:matter_id>/facts/bulk-delete/",
+        facts.bulk_facts_delete,
+        name="facts-bulk-delete",
+    ),
+    path(
+        "case/<int:matter_id>/facts/bulk-importance/",
+        facts.bulk_facts_importance,
+        name="facts-bulk-importance",
+    ),
+    path(
+        "case/<int:matter_id>/facts/bulk-color/",
+        facts.bulk_facts_color,
+        name="facts-bulk-color",
+    ),
+    path(
+        "case/<int:matter_id>/facts/bulk-labels/",
+        facts.bulk_facts_labels_modal,
+        name="facts-bulk-labels",
+    ),
+    path(
+        "case/<int:matter_id>/facts/bulk-label-action/",
+        facts.bulk_facts_label_action,
+        name="facts-bulk-label-action",
+    ),
     # Case Law (matter-scoped)
     path(
         "case/<int:matter_id>/caselaws/",
