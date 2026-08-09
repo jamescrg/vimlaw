@@ -131,23 +131,41 @@ def process_ai_request(
 
         # The AI can record timeline facts and witnesses when directed;
         # the fenced blocks it emits are applied after the response arrives.
-        # SOURCE_LINKING teaches inline source links for prose answers.
+        # SOURCE_LINKING (inline source links for prose) always rides
+        # along, but each write protocol is included only when the recent
+        # user messages actually point at timeline or witness work, so
+        # unrelated conversations carry no standing write instructions.
         from .context import SOURCE_LINKING
-        from .fact_blocks import FACT_BLOCK_RE, FACTS_PROTOCOL, apply_fact_blocks
+        from .fact_blocks import (
+            FACT_BLOCK_RE,
+            FACTS_PROTOCOL,
+            FACTS_TRIGGER_RE,
+            apply_fact_blocks,
+        )
         from .witness_blocks import (
             WITNESS_BLOCK_RE,
+            WITNESS_TRIGGER_RE,
             WITNESSES_PROTOCOL,
             apply_witness_blocks,
         )
 
-        context_text += (
-            "\n\n"
-            + SOURCE_LINKING
-            + "\n\n"
-            + FACTS_PROTOCOL
-            + "\n\n"
-            + WITNESSES_PROTOCOL
+        context_text += "\n\n" + SOURCE_LINKING
+
+        # Current message plus a few before it, so follow-up directives
+        # ("also add the crash date") keep the protocol from a turn or
+        # two after the one that named the timeline.
+        recent_user_text = "\n".join(
+            [user_message]
+            + list(
+                conversation.messages.filter(role="user")
+                .order_by("-created_at")
+                .values_list("content", flat=True)[:4]
+            )
         )
+        if FACTS_TRIGGER_RE.search(recent_user_text):
+            context_text += "\n\n" + FACTS_PROTOCOL
+        if WITNESS_TRIGGER_RE.search(recent_user_text):
+            context_text += "\n\n" + WITNESSES_PROTOCOL
 
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)

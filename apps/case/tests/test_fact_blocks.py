@@ -235,6 +235,30 @@ def test_classic_chat_applies_fact_blocks(user, matter, monkeypatch):
     assert "```create-facts" not in status["response"]
 
 
+def test_unrelated_chat_gets_no_write_protocols(user, matter, monkeypatch):
+    """A conversation that never mentions timeline or witness work
+    carries no standing write instructions (SOURCE_LINKING stays)."""
+    conversation = Conversation.objects.create(
+        matter=matter, user=user, llm="claude-opus", kind="classic"
+    )
+    message = "What are our chances on summary judgment?"
+    conversation.messages.create(role="user", user=user, content=message)
+
+    captured = {}
+
+    def fake_send(context_text, chat_history, model, is_cancelled=None):
+        captured["context"] = context_text
+        return "Decent, given the contract terms.", 10, 10
+
+    monkeypatch.setattr("apps.case.ai.tasks.send_to_claude", fake_send)
+
+    process_ai_request(conversation.id, matter.id, message, user.id, "claude-opus")
+
+    assert "CITING SOURCES" in captured["context"]
+    assert "RECORDING TIMELINE FACTS" not in captured["context"]
+    assert "RECORDING WITNESSES" not in captured["context"]
+
+
 def test_protocol_mentions_only_valid_colors():
     for value in ("Blue", "Gray", "Green", "Orange", "Purple", "Red", "Yellow"):
         assert value in FACTS_PROTOCOL

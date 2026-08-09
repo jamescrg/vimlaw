@@ -25,6 +25,12 @@ logger = logging.getLogger(__name__)
 
 FACT_BLOCK_RE = re.compile(r"```create-facts\s*\n(.*?)```", re.DOTALL)
 
+# Recent-user-message words that make the facts protocol relevant. The
+# protocol is withheld from conversations that never mention timeline
+# work (tasks.py), so ordinary analysis chats carry no standing write
+# instructions to misfire on.
+FACTS_TRIGGER_RE = re.compile(r"timeline|chronolog|\bfacts?\b|\brecord", re.IGNORECASE)
+
 VALID_COLORS = {value for value, _ in Fact.COLOR_CHOICES if value}
 
 FACTS_PROTOCOL = """RECORDING TIMELINE FACTS. This matter has a stored timeline table; its
@@ -43,6 +49,15 @@ direction to write to the table: answer it in ordinary text and do not
 emit the block. Mentioning or noticing a date is not direction either.
 Never emit the block unprompted; when unsure whether the user wants the
 table updated, answer in prose and ask.
+
+Timeline facts are generally the story underlying the dispute: events
+that occurred before the litigation (the agreement, the accident, the
+payments, the demand). Procedural history and the activity of counsel
+in the pending case (filings, motions, hearings, our own work) do not
+generally belong on the timeline; include them only when the user asks
+for them specifically. Draw facts from the matter's documents,
+highlights, and notes rather than from tasks, time entries, or other
+attorney activity.
 
 One entry per fact, in the order they should read. "description" is the
 entire timeline row (150-char cap): state the event plainly, past

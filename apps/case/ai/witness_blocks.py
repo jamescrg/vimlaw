@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 
 WITNESS_BLOCK_RE = re.compile(r"```create-witnesses\s*\n(.*?)```", re.DOTALL)
 
+# Recent-user-message words that make the witness protocol relevant; see
+# FACTS_TRIGGER_RE in fact_blocks.py for the rationale.
+WITNESS_TRIGGER_RE = re.compile(r"witness|testi|\brecord", re.IGNORECASE)
+
 VALID_ALIGNMENTS = {value for value, _ in Witness.ALIGNMENT_CHOICES}
 
 WITNESSES_PROTOCOL = """RECORDING WITNESSES. This matter has a stored witness list; its existing
