@@ -315,8 +315,9 @@
   display: block;
 }
 
-/* Highlight colors */
-#note-editor mark {
+/* Highlight colors — the editor renders highlights as span.note-hl with
+   the fill inlined (highlight-mark.js); mark selectors cover legacy HTML. */
+#note-editor :is(mark, .note-hl) {
   background: var(--yellow-100);
   border-radius: 0.125rem;
   color: inherit;
@@ -355,7 +356,7 @@
 
 /* Dark mode — marks stay light (paper-highlighter look, matching how they'd
    print) but the inherited text would flip light, so force it dark. */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor mark {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) #note-editor :is(mark, .note-hl) {
   color: var(--stone-900);
 }
 

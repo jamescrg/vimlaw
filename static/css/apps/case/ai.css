@@ -1352,7 +1352,7 @@
 /* Highlights — same paper-highlighter fills as the notes editor (marks stay
    light in dark themes; the inherited text would flip light, so force it
    dark to match). */
-.prompt-editor-content .ProseMirror mark {
+.prompt-editor-content .ProseMirror :is(mark, .note-hl) {
   background: var(--yellow-100);
   border-radius: 0.125rem;
   color: inherit;
@@ -1379,7 +1379,7 @@
   background: var(--stone-200);
 }
 
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .prompt-editor-content .ProseMirror mark {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .prompt-editor-content .ProseMirror :is(mark, .note-hl) {
   color: var(--stone-900);
 }
 

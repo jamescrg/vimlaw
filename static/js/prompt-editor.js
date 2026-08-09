@@ -110,7 +110,13 @@ function htmlToMarkdown(html) {
         return "*" + getChildren() + "*";
       case "s":
         return "~~" + getChildren() + "~~";
-      case "mark": {
+      case "mark":
+      case "span": {
+        // Highlights render as span.note-hl (highlight-mark.js); legacy
+        // <mark> HTML serializes the same. Other spans pass through.
+        if (tag === "span" && !node.classList.contains("note-hl")) {
+          return getChildren();
+        }
         // Same colored-highlight syntax the notes editor round-trips
         const prefixes = {
           "mark-green": "g==",
