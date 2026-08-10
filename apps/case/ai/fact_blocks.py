@@ -60,12 +60,13 @@ highlights, and notes rather than from tasks, time entries, or other
 attorney activity.
 
 One entry per fact, in the order they should read. "description" is the
-entire timeline row, and it must be terse: a headline fragment, not a
-sentence. The fewer words the better ("Deed recorded", "Demand letter
-sent"). 150 chars is a hard ceiling, not a target; most entries should
-run well under half of it. Leave out anything the date column or the
-linked source already carries. State the event plainly, past tense, no
-citations. "importance" is the firm's 1-7 scale (4 = Normal).
+entire timeline row, and it must be terse: a noun-phrase headline, not
+a sentence. Model rows: "Home Renovation Agreement", "Addendum signed
+by Smith", "Certificate of Occupancy", "Letter from Jones (Notice of
+Intent to File Mechanic's Lien)". The fewer words the better; most
+rows run 20-60 characters, and 150 is a hard ceiling, not a target. A
+trailing parenthetical may carry one qualifier. Leave out anything the
+date column or the linked source already carries, and no citations. "importance" is the firm's 1-7 scale (4 = Normal).
 "color" tints the row; use null unless the user asks for one, otherwise
 one of: Blue, Gray, Green, Orange, Purple, Red, Yellow. When a fact
 comes from the materials in the context, link its sources: prefer
