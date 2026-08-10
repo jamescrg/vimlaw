@@ -40,7 +40,7 @@ timeline", "record these facts", "put that on the timeline") end your
 reply with exactly one fenced block in this form:
 
 ```create-facts
-[{"date": "YYYY-MM-DD", "time": "HH:MM or null", "description": "<up to 150 chars>", "color": null, "importance": 4, "highlights": [<hl ids>], "documents": [<doc ids>]}]
+[{"date": "YYYY-MM-DD", "time": "HH:MM or null", "description": "<terse headline>", "color": null, "importance": 4, "highlights": [<hl ids>], "documents": [<doc ids>]}]
 ```
 
 Being asked to "create a timeline", "build a chronology", or lay out
@@ -60,8 +60,12 @@ highlights, and notes rather than from tasks, time entries, or other
 attorney activity.
 
 One entry per fact, in the order they should read. "description" is the
-entire timeline row (150-char cap): state the event plainly, past
-tense, no citations. "importance" is the firm's 1-7 scale (4 = Normal).
+entire timeline row, and it must be terse: a headline fragment, not a
+sentence. The fewer words the better ("Deed recorded", "Demand letter
+sent"). 150 chars is a hard ceiling, not a target; most entries should
+run well under half of it. Leave out anything the date column or the
+linked source already carries. State the event plainly, past tense, no
+citations. "importance" is the firm's 1-7 scale (4 = Normal).
 "color" tints the row; use null unless the user asks for one, otherwise
 one of: Blue, Gray, Green, Orange, Purple, Red, Yellow. When a fact
 comes from the materials in the context, link its sources: prefer
