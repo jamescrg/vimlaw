@@ -914,6 +914,32 @@ def set_vet_citations(request, conv_id, state):
 
 @login_required
 @require_POST
+def set_conversation_llm(request, conv_id):
+    """Switch which model an existing conversation sends with.
+
+    Retired keys are not offered: a conversation can move off one but
+    never back onto it.
+    """
+    llm = request.POST.get("llm", "")
+    if llm not in dict(Conversation.LLM_CHOICES):
+        return HttpResponse(status=400)
+
+    conversation = get_object_or_404(
+        Conversation, pk=conv_id, matter__in=get_accessible_matters()
+    )
+
+    conversation.llm = llm
+    conversation.save(update_fields=["llm"])
+
+    return render(
+        request,
+        "case/ai/llm-pill.html",
+        {"conversation": conversation},
+    )
+
+
+@login_required
+@require_POST
 def set_research_depth(request, conv_id, level):
     """Set a research conversation's search depth (quick/standard/deep)."""
     if level not in dict(Conversation.DEPTH_CHOICES):
