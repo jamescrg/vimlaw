@@ -207,24 +207,11 @@ class Note(AuditMixin, models.Model):
     summary_source_hash = models.CharField(max_length=32, blank=True, default="")
     labels = models.ManyToManyField("case.Label", related_name="notes", blank=True)
 
-    # Google Drive sync provenance — null for user-authored notes. A synced note
-    # is upserted by drive_file_id; drive_modified is the freshness marker used
-    # to skip unchanged files. Content history is tracked via HistoricalRecords.
-    drive_file_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    drive_path = models.CharField(max_length=1024, null=True, blank=True)
-    drive_modified = models.CharField(max_length=64, null=True, blank=True)
-    drive_synced_at = models.DateTimeField(null=True, blank=True)
-
     viewed_at = models.DateTimeField(null=True, blank=True)
     history = HistoricalRecords()
 
     def __str__(self):
         return self.title
-
-    @property
-    def is_synced(self):
-        """True if this note is mirrored from Google Drive (read-only in-app)."""
-        return bool(self.drive_file_id)
 
     class Meta:
         db_table = "app_note"

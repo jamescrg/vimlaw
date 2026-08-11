@@ -161,14 +161,11 @@ def test_notes_mirror_retired(matter, proceeding, fake_drive):
         content=b"# Memo\ncontent",
     )
     google.sync(full=True)
-    assert not Note.objects.filter(drive_file_id="n1").exists()
+    assert Note.objects.count() == 0
 
-    # A previously synced (now app-owned) note survives its Drive file's
-    # deletion — the changes feed no longer deletes notes.
-    note = Note.objects.create(
-        title="Legacy", matter=matter, drive_file_id="legacy1", content="kept"
-    )
-    fake_drive.change_feed = [fake_drive.change_for("legacy1", removed=True)]
+    # App-owned notes survive Drive-side deletions in the changes feed.
+    note = Note.objects.create(title="Legacy", matter=matter, content="kept")
+    fake_drive.change_feed = [fake_drive.change_for("n1", removed=True)]
     google.sync()
     assert Note.objects.filter(pk=note.pk).exists()
 

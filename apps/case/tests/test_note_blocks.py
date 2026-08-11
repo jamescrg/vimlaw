@@ -123,18 +123,6 @@ def test_edit_rejects_non_library_standalone_note(user, matter):
     assert note.content == "Old."
 
 
-def test_edit_allows_drive_imported_note(user, matter):
-    # Sync is retired; notes it created are app-owned and editable
-    note = Note.objects.create(
-        matter=matter, title="Imported", content="Old.", drive_file_id="drive-abc"
-    )
-    apply_note_blocks(
-        edit_block({"id": note.id, "content": "New.", "mode": "replace"}), matter, user
-    )
-    note.refresh_from_db()
-    assert note.content == "New."
-
-
 def test_edit_rejects_never_context_note(user, matter):
     note = Note.objects.create(
         matter=matter, title="Hidden", content="Old.", ai_context="never"

@@ -19,10 +19,9 @@ Flow:
 
 RETIRED (2026-08-11): the case-notes mirror. This module used to pull
 ``<root>/<matter>/Notes/**`` files into ``Note`` rows and delete them when
-the Drive file vanished. Notes are app-owned now — previously synced notes
-keep their provenance fields (``drive_file_id``, ``drive_path``,
-``drive_modified``, ``drive_synced_at``) and are editable in the app; files
-under ``Notes/`` are ignored by the sync.
+the Drive file vanished. Notes are app-owned now (the provenance fields on
+Note were dropped with the mirror); files under ``Notes/`` are ignored by
+the sync.
 """
 
 import json
@@ -36,7 +35,6 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 
 from apps.matters.models import Matter
-from apps.notes.models import Note
 from utils.prepare_path import prepare_path
 
 from . import records
@@ -544,7 +542,6 @@ def get_sync_status():
     state = DriveSyncState.objects.first()
     return {
         "linked": check_credentials(),
-        "synced_count": Note.objects.filter(drive_file_id__isnull=False).count(),
         "linked_matters": linked_matters,
         "synced_records": Document.objects.filter(drive_file_id__isnull=False).count(),
         "linked_proceedings": len(records.proceedings_by_folder()),

@@ -3,8 +3,3 @@
   Updated {{ note.updated_at|naturaltime }}
   {% if note.updated_by %}by {{ note.updated_by.get_full_name|default:note.updated_by.username }}{% endif %}
 {% endif %}
-{% comment %}Provenance for notes created by the retired Drive sync.{% endcomment %}
-{% if note.is_synced %}
-  · Imported from Google Drive
-  {% if note.drive_path %}(<span class="note-drive-path">{{ note.drive_path }}</span>){% endif %}
-{% endif %}

@@ -15,11 +15,6 @@ IMPORTANCE_CHOICES = (
     (1, "Lowest"),
 )
 
-SOURCE_CHOICES = (
-    ("synced", "Synced from Drive"),
-    ("manual", "Created in app"),
-)
-
 
 class NotesFilter(django_filters.FilterSet):
     keyword = django_filters.CharFilter(method="filter_keyword", label="Keyword")
@@ -36,12 +31,6 @@ class NotesFilter(django_filters.FilterSet):
         empty_label="All Categories",
     )
     topic = django_filters.CharFilter(field_name="topic", lookup_expr="exact")
-    source = django_filters.ChoiceFilter(
-        method="filter_source",
-        choices=SOURCE_CHOICES,
-        label="Source",
-        empty_label="All Sources",
-    )
     importance = django_filters.ChoiceFilter(
         field_name="importance",
         choices=IMPORTANCE_CHOICES,
@@ -71,7 +60,7 @@ class NotesFilter(django_filters.FilterSet):
 
     class Meta:
         model = Note
-        fields = ["keyword", "label", "category", "importance", "source", "order_by"]
+        fields = ["keyword", "label", "category", "importance", "order_by"]
 
     def __init__(self, *args, matter=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -90,11 +79,4 @@ class NotesFilter(django_filters.FilterSet):
     def filter_label(self, queryset, name, value):
         if value:
             return queryset.filter(labels=value)
-        return queryset
-
-    def filter_source(self, queryset, name, value):
-        if value == "synced":
-            return queryset.filter(drive_file_id__isnull=False)
-        if value == "manual":
-            return queryset.filter(drive_file_id__isnull=True)
         return queryset

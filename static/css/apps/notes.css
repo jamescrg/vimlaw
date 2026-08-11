@@ -1213,25 +1213,6 @@ body:has(.note-page.standalone) {
   color: var(--color-primary);
 }
 
-/* Google Drive synced notes (read-only) */
-.note-drive-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.5rem;
-  border: 1px solid var(--border-medium);
-  border-radius: 0.75rem;
-  color: var(--color-muted);
-  background: var(--background-section);
-  white-space: nowrap;
-}
-
-.note-drive-path {
-  color: var(--color-muted);
-  font-family: monospace;
-}
-
 /* Drive folder picker (Notes tab "Link Drive Folder" modal) */
 .drive-folder-list {
   display: flex;

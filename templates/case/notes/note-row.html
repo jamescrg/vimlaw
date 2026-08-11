@@ -6,11 +6,6 @@
          class="note-title-link"
          x-ref="button"
          @click.prevent="toggle()">{{ note.title }}</a>
-      {% if note.is_synced %}
-        <span class="note-drive-badge" title="Imported from Google Drive">
-          <i class="icon-cloud"></i> Drive
-        </span>
-      {% endif %}
       <ul class="dropdown-menu" x-ref="menu" x-show="open">
         <li>
           <a class="dropdown-item"
@@ -41,8 +36,6 @@
   <td class="user">
     {% if note.author %}
       {{ note.author.get_short_name|default:note.author.username }}
-    {% elif note.is_synced %}
-      Drive
     {% else %}
       —
     {% endif %}
