@@ -19,7 +19,7 @@ let hoverTimer = null;
 
 export function setupFileTree() {
   const container = document.getElementById("file-tree-container");
-  if (!container || !container.querySelector(".file-tree")) return; // matter editor: flat list
+  if (!container) return;
   if (container.dataset.treeBound) return;
   container.dataset.treeBound = "1";
 
@@ -37,7 +37,15 @@ function onClick(e) {
   const handle = e.target.closest(".file-tree-toggle, .file-tree-name");
   if (!handle) return;
   const li = handle.closest(".file-tree-item");
-  if (!li || !li.classList.contains("file-tree-folder")) return; // note clicks fall through to hx-get
+  // Folder and matter nodes toggle; note clicks fall through to hx-get
+  if (
+    !li ||
+    !(
+      li.classList.contains("file-tree-folder") ||
+      li.classList.contains("file-tree-matter")
+    )
+  )
+    return;
 
   e.stopPropagation();
   li.classList.toggle("collapsed");
@@ -63,7 +71,14 @@ function onDragStart(e) {
   const li = e.target.closest(".file-tree-note, .file-tree-folder");
   if (!li) return;
   const type = li.classList.contains("file-tree-folder") ? "folder" : "note";
-  drag = { type, el: li, height: type === "folder" ? subtreeHeight(li) : 0 };
+  drag = {
+    type,
+    el: li,
+    height: type === "folder" ? subtreeHeight(li) : 0,
+    // "" = general tree; anything else = that matter's tree. Drops never
+    // cross scopes (the server re-validates).
+    matterId: li.dataset.matterId || "",
+  };
   e.dataTransfer.setData(
     "text/plain",
     JSON.stringify({ type, id: li.dataset.folderId || li.dataset.noteId }),
@@ -80,6 +95,7 @@ function resolveDropTarget(e) {
 
   const folderLi = e.target.closest(".file-tree-folder");
   if (folderLi) {
+    if ((folderLi.dataset.matterId || "") !== drag.matterId) return null; // other tree
     if (drag.el === folderLi || drag.el.contains(folderLi)) return null; // self or own subtree
     if (drag.el.parentElement.closest(".file-tree-folder") === folderLi)
       return null; // current parent — a no-op move
@@ -91,8 +107,22 @@ function resolveDropTarget(e) {
     return folderLi;
   }
 
+  // A matter node = that matter's root (folder=None), same-matter items only
+  const matterLi = e.target.closest(".file-tree-matter");
+  if (matterLi) {
+    if (matterLi.dataset.matterId !== drag.matterId) return null;
+    if (
+      drag.el.parentElement.closest(".file-tree-folder, .file-tree-matter") ===
+      matterLi
+    )
+      return null; // already at this matter's root
+    return matterLi;
+  }
+
   const tree = e.target.closest(".file-tree");
   if (tree) {
+    if (tree.classList.contains("matters-tree")) return null; // background isn't a target
+    if (drag.matterId !== "") return null; // general root takes general items only
     if (drag.el.parentElement === tree) return null; // already at root
     return tree;
   }
@@ -175,7 +205,7 @@ function flashDropError(target, reason) {
   setTimeout(() => target.classList.remove("drop-error"), DROP_ERROR_MS);
 }
 
-function refreshTree() {
+export function refreshTree() {
   const container = document.getElementById("file-tree-container");
   // htmx.ajax processes the swapped content, so the new note rows' hx-get
   // attributes keep working. NOTE_DATA is re-set on every content swap,

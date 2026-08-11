@@ -43,16 +43,23 @@ class NoteFolderForm(forms.ModelForm):
             "ai_library": "Include in AI Library",
         }
 
-    def __init__(self, *args, exclude_folder=None, **kwargs):
+    def __init__(self, *args, exclude_folder=None, matter=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            matter = self.instance.matter  # edits never change scope
+        self.matter = matter
         self.fields["name"].required = True
         self.fields["parent"].required = False
         self.fields["parent"].empty_label = "— None (root level) —"
-        self.fields["ai_library"].widget = forms.Select(
-            choices=self.YESNO_CHOICES, attrs={"class": "form-control"}
-        )
+        if matter is not None:
+            # Matter folders can never join the firm AI library
+            del self.fields["ai_library"]
+        else:
+            self.fields["ai_library"].widget = forms.Select(
+                choices=self.YESNO_CHOICES, attrs={"class": "form-control"}
+            )
 
-        qs = NoteFolder.objects.filter(depth__lt=3).order_by("name")
+        qs = NoteFolder.objects.filter(depth__lt=3, matter=matter).order_by("name")
         if exclude_folder and exclude_folder.pk:
             descendant_ids = [d.pk for d in exclude_folder.get_descendants()]
             exclude_ids = [exclude_folder.pk] + descendant_ids
@@ -65,6 +72,14 @@ class NoteFolderForm(forms.ModelForm):
             indent = "\u00a0\u00a0\u00a0\u00a0" * folder.depth
             choices.append((folder.pk, f"{indent}{folder.name}"))
         self.fields["parent"].choices = choices
+
+    def save(self, commit=True):
+        folder = super().save(commit=False)
+        if not folder.pk:
+            folder.matter = self.matter
+        if commit:
+            folder.save()  # full save → full_clean runs the matter check
+        return folder
 
 
 class NoteFolderMoveForm(forms.Form):

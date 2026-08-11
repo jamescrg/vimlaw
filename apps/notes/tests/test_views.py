@@ -267,21 +267,28 @@ class TestEditorFileTree:
             li_open = content.rindex("<li", 0, start)
             assert "collapsed" not in content[li_open:start]
 
-    def test_matter_editor_renders_flat_list(self, client_with_matter, note, user):
+    def test_matter_editor_renders_matters_pane(self, client_with_matter, note, user):
         matter = client_with_matter.matter
         for title in ("Zeta", "Alpha"):
             Note.objects.create(author=user, matter=matter, title=title)
 
         response = client_with_matter.get(reverse("case:note-view", args=[note.id]))
         content = response.content.decode()
-        assert 'class="file-tree"' not in content
-        # Alphabetical order within the sidebar list itself (titles also
-        # appear elsewhere on the page, e.g. the <title> tag)
-        start = content.index('class="sidebar-notes-list"')
+        # Matter notes land on the Matters pane with their matter's tree
+        assert 'data-active-pane="matters"' in content
+        assert "matters-tree" in content
+        start = content.index('data-matter-id="%s"' % matter.id)
         listing = content[start : content.index("</ul>", start)]
         assert (
             listing.index("Alpha") < listing.index("Test Note") < listing.index("Zeta")
         )
+
+    def test_general_editor_lists_open_matters(self, client, user, matter):
+        note = Note.objects.create(author=user, title="Solo")
+        response = client.get(reverse("notes:note-view", args=[note.id]))
+        content = response.content.decode()
+        assert 'data-active-pane="files"' in content
+        assert matter.name in content  # open matter appears in the Matters pane
 
 
 class TestNoteFolderReparent:
@@ -387,11 +394,14 @@ class TestEditorFileTreePartial:
             == 400
         )
 
-    def test_matter_note_rejected(self, client_with_matter, note):
+    def test_matter_note_renders_both_panes(self, client_with_matter, note):
         resp = client_with_matter.get(
             reverse("notes:editor-file-tree") + f"?note={note.id}"
         )
-        assert resp.status_code == 404
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        assert "tree-pane-files" in content
+        assert "tree-pane-matters" in content
 
 
 class TestNoteMoveFromTree:
@@ -425,3 +435,179 @@ class TestNoteMoveFromTree:
         assert resp.status_code == 204
         note.refresh_from_db()
         assert note.folder_id is None
+
+
+class TestMatterScopeGuards:
+    """The hard invariant: no move ever crosses a matter boundary."""
+
+    @pytest.fixture
+    def scoped(self, user, matter):
+        from apps.notes.models import NoteFolder
+
+        general = NoteFolder.objects.create(name="General")
+        mfolder = NoteFolder.objects.create(name="Case Files", matter=matter)
+        gnote = Note.objects.create(author=user, title="General note")
+        mnote = Note.objects.create(author=user, title="Matter note", matter=matter)
+        return {
+            "general": general,
+            "mfolder": mfolder,
+            "gnote": gnote,
+            "mnote": mnote,
+        }
+
+    def test_matter_note_into_own_folder(self, client, scoped, matter):
+        resp = client.post(
+            reverse("notes:note-move", args=[scoped["mnote"].id]),
+            {"destination": scoped["mfolder"].id},
+        )
+        assert resp.status_code == 204
+        scoped["mnote"].refresh_from_db()
+        assert scoped["mnote"].folder_id == scoped["mfolder"].id
+        assert scoped["mnote"].matter_id == matter.id  # matter untouched
+
+    def test_matter_note_into_general_folder_rejected(self, client, scoped, matter):
+        resp = client.post(
+            reverse("notes:note-move", args=[scoped["mnote"].id]),
+            {"destination": scoped["general"].id},
+        )
+        assert resp.status_code == 400
+        scoped["mnote"].refresh_from_db()
+        assert scoped["mnote"].folder_id is None
+        assert scoped["mnote"].matter_id == matter.id
+
+    def test_general_note_into_matter_folder_rejected(self, client, scoped):
+        resp = client.post(
+            reverse("notes:note-move", args=[scoped["gnote"].id]),
+            {"destination": scoped["mfolder"].id},
+        )
+        assert resp.status_code == 400
+        scoped["gnote"].refresh_from_db()
+        assert scoped["gnote"].folder_id is None
+        assert scoped["gnote"].matter_id is None
+
+    def test_matter_note_to_matter_root(self, client, scoped, matter):
+        scoped["mnote"].folder = scoped["mfolder"]
+        scoped["mnote"].save(update_fields=["folder"])
+        resp = client.post(
+            reverse("notes:note-move", args=[scoped["mnote"].id]), {"destination": ""}
+        )
+        assert resp.status_code == 204
+        scoped["mnote"].refresh_from_db()
+        assert scoped["mnote"].folder_id is None
+        assert scoped["mnote"].matter_id == matter.id
+
+    def test_folder_reparent_across_matters_rejected(self, client, scoped):
+        from unittest.mock import patch
+
+        with patch("apps.notes.views.queue_library_summary_sweep"):
+            resp = client.post(
+                reverse("notes:folder-reparent", args=[scoped["mfolder"].id]),
+                {"destination": scoped["general"].id},
+            )
+        assert resp.status_code == 400
+        resp = client.post(
+            reverse("notes:folder-reparent", args=[scoped["general"].id]),
+            {"destination": scoped["mfolder"].id},
+        )
+        assert resp.status_code == 400
+        scoped["mfolder"].refresh_from_db()
+        scoped["general"].refresh_from_db()
+        assert scoped["mfolder"].parent_id is None
+        assert scoped["general"].parent_id is None
+
+    def test_move_targets_scoped_to_tree(self, scoped, matter):
+        from apps.notes.models import NoteFolder
+        from apps.notes.views import get_valid_move_targets
+
+        other = NoteFolder.objects.create(name="Other matter tree", matter=matter)
+        assert scoped["general"] not in get_valid_move_targets(other)
+        assert other in get_valid_move_targets(scoped["mfolder"])
+        assert scoped["mfolder"] not in get_valid_move_targets(scoped["general"])
+
+    def test_move_modal_tree_scoped(self, client, scoped):
+        resp = client.get(reverse("notes:note-move", args=[scoped["mnote"].id]))
+        content = resp.content.decode()
+        assert "Case Files" in content
+        assert "General" not in content
+
+    def test_bulk_move_rejects_matter_folder(self, client, scoped):
+        session = client.session
+        session["selected_notes"] = [scoped["gnote"].id]
+        session.save()
+        resp = client.post(
+            reverse("notes:bulk-move"), {"destination": scoped["mfolder"].id}
+        )
+        assert resp.status_code == 404
+
+    def test_notes_tab_sidebar_excludes_matter_folders(self, client, scoped):
+        resp = client.get(reverse("notes:index"))
+        content = resp.content.decode()
+        assert "General" in content
+        assert "Case Files" not in content
+
+
+class TestMatterToggle:
+    def test_toggle_flips_session(self, client, matter):
+        url = reverse("notes:matter-toggle", args=[matter.id])
+        assert client.post(url).status_code == 204
+        assert client.session["note_matters_expanded"] == [matter.id]
+        assert client.post(url).status_code == 204
+        assert client.session["note_matters_expanded"] == []
+
+
+class TestFolderToggleAllScoped:
+    def test_expand_and_collapse_preserve_matter_ids(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        general = NoteFolder.objects.create(name="G")
+        mfolder = NoteFolder.objects.create(name="M", matter=matter)
+        session = client.session
+        session["note_folders_expanded"] = [mfolder.id]
+        session.save()
+
+        client.post(reverse("notes:folder-toggle-all") + "?expand=true")
+        expanded = set(client.session["note_folders_expanded"])
+        assert general.id in expanded
+        assert mfolder.id in expanded  # matter id preserved
+
+        client.post(reverse("notes:folder-toggle-all") + "?expand=false")
+        expanded = set(client.session["note_folders_expanded"])
+        assert general.id not in expanded
+        assert mfolder.id in expanded  # still preserved
+
+
+class TestNoteFolderFormMatter:
+    def test_matter_scopes_parents_and_drops_ai_library(self, matter):
+        from apps.notes.forms import NoteFolderForm
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="General parent")
+        mparent = NoteFolder.objects.create(name="Matter parent", matter=matter)
+
+        form = NoteFolderForm(matter=matter)
+        assert "ai_library" not in form.fields
+        assert list(form.fields["parent"].queryset) == [mparent]
+
+        general_form = NoteFolderForm()
+        assert "ai_library" in general_form.fields
+        assert mparent not in general_form.fields["parent"].queryset
+
+    def test_save_stamps_matter(self, matter):
+        from apps.notes.forms import NoteFolderForm
+
+        form = NoteFolderForm({"name": "Discovery"}, matter=matter)
+        assert form.is_valid(), form.errors
+        folder = form.save()
+        assert folder.matter_id == matter.id
+
+    def test_edit_keeps_matter_scope(self, matter):
+        from apps.notes.forms import NoteFolderForm
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Old", matter=matter)
+        form = NoteFolderForm({"name": "Renamed"}, instance=folder)
+        assert "ai_library" not in form.fields
+        assert form.is_valid(), form.errors
+        saved = form.save()
+        assert saved.matter_id == matter.id
+        assert saved.name == "Renamed"

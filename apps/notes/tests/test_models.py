@@ -1,6 +1,6 @@
 import pytest
 
-from apps.notes.models import Note
+from apps.notes.models import Note, NoteFolder
 
 pytestmark = pytest.mark.django_db
 
@@ -139,3 +139,34 @@ class TestAiLibrary:
         assert journal not in notes
         assert unfoldered not in notes
         assert matter_note not in notes
+
+
+class TestMatterFolderScope:
+    def test_clean_rejects_cross_matter_parent(self, matter):
+        import pytest as _pytest
+        from django.core.exceptions import ValidationError
+
+        general = NoteFolder.objects.create(name="General")
+        with _pytest.raises(ValidationError):
+            NoteFolder.objects.create(name="Case sub", parent=general, matter=matter)
+
+        mroot = NoteFolder.objects.create(name="Case root", matter=matter)
+        with _pytest.raises(ValidationError):
+            NoteFolder.objects.create(name="General sub", parent=mroot)
+
+    def test_clean_accepts_same_matter_parent(self, matter):
+        mroot = NoteFolder.objects.create(name="Case root", matter=matter)
+        child = NoteFolder.objects.create(name="Sub", parent=mroot, matter=matter)
+        assert child.depth == 1
+
+    def test_library_folder_ids_excludes_matter_folders(self, matter):
+        from apps.notes.models import library_folder_ids
+
+        flagged_general = NoteFolder.objects.create(name="Library", ai_library=True)
+        matter_folder = NoteFolder.objects.create(name="Case", matter=matter)
+        # Force the flag past the form/full_clean layers
+        NoteFolder.objects.filter(pk=matter_folder.pk).update(ai_library=True)
+
+        ids = library_folder_ids()
+        assert flagged_general.id in ids
+        assert matter_folder.id not in ids

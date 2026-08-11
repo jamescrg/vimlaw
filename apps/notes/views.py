@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.db.models.functions import Lower
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -15,6 +16,7 @@ from apps.management.selection import (
     selection_response,
     toggle_id,
 )
+from apps.matters.models import Matter
 
 from .filters import NotesFilter
 from .forms import NoteFolderForm, NoteFolderMoveForm, NoteForm
@@ -84,14 +86,17 @@ def _folder_subtree_height(folder):
 def get_valid_move_targets(exclude_folder):
     """Return folders that can accept exclude_folder as a child.
 
-    Excludes the folder itself, its descendants, and any target shallow
-    enough that the moved subtree would exceed the 4-level depth cap.
+    Same tree only (general or the folder's matter); excludes the folder
+    itself, its descendants, and any target shallow enough that the moved
+    subtree would exceed the 4-level depth cap.
     """
     descendant_ids = [d.pk for d in exclude_folder.get_descendants()]
     exclude_ids = [exclude_folder.pk] + descendant_ids
     height = _folder_subtree_height(exclude_folder)
     return (
-        NoteFolder.objects.filter(depth__lt=3 - height)
+        NoteFolder.objects.filter(
+            depth__lt=3 - height, matter_id=exclude_folder.matter_id
+        )
         .exclude(pk__in=exclude_ids)
         .order_by("name")
     )
@@ -105,6 +110,8 @@ def validate_folder_move(folder, destination):
     """
     if destination is None:
         return None
+    if destination.matter_id != folder.matter_id:
+        return "Folders cannot move between matters."
     if destination.pk == folder.pk:
         return "A folder cannot be moved into itself."
     if any(d.pk == destination.pk for d in folder.get_descendants()):
@@ -120,8 +127,9 @@ def validate_folder_move(folder, destination):
 
 
 def get_note_folders_data(request):
-    """Get note folders tree and selected folder from session."""
-    folders = NoteFolder.objects.all()
+    """Get note folders tree and selected folder from session (Notes tab =
+    general tree only; matter trees live in the editor's Matters pane)."""
+    folders = NoteFolder.objects.filter(matter__isnull=True)
     expanded_ids = set(request.session.get("note_folders_expanded", []))
     selected_folder_id = request.session.get("notes_selected_folder_id")
 
@@ -145,24 +153,11 @@ def get_note_folders_data(request):
     }
 
 
-def get_editor_file_tree(request, note):
-    """Nested folder/note tree for the editor's Files tab (standalone notes).
+def _build_tree(folders, notes_by_folder, expanded_ids):
+    """Nested tree from name-ordered folders + per-folder note lists.
 
     Node = {"folder", "children": [node...], "notes": [Note...], "is_expanded"}.
-    Expansion comes from the session key shared with the Notes tab, unioned
-    with the current note's ancestor chain (union not persisted) so the
-    active note is always revealed.
     """
-    expanded_ids = set(request.session.get("note_folders_expanded", []))
-    if note.folder_id:
-        expanded_ids |= {a.pk for a in note.folder.get_ancestors()}
-        expanded_ids.add(note.folder_id)
-
-    notes_by_folder = {}
-    for n in Note.objects.filter(matter__isnull=True).order_by(Lower("title")):
-        notes_by_folder.setdefault(n.folder_id, []).append(n)
-
-    folders = list(NoteFolder.objects.order_by(Lower("name")))
     nodes = {
         f.pk: {
             "folder": f,
@@ -176,8 +171,67 @@ def get_editor_file_tree(request, note):
     for f in folders:  # two-pass: a child's parent may sort after it
         parent = nodes.get(f.parent_id)
         (parent["children"] if parent else roots).append(nodes[f.pk])
+    return roots
 
-    return {"file_tree": roots, "root_notes": notes_by_folder.get(None, [])}
+
+def get_editor_file_tree(request, note):
+    """Both left-panel trees for the editor: the general Files tree and the
+    per-matter trees of the Matters pane.
+
+    Folder expansion comes from the session key shared with the Notes tab;
+    matter-node expansion from its own session key. Both are unioned with
+    the current note's chain (union not persisted) so the active note is
+    always revealed.
+    """
+    expanded_ids = set(request.session.get("note_folders_expanded", []))
+    if note.folder_id:
+        expanded_ids |= {a.pk for a in note.folder.get_ancestors()}
+        expanded_ids.add(note.folder_id)
+
+    open_matters = list(Matter.objects.filter(status="Open").order_by("name"))
+    if note.matter and note.matter not in open_matters:
+        # Closed matter opened directly: surface it so the active pill exists
+        open_matters.append(note.matter)
+    matter_ids = {m.id for m in open_matters}
+
+    expanded_matter_ids = set(request.session.get("note_matters_expanded", []))
+    if note.matter_id:
+        expanded_matter_ids.add(note.matter_id)
+
+    folders_by_matter = {}
+    for f in NoteFolder.objects.order_by(Lower("name")):
+        folders_by_matter.setdefault(f.matter_id, []).append(f)
+
+    notes_by_scope = {}  # matter_id -> {folder_id: [Note]}
+    note_qs = Note.objects.filter(
+        Q(matter__isnull=True) | Q(matter_id__in=matter_ids)
+    ).order_by(Lower("title"))
+    for n in note_qs:
+        notes_by_scope.setdefault(n.matter_id, {}).setdefault(n.folder_id, []).append(n)
+
+    general = notes_by_scope.get(None, {})
+    matters = [
+        {
+            "matter": m,
+            "file_tree": _build_tree(
+                folders_by_matter.get(m.id, []),
+                notes_by_scope.get(m.id, {}),
+                expanded_ids,
+            ),
+            "root_notes": notes_by_scope.get(m.id, {}).get(None, []),
+            "is_expanded": m.id in expanded_matter_ids,
+        }
+        for m in open_matters
+    ]
+
+    return {
+        "file_tree": _build_tree(
+            folders_by_matter.get(None, []), general, expanded_ids
+        ),
+        "root_notes": general.get(None, []),
+        "matters": matters,
+        "active_pane": "matters" if note.matter_id else "files",
+    }
 
 
 def get_notes_data(request):
@@ -518,18 +572,18 @@ def note_content_partial(request, note_id):
 
 @login_required
 def editor_file_tree(request):
-    """Files-tab tree partial for the standalone editor (refreshed after DnD).
+    """Left-panel trees partial for the editor (refreshed after DnD/CRUD).
 
     The current note comes as ?note=<id> because the client tracks it: the
-    tree is not re-rendered on htmx note switches, so a note id baked into
-    a path-param URL at page load would go stale.
+    trees are not re-rendered on htmx note switches, so a note id baked
+    into a path-param URL at page load would go stale.
     """
     note_id = request.GET.get("note", "")
     if not note_id.isdigit():
         return HttpResponse("note parameter required", status=400)
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = get_object_or_404(Note, pk=note_id)
     context = {"note": note} | get_editor_file_tree(request, note)
-    return render(request, "notes/file-tree.html", context)
+    return render(request, "notes/editor-trees.html", context)
 
 
 @login_required
@@ -906,28 +960,56 @@ def note_folder_toggle_expand(request, folder_id):
 
 @login_required
 @require_POST
-def note_folder_toggle_all(request):
-    """Expand or collapse all folders in session."""
-    expand = request.GET.get("expand") == "true"
-    if expand:
-        all_ids = list(NoteFolder.objects.values_list("pk", flat=True))
-        request.session["note_folders_expanded"] = all_ids
+def note_matter_toggle_expand(request, matter_id):
+    """Toggle a matter node's expand state in the editor's Matters pane."""
+    expanded = request.session.get("note_matters_expanded", [])
+    if matter_id in expanded:
+        expanded.remove(matter_id)
     else:
-        request.session["note_folders_expanded"] = []
+        expanded.append(matter_id)
+    request.session["note_matters_expanded"] = expanded
+    request.session.modified = True
+    return HttpResponse(status=204)
+
+
+@login_required
+@require_POST
+def note_folder_toggle_all(request):
+    """Expand or collapse all GENERAL folders in session.
+
+    The session key is shared with the editor's matter trees, so matter
+    folder ids already present must survive both directions.
+    """
+    expand = request.GET.get("expand") == "true"
+    general_ids = set(
+        NoteFolder.objects.filter(matter__isnull=True).values_list("pk", flat=True)
+    )
+    current = set(request.session.get("note_folders_expanded", []))
+    updated = (current | general_ids) if expand else (current - general_ids)
+    request.session["note_folders_expanded"] = list(updated)
     request.session.modified = True
     return HttpResponse(status=204)
 
 
 @login_required
 def note_move(request, note_id):
-    """Move a note to a different folder via modal."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
-    all_folders = NoteFolder.objects.all()
+    """Move a note to a different folder (modal or editor drag-and-drop).
+
+    Serves general AND matter notes; the destination must live in the
+    note's own tree. note.matter is never written here.
+    """
+    note = get_object_or_404(Note, pk=note_id)
+    all_folders = NoteFolder.objects.filter(matter_id=note.matter_id)
 
     if request.method == "POST":
         folder_id = request.POST.get("destination")
         if folder_id:
-            note.folder = get_object_or_404(NoteFolder, pk=folder_id)
+            folder = get_object_or_404(NoteFolder, pk=folder_id)
+            if folder.matter_id != note.matter_id:
+                return HttpResponse(
+                    "Notes cannot move into another matter's folders.", status=400
+                )
+            note.folder = folder
         else:
             note.folder = None
         note.save(update_fields=["folder"])
@@ -1011,7 +1093,9 @@ def notes_bulk_move(request):
     if request.method == "POST":
         folder_id = request.POST.get("destination")
         if folder_id:
-            folder = get_object_or_404(NoteFolder, pk=folder_id)
+            # Notes-tab bulk move handles general notes only, so the
+            # destination must be a general folder
+            folder = get_object_or_404(NoteFolder, pk=folder_id, matter__isnull=True)
         else:
             folder = None
         Note.objects.filter(id__in=selected, matter__isnull=True).update(folder=folder)
@@ -1019,7 +1103,7 @@ def notes_bulk_move(request):
         queue_library_summary_sweep()
         return HttpResponse(status=204, headers={"HX-Trigger": NOTES_TRIGGER})
 
-    all_folders = NoteFolder.objects.all()
+    all_folders = NoteFolder.objects.filter(matter__isnull=True)
     tree = build_note_folder_tree_flat(all_folders, set())
 
     context = {

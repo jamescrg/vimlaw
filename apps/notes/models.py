@@ -26,6 +26,14 @@ class NoteFolder(AuditMixin, models.Model):
         blank=True,
         related_name="children",
     )
+    matter = models.ForeignKey(
+        Matter,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="note_folders",
+        help_text="Null = general tree; set = this matter's private tree",
+    )
     depth = models.IntegerField(default=0)
     ai_library = models.BooleanField(
         default=False,
@@ -74,6 +82,10 @@ class NoteFolder(AuditMixin, models.Model):
         if self.parent_id is not None:
             if self.parent_id == self.pk:
                 raise ValidationError("A folder cannot be its own parent.")
+            if self.parent.matter_id != self.matter_id:
+                raise ValidationError(
+                    "A folder must belong to the same matter as its parent."
+                )
             if self.parent.depth >= 3:
                 raise ValidationError("Maximum folder depth (4 levels) exceeded.")
             # Check for circular reference
@@ -100,8 +112,16 @@ class NoteFolder(AuditMixin, models.Model):
 
 
 def library_folder_ids():
-    """Ids of AI-library folders: every flagged folder plus all descendants."""
-    folders = list(NoteFolder.objects.only("id", "parent_id", "ai_library"))
+    """Ids of AI-library folders: every flagged folder plus all descendants.
+
+    General tree only — matter folders can never join the firm library
+    (the form drops the ai_library field for them).
+    """
+    folders = list(
+        NoteFolder.objects.filter(matter__isnull=True).only(
+            "id", "parent_id", "ai_library"
+        )
+    )
     children = {}
     for f in folders:
         children.setdefault(f.parent_id, []).append(f)
@@ -150,6 +170,10 @@ class Note(AuditMixin, models.Model):
     matter = models.ForeignKey(
         Matter, on_delete=models.CASCADE, related_name="notes", null=True, blank=True
     )
+    # INVARIANT: folder is None, or folder.matter_id == self.matter_id — a
+    # note never files into another matter's (or the general) tree. Enforced
+    # at the view layer (validate_folder_move, note_move) because every move
+    # path saves with update_fields, which skips full_clean.
     folder = models.ForeignKey(
         NoteFolder, on_delete=models.SET_NULL, blank=True, null=True
     )

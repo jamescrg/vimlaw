@@ -131,6 +131,11 @@ urlpatterns = [
         views.note_folder_toggle_all,
         name="folder-toggle-all",
     ),
+    path(
+        "notes/matters/<int:matter_id>/toggle/",
+        views.note_matter_toggle_expand,
+        name="matter-toggle",
+    ),
     # Note multi-select views
     path(
         "notes/toggle-select/<int:note_id>/",

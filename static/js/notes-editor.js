@@ -609,26 +609,51 @@ function setupHtmxHandlers() {
 }
 
 function updateSidebarActive(noteId) {
-  const pane = document.querySelector(".files-pane");
-  if (!pane) return;
+  const container = document.getElementById("file-tree-container");
+  if (!container) return;
 
-  pane
+  container
     .querySelectorAll("[data-note-id]")
     .forEach((item) => item.classList.remove("active"));
 
-  const activeItem = pane.querySelector('[data-note-id="' + noteId + '"]');
+  const activeItem = container.querySelector('[data-note-id="' + noteId + '"]');
   if (!activeItem) return;
   activeItem.classList.add("active");
 
-  // Reveal a note sitting inside collapsed folders (tree only). DOM-only,
+  // Reveal a note sitting inside collapsed folders/matters. DOM-only,
   // mirroring the server's render-time ancestor union without persisting
   // the expansion to the session.
-  let folder = activeItem.parentElement.closest(".file-tree-folder");
-  while (folder) {
-    folder.classList.remove("collapsed");
-    folder = folder.parentElement.closest(".file-tree-folder");
+  let node = activeItem.parentElement.closest(
+    ".file-tree-folder, .file-tree-matter",
+  );
+  while (node) {
+    node.classList.remove("collapsed");
+    node = node.parentElement.closest(".file-tree-folder, .file-tree-matter");
   }
+  // Surface the pane the note lives in (matters after a tree refresh, etc.)
+  setLeftTab(activeItem.closest(".tree-pane-matters") ? "matters" : "files");
   activeItem.scrollIntoView({ block: "nearest" });
+}
+
+// Files | Matters tabs on the left panel. Initial state is server-rendered
+// (data-active-pane derives from the open note), so there is nothing to
+// restore from storage.
+function setLeftTab(tab) {
+  const panel = document.querySelector(".note-panel-left");
+  if (!panel) return;
+  panel.dataset.activePane = tab;
+  panel
+    .querySelectorAll(".panel-tab")
+    .forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+}
+
+function setupLeftTabs() {
+  document.querySelectorAll(".note-panel-left .panel-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setLeftTab(btn.dataset.tab);
+      openPanel(PANELS[0]);
+    });
+  });
 }
 
 // ─── Panels (Files left, Outline right) ──────────────────────────────────────
@@ -764,6 +789,7 @@ function setupPanel(cfg) {
 document.addEventListener("DOMContentLoaded", () => {
   localStorage.removeItem("notes-editor-panel-tab"); // retired key
   PANELS.forEach(setupPanel);
+  setupLeftTabs();
   syncPanelIcons();
   setupFileTree();
   initEditor();

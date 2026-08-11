@@ -218,12 +218,54 @@ body:has(.note-page.standalone) {
   padding: 0 0.75rem;
 }
 
-/* Quiet static labels - same 1rem/muted voice the old tabs had, minus the
-   chrome */
+/* Quiet static label (right panel) */
 .note-panel .panel-title {
   color: var(--color-muted);
   font-size: 1rem;
   user-select: none;
+}
+
+/* Left panel tabs - Files | Matters */
+.note-panel-left .panel-tabs {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.note-panel-left .panel-tab {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.note-panel-left .panel-tab:hover {
+  color: var(--color-primary);
+}
+
+/* Active tab wears the nav's selected-item convention (see sidebar.css) */
+.note-panel-left .panel-tab.active {
+  background: var(--selected-background);
+  border-color: var(--selected-border);
+  color: var(--selected-color);
+}
+
+/* The active tab decides which tree pane shows */
+.note-panel-left .tree-pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.note-panel-left[data-active-pane="matters"] .tree-pane-files,
+.note-panel-left[data-active-pane="files"] .tree-pane-matters {
+  display: none;
 }
 
 .note-panel .panel-header-actions {
@@ -283,42 +325,6 @@ body:has(.note-page.standalone) {
   color: var(--color-primary);
 }
 
-.note-sidebar .sidebar-notes-list {
-  flex: 1;
-  list-style: none;
-  margin: 0 0.5rem;
-  overflow-y: auto;
-  padding: 0.5rem 0;
-}
-
-.note-sidebar .sidebar-notes-list li {
-  border-radius: var(--radius-sm);
-  color: var(--color-primary);
-  cursor: pointer;
-  font-size: 1rem;
-  overflow: hidden;
-  padding: 0.5rem 1rem;
-  text-overflow: ellipsis;
-  transition: background 0.15s ease;
-  white-space: nowrap;
-}
-
-.note-sidebar .sidebar-notes-list li:hover {
-  background: var(--background-subnav);
-}
-
-.note-sidebar .sidebar-notes-list li.active {
-  background: var(--selected-background);
-  color: var(--selected-color);
-}
-
-.note-sidebar .sidebar-notes-empty {
-  color: var(--color-muted);
-  font-size: 1rem;
-  font-style: italic;
-  padding: 1rem;
-}
-
 /* Files tab - folder/file tree (standalone notes). Mirrors the outline
    panel's anatomy above (chevron toggles, nested ULs with a guide rail,
    the active pill); .file-tree-* stays separate from .outline-* so the
@@ -351,6 +357,16 @@ body:has(.note-page.standalone) {
 
 .note-sidebar .file-tree-folder {
   color: var(--color-secondary);
+}
+
+/* Matter nodes: same anatomy as folders, weighted as tree roots
+   (500 is the project's weight ceiling) */
+.note-sidebar .file-tree-matter {
+  color: var(--color-secondary);
+}
+
+.note-sidebar .file-tree-matter > .file-tree-name {
+  font-weight: 500;
 }
 
 .note-sidebar .file-tree-note {
@@ -447,7 +463,7 @@ body:has(.note-page.standalone) {
   opacity: 0.5;
 }
 
-.note-sidebar .file-tree-folder.drop-target > .file-tree-name {
+.note-sidebar :is(.file-tree-folder, .file-tree-matter).drop-target > .file-tree-name {
   background: var(--selected-background);
   border-radius: var(--radius-sm);
   box-shadow: inset 0 0 0 1px var(--selected-border);
@@ -463,7 +479,7 @@ body:has(.note-page.standalone) {
 
 /* Rejected drop: brief red flash on the target (no toast lib loads in the
    editor; the server's reason goes to the console) */
-.note-sidebar .file-tree-folder.drop-error > .file-tree-name,
+.note-sidebar :is(.file-tree-folder, .file-tree-matter).drop-error > .file-tree-name,
 .note-sidebar .file-tree.drop-error {
   background: var(--btn-danger-bg);
   border-radius: var(--radius-sm);
@@ -1248,4 +1264,20 @@ body:has(.note-page.standalone) {
 .error-text {
   margin-top: 0.5rem;
   color: var(--error);
+}
+
+/* Dark mode — active panel tab follows the nav convention: hover-fill
+   background, no border, the colored text alone marks it (sidebar.css). */
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .note-panel-left .panel-tab.active {
+  background: var(--background-sidebar-active);
+  border-color: transparent;
+  color: var(--selected-color);
+}
+
+/* Basic — the active tab takes the azure fill under inverted text, matching
+   the nav's signature move. */
+[data-theme="basic"] .note-panel-left .panel-tab.active {
+  background: var(--control-active-bg);
+  border-color: var(--control-active-line);
+  color: var(--control-active-color);
 }

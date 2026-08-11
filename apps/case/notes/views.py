@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models.functions import Lower
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -10,7 +9,7 @@ from apps.case.models import Document, Highlight
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
 from apps.notes.models import Note
-from apps.notes.views import record_note_view
+from apps.notes.views import get_editor_file_tree, record_note_view
 
 from .filters import NotesFilter
 from .forms import NoteForm
@@ -180,14 +179,7 @@ def note_view(request, note_id):
     # Record user's view of this note
     record_note_view(request.user, note)
 
-    # All of the matter's notes, for the editor's Files tab flat list
-    notes = Note.objects.filter(matter=matter).order_by(Lower("title"))
-
-    context = {
-        "note": note,
-        "matter": matter,
-        "notes": notes,
-    }
+    context = {"note": note, "matter": matter} | get_editor_file_tree(request, note)
     return render(request, "notes/editor.html", context)
 
 

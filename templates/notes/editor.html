@@ -20,24 +20,26 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
   <div class="note-editor-layout">
-    <!-- Left Panel - Files -->
-    <aside class="note-panel note-panel-left">
+    <!-- Left Panel - Files / Matters -->
+    <aside class="note-panel note-panel-left"
+           data-active-pane="{{ active_pane }}">
       <div class="panel-header">
-        <span class="panel-title">Files</span>
+        <div class="panel-tabs">
+          <button type="button"
+                  class="panel-tab{% if active_pane == 'files' %} active{% endif %}"
+                  data-tab="files">Files</button>
+          <button type="button"
+                  class="panel-tab{% if active_pane == 'matters' %} active{% endif %}"
+                  data-tab="matters">Matters</button>
+        </div>
       </div>
       <div class="panel-pane files-pane note-sidebar">
         <div id="file-tree-container"
-             data-refresh-url="{% url 'notes:editor-file-tree' %}">
-          {% if note.matter %}
-            {% include "notes/sidebar-list.html" %}
-          {% else %}
-            {% include "notes/file-tree.html" %}
-          {% endif %}
-        </div>
+             data-refresh-url="{% url 'notes:editor-file-tree' %}">{% include "notes/editor-trees.html" %}</div>
       </div>
       <!-- Collapsed-rail shortcut: expand the panel -->
       <div class="panel-rail">
-        <button type="button" class="panel-btn" title="Files">
+        <button type="button" class="panel-btn" title="Files &amp; Matters">
           <i class="icon-files"></i>
         </button>
       </div>

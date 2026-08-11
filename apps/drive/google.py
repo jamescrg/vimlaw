@@ -313,10 +313,15 @@ def _ingest(service, file_meta, parts, matters, debug_dir, dry_run, stats, unmat
         if not dry_run and (
             existing.drive_path != rel_path or existing.matter_id != matter.id
         ):
+            update_fields = ["drive_path", "matter", "drive_synced_at"]
+            if existing.matter_id != matter.id:
+                # The old matter's folder is out of scope in the new matter
+                existing.folder = None
+                update_fields.append("folder")
             existing.drive_path = rel_path
             existing.matter = matter
             existing.drive_synced_at = timezone.now()
-            existing.save(update_fields=["drive_path", "matter", "drive_synced_at"])
+            existing.save(update_fields=update_fields)
         stats["skipped"] += 1
         return
 
@@ -327,17 +332,20 @@ def _ingest(service, file_meta, parts, matters, debug_dir, dry_run, stats, unmat
     content = _download(service, file_meta)
     markdown = convert.to_markdown(content, _effective_ext(file_meta))
 
-    Note.objects.update_or_create(
-        drive_file_id=fid,
-        defaults={
-            "matter": matter,
-            "title": title,
-            "content": markdown,
-            "drive_path": rel_path,
-            "drive_modified": mtime,
-            "drive_synced_at": timezone.now(),
-        },
-    )
+    # folder stays out of defaults so a manual folder assignment survives
+    # re-sync — except when the file moved to a different matter, which
+    # puts the old matter's folder out of scope.
+    defaults = {
+        "matter": matter,
+        "title": title,
+        "content": markdown,
+        "drive_path": rel_path,
+        "drive_modified": mtime,
+        "drive_synced_at": timezone.now(),
+    }
+    if existing and existing.matter_id != matter.id:
+        defaults["folder"] = None
+    Note.objects.update_or_create(drive_file_id=fid, defaults=defaults)
     if debug_dir:
         _write_debug(debug_dir, rel_path, markdown)
     stats["converted"] += 1

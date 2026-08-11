@@ -1,0 +1,7 @@
+{% comment %}
+Both left-panel tree panes, swapped together into #file-tree-container
+after any move or folder change. Which pane shows is decided by
+data-active-pane on the panel (CSS), toggled by the Files/Matters tabs.
+{% endcomment %}
+<div class="tree-pane tree-pane-files">{% include "notes/file-tree.html" %}</div>
+<div class="tree-pane tree-pane-matters">{% include "notes/matter-tree.html" %}</div>
