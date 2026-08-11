@@ -71,6 +71,16 @@ def validate_folder_move(folder, destination):
 # ---------------------------------------------------------------------------
 
 
+def _mark_library(nodes, inherited=False):
+    """Annotate a (general) tree with AI-library state: a folder is in the
+    library when it carries the flag or any ancestor does."""
+    for node in nodes:
+        own = node["folder"].ai_library
+        node["own_library_flag"] = own
+        node["in_library"] = own or inherited
+        _mark_library(node["children"], node["in_library"])
+
+
 def _build_tree(folders, notes_by_folder, expanded_ids):
     """Nested tree from name-ordered folders + per-folder note lists.
 
@@ -142,10 +152,11 @@ def get_editor_file_tree(request, note):
         for m in open_matters
     ]
 
+    general_tree = _build_tree(folders_by_matter.get(None, []), general, expanded_ids)
+    _mark_library(general_tree)  # matter folders can never join the library
+
     return {
-        "file_tree": _build_tree(
-            folders_by_matter.get(None, []), general, expanded_ids
-        ),
+        "file_tree": general_tree,
         "root_notes": general.get(None, []),
         "matters": matters,
         "active_pane": "matters" if note.matter_id else "files",

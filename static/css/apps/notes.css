@@ -389,6 +389,21 @@ body:has(.note-page.standalone) {
   color: var(--color-secondary);
 }
 
+/* AI library indicator - a quiet sparkle after the folder name (library
+   tree only; matter notes are inherently available to their matter's AI).
+   Muted when the folder itself is flagged, fainter still when inherited
+   from an ancestor. Scaled down instead of a sub-1rem font-size. */
+.note-sidebar .file-tree-library {
+  align-self: center;
+  color: var(--icon-muted);
+  flex-shrink: 0;
+  transform: scale(0.75);
+}
+
+.note-sidebar .file-tree-library-inherited {
+  color: var(--icon-muted-more);
+}
+
 /* Hover kebab on folder/matter rows opens the tree context menu.
    Direct-child selector so a hovered parent doesn't reveal every
    descendant row's kebab too. */

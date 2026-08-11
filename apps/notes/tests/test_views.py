@@ -854,3 +854,26 @@ class TestValidTabsFallback:
         assert resp.status_code == 200
         # get_last_tab sanitized the stale value to the default (documents)
         assert resp.request["PATH_INFO"].endswith("/documents/")
+
+
+class TestLibrarySparkles:
+    def test_flagged_and_inherited_folders_show_sparkle(self, client, user, matter):
+        from apps.notes.models import NoteFolder
+
+        flagged = NoteFolder.objects.create(name="Firm Library", ai_library=True)
+        NoteFolder.objects.create(name="Evidence", parent=flagged)
+        NoteFolder.objects.create(name="Journal")
+        NoteFolder.objects.create(name="Case Files", matter=matter)
+        note = Note.objects.create(author=user, title="Solo")
+
+        resp = client.get(reverse("notes:editor-file-tree") + f"?note={note.id}")
+        content = resp.content.decode()
+
+        def row(name):
+            start = content.index(f">{name}</span>")
+            return content[start : start + 300]
+
+        assert 'title="In AI library"' in row("Firm Library")
+        assert "file-tree-library-inherited" in row("Evidence")
+        assert "file-tree-library" not in row("Journal")
+        assert "file-tree-library" not in row("Case Files")
