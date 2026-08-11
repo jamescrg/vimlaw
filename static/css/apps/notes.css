@@ -606,20 +606,19 @@ body:has(.note-page.standalone) {
 
 
 /* =============================================================================
-   Toolbar - Constrained Width
-   One band holds everything: the shared format cluster sits over the text
-   column, the quiet actions (search, save status, overflow) sit right.
+   Toolbar - Consolidated Band
+   Everything packs into one centered cluster over the editor column:
+   new-note/save, the shared format buttons, then the quiet actions
+   (search, overflow), separated by dividers.
    ============================================================================= */
 
 .note-toolbar {
   align-items: center;
   display: flex;
   flex: 1;
-  gap: 1rem;
+  gap: 0.25rem;
   height: 100%;
-  justify-content: space-between;
-  margin: 0 auto;
-  max-width: 62rem;
+  justify-content: center;
   min-width: 0;
   padding: 0 1.5rem;
 }
@@ -639,7 +638,7 @@ body:has(.note-page.standalone) {
   min-width: 0;
 }
 
-.note-toolbar .toolbar-left > .toolbar-divider {
+.note-toolbar .toolbar-divider {
   background: var(--border-medium);
   height: 1.25rem;
   margin: 0 0.25rem;
