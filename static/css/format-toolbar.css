@@ -31,12 +31,14 @@
   color: var(--color-darker);
 }
 
+/* Active format wears the app's selected-item convention, so it follows
+   every theme */
 .format-toolbar .btn-icon.active {
-  background: var(--violet-100);
+  background: var(--selected-background);
   /* The selected ring as an inset shadow - a real border would resize
      the button relative to its inactive neighbours. */
   box-shadow: inset 0 0 0 1px var(--selected-border);
-  color: var(--violet-700);
+  color: var(--selected-color);
 }
 
 .format-toolbar .toolbar-divider {
