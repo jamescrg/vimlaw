@@ -1,19 +1,6 @@
 from django import forms
 
-from config.settings import CustomFormRendererCompact
-
-from .models import Note, NoteFolder
-
-
-class NoteForm(forms.ModelForm):
-    default_renderer = CustomFormRendererCompact
-
-    class Meta:
-        model = Note
-        fields = ["title"]
-        widgets = {
-            "title": forms.TextInput(attrs={"class": "span2"}),
-        }
+from .models import NoteFolder
 
 
 class NoteFolderForm(forms.ModelForm):

@@ -14,16 +14,19 @@ from apps.matters.models import Matter
 from apps.notes.models import Note, NoteFolder
 from apps.notes.views import (
     _expand_folder_in_session,
+    _next_untitled,
     get_editor_file_tree,
     record_note_view,
 )
 
-from .forms import NoteForm
-
 
 @login_required
+@require_POST
 def notes_add(request, matter_id):
-    """Add a new note, optionally into one of the matter's folders."""
+    """Create a matter note instantly (no modal), optionally into one of the
+    matter's folders (?folder=<id>), auto-named among its siblings. The
+    HX-Redirect opens the new note in the editor.
+    """
     matter, matters = get_matter_from_url(request, matter_id)
 
     folder = None
@@ -33,45 +36,21 @@ def notes_add(request, matter_id):
         if folder.matter_id != matter.id:
             return HttpResponse("Folder belongs to another matter.", status=400)
 
-    if request.method == "POST":
-        form = NoteForm(request.POST, user=request.user, use_required_attribute=False)
-        if form.is_valid():
-            note = form.save(commit=False)
-            note.author = request.user
-            note.matter = matter
-            note.folder = folder
-            note.save()
-            if folder:
-                _expand_folder_in_session(request, folder.pk)
-
-            # Open new note in a new browser tab; the editor context also
-            # refreshes the originating tab's trees
-            headers = {"HX-Trigger": "notesChanged"}
-            if request.GET.get("context") == "editor":
-                headers["HX-Trigger"] = json.dumps(
-                    {"notesChanged": True, "noteFoldersChanged": True}
-                )
-            note_url = reverse("case:note-view", args=[note.id])
-            return HttpResponse(
-                f'<script>window.open("{note_url}", "_blank");'
-                "window.dispatchEvent(new CustomEvent('close-modal'));</script>",
-                headers=headers,
-            )
-    else:
-        form = NoteForm(
-            initial={"matter": matter}, user=request.user, use_required_attribute=False
-        )
-
-    context = {
-        "app": "matters",
-        "subapp": "notes",
-        "matter": matter,
-        "form": form,
-        "action": "Add",
-        "add_qs": request.GET.urlencode(),
-    }
-
-    return render(request, "case/notes/form.html", context)
+    siblings = Note.objects.filter(matter=matter, folder=folder).values_list(
+        "title", flat=True
+    )
+    note = Note.objects.create(
+        title=_next_untitled(siblings),
+        author=request.user,
+        matter=matter,
+        folder=folder,
+    )
+    if folder:
+        _expand_folder_in_session(request, folder.pk)
+    return HttpResponse(
+        status=204,
+        headers={"HX-Redirect": reverse("case:note-view", args=[note.id])},
+    )
 
 
 @login_required

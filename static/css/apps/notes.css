@@ -256,22 +256,28 @@ body:has(.note-page.standalone) {
 }
 
 /* New-folder creates at the GENERAL root; matter roots create via their
-   row menu, so the button hides on the Matters pane */
-.note-panel-left[data-active-pane="matters"] .panel-btn-files-only {
+   row menu, so the button shows on the Files pane only */
+.note-panel-left:not([data-active-pane="files"]) .panel-btn-files-only {
+  display: none;
+}
+
+/* Nothing to collapse on the Recent pane */
+.note-panel-left[data-active-pane="recent"] #tree-collapse-btn {
   display: none;
 }
 
 /* The active tab decides which tree pane shows */
 .note-panel-left .tree-pane {
-  display: flex;
+  display: none;
   flex: 1;
   flex-direction: column;
   min-height: 0;
 }
 
-.note-panel-left[data-active-pane="matters"] .tree-pane-files,
-.note-panel-left[data-active-pane="files"] .tree-pane-matters {
-  display: none;
+.note-panel-left[data-active-pane="files"] .tree-pane-files,
+.note-panel-left[data-active-pane="matters"] .tree-pane-matters,
+.note-panel-left[data-active-pane="recent"] .tree-pane-recent {
+  display: flex;
 }
 
 .note-panel .panel-header-actions {
@@ -331,49 +337,8 @@ body:has(.note-page.standalone) {
   color: var(--color-primary);
 }
 
-/* Recent section - shared by both tree panes, above them. Reuses the tree
-   row anatomy; rows are deliberately inert for drag-and-drop. */
-.note-sidebar .tree-recents {
-  border-bottom: 1px solid var(--border-medium);
-  flex-shrink: 0;
-}
-
-.note-sidebar .tree-recents-header {
-  align-items: center;
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  cursor: pointer;
-  display: flex;
-  font-size: 1rem;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem 0;
-  width: 100%;
-}
-
-.note-sidebar .tree-recents-header:hover {
-  color: var(--color-primary);
-}
-
-.note-sidebar .tree-recents-header .file-tree-toggle i {
-  display: inline-block;
-  transition: transform 0.15s ease;
-}
-
-.note-sidebar .tree-recents.collapsed .tree-recents-header .file-tree-toggle i {
-  transform: rotate(-90deg);
-}
-
-.note-sidebar .tree-recents-list {
-  flex: 0 0 auto;
-  overflow: visible;
-  padding: 0.25rem 0 0.5rem;
-}
-
-.note-sidebar .tree-recents.collapsed .tree-recents-list {
-  display: none;
-}
-
+/* Recent pane - reuses the tree row anatomy; rows are deliberately inert
+   for drag-and-drop. */
 .note-sidebar .tree-recent-matter {
   color: var(--color-muted);
   flex-shrink: 0;

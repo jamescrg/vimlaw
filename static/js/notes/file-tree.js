@@ -31,31 +31,7 @@ export function setupFileTree() {
   container.addEventListener("drop", onDrop);
 
   setupTreeCollapseAll(container);
-  container.addEventListener("htmx:afterSwap", () => {
-    updateTreeCollapseIcon();
-    applyRecentsState();
-  });
-  applyRecentsState();
-}
-
-// ─── Recent section (collapse is cosmetic → localStorage) ────────────────────
-
-const RECENTS_KEY = "notes-editor-recents-collapsed";
-
-function applyRecentsState() {
-  const recents = document.getElementById("tree-recents");
-  if (!recents) return;
-  recents.classList.toggle(
-    "collapsed",
-    localStorage.getItem(RECENTS_KEY) === "1",
-  );
-}
-
-function toggleRecents() {
-  const recents = document.getElementById("tree-recents");
-  if (!recents) return;
-  const collapsed = recents.classList.toggle("collapsed");
-  localStorage.setItem(RECENTS_KEY, collapsed ? "1" : "");
+  container.addEventListener("htmx:afterSwap", updateTreeCollapseIcon);
 }
 
 // ─── Collapse/expand all (header button, active pane only) ───────────────────
@@ -63,11 +39,11 @@ function toggleRecents() {
 function activePane() {
   const panel = document.querySelector(".note-panel-left");
   if (!panel) return null;
-  const cls =
-    panel.dataset.activePane === "matters"
-      ? ".tree-pane-matters"
-      : ".tree-pane-files";
-  return document.querySelector(cls);
+  const pane = panel.dataset.activePane;
+  if (pane === "recent") return null; // nothing to collapse there
+  return document.querySelector(
+    pane === "matters" ? ".tree-pane-matters" : ".tree-pane-files",
+  );
 }
 
 // All-or-nothing, like the outline's collapse-all: any expanded node means
@@ -117,10 +93,6 @@ function setupTreeCollapseAll(container) {
 // ─── Expand/collapse ─────────────────────────────────────────────────────────
 
 function onClick(e) {
-  if (e.target.closest(".tree-recents-header")) {
-    toggleRecents();
-    return;
-  }
   const handle = e.target.closest(".file-tree-toggle, .file-tree-name");
   if (!handle) return;
   const li = handle.closest(".file-tree-item");

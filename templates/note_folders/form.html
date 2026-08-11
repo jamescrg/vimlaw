@@ -1,13 +1,7 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">
-        {% if not edit %}
-          Add Folder
-        {% else %}
-          Edit Folder
-        {% endif %}
-      </h1>
+      <h1 class="modal-title">Edit Folder</h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
@@ -16,12 +10,12 @@
     </div>
     <div class="modal-body">
       {% comment %}
-      Notes tab swaps its sidebar (#note-folders); the editor has no such
-      element — its success response is 204 + triggers, so swap nothing.
+      Success responds 204 + triggers (tree refresh, modal close), so swap
+      nothing.
       {% endcomment %}
       <form id="note-folder-form"
             hx-post="{{ action }}"
-            {% if editor_context %}hx-swap="none"{% else %}hx-target="#note-folders" hx-swap="innerHTML"{% endif %}
+            hx-swap="none"
             class="form-compact"
             role="form">
         {% csrf_token %}

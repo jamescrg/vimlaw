@@ -22,25 +22,20 @@ class TestNoteView:
 
 
 class TestNotesAdd:
-    def test_notes_add_get(self, client_with_matter):
+    def test_instant_create_opens_editor(self, client_with_matter):
         matter = client_with_matter.matter
         url = reverse("case:notes-add", args=[matter.id])
-        response = client_with_matter.get(url)
-        assert response.status_code == 200
-
-    def test_notes_add_post(self, client_with_matter):
-        matter = client_with_matter.matter
-        url = reverse("case:notes-add", args=[matter.id])
-        response = client_with_matter.post(
-            url,
-            {
-                "title": "New Note",
-                "category": "analysis",
-                "date": "2024-01-15",
-            },
+        response = client_with_matter.post(url)
+        assert response.status_code == 204
+        note = Note.objects.get(matter=matter, title="Untitled")
+        assert response.headers["HX-Redirect"] == reverse(
+            "case:note-view", args=[note.id]
         )
-        assert response.status_code == 200
-        assert Note.objects.filter(title="New Note", matter=matter).exists()
+
+    def test_get_not_allowed(self, client_with_matter):
+        matter = client_with_matter.matter
+        url = reverse("case:notes-add", args=[matter.id])
+        assert client_with_matter.get(url).status_code == 405
 
 
 class TestNoteDelete:
@@ -118,30 +113,16 @@ class TestNoteSetAi:
 
 
 class TestAiLibraryFolderFlag:
-    def test_folder_add_saves_flag_and_queues_sweep(self, client):
+    def test_instant_folder_add_never_queues_sweep(self, client):
         from unittest.mock import patch
 
         from apps.notes.models import NoteFolder
 
         with patch("django_q.tasks.async_task") as async_task:
-            response = client.post(
-                reverse("notes:folder-add"),
-                {"name": "Library Test Folder", "ai_library": "True"},
-            )
+            response = client.post(reverse("notes:folder-add"))
         assert response.status_code == 204
-        folder = NoteFolder.objects.get(name="Library Test Folder")
-        assert folder.ai_library is True
-        assert async_task.called
-
-    def test_folder_add_without_flag_skips_sweep(self, client):
-        from unittest.mock import patch
-
-        with patch("django_q.tasks.async_task") as async_task:
-            response = client.post(
-                reverse("notes:folder-add"),
-                {"name": "Journal", "ai_library": "False"},
-            )
-        assert response.status_code == 204
+        folder = NoteFolder.objects.get(name="Untitled")
+        assert folder.ai_library is False
         assert not async_task.called
 
     def test_folder_edit_flag_change_queues_sweep(self, client):
@@ -520,40 +501,51 @@ class TestNoteFolderFormMatter:
 
 
 class TestFolderCrudEditorContext:
-    def test_add_matter_root_folder(self, client, matter):
+    def test_instant_add_matter_root_folder(self, client, matter):
         from apps.notes.models import NoteFolder
 
-        url = reverse("notes:folder-add") + f"?context=editor&matter={matter.id}"
-        get = client.get(url)
-        content = get.content.decode()
-        assert "ai_library" not in content  # matter folders can't join the library
-        assert (
-            f"?context=editor&amp;matter={matter.id}" in content
-        )  # action round-trips
-
-        resp = client.post(url, {"name": "Discovery"})
+        resp = client.post(reverse("notes:folder-add") + f"?matter={matter.id}")
         assert resp.status_code == 204
-        trigger = resp.headers["HX-Trigger"]
-        assert "noteFoldersChanged" in trigger
-        assert "closeModal" in trigger
-        folder = NoteFolder.objects.get(name="Discovery")
+        assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
+        folder = NoteFolder.objects.get(name="Untitled")
         assert folder.matter_id == matter.id
         assert folder.parent_id is None
 
-    def test_add_subfolder_inherits_matter_and_parent(self, client, matter):
+    def test_instant_add_subfolder_inherits_matter(self, client, matter):
         from apps.notes.models import NoteFolder
 
         parent = NoteFolder.objects.create(name="Case Files", matter=matter)
-        url = reverse("notes:folder-add") + f"?context=editor&parent={parent.id}"
-        get = client.get(url)
-        assert f'value="{parent.id}" selected' in get.content.decode()
-
-        resp = client.post(url, {"name": "Motions", "parent": parent.id})
+        resp = client.post(reverse("notes:folder-add") + f"?parent={parent.id}")
         assert resp.status_code == 204
-        folder = NoteFolder.objects.get(name="Motions")
+        folder = NoteFolder.objects.get(name="Untitled")
         assert folder.matter_id == matter.id
         assert folder.parent_id == parent.id
         assert folder.depth == 1
+        assert parent.id in client.session["note_folders_expanded"]
+
+    def test_instant_add_rejects_depth_cap(self, client):
+        from apps.notes.models import NoteFolder
+
+        f = None
+        for name in ("A", "B", "C", "D"):
+            f = NoteFolder.objects.create(name=name, parent=f)
+        resp = client.post(reverse("notes:folder-add") + f"?parent={f.id}")
+        assert resp.status_code == 400
+
+    def test_sequential_untitled_folders(self, client):
+        from apps.notes.models import NoteFolder
+
+        client.post(reverse("notes:folder-add"))
+        client.post(reverse("notes:folder-add"))
+        names = set(
+            NoteFolder.objects.filter(parent__isnull=True).values_list(
+                "name", flat=True
+            )
+        )
+        assert {"Untitled", "Untitled 1"} <= names
+
+    def test_get_not_allowed(self, client):
+        assert client.get(reverse("notes:folder-add")).status_code == 405
 
     def test_edit_editor_context(self, client, matter):
         from apps.notes.models import NoteFolder
@@ -649,16 +641,16 @@ class TestEditorTreeToggleAll:
 
 
 class TestStandaloneNoteAddEdit:
-    """Regression: 64a1161d passed user= to the title-only standalone
-    NoteForm, which crashed add/edit for general notes."""
-
-    def test_add_modal_and_post(self, client, user):
-        assert client.get(reverse("notes:add")).status_code == 200
-        resp = client.post(reverse("notes:add"), {"title": "Fresh note"})
-        assert resp.status_code == 200
-        note = Note.objects.get(title="Fresh note")
-        assert note.matter_id is None
-        assert note.author == user
+    def test_instant_create_and_sequential_names(self, client, user):
+        url = reverse("notes:add")
+        for expected in ("Untitled", "Untitled 1", "Untitled 2"):
+            resp = client.post(url)
+            assert resp.status_code == 204
+            note = Note.objects.get(title=expected)
+            assert note.matter_id is None
+            assert resp.headers["HX-Redirect"] == reverse(
+                "notes:note-view", args=[note.id]
+            )
 
 
 class TestNotesLaunch:
@@ -696,38 +688,39 @@ class TestAddIntoFolder:
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Inbox 2")
-        url = reverse("notes:add") + f"?folder={folder.id}&context=editor"
-        resp = client.post(url, {"title": "Filed on arrival"})
-        assert resp.status_code == 200
-        note = Note.objects.get(title="Filed on arrival")
+        resp = client.post(reverse("notes:add") + f"?folder={folder.id}")
+        assert resp.status_code == 204
+        note = Note.objects.get(title="Untitled")
         assert note.folder_id == folder.id
         assert folder.id in client.session["note_folders_expanded"]
-        assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
+
+    def test_untitled_names_scoped_per_folder(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Scoped")
+        client.post(reverse("notes:add"))  # root Untitled
+        resp = client.post(reverse("notes:add") + f"?folder={folder.id}")
+        assert resp.status_code == 204
+        # The folder had no Untitled yet, so no suffix
+        assert Note.objects.filter(title="Untitled").count() == 2
 
     def test_general_add_rejects_matter_folder(self, client, matter):
         from apps.notes.models import NoteFolder
 
         mfolder = NoteFolder.objects.create(name="Case", matter=matter)
-        resp = client.post(
-            reverse("notes:add") + f"?folder={mfolder.id}", {"title": "Nope"}
-        )
+        resp = client.post(reverse("notes:add") + f"?folder={mfolder.id}")
         assert resp.status_code == 400
-        assert not Note.objects.filter(title="Nope").exists()
+        assert Note.objects.count() == 0
 
     def test_matter_add_lands_in_folder(self, client_with_matter):
         from apps.notes.models import NoteFolder
 
         matter = client_with_matter.matter
         folder = NoteFolder.objects.create(name="Discovery", matter=matter)
-        url = (
-            reverse("case:notes-add", args=[matter.id])
-            + f"?folder={folder.id}&context=editor"
-        )
-        resp = client_with_matter.post(
-            url, {"title": "Motion notes", "category": "note"}
-        )
-        assert resp.status_code == 200
-        note = Note.objects.get(title="Motion notes")
+        url = reverse("case:notes-add", args=[matter.id]) + f"?folder={folder.id}"
+        resp = client_with_matter.post(url)
+        assert resp.status_code == 204
+        note = Note.objects.get(title="Untitled")
         assert note.folder_id == folder.id
         assert note.matter_id == matter.id
 
@@ -738,7 +731,7 @@ class TestAddIntoFolder:
         other = MatterModel.objects.create(name="Other", status="Open")
         ofolder = NoteFolder.objects.create(name="Elsewhere", matter=other)
         url = reverse("case:notes-add", args=[matter.id]) + f"?folder={ofolder.id}"
-        resp = client_with_matter.post(url, {"title": "Nope", "category": "note"})
+        resp = client_with_matter.post(url)
         assert resp.status_code == 400
 
 
@@ -838,10 +831,12 @@ class TestEditorRecents:
 
         resp = client.get(reverse("notes:editor-file-tree") + f"?note={general.id}")
         content = resp.content.decode()
-        assert "tree-recents" in content
-        # Most recent first; matter note links to the case editor URL
+        # The Recent pane is the LAST tree pane (so [data-note-id] lookups
+        # find tree rows before recents rows)
         start = content.index("tree-recents-list")
-        listing = content[start : content.index("tree-pane-files")]
+        assert "tree-pane" not in content[start:]
+        listing = content[start:]
+        # Most recent first; matter note links to the case editor URL
         assert listing.index("Matter recent") < listing.index("Gen recent")
         assert reverse("case:note-view", args=[mnote.id]) in listing
 

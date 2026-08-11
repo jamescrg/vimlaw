@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from apps.accounts.access import filter_matters_for_user
 from apps.matters.models import Matter
 
-from .forms import NoteFolderForm, NoteForm
+from .forms import NoteFolderForm
 from .models import Note, NoteFolder, NoteView
 from .tasks import queue_library_summary_sweep, queue_note_summary
 
@@ -158,12 +158,23 @@ def get_editor_file_tree(request, note):
     }
 
 
-@login_required
-def notes_add(request):
-    """Add a new standalone note, optionally into a folder (?folder=<id>).
+def _next_untitled(existing_names, base="Untitled"):
+    """Obsidian-style auto-name: Untitled, then Untitled 1, 2, ..."""
+    names = set(existing_names)
+    if base not in names:
+        return base
+    i = 1
+    while f"{base} {i}" in names:
+        i += 1
+    return f"{base} {i}"
 
-    The standalone NoteForm is title-only — unlike the case-side NoteForm,
-    it takes no user kwarg (there is no matter select to scope).
+
+@login_required
+@require_POST
+def notes_add(request):
+    """Create a general note instantly (no modal), optionally into a folder
+    (?folder=<id>), auto-named among its siblings. The HX-Redirect opens
+    the new note in the editor.
     """
     folder = None
     folder_id = request.GET.get("folder", "")
@@ -172,41 +183,21 @@ def notes_add(request):
         if folder.matter_id is not None:
             return HttpResponse("Folder belongs to another matter.", status=400)
 
-    if request.method == "POST":
-        form = NoteForm(request.POST, use_required_attribute=False)
-        if form.is_valid():
-            note = form.save(commit=False)
-            note.author = request.user
-            note.matter = None
-            note.folder = folder
-            note.save()
-            if folder:
-                _expand_folder_in_session(request, folder.pk)
-
-            # Open new note in a new browser tab; the editor context also
-            # refreshes the originating tab's trees
-            headers = {"HX-Trigger": "notesChanged"}
-            if request.GET.get("context") == "editor":
-                headers["HX-Trigger"] = json.dumps(
-                    {"notesChanged": True, "noteFoldersChanged": True}
-                )
-            note_url = reverse("notes:note-view", args=[note.id])
-            return HttpResponse(
-                f'<script>window.open("{note_url}", "_blank");'
-                "window.dispatchEvent(new CustomEvent('close-modal'));</script>",
-                headers=headers,
-            )
-    else:
-        form = NoteForm(use_required_attribute=False)
-
-    context = {
-        "app": "notes",
-        "form": form,
-        "action": "Add",
-        "add_qs": request.GET.urlencode(),
-    }
-
-    return render(request, "notes/form.html", context)
+    siblings = Note.objects.filter(matter__isnull=True, folder=folder).values_list(
+        "title", flat=True
+    )
+    note = Note.objects.create(
+        title=_next_untitled(siblings),
+        author=request.user,
+        matter=None,
+        folder=folder,
+    )
+    if folder:
+        _expand_folder_in_session(request, folder.pk)
+    return HttpResponse(
+        status=204,
+        headers={"HX-Redirect": reverse("notes:note-view", args=[note.id])},
+    )
 
 
 def record_note_view(user, note):
@@ -432,11 +423,13 @@ def _editor_crud_response():
 
 
 @login_required
+@require_POST
 def note_folder_add(request):
-    """Add a note folder (editor modal).
+    """Create a folder instantly (no modal), auto-named among its siblings.
 
-    ?parent=<id> presets "New subfolder" (matter inherited from the parent);
-    ?matter=<id> creates at a matter's root; neither means the general root.
+    ?parent=<id> creates a subfolder (matter inherited from the parent);
+    ?matter=<id> creates at a matter's root; neither means the general
+    root. Rename afterwards via the tree's context menu.
     """
     parent_id = request.GET.get("parent", "")
     matter_id = request.GET.get("matter", "")
@@ -444,29 +437,20 @@ def note_folder_add(request):
     if parent_id.isdigit():
         parent = get_object_or_404(NoteFolder, pk=parent_id)
         matter = parent.matter
+        if not parent.can_have_children():
+            return HttpResponse("Maximum folder depth (4 levels) exceeded.", status=400)
     elif matter_id.isdigit():
         matter = get_object_or_404(Matter, pk=matter_id)
 
-    if request.method == "POST":
-        form = NoteFolderForm(request.POST, matter=matter)
-        if form.is_valid():
-            form.save()
-            if form.cleaned_data.get("ai_library"):
-                queue_library_summary_sweep()
-            return _editor_crud_response()
-    else:
-        form = NoteFolderForm(matter=matter)
-        if parent and parent.can_have_children():
-            form.initial["parent"] = parent.pk
-
-    query = request.GET.urlencode()
-    context = {
-        "form": form,
-        "action": "/notes/folders/add/" + (f"?{query}" if query else ""),
-        "edit": False,
-        "editor_context": True,
-    }
-    return render(request, "note_folders/form.html", context)
+    siblings = NoteFolder.objects.filter(parent=parent, matter=matter).values_list(
+        "name", flat=True
+    )
+    NoteFolder.objects.create(
+        name=_next_untitled(siblings), parent=parent, matter=matter
+    )
+    if parent:
+        _expand_folder_in_session(request, parent.pk)
+    return _editor_crud_response()
 
 
 @login_required

@@ -121,15 +121,22 @@ function runAction(action) {
   const isMatter = li.classList.contains("file-tree-matter");
 
   if (action === "new-note") {
+    // Instant creation: an Untitled note in this folder/matter root; the
+    // HX-Redirect opens it
     const folderParam = li.dataset.folderId
-      ? "&folder=" + li.dataset.folderId
+      ? "?folder=" + li.dataset.folderId
       : "";
-    openModal(li.dataset.noteAddUrl + "?context=editor" + folderParam);
+    window.htmx.ajax("POST", li.dataset.noteAddUrl + folderParam, {
+      swap: "none",
+    });
   } else if (action === "new") {
+    // Instant creation: an Untitled folder here; rename via this menu
     const scope = isMatter
       ? "matter=" + li.dataset.matterId
       : "parent=" + li.dataset.folderId;
-    openModal(container.dataset.folderAddUrl + "?context=editor&" + scope);
+    window.htmx.ajax("POST", container.dataset.folderAddUrl + "?" + scope, {
+      swap: "none",
+    });
   } else if (action === "properties") {
     openModal(li.dataset.propertiesUrl);
   } else if (action === "rename") {
