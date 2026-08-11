@@ -19,6 +19,11 @@
         n.removeAttribute("class");
         n.removeAttribute("id");
       });
+      // Paragraph gaps on screen come from the chat stylesheet, which doesn't
+      // travel with the clipboard; email composers default <p> to no margin.
+      root.querySelectorAll("p").forEach((p) => {
+        p.style.margin = "0 0 0.75em";
+      });
       return root;
     };
   }

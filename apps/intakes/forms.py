@@ -152,3 +152,5 @@ class NoteForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.renderer = CustomFormRendererCompact()
+        if not self.instance.pk and not self.initial.get("type"):
+            self.initial["type"] = "Comment"

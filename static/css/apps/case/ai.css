@@ -514,6 +514,13 @@
   color: var(--label-green-line);
 }
 
+/* Model switcher: the header badge is a <select>; strip the UA chrome so
+   the .app-badge look carries, and signal it's interactive. */
+select.ai-llm-pill {
+  appearance: none;
+  cursor: pointer;
+}
+
 /* New conversation buttons */
 .ai-new-btn {
   align-items: center;

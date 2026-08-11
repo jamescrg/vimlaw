@@ -1,0 +1,30 @@
+{% comment %}
+Model badge for the conversation header. Saved conversations render it
+as a select so the model can be switched mid-conversation (the toolbar
+dropdown on the AI tab only sets the default for NEW chats; sends always
+use conversation.llm). Unsaved previews stay a static badge until the
+first send creates the row.
+{% endcomment %}
+{% if not conversation.id %}
+  <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
+{% else %}
+  <select id="llmPill"
+          name="llm"
+          class="app-badge badge-lg ai-llm-pill ai-llm-{{ conversation.llm }}"
+          hx-post="{% url 'case:ai-set-llm' conversation.id %}"
+          hx-target="#llmPill"
+          hx-swap="outerHTML"
+          title="Model for this conversation">
+    {% if conversation.get_llm_display == conversation.llm %}
+      {% comment %}
+      Retired key: get_llm_display falls back to the raw key when the
+      stored value is no longer in LLM_CHOICES. Keep it visible and
+      selected; picking any current model moves off it for good.
+      {% endcomment %}
+      <option value="{{ conversation.llm }}" selected>{{ conversation.llm }}</option>
+    {% endif %}
+    {% for key, label in conversation.LLM_CHOICES %}
+      <option value="{{ key }}" {% if key == conversation.llm %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+{% endif %}
