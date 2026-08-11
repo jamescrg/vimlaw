@@ -611,3 +611,94 @@ class TestNoteFolderFormMatter:
         saved = form.save()
         assert saved.matter_id == matter.id
         assert saved.name == "Renamed"
+
+
+class TestFolderCrudEditorContext:
+    def test_add_matter_root_folder(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        url = reverse("notes:folder-add") + f"?context=editor&matter={matter.id}"
+        get = client.get(url)
+        content = get.content.decode()
+        assert "ai_library" not in content  # matter folders can't join the library
+        assert (
+            f"?context=editor&amp;matter={matter.id}" in content
+        )  # action round-trips
+
+        resp = client.post(url, {"name": "Discovery"})
+        assert resp.status_code == 204
+        trigger = resp.headers["HX-Trigger"]
+        assert "noteFoldersChanged" in trigger
+        assert "closeModal" in trigger
+        folder = NoteFolder.objects.get(name="Discovery")
+        assert folder.matter_id == matter.id
+        assert folder.parent_id is None
+
+    def test_add_subfolder_inherits_matter_and_parent(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        parent = NoteFolder.objects.create(name="Case Files", matter=matter)
+        url = reverse("notes:folder-add") + f"?context=editor&parent={parent.id}"
+        get = client.get(url)
+        assert f'value="{parent.id}" selected' in get.content.decode()
+
+        resp = client.post(url, {"name": "Motions", "parent": parent.id})
+        assert resp.status_code == 204
+        folder = NoteFolder.objects.get(name="Motions")
+        assert folder.matter_id == matter.id
+        assert folder.parent_id == parent.id
+        assert folder.depth == 1
+
+    def test_edit_editor_context(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Old", matter=matter)
+        url = reverse("notes:folder-edit", args=[folder.id]) + "?context=editor&note=1"
+        resp = client.post(url, {"name": "New"})
+        assert resp.status_code == 204
+        assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
+        folder.refresh_from_db()
+        assert folder.name == "New"
+
+    def test_notes_tab_add_unchanged(self, client):
+        from apps.notes.models import NoteFolder
+
+        resp = client.post(
+            reverse("notes:folder-add"), {"name": "General", "ai_library": "False"}
+        )
+        assert resp.status_code == 202  # Notes-tab shape preserved
+        assert NoteFolder.objects.get(name="General").matter_id is None
+
+    def test_delete_open_note_redirects(self, client, user, matter):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Doomed", matter=matter)
+        note = Note.objects.create(
+            author=user, title="Inside", matter=matter, folder=folder
+        )
+        url = (
+            reverse("notes:folder-delete", args=[folder.id])
+            + f"?delete_notes=true&context=editor&note={note.id}"
+        )
+        resp = client.delete(url)
+        assert resp.status_code == 204
+        assert resp.headers.get("HX-Redirect") == reverse("notes:index")
+        assert not Note.objects.filter(pk=note.id).exists()
+
+    def test_delete_keeping_notes_refreshes(self, client, user, matter):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Emptied", matter=matter)
+        note = Note.objects.create(
+            author=user, title="Survivor", matter=matter, folder=folder
+        )
+        url = (
+            reverse("notes:folder-delete", args=[folder.id])
+            + f"?context=editor&note={note.id}"
+        )
+        resp = client.delete(url)
+        assert resp.status_code == 204
+        assert resp.headers.get("HX-Refresh") == "true"
+        note.refresh_from_db()
+        assert note.folder_id is None
+        assert note.matter_id == matter.id

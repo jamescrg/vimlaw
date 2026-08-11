@@ -47,6 +47,10 @@ class NoteFolderForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
             matter = self.instance.matter  # edits never change scope
+        else:
+            # Stamp before validation: the ModelForm's _post_clean runs the
+            # model's full_clean (matter-homogeneity check) pre-save
+            self.instance.matter = matter
         self.matter = matter
         self.fields["name"].required = True
         self.fields["parent"].required = False
@@ -72,14 +76,6 @@ class NoteFolderForm(forms.ModelForm):
             indent = "\u00a0\u00a0\u00a0\u00a0" * folder.depth
             choices.append((folder.pk, f"{indent}{folder.name}"))
         self.fields["parent"].choices = choices
-
-    def save(self, commit=True):
-        folder = super().save(commit=False)
-        if not folder.pk:
-            folder.matter = self.matter
-        if commit:
-            folder.save()  # full save → full_clean runs the matter check
-        return folder
 
 
 class NoteFolderMoveForm(forms.Form):

@@ -35,7 +35,8 @@
       </div>
       <div class="panel-pane files-pane note-sidebar">
         <div id="file-tree-container"
-             data-refresh-url="{% url 'notes:editor-file-tree' %}">{% include "notes/editor-trees.html" %}</div>
+             data-refresh-url="{% url 'notes:editor-file-tree' %}"
+             data-folder-add-url="{% url 'notes:folder-add' %}">{% include "notes/editor-trees.html" %}</div>
       </div>
       <!-- Collapsed-rail shortcut: expand the panel -->
       <div class="panel-rail">
@@ -130,6 +131,18 @@
       </div>
       <div class="note-page standalone">
         <div id="note-editor-container">{% include "notes/editor-content.html" %}</div>
+      </div>
+      <!-- Tree context menu (folder/matter rows in the left panel) -->
+      <div id="tree-context-menu" class="dropdown-menu">
+        <li>
+          <a class="dropdown-item" href="#" data-action="new"><i class="icon-folder-plus"></i> <span data-label>New subfolder</span></a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#" data-action="rename"><i class="icon-pencil"></i> Rename</a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#" data-action="delete"><i class="icon-trash"></i> Delete</a>
+        </li>
       </div>
       <!-- Highlight reference dropdown -->
       <div id="highlight-ref-dropdown" class="dropdown-menu">

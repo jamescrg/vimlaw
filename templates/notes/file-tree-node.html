@@ -12,9 +12,17 @@ the folder's own tree.
     data-depth="{{ node.folder.depth }}"
     data-matter-id="{{ node.folder.matter_id|default_if_none:'' }}"
     data-toggle-url="{% url 'notes:folder-toggle' node.folder.id %}"
-    data-reparent-url="{% url 'notes:folder-reparent' node.folder.id %}">
+    data-reparent-url="{% url 'notes:folder-reparent' node.folder.id %}"
+    data-edit-url="{% url 'notes:folder-edit' node.folder.id %}"
+    data-delete-url="{% url 'notes:folder-delete-confirm' node.folder.id %}">
   <span class="file-tree-toggle"><i class="icon-chevron-down"></i></span>
   <span class="file-tree-name">{{ node.folder.name }}</span>
+  <button type="button"
+          class="file-tree-menu-btn"
+          tabindex="-1"
+          title="Folder actions">
+    <i class="icon-ellipsis"></i>
+  </button>
   <ul class="file-tree-children">
     {% for child in node.children %}
       {% with node=child %}

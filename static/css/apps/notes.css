@@ -369,6 +369,32 @@ body:has(.note-page.standalone) {
   font-weight: 500;
 }
 
+/* Hover kebab on folder/matter rows opens the tree context menu.
+   Direct-child selector so a hovered parent doesn't reveal every
+   descendant row's kebab too. */
+.note-sidebar .file-tree-menu-btn {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-muted);
+  cursor: pointer;
+  display: none;
+  flex-shrink: 0;
+  font-size: 1rem;
+  justify-content: center;
+  padding: 0.25rem;
+}
+
+.note-sidebar :is(.file-tree-folder, .file-tree-matter):hover > .file-tree-menu-btn {
+  display: flex;
+}
+
+.note-sidebar .file-tree-menu-btn:hover {
+  background: var(--background-subnav);
+  color: var(--color-primary);
+}
+
 .note-sidebar .file-tree-note {
   color: var(--color-primary);
   cursor: pointer;

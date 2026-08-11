@@ -15,10 +15,13 @@
       </div>
     </div>
     <div class="modal-body">
+      {% comment %}
+      Notes tab swaps its sidebar (#note-folders); the editor has no such
+      element — its success response is 204 + triggers, so swap nothing.
+      {% endcomment %}
       <form id="note-folder-form"
             hx-post="{{ action }}"
-            hx-target="#note-folders"
-            hx-swap="innerHTML"
+            {% if editor_context %}hx-swap="none"{% else %}hx-target="#note-folders" hx-swap="innerHTML"{% endif %}
             class="form-compact"
             role="form">
         {% csrf_token %}
@@ -36,20 +39,23 @@
             {% if form.name.errors %}<div class="text-danger">{{ form.name.errors }}</div>{% endif %}
           </div>
         </div>
-        <div class="form-group">
-          <label for="{{ form.ai_library.id_for_label }}">{{ form.ai_library.label }}</label>
-          <div>
-            {{ form.ai_library }}
-            {% if form.ai_library.errors %}<div class="text-danger">{{ form.ai_library.errors }}</div>{% endif %}
+        {% comment %}Matter folders have no ai_library field.{% endcomment %}
+        {% if "ai_library" in form.fields %}
+          <div class="form-group">
+            <label for="{{ form.ai_library.id_for_label }}">{{ form.ai_library.label }}</label>
+            <div>
+              {{ form.ai_library }}
+              {% if form.ai_library.errors %}<div class="text-danger">{{ form.ai_library.errors }}</div>{% endif %}
+            </div>
           </div>
-        </div>
+        {% endif %}
       </form>
     </div>
     <div class="modal-footer">
       {% if edit %}
         <button type="button"
                 class="btn btn-danger"
-                hx-get="{% url 'notes:folder-delete-confirm' folder.id %}"
+                hx-get="{% url 'notes:folder-delete-confirm' folder.id %}{% if editor_context %}?{{ extra_qs }}{% endif %}"
                 hx-target="#htmx-modal-container"
                 hx-swap="innerHTML">Delete</button>
       {% else %}

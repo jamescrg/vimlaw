@@ -29,7 +29,8 @@ import { HighlightMark } from "./highlight-mark.js";
 import { PlainCopy } from "./plain-copy.js";
 
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
-import { setupFileTree } from "./notes/file-tree.js";
+import { setupFileTree, refreshTree } from "./notes/file-tree.js";
+import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
 import {
@@ -792,6 +793,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setupLeftTabs();
   syncPanelIcons();
   setupFileTree();
+  setupTreeMenu();
+  // Folder CRUD modals (tree context menu) announce success via HX-Trigger
+  document.body.addEventListener("noteFoldersChanged", refreshTree);
   initEditor();
   setupHtmxHandlers();
   setupOutlineCollapseAll();

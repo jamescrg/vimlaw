@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.db.models.functions import Lower
@@ -754,44 +756,77 @@ def note_folder_all(request):
     return redirect("notes:index")
 
 
+def _editor_crud_response():
+    """Editor-context success: refresh the trees and close the modal."""
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps({"noteFoldersChanged": True, "closeModal": True})
+        },
+    )
+
+
 @login_required
 def note_folder_add(request):
-    """Add a new note folder."""
+    """Add a note folder (Notes-tab modal, or editor context menu).
+
+    Editor context arrives as ?context=editor plus either ?parent=<id>
+    ("New subfolder", matter inherited from the parent) or ?matter=<id>
+    ("New folder" at a matter's root).
+    """
+    editor = request.GET.get("context") == "editor"
+    parent_id = request.GET.get("parent", "")
+    matter_id = request.GET.get("matter", "")
+    parent = matter = None
+    if parent_id.isdigit():
+        parent = get_object_or_404(NoteFolder, pk=parent_id)
+        matter = parent.matter
+    elif matter_id.isdigit():
+        matter = get_object_or_404(Matter, pk=matter_id)
+
     if request.method == "POST":
-        form = NoteFolderForm(request.POST)
+        form = NoteFolderForm(request.POST, matter=matter)
         if form.is_valid():
             form.save()
             if form.cleaned_data.get("ai_library"):
                 queue_library_summary_sweep()
+            if editor:
+                return _editor_crud_response()
             context = get_note_folders_data(request)
             response = render(request, "note_folders/list.html", context)
             response.status_code = 202
             response["HX-Trigger-After-Swap"] = "closeModal"
             return response
     else:
-        form = NoteFolderForm()
-        # Pre-fill parent if a folder is currently selected
-        selected_folder_id = request.session.get("notes_selected_folder_id")
-        if selected_folder_id:
-            try:
-                selected = NoteFolder.objects.get(pk=selected_folder_id)
-                if selected.can_have_children():
-                    form.initial["parent"] = selected.pk
-            except NoteFolder.DoesNotExist:
-                pass
+        form = NoteFolderForm(matter=matter)
+        if parent and parent.can_have_children():
+            form.initial["parent"] = parent.pk
+        elif not editor:
+            # Notes tab: pre-fill parent if a folder is currently selected
+            selected_folder_id = request.session.get("notes_selected_folder_id")
+            if selected_folder_id:
+                try:
+                    selected = NoteFolder.objects.get(pk=selected_folder_id)
+                    if selected.can_have_children():
+                        form.initial["parent"] = selected.pk
+                except NoteFolder.DoesNotExist:
+                    pass
 
+    query = request.GET.urlencode()
     context = {
         "form": form,
-        "action": "/notes/folders/add/",
+        "action": "/notes/folders/add/" + (f"?{query}" if query else ""),
         "edit": False,
+        "editor_context": editor,
     }
     return render(request, "note_folders/form.html", context)
 
 
 @login_required
 def note_folder_edit(request, folder_id):
-    """Edit a note folder."""
+    """Edit a note folder (Notes-tab modal, or editor context menu)."""
     folder = get_object_or_404(NoteFolder, pk=folder_id)
+    editor = request.GET.get("context") == "editor"
 
     if request.method == "POST":
         form = NoteFolderForm(request.POST, instance=folder, exclude_folder=folder)
@@ -806,6 +841,8 @@ def note_folder_edit(request, folder_id):
                 folder.update_descendant_depths()
             if "ai_library" in form.changed_data or "parent" in form.changed_data:
                 queue_library_summary_sweep()
+            if editor:
+                return _editor_crud_response()
             context = get_note_folders_data(request)
             response = render(request, "note_folders/list.html", context)
             response.status_code = 202
@@ -814,11 +851,14 @@ def note_folder_edit(request, folder_id):
     else:
         form = NoteFolderForm(instance=folder, exclude_folder=folder)
 
+    query = request.GET.urlencode()
     context = {
         "form": form,
-        "action": f"/notes/folders/edit/{folder_id}",
+        "action": f"/notes/folders/edit/{folder_id}" + (f"?{query}" if query else ""),
         "edit": True,
         "folder": folder,
+        "editor_context": editor,
+        "extra_qs": query if editor else "",
     }
     return render(request, "note_folders/form.html", context)
 
@@ -831,10 +871,15 @@ def note_folder_delete_confirm(request, folder_id):
     descendants = folder.get_descendants()
     subfolder_count = len(descendants)
 
+    # Editor context (plus the open note's id) rides the querystring so the
+    # delete endpoint can redirect if the open note gets deleted with the
+    # folder.
+    editor = request.GET.get("context") == "editor"
     context = {
         "folder": folder,
         "note_count": note_count,
         "subfolder_count": subfolder_count,
+        "extra_qs": request.GET.urlencode() if editor else "",
     }
     return render(request, "note_folders/delete-confirm.html", context)
 
@@ -872,6 +917,16 @@ def note_folder_delete(request, folder_id):
         request.session["notes_selected_folder_id"] = None
 
     folder.delete()
+
+    # Editor context: if the open note went down with the folder, a plain
+    # refresh would 404 — send the user to the notes index instead.
+    note_id = request.GET.get("note", "")
+    if (
+        request.GET.get("context") == "editor"
+        and note_id.isdigit()
+        and not Note.objects.filter(pk=note_id).exists()
+    ):
+        return HttpResponse(status=204, headers={"HX-Redirect": reverse("notes:index")})
 
     return HttpResponse(status=204, headers={"HX-Refresh": "true"})
 

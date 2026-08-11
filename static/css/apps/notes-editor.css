@@ -313,12 +313,14 @@
   text-decoration: underline;
 }
 
-/* Highlight reference dropdown */
-#highlight-ref-dropdown {
+/* Floating menus: highlight references + the file-tree context menu */
+#highlight-ref-dropdown,
+#tree-context-menu {
   z-index: 1050;
 }
 
-#highlight-ref-dropdown.show {
+#highlight-ref-dropdown.show,
+#tree-context-menu.show {
   display: block;
 }
 

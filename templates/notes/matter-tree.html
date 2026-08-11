@@ -12,6 +12,12 @@ move endpoints guard server-side).
         data-toggle-url="{% url 'notes:matter-toggle' entry.matter.id %}">
       <span class="file-tree-toggle"><i class="icon-chevron-down"></i></span>
       <span class="file-tree-name">{{ entry.matter.name }}</span>
+      <button type="button"
+              class="file-tree-menu-btn"
+              tabindex="-1"
+              title="Matter actions">
+        <i class="icon-ellipsis"></i>
+      </button>
       <ul class="file-tree-children">
         {% for node in entry.file_tree %}
           {% include "notes/file-tree-node.html" %}
