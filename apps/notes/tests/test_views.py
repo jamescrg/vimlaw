@@ -870,7 +870,7 @@ class TestLibrarySparkles:
         content = resp.content.decode()
 
         def row(name):
-            start = content.index(f">{name}</span>")
+            start = content.index(name)
             return content[start : start + 300]
 
         assert 'title="In AI library"' in row("Firm Library")

@@ -17,13 +17,19 @@ the folder's own tree.
     data-delete-url="{% url 'notes:folder-delete-confirm' node.folder.id %}"
     data-note-add-url="{% if node.folder.matter_id %}{% url 'case:notes-add' node.folder.matter_id %}{% else %}{% url 'notes:add' %}{% endif %}">
   <span class="file-tree-toggle"><i class="icon-chevron-down"></i></span>
-  <span class="file-tree-name">{{ node.folder.name }}</span>
-  {% if node.own_library_flag %}
-    <i class="icon-sparkle file-tree-library" title="In AI library"></i>
-  {% elif node.in_library %}
-    <i class="icon-sparkle file-tree-library file-tree-library-inherited"
-       title="In AI library (from parent folder)"></i>
-  {% endif %}
+  {% comment %}
+  The sparkle lives INSIDE the name span so it hugs the end of the text
+  (the span's flex:1 stretch would otherwise push it to the row edge).
+  {% endcomment %}
+  <span class="file-tree-name">
+    {{ node.folder.name }}
+    {% if node.own_library_flag %}
+      <i class="icon-sparkle file-tree-library" title="In AI library"></i>
+    {% elif node.in_library %}
+      <i class="icon-sparkle file-tree-library file-tree-library-inherited"
+         title="In AI library (from parent folder)"></i>
+    {% endif %}
+  </span>
   <button type="button"
           class="file-tree-menu-btn"
           tabindex="-1"
