@@ -1,9 +1,10 @@
 {% load humanize %}
-{% if note.is_synced %}
-  Synced from Google Drive
-  {% if note.drive_synced_at %}{{ note.drive_synced_at|naturaltime }}{% endif %}
-  {% if note.drive_path %}· <span class="note-drive-path">{{ note.drive_path }}</span>{% endif %}
-{% elif note.updated_at %}
+{% if note.updated_at %}
   Updated {{ note.updated_at|naturaltime }}
   {% if note.updated_by %}by {{ note.updated_by.get_full_name|default:note.updated_by.username }}{% endif %}
+{% endif %}
+{% comment %}Provenance for notes created by the retired Drive sync.{% endcomment %}
+{% if note.is_synced %}
+  · Imported from Google Drive
+  {% if note.drive_path %}(<span class="note-drive-path">{{ note.drive_path }}</span>){% endif %}
 {% endif %}

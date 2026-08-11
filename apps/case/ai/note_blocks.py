@@ -119,7 +119,8 @@ def _apply_create(match, matter, requesting_user):
 
 def _editable_note(note_id, matter):
     """Resolve an edit target the AI may touch: this matter's notes or
-    firm-library notes — never synced or AI-hidden ones."""
+    firm-library notes — never AI-hidden ones. (Drive-imported notes are
+    app-owned since the sync retired and are editable like any other.)"""
     try:
         note = Note.objects.get(id=int(note_id))
     except (Note.DoesNotExist, TypeError, ValueError):
@@ -129,7 +130,7 @@ def _editable_note(note_id, matter):
     in_library = note.matter_id is None and note.folder_id in library_folder_ids()
     if not (in_matter or in_library):
         return None
-    if note.drive_file_id or note.ai_context == "never":
+    if note.ai_context == "never":
         return None
     return note
 

@@ -90,8 +90,7 @@ def test_removal_leaves_document_intact(matter, proceeding, fake_drive):
     # Deleted in Drive: only a fileId arrives. Append-only mirror keeps it.
     del fake_drive.files_by_id["f1"]
     fake_drive.change_feed = [fake_drive.change_for("f1", removed=True)]
-    stats = google.sync()
-    assert stats["removed"] == 0
+    google.sync()
     assert Document.objects.count() == 1
 
     # A later full pass keeps it too (no stale reconciliation for records).
@@ -152,8 +151,8 @@ def test_tombstone_blocks_reingest(matter, proceeding, fake_drive):
     assert Document.objects.count() == 0
 
 
-def test_notes_regression_sync_and_removal(matter, proceeding, fake_drive):
-    """The notes mirror keeps its exact semantics beside the record path."""
+def test_notes_mirror_retired(matter, proceeding, fake_drive):
+    """Files under Notes/ are ignored, and removals never touch Note rows."""
     fake_drive.add_file(
         "n1",
         "memo.md",
@@ -161,17 +160,17 @@ def test_notes_regression_sync_and_removal(matter, proceeding, fake_drive):
         mime="text/markdown",
         content=b"# Memo\ncontent",
     )
-    stats = google.sync(full=True)
-    assert stats["converted"] == 1
-    note = Note.objects.get(drive_file_id="n1")
-    assert note.matter == matter
-
-    # Note removal still deletes the Note (unlike record Documents).
-    del fake_drive.files_by_id["n1"]
-    fake_drive.change_feed = [fake_drive.change_for("n1", removed=True)]
-    stats = google.sync()
-    assert stats["removed"] == 1
+    google.sync(full=True)
     assert not Note.objects.filter(drive_file_id="n1").exists()
+
+    # A previously synced (now app-owned) note survives its Drive file's
+    # deletion — the changes feed no longer deletes notes.
+    note = Note.objects.create(
+        title="Legacy", matter=matter, drive_file_id="legacy1", content="kept"
+    )
+    fake_drive.change_feed = [fake_drive.change_for("legacy1", removed=True)]
+    google.sync()
+    assert Note.objects.filter(pk=note.pk).exists()
 
 
 def test_date_prefix_names_the_document(matter, proceeding, fake_drive):

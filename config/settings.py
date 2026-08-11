@@ -410,10 +410,6 @@ COURTLISTENER_API_TOKEN = env("COURTLISTENER_API_KEY", default="")
 # Google Drive case-notes sync
 # Root Drive folder whose <matter>/Notes/** files are synced into Note records.
 DRIVE_NOTES_ROOT = env("DRIVE_NOTES_ROOT", default="Matters - Open")
-# Optional opt-in debug mirror: if set, the converted Markdown is ALSO written to
-# this local directory for inspection. Canonical storage is Note.content in the DB;
-# leave blank to disable. (e.g. os.path.join(BASE_DIR, "drive_notes"))
-DRIVE_NOTES_DEBUG_DIR = env("DRIVE_NOTES_DEBUG_DIR", default="")
 # Optional: set if "Matters - Open" lives in a Shared Drive rather than My Drive.
 DRIVE_SHARED_DRIVE_ID = env("DRIVE_SHARED_DRIVE_ID", default="")
 # Any folder with this name inside a matter's Drive folder is a curated

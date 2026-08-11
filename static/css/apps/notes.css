@@ -1227,23 +1227,6 @@ body:has(.note-page.standalone) {
   white-space: nowrap;
 }
 
-.note-synced-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-medium);
-  border-radius: 0.375rem;
-  color: var(--color-muted);
-  background: var(--background-section);
-}
-
-.note-readonly .note-title-input {
-  color: var(--color-primary);
-  cursor: default;
-}
-
 .note-drive-path {
   color: var(--color-muted);
   font-family: monospace;

@@ -197,7 +197,6 @@ def fake_drive(monkeypatch, settings, db):
     """
     settings.DRIVE_NOTES_ROOT = "Matters - Open"
     settings.DRIVE_SHARED_DRIVE_ID = ""
-    settings.DRIVE_NOTES_DEBUG_DIR = ""
 
     service = FakeDriveService()
     service.add_folder("root1", "Matters - Open")
