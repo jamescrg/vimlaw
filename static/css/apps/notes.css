@@ -359,14 +359,9 @@ body:has(.note-page.standalone) {
   color: var(--color-secondary);
 }
 
-/* Matter nodes: same anatomy as folders, weighted as tree roots
-   (500 is the project's weight ceiling) */
+/* Matter nodes: same anatomy and voice as folders */
 .note-sidebar .file-tree-matter {
   color: var(--color-secondary);
-}
-
-.note-sidebar .file-tree-matter > .file-tree-name {
-  font-weight: 500;
 }
 
 /* Hover kebab on folder/matter rows opens the tree context menu.

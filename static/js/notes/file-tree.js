@@ -29,6 +29,65 @@ export function setupFileTree() {
   container.addEventListener("dragover", onDragOver);
   container.addEventListener("dragleave", onDragLeave);
   container.addEventListener("drop", onDrop);
+
+  setupTreeCollapseAll(container);
+  container.addEventListener("htmx:afterSwap", updateTreeCollapseIcon);
+}
+
+// ─── Collapse/expand all (header button, active pane only) ───────────────────
+
+function activePane() {
+  const panel = document.querySelector(".note-panel-left");
+  if (!panel) return null;
+  const cls =
+    panel.dataset.activePane === "matters"
+      ? ".tree-pane-matters"
+      : ".tree-pane-files";
+  return document.querySelector(cls);
+}
+
+// All-or-nothing, like the outline's collapse-all: any expanded node means
+// the button collapses everything. The icon shows the action it will take.
+export function updateTreeCollapseIcon() {
+  const btn = document.getElementById("tree-collapse-btn");
+  const pane = activePane();
+  if (!btn || !pane) return;
+  const anyExpanded = pane.querySelector(
+    ".file-tree-folder:not(.collapsed), .file-tree-matter:not(.collapsed)",
+  );
+  btn.querySelector("i").className = anyExpanded
+    ? "icon-chevrons-down-up"
+    : "icon-chevrons-up-down";
+}
+
+function setupTreeCollapseAll(container) {
+  const btn = document.getElementById("tree-collapse-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const pane = activePane();
+    if (!pane) return;
+    const expand = !pane.querySelector(
+      ".file-tree-folder:not(.collapsed), .file-tree-matter:not(.collapsed)",
+    );
+    pane
+      .querySelectorAll(".file-tree-folder, .file-tree-matter")
+      .forEach((li) => li.classList.toggle("collapsed", !expand));
+    // Fire-and-forget: persist the whole pane's expansion state
+    const paneName = pane.classList.contains("tree-pane-matters")
+      ? "matters"
+      : "files";
+    fetch(
+      `${container.dataset.toggleAllUrl}?pane=${paneName}&expand=${expand}`,
+      {
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRFToken() },
+      },
+    );
+    updateTreeCollapseIcon();
+  });
+
+  updateTreeCollapseIcon();
 }
 
 // ─── Expand/collapse ─────────────────────────────────────────────────────────
@@ -55,6 +114,7 @@ function onClick(e) {
     method: "POST",
     headers: { "X-CSRFToken": getCSRFToken() },
   });
+  updateTreeCollapseIcon();
 }
 
 // ─── Drag and drop ───────────────────────────────────────────────────────────

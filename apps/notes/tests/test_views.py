@@ -702,3 +702,50 @@ class TestFolderCrudEditorContext:
         note.refresh_from_db()
         assert note.folder_id is None
         assert note.matter_id == matter.id
+
+
+class TestEditorTreeToggleAll:
+    def test_files_pane_scopes_general_only(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        general = NoteFolder.objects.create(name="G")
+        mfolder = NoteFolder.objects.create(name="M", matter=matter)
+        url = reverse("notes:editor-tree-toggle-all")
+
+        resp = client.post(url + "?pane=files&expand=true")
+        assert resp.status_code == 204
+        expanded = set(client.session["note_folders_expanded"])
+        assert general.id in expanded
+        assert mfolder.id not in expanded
+
+        client.post(url + "?pane=files&expand=false")
+        assert general.id not in set(client.session["note_folders_expanded"])
+
+    def test_matters_pane_flips_folders_and_matter_nodes(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        general = NoteFolder.objects.create(name="G")
+        mfolder = NoteFolder.objects.create(name="M", matter=matter)
+        url = reverse("notes:editor-tree-toggle-all")
+
+        # General folder expansion must survive a matters-pane sweep
+        session = client.session
+        session["note_folders_expanded"] = [general.id]
+        session.save()
+
+        client.post(url + "?pane=matters&expand=true")
+        expanded = set(client.session["note_folders_expanded"])
+        assert mfolder.id in expanded
+        assert general.id in expanded
+        assert matter.id in client.session["note_matters_expanded"]
+
+        client.post(url + "?pane=matters&expand=false")
+        expanded = set(client.session["note_folders_expanded"])
+        assert mfolder.id not in expanded
+        assert general.id in expanded  # untouched
+        assert client.session["note_matters_expanded"] == []
+
+    def test_invalid_pane_rejected(self, client):
+        url = reverse("notes:editor-tree-toggle-all")
+        assert client.post(url + "?pane=everything&expand=true").status_code == 400
+        assert client.get(url + "?pane=files&expand=true").status_code == 405

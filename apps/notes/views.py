@@ -1015,6 +1015,39 @@ def note_folder_toggle_expand(request, folder_id):
 
 @login_required
 @require_POST
+def editor_tree_toggle_all(request):
+    """Expand or collapse every node of one editor pane (files|matters).
+
+    Scoped set-union/difference on the shared folder session key so the
+    other pane's state (and the Notes tab's) survives; the matters pane
+    also flips its matter-node key.
+    """
+    pane = request.GET.get("pane")
+    expand = request.GET.get("expand") == "true"
+    if pane not in ("files", "matters"):
+        return HttpResponse("pane must be files or matters", status=400)
+
+    folder_ids = set(
+        NoteFolder.objects.filter(matter__isnull=(pane == "files")).values_list(
+            "pk", flat=True
+        )
+    )
+    current = set(request.session.get("note_folders_expanded", []))
+    updated = (current | folder_ids) if expand else (current - folder_ids)
+    request.session["note_folders_expanded"] = list(updated)
+
+    if pane == "matters":
+        request.session["note_matters_expanded"] = (
+            list(Matter.objects.filter(status="Open").values_list("pk", flat=True))
+            if expand
+            else []
+        )
+    request.session.modified = True
+    return HttpResponse(status=204)
+
+
+@login_required
+@require_POST
 def note_matter_toggle_expand(request, matter_id):
     """Toggle a matter node's expand state in the editor's Matters pane."""
     expanded = request.session.get("note_matters_expanded", [])

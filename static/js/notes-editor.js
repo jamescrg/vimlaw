@@ -29,7 +29,11 @@ import { HighlightMark } from "./highlight-mark.js";
 import { PlainCopy } from "./plain-copy.js";
 
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
-import { setupFileTree, refreshTree } from "./notes/file-tree.js";
+import {
+  setupFileTree,
+  refreshTree,
+  updateTreeCollapseIcon,
+} from "./notes/file-tree.js";
 import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
@@ -646,6 +650,7 @@ function setLeftTab(tab) {
   panel
     .querySelectorAll(".panel-tab")
     .forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+  updateTreeCollapseIcon(); // the button governs the newly active pane
 }
 
 function setupLeftTabs() {
