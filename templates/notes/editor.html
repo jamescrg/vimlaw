@@ -28,31 +28,6 @@
           <button type="button" class="panel-tab" data-tab="outline">Outline</button>
         </div>
         <div class="panel-header-actions">
-          <div class="files-actions">
-            <div class="dropdown" x-data="dropdown()">
-              <button class="panel-btn"
-                      type="button"
-                      x-ref="button"
-                      @click="toggle()"
-                      :aria-expanded="open"
-                      title="Sort notes">
-                <i class="icon-arrow-up-down"></i>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end panel-sort-menu"
-                  x-ref="menu"
-                  x-show="open"
-                  @click="close()">
-                {% for key, label in sidebar_sort_options %}
-                  <li>
-                    <a class="dropdown-item {% if current_sort == key %}active{% endif %}"
-                       href="#"
-                       hx-get="{% if note.matter %}{% url 'case:note-sidebar-sort' note.id key %}{% else %}{% url 'notes:note-sidebar-sort' note.id key %}{% endif %}"
-                       hx-target="#sidebar-list-container">{{ label }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-            </div>
-          </div>
           <div class="outline-actions">
             <button type="button"
                     class="panel-btn"
@@ -64,7 +39,13 @@
         </div>
       </div>
       <div class="panel-pane files-pane note-sidebar">
-        <div id="sidebar-list-container">{% include "notes/sidebar-list.html" %}</div>
+        <div id="file-tree-container">
+          {% if note.matter %}
+            {% include "notes/sidebar-list.html" %}
+          {% else %}
+            {% include "notes/file-tree.html" %}
+          {% endif %}
+        </div>
       </div>
       <div class="panel-pane outline-pane note-outline">
         <ul class="outline-list" id="outline-list">

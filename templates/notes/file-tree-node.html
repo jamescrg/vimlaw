@@ -1,0 +1,29 @@
+{% comment %}
+One folder node of the Files-tab tree; includes itself for child folders
+(nesting capped at 4 levels by NoteFolder.depth). Folders render as text
+plus a chevron only, no folder icons; empty folders still show.
+{% endcomment %}
+<li class="file-tree-item file-tree-folder{% if not node.is_expanded %} collapsed{% endif %}"
+    data-folder-id="{{ node.folder.id }}"
+    data-toggle-url="{% url 'notes:folder-toggle' node.folder.id %}">
+  <span class="file-tree-toggle"><i class="icon-chevron-down"></i></span>
+  <span class="file-tree-name">{{ node.folder.name }}</span>
+  <ul class="file-tree-children">
+    {% for child in node.children %}
+      {% with node=child %}
+        {% include "notes/file-tree-node.html" %}
+      {% endwith %}
+    {% endfor %}
+    {% for n in node.notes %}
+      <li class="file-tree-item file-tree-note{% if n.id == note.id %} active{% endif %}"
+          hx-get="{% url 'notes:note-content-partial' n.id %}"
+          hx-target="#note-editor-container"
+          hx-swap="innerHTML"
+          hx-push-url="{% url 'notes:note-view' n.id %}"
+          data-note-id="{{ n.id }}">
+        <span class="file-tree-toggle-spacer"></span>
+        <span class="file-tree-name">{{ n.title }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</li>

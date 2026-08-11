@@ -29,6 +29,7 @@ import { HighlightMark } from "./highlight-mark.js";
 import { PlainCopy } from "./plain-copy.js";
 
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
+import { setupFileTree } from "./notes/file-tree.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
 import {
@@ -608,15 +609,26 @@ function setupHtmxHandlers() {
 }
 
 function updateSidebarActive(noteId) {
-  const sidebar = document.querySelector(".sidebar-notes-list");
-  if (!sidebar) return;
+  const pane = document.querySelector(".files-pane");
+  if (!pane) return;
 
-  sidebar
-    .querySelectorAll("li")
+  pane
+    .querySelectorAll("[data-note-id]")
     .forEach((item) => item.classList.remove("active"));
 
-  const activeItem = sidebar.querySelector('li[data-note-id="' + noteId + '"]');
-  if (activeItem) activeItem.classList.add("active");
+  const activeItem = pane.querySelector('[data-note-id="' + noteId + '"]');
+  if (!activeItem) return;
+  activeItem.classList.add("active");
+
+  // Reveal a note sitting inside collapsed folders (tree only). DOM-only,
+  // mirroring the server's render-time ancestor union without persisting
+  // the expansion to the session.
+  let folder = activeItem.parentElement.closest(".file-tree-folder");
+  while (folder) {
+    folder.classList.remove("collapsed");
+    folder = folder.parentElement.closest(".file-tree-folder");
+  }
+  activeItem.scrollIntoView({ block: "nearest" });
 }
 
 // ─── Panel Collapse + Tabs ───────────────────────────────────────────────────
@@ -688,20 +700,6 @@ function setupPanelTabs() {
       openPanel();
     });
   });
-
-  // The sort menu lives in the static panel header while the list swaps
-  // elsewhere, so move its checkmark client-side.
-  document
-    .querySelectorAll(".panel-sort-menu .dropdown-item")
-    .forEach((item) => {
-      item.addEventListener("click", () => {
-        item
-          .closest(".panel-sort-menu")
-          .querySelectorAll(".dropdown-item")
-          .forEach((el) => el.classList.remove("active"));
-        item.classList.add("active");
-      });
-    });
 }
 
 function setupPanelResize() {
@@ -762,6 +760,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPanelTabs();
   setupPanelResize();
   syncPanelIcons();
+  setupFileTree();
   initEditor();
   setupHtmxHandlers();
   setupOutlineCollapseAll();

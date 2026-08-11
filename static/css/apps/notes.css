@@ -229,7 +229,7 @@ body:has(.note-page.standalone) {
   font-size: 1rem;
 }
 
-.note-panel .panel-header-actions :is(.files-actions, .outline-actions) {
+.note-panel .panel-header-actions .outline-actions {
   display: flex;
 }
 
@@ -242,7 +242,7 @@ body:has(.note-page.standalone) {
 }
 
 /* The active tab decides which pane shows and which header action rides
-   along (sort for Files, collapse-all for Outline). */
+   along (collapse-all for Outline; Files has none). */
 .note-panel .panel-pane {
   display: none;
   flex: 1;
@@ -258,15 +258,11 @@ body:has(.note-page.standalone) {
   display: flex;
 }
 
-.note-panel.tab-outline .panel-header .files-actions {
-  display: none;
-}
-
 .note-panel:not(.tab-outline) .panel-header .outline-actions {
   display: none;
 }
 
-.note-panel #sidebar-list-container {
+.note-panel #file-tree-container {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -320,6 +316,133 @@ body:has(.note-page.standalone) {
 .note-sidebar .sidebar-notes-list li.active {
   background: var(--selected-background);
   color: var(--selected-color);
+}
+
+.note-sidebar .sidebar-notes-empty {
+  color: var(--color-muted);
+  font-size: 1rem;
+  font-style: italic;
+  padding: 1rem;
+}
+
+/* Files tab - folder/file tree (standalone notes). Mirrors the outline
+   panel's anatomy above (chevron toggles, nested ULs with a guide rail,
+   the active pill); .file-tree-* stays separate from .outline-* so the
+   two panels can evolve independently. */
+.note-sidebar .file-tree {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.note-sidebar .file-tree-item {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 1rem;
+  /* Column gap only (chevron <-> name); a row gap would open extra space
+     between a folder's name line and its wrapped children list. */
+  gap: 0 0.25rem;
+  padding: 0 0.75rem;
+}
+
+/* Nested rows are indented by the guide rail, not their own padding. */
+.note-sidebar .file-tree-children .file-tree-item {
+  padding: 0;
+}
+
+.note-sidebar .file-tree-folder {
+  color: var(--color-secondary);
+}
+
+.note-sidebar .file-tree-note {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.note-sidebar .file-tree-toggle,
+.note-sidebar .file-tree-toggle-spacer {
+  flex-shrink: 0;
+  width: 1rem;
+}
+
+.note-sidebar .file-tree-toggle {
+  color: var(--color-muted);
+  cursor: pointer;
+  /* Track .file-tree-name's vertical padding so the chevron stays on the
+     name's first line (the row aligns flex-start). */
+  padding-top: 0.25rem;
+}
+
+.note-sidebar .file-tree-toggle:hover {
+  color: var(--color-primary);
+}
+
+.note-sidebar .file-tree-toggle i {
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.note-sidebar .file-tree-item.collapsed > .file-tree-toggle i {
+  transform: rotate(-90deg);
+}
+
+.note-sidebar .file-tree-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.25rem 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-sidebar .file-tree-folder > .file-tree-name {
+  cursor: pointer;
+}
+
+.note-sidebar .file-tree-name:hover {
+  color: var(--color-primary);
+}
+
+/* Active note wears the panel's selected pill (same inset-ring trick as
+   the outline's active item - see the comments there). */
+.note-sidebar .file-tree-note.active > .file-tree-name {
+  background: var(--selected-background);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--selected-border);
+  color: var(--selected-color);
+  margin: 0 -0.25rem;
+  padding: 0.25rem;
+}
+
+/* Guide rail. Tokenized (unlike the outline's hardcoded rgb) so the dark
+   themes get a visible rail without a scoped override. The 7px left
+   margin centers the rail under the 1rem chevron, same as the outline. */
+.note-sidebar .file-tree-children {
+  border-left: 1px solid var(--border-medium);
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  margin-left: 7px;
+  padding: 0;
+  padding-left: 1rem;
+  width: 100%;
+}
+
+.note-sidebar .file-tree-item.collapsed > .file-tree-children {
+  display: none;
+}
+
+.note-sidebar .file-tree-empty {
+  color: var(--color-muted);
+  font-size: 1rem;
+  font-style: italic;
+  padding: 1rem;
 }
 
 /* Center Panel - Editor */

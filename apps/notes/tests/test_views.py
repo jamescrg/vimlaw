@@ -230,3 +230,55 @@ class TestAiLibraryFolderFlag:
             )
         assert response.status_code == 200
         assert async_task.called
+
+
+class TestEditorFileTree:
+    def test_standalone_editor_renders_folder_tree(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        parent = NoteFolder.objects.create(name="Research")
+        child = NoteFolder.objects.create(name="Cases", parent=parent)
+        Note.objects.create(author=user, title="Nested", folder=child)
+        root_note = Note.objects.create(author=user, title="Loose")
+
+        response = client.get(reverse("notes:note-view", args=[root_note.id]))
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert 'class="file-tree"' in content
+        assert "Research" in content
+        assert "Cases" in content
+        assert "Nested" in content
+        assert "Loose" in content
+
+    def test_current_note_ancestors_render_expanded(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        parent = NoteFolder.objects.create(name="Research")
+        child = NoteFolder.objects.create(name="Cases", parent=parent)
+        note = Note.objects.create(author=user, title="Deep", folder=child)
+
+        # Session has everything collapsed (empty expanded set)
+        response = client.get(reverse("notes:note-view", args=[note.id]))
+        content = response.content.decode()
+        # Both ancestor folder nodes render without the collapsed class
+        assert f'data-folder-id="{parent.id}"' in content
+        for folder_id in (parent.id, child.id):
+            start = content.index(f'data-folder-id="{folder_id}"')
+            li_open = content.rindex("<li", 0, start)
+            assert "collapsed" not in content[li_open:start]
+
+    def test_matter_editor_renders_flat_list(self, client_with_matter, note, user):
+        matter = client_with_matter.matter
+        for title in ("Zeta", "Alpha"):
+            Note.objects.create(author=user, matter=matter, title=title)
+
+        response = client_with_matter.get(reverse("case:note-view", args=[note.id]))
+        content = response.content.decode()
+        assert 'class="file-tree"' not in content
+        # Alphabetical order within the sidebar list itself (titles also
+        # appear elsewhere on the page, e.g. the <title> tag)
+        start = content.index('class="sidebar-notes-list"')
+        listing = content[start : content.index("</ul>", start)]
+        assert (
+            listing.index("Alpha") < listing.index("Test Note") < listing.index("Zeta")
+        )
