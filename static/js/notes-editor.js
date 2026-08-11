@@ -613,12 +613,9 @@ function setupHtmxHandlers() {
   });
 }
 
-const PANE_SELECTORS = {
-  files: ".tree-pane-files",
-  matters: ".tree-pane-matters",
-  recent: ".tree-pane-recent",
-};
-
+// A note click only moves the active pill (the canvas and outline swap via
+// htmx). Panes never switch on their own — the user picks the pane, we
+// don't. Full-page loads get their pane from the server (active_pane).
 function updateSidebarActive(noteId) {
   const container = document.getElementById("file-tree-container");
   if (!container) return;
@@ -632,10 +629,10 @@ function updateSidebarActive(noteId) {
   if (!matches.length) return;
   matches.forEach((item) => item.classList.add("active"));
 
-  // Reveal the tree row sitting inside collapsed folders/matters. DOM-only,
-  // mirroring the server's render-time ancestor union without persisting
-  // the expansion to the session.
-  const treeRow = matches[0]; // panes render before Recent, so this is the tree row
+  // Expand the tree row's collapsed ancestors so the note is already
+  // visible if the user tabs over to its home pane (clicks from Recent
+  // land here). DOM-only; nothing is persisted.
+  const treeRow = matches[0]; // tree panes render before Recent
   let node = treeRow.parentElement.closest(
     ".file-tree-folder, .file-tree-matter",
   );
@@ -643,21 +640,6 @@ function updateSidebarActive(noteId) {
     node.classList.remove("collapsed");
     node = node.parentElement.closest(".file-tree-folder, .file-tree-matter");
   }
-
-  // Stay on the current pane when it already shows the note (clicking in
-  // Recent keeps you on Recent); otherwise switch to the pane that does
-  const panel = document.querySelector(".note-panel-left");
-  const currentPane = document.querySelector(
-    PANE_SELECTORS[panel ? panel.dataset.activePane : "files"] ||
-      PANE_SELECTORS.files,
-  );
-  let visible =
-    currentPane && currentPane.querySelector('[data-note-id="' + noteId + '"]');
-  if (!visible) {
-    setLeftTab(treeRow.closest(".tree-pane-matters") ? "matters" : "files");
-    visible = treeRow;
-  }
-  visible.scrollIntoView({ block: "nearest" });
 }
 
 // Files | Matters tabs on the left panel. Initial state is server-rendered
