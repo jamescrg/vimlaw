@@ -26,7 +26,8 @@
         <span class="panel-title">Files</span>
       </div>
       <div class="panel-pane files-pane note-sidebar">
-        <div id="file-tree-container">
+        <div id="file-tree-container"
+             data-refresh-url="{% url 'notes:editor-file-tree' %}">
           {% if note.matter %}
             {% include "notes/sidebar-list.html" %}
           {% else %}

@@ -1,9 +1,11 @@
 {% comment %}
-Files-tab folder/file tree for standalone notes (Obsidian-style). Rendered
-once per full page load; expand state comes from the session key
-note_folders_expanded (plus the active note's ancestors) and is toggled
-client-side in static/js/notes/file-tree.js. Folderless notes sit at the
-root, after the top-level folders.
+Files-tab folder/file tree for standalone notes (Obsidian-style). Expand
+state comes from the session key note_folders_expanded (plus the active
+note's ancestors) and is toggled client-side in
+static/js/notes/file-tree.js, which also handles drag-and-drop; after a
+move the tree is re-rendered via notes:editor-file-tree into
+#file-tree-container. Folderless notes sit at the root, after the
+top-level folders; the ul itself is the root drop target.
 {% endcomment %}
 <ul class="file-tree">
   {% for node in file_tree %}
@@ -11,6 +13,8 @@ root, after the top-level folders.
   {% endfor %}
   {% for n in root_notes %}
     <li class="file-tree-item file-tree-note{% if n.id == note.id %} active{% endif %}"
+        draggable="true"
+        data-move-url="{% url 'notes:note-move' n.id %}"
         hx-get="{% url 'notes:note-content-partial' n.id %}"
         hx-target="#note-editor-container"
         hx-swap="innerHTML"

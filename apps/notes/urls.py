@@ -112,6 +112,16 @@ urlpatterns = [
         name="folder-move",
     ),
     path(
+        "notes/folders/reparent/<int:folder_id>/",
+        views.note_folder_reparent,
+        name="folder-reparent",
+    ),
+    path(
+        "notes/editor/file-tree/",
+        views.editor_file_tree,
+        name="editor-file-tree",
+    ),
+    path(
         "notes/folders/toggle/<int:folder_id>/",
         views.note_folder_toggle_expand,
         name="folder-toggle",

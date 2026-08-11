@@ -1,11 +1,16 @@
 {% comment %}
 One folder node of the Files-tab tree; includes itself for child folders
 (nesting capped at 4 levels by NoteFolder.depth). Folders render as text
-plus a chevron only, no folder icons; empty folders still show.
+plus a chevron only, no folder icons; empty folders still show. Folders
+and notes are draggable; data-depth lets the client pre-validate the
+depth cap before the server does.
 {% endcomment %}
 <li class="file-tree-item file-tree-folder{% if not node.is_expanded %} collapsed{% endif %}"
+    draggable="true"
     data-folder-id="{{ node.folder.id }}"
-    data-toggle-url="{% url 'notes:folder-toggle' node.folder.id %}">
+    data-depth="{{ node.folder.depth }}"
+    data-toggle-url="{% url 'notes:folder-toggle' node.folder.id %}"
+    data-reparent-url="{% url 'notes:folder-reparent' node.folder.id %}">
   <span class="file-tree-toggle"><i class="icon-chevron-down"></i></span>
   <span class="file-tree-name">{{ node.folder.name }}</span>
   <ul class="file-tree-children">
@@ -16,6 +21,8 @@ plus a chevron only, no folder icons; empty folders still show.
     {% endfor %}
     {% for n in node.notes %}
       <li class="file-tree-item file-tree-note{% if n.id == note.id %} active{% endif %}"
+          draggable="true"
+          data-move-url="{% url 'notes:note-move' n.id %}"
           hx-get="{% url 'notes:note-content-partial' n.id %}"
           hx-target="#note-editor-container"
           hx-swap="innerHTML"

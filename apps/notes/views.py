@@ -73,15 +73,45 @@ def build_note_folder_tree_flat(folders_qs, expanded_ids):
     return result
 
 
+def _folder_subtree_height(folder):
+    """0-based height of folder's subtree: deepest descendant depth - own depth."""
+    descendants = folder.get_descendants()
+    if not descendants:
+        return 0
+    return max(d.depth for d in descendants) - folder.depth
+
+
 def get_valid_move_targets(exclude_folder):
-    """Return folders excluding the given folder, its descendants, and depth-3 folders."""
+    """Return folders that can accept exclude_folder as a child.
+
+    Excludes the folder itself, its descendants, and any target shallow
+    enough that the moved subtree would exceed the 4-level depth cap.
+    """
     descendant_ids = [d.pk for d in exclude_folder.get_descendants()]
     exclude_ids = [exclude_folder.pk] + descendant_ids
+    height = _folder_subtree_height(exclude_folder)
     return (
-        NoteFolder.objects.filter(depth__lt=3)
+        NoteFolder.objects.filter(depth__lt=3 - height)
         .exclude(pk__in=exclude_ids)
         .order_by("name")
     )
+
+
+def validate_folder_move(folder, destination):
+    """Return an error message, or None if re-parenting is legal (None dest = root).
+
+    The depth-cap check NoteFolder.clean() would do if the move paths didn't
+    save with update_fields (which skips full_clean).
+    """
+    if destination is None:
+        return None
+    if destination.pk == folder.pk:
+        return "A folder cannot be moved into itself."
+    if any(d.pk == destination.pk for d in folder.get_descendants()):
+        return "A folder cannot be moved into its own subfolder."
+    if destination.depth + 1 + _folder_subtree_height(folder) > 3:
+        return "Maximum folder depth (4 levels) exceeded."
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -487,6 +517,22 @@ def note_content_partial(request, note_id):
 
 
 @login_required
+def editor_file_tree(request):
+    """Files-tab tree partial for the standalone editor (refreshed after DnD).
+
+    The current note comes as ?note=<id> because the client tracks it: the
+    tree is not re-rendered on htmx note switches, so a note id baked into
+    a path-param URL at page load would go stale.
+    """
+    note_id = request.GET.get("note", "")
+    if not note_id.isdigit():
+        return HttpResponse("note parameter required", status=400)
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    context = {"note": note} | get_editor_file_tree(request, note)
+    return render(request, "notes/file-tree.html", context)
+
+
+@login_required
 def note_edit(request, note_id):
     """Edit note metadata (title, category, date)."""
     note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
@@ -811,6 +857,39 @@ def note_folder_move(request, folder_id):
     return render(request, "note_folders/move.html", context)
 
 
+def _expand_folder_in_session(request, folder_id):
+    """Idempotently mark a folder expanded (shared Notes-tab/editor session key)."""
+    expanded = request.session.get("note_folders_expanded", [])
+    if folder_id not in expanded:
+        expanded.append(folder_id)
+        request.session["note_folders_expanded"] = expanded
+        request.session.modified = True
+
+
+@login_required
+@require_POST
+def note_folder_reparent(request, folder_id):
+    """Re-parent a folder (editor tree drag-and-drop). 204, or 400 with a reason."""
+    folder = get_object_or_404(NoteFolder, pk=folder_id)
+    dest_id = request.POST.get("destination") or None
+    if dest_id is not None and not dest_id.isdigit():
+        return HttpResponse("Invalid destination.", status=400)
+    destination = get_object_or_404(NoteFolder, pk=dest_id) if dest_id else None
+
+    error = validate_folder_move(folder, destination)
+    if error:
+        return HttpResponse(error, status=400)
+
+    folder.parent = destination
+    folder.depth = destination.depth + 1 if destination else 0
+    folder.save(update_fields=["parent", "depth"])
+    folder.update_descendant_depths()
+    queue_library_summary_sweep()  # subtree may enter/leave an AI library
+    if destination:
+        _expand_folder_in_session(request, destination.pk)
+    return HttpResponse(status=204)
+
+
 @login_required
 @require_POST
 def note_folder_toggle_expand(request, folder_id):
@@ -853,6 +932,8 @@ def note_move(request, note_id):
             note.folder = None
         note.save(update_fields=["folder"])
         queue_note_summary(note.id)
+        if note.folder_id:
+            _expand_folder_in_session(request, note.folder_id)
         return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
 
     # Build tree — expand ancestors of current folder so selection is visible

@@ -282,3 +282,146 @@ class TestEditorFileTree:
         assert (
             listing.index("Alpha") < listing.index("Test Note") < listing.index("Zeta")
         )
+
+
+class TestNoteFolderReparent:
+    @pytest.fixture
+    def tree(self):
+        from apps.notes.models import NoteFolder
+
+        root = NoteFolder.objects.create(name="Root")
+        child = NoteFolder.objects.create(name="Child", parent=root)
+        grandchild = NoteFolder.objects.create(name="Grandchild", parent=child)
+        other = NoteFolder.objects.create(name="Other")
+        return {"root": root, "child": child, "grandchild": grandchild, "other": other}
+
+    def _reparent(self, client, folder, destination=""):
+        from unittest.mock import patch
+
+        with patch("apps.notes.views.queue_library_summary_sweep") as sweep:
+            resp = client.post(
+                reverse("notes:folder-reparent", args=[folder.id]),
+                {"destination": destination},
+            )
+        return resp, sweep
+
+    def test_reparent_updates_depths_and_session(self, client, tree):
+        resp, sweep = self._reparent(client, tree["child"], tree["other"].id)
+        assert resp.status_code == 204
+        tree["child"].refresh_from_db()
+        tree["grandchild"].refresh_from_db()
+        assert tree["child"].parent_id == tree["other"].id
+        assert tree["child"].depth == 1
+        assert tree["grandchild"].depth == 2
+        assert sweep.called
+        assert tree["other"].id in client.session["note_folders_expanded"]
+
+    def test_reparent_to_root(self, client, tree):
+        resp, _ = self._reparent(client, tree["grandchild"], "")
+        assert resp.status_code == 204
+        tree["grandchild"].refresh_from_db()
+        assert tree["grandchild"].parent_id is None
+        assert tree["grandchild"].depth == 0
+
+    def test_reject_self(self, client, tree):
+        resp, _ = self._reparent(client, tree["root"], tree["root"].id)
+        assert resp.status_code == 400
+
+    def test_reject_own_descendant(self, client, tree):
+        resp, sweep = self._reparent(client, tree["root"], tree["grandchild"].id)
+        assert resp.status_code == 400
+        assert not sweep.called
+        tree["root"].refresh_from_db()
+        assert tree["root"].parent_id is None
+
+    def test_reject_subtree_depth_overflow(self, client, tree):
+        # root has height 2 (child -> grandchild); moving it under a depth-1
+        # target would create depth-4 nodes
+        resp, _ = self._reparent(client, tree["root"], tree["child"].id)
+        assert resp.status_code == 400
+        # and a height-1 subtree under a depth-2 target also overflows —
+        # the case the modal path used to allow
+        resp, _ = self._reparent(client, tree["child"], tree["grandchild"].id)
+        assert resp.status_code == 400
+
+    def test_get_not_allowed(self, client, tree):
+        resp = client.get(reverse("notes:folder-reparent", args=[tree["root"].id]))
+        assert resp.status_code == 405
+
+    def test_bad_destination(self, client, tree):
+        resp, _ = self._reparent(client, tree["root"], "bogus")
+        assert resp.status_code == 400
+        resp = client.post(
+            reverse("notes:folder-reparent", args=[tree["root"].id]),
+            {"destination": "999999"},
+        )
+        assert resp.status_code == 404
+
+    def test_valid_move_targets_respect_subtree_height(self, tree):
+        from apps.notes.views import get_valid_move_targets
+
+        # A leaf can go under the depth-1 child; a height-1 folder cannot
+        leaf_targets = get_valid_move_targets(tree["other"])
+        assert tree["grandchild"] in leaf_targets
+        tall_targets = get_valid_move_targets(tree["child"])
+        assert tree["grandchild"] not in tall_targets
+
+
+class TestEditorFileTreePartial:
+    def test_renders_tree_for_note(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Docs")
+        note = Note.objects.create(author=user, title="Draft", folder=folder)
+        resp = client.get(reverse("notes:editor-file-tree") + f"?note={note.id}")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        assert 'class="file-tree"' in content
+        assert "Docs" in content
+        assert "active" in content
+
+    def test_requires_note_param(self, client):
+        assert client.get(reverse("notes:editor-file-tree")).status_code == 400
+        assert (
+            client.get(reverse("notes:editor-file-tree") + "?note=abc").status_code
+            == 400
+        )
+
+    def test_matter_note_rejected(self, client_with_matter, note):
+        resp = client_with_matter.get(
+            reverse("notes:editor-file-tree") + f"?note={note.id}"
+        )
+        assert resp.status_code == 404
+
+
+class TestNoteMoveFromTree:
+    def test_move_into_folder_expands_destination(self, client, user):
+        from unittest.mock import patch
+
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Filed")
+        note = Note.objects.create(author=user, title="Loose")
+        with patch("apps.notes.views.queue_note_summary") as summary:
+            resp = client.post(
+                reverse("notes:note-move", args=[note.id]),
+                {"destination": folder.id},
+            )
+        assert resp.status_code == 204
+        assert resp.headers.get("HX-Trigger") == "notesChanged"
+        note.refresh_from_db()
+        assert note.folder_id == folder.id
+        assert summary.called
+        assert folder.id in client.session["note_folders_expanded"]
+
+    def test_move_to_root(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Filed")
+        note = Note.objects.create(author=user, title="Filed note", folder=folder)
+        resp = client.post(
+            reverse("notes:note-move", args=[note.id]), {"destination": ""}
+        )
+        assert resp.status_code == 204
+        note.refresh_from_db()
+        assert note.folder_id is None

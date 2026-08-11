@@ -439,6 +439,36 @@ body:has(.note-page.standalone) {
   padding: 1rem;
 }
 
+/* Drag-and-drop: dragged item ghosts; the hovered valid folder wears the
+   selected pill (same inset-ring idiom as .active above); the tree itself
+   rings when the root level is the target. All tokens, so dark themes
+   work without a scoped block. */
+.note-sidebar .file-tree-item.dragging {
+  opacity: 0.5;
+}
+
+.note-sidebar .file-tree-folder.drop-target > .file-tree-name {
+  background: var(--selected-background);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--selected-border);
+  color: var(--selected-color);
+  margin: 0 -0.25rem;
+  padding: 0.25rem;
+}
+
+.note-sidebar .file-tree.drop-target-root {
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--selected-border);
+}
+
+/* Rejected drop: brief red flash on the target (no toast lib loads in the
+   editor; the server's reason goes to the console) */
+.note-sidebar .file-tree-folder.drop-error > .file-tree-name,
+.note-sidebar .file-tree.drop-error {
+  background: var(--btn-danger-bg);
+  border-radius: var(--radius-sm);
+}
+
 /* Center Panel - Editor */
 .note-main {
   display: flex;
