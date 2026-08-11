@@ -6,12 +6,13 @@ from apps.management.selection import get_session_key
 from apps.matters.models import Matter
 
 # Valid tabs for the case app
+# "notes" retired 2026-08-11 (editor-centric notes); get_last_tab
+# sanitizes stale session values against this list
 VALID_TABS = [
     "documents",
     "highlights",
     "facts",
     "witnesses",
-    "notes",
     "emails",
     "labels",
     "search",
@@ -156,7 +157,6 @@ def _get_case_tab_data(request, matter, matters, matter_id, tab):
     from apps.case.facts.views import get_facts_data
     from apps.case.highlights.views import get_highlights_data
     from apps.case.labels.views import get_label_data
-    from apps.case.notes.views import get_notes_data
     from apps.case.search.views import get_search_data
     from apps.case.witnesses.views import get_witnesses_data
 
@@ -182,12 +182,6 @@ def _get_case_tab_data(request, matter, matters, matter_id, tab):
         return {
             "tab_template": "case/witnesses/list.html",
             **get_witnesses_data(request, matter, matter_id),
-        }
-
-    elif tab == "notes":
-        return {
-            "tab_template": "case/notes/list.html",
-            **get_notes_data(request, matter, matter_id),
         }
 
     elif tab == "emails":

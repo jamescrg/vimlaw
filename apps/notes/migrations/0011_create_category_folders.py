@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 CATEGORIES = [
     ("analysis", "Analysis"),
     ("drafting", "Drafting"),

@@ -358,6 +358,19 @@
 <div class="toolbar-right">
   <button type="button"
           class="btn-icon"
+          hx-get="{% url 'case:notes-drive-link-modal' matter.id %}"
+          hx-target="#htmx-modal-container"
+          hx-trigger="click"
+          title="{% if matter.drive_folder %}Linked to the Drive folder that feeds this matter's document mirrors{% else %}Link this matter's Drive folder to feed its document mirrors{% endif %}">
+    <i class="icon-folder-cog with-text"></i>
+    {% if matter.drive_folder %}
+      {{ matter.drive_folder }}
+    {% else %}
+      Link Drive Folder
+    {% endif %}
+  </button>
+  <button type="button"
+          class="btn-icon"
           hx-get="{% url 'case:documents-record-link-modal' matter.id %}"
           hx-target="#htmx-modal-container"
           hx-trigger="click"

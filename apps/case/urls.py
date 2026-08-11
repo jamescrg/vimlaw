@@ -481,47 +481,7 @@ urlpatterns = [
         name="remove-witness-from",
     ),
     # Notes (matter-scoped)
-    path("case/<int:matter_id>/notes/", notes.notes_index, name="notes-index"),
-    path("case/<int:matter_id>/notes/list/", notes.notes_list, name="notes-list"),
     path("case/<int:matter_id>/notes/add/", notes.notes_add, name="notes-add"),
-    path("case/<int:matter_id>/notes/filter/", notes.notes_filter, name="notes-filter"),
-    path(
-        "case/<int:matter_id>/notes/filter/keyword/",
-        notes.notes_filter_keyword,
-        name="notes-filter-keyword",
-    ),
-    path(
-        "case/<int:matter_id>/notes/filter/importance/<int:importance_value>/",
-        notes.notes_filter_importance,
-        name="notes-filter-importance",
-    ),
-    path(
-        "case/<int:matter_id>/notes/filter/category/<str:category>/",
-        notes.notes_filter_category,
-        name="notes-filter-category",
-    ),
-    path(
-        "case/<int:matter_id>/notes/filter/category/",
-        notes.notes_filter_category,
-        {"category": ""},
-        name="notes-filter-category-clear",
-    ),
-    path(
-        "case/<int:matter_id>/notes/filter/topic/<str:topic>/",
-        notes.notes_filter_topic,
-        name="notes-filter-topic",
-    ),
-    path(
-        "case/<int:matter_id>/notes/filter/topic/",
-        notes.notes_filter_topic,
-        {"topic": ""},
-        name="notes-filter-topic-clear",
-    ),
-    path(
-        "case/<int:matter_id>/notes/sort/<str:order>/",
-        notes.notes_sort,
-        name="notes-sort",
-    ),
     path(
         "case/<int:matter_id>/notes/shortcuts/",
         notes.notes_shortcuts,
@@ -1051,19 +1011,8 @@ urlpatterns = [
         notes.note_content_partial,
         name="note-content-partial",
     ),
-    path("case/notes/<int:note_id>/edit/", notes.note_edit, name="notes-edit"),
     path("case/notes/<int:note_id>/delete/", notes.note_delete, name="notes-delete"),
     path("case/notes/<int:note_id>/content/", notes.note_content, name="note-content"),
-    path(
-        "case/notes/<int:note_id>/category/<str:value>/",
-        notes.note_category,
-        name="note-category",
-    ),
-    path(
-        "case/notes/<int:note_id>/importance/<int:value>/",
-        notes.note_importance,
-        name="note-importance",
-    ),
     path(
         "case/notes/<int:note_id>/properties/",
         notes.note_properties,

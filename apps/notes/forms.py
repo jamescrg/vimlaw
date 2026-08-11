@@ -76,12 +76,3 @@ class NoteFolderForm(forms.ModelForm):
             indent = "\u00a0\u00a0\u00a0\u00a0" * folder.depth
             choices.append((folder.pk, f"{indent}{folder.name}"))
         self.fields["parent"].choices = choices
-
-
-class NoteFolderMoveForm(forms.Form):
-    destination = forms.ModelChoiceField(
-        queryset=NoteFolder.objects.none(),
-        required=False,
-        empty_label="Root level",
-        widget=forms.RadioSelect,
-    )

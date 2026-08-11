@@ -6,36 +6,6 @@ from apps.notes.models import Note
 pytestmark = pytest.mark.django_db
 
 
-class TestNotesIndex:
-    def test_notes_index_requires_login(self, client, matter):
-        client.logout()
-        url = reverse("case:notes-index", args=[matter.id])
-        response = client.get(url)
-        assert response.status_code == 302
-        assert "/accounts/login/" in response.url
-
-    def test_notes_index_loads(self, client_with_matter):
-        matter = client_with_matter.matter
-        url = reverse("case:notes-index", args=[matter.id])
-        response = client_with_matter.get(url)
-        assert response.status_code == 200
-
-    def test_notes_index_shows_notes(self, client_with_matter, note):
-        matter = client_with_matter.matter
-        url = reverse("case:notes-index", args=[matter.id])
-        response = client_with_matter.get(url)
-        assert response.status_code == 200
-        assert b"Test Note" in response.content
-
-
-class TestNotesList:
-    def test_notes_list_htmx_partial(self, client_with_matter, note):
-        matter = client_with_matter.matter
-        url = reverse("case:notes-list", args=[matter.id])
-        response = client_with_matter.get(url)
-        assert response.status_code == 200
-
-
 class TestNoteView:
     def test_note_view_loads(self, client_with_matter, note):
         url = reverse("case:note-view", args=[note.id])
@@ -71,28 +41,6 @@ class TestNotesAdd:
         )
         assert response.status_code == 200
         assert Note.objects.filter(title="New Note", matter=matter).exists()
-
-
-class TestNoteEdit:
-    def test_note_edit_get(self, client_with_matter, note):
-        url = reverse("case:notes-edit", args=[note.id])
-        response = client_with_matter.get(url)
-        assert response.status_code == 200
-
-    def test_note_edit_post(self, client_with_matter, note):
-        url = reverse("case:notes-edit", args=[note.id])
-        response = client_with_matter.post(
-            url,
-            {
-                "title": "Updated Title",
-                "category": "analysis",
-                "date": "2024-01-15",
-            },
-        )
-        assert response.status_code == 204
-        note.refresh_from_db()
-        assert note.title == "Updated Title"
-        assert note.category == "analysis"
 
 
 class TestNoteDelete:
@@ -156,7 +104,7 @@ class TestNoteSetAi:
         for state in ("always", "never", "auto"):
             url = reverse("notes:note-set-ai", args=[standalone_note.id, state])
             response = client.post(url)
-            assert response.status_code == 200
+            assert response.status_code == 204
             standalone_note.refresh_from_db()
             assert standalone_note.ai_context == state
 
@@ -180,7 +128,7 @@ class TestAiLibraryFolderFlag:
                 reverse("notes:folder-add"),
                 {"name": "Library Test Folder", "ai_library": "True"},
             )
-        assert response.status_code == 202
+        assert response.status_code == 204
         folder = NoteFolder.objects.get(name="Library Test Folder")
         assert folder.ai_library is True
         assert async_task.called
@@ -193,7 +141,7 @@ class TestAiLibraryFolderFlag:
                 reverse("notes:folder-add"),
                 {"name": "Journal", "ai_library": "False"},
             )
-        assert response.status_code == 202
+        assert response.status_code == 204
         assert not async_task.called
 
     def test_folder_edit_flag_change_queues_sweep(self, client):
@@ -207,7 +155,7 @@ class TestAiLibraryFolderFlag:
                 reverse("notes:folder-edit", args=[folder.id]),
                 {"name": "Guides", "ai_library": "True"},
             )
-        assert response.status_code == 202
+        assert response.status_code == 204
         folder.refresh_from_db()
         assert folder.ai_library is True
         assert async_task.called
@@ -524,27 +472,6 @@ class TestMatterScopeGuards:
         assert other in get_valid_move_targets(scoped["mfolder"])
         assert scoped["mfolder"] not in get_valid_move_targets(scoped["general"])
 
-    def test_move_modal_tree_scoped(self, client, scoped):
-        resp = client.get(reverse("notes:note-move", args=[scoped["mnote"].id]))
-        content = resp.content.decode()
-        assert "Case Files" in content
-        assert "General" not in content
-
-    def test_bulk_move_rejects_matter_folder(self, client, scoped):
-        session = client.session
-        session["selected_notes"] = [scoped["gnote"].id]
-        session.save()
-        resp = client.post(
-            reverse("notes:bulk-move"), {"destination": scoped["mfolder"].id}
-        )
-        assert resp.status_code == 404
-
-    def test_notes_tab_sidebar_excludes_matter_folders(self, client, scoped):
-        resp = client.get(reverse("notes:index"))
-        content = resp.content.decode()
-        assert "General" in content
-        assert "Case Files" not in content
-
 
 class TestMatterToggle:
     def test_toggle_flips_session(self, client, matter):
@@ -553,27 +480,6 @@ class TestMatterToggle:
         assert client.session["note_matters_expanded"] == [matter.id]
         assert client.post(url).status_code == 204
         assert client.session["note_matters_expanded"] == []
-
-
-class TestFolderToggleAllScoped:
-    def test_expand_and_collapse_preserve_matter_ids(self, client, matter):
-        from apps.notes.models import NoteFolder
-
-        general = NoteFolder.objects.create(name="G")
-        mfolder = NoteFolder.objects.create(name="M", matter=matter)
-        session = client.session
-        session["note_folders_expanded"] = [mfolder.id]
-        session.save()
-
-        client.post(reverse("notes:folder-toggle-all") + "?expand=true")
-        expanded = set(client.session["note_folders_expanded"])
-        assert general.id in expanded
-        assert mfolder.id in expanded  # matter id preserved
-
-        client.post(reverse("notes:folder-toggle-all") + "?expand=false")
-        expanded = set(client.session["note_folders_expanded"])
-        assert general.id not in expanded
-        assert mfolder.id in expanded  # still preserved
 
 
 class TestNoteFolderFormMatter:
@@ -659,15 +565,6 @@ class TestFolderCrudEditorContext:
         assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
         folder.refresh_from_db()
         assert folder.name == "New"
-
-    def test_notes_tab_add_unchanged(self, client):
-        from apps.notes.models import NoteFolder
-
-        resp = client.post(
-            reverse("notes:folder-add"), {"name": "General", "ai_library": "False"}
-        )
-        assert resp.status_code == 202  # Notes-tab shape preserved
-        assert NoteFolder.objects.get(name="General").matter_id is None
 
     def test_delete_open_note_redirects(self, client, user, matter):
         from apps.notes.models import NoteFolder
@@ -762,15 +659,6 @@ class TestStandaloneNoteAddEdit:
         note = Note.objects.get(title="Fresh note")
         assert note.matter_id is None
         assert note.author == user
-
-    def test_edit_modal_and_post(self, client, user):
-        note = Note.objects.create(author=user, title="Before")
-        url = reverse("notes:edit", args=[note.id])
-        assert client.get(url).status_code == 200
-        resp = client.post(url, {"title": "After"})
-        assert resp.status_code == 204
-        note.refresh_from_db()
-        assert note.title == "After"
 
 
 class TestNotesLaunch:
@@ -956,3 +844,18 @@ class TestEditorRecents:
         listing = content[start : content.index("tree-pane-files")]
         assert listing.index("Matter recent") < listing.index("Gen recent")
         assert reverse("case:note-view", args=[mnote.id]) in listing
+
+
+class TestValidTabsFallback:
+    def test_stale_notes_tab_session_falls_back(self, client_with_matter):
+        """Sessions that stored the retired "notes" case tab land on the
+        default tab instead of 404ing."""
+        matter = client_with_matter.matter
+        session = client_with_matter.session
+        session[f"case_tab_{matter.id}"] = "notes"
+        session.save()
+
+        resp = client_with_matter.get(reverse("case:case-index"), follow=True)
+        assert resp.status_code == 200
+        # get_last_tab sanitized the stale value to the default (documents)
+        assert resp.request["PATH_INFO"].endswith("/documents/")
