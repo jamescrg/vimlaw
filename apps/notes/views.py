@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from apps.accounts.access import filter_matters_for_user
 from apps.management.pagination import CustomPaginator
 from apps.management.selection import (
     all_visible_selected,
@@ -233,6 +234,12 @@ def get_editor_file_tree(request, note):
         "root_notes": general.get(None, []),
         "matters": matters,
         "active_pane": "matters" if note.matter_id else "files",
+        "recent_notes": [
+            nv.note
+            for nv in NoteView.objects.filter(user=request.user)
+            .select_related("note", "note__matter")
+            .order_by("-viewed_at")[:7]
+        ],
     }
 
 
@@ -364,23 +371,41 @@ def notes_list(request):
 
 @login_required
 def notes_add(request):
-    """Add a new standalone note."""
-    # The standalone NoteForm is title-only — unlike the case-side NoteForm,
-    # it takes no user kwarg (there is no matter select to scope).
+    """Add a new standalone note, optionally into a folder (?folder=<id>).
+
+    The standalone NoteForm is title-only — unlike the case-side NoteForm,
+    it takes no user kwarg (there is no matter select to scope).
+    """
+    folder = None
+    folder_id = request.GET.get("folder", "")
+    if folder_id.isdigit():
+        folder = get_object_or_404(NoteFolder, pk=folder_id)
+        if folder.matter_id is not None:
+            return HttpResponse("Folder belongs to another matter.", status=400)
+
     if request.method == "POST":
         form = NoteForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             note = form.save(commit=False)
             note.author = request.user
             note.matter = None
+            note.folder = folder
             note.save()
+            if folder:
+                _expand_folder_in_session(request, folder.pk)
 
-            # Open new note in a new browser tab
+            # Open new note in a new browser tab; the editor context also
+            # refreshes the originating tab's trees
+            headers = {"HX-Trigger": "notesChanged"}
+            if request.GET.get("context") == "editor":
+                headers["HX-Trigger"] = json.dumps(
+                    {"notesChanged": True, "noteFoldersChanged": True}
+                )
             note_url = reverse("notes:note-view", args=[note.id])
             return HttpResponse(
                 f'<script>window.open("{note_url}", "_blank");'
                 "window.dispatchEvent(new CustomEvent('close-modal'));</script>",
-                headers={"HX-Trigger": "notesChanged"},
+                headers=headers,
             )
     else:
         form = NoteForm(use_required_attribute=False)
@@ -389,6 +414,7 @@ def notes_add(request):
         "app": "notes",
         "form": form,
         "action": "Add",
+        "add_qs": request.GET.urlencode(),
     }
 
     return render(request, "notes/form.html", context)
@@ -549,6 +575,35 @@ def record_note_view(user, note):
 
 
 @login_required
+def notes_launch(request):
+    """Open the editor at the user's most recently viewed note.
+
+    The sidebar's Notes launcher points here. Falls back to the latest
+    note the user can reach, and finally creates a fresh untitled note so
+    the editor always has something to open.
+    """
+    nv = (
+        NoteView.objects.filter(user=request.user)
+        .select_related("note")
+        .order_by("-viewed_at")
+        .first()
+    )
+    note = nv.note if nv else None
+    if note is None:
+        accessible = filter_matters_for_user(Matter.objects.all(), request.user)
+        note = (
+            Note.objects.filter(Q(matter__isnull=True) | Q(matter__in=accessible))
+            .order_by("-updated_at")
+            .first()
+        )
+    if note is None:
+        note = Note.objects.create(title="Untitled", author=request.user, matter=None)
+    if note.matter_id:
+        return redirect("case:note-view", note.id)
+    return redirect("notes:note-view", note.id)
+
+
+@login_required
 def note_view(request, note_id):
     """Standalone editor view for a note without a matter."""
     note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
@@ -683,6 +738,16 @@ def note_set_ai(request, note_id, state):
         queue_note_summary(note.id)
 
     return render(request, "notes/ai-context-cell.html", {"note": note})
+
+
+@login_required
+def note_properties(request, note_id):
+    """Properties modal for a standalone note (AI context only)."""
+    from .models import AI_CONTEXT_CHOICES
+
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    context = {"note": note, "ai_choices": AI_CONTEXT_CHOICES}
+    return render(request, "notes/properties-modal.html", context)
 
 
 @login_required
@@ -926,7 +991,9 @@ def note_folder_delete(request, folder_id):
         and note_id.isdigit()
         and not Note.objects.filter(pk=note_id).exists()
     ):
-        return HttpResponse(status=204, headers={"HX-Redirect": reverse("notes:index")})
+        return HttpResponse(
+            status=204, headers={"HX-Redirect": reverse("notes:launch")}
+        )
 
     return HttpResponse(status=204, headers={"HX-Refresh": "true"})
 

@@ -9,8 +9,12 @@
       </div>
     </div>
     <div class="modal-body">
+      {% comment %}
+      add_qs round-trips ?folder= / ?context=editor from the tree menu into
+      the POST so the note lands in the chosen folder.
+      {% endcomment %}
       <form id="note-form"
-            hx-post="{% if note %}{% url 'case:notes-edit' note.id %}{% else %}{% url 'case:notes-add' matter.id %}{% endif %}"
+            hx-post="{% if note %}{% url 'case:notes-edit' note.id %}{% else %}{% url 'case:notes-add' matter.id %}{% if add_qs %}?{{ add_qs }}{% endif %}{% endif %}"
             hx-target="#htmx-modal-container"
             class="form-compact col2">
         {% csrf_token %}

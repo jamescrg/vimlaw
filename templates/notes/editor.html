@@ -35,9 +35,14 @@
         <div class="panel-header-actions">
           <a href="#"
              class="panel-btn"
-             hx-get="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
+             hx-get="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}?context=editor"
              hx-target="#htmx-modal-container"
              title="New note"><i class="icon-square-pen"></i></a>
+          <a href="#"
+             class="panel-btn panel-btn-files-only"
+             hx-get="{% url 'notes:folder-add' %}?context=editor"
+             hx-target="#htmx-modal-container"
+             title="New folder"><i class="icon-folder-plus"></i></a>
           <button type="button"
                   class="panel-btn"
                   id="tree-collapse-btn"
@@ -50,9 +55,8 @@
         <div id="file-tree-container"
              data-refresh-url="{% url 'notes:editor-file-tree' %}"
              data-folder-add-url="{% url 'notes:folder-add' %}"
-             data-toggle-all-url="{% url 'notes:editor-tree-toggle-all' %}">
-          {% include "notes/editor-trees.html" %}
-        </div>
+             data-toggle-all-url="{% url 'notes:editor-tree-toggle-all' %}"
+             data-launch-url="{% url 'notes:launch' %}">{% include "notes/editor-trees.html" %}</div>
       </div>
       <!-- Collapsed-rail shortcut: expand the panel -->
       <div class="panel-rail">
@@ -142,16 +146,25 @@
       <div class="note-page standalone">
         <div id="note-editor-container">{% include "notes/editor-content.html" %}</div>
       </div>
-      <!-- Tree context menu (folder/matter rows in the left panel) -->
+      <!-- Tree context menu (folder/matter/note rows in the left panel) -->
       <div id="tree-context-menu" class="dropdown-menu">
         <li>
+          <a class="dropdown-item" href="#" data-action="new-note"><i class="icon-square-pen"></i> New note</a>
+        </li>
+        <li>
           <a class="dropdown-item" href="#" data-action="new"><i class="icon-folder-plus"></i> <span data-label>New subfolder</span></a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#" data-action="properties"><i class="icon-settings-2"></i> Properties</a>
         </li>
         <li>
           <a class="dropdown-item" href="#" data-action="rename"><i class="icon-pencil"></i> Rename</a>
         </li>
         <li>
           <a class="dropdown-item" href="#" data-action="delete"><i class="icon-trash"></i> Delete</a>
+        </li>
+        <li>
+          <a class="dropdown-item urgent" href="#" data-action="delete-note"><i class="icon-trash-2"></i> Delete</a>
         </li>
       </div>
       <!-- Highlight reference dropdown -->

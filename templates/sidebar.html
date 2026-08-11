@@ -101,6 +101,12 @@
     </ul>
     <ul class="sidebar-nav-utils">
       <li>
+        <a href="{% url 'notes:launch' %}" target="_blank" data-tooltip="Notes">
+          <i class="icon-notebook-pen"></i>
+          <span class="sidebar-label">Notes</span>
+        </a>
+      </li>
+      <li>
         <a href="#"
            hx-get="{% url 'search:search' %}"
            hx-target="#htmx-modal-container"

@@ -1065,6 +1065,16 @@ urlpatterns = [
         name="note-importance",
     ),
     path(
+        "case/notes/<int:note_id>/properties/",
+        notes.note_properties,
+        name="notes-properties",
+    ),
+    path(
+        "case/notes/<int:note_id>/reassign-matter/",
+        notes.note_reassign_matter,
+        name="notes-reassign-matter",
+    ),
+    path(
         "case/notes/<int:note_id>/set-ai/<str:state>/",
         notes.note_set_ai,
         name="notes-set-ai",

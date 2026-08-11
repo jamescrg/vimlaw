@@ -31,7 +31,31 @@ export function setupFileTree() {
   container.addEventListener("drop", onDrop);
 
   setupTreeCollapseAll(container);
-  container.addEventListener("htmx:afterSwap", updateTreeCollapseIcon);
+  container.addEventListener("htmx:afterSwap", () => {
+    updateTreeCollapseIcon();
+    applyRecentsState();
+  });
+  applyRecentsState();
+}
+
+// ─── Recent section (collapse is cosmetic → localStorage) ────────────────────
+
+const RECENTS_KEY = "notes-editor-recents-collapsed";
+
+function applyRecentsState() {
+  const recents = document.getElementById("tree-recents");
+  if (!recents) return;
+  recents.classList.toggle(
+    "collapsed",
+    localStorage.getItem(RECENTS_KEY) === "1",
+  );
+}
+
+function toggleRecents() {
+  const recents = document.getElementById("tree-recents");
+  if (!recents) return;
+  const collapsed = recents.classList.toggle("collapsed");
+  localStorage.setItem(RECENTS_KEY, collapsed ? "1" : "");
 }
 
 // ─── Collapse/expand all (header button, active pane only) ───────────────────
@@ -93,6 +117,10 @@ function setupTreeCollapseAll(container) {
 // ─── Expand/collapse ─────────────────────────────────────────────────────────
 
 function onClick(e) {
+  if (e.target.closest(".tree-recents-header")) {
+    toggleRecents();
+    return;
+  }
   const handle = e.target.closest(".file-tree-toggle, .file-tree-name");
   if (!handle) return;
   const li = handle.closest(".file-tree-item");

@@ -682,7 +682,7 @@ class TestFolderCrudEditorContext:
         )
         resp = client.delete(url)
         assert resp.status_code == 204
-        assert resp.headers.get("HX-Redirect") == reverse("notes:index")
+        assert resp.headers.get("HX-Redirect") == reverse("notes:launch")
         assert not Note.objects.filter(pk=note.id).exists()
 
     def test_delete_keeping_notes_refreshes(self, client, user, matter):
@@ -771,3 +771,188 @@ class TestStandaloneNoteAddEdit:
         assert resp.status_code == 204
         note.refresh_from_db()
         assert note.title == "After"
+
+
+class TestNotesLaunch:
+    def test_redirects_to_most_recent_view(self, client, user, matter):
+        from apps.notes.models import NoteView
+
+        older = Note.objects.create(author=user, title="Older")
+        recent = Note.objects.create(author=user, title="Recent", matter=matter)
+        NoteView.objects.create(user=user, note=older)
+        NoteView.objects.create(user=user, note=recent)
+
+        resp = client.get(reverse("notes:launch"))
+        assert resp.status_code == 302
+        assert resp.url == reverse("case:note-view", args=[recent.id])
+
+    def test_falls_back_to_latest_note(self, client, user):
+        Note.objects.create(author=user, title="Only note")
+        resp = client.get(reverse("notes:launch"))
+        assert resp.status_code == 302
+        note = Note.objects.get(title="Only note")
+        assert resp.url == reverse("notes:note-view", args=[note.id])
+
+    def test_creates_untitled_when_no_notes(self, client, user):
+        assert Note.objects.count() == 0
+        resp = client.get(reverse("notes:launch"))
+        assert resp.status_code == 302
+        note = Note.objects.get()
+        assert note.title == "Untitled"
+        assert note.matter_id is None
+        assert resp.url == reverse("notes:note-view", args=[note.id])
+
+
+class TestAddIntoFolder:
+    def test_general_add_lands_in_folder(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Inbox 2")
+        url = reverse("notes:add") + f"?folder={folder.id}&context=editor"
+        resp = client.post(url, {"title": "Filed on arrival"})
+        assert resp.status_code == 200
+        note = Note.objects.get(title="Filed on arrival")
+        assert note.folder_id == folder.id
+        assert folder.id in client.session["note_folders_expanded"]
+        assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
+
+    def test_general_add_rejects_matter_folder(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        mfolder = NoteFolder.objects.create(name="Case", matter=matter)
+        resp = client.post(
+            reverse("notes:add") + f"?folder={mfolder.id}", {"title": "Nope"}
+        )
+        assert resp.status_code == 400
+        assert not Note.objects.filter(title="Nope").exists()
+
+    def test_matter_add_lands_in_folder(self, client_with_matter):
+        from apps.notes.models import NoteFolder
+
+        matter = client_with_matter.matter
+        folder = NoteFolder.objects.create(name="Discovery", matter=matter)
+        url = (
+            reverse("case:notes-add", args=[matter.id])
+            + f"?folder={folder.id}&context=editor"
+        )
+        resp = client_with_matter.post(
+            url, {"title": "Motion notes", "category": "note"}
+        )
+        assert resp.status_code == 200
+        note = Note.objects.get(title="Motion notes")
+        assert note.folder_id == folder.id
+        assert note.matter_id == matter.id
+
+    def test_matter_add_rejects_cross_matter_folder(self, client_with_matter, matter):
+        from apps.matters.models import Matter as MatterModel
+        from apps.notes.models import NoteFolder
+
+        other = MatterModel.objects.create(name="Other", status="Open")
+        ofolder = NoteFolder.objects.create(name="Elsewhere", matter=other)
+        url = reverse("case:notes-add", args=[matter.id]) + f"?folder={ofolder.id}"
+        resp = client_with_matter.post(url, {"title": "Nope", "category": "note"})
+        assert resp.status_code == 400
+
+
+class TestNoteProperties:
+    def test_general_modal_renders_ai_only(self, client, user):
+        note = Note.objects.create(author=user, title="Solo", ai_context="always")
+        resp = client.get(reverse("notes:note-properties", args=[note.id]))
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        assert "AI Context" in content
+        assert 'name="matter"' not in content
+        assert "always" in content
+
+    def test_matter_modal_lists_open_matters(self, client_with_matter, note, user):
+        from apps.matters.models import Matter as MatterModel
+
+        MatterModel.objects.create(name="Closed one", status="Closed")
+        resp = client_with_matter.get(reverse("case:notes-properties", args=[note.id]))
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        assert 'name="matter"' in content
+        assert "Closed one" not in content
+
+    def test_scope_guards(self, client_with_matter, note, user):
+        general = Note.objects.create(author=user, title="General")
+        assert (
+            client_with_matter.get(
+                reverse("notes:note-properties", args=[note.id])
+            ).status_code
+            == 404
+        )
+        assert (
+            client_with_matter.get(
+                reverse("case:notes-properties", args=[general.id])
+            ).status_code
+            == 404
+        )
+
+
+class TestReassignMatter:
+    def test_moves_and_resets_folder(self, client_with_matter, user):
+        from apps.matters.models import Matter as MatterModel
+        from apps.notes.models import NoteFolder
+
+        matter = client_with_matter.matter
+        folder = NoteFolder.objects.create(name="Old home", matter=matter)
+        note = Note.objects.create(
+            author=user, title="Mover", matter=matter, folder=folder
+        )
+        other = MatterModel.objects.create(name="New home", status="Open")
+
+        resp = client_with_matter.post(
+            reverse("case:notes-reassign-matter", args=[note.id]),
+            {"matter": other.id},
+        )
+        assert resp.status_code == 204
+        assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
+        note.refresh_from_db()
+        assert note.matter_id == other.id
+        assert note.folder_id is None
+
+    def test_rejects_closed_matter_and_general_note(
+        self, client_with_matter, note, user
+    ):
+        from apps.matters.models import Matter as MatterModel
+
+        closed = MatterModel.objects.create(name="Closed", status="Closed")
+        resp = client_with_matter.post(
+            reverse("case:notes-reassign-matter", args=[note.id]),
+            {"matter": closed.id},
+        )
+        assert resp.status_code == 404
+
+        general = Note.objects.create(author=user, title="General")
+        resp = client_with_matter.post(
+            reverse("case:notes-reassign-matter", args=[general.id]),
+            {"matter": client_with_matter.matter.id},
+        )
+        assert resp.status_code == 404
+
+        assert (
+            client_with_matter.get(
+                reverse("case:notes-reassign-matter", args=[note.id])
+            ).status_code
+            == 405
+        )
+
+
+class TestEditorRecents:
+    def test_recents_render_in_tree_partial(self, client, user, matter):
+        from apps.notes.models import NoteView
+
+        general = Note.objects.create(author=user, title="Gen recent")
+        mnote = Note.objects.create(author=user, title="Matter recent", matter=matter)
+        NoteView.objects.create(user=user, note=general)
+        NoteView.objects.create(user=user, note=mnote)
+
+        resp = client.get(reverse("notes:editor-file-tree") + f"?note={general.id}")
+        content = resp.content.decode()
+        assert "tree-recents" in content
+        # Most recent first; matter note links to the case editor URL
+        start = content.index("tree-recents-list")
+        listing = content[start : content.index("tree-pane-files")]
+        assert listing.index("Matter recent") < listing.index("Gen recent")
+        assert reverse("case:note-view", args=[mnote.id]) in listing

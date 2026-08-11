@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -5,11 +7,16 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 import apps.drive.google as drive_google
+from apps.accounts.access import filter_matters_for_user
 from apps.case.models import Document, Highlight
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
-from apps.notes.models import Note
-from apps.notes.views import get_editor_file_tree, record_note_view
+from apps.notes.models import Note, NoteFolder
+from apps.notes.views import (
+    _expand_folder_in_session,
+    get_editor_file_tree,
+    record_note_view,
+)
 
 from .filters import NotesFilter
 from .forms import NoteForm
@@ -125,8 +132,15 @@ def notes_list(request, matter_id):
 
 @login_required
 def notes_add(request, matter_id):
-    """Add a new note."""
+    """Add a new note, optionally into one of the matter's folders."""
     matter, matters = get_matter_from_url(request, matter_id)
+
+    folder = None
+    folder_id = request.GET.get("folder", "")
+    if folder_id.isdigit():
+        folder = get_object_or_404(NoteFolder, pk=folder_id)
+        if folder.matter_id != matter.id:
+            return HttpResponse("Folder belongs to another matter.", status=400)
 
     if request.method == "POST":
         form = NoteForm(request.POST, user=request.user, use_required_attribute=False)
@@ -134,14 +148,23 @@ def notes_add(request, matter_id):
             note = form.save(commit=False)
             note.author = request.user
             note.matter = matter
+            note.folder = folder
             note.save()
+            if folder:
+                _expand_folder_in_session(request, folder.pk)
 
-            # Open new note in a new browser tab
+            # Open new note in a new browser tab; the editor context also
+            # refreshes the originating tab's trees
+            headers = {"HX-Trigger": "notesChanged"}
+            if request.GET.get("context") == "editor":
+                headers["HX-Trigger"] = json.dumps(
+                    {"notesChanged": True, "noteFoldersChanged": True}
+                )
             note_url = reverse("case:note-view", args=[note.id])
             return HttpResponse(
                 f'<script>window.open("{note_url}", "_blank");'
                 "window.dispatchEvent(new CustomEvent('close-modal'));</script>",
-                headers={"HX-Trigger": "notesChanged"},
+                headers=headers,
             )
     else:
         form = NoteForm(
@@ -154,6 +177,7 @@ def notes_add(request, matter_id):
         "matter": matter,
         "form": form,
         "action": "Add",
+        "add_qs": request.GET.urlencode(),
     }
 
     return render(request, "case/notes/form.html", context)
@@ -223,6 +247,41 @@ def note_delete(request, note_id):
     note.delete()
 
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
+
+
+@login_required
+def note_properties(request, note_id):
+    """Properties modal for a matter note (AI context + matter re-assign)."""
+    from apps.notes.models import AI_CONTEXT_CHOICES
+
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=False)
+    matters = filter_matters_for_user(
+        Matter.objects.filter(status="Open").order_by("name"), request.user
+    )
+    context = {"note": note, "ai_choices": AI_CONTEXT_CHOICES, "matters": matters}
+    return render(request, "notes/properties-modal.html", context)
+
+
+@login_required
+@require_POST
+def note_reassign_matter(request, note_id):
+    """Move a matter note to another matter; folder resets to that matter's
+    root (a folder always belongs to exactly one matter's tree)."""
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=False)
+    matter = get_object_or_404(
+        filter_matters_for_user(Matter.objects.filter(status="Open"), request.user),
+        pk=request.POST.get("matter"),
+    )
+    if matter.id != note.matter_id:
+        note.matter = matter
+        note.folder = None
+        note.save(update_fields=["matter", "folder"])
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps({"noteFoldersChanged": True, "closeModal": True})
+        },
+    )
 
 
 @login_required
