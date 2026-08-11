@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, OuterRef, Subquery
+from django.db.models.functions import Lower
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -22,13 +22,6 @@ from .models import Note, NoteFolder, NoteView
 from .tasks import queue_library_summary_sweep, queue_note_summary
 
 NOTES_TRIGGER = "notesChanged"
-
-SIDEBAR_SORT_OPTIONS = [
-    ("-viewed_at", "Recently viewed"),
-    ("-updated_at", "Modified, new to old"),
-    ("-created_at", "Created, new to old"),
-    ("title", "Title (A-Z)"),
-]
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +113,41 @@ def get_note_folders_data(request):
         "selected_note_folder": selected_folder,
         "all_folders_selected": selected_folder_id == "all",
     }
+
+
+def get_editor_file_tree(request, note):
+    """Nested folder/note tree for the editor's Files tab (standalone notes).
+
+    Node = {"folder", "children": [node...], "notes": [Note...], "is_expanded"}.
+    Expansion comes from the session key shared with the Notes tab, unioned
+    with the current note's ancestor chain (union not persisted) so the
+    active note is always revealed.
+    """
+    expanded_ids = set(request.session.get("note_folders_expanded", []))
+    if note.folder_id:
+        expanded_ids |= {a.pk for a in note.folder.get_ancestors()}
+        expanded_ids.add(note.folder_id)
+
+    notes_by_folder = {}
+    for n in Note.objects.filter(matter__isnull=True).order_by(Lower("title")):
+        notes_by_folder.setdefault(n.folder_id, []).append(n)
+
+    folders = list(NoteFolder.objects.order_by(Lower("name")))
+    nodes = {
+        f.pk: {
+            "folder": f,
+            "children": [],
+            "notes": notes_by_folder.get(f.pk, []),
+            "is_expanded": f.pk in expanded_ids,
+        }
+        for f in folders
+    }
+    roots = []
+    for f in folders:  # two-pass: a child's parent may sort after it
+        parent = nodes.get(f.parent_id)
+        (parent["children"] if parent else roots).append(nodes[f.pk])
+
+    return {"file_tree": roots, "root_notes": notes_by_folder.get(None, [])}
 
 
 def get_notes_data(request):
@@ -418,11 +446,6 @@ def note_importance(request, note_id, value):
     return redirect("notes:list")
 
 
-def get_sidebar_sort(request):
-    """Get the current sidebar sort order from session for standalone notes."""
-    return request.session.get("standalone_notes_sidebar_sort", "-viewed_at")
-
-
 def record_note_view(user, note):
     """Record that a user viewed a note, updating or creating the NoteView record."""
     from django.utils import timezone
@@ -437,26 +460,6 @@ def record_note_view(user, note):
     note.save(update_fields=["viewed_at"])
 
 
-def get_sorted_standalone_notes(user, sort_order="-viewed_at"):
-    """Get standalone notes sorted by user's view history or specified order."""
-    notes = Note.objects.filter(matter__isnull=True)
-
-    if sort_order == "-viewed_at":
-        # Sort by user's personal view history
-        user_views = NoteView.objects.filter(
-            user=user,
-            note=OuterRef("pk"),
-        ).values("viewed_at")[:1]
-
-        notes = notes.annotate(user_viewed_at=Subquery(user_views)).order_by(
-            F("user_viewed_at").desc(nulls_last=True)
-        )
-    else:
-        notes = notes.order_by(sort_order)
-
-    return notes[:20]
-
-
 @login_required
 def note_view(request, note_id):
     """Standalone editor view for a note without a matter."""
@@ -465,16 +468,7 @@ def note_view(request, note_id):
     # Record user's view of this note
     record_note_view(request.user, note)
 
-    # Get all standalone notes for sidebar with sort order
-    sort_order = get_sidebar_sort(request)
-    notes = get_sorted_standalone_notes(request.user, sort_order)
-
-    context = {
-        "note": note,
-        "notes": notes,
-        "sidebar_sort_options": SIDEBAR_SORT_OPTIONS,
-        "current_sort": sort_order,
-    }
+    context = {"note": note} | get_editor_file_tree(request, note)
     return render(request, "notes/editor.html", context)
 
 
@@ -490,31 +484,6 @@ def note_content_partial(request, note_id):
         "note": note,
     }
     return render(request, "notes/editor-content.html", context)
-
-
-@login_required
-def sidebar_sort(request, note_id, sort_key):
-    """Change sidebar sort order and return updated sidebar list."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
-
-    # Validate sort key
-    valid_keys = [key for key, _ in SIDEBAR_SORT_OPTIONS]
-    if sort_key not in valid_keys:
-        sort_key = "-viewed_at"
-
-    # Save to session
-    request.session["standalone_notes_sidebar_sort"] = sort_key
-
-    # Get sorted notes
-    notes = get_sorted_standalone_notes(request.user, sort_key)
-
-    context = {
-        "note": note,
-        "notes": notes,
-        "sidebar_sort_options": SIDEBAR_SORT_OPTIONS,
-        "current_sort": sort_key,
-    }
-    return render(request, "notes/sidebar-list.html", context)
 
 
 @login_required

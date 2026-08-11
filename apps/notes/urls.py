@@ -66,11 +66,6 @@ urlpatterns = [
     path("notes/<int:note_id>/autosave/", views.note_autosave, name="note-autosave"),
     path("notes/<int:note_id>/title/", views.note_title, name="note-title"),
     path("notes/<int:note_id>/meta/", views.note_meta, name="note-meta"),
-    path(
-        "notes/<int:note_id>/sidebar/sort/<str:sort_key>/",
-        views.sidebar_sort,
-        name="note-sidebar-sort",
-    ),
     path("notes/shortcuts/", views.notes_shortcuts, name="notes-shortcuts"),
     path(
         "notes/<int:note_id>/import-modal/",

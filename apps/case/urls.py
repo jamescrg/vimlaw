@@ -1051,11 +1051,6 @@ urlpatterns = [
         notes.note_content_partial,
         name="note-content-partial",
     ),
-    path(
-        "case/notes/<int:note_id>/sidebar-sort/<str:sort_key>/",
-        notes.sidebar_sort,
-        name="note-sidebar-sort",
-    ),
     path("case/notes/<int:note_id>/edit/", notes.note_edit, name="notes-edit"),
     path("case/notes/<int:note_id>/delete/", notes.note_delete, name="notes-delete"),
     path("case/notes/<int:note_id>/content/", notes.note_content, name="note-content"),
