@@ -67,11 +67,12 @@ body:has(.note-page.standalone) {
   margin-top: 1.75rem;
 }
 
-/* Left Panel - Files / Outline (Typora-style: one full-height panel, the
-   tab row sharing the toolbar's 3rem band) */
+/* Side panels - Files left, Outline right. Shared chrome lives on
+   .note-panel; the side modifiers carry only edge-specific rules (border,
+   resizer edge, responsive breakpoint). Each panel's header label shares
+   the toolbar's 3rem band. */
 .note-panel {
   background: var(--background-section);
-  border-right: 1px solid var(--border-medium);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -81,15 +82,30 @@ body:has(.note-page.standalone) {
   width: var(--panel-width, 17rem);
 }
 
-/* Drag handle on the panel's right edge; width persists per user. */
+.note-panel-left {
+  border-right: 1px solid var(--border-medium);
+}
+
+.note-panel-right {
+  border-left: 1px solid var(--border-medium);
+}
+
+/* Drag handle on the panel's inner edge; width persists per user. */
 .note-panel .panel-resizer {
   bottom: 0;
   cursor: col-resize;
   position: absolute;
-  right: 0;
   top: 0;
   width: 0.25rem;
   z-index: 10;
+}
+
+.note-panel-left .panel-resizer {
+  right: 0;
+}
+
+.note-panel-right .panel-resizer {
+  left: 0;
 }
 
 .note-panel .panel-resizer:hover,
@@ -105,8 +121,8 @@ body:has(.note-page.standalone) {
 
 /* Collapsed = a slim rail with the bottom toggle still reachable, matching
    the main nav sidebar (the toggle lives in the panel, so the rail must
-   never shrink to nothing). The rail shows one icon per tab; clicking one
-   expands the panel onto that tab. */
+   never shrink to nothing). The rail shows the panel's one icon; clicking
+   it expands the panel. */
 .note-panel .panel-rail {
   display: none;
 }
@@ -116,8 +132,7 @@ body:has(.note-page.standalone) {
 }
 
 .note-panel.collapsed .panel-header,
-.note-panel.collapsed .panel-pane.files-pane,
-.note-panel.collapsed .panel-pane.outline-pane,
+.note-panel.collapsed .panel-pane,
 .note-panel.collapsed .panel-resizer {
   display: none;
 }
@@ -130,20 +145,21 @@ body:has(.note-page.standalone) {
   padding: 0.75rem 0;
 }
 
-/* Collapse the panel by default on smaller screens */
-@media (width <= 1199px) {
-  .note-panel:not(.expanded) {
+/* Staggered auto-rail on smaller screens: the Outline yields first, the
+   Files panel holds on longer. The JS restore-expanded gates
+   (railBreakpoint in notes-editor.js) mirror these breakpoints. */
+@media (width <= 1439px) {
+  .note-panel-right:not(.expanded) {
     width: 3rem;
   }
 
-  .note-panel:not(.expanded) .panel-header,
-  .note-panel:not(.expanded) .panel-pane.files-pane,
-  .note-panel:not(.expanded) .panel-pane.outline-pane,
-  .note-panel:not(.expanded) .panel-resizer {
+  .note-panel-right:not(.expanded) .panel-header,
+  .note-panel-right:not(.expanded) .panel-pane,
+  .note-panel-right:not(.expanded) .panel-resizer {
     display: none;
   }
 
-  .note-panel:not(.expanded) .panel-rail {
+  .note-panel-right:not(.expanded) .panel-rail {
     align-items: center;
     display: flex;
     flex-direction: column;
@@ -152,9 +168,24 @@ body:has(.note-page.standalone) {
   }
 }
 
-.note-panel .rail-tab.active {
-  background: var(--selected-background);
-  color: var(--selected-color);
+@media (width <= 1199px) {
+  .note-panel-left:not(.expanded) {
+    width: 3rem;
+  }
+
+  .note-panel-left:not(.expanded) .panel-header,
+  .note-panel-left:not(.expanded) .panel-pane,
+  .note-panel-left:not(.expanded) .panel-resizer {
+    display: none;
+  }
+
+  .note-panel-left:not(.expanded) .panel-rail {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 0;
+  }
 }
 
 /* Bottom toggle — same treatment as the main nav's .sidebar-toggle */
@@ -187,33 +218,12 @@ body:has(.note-page.standalone) {
   padding: 0 0.75rem;
 }
 
-.note-panel .panel-tabs {
-  align-items: center;
-  display: flex;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.note-panel .panel-tab {
-  background: none;
-  border: 1px solid transparent;
-  border-radius: var(--radius-xs);
+/* Quiet static labels - same 1rem/muted voice the old tabs had, minus the
+   chrome */
+.note-panel .panel-title {
   color: var(--color-muted);
-  cursor: pointer;
   font-size: 1rem;
-  padding: 0.25rem 0.5rem;
-  transition: all 0.15s ease;
-}
-
-.note-panel .panel-tab:hover {
-  color: var(--color-primary);
-}
-
-/* Active tab wears the nav's selected-item convention (see sidebar.css) */
-.note-panel .panel-tab.active {
-  background: var(--selected-background);
-  border-color: var(--selected-border);
-  color: var(--selected-color);
+  user-select: none;
 }
 
 .note-panel .panel-header-actions {
@@ -223,14 +233,10 @@ body:has(.note-page.standalone) {
   gap: 0.25rem;
 }
 
-/* Header action icons (sort, collapse-all) match the 1rem tab text rather
+/* Header action icons (collapse-all) match the 1rem title text rather
    than the chunkier 1.25rem panel-btn default. */
 .note-panel .panel-header .panel-btn {
   font-size: 1rem;
-}
-
-.note-panel .panel-header-actions .outline-actions {
-  display: flex;
 }
 
 .note-panel .panel-header .panel-btn:hover {
@@ -241,25 +247,13 @@ body:has(.note-page.standalone) {
   color: inherit;
 }
 
-/* The active tab decides which pane shows and which header action rides
-   along (collapse-all for Outline; Files has none). */
+/* Each panel owns exactly one pane - always visible when the panel is
+   open */
 .note-panel .panel-pane {
-  display: none;
+  display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
-}
-
-.note-panel:not(.tab-outline) .files-pane {
-  display: flex;
-}
-
-.note-panel.tab-outline .outline-pane {
-  display: flex;
-}
-
-.note-panel:not(.tab-outline) .panel-header .outline-actions {
-  display: none;
 }
 
 .note-panel #file-tree-container {
@@ -476,7 +470,7 @@ body:has(.note-page.standalone) {
   padding: 2rem 3rem 8rem;
 }
 
-/* Outline pane (inside the merged panel; .note-outline scopes the list
+/* Outline pane (inside the right panel; .note-outline scopes the list
    styles below) */
 /* Vertical rhythm comes solely from .outline-text's 0.25rem paddings
    (0.5rem label-to-label everywhere) - no list gaps, which would stack
@@ -1225,21 +1219,4 @@ body:has(.note-page.standalone) {
 .error-text {
   margin-top: 0.5rem;
   color: var(--error);
-}
-
-/* Dark mode — active panel tab (and rail icon) follows the nav convention:
-   hover-fill background, no border, the colored text alone marks it
-   (sidebar.css). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .note-panel :is(.panel-tab, .rail-tab).active {
-  background: var(--background-sidebar-active);
-  border-color: transparent;
-  color: var(--selected-color);
-}
-
-/* Basic — the active tab takes the azure fill under inverted text, matching
-   the nav's signature move. */
-[data-theme="basic"] .note-panel :is(.panel-tab, .rail-tab).active {
-  background: var(--control-active-bg);
-  border-color: var(--control-active-line);
-  color: var(--control-active-color);
 }

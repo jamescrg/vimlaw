@@ -631,83 +631,78 @@ function updateSidebarActive(noteId) {
   activeItem.scrollIntoView({ block: "nearest" });
 }
 
-// ─── Panel Collapse + Tabs ───────────────────────────────────────────────────
+// ─── Panels (Files left, Outline right) ──────────────────────────────────────
 
-const PANEL_STATE_KEY = "notes-editor-note-panel";
-const PANEL_TAB_KEY = "notes-editor-panel-tab";
-const PANEL_WIDTH_KEY = "notes-editor-panel-width";
 // Collapsed leaves a 3rem rail (so the bottom toggle stays reachable) —
 // only widths beyond it count as "open".
 const PANEL_RAIL_PX = 64;
 const PANEL_MIN_WIDTH = 180;
 const PANEL_MAX_WIDTH = 560;
 
+// The left panel keeps its pre-split storage keys so existing user state
+// survives. railBreakpoint mirrors each panel's auto-rail media query in
+// notes.css; resizeDir is the drag direction that widens the panel.
+const PANELS = [
+  {
+    selector: ".note-panel-left",
+    stateKey: "notes-editor-note-panel",
+    widthKey: "notes-editor-panel-width",
+    iconPrefix: "icon-panel-left-",
+    railBreakpoint: 1200,
+    resizeDir: 1,
+  },
+  {
+    selector: ".note-panel-right",
+    stateKey: "notes-editor-outline-panel",
+    widthKey: "notes-editor-outline-panel-width",
+    iconPrefix: "icon-panel-right-",
+    railBreakpoint: 1440,
+    resizeDir: -1,
+  },
+];
+
 // Point the toggle's icon at the action it will perform: an open panel
 // gets the "close" glyph, a collapsed one the "open" glyph.
-function syncPanelIcon(isOpen) {
-  const icon = document.querySelector("#panel-toggle-btn i");
-  if (icon) icon.className = "icon-panel-left-" + (isOpen ? "close" : "open");
+function syncPanelIcon(cfg, isOpen) {
+  const icon = document.querySelector(cfg.selector + " .panel-toggle i");
+  if (icon) icon.className = cfg.iconPrefix + (isOpen ? "close" : "open");
 }
 
-// Measured width is the ground truth (media queries collapse the panel
+// Measured width is the ground truth (media queries collapse the panels
 // without touching the classes), so re-sync from it on load and resize.
 function syncPanelIcons() {
-  const panel = document.querySelector(".note-panel");
-  if (panel) syncPanelIcon(panel.offsetWidth > PANEL_RAIL_PX);
+  for (const cfg of PANELS) {
+    const panel = document.querySelector(cfg.selector);
+    if (panel) syncPanelIcon(cfg, panel.offsetWidth > PANEL_RAIL_PX);
+  }
 }
 
-function togglePanel() {
-  const panel = document.querySelector(".note-panel");
+function togglePanel(cfg) {
+  const panel = document.querySelector(cfg.selector);
   if (!panel) return;
 
   const isVisible = panel.offsetWidth > PANEL_RAIL_PX;
   panel.classList.toggle("collapsed", isVisible);
   panel.classList.toggle("expanded", !isVisible);
-  localStorage.setItem(PANEL_STATE_KEY, isVisible ? "collapsed" : "expanded");
-  syncPanelIcon(!isVisible);
+  localStorage.setItem(cfg.stateKey, isVisible ? "collapsed" : "expanded");
+  syncPanelIcon(cfg, !isVisible);
 }
 
-function openPanel() {
-  const panel = document.querySelector(".note-panel");
+function openPanel(cfg) {
+  const panel = document.querySelector(cfg.selector);
   if (!panel) return;
 
   panel.classList.remove("collapsed");
   panel.classList.add("expanded");
-  localStorage.setItem(PANEL_STATE_KEY, "expanded");
-  syncPanelIcon(true);
+  localStorage.setItem(cfg.stateKey, "expanded");
+  syncPanelIcon(cfg, true);
 }
 
-function setPanelTab(tab) {
-  const panel = document.querySelector(".note-panel");
-  if (!panel) return;
-
-  panel.classList.toggle("tab-outline", tab === "outline");
-  panel
-    .querySelectorAll(".panel-tab, .rail-tab")
-    .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
-  localStorage.setItem(PANEL_TAB_KEY, tab);
-}
-
-function setupPanelTabs() {
-  document.querySelectorAll(".note-panel .panel-tab").forEach((btn) => {
-    btn.addEventListener("click", () => setPanelTab(btn.dataset.tab));
-  });
-
-  // Rail icons expand the collapsed panel straight onto their tab
-  document.querySelectorAll(".note-panel .rail-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setPanelTab(btn.dataset.tab);
-      openPanel();
-    });
-  });
-}
-
-function setupPanelResize() {
-  const panel = document.querySelector(".note-panel");
-  const resizer = panel && panel.querySelector(".panel-resizer");
+function setupPanelResize(cfg, panel) {
+  const resizer = panel.querySelector(".panel-resizer");
   if (!resizer) return;
 
-  const storedWidth = parseInt(localStorage.getItem(PANEL_WIDTH_KEY), 10);
+  const storedWidth = parseInt(localStorage.getItem(cfg.widthKey), 10);
   if (storedWidth) panel.style.setProperty("--panel-width", storedWidth + "px");
 
   resizer.addEventListener("pointerdown", (e) => {
@@ -720,7 +715,10 @@ function setupPanelResize() {
     const onMove = (ev) => {
       const width = Math.min(
         PANEL_MAX_WIDTH,
-        Math.max(PANEL_MIN_WIDTH, startWidth + ev.clientX - startX),
+        Math.max(
+          PANEL_MIN_WIDTH,
+          startWidth + cfg.resizeDir * (ev.clientX - startX),
+        ),
       );
       panel.style.setProperty("--panel-width", width + "px");
     };
@@ -728,7 +726,7 @@ function setupPanelResize() {
       resizer.removeEventListener("pointermove", onMove);
       resizer.removeEventListener("pointerup", onUp);
       panel.classList.remove("resizing");
-      localStorage.setItem(PANEL_WIDTH_KEY, String(panel.offsetWidth));
+      localStorage.setItem(cfg.widthKey, String(panel.offsetWidth));
     };
     resizer.addEventListener("pointermove", onMove);
     resizer.addEventListener("pointerup", onUp);
@@ -736,29 +734,36 @@ function setupPanelResize() {
 
   resizer.addEventListener("dblclick", () => {
     panel.style.removeProperty("--panel-width");
-    localStorage.removeItem(PANEL_WIDTH_KEY);
+    localStorage.removeItem(cfg.widthKey);
   });
 }
 
-function restorePanelStates() {
-  const panel = document.querySelector(".note-panel");
-  if (panel) {
-    const stored = localStorage.getItem(PANEL_STATE_KEY);
-    if (stored === "collapsed") panel.classList.add("collapsed");
-    else if (stored === "expanded" && window.innerWidth >= 1200)
-      panel.classList.add("expanded");
-  }
-  setPanelTab(localStorage.getItem(PANEL_TAB_KEY) || "files");
-}
+function setupPanel(cfg) {
+  const panel = document.querySelector(cfg.selector);
+  if (!panel) return;
 
-window.togglePanel = togglePanel;
+  // Restore stored state; only re-apply "expanded" above the panel's own
+  // auto-rail breakpoint so small screens still start railed.
+  const stored = localStorage.getItem(cfg.stateKey);
+  if (stored === "collapsed") panel.classList.add("collapsed");
+  else if (stored === "expanded" && window.innerWidth >= cfg.railBreakpoint)
+    panel.classList.add("expanded");
+
+  const toggle = panel.querySelector(".panel-toggle");
+  if (toggle) toggle.addEventListener("click", () => togglePanel(cfg));
+
+  // Rail icon expands the collapsed panel
+  const railBtn = panel.querySelector(".panel-rail .panel-btn");
+  if (railBtn) railBtn.addEventListener("click", () => openPanel(cfg));
+
+  setupPanelResize(cfg, panel);
+}
 
 // ─── Init ────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
-  restorePanelStates();
-  setupPanelTabs();
-  setupPanelResize();
+  localStorage.removeItem("notes-editor-panel-tab"); // retired key
+  PANELS.forEach(setupPanel);
   syncPanelIcons();
   setupFileTree();
   initEditor();

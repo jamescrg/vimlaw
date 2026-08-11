@@ -20,23 +20,10 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
   <div class="note-editor-layout">
-    <!-- Left Panel - Files / Outline -->
-    <aside class="note-panel">
+    <!-- Left Panel - Files -->
+    <aside class="note-panel note-panel-left">
       <div class="panel-header">
-        <div class="panel-tabs">
-          <button type="button" class="panel-tab active" data-tab="files">Files</button>
-          <button type="button" class="panel-tab" data-tab="outline">Outline</button>
-        </div>
-        <div class="panel-header-actions">
-          <div class="outline-actions">
-            <button type="button"
-                    class="panel-btn"
-                    id="outline-collapse-btn"
-                    title="Collapse/Expand all">
-              <i class="icon-chevrons-down-up"></i>
-            </button>
-          </div>
-        </div>
+        <span class="panel-title">Files</span>
       </div>
       <div class="panel-pane files-pane note-sidebar">
         <div id="file-tree-container">
@@ -47,30 +34,13 @@
           {% endif %}
         </div>
       </div>
-      <div class="panel-pane outline-pane note-outline">
-        <ul class="outline-list" id="outline-list">
-        </ul>
-      </div>
-      <!-- Collapsed-rail shortcuts: expand the panel onto the chosen tab -->
+      <!-- Collapsed-rail shortcut: expand the panel -->
       <div class="panel-rail">
-        <button type="button"
-                class="panel-btn rail-tab"
-                data-tab="files"
-                title="Files">
+        <button type="button" class="panel-btn" title="Files">
           <i class="icon-files"></i>
         </button>
-        <button type="button"
-                class="panel-btn rail-tab"
-                data-tab="outline"
-                title="Outline">
-          <i class="icon-list-tree"></i>
-        </button>
       </div>
-      <button class="panel-toggle"
-              id="panel-toggle-btn"
-              type="button"
-              onclick="togglePanel()"
-              title="Toggle panel">
+      <button class="panel-toggle" type="button" title="Toggle files panel">
         <i class="icon-panel-left-close"></i>
       </button>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>
@@ -170,6 +140,34 @@
         </li>
       </div>
     </main>
+    <!-- Right Panel - Outline -->
+    <aside class="note-panel note-panel-right">
+      <div class="panel-header">
+        <span class="panel-title">Outline</span>
+        <div class="panel-header-actions">
+          <button type="button"
+                  class="panel-btn"
+                  id="outline-collapse-btn"
+                  title="Collapse/Expand all">
+            <i class="icon-chevrons-down-up"></i>
+          </button>
+        </div>
+      </div>
+      <div class="panel-pane outline-pane note-outline">
+        <ul class="outline-list" id="outline-list">
+        </ul>
+      </div>
+      <!-- Collapsed-rail shortcut: expand the panel -->
+      <div class="panel-rail">
+        <button type="button" class="panel-btn" title="Outline">
+          <i class="icon-list-tree"></i>
+        </button>
+      </div>
+      <button class="panel-toggle" type="button" title="Toggle outline panel">
+        <i class="icon-panel-right-close"></i>
+      </button>
+      <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>
+    </aside>
   </div>
   <script type="module" src="{% static_v 'js/notes-editor.js' %}"></script>
 {% endblock content %}
