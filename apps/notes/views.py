@@ -365,8 +365,10 @@ def notes_list(request):
 @login_required
 def notes_add(request):
     """Add a new standalone note."""
+    # The standalone NoteForm is title-only — unlike the case-side NoteForm,
+    # it takes no user kwarg (there is no matter select to scope).
     if request.method == "POST":
-        form = NoteForm(request.POST, user=request.user, use_required_attribute=False)
+        form = NoteForm(request.POST, use_required_attribute=False)
         if form.is_valid():
             note = form.save(commit=False)
             note.author = request.user
@@ -381,7 +383,7 @@ def notes_add(request):
                 headers={"HX-Trigger": "notesChanged"},
             )
     else:
-        form = NoteForm(user=request.user, use_required_attribute=False)
+        form = NoteForm(use_required_attribute=False)
 
     context = {
         "app": "notes",
@@ -594,14 +596,12 @@ def note_edit(request, note_id):
     note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
 
     if request.method == "POST":
-        form = NoteForm(
-            request.POST, instance=note, user=request.user, use_required_attribute=False
-        )
+        form = NoteForm(request.POST, instance=note, use_required_attribute=False)
         if form.is_valid():
             form.save()
             return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
     else:
-        form = NoteForm(instance=note, user=request.user, use_required_attribute=False)
+        form = NoteForm(instance=note, use_required_attribute=False)
 
     context = {
         "app": "notes",

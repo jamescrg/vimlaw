@@ -749,3 +749,25 @@ class TestEditorTreeToggleAll:
         url = reverse("notes:editor-tree-toggle-all")
         assert client.post(url + "?pane=everything&expand=true").status_code == 400
         assert client.get(url + "?pane=files&expand=true").status_code == 405
+
+
+class TestStandaloneNoteAddEdit:
+    """Regression: 64a1161d passed user= to the title-only standalone
+    NoteForm, which crashed add/edit for general notes."""
+
+    def test_add_modal_and_post(self, client, user):
+        assert client.get(reverse("notes:add")).status_code == 200
+        resp = client.post(reverse("notes:add"), {"title": "Fresh note"})
+        assert resp.status_code == 200
+        note = Note.objects.get(title="Fresh note")
+        assert note.matter_id is None
+        assert note.author == user
+
+    def test_edit_modal_and_post(self, client, user):
+        note = Note.objects.create(author=user, title="Before")
+        url = reverse("notes:edit", args=[note.id])
+        assert client.get(url).status_code == 200
+        resp = client.post(url, {"title": "After"})
+        assert resp.status_code == 204
+        note.refresh_from_db()
+        assert note.title == "After"
