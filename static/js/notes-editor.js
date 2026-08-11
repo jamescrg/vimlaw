@@ -613,6 +613,12 @@ function setupHtmxHandlers() {
   });
 }
 
+const PANE_SELECTORS = {
+  files: ".tree-pane-files",
+  matters: ".tree-pane-matters",
+  recent: ".tree-pane-recent",
+};
+
 function updateSidebarActive(noteId) {
   const container = document.getElementById("file-tree-container");
   if (!container) return;
@@ -621,23 +627,37 @@ function updateSidebarActive(noteId) {
     .querySelectorAll("[data-note-id]")
     .forEach((item) => item.classList.remove("active"));
 
-  const activeItem = container.querySelector('[data-note-id="' + noteId + '"]');
-  if (!activeItem) return;
-  activeItem.classList.add("active");
+  // A note can have a tree row AND a recents row; light up both
+  const matches = container.querySelectorAll('[data-note-id="' + noteId + '"]');
+  if (!matches.length) return;
+  matches.forEach((item) => item.classList.add("active"));
 
-  // Reveal a note sitting inside collapsed folders/matters. DOM-only,
+  // Reveal the tree row sitting inside collapsed folders/matters. DOM-only,
   // mirroring the server's render-time ancestor union without persisting
   // the expansion to the session.
-  let node = activeItem.parentElement.closest(
+  const treeRow = matches[0]; // panes render before Recent, so this is the tree row
+  let node = treeRow.parentElement.closest(
     ".file-tree-folder, .file-tree-matter",
   );
   while (node) {
     node.classList.remove("collapsed");
     node = node.parentElement.closest(".file-tree-folder, .file-tree-matter");
   }
-  // Surface the pane the note lives in (matters after a tree refresh, etc.)
-  setLeftTab(activeItem.closest(".tree-pane-matters") ? "matters" : "files");
-  activeItem.scrollIntoView({ block: "nearest" });
+
+  // Stay on the current pane when it already shows the note (clicking in
+  // Recent keeps you on Recent); otherwise switch to the pane that does
+  const panel = document.querySelector(".note-panel-left");
+  const currentPane = document.querySelector(
+    PANE_SELECTORS[panel ? panel.dataset.activePane : "files"] ||
+      PANE_SELECTORS.files,
+  );
+  let visible =
+    currentPane && currentPane.querySelector('[data-note-id="' + noteId + '"]');
+  if (!visible) {
+    setLeftTab(treeRow.closest(".tree-pane-matters") ? "matters" : "files");
+    visible = treeRow;
+  }
+  visible.scrollIntoView({ block: "nearest" });
 }
 
 // Files | Matters tabs on the left panel. Initial state is server-rendered
