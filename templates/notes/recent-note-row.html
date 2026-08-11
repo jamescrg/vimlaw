@@ -6,7 +6,7 @@ must never participate in the tree's drag-and-drop scoping.
 <li class="file-tree-item file-tree-note tree-recent-note{% if n.id == note.id %} active{% endif %}"
     data-note-id="{{ n.id }}"
     data-delete-url="{% if n.matter_id %}{% url 'case:notes-delete' n.id %}{% else %}{% url 'notes:delete' n.id %}{% endif %}"
-    data-properties-url="{% if n.matter_id %}{% url 'case:notes-properties' n.id %}{% else %}{% url 'notes:note-properties' n.id %}{% endif %}"
+    {% if n.matter_id %}data-properties-url="{% url 'case:notes-properties' n.id %}"{% endif %}
     hx-get="{% if n.matter_id %}{% url 'case:note-content-partial' n.id %}{% else %}{% url 'notes:note-content-partial' n.id %}{% endif %}"
     hx-target="#note-editor-container"
     hx-swap="innerHTML"

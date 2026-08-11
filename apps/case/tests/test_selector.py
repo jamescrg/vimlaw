@@ -32,7 +32,7 @@ def test_strips_markdown_fences():
 def library_note(user):
     from apps.notes.models import Note, NoteFolder
 
-    root = NoteFolder.objects.create(name="Firm Library", ai_library=True)
+    root = NoteFolder.objects.create(name="Firm Library")
     sub = NoteFolder.objects.create(name="Evidence", parent=root)
     return Note.objects.create(
         author=user,
@@ -58,12 +58,6 @@ class TestLibraryManifest:
 
     def test_include_library_false_suppresses(self, matter, library_note):
         items, _ = build_manifest(matter, include_library=False)
-        assert not [i for i in items if i.item_type == "library"]
-
-    def test_always_library_notes_not_in_manifest(self, matter, library_note):
-        library_note.ai_context = "always"
-        library_note.save(update_fields=["ai_context"])
-        items, _ = build_manifest(matter)
         assert not [i for i in items if i.item_type == "library"]
 
     def test_lib_label_in_prompt(self):
@@ -121,25 +115,3 @@ class TestLibrarySelection:
         keys = _fallback_by_importance(items, content_map, 10_000)
         assert ("library", 1) not in keys
         assert ("document", 2) in keys
-
-
-class TestLibraryAlwaysContext:
-    def test_always_library_note_included_when_enabled(self, matter, library_note):
-        from apps.case.ai.context import collect_context_items
-
-        library_note.ai_context = "always"
-        library_note.save(update_fields=["ai_context"])
-
-        items = collect_context_items(matter)
-        assert not [i for i in items if i.item_type == "library"]
-
-        items = collect_context_items(matter, include_library_always=True)
-        lib = [i for i in items if i.item_type == "library"]
-        assert len(lib) == 1
-        assert "Hearsay Exceptions" in lib[0].content
-
-    def test_auto_library_note_not_in_always_items(self, matter, library_note):
-        from apps.case.ai.context import collect_context_items
-
-        items = collect_context_items(matter, include_library_always=True)
-        assert not [i for i in items if i.item_type == "library"]

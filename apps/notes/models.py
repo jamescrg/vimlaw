@@ -8,13 +8,6 @@ from utils.models import AuditMixin
 
 User = get_user_model()
 
-# AI context inclusion modes (mirrors apps.case.models.AI_CONTEXT_CHOICES).
-AI_CONTEXT_CHOICES = [
-    ("auto", "Auto"),
-    ("always", "Always"),
-    ("never", "Never"),
-]
-
 
 class NoteFolder(AuditMixin, models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -35,21 +28,10 @@ class NoteFolder(AuditMixin, models.Model):
         help_text="Null = general tree; set = this matter's private tree",
     )
     depth = models.IntegerField(default=0)
-    ai_library = models.BooleanField(
-        default=False,
-        help_text="Notes in this folder and its subfolders are offered to the matter AI",
-    )
     history = HistoricalRecords()
 
     def __str__(self):
         return self.name
-
-    @property
-    def in_ai_library(self):
-        """True when this folder or any ancestor is flagged as AI library."""
-        if self.ai_library:
-            return True
-        return any(a.ai_library for a in self.get_ancestors())
 
     class Meta:
         db_table = "app_note_folder"
@@ -111,40 +93,14 @@ class NoteFolder(AuditMixin, models.Model):
             child.update_descendant_depths()
 
 
-def library_folder_ids():
-    """Ids of AI-library folders: every flagged folder plus all descendants.
-
-    General tree only — matter folders can never join the firm library
-    (the form drops the ai_library field for them).
-    """
-    folders = list(
-        NoteFolder.objects.filter(matter__isnull=True).only(
-            "id", "parent_id", "ai_library"
-        )
-    )
-    children = {}
-    for f in folders:
-        children.setdefault(f.parent_id, []).append(f)
-    ids = set()
-
-    def mark(folder):
-        if folder.id in ids:
-            return
-        ids.add(folder.id)
-        for child in children.get(folder.id, []):
-            mark(child)
-
-    for f in folders:
-        if f.ai_library:
-            mark(f)
-    return ids
-
-
 def get_library_notes():
-    """Standalone notes eligible for the AI library (folder opt-in, not never)."""
-    return Note.objects.filter(
-        matter__isnull=True, folder_id__in=library_folder_ids()
-    ).exclude(ai_context="never")
+    """Every standalone note: the whole Library tree feeds the AI.
+
+    Notes carry no AI knobs — library notes are all selectable, matter
+    notes are all selectable for their matter, and force-inclusion is
+    copy-paste into the chat.
+    """
+    return Note.objects.filter(matter__isnull=True)
 
 
 class Note(AuditMixin, models.Model):
@@ -191,12 +147,6 @@ class Note(AuditMixin, models.Model):
     )
 
     importance = models.PositiveIntegerField(default=4)
-    ai_context = models.CharField(
-        max_length=6,
-        choices=AI_CONTEXT_CHOICES,
-        default="auto",
-        help_text="AI context inclusion: auto (selector decides), always, or never",
-    )
     summary = models.TextField(
         blank=True,
         default="",

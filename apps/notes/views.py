@@ -13,7 +13,7 @@ from apps.matters.models import Matter
 
 from .forms import NoteFolderForm
 from .models import Note, NoteFolder, NoteView
-from .tasks import queue_library_summary_sweep, queue_note_summary
+from .tasks import queue_note_summary
 
 # ---------------------------------------------------------------------------
 # Tree-building utilities
@@ -69,16 +69,6 @@ def validate_folder_move(folder, destination):
 # ---------------------------------------------------------------------------
 # Data helpers
 # ---------------------------------------------------------------------------
-
-
-def _mark_library(nodes, inherited=False):
-    """Annotate a (general) tree with AI-library state: a folder is in the
-    library when it carries the flag or any ancestor does."""
-    for node in nodes:
-        own = node["folder"].ai_library
-        node["own_library_flag"] = own
-        node["in_library"] = own or inherited
-        _mark_library(node["children"], node["in_library"])
 
 
 def _build_tree(folders, notes_by_folder, expanded_ids):
@@ -152,11 +142,10 @@ def get_editor_file_tree(request, note):
         for m in open_matters
     ]
 
-    general_tree = _build_tree(folders_by_matter.get(None, []), general, expanded_ids)
-    _mark_library(general_tree)  # matter folders can never join the library
-
     return {
-        "file_tree": general_tree,
+        "file_tree": _build_tree(
+            folders_by_matter.get(None, []), general, expanded_ids
+        ),
         "root_notes": general.get(None, []),
         "matters": matters,
         "active_pane": "matters" if note.matter_id else "files",
@@ -353,32 +342,6 @@ def note_title(request, note_id):
 
 
 @login_required
-@require_POST
-def note_set_ai(request, note_id, state):
-    """Set the ai_context state on a standalone note (auto/always/never)."""
-    if state not in ("auto", "always", "never"):
-        return HttpResponse(status=400)
-
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
-    note.ai_context = state
-    note.save(update_fields=["ai_context", "updated_at", "updated_by"])
-    if state != "never":
-        queue_note_summary(note.id)
-
-    return HttpResponse(status=204)
-
-
-@login_required
-def note_properties(request, note_id):
-    """Properties modal for a standalone note (AI context only)."""
-    from .models import AI_CONTEXT_CHOICES
-
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
-    context = {"note": note, "ai_choices": AI_CONTEXT_CHOICES}
-    return render(request, "notes/properties-modal.html", context)
-
-
-@login_required
 def note_meta(request, note_id):
     """Render the note meta partial (used by HTMX to refresh after autosave)."""
     note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
@@ -480,8 +443,6 @@ def note_folder_edit(request, folder_id):
             folder = form.save()
             if folder.parent_id != old_parent_id:
                 folder.update_descendant_depths()
-            if "ai_library" in form.changed_data or "parent" in form.changed_data:
-                queue_library_summary_sweep()
             return _editor_crud_response()
     else:
         form = NoteFolderForm(instance=folder, exclude_folder=folder)
@@ -593,7 +554,6 @@ def note_folder_reparent(request, folder_id):
     folder.depth = destination.depth + 1 if destination else 0
     folder.save(update_fields=["parent", "depth"])
     folder.update_descendant_depths()
-    queue_library_summary_sweep()  # subtree may enter/leave an AI library
     if destination:
         _expand_folder_in_session(request, destination.pk)
     return HttpResponse(status=204)
@@ -681,7 +641,6 @@ def note_move(request, note_id):
     else:
         note.folder = None
     note.save(update_fields=["folder"])
-    queue_note_summary(note.id)
     if note.folder_id:
         _expand_folder_in_session(request, note.folder_id)
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})

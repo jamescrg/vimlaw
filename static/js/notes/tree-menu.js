@@ -72,7 +72,8 @@ function openMenu(li, x, y) {
       ? "New folder"
       : "New subfolder";
   }
-  showItem("properties", isNote);
+  // Properties = matter re-assignment, so matter notes only
+  showItem("properties", isNote && !!li.dataset.propertiesUrl);
   showItem("rename", isFolder);
   showItem("delete", isFolder);
   showItem("delete-note", isNote);

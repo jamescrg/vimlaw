@@ -1,8 +1,8 @@
 {% comment %}
-Note Properties (shared by general and matter notes). AI context posts
-apply immediately (radio hx-post, no swap); the matter section only
-renders for matter notes and re-assigning explicitly returns the note to
-the new matter's root (folder reset server-side).
+Note Properties (matter notes only): matter re-assignment. Re-assigning
+explicitly returns the note to the new matter's root (folder reset
+server-side). Notes carry no AI knobs — everything is selectable; to force
+a note into a chat, paste it in.
 {% endcomment %}
 <div class="modal-dialog modal-md">
   <div class="modal-content">
@@ -15,53 +15,32 @@ the new matter's root (folder reset server-side).
       </div>
     </div>
     <div class="modal-body">
-      <div class="form-compact">
+      <form id="note-reassign-form"
+            class="form-compact"
+            hx-post="{% url 'case:notes-reassign-matter' note.id %}"
+            hx-swap="none">
+        {% csrf_token %}
         <div class="form-group">
-          <label>AI Context</label>
-          <div class="ai-context-options">
-            {% for value, label in ai_choices %}
-              <label class="ai-context-option">
-                <input type="radio"
-                       name="ai_context"
-                       value="{{ value }}"
-                       {% if note.ai_context == value %}checked{% endif %}
-                       hx-post="{% if note.matter_id %}{% url 'case:notes-set-ai' note.id value %}{% else %}{% url 'notes:note-set-ai' note.id value %}{% endif %}"
-                       hx-swap="none">
-                <span>{{ label }}</span>
-              </label>
-            {% endfor %}
+          <label for="reassign-matter">Matter</label>
+          <div>
+            <select name="matter" id="reassign-matter" class="form-control">
+              {% for m in matters %}
+                <option value="{{ m.id }}" {% if m.id == note.matter_id %}selected{% endif %}>{{ m.name }}</option>
+              {% endfor %}
+            </select>
+            <p class="detail-text">
+              Moving a note to another matter returns it to that matter's
+              root.
+            </p>
           </div>
         </div>
-        {% if note.matter_id %}
-          <form id="note-reassign-form"
-                hx-post="{% url 'case:notes-reassign-matter' note.id %}"
-                hx-swap="none">
-            {% csrf_token %}
-            <div class="form-group">
-              <label for="reassign-matter">Matter</label>
-              <div>
-                <select name="matter" id="reassign-matter" class="form-control">
-                  {% for m in matters %}
-                    <option value="{{ m.id }}" {% if m.id == note.matter_id %}selected{% endif %}>{{ m.name }}</option>
-                  {% endfor %}
-                </select>
-                <p class="detail-text">
-                  Moving a note to another matter returns it to that matter's
-                  root.
-                </p>
-              </div>
-            </div>
-          </form>
-        {% endif %}
-      </div>
+      </form>
     </div>
     <div class="modal-footer">
       <button type="button"
               class="btn btn-secondary"
               @click="$dispatch('close-modal')">Close</button>
-      {% if note.matter_id %}
-        <button type="submit" form="note-reassign-form" class="btn btn-success">Move</button>
-      {% endif %}
+      <button type="submit" form="note-reassign-form" class="btn btn-success">Move</button>
     </div>
   </div>
 </div>

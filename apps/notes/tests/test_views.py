@@ -90,58 +90,8 @@ class TestNoteTitle:
         assert response.json()["saved"] is False
 
 
-class TestNoteSetAi:
-    @pytest.fixture
-    def standalone_note(self, user):
-        return Note.objects.create(author=user, title="Standalone", content="text")
-
-    def test_set_ai_states(self, client, standalone_note):
-        for state in ("always", "never", "auto"):
-            url = reverse("notes:note-set-ai", args=[standalone_note.id, state])
-            response = client.post(url)
-            assert response.status_code == 204
-            standalone_note.refresh_from_db()
-            assert standalone_note.ai_context == state
-
-    def test_set_ai_invalid_state(self, client, standalone_note):
-        url = reverse("notes:note-set-ai", args=[standalone_note.id, "sometimes"])
-        assert client.post(url).status_code == 400
-
-    def test_set_ai_rejects_matter_notes(self, client, note):
-        url = reverse("notes:note-set-ai", args=[note.id, "always"])
-        assert client.post(url).status_code == 404
-
-
-class TestAiLibraryFolderFlag:
-    def test_instant_folder_add_never_queues_sweep(self, client):
-        from unittest.mock import patch
-
-        from apps.notes.models import NoteFolder
-
-        with patch("django_q.tasks.async_task") as async_task:
-            response = client.post(reverse("notes:folder-add"))
-        assert response.status_code == 204
-        folder = NoteFolder.objects.get(name="Untitled")
-        assert folder.ai_library is False
-        assert not async_task.called
-
-    def test_folder_edit_flag_change_queues_sweep(self, client):
-        from unittest.mock import patch
-
-        from apps.notes.models import NoteFolder
-
-        folder = NoteFolder.objects.create(name="Guides")
-        with patch("django_q.tasks.async_task") as async_task:
-            response = client.post(
-                reverse("notes:folder-edit", args=[folder.id]),
-                {"name": "Guides", "ai_library": "True"},
-            )
-        assert response.status_code == 204
-        folder.refresh_from_db()
-        assert folder.ai_library is True
-        assert async_task.called
-
-    def test_autosave_queues_summary_for_library_note(self, client, user):
+class TestNoteSummaries:
+    def test_autosave_queues_summary_for_any_general_note(self, client, user):
         from unittest.mock import patch
 
         from django.core.cache import cache
@@ -149,7 +99,7 @@ class TestAiLibraryFolderFlag:
         from apps.notes.models import NoteFolder
 
         cache.clear()
-        folder = NoteFolder.objects.create(name="Research", ai_library=True)
+        folder = NoteFolder.objects.create(name="Research")
         note = Note.objects.create(
             author=user, title="Lib", folder=folder, content="v1"
         )
@@ -232,52 +182,47 @@ class TestNoteFolderReparent:
         return {"root": root, "child": child, "grandchild": grandchild, "other": other}
 
     def _reparent(self, client, folder, destination=""):
-        from unittest.mock import patch
-
-        with patch("apps.notes.views.queue_library_summary_sweep") as sweep:
-            resp = client.post(
-                reverse("notes:folder-reparent", args=[folder.id]),
-                {"destination": destination},
-            )
-        return resp, sweep
+        resp = client.post(
+            reverse("notes:folder-reparent", args=[folder.id]),
+            {"destination": destination},
+        )
+        return resp
 
     def test_reparent_updates_depths_and_session(self, client, tree):
-        resp, sweep = self._reparent(client, tree["child"], tree["other"].id)
+        resp = self._reparent(client, tree["child"], tree["other"].id)
         assert resp.status_code == 204
         tree["child"].refresh_from_db()
         tree["grandchild"].refresh_from_db()
         assert tree["child"].parent_id == tree["other"].id
         assert tree["child"].depth == 1
         assert tree["grandchild"].depth == 2
-        assert sweep.called
         assert tree["other"].id in client.session["note_folders_expanded"]
 
     def test_reparent_to_root(self, client, tree):
-        resp, _ = self._reparent(client, tree["grandchild"], "")
+        resp = self._reparent(client, tree["grandchild"], "")
         assert resp.status_code == 204
         tree["grandchild"].refresh_from_db()
         assert tree["grandchild"].parent_id is None
         assert tree["grandchild"].depth == 0
 
     def test_reject_self(self, client, tree):
-        resp, _ = self._reparent(client, tree["root"], tree["root"].id)
+        resp = self._reparent(client, tree["root"], tree["root"].id)
         assert resp.status_code == 400
 
     def test_reject_own_descendant(self, client, tree):
-        resp, sweep = self._reparent(client, tree["root"], tree["grandchild"].id)
+        resp = self._reparent(client, tree["root"], tree["grandchild"].id)
         assert resp.status_code == 400
-        assert not sweep.called
         tree["root"].refresh_from_db()
         assert tree["root"].parent_id is None
 
     def test_reject_subtree_depth_overflow(self, client, tree):
         # root has height 2 (child -> grandchild); moving it under a depth-1
         # target would create depth-4 nodes
-        resp, _ = self._reparent(client, tree["root"], tree["child"].id)
+        resp = self._reparent(client, tree["root"], tree["child"].id)
         assert resp.status_code == 400
         # and a height-1 subtree under a depth-2 target also overflows —
         # the case the modal path used to allow
-        resp, _ = self._reparent(client, tree["child"], tree["grandchild"].id)
+        resp = self._reparent(client, tree["child"], tree["grandchild"].id)
         assert resp.status_code == 400
 
     def test_get_not_allowed(self, client, tree):
@@ -285,7 +230,7 @@ class TestNoteFolderReparent:
         assert resp.status_code == 405
 
     def test_bad_destination(self, client, tree):
-        resp, _ = self._reparent(client, tree["root"], "bogus")
+        resp = self._reparent(client, tree["root"], "bogus")
         assert resp.status_code == 400
         resp = client.post(
             reverse("notes:folder-reparent", args=[tree["root"].id]),
@@ -335,22 +280,18 @@ class TestEditorFileTreePartial:
 
 class TestNoteMoveFromTree:
     def test_move_into_folder_expands_destination(self, client, user):
-        from unittest.mock import patch
-
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Filed")
         note = Note.objects.create(author=user, title="Loose")
-        with patch("apps.notes.views.queue_note_summary") as summary:
-            resp = client.post(
-                reverse("notes:note-move", args=[note.id]),
-                {"destination": folder.id},
-            )
+        resp = client.post(
+            reverse("notes:note-move", args=[note.id]),
+            {"destination": folder.id},
+        )
         assert resp.status_code == 204
         assert resp.headers.get("HX-Trigger") == "notesChanged"
         note.refresh_from_db()
         assert note.folder_id == folder.id
-        assert summary.called
         assert folder.id in client.session["note_folders_expanded"]
 
     def test_move_to_root(self, client, user):
@@ -426,13 +367,10 @@ class TestMatterScopeGuards:
         assert scoped["mnote"].matter_id == matter.id
 
     def test_folder_reparent_across_matters_rejected(self, client, scoped):
-        from unittest.mock import patch
-
-        with patch("apps.notes.views.queue_library_summary_sweep"):
-            resp = client.post(
-                reverse("notes:folder-reparent", args=[scoped["mfolder"].id]),
-                {"destination": scoped["general"].id},
-            )
+        resp = client.post(
+            reverse("notes:folder-reparent", args=[scoped["mfolder"].id]),
+            {"destination": scoped["general"].id},
+        )
         assert resp.status_code == 400
         resp = client.post(
             reverse("notes:folder-reparent", args=[scoped["general"].id]),
@@ -464,7 +402,7 @@ class TestMatterToggle:
 
 
 class TestNoteFolderFormMatter:
-    def test_matter_scopes_parents_and_drops_ai_library(self, matter):
+    def test_matter_scopes_parents(self, matter):
         from apps.notes.forms import NoteFolderForm
         from apps.notes.models import NoteFolder
 
@@ -472,11 +410,9 @@ class TestNoteFolderFormMatter:
         mparent = NoteFolder.objects.create(name="Matter parent", matter=matter)
 
         form = NoteFolderForm(matter=matter)
-        assert "ai_library" not in form.fields
         assert list(form.fields["parent"].queryset) == [mparent]
 
         general_form = NoteFolderForm()
-        assert "ai_library" in general_form.fields
         assert mparent not in general_form.fields["parent"].queryset
 
     def test_save_stamps_matter(self, matter):
@@ -736,16 +672,7 @@ class TestAddIntoFolder:
 
 
 class TestNoteProperties:
-    def test_general_modal_renders_ai_only(self, client, user):
-        note = Note.objects.create(author=user, title="Solo", ai_context="always")
-        resp = client.get(reverse("notes:note-properties", args=[note.id]))
-        assert resp.status_code == 200
-        content = resp.content.decode()
-        assert "AI Context" in content
-        assert 'name="matter"' not in content
-        assert "always" in content
-
-    def test_matter_modal_lists_open_matters(self, client_with_matter, note, user):
+    def test_matter_modal_offers_reassign_only(self, client_with_matter, note):
         from apps.matters.models import Matter as MatterModel
 
         MatterModel.objects.create(name="Closed one", status="Closed")
@@ -754,21 +681,14 @@ class TestNoteProperties:
         content = resp.content.decode()
         assert 'name="matter"' in content
         assert "Closed one" not in content
+        assert "ai_context" not in content  # notes carry no AI knobs
 
-    def test_scope_guards(self, client_with_matter, note, user):
+    def test_general_note_has_no_properties(self, client_with_matter, user):
         general = Note.objects.create(author=user, title="General")
-        assert (
-            client_with_matter.get(
-                reverse("notes:note-properties", args=[note.id])
-            ).status_code
-            == 404
+        resp = client_with_matter.get(
+            reverse("case:notes-properties", args=[general.id])
         )
-        assert (
-            client_with_matter.get(
-                reverse("case:notes-properties", args=[general.id])
-            ).status_code
-            == 404
-        )
+        assert resp.status_code == 404
 
 
 class TestReassignMatter:
@@ -854,26 +774,3 @@ class TestValidTabsFallback:
         assert resp.status_code == 200
         # get_last_tab sanitized the stale value to the default (documents)
         assert resp.request["PATH_INFO"].endswith("/documents/")
-
-
-class TestLibrarySparkles:
-    def test_flagged_and_inherited_folders_show_sparkle(self, client, user, matter):
-        from apps.notes.models import NoteFolder
-
-        flagged = NoteFolder.objects.create(name="Firm Library", ai_library=True)
-        NoteFolder.objects.create(name="Evidence", parent=flagged)
-        NoteFolder.objects.create(name="Journal")
-        NoteFolder.objects.create(name="Case Files", matter=matter)
-        note = Note.objects.create(author=user, title="Solo")
-
-        resp = client.get(reverse("notes:editor-file-tree") + f"?note={note.id}")
-        content = resp.content.decode()
-
-        def row(name):
-            start = content.index(name)
-            return content[start : start + 300]
-
-        assert 'title="In AI library"' in row("Firm Library")
-        assert "file-tree-library-inherited" in row("Evidence")
-        assert "file-tree-library" not in row("Journal")
-        assert "file-tree-library" not in row("Case Files")

@@ -7,11 +7,6 @@ app_name = "notes"
 urlpatterns = [
     # List views
     path("notes/add/", views.notes_add, name="add"),
-    path(
-        "notes/<int:note_id>/set-ai/<str:state>/",
-        views.note_set_ai,
-        name="note-set-ai",
-    ),
     # Editor views
     path("notes/launch/", views.notes_launch, name="launch"),
     path("notes/<int:note_id>/", views.note_view, name="note-view"),
@@ -26,11 +21,6 @@ urlpatterns = [
     path("notes/<int:note_id>/autosave/", views.note_autosave, name="note-autosave"),
     path("notes/<int:note_id>/title/", views.note_title, name="note-title"),
     path("notes/<int:note_id>/meta/", views.note_meta, name="note-meta"),
-    path(
-        "notes/<int:note_id>/properties/",
-        views.note_properties,
-        name="note-properties",
-    ),
     path("notes/shortcuts/", views.notes_shortcuts, name="notes-shortcuts"),
     path(
         "notes/<int:note_id>/import-modal/",

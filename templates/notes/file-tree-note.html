@@ -10,7 +10,7 @@ drag-and-drop scope guard.
     data-matter-id="{{ n.matter_id|default_if_none:'' }}"
     data-move-url="{% url 'notes:note-move' n.id %}"
     data-delete-url="{% if n.matter_id %}{% url 'case:notes-delete' n.id %}{% else %}{% url 'notes:delete' n.id %}{% endif %}"
-    data-properties-url="{% if n.matter_id %}{% url 'case:notes-properties' n.id %}{% else %}{% url 'notes:note-properties' n.id %}{% endif %}"
+    {% if n.matter_id %}data-properties-url="{% url 'case:notes-properties' n.id %}"{% endif %}
     hx-get="{% if n.matter_id %}{% url 'case:note-content-partial' n.id %}{% else %}{% url 'notes:note-content-partial' n.id %}{% endif %}"
     hx-target="#note-editor-container"
     hx-swap="innerHTML"

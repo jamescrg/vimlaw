@@ -83,61 +83,20 @@ class TestNote:
         assert note.content == ""
 
 
-class TestAiLibrary:
-    def _folder(self, name, parent=None, ai_library=False):
-        from apps.notes.models import NoteFolder
-
-        return NoteFolder.objects.create(
-            name=name, parent=parent, ai_library=ai_library
-        )
-
-    def test_ai_library_defaults_false(self):
-        folder = self._folder("Plain")
-        assert folder.ai_library is False
-        assert folder.in_ai_library is False
-
-    def test_in_ai_library_inherits_from_ancestor(self):
-        root = self._folder("Research", ai_library=True)
-        child = self._folder("Evidence", parent=root)
-        grandchild = self._folder("Hearsay", parent=child)
-        assert child.in_ai_library is True
-        assert grandchild.in_ai_library is True
-
-    def test_library_folder_ids_includes_descendants(self):
-        from apps.notes.models import library_folder_ids
-
-        root = self._folder("Research", ai_library=True)
-        child = self._folder("Evidence", parent=root)
-        other = self._folder("Groceries")
-        ids = library_folder_ids()
-        assert root.id in ids
-        assert child.id in ids
-        assert other.id not in ids
-
-    def test_get_library_notes_filters(self, user, matter):
+class TestLibraryNotes:
+    def test_get_library_notes_is_every_standalone_note(self, user, matter):
+        """Notes carry no AI knobs: the whole Library tree feeds the AI,
+        matter notes never do (they feed their own matter's context)."""
         from apps.notes.models import get_library_notes
 
-        library = self._folder("Research", ai_library=True)
-        sub = self._folder("Evidence", parent=library)
-        plain = self._folder("Journal")
-
-        in_root = Note.objects.create(author=user, title="Root", folder=library)
-        in_sub = Note.objects.create(author=user, title="Nested", folder=sub)
-        never = Note.objects.create(
-            author=user, title="Never", folder=library, ai_context="never"
-        )
-        journal = Note.objects.create(author=user, title="Journal", folder=plain)
-        unfoldered = Note.objects.create(author=user, title="Loose")
-        matter_note = Note.objects.create(
-            author=user, title="Matter", folder=library, matter=matter
-        )
+        folder = NoteFolder.objects.create(name="Research")
+        in_folder = Note.objects.create(author=user, title="Filed", folder=folder)
+        loose = Note.objects.create(author=user, title="Loose")
+        matter_note = Note.objects.create(author=user, title="Matter", matter=matter)
 
         notes = set(get_library_notes())
-        assert in_root in notes
-        assert in_sub in notes
-        assert never not in notes
-        assert journal not in notes
-        assert unfoldered not in notes
+        assert in_folder in notes
+        assert loose in notes
         assert matter_note not in notes
 
 
@@ -158,15 +117,3 @@ class TestMatterFolderScope:
         mroot = NoteFolder.objects.create(name="Case root", matter=matter)
         child = NoteFolder.objects.create(name="Sub", parent=mroot, matter=matter)
         assert child.depth == 1
-
-    def test_library_folder_ids_excludes_matter_folders(self, matter):
-        from apps.notes.models import library_folder_ids
-
-        flagged_general = NoteFolder.objects.create(name="Library", ai_library=True)
-        matter_folder = NoteFolder.objects.create(name="Case", matter=matter)
-        # Force the flag past the form/full_clean layers
-        NoteFolder.objects.filter(pk=matter_folder.pk).update(ai_library=True)
-
-        ids = library_folder_ids()
-        assert flagged_general.id in ids
-        assert matter_folder.id not in ids

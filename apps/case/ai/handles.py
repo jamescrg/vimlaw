@@ -21,7 +21,7 @@ import re
 from django.db.models import Q
 
 from apps.case.models import Document, Highlight
-from apps.notes.models import Note, library_folder_ids
+from apps.notes.models import Note
 
 HANDLE_RE = re.compile(r"\[(doc|hl|note):(\d+)\]")
 
@@ -78,7 +78,7 @@ def _resolve(kind, item_id, matter):
                 _clean_label(note.title, f"Note {note.id}"),
                 f"/case/notes/{note.id}/",
             )
-        if note and note.matter_id is None and note.folder_id in library_folder_ids():
+        if note and note.matter_id is None:
             return (_clean_label(note.title, f"Note {note.id}"), f"/notes/{note.id}/")
     return None
 

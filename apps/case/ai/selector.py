@@ -157,8 +157,8 @@ def build_manifest(matter, current_conversation=None, include_library=True):
         content_parts.append(f"Content:\n{doc.ocr_text}")
         content_map[("document", doc.id)] = "\n".join(content_parts)
 
-    # Notes with ai_context="auto"
-    for note in Note.objects.filter(matter=matter, ai_context="auto"):
+    # Notes (all of the matter's notes — notes carry no AI knobs)
+    for note in Note.objects.filter(matter=matter):
         content_text = note.content or ""
         if not content_text.strip():
             continue
@@ -340,20 +340,14 @@ def build_manifest(matter, current_conversation=None, include_library=True):
         # queries for invoices the selector ends up not picking.
         content_map[("invoice", invoice.id)] = invoice
 
-    # Firm library — standalone notes in AI-library folders. Offered on every
-    # matter; the selector includes one only when its topic bears on the
-    # question. ai_context="always" library notes are injected by
-    # collect_context_items instead, so only "auto" goes in the manifest.
+    # Firm library — every standalone note. Offered on every matter; the
+    # selector includes one only when its topic bears on the question.
     if include_library:
-        library_notes = (
-            get_library_notes()
-            .filter(ai_context="auto")
-            .select_related(
-                "folder",
-                "folder__parent",
-                "folder__parent__parent",
-                "folder__parent__parent__parent",
-            )
+        library_notes = get_library_notes().select_related(
+            "folder",
+            "folder__parent",
+            "folder__parent__parent",
+            "folder__parent__parent__parent",
         )
         for note in library_notes:
             content_text = note.content or ""

@@ -93,14 +93,12 @@ def note_delete(request, note_id):
 
 @login_required
 def note_properties(request, note_id):
-    """Properties modal for a matter note (AI context + matter re-assign)."""
-    from apps.notes.models import AI_CONTEXT_CHOICES
-
+    """Properties modal for a matter note (matter re-assignment)."""
     note = get_object_or_404(Note, pk=note_id, matter__isnull=False)
     matters = filter_matters_for_user(
         Matter.objects.filter(status="Open").order_by("name"), request.user
     )
-    context = {"note": note, "ai_choices": AI_CONTEXT_CHOICES, "matters": matters}
+    context = {"note": note, "matters": matters}
     return render(request, "notes/properties-modal.html", context)
 
 
@@ -187,24 +185,6 @@ def notes_shortcuts(request, matter_id):
 def note_import_modal(request, note_id):
     """Show import markdown modal."""
     return render(request, "notes/import-modal.html")
-
-
-@login_required
-@require_POST
-def note_set_ai(request, note_id, state):
-    """Set the ai_context state on a note (auto/always/never).
-
-    Editable for synced notes too — ai_context is app-only metadata that the
-    Drive sync never overwrites.
-    """
-    if state not in ("auto", "always", "never"):
-        return HttpResponse(status=400)
-
-    note = get_object_or_404(Note, pk=note_id)
-    note.ai_context = state
-    note.save(update_fields=["ai_context", "updated_at", "updated_by"])
-
-    return HttpResponse(status=204)
 
 
 @login_required

@@ -33,16 +33,6 @@
             {% if form.name.errors %}<div class="text-danger">{{ form.name.errors }}</div>{% endif %}
           </div>
         </div>
-        {% comment %}Matter folders have no ai_library field.{% endcomment %}
-        {% if "ai_library" in form.fields %}
-          <div class="form-group">
-            <label for="{{ form.ai_library.id_for_label }}">{{ form.ai_library.label }}</label>
-            <div>
-              {{ form.ai_library }}
-              {% if form.ai_library.errors %}<div class="text-danger">{{ form.ai_library.errors }}</div>{% endif %}
-            </div>
-          </div>
-        {% endif %}
       </form>
     </div>
     <div class="modal-footer">

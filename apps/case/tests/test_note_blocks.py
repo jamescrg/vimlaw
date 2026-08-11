@@ -92,7 +92,7 @@ def test_edit_replace_rewrites(user, matter):
 
 
 def test_edit_reaches_library_note(user, matter):
-    folder = NoteFolder.objects.create(name="Library", ai_library=True)
+    folder = NoteFolder.objects.create(name="Library")
     note = Note.objects.create(folder=folder, title="Service guide", content="Old.")
     text = apply_note_blocks(
         edit_block({"id": note.id, "content": "Addendum."}), matter, user
@@ -115,21 +115,15 @@ def test_edit_rejects_other_matter_note(user, matter, contact, practice_area):
     assert "not found or not editable" in text
 
 
-def test_edit_rejects_non_library_standalone_note(user, matter):
-    folder = NoteFolder.objects.create(name="Private", ai_library=False)
-    note = Note.objects.create(folder=folder, title="Private", content="Old.")
-    apply_note_blocks(edit_block({"id": note.id, "content": "x"}), matter, user)
-    note.refresh_from_db()
-    assert note.content == "Old."
-
-
-def test_edit_rejects_never_context_note(user, matter):
-    note = Note.objects.create(
-        matter=matter, title="Hidden", content="Old.", ai_context="never"
+def test_edit_reaches_any_standalone_note(user, matter):
+    # Notes carry no AI knobs: every library note is editable
+    folder = NoteFolder.objects.create(name="Journal")
+    note = Note.objects.create(folder=folder, title="Journal note", content="Old.")
+    apply_note_blocks(
+        edit_block({"id": note.id, "content": "More.", "mode": "append"}), matter, user
     )
-    apply_note_blocks(edit_block({"id": note.id, "content": "x"}), matter, user)
     note.refresh_from_db()
-    assert note.content == "Old."
+    assert note.content.endswith("More.")
 
 
 def test_edit_unknown_id_reports(user, matter):

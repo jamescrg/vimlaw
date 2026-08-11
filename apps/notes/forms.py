@@ -4,14 +4,9 @@ from .models import NoteFolder
 
 
 class NoteFolderForm(forms.ModelForm):
-    YESNO_CHOICES = (
-        (False, "No"),
-        (True, "Yes"),
-    )
-
     class Meta:
         model = NoteFolder
-        fields = ["name", "parent", "ai_library"]
+        fields = ["name", "parent"]
 
         widgets = {
             "name": forms.TextInput(
@@ -27,7 +22,6 @@ class NoteFolderForm(forms.ModelForm):
         labels = {
             "name": "Folder Name",
             "parent": "Parent Folder",
-            "ai_library": "Include in AI Library",
         }
 
     def __init__(self, *args, exclude_folder=None, matter=None, **kwargs):
@@ -42,13 +36,6 @@ class NoteFolderForm(forms.ModelForm):
         self.fields["name"].required = True
         self.fields["parent"].required = False
         self.fields["parent"].empty_label = "— None (root level) —"
-        if matter is not None:
-            # Matter folders can never join the firm AI library
-            del self.fields["ai_library"]
-        else:
-            self.fields["ai_library"].widget = forms.Select(
-                choices=self.YESNO_CHOICES, attrs={"class": "form-control"}
-            )
 
         qs = NoteFolder.objects.filter(depth__lt=3, matter=matter).order_by("name")
         if exclude_folder and exclude_folder.pk:
@@ -60,6 +47,6 @@ class NoteFolderForm(forms.ModelForm):
         # Indent choices to show hierarchy
         choices = [("", self.fields["parent"].empty_label)]
         for folder in qs:
-            indent = "\u00a0\u00a0\u00a0\u00a0" * folder.depth
+            indent = "    " * folder.depth
             choices.append((folder.pk, f"{indent}{folder.name}"))
         self.fields["parent"].choices = choices
