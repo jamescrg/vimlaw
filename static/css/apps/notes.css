@@ -359,7 +359,9 @@ body:has(.note-page.standalone) {
   list-style: none;
   margin: 0;
   overflow-y: auto;
-  padding: 0.5rem 0;
+  /* Bottom padding keeps some blank root-drop space at the list's end even
+     when the tree fills the pane */
+  padding: 0.5rem 0 2rem;
 }
 
 .note-sidebar .file-tree-item {
@@ -519,6 +521,31 @@ body:has(.note-page.standalone) {
 .note-sidebar .file-tree.drop-target-root {
   border-radius: var(--radius-sm);
   box-shadow: inset 0 0 0 1px var(--selected-border);
+}
+
+/* Pinned root dropzone: hidden until a drag starts, sits below the
+   scrolling list so it stays reachable however deep the tree scrolls */
+.note-sidebar .tree-root-dropzone {
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  display: none;
+  flex-shrink: 0;
+  font-size: 1rem;
+  margin: 0.5rem 0.75rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+#file-tree-container.tree-dragging .tree-root-dropzone {
+  display: block;
+}
+
+.note-sidebar .tree-root-dropzone.drop-target {
+  background: var(--selected-background);
+  border-color: var(--selected-border);
+  border-style: solid;
+  color: var(--selected-color);
 }
 
 /* Rejected drop: brief red flash on the target (no toast lib loads in the

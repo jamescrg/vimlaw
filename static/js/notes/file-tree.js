@@ -145,6 +145,8 @@ function onDragStart(e) {
   );
   e.dataTransfer.effectAllowed = "move";
   li.classList.add("dragging");
+  // Reveal the pinned root dropzones for the duration of the drag
+  document.getElementById("file-tree-container").classList.add("tree-dragging");
 }
 
 // Returns the folder li or root ul that would accept the current drag at
@@ -165,6 +167,14 @@ function resolveDropTarget(e) {
     )
       return null;
     return folderLi;
+  }
+
+  // The pinned dropzone = the root of the dragged item's own scope
+  // (general root for general items, its matter's root for matter items)
+  const rootBar = e.target.closest(".tree-root-dropzone");
+  if (rootBar) {
+    if (!drag.el.parentElement.closest(".file-tree-folder")) return null; // already at its root
+    return rootBar;
   }
 
   // A matter node = that matter's root (folder=None), same-matter items only
@@ -255,6 +265,8 @@ function onDragEnd() {
   if (drag) drag.el.classList.remove("dragging");
   drag = null;
   clearDropState();
+  const container = document.getElementById("file-tree-container");
+  if (container) container.classList.remove("tree-dragging");
 }
 
 // No toast library loads in the editor, so rejection feedback is a brief
