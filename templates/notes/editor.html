@@ -41,6 +41,11 @@
             <i class="icon-history"></i>
           </button>
         </div>
+        <button class="panel-btn panel-toggle"
+                type="button"
+                title="Toggle files panel">
+          <i class="icon-panel-left-close"></i>
+        </button>
       </div>
       {% comment %}
       Obsidian-style action row: the tab bar above only switches panes;
@@ -88,9 +93,6 @@
            hx-get="{% url 'notes:search-palette' %}"
            hx-target="#htmx-modal-container"><i class="icon-search"></i></a>
       </div>
-      <button class="panel-toggle" type="button" title="Toggle files panel">
-        <i class="icon-panel-left-close"></i>
-      </button>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>
     </aside>
     <!-- Main Editor Area -->
@@ -233,15 +235,21 @@
     <!-- Right Panel - Outline -->
     <aside class="note-panel note-panel-right">
       <div class="panel-header">
+        <button class="panel-btn panel-toggle"
+                type="button"
+                title="Toggle outline panel">
+          <i class="icon-panel-right-close"></i>
+        </button>
+        {% comment %}Decorative mirror of the left panel's tab bar{% endcomment %}
         <span class="panel-title" title="Outline"><i class="icon-list-tree"></i></span>
-        <div class="panel-header-actions">
-          <button type="button"
-                  class="panel-btn"
-                  id="outline-collapse-btn"
-                  title="Collapse/Expand all">
-            <i class="icon-chevrons-down-up"></i>
-          </button>
-        </div>
+      </div>
+      <div class="panel-actions">
+        <button type="button"
+                class="panel-btn"
+                id="outline-collapse-btn"
+                title="Collapse/Expand all">
+          <i class="icon-chevrons-down-up"></i>
+        </button>
       </div>
       <div class="panel-pane outline-pane note-outline">
         <ul class="outline-list" id="outline-list">
@@ -253,9 +261,6 @@
           <i class="icon-list-tree"></i>
         </button>
       </div>
-      <button class="panel-toggle" type="button" title="Toggle outline panel">
-        <i class="icon-panel-right-close"></i>
-      </button>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>
     </aside>
   </div>

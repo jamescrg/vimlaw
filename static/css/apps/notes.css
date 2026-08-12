@@ -191,22 +191,11 @@ body:has(.note-page.standalone) {
   }
 }
 
-/* Bottom toggle — same treatment as the main nav's .sidebar-toggle */
+/* The panel toggle is a plain header button (right edge of the left
+   header, left edge of the right header); collapsed panels expand via
+   their rail icon instead */
 .note-panel .panel-toggle {
-  background: none;
-  border: none;
-  border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-top: auto;
-  padding: 0.75rem;
-  text-align: center;
-  transition: color 100ms ease;
-}
-
-.note-panel .panel-toggle:hover {
-  color: var(--color-primary);
 }
 
 .note-panel .panel-header {
@@ -283,16 +272,10 @@ body:has(.note-page.standalone) {
   display: flex;
 }
 
-.note-panel .panel-header-actions {
-  align-items: center;
-  display: flex;
-  flex-shrink: 0;
-  gap: 0.25rem;
-}
-
-/* Obsidian-style action row under the tab bar (left panel): the tabs
-   above only switch panes; collection-level actions live here */
-.note-panel-left .panel-actions {
+/* Obsidian-style action row under the header (both panels): the header
+   only switches panes / toggles the panel; collection-level actions
+   live here */
+.note-panel .panel-actions {
   align-items: center;
   display: flex;
   flex-shrink: 0;
