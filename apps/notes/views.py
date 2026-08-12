@@ -2,12 +2,7 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.search import SearchHeadline, SearchQuery
-from django.db.models import (
-    Case as SqlCase,
-    Q,
-    Value,
-    When,
-)
+from django.db.models import Q
 from django.db.models.functions import Lower
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -253,8 +248,10 @@ def notes_search_palette(request):
 
     GET renders the whole modal with the Recent band; the input's debounced
     hx-post comes back here and gets just the results partial. Two ranked
-    bands: title matches (istartswith first), then full-text matches via
-    watson with a match-centered highlighted excerpt.
+    bands: path matches (the query is checked against each note's full
+    display path — matter/folders/title — with title hits ranked above
+    path-only hits), then full-text matches via watson with a
+    match-centered highlighted excerpt.
     """
     q = (request.POST.get("q") or request.GET.get("q") or "").strip()
 
@@ -276,16 +273,51 @@ def notes_search_palette(request):
             .order_by("-viewed_at")[:10]
         ]
     else:
-        title_notes = list(
-            scope.filter(title__icontains=q)
-            .annotate(
-                _starts=SqlCase(
-                    When(title__istartswith=q, then=Value(0)), default=Value(1)
-                )
+        # Paths aren't stored anywhere, so the title band matches in
+        # memory: build each note's full display path from one folder
+        # sweep and one values() pass over the scope (a few thousand rows
+        # at most — cheap next to the round-trip)
+        q_lower = q.lower()
+        folders = {
+            f["id"]: f for f in NoteFolder.objects.values("id", "name", "parent_id")
+        }
+
+        def folder_path(folder_id):
+            parts = []
+            while folder_id:
+                folder = folders.get(folder_id)
+                if folder is None:
+                    break
+                parts.append(folder["name"])
+                folder_id = folder["parent_id"]
+            return parts[::-1]
+
+        ranked = []
+        for row in scope.values("id", "title", "folder_id", "matter__name"):
+            parts = []
+            if row["matter__name"]:
+                parts.append(row["matter__name"])
+            parts.extend(folder_path(row["folder_id"]))
+            parts.append(row["title"])
+            if q_lower not in "/".join(parts).lower():
+                continue
+            title_lower = row["title"].lower()
+            if title_lower.startswith(q_lower):
+                rank = 0
+            elif q_lower in title_lower:
+                rank = 1
+            else:
+                rank = 2  # matched the path, not the title
+            ranked.append((rank, title_lower, row["id"]))
+        ranked.sort()
+        title_ids = [note_id for _, _, note_id in ranked[:8]]
+        by_id = {
+            n.id: n
+            for n in Note.objects.filter(id__in=title_ids).select_related(
+                "matter", "folder"
             )
-            .order_by("_starts", Lower("title"))
-            .select_related("matter", "folder")[:8]
-        )
+        }
+        title_notes = [by_id[note_id] for note_id in title_ids]
 
         sq = SearchQuery(q, search_type="websearch", config="english")
         content_notes = list(

@@ -544,9 +544,21 @@
 }
 
 .palette-band-label {
+  border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
   font-size: 1rem;
-  padding: 0.5rem 1rem 0.25rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem 0.25rem;
+  text-transform: uppercase;
+}
+
+/* The first band needs no divider against the input's own border */
+.notes-palette-results > .palette-band-label:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0.5rem;
 }
 
 .palette-row {

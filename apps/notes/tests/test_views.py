@@ -857,6 +857,28 @@ class TestSearchPalette:
         assert "Title matches" in content
         assert content.index("Alpha brief") < content.index("The Alpha")
 
+    def test_title_band_matches_full_path(self, client_with_matter, user, url):
+        from apps.notes.models import NoteFolder
+
+        appeals = NoteFolder.objects.create(name="Appeals")
+        procedure = NoteFolder.objects.create(name="Procedure", parent=appeals)
+        in_path = Note.objects.create(
+            author=user, title="Preservation checklist", folder=procedure
+        )
+        # A title hit still outranks a path-only hit
+        Note.objects.create(author=user, title="Appeal bond memo")
+        content = client_with_matter.post(url, {"q": "appeal"}).content.decode()
+        assert f'data-note-id="{in_path.id}"' in content
+        assert "Appeals/Procedure/" in content
+        assert content.index("Appeal bond memo") < content.index(
+            "Preservation checklist"
+        )
+
+    def test_title_band_matches_matter_name(self, client_with_matter, note, url):
+        # "Test Matter" is the matter; its note is reachable by matter name
+        content = client_with_matter.post(url, {"q": "test matter"}).content.decode()
+        assert f'data-note-id="{note.id}"' in content
+
     def test_content_band_excerpt_and_search_term(self, client_with_matter, user, url):
         n = Note.objects.create(
             author=user,
