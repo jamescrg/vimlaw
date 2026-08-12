@@ -294,7 +294,6 @@ body:has(.note-page.standalone) {
    above only switch panes; collection-level actions live here */
 .note-panel-left .panel-actions {
   align-items: center;
-  border-bottom: 1px solid var(--border-medium);
   display: flex;
   flex-shrink: 0;
   gap: 0.25rem;
