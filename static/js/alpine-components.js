@@ -154,6 +154,12 @@ document.addEventListener('alpine:init', () => {
     isOpen: false,
 
     open() {
+      // A reopen within close()'s fade window must cancel the pending
+      // wipe, or the timer hides and empties the new modal 150ms in
+      if (this._closeTimer) {
+        clearTimeout(this._closeTimer);
+        this._closeTimer = null;
+      }
       if (this.isOpen) return;
       this.isOpen = true;
 
@@ -189,7 +195,8 @@ document.addEventListener('alpine:init', () => {
       if (backdrop) backdrop.remove();
 
       // Allow fade transition
-      setTimeout(() => {
+      this._closeTimer = setTimeout(() => {
+        this._closeTimer = null;
         this.$el.style.display = 'none';
         document.body.style.overflow = '';
         document.body.classList.remove('modal-open');

@@ -42,6 +42,17 @@ export function setupPalette() {
     if (input) window.htmx.trigger(input, "htmx:abort");
   }
 
+  // Unlike form modals (which require an explicit close so a stray click
+  // can't eat half-entered data), the palette is read-only — a press
+  // outside the dialog dismisses it. mousedown, not click, so a
+  // text-selection drag that ends outside the input doesn't dismiss.
+  document.addEventListener("mousedown", (e) => {
+    const palette = getPalette();
+    if (!palette || palette.contains(e.target)) return;
+    abortPendingResults();
+    window.dispatchEvent(new CustomEvent("close-modal"));
+  });
+
   // Palette-local keys: the input keeps focus throughout (no modes);
   // Escape is Alpine's own close
   document.addEventListener("keydown", (e) => {
