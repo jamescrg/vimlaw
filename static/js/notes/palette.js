@@ -35,12 +35,21 @@ export function setupPalette() {
     }
   });
 
+  // A debounced results POST that lands after close() would swap into the
+  // closing modal; kill it whenever the palette is going away
+  function abortPendingResults() {
+    const input = document.getElementById("palette-input");
+    if (input) window.htmx.trigger(input, "htmx:abort");
+  }
+
   // Palette-local keys: the input keeps focus throughout (no modes);
   // Escape is Alpine's own close
   document.addEventListener("keydown", (e) => {
     const palette = getPalette();
     if (!palette) return;
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (e.key === "Escape") {
+      abortPendingResults();
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       const rows = [...palette.querySelectorAll(".palette-row")];
       if (!rows.length) return;
@@ -82,6 +91,7 @@ export function setupPalette() {
       e.detail.target.id === "note-editor-container" &&
       getPalette()
     ) {
+      abortPendingResults();
       window.dispatchEvent(new CustomEvent("close-modal"));
     }
   });

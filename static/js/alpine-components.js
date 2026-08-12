@@ -373,9 +373,15 @@ document.addEventListener('DOMContentLoaded', () => {
            target.closest('#htmx-modal-container');
   }
 
-  // Open modal when HTMX swaps content into modal container
+  // Open modal when HTMX swaps content into modal container. Only a swap of
+  // the container itself may open — a swap NESTED inside the modal (e.g. a
+  // search input refreshing its results div) must not, because this delayed
+  // open can race close()'s 150ms wipe timer and resurrect a half-closed
+  // modal with a freshly orphaned backdrop that blocks the whole page.
+  // While the modal is open the re-dispatch was a no-op anyway.
   document.body.addEventListener('htmx:afterSwap', (e) => {
-    if (isModalTarget(e.detail.target) && e.detail.xhr.response) {
+    const t = e.detail.target;
+    if (t && t.id === 'htmx-modal-container' && e.detail.xhr.response) {
       // Small delay to ensure Alpine has processed new content
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('open-modal'));
