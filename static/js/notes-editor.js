@@ -254,7 +254,11 @@ function setupTitleEdit() {
         if (data.saved) {
           originalTitle = data.title;
           input.value = data.title;
+          document.title = data.title + " - Kosmos";
           document.body.dispatchEvent(new Event("noteSaved"));
+          // The rename changes the note's alphabetical position too, so
+          // re-render the left panel trees rather than patching the text
+          refreshTree();
         } else {
           input.value = originalTitle;
         }
