@@ -27,7 +27,7 @@ def test_chat_hl_handle_becomes_link(matter, highlight):
 def test_chat_note_handle_becomes_link(matter):
     note = Note.objects.create(matter=matter, title="Service memo", content="x")
     text = resolve_handles_for_chat(f"As noted in [note:{note.id}].", matter)
-    assert text == f"As noted in [Service memo](/case/notes/{note.id}/)."
+    assert text == f"As noted in [Service memo](/notes/{note.id}/)."
 
 
 def test_chat_library_note_links_to_notes_app(matter):

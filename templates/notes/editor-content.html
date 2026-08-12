@@ -1,4 +1,14 @@
 <div class="note-canvas">
+  {% comment %}
+  Shown when another tab saved this note under our feet (autosave 409 or
+  a broadcast from the saving tab while we're dirty). Lives inside the
+  content partial so any note switch naturally resets it.
+  {% endcomment %}
+  <div id="note-conflict-banner" class="note-conflict-banner" hidden>
+    <i class="icon-triangle-alert"></i>
+    <span>This note changed in another tab. Editing is paused.</span>
+    <button type="button" id="note-conflict-reload" class="btn-secondary">Reload latest</button>
+  </div>
   <div class="note-header">
     <input type="text"
            id="note-title"
@@ -7,7 +17,7 @@
            value="{{ note.title }}">
   </div>
   <div class="note-meta"
-       hx-get="{% if note.matter %}{% url 'case:note-meta' note.id %}{% else %}{% url 'notes:note-meta' note.id %}{% endif %}"
+       hx-get="{% url 'notes:note-meta' note.id %}"
        hx-trigger="noteSaved from:body"
        hx-swap="innerHTML">{% include "notes/meta.html" %}</div>
   <div id="note-editor"></div>
@@ -32,9 +42,11 @@
     readOnly: false,
     title: "{{ note.title|escapejs }}",
     content: "{{ note.content|escapejs }}",
-    autosaveUrl: "{% if note.matter %}{% url 'case:note-autosave' note.id %}{% else %}{% url 'notes:note-autosave' note.id %}{% endif %}",
-    titleUrl: "{% if note.matter %}{% url 'case:note-title' note.id %}{% else %}{% url 'notes:note-title' note.id %}{% endif %}",
-    searchUrl: "{% if note.matter %}{% url 'case:note-reference-search' note.id %}{% else %}{% url 'notes:note-reference-search' note.id %}{% endif %}",
-    citationsUrl: "{% if note.matter %}{% url 'case:note-citations' note.id %}{% else %}{% url 'notes:note-citations' note.id %}{% endif %}",
+    autosaveUrl: "{% url 'notes:note-autosave' note.id %}",
+    titleUrl: "{% url 'notes:note-title' note.id %}",
+    contentPartialUrl: "{% url 'notes:note-content-partial' note.id %}",
+    updatedAt: "{{ note.updated_at.isoformat }}",
+    searchUrl: "{% url 'notes:note-reference-search' note.id %}",
+    citationsUrl: "{% url 'notes:note-citations' note.id %}",
   };
 </script>

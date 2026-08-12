@@ -1,12 +1,16 @@
 import json
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.search import SearchHeadline, SearchQuery
 from django.db.models import Q
 from django.db.models.functions import Lower
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
+from watson import search as watson
 
 from apps.accounts.access import filter_matters_for_user
 from apps.matters.models import Matter
@@ -71,17 +75,16 @@ def validate_folder_move(folder, destination):
 # ---------------------------------------------------------------------------
 
 
-def _build_tree(folders, notes_by_folder, expanded_ids):
+def _build_tree(folders, notes_by_folder):
     """Nested tree from name-ordered folders + per-folder note lists.
 
-    Node = {"folder", "children": [node...], "notes": [Note...], "is_expanded"}.
+    Node = {"folder", "children": [node...], "notes": [Note...]}.
     """
     nodes = {
         f.pk: {
             "folder": f,
             "children": [],
             "notes": notes_by_folder.get(f.pk, []),
-            "is_expanded": f.pk in expanded_ids,
         }
         for f in folders
     }
@@ -96,25 +99,17 @@ def get_editor_file_tree(request, note):
     """Both left-panel trees for the editor: the general Files tree and the
     per-matter trees of the Matters pane.
 
-    Folder expansion comes from the session key shared with the Notes tab;
-    matter-node expansion from its own session key. Both are unioned with
-    the current note's chain (union not persisted) so the active note is
-    always revealed.
+    Every node renders collapsed; expansion state is per-browser-tab
+    (sessionStorage), applied client-side by notes/tab-state.js — the
+    server no longer tracks it, so tabs can't clobber each other's
+    navigation. active_pane is only the fallback for tabs with no stored
+    pane choice.
     """
-    expanded_ids = set(request.session.get("note_folders_expanded", []))
-    if note.folder_id:
-        expanded_ids |= {a.pk for a in note.folder.get_ancestors()}
-        expanded_ids.add(note.folder_id)
-
     open_matters = list(Matter.objects.filter(status="Open").order_by("name"))
     if note.matter and note.matter not in open_matters:
         # Closed matter opened directly: surface it so the active pill exists
         open_matters.append(note.matter)
     matter_ids = {m.id for m in open_matters}
-
-    expanded_matter_ids = set(request.session.get("note_matters_expanded", []))
-    if note.matter_id:
-        expanded_matter_ids.add(note.matter_id)
 
     folders_by_matter = {}
     for f in NoteFolder.objects.order_by(Lower("name")):
@@ -134,18 +129,14 @@ def get_editor_file_tree(request, note):
             "file_tree": _build_tree(
                 folders_by_matter.get(m.id, []),
                 notes_by_scope.get(m.id, {}),
-                expanded_ids,
             ),
             "root_notes": notes_by_scope.get(m.id, {}).get(None, []),
-            "is_expanded": m.id in expanded_matter_ids,
         }
         for m in open_matters
     ]
 
     return {
-        "file_tree": _build_tree(
-            folders_by_matter.get(None, []), general, expanded_ids
-        ),
+        "file_tree": _build_tree(folders_by_matter.get(None, []), general),
         "root_notes": general.get(None, []),
         "matters": matters,
         "active_pane": "matters" if note.matter_id else "files",
@@ -192,8 +183,6 @@ def notes_add(request):
         matter=None,
         folder=folder,
     )
-    if folder:
-        _expand_folder_in_session(request, folder.pk)
     return HttpResponse(
         status=204,
         headers={"HX-Redirect": reverse("notes:note-view", args=[note.id])},
@@ -212,6 +201,145 @@ def record_note_view(user, note):
 
     note.viewed_at = timezone.now()
     note.save(update_fields=["viewed_at"])
+
+
+# Headline sentinels: ts_headline marks matches, we escape the whole
+# excerpt, then swap sentinels for <mark> — the HTML is safe by
+# construction (never |safe on raw note content).
+_HL_START, _HL_STOP = "\x02", "\x03"
+
+
+def _safe_excerpt(raw):
+    return mark_safe(
+        escape(raw).replace(_HL_START, "<mark>").replace(_HL_STOP, "</mark>")
+    )
+
+
+def _palette_path(note):
+    """Omnisearch-style path prefix for a palette row. A matter is the root
+    directory of its notes' paths; library notes are rooted at the tree
+    root, so a root library note has no prefix at all."""
+    parts = []
+    if note.matter_id:
+        parts.append(note.matter.name)
+    if note.folder:
+        parts.extend(f.name for f in note.folder.get_ancestors() + [note.folder])
+    return "/".join(parts)
+
+
+@login_required
+def notes_search_palette(request):
+    """The editor's Ctrl+K search palette (Omnisearch-style).
+
+    GET renders the whole modal with the Recent band; the input's debounced
+    hx-post comes back here and gets just the results partial. Two ranked
+    bands: path matches (the query is checked against each note's full
+    display path — matter/folders/title — with title hits ranked above
+    path-only hits), then full-text matches via watson with a
+    match-centered highlighted excerpt.
+    """
+    q = (request.POST.get("q") or request.GET.get("q") or "").strip()
+
+    accessible_matter_ids = set(
+        filter_matters_for_user(Matter.objects.all(), request.user).values_list(
+            "id", flat=True
+        )
+    )
+    scope = Note.objects.filter(
+        Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
+    )
+
+    title_notes, content_notes, recent_notes = [], [], []
+    if len(q) < 2:
+        recent_notes = [
+            nv.note
+            for nv in NoteView.objects.filter(user=request.user)
+            .select_related("note__matter", "note__folder")
+            .order_by("-viewed_at")[:10]
+        ]
+    else:
+        # Paths aren't stored anywhere, so the title band matches in
+        # memory: build each note's full display path from one folder
+        # sweep and one values() pass over the scope (a few thousand rows
+        # at most — cheap next to the round-trip)
+        q_lower = q.lower()
+        folders = {
+            f["id"]: f for f in NoteFolder.objects.values("id", "name", "parent_id")
+        }
+
+        def folder_path(folder_id):
+            parts = []
+            while folder_id:
+                folder = folders.get(folder_id)
+                if folder is None:
+                    break
+                parts.append(folder["name"])
+                folder_id = folder["parent_id"]
+            return parts[::-1]
+
+        ranked = []
+        for row in scope.values("id", "title", "folder_id", "matter__name"):
+            parts = []
+            if row["matter__name"]:
+                parts.append(row["matter__name"])
+            parts.extend(folder_path(row["folder_id"]))
+            parts.append(row["title"])
+            if q_lower not in "/".join(parts).lower():
+                continue
+            title_lower = row["title"].lower()
+            if title_lower.startswith(q_lower):
+                rank = 0
+            elif q_lower in title_lower:
+                rank = 1
+            else:
+                rank = 2  # matched the path, not the title
+            ranked.append((rank, title_lower, row["id"]))
+        ranked.sort()
+        title_ids = [note_id for _, _, note_id in ranked[:8]]
+        by_id = {
+            n.id: n
+            for n in Note.objects.filter(id__in=title_ids).select_related(
+                "matter", "folder"
+            )
+        }
+        title_notes = [by_id[note_id] for note_id in title_ids]
+
+        sq = SearchQuery(q, search_type="websearch", config="english")
+        content_notes = list(
+            watson.filter(scope, q)
+            .exclude(id__in=[n.id for n in title_notes])
+            .order_by("-watson_rank")
+            .annotate(
+                excerpt=SearchHeadline(
+                    "content",
+                    sq,
+                    config="english",
+                    start_sel=_HL_START,
+                    stop_sel=_HL_STOP,
+                    max_words=18,
+                    min_words=10,
+                )
+            )
+            .select_related("matter", "folder")[:10]
+        )
+
+    for n in title_notes + content_notes + recent_notes:
+        n.path_prefix = _palette_path(n)
+    for n in content_notes:
+        n.safe_excerpt = _safe_excerpt(n.excerpt)
+
+    template = (
+        "notes/palette-results.html"
+        if request.method == "POST"
+        else "notes/palette.html"
+    )
+    context = {
+        "q": q,
+        "title_notes": title_notes,
+        "content_notes": content_notes,
+        "recent_notes": recent_notes,
+    }
+    return render(request, template, context)
 
 
 @login_required
@@ -238,33 +366,52 @@ def notes_launch(request):
         )
     if note is None:
         note = Note.objects.create(title="Untitled", author=request.user, matter=None)
-    if note.matter_id:
-        return redirect("case:note-view", note.id)
     return redirect("notes:note-view", note.id)
+
+
+def _get_note(request, note_id, **filters):
+    """Fetch a note for a per-note endpoint: general notes are shared,
+    matter notes require access to their matter (404 either way, so denial
+    doesn't confirm existence). Every /notes/<id>/... view goes through
+    here — the routes serve both kinds of note."""
+    note = get_object_or_404(
+        Note.objects.select_related("matter"), pk=note_id, **filters
+    )
+    if note.matter_id and not request.user.has_matter_access(note.matter):
+        raise Http404
+    return note
 
 
 @login_required
 def note_view(request, note_id):
-    """Standalone editor view for a note without a matter."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    """Standalone editor view for a note."""
+    note = _get_note(request, note_id)
 
     # Record user's view of this note
     record_note_view(request.user, note)
 
-    context = {"note": note} | get_editor_file_tree(request, note)
+    context = {"note": note, "matter": note.matter} | get_editor_file_tree(
+        request, note
+    )
     return render(request, "notes/editor.html", context)
 
 
 @login_required
 def note_content_partial(request, note_id):
-    """HTMX partial for switching notes in the editor."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    """HTMX partial for switching notes in the editor.
 
-    # Record user's view of this note
-    record_note_view(request.user, note)
+    ?sync=1 marks a background reload (another tab saved this note) —
+    those must not count as the user viewing the note, or every silent
+    sync would reorder recents and hijack notes:launch.
+    """
+    note = _get_note(request, note_id)
+
+    if not request.GET.get("sync"):
+        record_note_view(request.user, note)
 
     context = {
         "note": note,
+        "matter": note.matter,
     }
     return render(request, "notes/editor-content.html", context)
 
@@ -280,7 +427,7 @@ def editor_file_tree(request):
     note_id = request.GET.get("note", "")
     if not note_id.isdigit():
         return HttpResponse("note parameter required", status=400)
-    note = get_object_or_404(Note, pk=note_id)
+    note = _get_note(request, note_id)
     context = {"note": note} | get_editor_file_tree(request, note)
     return render(request, "notes/editor-trees.html", context)
 
@@ -288,8 +435,8 @@ def editor_file_tree(request):
 @login_required
 @require_POST
 def note_delete(request, note_id):
-    """Delete a standalone note."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    """Delete a note."""
+    note = _get_note(request, note_id)
     note.delete()
 
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
@@ -298,30 +445,58 @@ def note_delete(request, note_id):
 @login_required
 def note_content(request, note_id):
     """GET returns markdown content, POST saves it."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
 
     if request.method == "POST":
         content = request.POST.get("content", "")
         note.content = content
         note.save()
-        queue_note_summary(note.id)
+        if note.matter_id is None:
+            queue_note_summary(note.id)
         return HttpResponse(status=204)
 
     return HttpResponse(note.content, content_type="text/plain; charset=utf-8")
+
+
+def _version_conflict(request, note):
+    """409 when the client's note is stale (edited from another tab).
+
+    The client echoes back the exact updated_at isoformat string it last
+    received (base_version); any difference means someone else saved
+    since. Optional: callers that don't send it save unconditionally.
+    """
+    base_version = request.POST.get("base_version", "")
+    if base_version and base_version != note.updated_at.isoformat():
+        return JsonResponse(
+            {
+                "saved": False,
+                "conflict": True,
+                "updated_at": note.updated_at.isoformat(),
+            },
+            status=409,
+        )
+    return None
 
 
 @login_required
 @require_POST
 def note_autosave(request, note_id):
     """Autosave endpoint for the editor."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
+
+    conflict = _version_conflict(request, note)
+    if conflict:
+        return conflict
 
     content = request.POST.get("content", "")
     note.content = content
     # updated_by is set by AuditMixin.save; include it in update_fields so the
     # change is actually persisted.
     note.save(update_fields=["content", "updated_at", "updated_by"])
-    queue_note_summary(note.id)
+    # Library notes carry AI summaries for the selector manifest; matter
+    # notes feed their matter's context directly
+    if note.matter_id is None:
+        queue_note_summary(note.id)
 
     return JsonResponse({"saved": True, "updated_at": note.updated_at.isoformat()})
 
@@ -330,13 +505,23 @@ def note_autosave(request, note_id):
 @require_POST
 def note_title(request, note_id):
     """Update note title."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
+
+    conflict = _version_conflict(request, note)
+    if conflict:
+        return conflict
 
     title = request.POST.get("title", "").strip()
     if title:
         note.title = title
         note.save(update_fields=["title", "updated_at", "updated_by"])
-        return JsonResponse({"saved": True, "title": note.title})
+        return JsonResponse(
+            {
+                "saved": True,
+                "title": note.title,
+                "updated_at": note.updated_at.isoformat(),
+            }
+        )
 
     return JsonResponse({"saved": False, "error": "Title cannot be empty"}, status=400)
 
@@ -344,7 +529,7 @@ def note_title(request, note_id):
 @login_required
 def note_meta(request, note_id):
     """Render the note meta partial (used by HTMX to refresh after autosave)."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
     return render(request, "notes/meta.html", {"note": note})
 
 
@@ -362,14 +547,29 @@ def note_import_modal(request, note_id):
 
 @login_required
 def reference_search(request, note_id):
-    """Search documents and highlights for note references."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    """Search the note's matter for documents and highlights to reference.
+    Library notes have no matter, so they get empty results."""
+    from apps.case.models import Document, Highlight
+
+    note = _get_note(request, note_id)
+    matter = note.matter
     query = request.GET.get("q", "").strip()
+
+    documents = []
+    highlights = []
+
+    if query and matter:
+        documents = Document.objects.filter(matter=matter, name__icontains=query)[:15]
+        highlights = (
+            Highlight.objects.filter(document__matter=matter)
+            .filter(Q(slug__icontains=query) | Q(text__icontains=query))
+            .select_related("document")[:15]
+        )
 
     context = {
         "note": note,
-        "documents": [],
-        "highlights": [],
+        "documents": documents,
+        "highlights": highlights,
         "query": query,
     }
     return render(request, "notes/reference-results.html", context)
@@ -378,7 +578,53 @@ def reference_search(request, note_id):
 @login_required
 def reference_citations(request, note_id):
     """Return current citations for references."""
-    return JsonResponse({})
+    from apps.case.models import Document, Highlight
+
+    doc_ids = request.GET.getlist("doc")
+    hl_ids = request.GET.getlist("hl")
+
+    citations = {}
+
+    for doc in Document.objects.filter(id__in=doc_ids):
+        citations[f"doc:{doc.id}"] = doc.citation
+
+    for hl in Highlight.objects.filter(id__in=hl_ids).select_related("document"):
+        citations[f"hl:{hl.id}"] = hl.citation
+
+    return JsonResponse(citations)
+
+
+@login_required
+def note_properties(request, note_id):
+    """Properties modal for a matter note (matter re-assignment)."""
+    note = _get_note(request, note_id, matter__isnull=False)
+    matters = filter_matters_for_user(
+        Matter.objects.filter(status="Open").order_by("name"), request.user
+    )
+    context = {"note": note, "matters": matters}
+    return render(request, "notes/properties-modal.html", context)
+
+
+@login_required
+@require_POST
+def note_reassign_matter(request, note_id):
+    """Move a matter note to another matter; folder resets to that matter's
+    root (a folder always belongs to exactly one matter's tree)."""
+    note = _get_note(request, note_id, matter__isnull=False)
+    matter = get_object_or_404(
+        filter_matters_for_user(Matter.objects.filter(status="Open"), request.user),
+        pk=request.POST.get("matter"),
+    )
+    if matter.id != note.matter_id:
+        note.matter = matter
+        note.folder = None
+        note.save(update_fields=["matter", "folder"])
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps({"noteFoldersChanged": True, "closeModal": True})
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -422,8 +668,6 @@ def note_folder_add(request):
     NoteFolder.objects.create(
         name=_next_untitled(siblings), parent=parent, matter=matter
     )
-    if parent:
-        _expand_folder_in_session(request, parent.pk)
     return _editor_crud_response()
 
 
@@ -529,15 +773,6 @@ def note_folder_delete(request, folder_id):
     return _editor_crud_response()
 
 
-def _expand_folder_in_session(request, folder_id):
-    """Idempotently mark a folder expanded (shared Notes-tab/editor session key)."""
-    expanded = request.session.get("note_folders_expanded", [])
-    if folder_id not in expanded:
-        expanded.append(folder_id)
-        request.session["note_folders_expanded"] = expanded
-        request.session.modified = True
-
-
 @login_required
 @require_POST
 def note_folder_reparent(request, folder_id):
@@ -556,69 +791,6 @@ def note_folder_reparent(request, folder_id):
     folder.depth = destination.depth + 1 if destination else 0
     folder.save(update_fields=["parent", "depth"])
     folder.update_descendant_depths()
-    if destination:
-        _expand_folder_in_session(request, destination.pk)
-    return HttpResponse(status=204)
-
-
-@login_required
-@require_POST
-def note_folder_toggle_expand(request, folder_id):
-    """Toggle folder expand/collapse state in session."""
-    expanded = request.session.get("note_folders_expanded", [])
-    if folder_id in expanded:
-        expanded.remove(folder_id)
-    else:
-        expanded.append(folder_id)
-    request.session["note_folders_expanded"] = expanded
-    request.session.modified = True
-    return HttpResponse(status=204)
-
-
-@login_required
-@require_POST
-def editor_tree_toggle_all(request):
-    """Expand or collapse every node of one editor pane (files|matters).
-
-    Scoped set-union/difference on the shared folder session key so the
-    other pane's state (and the Notes tab's) survives; the matters pane
-    also flips its matter-node key.
-    """
-    pane = request.GET.get("pane")
-    expand = request.GET.get("expand") == "true"
-    if pane not in ("files", "matters"):
-        return HttpResponse("pane must be files or matters", status=400)
-
-    folder_ids = set(
-        NoteFolder.objects.filter(matter__isnull=(pane == "files")).values_list(
-            "pk", flat=True
-        )
-    )
-    current = set(request.session.get("note_folders_expanded", []))
-    updated = (current | folder_ids) if expand else (current - folder_ids)
-    request.session["note_folders_expanded"] = list(updated)
-
-    if pane == "matters":
-        request.session["note_matters_expanded"] = (
-            list(Matter.objects.filter(status="Open").values_list("pk", flat=True))
-            if expand
-            else []
-        )
-    request.session.modified = True
-    return HttpResponse(status=204)
-
-
-@login_required
-@require_POST
-def note_matter_toggle_expand(request, matter_id):
-    """Toggle a matter node's expand state in the editor's Matters pane."""
-    expanded = request.session.get("note_matters_expanded", [])
-    if matter_id in expanded:
-        expanded.remove(matter_id)
-    else:
-        expanded.append(matter_id)
-    request.session["note_matters_expanded"] = expanded
-    request.session.modified = True
     return HttpResponse(status=204)
 
 
@@ -643,6 +815,4 @@ def note_move(request, note_id):
     else:
         note.folder = None
     note.save(update_fields=["folder"])
-    if note.folder_id:
-        _expand_folder_in_session(request, note.folder_id)
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})

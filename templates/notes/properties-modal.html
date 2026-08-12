@@ -17,7 +17,7 @@ a note into a chat, paste it in.
     <div class="modal-body">
       <form id="note-reassign-form"
             class="form-compact"
-            hx-post="{% url 'case:notes-reassign-matter' note.id %}"
+            hx-post="{% url 'notes:note-reassign-matter' note.id %}"
             hx-swap="none">
         {% csrf_token %}
         <div class="form-group">

@@ -28,7 +28,7 @@ export function buildOutline() {
 
   let collapsedItems = [];
   try {
-    collapsedItems = JSON.parse(localStorage.getItem(storageKey)) || [];
+    collapsedItems = JSON.parse(sessionStorage.getItem(storageKey)) || [];
   } catch {
     collapsedItems = [];
   }
@@ -104,7 +104,7 @@ export function buildOutline() {
         collapsedItems = collapsedItems.filter((p) => p !== pos);
       }
 
-      localStorage.setItem(storageKey, JSON.stringify(collapsedItems));
+      sessionStorage.setItem(storageKey, JSON.stringify(collapsedItems));
     });
   });
 
@@ -221,7 +221,7 @@ export function setupOutlineCollapseAll() {
       }
     });
 
-    localStorage.setItem(storageKey, JSON.stringify(collapsedPositions));
+    sessionStorage.setItem(storageKey, JSON.stringify(collapsedPositions));
     updateCollapseButtonIcon();
   });
 }

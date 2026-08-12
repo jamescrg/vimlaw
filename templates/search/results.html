@@ -99,7 +99,7 @@
     </div>
     <div class="search-cards">
       {% for note in notes %}
-        <a href="{% if note.matter_id %}{% url 'case:note-view' note.id %}{% else %}{% url 'notes:note-view' note.id %}{% endif %}"
+        <a href="{% url 'notes:note-view' note.id %}"
            class="search-card"
            target="_blank">
           <span class="app-badge app-badge-lg badge-gray"><i class="icon-sticky-note"></i></span>

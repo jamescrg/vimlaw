@@ -58,8 +58,6 @@ function moveFocusToEnd(input) {
   input.scrollLeft = input.scrollWidth;
 }
 
-document.addEventListener("DOMContentLoaded", updateToggleAllFoldersIcon);
-
 function selectMoveTarget(el, value) {
   const tree = el.closest(".move-tree");
   tree.querySelectorAll(".move-tree-item").forEach((item) => {

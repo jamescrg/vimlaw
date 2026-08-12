@@ -41,44 +41,57 @@
             <i class="icon-history"></i>
           </button>
         </div>
-        {% comment %}
-        Creation is instant (Obsidian-style): new notes/folders land at the
-        root as "Untitled" with no modal; notes open immediately via
-        HX-Redirect.
-        {% endcomment %}
-        <div class="panel-header-actions">
-          <a href="#"
-             class="panel-btn"
-             hx-post="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
-             title="New note"><i class="icon-square-pen"></i></a>
-          <a href="#"
-             class="panel-btn panel-btn-files-only"
-             hx-post="{% url 'notes:folder-add' %}"
-             title="New folder"><i class="icon-folder-plus"></i></a>
-          <button type="button"
-                  class="panel-btn"
-                  id="tree-collapse-btn"
-                  title="Collapse/Expand all">
-            <i class="icon-chevrons-down-up"></i>
-          </button>
-        </div>
+        <button class="panel-btn panel-toggle"
+                type="button"
+                title="Toggle files panel">
+          <i class="icon-chevron-left"></i>
+        </button>
+      </div>
+      {% comment %}
+      Obsidian-style action row: the tab bar above only switches panes;
+      collection-level actions live here. Creation is instant (new
+      notes/folders land at the root as "Untitled" with no modal; notes
+      open immediately via HX-Redirect).
+      {% endcomment %}
+      <div class="panel-actions">
+        <a href="#"
+           class="panel-btn"
+           hx-post="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
+           title="New note"><i class="icon-square-pen"></i></a>
+        <a href="#"
+           class="panel-btn panel-btn-files-only"
+           hx-post="{% url 'notes:folder-add' %}"
+           title="New folder"><i class="icon-folder-plus"></i></a>
+        <a href="#"
+           class="panel-btn"
+           id="notes-palette-btn"
+           title="Search notes (Ctrl+K)"
+           hx-get="{% url 'notes:search-palette' %}"
+           hx-target="#htmx-modal-container"><i class="icon-search"></i></a>
+        <button type="button"
+                class="panel-btn"
+                id="tree-collapse-btn"
+                title="Collapse/Expand all">
+          <i class="icon-chevrons-down-up"></i>
+        </button>
       </div>
       <div class="panel-pane files-pane note-sidebar">
         <div id="file-tree-container"
              data-refresh-url="{% url 'notes:editor-file-tree' %}"
              data-folder-add-url="{% url 'notes:folder-add' %}"
-             data-toggle-all-url="{% url 'notes:editor-tree-toggle-all' %}"
              data-launch-url="{% url 'notes:launch' %}">{% include "notes/editor-trees.html" %}</div>
       </div>
-      <!-- Collapsed-rail shortcut: expand the panel -->
+      <!-- Collapsed-rail shortcuts: expand the panel; search stays reachable -->
       <div class="panel-rail">
         <button type="button" class="panel-btn" title="Notes panel">
-          <i class="icon-notebook-pen"></i>
+          <i class="icon-folders"></i>
         </button>
+        <a href="#"
+           class="panel-btn"
+           title="Search notes (Ctrl+K)"
+           hx-get="{% url 'notes:search-palette' %}"
+           hx-target="#htmx-modal-container"><i class="icon-search"></i></a>
       </div>
-      <button class="panel-toggle" type="button" title="Toggle files panel">
-        <i class="icon-panel-left-close"></i>
-      </button>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>
     </aside>
     <!-- Main Editor Area -->
@@ -139,7 +152,7 @@
                 <li>
                   <a class="dropdown-item"
                      href="#"
-                     hx-get="{% if note.matter %}{% url 'case:note-import-modal' note.id %}{% else %}{% url 'notes:note-import-modal' note.id %}{% endif %}"
+                     hx-get="{% url 'notes:note-import-modal' note.id %}"
                      hx-target="#htmx-modal-container"
                      data-bs-toggle="modal"
                      data-bs-target="#htmx-modal-container"><i class="icon-upload"></i> Import from markdown</a>
@@ -150,7 +163,7 @@
                 <li>
                   <a class="dropdown-item"
                      href="#"
-                     hx-get="{% if note.matter %}{% url 'case:notes-shortcuts' note.matter.id %}{% else %}{% url 'notes:notes-shortcuts' %}{% endif %}"
+                     hx-get="{% url 'notes:notes-shortcuts' %}"
                      hx-target="#htmx-modal-container"
                      data-bs-toggle="modal"
                      data-bs-target="#htmx-modal-container"><i class="icon-keyboard"></i> Keyboard shortcuts</a>
@@ -221,15 +234,21 @@
     <!-- Right Panel - Outline -->
     <aside class="note-panel note-panel-right">
       <div class="panel-header">
+        <button class="panel-btn panel-toggle"
+                type="button"
+                title="Toggle outline panel">
+          <i class="icon-chevron-right"></i>
+        </button>
+        {% comment %}Decorative mirror of the left panel's tab bar{% endcomment %}
         <span class="panel-title" title="Outline"><i class="icon-list-tree"></i></span>
-        <div class="panel-header-actions">
-          <button type="button"
-                  class="panel-btn"
-                  id="outline-collapse-btn"
-                  title="Collapse/Expand all">
-            <i class="icon-chevrons-down-up"></i>
-          </button>
-        </div>
+      </div>
+      <div class="panel-actions">
+        <button type="button"
+                class="panel-btn"
+                id="outline-collapse-btn"
+                title="Collapse/Expand all">
+          <i class="icon-chevrons-down-up"></i>
+        </button>
       </div>
       <div class="panel-pane outline-pane note-outline">
         <ul class="outline-list" id="outline-list">
@@ -241,9 +260,6 @@
           <i class="icon-list-tree"></i>
         </button>
       </div>
-      <button class="panel-toggle" type="button" title="Toggle outline panel">
-        <i class="icon-panel-right-close"></i>
-      </button>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>
     </aside>
   </div>

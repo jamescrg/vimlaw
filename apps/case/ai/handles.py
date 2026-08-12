@@ -73,12 +73,7 @@ def _resolve(kind, item_id, matter):
             )
     elif kind == "note":
         note = Note.objects.filter(id=item_id).first()
-        if note and note.matter_id == matter.id:
-            return (
-                _clean_label(note.title, f"Note {note.id}"),
-                f"/case/notes/{note.id}/",
-            )
-        if note and note.matter_id is None:
+        if note and (note.matter_id == matter.id or note.matter_id is None):
             return (_clean_label(note.title, f"Note {note.id}"), f"/notes/{note.id}/")
     return None
 

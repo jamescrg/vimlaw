@@ -8,7 +8,9 @@
 // tree refresh.
 
 import { refreshTree } from "./file-tree.js";
+import { broadcast } from "./broadcast.js";
 import { getCSRFToken } from "./state.js";
+import { setFolderExpanded, setMatterExpanded } from "./tab-state.js";
 
 const ROW_SELECTOR = ".file-tree-folder, .file-tree-matter, .file-tree-note";
 
@@ -97,6 +99,8 @@ function deleteNote(li) {
     headers: { "X-CSRFToken": getCSRFToken() },
   }).then((resp) => {
     if (!resp.ok) return;
+    broadcast({ type: "note-deleted", noteId: Number(li.dataset.noteId) });
+    broadcast({ type: "tree-changed" });
     if (deletedOpenNote) {
       // The open document is gone; land on the most recent surviving note
       window.location.assign(container.dataset.launchUrl);
@@ -115,7 +119,11 @@ function runAction(action) {
 
   if (action === "new-note") {
     // Instant creation: an Untitled note in this folder/matter root; the
-    // HX-Redirect opens it
+    // HX-Redirect opens it. Persist the target's expansion FIRST —
+    // sessionStorage survives the navigation, so the new note's home is
+    // open when the redirected page applies this tab's state.
+    if (li.dataset.folderId) setFolderExpanded(li.dataset.folderId, true);
+    if (isMatter) setMatterExpanded(li.dataset.matterId, true);
     const folderParam = li.dataset.folderId
       ? "?folder=" + li.dataset.folderId
       : "";
@@ -123,7 +131,13 @@ function runAction(action) {
       swap: "none",
     });
   } else if (action === "new") {
-    // Instant creation: an Untitled folder here; rename via this menu
+    // Instant creation: an Untitled folder here; rename via this menu.
+    // Keep the parent open so the new child is visible after the refresh.
+    if (isMatter) {
+      setMatterExpanded(li.dataset.matterId, true);
+    } else {
+      setFolderExpanded(li.dataset.folderId, true);
+    }
     const scope = isMatter
       ? "matter=" + li.dataset.matterId
       : "parent=" + li.dataset.folderId;

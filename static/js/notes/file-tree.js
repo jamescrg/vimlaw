@@ -4,6 +4,13 @@
 // follows every move.
 
 import { getCSRFToken } from "./state.js";
+import { broadcast } from "./broadcast.js";
+import {
+  applyTreeState,
+  setFolderExpanded,
+  setMatterExpanded,
+  setPaneExpansion,
+} from "./tab-state.js";
 
 const MAX_DEPTH = 3; // 0-based; 4 levels, mirrors NoteFolder's cap
 const HOVER_EXPAND_MS = 600;
@@ -31,7 +38,15 @@ export function setupFileTree() {
   container.addEventListener("drop", onDrop);
 
   setupTreeCollapseAll(container);
-  container.addEventListener("htmx:afterSwap", updateTreeCollapseIcon);
+  // Order matters: the swapped-in tree is all-collapsed; dress it in this
+  // tab's expansion state synchronously (before refreshTree's promise
+  // restores scroll positions against the final heights), then sync the
+  // collapse-all icon off the resulting DOM.
+  container.addEventListener("htmx:afterSwap", () => {
+    applyTreeState();
+    updateTreeCollapseIcon();
+  });
+  applyTreeState();
 }
 
 // ─── Collapse/expand all (header button, active pane only) ───────────────────
@@ -73,16 +88,15 @@ function setupTreeCollapseAll(container) {
     pane
       .querySelectorAll(".file-tree-folder, .file-tree-matter")
       .forEach((li) => li.classList.toggle("collapsed", !expand));
-    // Fire-and-forget: persist the whole pane's expansion state
-    const paneName = pane.classList.contains("tree-pane-matters")
-      ? "matters"
-      : "files";
-    fetch(
-      `${container.dataset.toggleAllUrl}?pane=${paneName}&expand=${expand}`,
-      {
-        method: "POST",
-        headers: { "X-CSRFToken": getCSRFToken() },
-      },
+    // Persist the whole pane's expansion state (this tab only)
+    setPaneExpansion(
+      [...pane.querySelectorAll(".file-tree-folder")].map(
+        (li) => li.dataset.folderId,
+      ),
+      [...pane.querySelectorAll(".file-tree-matter")].map(
+        (li) => li.dataset.matterId,
+      ),
+      expand,
     );
     updateTreeCollapseIcon();
   });
@@ -107,13 +121,12 @@ function onClick(e) {
     return;
 
   e.stopPropagation();
-  li.classList.toggle("collapsed");
-  // Fire-and-forget: expand state lives in the session, shared with the
-  // Notes tab's folder sidebar (endpoint returns 204).
-  fetch(li.dataset.toggleUrl, {
-    method: "POST",
-    headers: { "X-CSRFToken": getCSRFToken() },
-  });
+  const nowExpanded = !li.classList.toggle("collapsed");
+  if (li.classList.contains("file-tree-matter")) {
+    setMatterExpanded(li.dataset.matterId, nowExpanded);
+  } else {
+    setFolderExpanded(li.dataset.folderId, nowExpanded);
+  }
   updateTreeCollapseIcon();
 }
 
@@ -258,7 +271,15 @@ async function onDrop(e) {
     body: new URLSearchParams({ destination }),
   });
   if (!resp.ok) return flashDropError(target, await resp.text());
+  // Keep the destination open in this tab so the dropped item is visible
+  // after the refresh (the server no longer tracks expansion)
+  if (isFolderTarget) {
+    setFolderExpanded(destination, true);
+  } else if (target.classList.contains("file-tree-matter")) {
+    setMatterExpanded(target.dataset.matterId, true);
+  }
   refreshTree();
+  broadcast({ type: "tree-changed" });
 }
 
 function onDragEnd() {

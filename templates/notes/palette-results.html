@@ -1,0 +1,30 @@
+{% comment %}
+Palette result bands (also the htmx partial the debounced input swaps).
+Title matches outrank full-text matches; full-text rows carry the query
+as data-search-term so opening one jumps to the match in the document.
+{% endcomment %}
+{% if recent_notes %}
+  <div class="palette-band-label">Recent</div>
+  <ul class="palette-band">
+    {% for n in recent_notes %}
+      {% include "notes/palette-row.html" %}
+    {% endfor %}
+  </ul>
+{% endif %}
+{% if title_notes %}
+  <div class="palette-band-label">Title matches</div>
+  <ul class="palette-band">
+    {% for n in title_notes %}
+      {% include "notes/palette-row.html" %}
+    {% endfor %}
+  </ul>
+{% endif %}
+{% if content_notes %}
+  <div class="palette-band-label">Full-text matches</div>
+  <ul class="palette-band">
+    {% for n in content_notes %}
+      {% include "notes/palette-row.html" with search_term=q %}
+    {% endfor %}
+  </ul>
+{% endif %}
+{% if q|length >= 2 and not title_notes and not content_notes %}<div class="palette-empty">No matches.</div>{% endif %}

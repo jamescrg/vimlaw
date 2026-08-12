@@ -8,17 +8,50 @@ pytestmark = pytest.mark.django_db
 
 class TestNoteView:
     def test_note_view_loads(self, client_with_matter, note):
-        url = reverse("case:note-view", args=[note.id])
+        url = reverse("notes:note-view", args=[note.id])
         response = client_with_matter.get(url)
         assert response.status_code == 200
         assert b"Test Note" in response.content
 
     def test_note_view_updates_viewed_at(self, client_with_matter, note):
         assert note.viewed_at is None
-        url = reverse("case:note-view", args=[note.id])
+        url = reverse("notes:note-view", args=[note.id])
         client_with_matter.get(url)
         note.refresh_from_db()
         assert note.viewed_at is not None
+
+    def test_matter_note_404_without_matter_access(self, note):
+        from django.test import Client
+
+        from apps.accounts.models import CustomUser
+
+        restricted = CustomUser.objects.create(
+            username="outsider",
+            email="outsider@example.com",
+            user_rate=100,
+            perm_all_matters=False,
+        )
+        restricted.set_password("testpass123")
+        restricted.save()
+        c = Client()
+        c.login(username="outsider", password="testpass123")
+        c.get("/dash/")
+        assert c.get(reverse("notes:note-view", args=[note.id])).status_code == 404
+        assert (
+            c.get(reverse("notes:note-content-partial", args=[note.id])).status_code
+            == 404
+        )
+        assert (
+            c.post(
+                reverse("notes:note-autosave", args=[note.id]), {"content": "x"}
+            ).status_code
+            == 404
+        )
+
+    def test_old_case_url_redirects(self, client_with_matter, note):
+        response = client_with_matter.get(f"/case/notes/{note.id}/")
+        assert response.status_code == 302
+        assert response.url == reverse("notes:note-view", args=[note.id])
 
 
 class TestNotesAdd:
@@ -29,7 +62,7 @@ class TestNotesAdd:
         assert response.status_code == 204
         note = Note.objects.get(matter=matter, title="Untitled")
         assert response.headers["HX-Redirect"] == reverse(
-            "case:note-view", args=[note.id]
+            "notes:note-view", args=[note.id]
         )
 
     def test_get_not_allowed(self, client_with_matter):
@@ -41,7 +74,7 @@ class TestNotesAdd:
 class TestNoteDelete:
     def test_note_delete(self, client_with_matter, note):
         note_id = note.id
-        url = reverse("case:notes-delete", args=[note.id])
+        url = reverse("notes:delete", args=[note.id])
         response = client_with_matter.post(url)
         assert response.status_code == 204
         assert not Note.objects.filter(id=note_id).exists()
@@ -49,13 +82,13 @@ class TestNoteDelete:
 
 class TestNoteContent:
     def test_note_content_get(self, client_with_matter, note):
-        url = reverse("case:note-content", args=[note.id])
+        url = reverse("notes:note-content", args=[note.id])
         response = client_with_matter.get(url)
         assert response.status_code == 200
         assert response.content.decode() == note.content
 
     def test_note_content_post(self, client_with_matter, note):
-        url = reverse("case:note-content", args=[note.id])
+        url = reverse("notes:note-content", args=[note.id])
         new_content = "Updated markdown content"
         response = client_with_matter.post(url, {"content": new_content})
         assert response.status_code == 204
@@ -65,7 +98,7 @@ class TestNoteContent:
 
 class TestNoteAutosave:
     def test_note_autosave(self, client_with_matter, note):
-        url = reverse("case:note-autosave", args=[note.id])
+        url = reverse("notes:note-autosave", args=[note.id])
         new_content = "Autosaved content"
         response = client_with_matter.post(url, {"content": new_content})
         assert response.status_code == 200
@@ -76,7 +109,7 @@ class TestNoteAutosave:
 
 class TestNoteTitle:
     def test_note_title_update(self, client_with_matter, note):
-        url = reverse("case:note-title", args=[note.id])
+        url = reverse("notes:note-title", args=[note.id])
         response = client_with_matter.post(url, {"title": "New Title"})
         assert response.status_code == 200
         assert response.json()["saved"] is True
@@ -84,7 +117,7 @@ class TestNoteTitle:
         assert note.title == "New Title"
 
     def test_note_title_empty_rejected(self, client_with_matter, note):
-        url = reverse("case:note-title", args=[note.id])
+        url = reverse("notes:note-title", args=[note.id])
         response = client_with_matter.post(url, {"title": ""})
         assert response.status_code == 400
         assert response.json()["saved"] is False
@@ -129,29 +162,28 @@ class TestEditorFileTree:
         assert "Nested" in content
         assert "Loose" in content
 
-    def test_current_note_ancestors_render_expanded(self, client, user):
+    def test_every_folder_renders_collapsed(self, client, user):
+        # Expansion is per-browser-tab (sessionStorage, applied
+        # client-side); the server renders every node collapsed
         from apps.notes.models import NoteFolder
 
         parent = NoteFolder.objects.create(name="Research")
         child = NoteFolder.objects.create(name="Cases", parent=parent)
         note = Note.objects.create(author=user, title="Deep", folder=child)
 
-        # Session has everything collapsed (empty expanded set)
         response = client.get(reverse("notes:note-view", args=[note.id]))
         content = response.content.decode()
-        # Both ancestor folder nodes render without the collapsed class
-        assert f'data-folder-id="{parent.id}"' in content
         for folder_id in (parent.id, child.id):
             start = content.index(f'data-folder-id="{folder_id}"')
             li_open = content.rindex("<li", 0, start)
-            assert "collapsed" not in content[li_open:start]
+            assert "collapsed" in content[li_open:start]
 
     def test_matter_editor_renders_matters_pane(self, client_with_matter, note, user):
         matter = client_with_matter.matter
         for title in ("Zeta", "Alpha"):
             Note.objects.create(author=user, matter=matter, title=title)
 
-        response = client_with_matter.get(reverse("case:note-view", args=[note.id]))
+        response = client_with_matter.get(reverse("notes:note-view", args=[note.id]))
         content = response.content.decode()
         # Matter notes land on the Matters pane with their matter's tree
         assert 'data-active-pane="matters"' in content
@@ -188,7 +220,7 @@ class TestNoteFolderReparent:
         )
         return resp
 
-    def test_reparent_updates_depths_and_session(self, client, tree):
+    def test_reparent_updates_depths(self, client, tree):
         resp = self._reparent(client, tree["child"], tree["other"].id)
         assert resp.status_code == 204
         tree["child"].refresh_from_db()
@@ -196,7 +228,6 @@ class TestNoteFolderReparent:
         assert tree["child"].parent_id == tree["other"].id
         assert tree["child"].depth == 1
         assert tree["grandchild"].depth == 2
-        assert tree["other"].id in client.session["note_folders_expanded"]
 
     def test_reparent_to_root(self, client, tree):
         resp = self._reparent(client, tree["grandchild"], "")
@@ -279,7 +310,7 @@ class TestEditorFileTreePartial:
 
 
 class TestNoteMoveFromTree:
-    def test_move_into_folder_expands_destination(self, client, user):
+    def test_move_into_folder(self, client, user):
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Filed")
@@ -292,7 +323,6 @@ class TestNoteMoveFromTree:
         assert resp.headers.get("HX-Trigger") == "notesChanged"
         note.refresh_from_db()
         assert note.folder_id == folder.id
-        assert folder.id in client.session["note_folders_expanded"]
 
     def test_move_to_root(self, client, user):
         from apps.notes.models import NoteFolder
@@ -392,15 +422,6 @@ class TestMatterScopeGuards:
         assert scoped["mfolder"] not in get_valid_move_targets(scoped["general"])
 
 
-class TestMatterToggle:
-    def test_toggle_flips_session(self, client, matter):
-        url = reverse("notes:matter-toggle", args=[matter.id])
-        assert client.post(url).status_code == 204
-        assert client.session["note_matters_expanded"] == [matter.id]
-        assert client.post(url).status_code == 204
-        assert client.session["note_matters_expanded"] == []
-
-
 class TestNoteFolderFormMatter:
     def test_matter_scopes_parents(self, matter):
         from apps.notes.forms import NoteFolderForm
@@ -457,7 +478,6 @@ class TestFolderCrudEditorContext:
         assert folder.matter_id == matter.id
         assert folder.parent_id == parent.id
         assert folder.depth == 1
-        assert parent.id in client.session["note_folders_expanded"]
 
     def test_instant_add_rejects_depth_cap(self, client):
         from apps.notes.models import NoteFolder
@@ -529,53 +549,6 @@ class TestFolderCrudEditorContext:
         assert note.matter_id == matter.id
 
 
-class TestEditorTreeToggleAll:
-    def test_files_pane_scopes_general_only(self, client, matter):
-        from apps.notes.models import NoteFolder
-
-        general = NoteFolder.objects.create(name="G")
-        mfolder = NoteFolder.objects.create(name="M", matter=matter)
-        url = reverse("notes:editor-tree-toggle-all")
-
-        resp = client.post(url + "?pane=files&expand=true")
-        assert resp.status_code == 204
-        expanded = set(client.session["note_folders_expanded"])
-        assert general.id in expanded
-        assert mfolder.id not in expanded
-
-        client.post(url + "?pane=files&expand=false")
-        assert general.id not in set(client.session["note_folders_expanded"])
-
-    def test_matters_pane_flips_folders_and_matter_nodes(self, client, matter):
-        from apps.notes.models import NoteFolder
-
-        general = NoteFolder.objects.create(name="G")
-        mfolder = NoteFolder.objects.create(name="M", matter=matter)
-        url = reverse("notes:editor-tree-toggle-all")
-
-        # General folder expansion must survive a matters-pane sweep
-        session = client.session
-        session["note_folders_expanded"] = [general.id]
-        session.save()
-
-        client.post(url + "?pane=matters&expand=true")
-        expanded = set(client.session["note_folders_expanded"])
-        assert mfolder.id in expanded
-        assert general.id in expanded
-        assert matter.id in client.session["note_matters_expanded"]
-
-        client.post(url + "?pane=matters&expand=false")
-        expanded = set(client.session["note_folders_expanded"])
-        assert mfolder.id not in expanded
-        assert general.id in expanded  # untouched
-        assert client.session["note_matters_expanded"] == []
-
-    def test_invalid_pane_rejected(self, client):
-        url = reverse("notes:editor-tree-toggle-all")
-        assert client.post(url + "?pane=everything&expand=true").status_code == 400
-        assert client.get(url + "?pane=files&expand=true").status_code == 405
-
-
 class TestStandaloneNoteAddEdit:
     def test_instant_create_and_sequential_names(self, client, user):
         url = reverse("notes:add")
@@ -600,7 +573,7 @@ class TestNotesLaunch:
 
         resp = client.get(reverse("notes:launch"))
         assert resp.status_code == 302
-        assert resp.url == reverse("case:note-view", args=[recent.id])
+        assert resp.url == reverse("notes:note-view", args=[recent.id])
 
     def test_falls_back_to_latest_note(self, client, user):
         Note.objects.create(author=user, title="Only note")
@@ -628,7 +601,6 @@ class TestAddIntoFolder:
         assert resp.status_code == 204
         note = Note.objects.get(title="Untitled")
         assert note.folder_id == folder.id
-        assert folder.id in client.session["note_folders_expanded"]
 
     def test_untitled_names_scoped_per_folder(self, client, user):
         from apps.notes.models import NoteFolder
@@ -676,7 +648,7 @@ class TestNoteProperties:
         from apps.matters.models import Matter as MatterModel
 
         MatterModel.objects.create(name="Closed one", status="Closed")
-        resp = client_with_matter.get(reverse("case:notes-properties", args=[note.id]))
+        resp = client_with_matter.get(reverse("notes:note-properties", args=[note.id]))
         assert resp.status_code == 200
         content = resp.content.decode()
         assert 'name="matter"' in content
@@ -686,7 +658,7 @@ class TestNoteProperties:
     def test_general_note_has_no_properties(self, client_with_matter, user):
         general = Note.objects.create(author=user, title="General")
         resp = client_with_matter.get(
-            reverse("case:notes-properties", args=[general.id])
+            reverse("notes:note-properties", args=[general.id])
         )
         assert resp.status_code == 404
 
@@ -704,7 +676,7 @@ class TestReassignMatter:
         other = MatterModel.objects.create(name="New home", status="Open")
 
         resp = client_with_matter.post(
-            reverse("case:notes-reassign-matter", args=[note.id]),
+            reverse("notes:note-reassign-matter", args=[note.id]),
             {"matter": other.id},
         )
         assert resp.status_code == 204
@@ -720,21 +692,21 @@ class TestReassignMatter:
 
         closed = MatterModel.objects.create(name="Closed", status="Closed")
         resp = client_with_matter.post(
-            reverse("case:notes-reassign-matter", args=[note.id]),
+            reverse("notes:note-reassign-matter", args=[note.id]),
             {"matter": closed.id},
         )
         assert resp.status_code == 404
 
         general = Note.objects.create(author=user, title="General")
         resp = client_with_matter.post(
-            reverse("case:notes-reassign-matter", args=[general.id]),
+            reverse("notes:note-reassign-matter", args=[general.id]),
             {"matter": client_with_matter.matter.id},
         )
         assert resp.status_code == 404
 
         assert (
             client_with_matter.get(
-                reverse("case:notes-reassign-matter", args=[note.id])
+                reverse("notes:note-reassign-matter", args=[note.id])
             ).status_code
             == 405
         )
@@ -758,7 +730,7 @@ class TestEditorRecents:
         listing = content[start:]
         # Most recent first; matter note links to the case editor URL
         assert listing.index("Matter recent") < listing.index("Gen recent")
-        assert reverse("case:note-view", args=[mnote.id]) in listing
+        assert reverse("notes:note-view", args=[mnote.id]) in listing
 
 
 class TestValidTabsFallback:
@@ -774,3 +746,188 @@ class TestValidTabsFallback:
         assert resp.status_code == 200
         # get_last_tab sanitized the stale value to the default (documents)
         assert resp.request["PATH_INFO"].endswith("/documents/")
+
+
+class TestSearchPalette:
+    """The editor's Ctrl+K palette: bands, ranking, scoping, row wiring."""
+
+    @pytest.fixture
+    def url(self):
+        return reverse("notes:search-palette")
+
+    @staticmethod
+    def _index(*notes):
+        # Watson only auto-indexes inside a request's search context, so
+        # ORM-created fixtures must be indexed by hand.
+        from watson import search as watson
+
+        for n in notes:
+            watson.default_search_engine.update_obj_index(n)
+
+    def test_get_renders_palette_with_recents(self, client_with_matter, note, user):
+        from apps.notes.models import NoteView
+
+        NoteView.objects.create(user=user, note=note)
+        response = client_with_matter.get(reverse("notes:search-palette"))
+        content = response.content.decode()
+        assert response.status_code == 200
+        assert "notes-palette" in content
+        assert 'id="palette-input"' in content
+        # main.js hijacks keys when '#htmx-modal-container .search' exists
+        assert 'class="modal-dialog modal-lg notes-palette"' in content
+        assert "Test Note" in content
+
+    def test_short_query_returns_recents_only(
+        self, client_with_matter, note, user, url
+    ):
+        from apps.notes.models import NoteView
+
+        NoteView.objects.create(user=user, note=note)
+        response = client_with_matter.post(url, {"q": "a"})
+        content = response.content.decode()
+        assert "Recent" in content
+        assert "Title matches" not in content
+        assert "Full-text matches" not in content
+
+    def test_title_band_prefix_first(self, client_with_matter, user, url):
+        Note.objects.create(author=user, title="The Alpha", content="x")
+        Note.objects.create(author=user, title="Alpha brief", content="x")
+        content = client_with_matter.post(url, {"q": "alpha"}).content.decode()
+        assert "Title matches" in content
+        assert content.index("Alpha brief") < content.index("The Alpha")
+
+    def test_title_band_matches_full_path(self, client_with_matter, user, url):
+        from apps.notes.models import NoteFolder
+
+        appeals = NoteFolder.objects.create(name="Appeals")
+        procedure = NoteFolder.objects.create(name="Procedure", parent=appeals)
+        in_path = Note.objects.create(
+            author=user, title="Preservation checklist", folder=procedure
+        )
+        # A title hit still outranks a path-only hit
+        Note.objects.create(author=user, title="Appeal bond memo")
+        content = client_with_matter.post(url, {"q": "appeal"}).content.decode()
+        assert f'data-note-id="{in_path.id}"' in content
+        assert "Appeals/Procedure/" in content
+        assert content.index("Appeal bond memo") < content.index(
+            "Preservation checklist"
+        )
+
+    def test_title_band_matches_matter_name(self, client_with_matter, note, url):
+        # "Test Matter" is the matter; its note is reachable by matter name
+        content = client_with_matter.post(url, {"q": "test matter"}).content.decode()
+        assert f'data-note-id="{note.id}"' in content
+
+    def test_content_band_excerpt_and_search_term(self, client_with_matter, user, url):
+        n = Note.objects.create(
+            author=user,
+            title="Brewing notes",
+            content="A paragraph mentioning zymurgy somewhere in the middle.",
+        )
+        self._index(n)
+        content = client_with_matter.post(url, {"q": "zymurgy"}).content.decode()
+        assert "Full-text matches" in content
+        assert "<mark>zymurgy</mark>" in content
+        assert 'data-search-term="zymurgy"' in content
+
+    def test_title_match_excluded_from_content_band(
+        self, client_with_matter, user, url
+    ):
+        n = Note.objects.create(
+            author=user, title="Zymurgy handbook", content="All about zymurgy."
+        )
+        self._index(n)
+        content = client_with_matter.post(url, {"q": "zymurgy"}).content.decode()
+        assert content.count(f'data-note-id="{n.id}"') == 1
+        assert "Full-text matches" not in content
+
+    def test_matter_note_uses_unified_urls(self, client_with_matter, note, url):
+        content = client_with_matter.post(url, {"q": "Test Note"}).content.decode()
+        assert reverse("notes:note-content-partial", args=[note.id]) in content
+        assert reverse("notes:note-view", args=[note.id]) in content
+
+    def test_matter_scope_excludes_unassigned_user(self, matter, user, url):
+        from django.test import Client
+
+        from apps.accounts.models import CustomUser
+
+        restricted = CustomUser.objects.create(
+            username="restricted",
+            email="restricted@example.com",
+            user_rate=100,
+            perm_all_matters=False,
+        )
+        restricted.set_password("testpass123")
+        restricted.save()
+        Note.objects.create(author=user, matter=matter, title="Secret matter memo")
+        Note.objects.create(author=user, title="Public library memo")
+        c = Client()
+        c.login(username="restricted", password="testpass123")
+        c.get("/dash/")
+        content = c.post(url, {"q": "memo"}).content.decode()
+        assert "Public library memo" in content
+        assert "Secret matter memo" not in content
+
+
+class TestSaveConflicts:
+    """base_version guard: stale writes from another tab are rejected."""
+
+    def test_autosave_stale_base_version_409(self, client_with_matter, note):
+        url = reverse("notes:note-autosave", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"content": "stale tab", "base_version": "2000-01-01T00:00:00+00:00"}
+        )
+        assert resp.status_code == 409
+        body = resp.json()
+        assert body["saved"] is False
+        assert body["conflict"] is True
+        assert body["updated_at"] == note.updated_at.isoformat()
+        note.refresh_from_db()
+        assert note.content != "stale tab"
+
+    def test_autosave_fresh_base_version_saves(self, client_with_matter, note):
+        url = reverse("notes:note-autosave", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"content": "fresh", "base_version": note.updated_at.isoformat()}
+        )
+        assert resp.status_code == 200
+        note.refresh_from_db()
+        assert note.content == "fresh"
+        assert resp.json()["updated_at"] == note.updated_at.isoformat()
+
+    def test_autosave_without_base_version_saves(self, client_with_matter, note):
+        url = reverse("notes:note-autosave", args=[note.id])
+        resp = client_with_matter.post(url, {"content": "unguarded"})
+        assert resp.status_code == 200
+        note.refresh_from_db()
+        assert note.content == "unguarded"
+
+    def test_title_stale_base_version_409(self, client_with_matter, note):
+        url = reverse("notes:note-title", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"title": "Stale", "base_version": "2000-01-01T00:00:00+00:00"}
+        )
+        assert resp.status_code == 409
+        note.refresh_from_db()
+        assert note.title != "Stale"
+
+    def test_title_fresh_base_version_saves_with_updated_at(
+        self, client_with_matter, note
+    ):
+        url = reverse("notes:note-title", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"title": "Fresh", "base_version": note.updated_at.isoformat()}
+        )
+        assert resp.status_code == 200
+        note.refresh_from_db()
+        assert note.title == "Fresh"
+        assert resp.json()["updated_at"] == note.updated_at.isoformat()
+
+    def test_sync_reload_skips_recency(self, client_with_matter, note):
+        from apps.notes.models import NoteView
+
+        url = reverse("notes:note-content-partial", args=[note.id])
+        assert client_with_matter.get(url + "?sync=1").status_code == 200
+        assert not NoteView.objects.filter(note=note).exists()
+        assert client_with_matter.get(url).status_code == 200
+        assert NoteView.objects.filter(note=note).exists()

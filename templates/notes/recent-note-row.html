@@ -5,12 +5,12 @@ must never participate in the tree's drag-and-drop scoping.
 {% endcomment %}
 <li class="file-tree-item file-tree-note tree-recent-note{% if n.id == note.id %} active{% endif %}"
     data-note-id="{{ n.id }}"
-    data-delete-url="{% if n.matter_id %}{% url 'case:notes-delete' n.id %}{% else %}{% url 'notes:delete' n.id %}{% endif %}"
-    {% if n.matter_id %}data-properties-url="{% url 'case:notes-properties' n.id %}"{% endif %}
-    hx-get="{% if n.matter_id %}{% url 'case:note-content-partial' n.id %}{% else %}{% url 'notes:note-content-partial' n.id %}{% endif %}"
+    data-delete-url="{% url 'notes:delete' n.id %}"
+    {% if n.matter_id %}data-properties-url="{% url 'notes:note-properties' n.id %}"{% endif %}
+    hx-get="{% url 'notes:note-content-partial' n.id %}"
     hx-target="#note-editor-container"
     hx-swap="innerHTML"
-    hx-push-url="{% if n.matter_id %}{% url 'case:note-view' n.id %}{% else %}{% url 'notes:note-view' n.id %}{% endif %}">
+    hx-push-url="{% url 'notes:note-view' n.id %}">
   <span class="file-tree-name">{{ n.title }}</span>
   {% if n.matter_id %}<span class="tree-recent-matter">{{ n.matter.name }}</span>{% endif %}
 </li>

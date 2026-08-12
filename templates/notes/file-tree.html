@@ -1,8 +1,8 @@
 {% comment %}
-Files pane: the GENERAL folder/file tree (Obsidian-style). Expand state
-comes from the session key note_folders_expanded (plus the active note's
-ancestors) and is toggled client-side in static/js/notes/file-tree.js,
-which also handles drag-and-drop; after a move both panes re-render via
+Files pane: the GENERAL folder/file tree (Obsidian-style). Every node
+renders collapsed; expansion is per-browser-tab, applied and toggled
+client-side (static/js/notes/tab-state.js + file-tree.js, which also
+handles drag-and-drop); after a move both panes re-render via
 notes:editor-file-tree into #file-tree-container. Folderless notes sit at
 the root, after the top-level folders; the ul itself is the root drop
 target.

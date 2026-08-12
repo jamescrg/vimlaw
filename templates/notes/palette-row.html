@@ -1,0 +1,17 @@
+{% comment %}
+One palette result (expects `n`; optional `search_term` on full-text
+rows). Same four-attr open idiom as the tree rows; data-note-id lets the
+existing beforeRequest hook move the sidebar's active pill.
+{% endcomment %}
+<li class="palette-row"
+    data-note-id="{{ n.id }}"
+    {% if search_term %}data-search-term="{{ search_term }}"{% endif %}
+    hx-get="{% url 'notes:note-content-partial' n.id %}"
+    hx-target="#note-editor-container"
+    hx-swap="innerHTML"
+    hx-push-url="{% url 'notes:note-view' n.id %}">
+  {# djlint:off #}
+  <span class="palette-row-title">{% if n.path_prefix %}<span class="palette-row-path">{{ n.path_prefix }}/</span>{% endif %}{{ n.title }}</span>
+  {# djlint:on #}
+  {% if n.safe_excerpt %}<span class="palette-row-excerpt">{{ n.safe_excerpt }}</span>{% endif %}
+</li>
