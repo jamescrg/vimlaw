@@ -10,7 +10,8 @@ existing beforeRequest hook move the sidebar's active pill.
     hx-target="#note-editor-container"
     hx-swap="innerHTML"
     hx-push-url="{% url 'notes:note-view' n.id %}">
-  <span class="palette-row-title">{{ n.title }}</span>
-  <span class="palette-row-context">{{ n.context_label }}</span>
+  {# djlint:off #}
+  <span class="palette-row-title">{% if n.path_prefix %}<span class="palette-row-path">{{ n.path_prefix }}/</span>{% endif %}{{ n.title }}</span>
+  {# djlint:on #}
   {% if n.safe_excerpt %}<span class="palette-row-excerpt">{{ n.safe_excerpt }}</span>{% endif %}
 </li>

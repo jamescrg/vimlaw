@@ -235,13 +235,16 @@ def _safe_excerpt(raw):
     )
 
 
-def _palette_context_label(note):
-    """Where the note lives: its matter's name, or its Library folder path."""
+def _palette_path(note):
+    """Omnisearch-style path prefix for a palette row. A matter is the root
+    directory of its notes' paths; library notes are rooted at the tree
+    root, so a root library note has no prefix at all."""
+    parts = []
     if note.matter_id:
-        return note.matter.name
+        parts.append(note.matter.name)
     if note.folder:
-        return "/".join(f.name for f in note.folder.get_ancestors() + [note.folder])
-    return "Library"
+        parts.extend(f.name for f in note.folder.get_ancestors() + [note.folder])
+    return "/".join(parts)
 
 
 @login_required
@@ -304,7 +307,7 @@ def notes_search_palette(request):
         )
 
     for n in title_notes + content_notes + recent_notes:
-        n.context_label = _palette_context_label(n)
+        n.path_prefix = _palette_path(n)
     for n in content_notes:
         n.safe_excerpt = _safe_excerpt(n.excerpt)
 

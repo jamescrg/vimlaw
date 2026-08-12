@@ -550,10 +550,7 @@
 }
 
 .palette-row {
-  column-gap: 0.75rem;
   cursor: pointer;
-  display: grid;
-  grid-template-columns: 1fr auto;
   padding: 0.5rem 1rem;
 }
 
@@ -562,23 +559,22 @@
   background: var(--selected-background);
 }
 
+/* One Omnisearch-style line: muted path prefix flowing into the title */
 .palette-row-title {
   color: var(--color-primary);
-  min-width: 0;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.palette-row-context {
+.palette-row-path {
   color: var(--color-muted);
-  white-space: nowrap;
 }
 
 .palette-row-excerpt {
   color: var(--color-muted);
-  grid-column: 1 / -1;
-  min-width: 0;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -593,12 +589,6 @@
   color: var(--color-muted);
   padding: 1rem;
   text-align: center;
-}
-
-@media (width <= 500px) {
-  .palette-row-context {
-    display: none;
-  }
 }
 
 /* Dark mode — highlighted excerpt text needs a dark ink on the yellow mark,
