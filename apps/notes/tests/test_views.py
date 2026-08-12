@@ -523,7 +523,7 @@ class TestFolderCrudEditorContext:
         )
         resp = client.delete(url)
         assert resp.status_code == 204
-        assert resp.headers.get("HX-Refresh") == "true"
+        assert "noteFoldersChanged" in resp.headers.get("HX-Trigger", "")
         note.refresh_from_db()
         assert note.folder_id is None
         assert note.matter_id == matter.id

@@ -524,7 +524,9 @@ def note_folder_delete(request, folder_id):
             status=204, headers={"HX-Redirect": reverse("notes:launch")}
         )
 
-    return HttpResponse(status=204, headers={"HX-Refresh": "true"})
+    # Refresh the trees in place (a full HX-Refresh reload would dump the
+    # panel's scroll position and any open editing state)
+    return _editor_crud_response()
 
 
 def _expand_folder_in_session(request, folder_id):
