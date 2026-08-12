@@ -20,20 +20,12 @@ export function setupTreeMenu() {
   menu = document.getElementById("tree-context-menu");
   if (!container || !menu) return;
 
+  // Right-click is the sole trigger (no hover kebabs)
   container.addEventListener("contextmenu", (e) => {
     const li = e.target.closest(ROW_SELECTOR);
     if (!li) return;
     e.preventDefault();
     openMenu(li, e.clientX, e.clientY);
-  });
-
-  container.addEventListener("click", (e) => {
-    const btn = e.target.closest(".file-tree-menu-btn");
-    if (!btn) return;
-    e.stopPropagation();
-    const li = btn.closest(ROW_SELECTOR);
-    const rect = btn.getBoundingClientRect();
-    openMenu(li, rect.left, rect.bottom + 4);
   });
 
   menu.addEventListener("click", (e) => {

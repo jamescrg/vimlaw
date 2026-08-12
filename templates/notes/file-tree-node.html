@@ -18,12 +18,6 @@ the folder's own tree.
     data-note-add-url="{% if node.folder.matter_id %}{% url 'case:notes-add' node.folder.matter_id %}{% else %}{% url 'notes:add' %}{% endif %}">
   <span class="file-tree-toggle"><i class="icon-chevron-down"></i></span>
   <span class="file-tree-name">{{ node.folder.name }}</span>
-  <button type="button"
-          class="file-tree-menu-btn"
-          tabindex="-1"
-          title="Folder actions">
-    <i class="icon-ellipsis"></i>
-  </button>
   <ul class="file-tree-children">
     {% for child in node.children %}
       {% with node=child %}
