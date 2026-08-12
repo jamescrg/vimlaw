@@ -279,12 +279,23 @@ function flashDropError(target, reason) {
 
 export function refreshTree() {
   const container = document.getElementById("file-tree-container");
+  // The innerHTML swap resets every list's scroll; capture and restore so
+  // a rename/create/delete doesn't bounce the panel to the top. List order
+  // is stable (files tree, matter trees, recents).
+  const scrolls = Array.from(container.querySelectorAll(".file-tree")).map(
+    (el) => el.scrollTop,
+  );
   // htmx.ajax processes the swapped content, so the new note rows' hx-get
   // attributes keep working. NOTE_DATA is re-set on every content swap,
   // so the active pill follows the currently open note.
-  window.htmx.ajax(
-    "GET",
-    `${container.dataset.refreshUrl}?note=${window.NOTE_DATA.id}`,
-    { target: "#file-tree-container", swap: "innerHTML" },
-  );
+  window.htmx
+    .ajax("GET", `${container.dataset.refreshUrl}?note=${window.NOTE_DATA.id}`, {
+      target: "#file-tree-container",
+      swap: "innerHTML",
+    })
+    .then(() => {
+      container.querySelectorAll(".file-tree").forEach((el, i) => {
+        if (scrolls[i]) el.scrollTop = scrolls[i];
+      });
+    });
 }

@@ -29,7 +29,7 @@
                   class="panel-tab{% if active_pane == 'files' %} active{% endif %}"
                   data-tab="files"
                   title="Library">
-            <i class="icon-book-open"></i>
+            <i class="icon-folders"></i>
           </button>
           <button type="button"
                   class="panel-tab{% if active_pane == 'matters' %} active{% endif %}"
@@ -73,7 +73,7 @@
       <!-- Collapsed-rail shortcut: expand the panel -->
       <div class="panel-rail">
         <button type="button" class="panel-btn" title="Notes panel">
-          <i class="icon-book-open"></i>
+          <i class="icon-notebook-pen"></i>
         </button>
       </div>
       <button class="panel-toggle" type="button" title="Toggle files panel">
@@ -110,6 +110,32 @@
                   x-ref="menu"
                   x-show="open"
                   @click="close()">
+                {% comment %}
+                Overflow homes for format buttons the container queries hide
+                when the editor column narrows (wide panels / small screens).
+                Each proxies a click to its hidden bar button (data-cmd).
+                {% endcomment %}
+                <li class="fmt-overflow fmt-overflow-1">
+                  <a class="dropdown-item" href="#" data-fmt="strike"><i class="icon-strikethrough"></i> Strikethrough</a>
+                </li>
+                <li class="fmt-overflow fmt-overflow-1">
+                  <a class="dropdown-item" href="#" data-fmt="h4"><i class="icon-heading-4"></i> Heading 4</a>
+                </li>
+                <li class="fmt-overflow fmt-overflow-1">
+                  <a class="dropdown-item" href="#" data-fmt="quote"><i class="icon-quote"></i> Blockquote</a>
+                </li>
+                <li class="fmt-overflow fmt-overflow-2">
+                  <a class="dropdown-item" href="#" data-fmt="h3"><i class="icon-heading-3"></i> Heading 3</a>
+                </li>
+                <li class="fmt-overflow fmt-overflow-2">
+                  <a class="dropdown-item" href="#" data-fmt="ordered"><i class="icon-list-ordered"></i> Numbered List</a>
+                </li>
+                <li class="fmt-overflow fmt-overflow-3">
+                  <a class="dropdown-item" href="#" data-fmt="h2"><i class="icon-heading-2"></i> Heading 2</a>
+                </li>
+                <li class="fmt-overflow fmt-overflow-3">
+                  <a class="dropdown-item" href="#" data-fmt="bullet"><i class="icon-list"></i> Bullet List</a>
+                </li>
                 <li>
                   <a class="dropdown-item"
                      href="#"
