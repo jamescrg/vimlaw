@@ -162,22 +162,21 @@ class TestEditorFileTree:
         assert "Nested" in content
         assert "Loose" in content
 
-    def test_current_note_ancestors_render_expanded(self, client, user):
+    def test_every_folder_renders_collapsed(self, client, user):
+        # Expansion is per-browser-tab (sessionStorage, applied
+        # client-side); the server renders every node collapsed
         from apps.notes.models import NoteFolder
 
         parent = NoteFolder.objects.create(name="Research")
         child = NoteFolder.objects.create(name="Cases", parent=parent)
         note = Note.objects.create(author=user, title="Deep", folder=child)
 
-        # Session has everything collapsed (empty expanded set)
         response = client.get(reverse("notes:note-view", args=[note.id]))
         content = response.content.decode()
-        # Both ancestor folder nodes render without the collapsed class
-        assert f'data-folder-id="{parent.id}"' in content
         for folder_id in (parent.id, child.id):
             start = content.index(f'data-folder-id="{folder_id}"')
             li_open = content.rindex("<li", 0, start)
-            assert "collapsed" not in content[li_open:start]
+            assert "collapsed" in content[li_open:start]
 
     def test_matter_editor_renders_matters_pane(self, client_with_matter, note, user):
         matter = client_with_matter.matter
@@ -221,7 +220,7 @@ class TestNoteFolderReparent:
         )
         return resp
 
-    def test_reparent_updates_depths_and_session(self, client, tree):
+    def test_reparent_updates_depths(self, client, tree):
         resp = self._reparent(client, tree["child"], tree["other"].id)
         assert resp.status_code == 204
         tree["child"].refresh_from_db()
@@ -229,7 +228,6 @@ class TestNoteFolderReparent:
         assert tree["child"].parent_id == tree["other"].id
         assert tree["child"].depth == 1
         assert tree["grandchild"].depth == 2
-        assert tree["other"].id in client.session["note_folders_expanded"]
 
     def test_reparent_to_root(self, client, tree):
         resp = self._reparent(client, tree["grandchild"], "")
@@ -312,7 +310,7 @@ class TestEditorFileTreePartial:
 
 
 class TestNoteMoveFromTree:
-    def test_move_into_folder_expands_destination(self, client, user):
+    def test_move_into_folder(self, client, user):
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Filed")
@@ -325,7 +323,6 @@ class TestNoteMoveFromTree:
         assert resp.headers.get("HX-Trigger") == "notesChanged"
         note.refresh_from_db()
         assert note.folder_id == folder.id
-        assert folder.id in client.session["note_folders_expanded"]
 
     def test_move_to_root(self, client, user):
         from apps.notes.models import NoteFolder
@@ -425,15 +422,6 @@ class TestMatterScopeGuards:
         assert scoped["mfolder"] not in get_valid_move_targets(scoped["general"])
 
 
-class TestMatterToggle:
-    def test_toggle_flips_session(self, client, matter):
-        url = reverse("notes:matter-toggle", args=[matter.id])
-        assert client.post(url).status_code == 204
-        assert client.session["note_matters_expanded"] == [matter.id]
-        assert client.post(url).status_code == 204
-        assert client.session["note_matters_expanded"] == []
-
-
 class TestNoteFolderFormMatter:
     def test_matter_scopes_parents(self, matter):
         from apps.notes.forms import NoteFolderForm
@@ -490,7 +478,6 @@ class TestFolderCrudEditorContext:
         assert folder.matter_id == matter.id
         assert folder.parent_id == parent.id
         assert folder.depth == 1
-        assert parent.id in client.session["note_folders_expanded"]
 
     def test_instant_add_rejects_depth_cap(self, client):
         from apps.notes.models import NoteFolder
@@ -562,53 +549,6 @@ class TestFolderCrudEditorContext:
         assert note.matter_id == matter.id
 
 
-class TestEditorTreeToggleAll:
-    def test_files_pane_scopes_general_only(self, client, matter):
-        from apps.notes.models import NoteFolder
-
-        general = NoteFolder.objects.create(name="G")
-        mfolder = NoteFolder.objects.create(name="M", matter=matter)
-        url = reverse("notes:editor-tree-toggle-all")
-
-        resp = client.post(url + "?pane=files&expand=true")
-        assert resp.status_code == 204
-        expanded = set(client.session["note_folders_expanded"])
-        assert general.id in expanded
-        assert mfolder.id not in expanded
-
-        client.post(url + "?pane=files&expand=false")
-        assert general.id not in set(client.session["note_folders_expanded"])
-
-    def test_matters_pane_flips_folders_and_matter_nodes(self, client, matter):
-        from apps.notes.models import NoteFolder
-
-        general = NoteFolder.objects.create(name="G")
-        mfolder = NoteFolder.objects.create(name="M", matter=matter)
-        url = reverse("notes:editor-tree-toggle-all")
-
-        # General folder expansion must survive a matters-pane sweep
-        session = client.session
-        session["note_folders_expanded"] = [general.id]
-        session.save()
-
-        client.post(url + "?pane=matters&expand=true")
-        expanded = set(client.session["note_folders_expanded"])
-        assert mfolder.id in expanded
-        assert general.id in expanded
-        assert matter.id in client.session["note_matters_expanded"]
-
-        client.post(url + "?pane=matters&expand=false")
-        expanded = set(client.session["note_folders_expanded"])
-        assert mfolder.id not in expanded
-        assert general.id in expanded  # untouched
-        assert client.session["note_matters_expanded"] == []
-
-    def test_invalid_pane_rejected(self, client):
-        url = reverse("notes:editor-tree-toggle-all")
-        assert client.post(url + "?pane=everything&expand=true").status_code == 400
-        assert client.get(url + "?pane=files&expand=true").status_code == 405
-
-
 class TestStandaloneNoteAddEdit:
     def test_instant_create_and_sequential_names(self, client, user):
         url = reverse("notes:add")
@@ -661,7 +601,6 @@ class TestAddIntoFolder:
         assert resp.status_code == 204
         note = Note.objects.get(title="Untitled")
         assert note.folder_id == folder.id
-        assert folder.id in client.session["note_folders_expanded"]
 
     def test_untitled_names_scoped_per_folder(self, client, user):
         from apps.notes.models import NoteFolder

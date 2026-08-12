@@ -34,6 +34,7 @@ import {
   refreshTree,
   updateTreeCollapseIcon,
 } from "./notes/file-tree.js";
+import { getPane, setPane, revealActiveNote } from "./notes/tab-state.js";
 import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
@@ -644,15 +645,9 @@ function updateSidebarActive(noteId) {
 
   // Expand the tree row's collapsed ancestors so the note is already
   // visible if the user tabs over to its home pane (clicks from Recent
-  // land here). DOM-only; nothing is persisted.
-  const treeRow = matches[0]; // tree panes render before Recent
-  let node = treeRow.parentElement.closest(
-    ".file-tree-folder, .file-tree-matter",
-  );
-  while (node) {
-    node.classList.remove("collapsed");
-    node = node.parentElement.closest(".file-tree-folder, .file-tree-matter");
-  }
+  // land here). Persisted per-tab so the next tree refresh keeps the
+  // open note's path visible.
+  revealActiveNote();
 }
 
 // Files | Matters tabs on the left panel. Initial state is server-rendered
@@ -661,6 +656,7 @@ function updateSidebarActive(noteId) {
 function setLeftTab(tab) {
   const panel = document.querySelector(".note-panel-left");
   if (!panel) return;
+  setPane(tab); // this tab's choice outlives reloads (sessionStorage)
   panel.dataset.activePane = tab;
   panel
     .querySelectorAll(".panel-tab")
@@ -823,6 +819,10 @@ document.addEventListener("DOMContentLoaded", () => {
   PANELS.forEach(setupPanel);
   setupLeftTabs();
   syncPanelIcons();
+  // This tab's stored pane choice beats the server's note-derived
+  // fallback (and makes "recent" restorable, which the server can't)
+  const storedPane = getPane();
+  if (storedPane) setLeftTab(storedPane);
   setupFileTree();
   setupTreeMenu();
   setupPalette();

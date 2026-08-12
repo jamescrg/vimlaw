@@ -4,14 +4,14 @@ One folder node of the editor trees; includes itself for child folders
 plus a chevron only, no folder icons; empty folders still show. Folders
 and notes are draggable; data-depth lets the client pre-validate the
 depth cap and data-matter-id ("" for general) scopes drag-and-drop to
-the folder's own tree.
+the folder's own tree. Every node renders collapsed; each browser tab
+applies its own expansion state (notes/tab-state.js).
 {% endcomment %}
-<li class="file-tree-item file-tree-folder{% if not node.is_expanded %} collapsed{% endif %}"
+<li class="file-tree-item file-tree-folder collapsed"
     draggable="true"
     data-folder-id="{{ node.folder.id }}"
     data-depth="{{ node.folder.depth }}"
     data-matter-id="{{ node.folder.matter_id|default_if_none:'' }}"
-    data-toggle-url="{% url 'notes:folder-toggle' node.folder.id %}"
     data-reparent-url="{% url 'notes:folder-reparent' node.folder.id %}"
     data-edit-url="{% url 'notes:folder-edit' node.folder.id %}"
     data-delete-url="{% url 'notes:folder-delete-confirm' node.folder.id %}"

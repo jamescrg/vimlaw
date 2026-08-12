@@ -75,19 +75,4 @@ urlpatterns = [
         views.editor_file_tree,
         name="editor-file-tree",
     ),
-    path(
-        "notes/editor/tree-toggle-all/",
-        views.editor_tree_toggle_all,
-        name="editor-tree-toggle-all",
-    ),
-    path(
-        "notes/folders/toggle/<int:folder_id>/",
-        views.note_folder_toggle_expand,
-        name="folder-toggle",
-    ),
-    path(
-        "notes/matters/<int:matter_id>/toggle/",
-        views.note_matter_toggle_expand,
-        name="matter-toggle",
-    ),
 ]

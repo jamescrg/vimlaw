@@ -8,7 +8,7 @@ import apps.drive.google as drive_google
 from apps.case.views import get_matter_from_url
 from apps.matters.models import Matter
 from apps.notes.models import Note, NoteFolder
-from apps.notes.views import _expand_folder_in_session, _next_untitled
+from apps.notes.views import _next_untitled
 
 
 @login_required
@@ -36,8 +36,6 @@ def notes_add(request, matter_id):
         matter=matter,
         folder=folder,
     )
-    if folder:
-        _expand_folder_in_session(request, folder.pk)
     return HttpResponse(
         status=204,
         headers={"HX-Redirect": reverse("notes:note-view", args=[note.id])},

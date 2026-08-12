@@ -75,17 +75,16 @@ def validate_folder_move(folder, destination):
 # ---------------------------------------------------------------------------
 
 
-def _build_tree(folders, notes_by_folder, expanded_ids):
+def _build_tree(folders, notes_by_folder):
     """Nested tree from name-ordered folders + per-folder note lists.
 
-    Node = {"folder", "children": [node...], "notes": [Note...], "is_expanded"}.
+    Node = {"folder", "children": [node...], "notes": [Note...]}.
     """
     nodes = {
         f.pk: {
             "folder": f,
             "children": [],
             "notes": notes_by_folder.get(f.pk, []),
-            "is_expanded": f.pk in expanded_ids,
         }
         for f in folders
     }
@@ -100,25 +99,17 @@ def get_editor_file_tree(request, note):
     """Both left-panel trees for the editor: the general Files tree and the
     per-matter trees of the Matters pane.
 
-    Folder expansion comes from the session key shared with the Notes tab;
-    matter-node expansion from its own session key. Both are unioned with
-    the current note's chain (union not persisted) so the active note is
-    always revealed.
+    Every node renders collapsed; expansion state is per-browser-tab
+    (sessionStorage), applied client-side by notes/tab-state.js — the
+    server no longer tracks it, so tabs can't clobber each other's
+    navigation. active_pane is only the fallback for tabs with no stored
+    pane choice.
     """
-    expanded_ids = set(request.session.get("note_folders_expanded", []))
-    if note.folder_id:
-        expanded_ids |= {a.pk for a in note.folder.get_ancestors()}
-        expanded_ids.add(note.folder_id)
-
     open_matters = list(Matter.objects.filter(status="Open").order_by("name"))
     if note.matter and note.matter not in open_matters:
         # Closed matter opened directly: surface it so the active pill exists
         open_matters.append(note.matter)
     matter_ids = {m.id for m in open_matters}
-
-    expanded_matter_ids = set(request.session.get("note_matters_expanded", []))
-    if note.matter_id:
-        expanded_matter_ids.add(note.matter_id)
 
     folders_by_matter = {}
     for f in NoteFolder.objects.order_by(Lower("name")):
@@ -138,18 +129,14 @@ def get_editor_file_tree(request, note):
             "file_tree": _build_tree(
                 folders_by_matter.get(m.id, []),
                 notes_by_scope.get(m.id, {}),
-                expanded_ids,
             ),
             "root_notes": notes_by_scope.get(m.id, {}).get(None, []),
-            "is_expanded": m.id in expanded_matter_ids,
         }
         for m in open_matters
     ]
 
     return {
-        "file_tree": _build_tree(
-            folders_by_matter.get(None, []), general, expanded_ids
-        ),
+        "file_tree": _build_tree(folders_by_matter.get(None, []), general),
         "root_notes": general.get(None, []),
         "matters": matters,
         "active_pane": "matters" if note.matter_id else "files",
@@ -196,8 +183,6 @@ def notes_add(request):
         matter=None,
         folder=folder,
     )
-    if folder:
-        _expand_folder_in_session(request, folder.pk)
     return HttpResponse(
         status=204,
         headers={"HX-Redirect": reverse("notes:note-view", args=[note.id])},
@@ -644,8 +629,6 @@ def note_folder_add(request):
     NoteFolder.objects.create(
         name=_next_untitled(siblings), parent=parent, matter=matter
     )
-    if parent:
-        _expand_folder_in_session(request, parent.pk)
     return _editor_crud_response()
 
 
@@ -751,15 +734,6 @@ def note_folder_delete(request, folder_id):
     return _editor_crud_response()
 
 
-def _expand_folder_in_session(request, folder_id):
-    """Idempotently mark a folder expanded (shared Notes-tab/editor session key)."""
-    expanded = request.session.get("note_folders_expanded", [])
-    if folder_id not in expanded:
-        expanded.append(folder_id)
-        request.session["note_folders_expanded"] = expanded
-        request.session.modified = True
-
-
 @login_required
 @require_POST
 def note_folder_reparent(request, folder_id):
@@ -778,69 +752,6 @@ def note_folder_reparent(request, folder_id):
     folder.depth = destination.depth + 1 if destination else 0
     folder.save(update_fields=["parent", "depth"])
     folder.update_descendant_depths()
-    if destination:
-        _expand_folder_in_session(request, destination.pk)
-    return HttpResponse(status=204)
-
-
-@login_required
-@require_POST
-def note_folder_toggle_expand(request, folder_id):
-    """Toggle folder expand/collapse state in session."""
-    expanded = request.session.get("note_folders_expanded", [])
-    if folder_id in expanded:
-        expanded.remove(folder_id)
-    else:
-        expanded.append(folder_id)
-    request.session["note_folders_expanded"] = expanded
-    request.session.modified = True
-    return HttpResponse(status=204)
-
-
-@login_required
-@require_POST
-def editor_tree_toggle_all(request):
-    """Expand or collapse every node of one editor pane (files|matters).
-
-    Scoped set-union/difference on the shared folder session key so the
-    other pane's state (and the Notes tab's) survives; the matters pane
-    also flips its matter-node key.
-    """
-    pane = request.GET.get("pane")
-    expand = request.GET.get("expand") == "true"
-    if pane not in ("files", "matters"):
-        return HttpResponse("pane must be files or matters", status=400)
-
-    folder_ids = set(
-        NoteFolder.objects.filter(matter__isnull=(pane == "files")).values_list(
-            "pk", flat=True
-        )
-    )
-    current = set(request.session.get("note_folders_expanded", []))
-    updated = (current | folder_ids) if expand else (current - folder_ids)
-    request.session["note_folders_expanded"] = list(updated)
-
-    if pane == "matters":
-        request.session["note_matters_expanded"] = (
-            list(Matter.objects.filter(status="Open").values_list("pk", flat=True))
-            if expand
-            else []
-        )
-    request.session.modified = True
-    return HttpResponse(status=204)
-
-
-@login_required
-@require_POST
-def note_matter_toggle_expand(request, matter_id):
-    """Toggle a matter node's expand state in the editor's Matters pane."""
-    expanded = request.session.get("note_matters_expanded", [])
-    if matter_id in expanded:
-        expanded.remove(matter_id)
-    else:
-        expanded.append(matter_id)
-    request.session["note_matters_expanded"] = expanded
-    request.session.modified = True
     return HttpResponse(status=204)
 
 
@@ -865,6 +776,4 @@ def note_move(request, note_id):
     else:
         note.folder = None
     note.save(update_fields=["folder"])
-    if note.folder_id:
-        _expand_folder_in_session(request, note.folder_id)
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
