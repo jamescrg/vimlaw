@@ -611,6 +611,12 @@
 
 /* Multi-tab conflict banner — another tab saved this note; editing is
    paused until the user reloads (autosave.js enterConflict) */
+/* The class's display:flex would silently defeat the hidden attribute
+   (UA display:none loses to any author rule) — restate it */
+.note-conflict-banner[hidden] {
+  display: none;
+}
+
 .note-conflict-banner {
   align-items: center;
   background: var(--toast-warning-body-bg);
