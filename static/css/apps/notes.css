@@ -132,6 +132,7 @@ body:has(.note-page.standalone) {
 }
 
 .note-panel.collapsed .panel-header,
+.note-panel.collapsed .panel-actions,
 .note-panel.collapsed .panel-pane,
 .note-panel.collapsed .panel-resizer {
   display: none;
@@ -154,6 +155,7 @@ body:has(.note-page.standalone) {
   }
 
   .note-panel-right:not(.expanded) .panel-header,
+  .note-panel-right:not(.expanded) .panel-actions,
   .note-panel-right:not(.expanded) .panel-pane,
   .note-panel-right:not(.expanded) .panel-resizer {
     display: none;
@@ -174,6 +176,7 @@ body:has(.note-page.standalone) {
   }
 
   .note-panel-left:not(.expanded) .panel-header,
+  .note-panel-left:not(.expanded) .panel-actions,
   .note-panel-left:not(.expanded) .panel-pane,
   .note-panel-left:not(.expanded) .panel-resizer {
     display: none;
@@ -287,17 +290,32 @@ body:has(.note-page.standalone) {
   gap: 0.25rem;
 }
 
-/* Header action icons (collapse-all) match the 1rem title text rather
-   than the chunkier 1.25rem panel-btn default. */
-.note-panel .panel-header .panel-btn {
+/* Obsidian-style action row under the tab bar (left panel): the tabs
+   above only switch panes; collection-level actions live here */
+.note-panel-left .panel-actions {
+  align-items: center;
+  border-bottom: 1px solid var(--border-medium);
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  justify-content: space-evenly;
+  padding: 0.25rem 0.75rem;
+}
+
+/* Header/action icons (collapse-all etc.) match the 1rem title text
+   rather than the chunkier 1.25rem panel-btn default. */
+.note-panel .panel-header .panel-btn,
+.note-panel .panel-actions .panel-btn {
   font-size: 1rem;
 }
 
-.note-panel .panel-header .panel-btn:hover {
+.note-panel .panel-header .panel-btn:hover,
+.note-panel .panel-actions .panel-btn:hover {
   background: var(--background-section);
 }
 
-.note-panel .panel-header .panel-btn i {
+.note-panel .panel-header .panel-btn i,
+.note-panel .panel-actions .panel-btn i {
   color: inherit;
 }
 

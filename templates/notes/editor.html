@@ -41,27 +41,34 @@
             <i class="icon-history"></i>
           </button>
         </div>
-        {% comment %}
-        Creation is instant (Obsidian-style): new notes/folders land at the
-        root as "Untitled" with no modal; notes open immediately via
-        HX-Redirect.
-        {% endcomment %}
-        <div class="panel-header-actions">
-          <a href="#"
-             class="panel-btn"
-             hx-post="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
-             title="New note"><i class="icon-square-pen"></i></a>
-          <a href="#"
-             class="panel-btn panel-btn-files-only"
-             hx-post="{% url 'notes:folder-add' %}"
-             title="New folder"><i class="icon-folder-plus"></i></a>
-          <button type="button"
-                  class="panel-btn"
-                  id="tree-collapse-btn"
-                  title="Collapse/Expand all">
-            <i class="icon-chevrons-down-up"></i>
-          </button>
-        </div>
+      </div>
+      {% comment %}
+      Obsidian-style action row: the tab bar above only switches panes;
+      collection-level actions live here. Creation is instant (new
+      notes/folders land at the root as "Untitled" with no modal; notes
+      open immediately via HX-Redirect).
+      {% endcomment %}
+      <div class="panel-actions">
+        <a href="#"
+           class="panel-btn"
+           hx-post="{% if note.matter %}{% url 'case:notes-add' note.matter.id %}{% else %}{% url 'notes:add' %}{% endif %}"
+           title="New note"><i class="icon-square-pen"></i></a>
+        <a href="#"
+           class="panel-btn panel-btn-files-only"
+           hx-post="{% url 'notes:folder-add' %}"
+           title="New folder"><i class="icon-folder-plus"></i></a>
+        <a href="#"
+           class="panel-btn"
+           id="notes-palette-btn"
+           title="Search notes (Ctrl+K)"
+           hx-get="{% url 'notes:search-palette' %}"
+           hx-target="#htmx-modal-container"><i class="icon-text-search"></i></a>
+        <button type="button"
+                class="panel-btn"
+                id="tree-collapse-btn"
+                title="Collapse/Expand all">
+          <i class="icon-chevrons-down-up"></i>
+        </button>
       </div>
       <div class="panel-pane files-pane note-sidebar">
         <div id="file-tree-container"
@@ -70,11 +77,16 @@
              data-toggle-all-url="{% url 'notes:editor-tree-toggle-all' %}"
              data-launch-url="{% url 'notes:launch' %}">{% include "notes/editor-trees.html" %}</div>
       </div>
-      <!-- Collapsed-rail shortcut: expand the panel -->
+      <!-- Collapsed-rail shortcuts: expand the panel; search stays reachable -->
       <div class="panel-rail">
         <button type="button" class="panel-btn" title="Notes panel">
           <i class="icon-notebook-pen"></i>
         </button>
+        <a href="#"
+           class="panel-btn"
+           title="Search notes (Ctrl+K)"
+           hx-get="{% url 'notes:search-palette' %}"
+           hx-target="#htmx-modal-container"><i class="icon-text-search"></i></a>
       </div>
       <button class="panel-toggle" type="button" title="Toggle files panel">
         <i class="icon-panel-left-close"></i>
@@ -94,13 +106,6 @@
           </div>
           <div class="toolbar-right">
             <span class="toolbar-divider"></span>
-            <a href="#"
-               id="notes-palette-btn"
-               title="Search notes (Ctrl+K)"
-               hx-get="{% url 'notes:search-palette' %}"
-               hx-target="#htmx-modal-container">
-              <i class="icon-text-search"></i>
-            </a>
             <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
               <i class="icon-search"></i>
             </a>
