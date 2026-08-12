@@ -1,57 +1,43 @@
-"""Google Drive case-notes mirror.
+"""Google Drive document mirrors (changes-feed owner).
 
-Pulls case notes from Google Drive into the database as ``Note`` rows, scoped to
-the ``Notes`` subfolder of each matter under a configured root folder (default
-``Matters - Open``). Reuses the project's existing Google OAuth plumbing
-(see apps/calendar/google.py) and the Drive Changes API for incremental,
-near-real-time sync.
-
-Storage model (DB-canonical):
-- The converted Markdown text lives in ``Note.content`` (Postgres), so the AI
-  context builder and the in-app Notes UI read it directly — no file tree of
-  record. A synced note carries provenance (``drive_file_id``, ``drive_path``,
-  ``drive_modified``, ``drive_synced_at``) and is upserted by ``drive_file_id``.
-- An optional debug mirror (settings.DRIVE_NOTES_DEBUG_DIR, off by default)
-  additionally writes the Markdown to disk for inspection.
-
-Flow:
-- bootstrap(): first run (no saved page token) crawls every
-  ``<root>/<matter>/Notes/**`` file, converts it, and upserts a Note, then
-  stores a Changes API start page token.
-- sync(): on each tick, consume the changes delta since the saved token,
-  filtering to in-scope note files, and upsert/delete accordingly.
-
-The Changes API is drive-wide, so each changed file is resolved by walking its
-parent chain up to the root folder; only files whose path is
-``<root>/<matter>/Notes/...`` with an allowed extension are mirrored. A note's
-matter is resolved via ``Matter.drive_folder`` (set by the link_drive_folders
-command); folders with no matching Matter are recorded as unmatched.
-
-This module owns the single changes-feed cursor and also dispatches to the
-document mirrors (apps/drive/records.py): PDFs under
+Owns the single Drive Changes API cursor and dispatches to the document
+mirrors (apps/drive/records.py): PDFs under
 ``<root>/<matter>/<linked record folder>/...`` become Record Documents on
 the linked proceeding, and PDFs under any convention-named "Key Documents"
-folder become Evidence documents (curation by drag). Those mirrors are
-append-only — removals and trashes only ever affect Notes here.
+folder become Evidence documents (curation by drag). Both mirrors are
+append-only — removals and trashes in Drive never delete app rows.
+
+Reuses the project's existing Google OAuth plumbing (see
+apps/calendar/google.py). A matter is resolved via ``Matter.drive_folder``
+(set by the link_drive_folders command or the notes-tab link modal);
+folders with no matching Matter are recorded as unmatched.
+
+Flow:
+- bootstrap(): first run (no saved page token) crawls the linked record
+  folders and Key Documents folders, then stores a Changes API start token.
+- sync(): on each tick, consume the changes delta since the saved token.
+
+RETIRED (2026-08-11): the case-notes mirror. This module used to pull
+``<root>/<matter>/Notes/**`` files into ``Note`` rows and delete them when
+the Drive file vanished. Notes are app-owned now (the provenance fields on
+Note were dropped with the mirror); files under ``Notes/`` are ignored by
+the sync.
 """
 
 import json
 import logging
-import os
 from io import BytesIO
 
 import google.oauth2.credentials
 from django.conf import settings
-from django.utils import timezone
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 
 from apps.matters.models import Matter
-from apps.notes.models import Note
 from utils.prepare_path import prepare_path
 
-from . import convert, records
+from . import records
 from .models import DriveSyncState
 
 logger = logging.getLogger(__name__)
@@ -64,7 +50,8 @@ GOOGLE_SHEET_MIME = "application/vnd.google-apps.spreadsheet"
 DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
-ALLOWED_EXTENSIONS = (".docx", ".odt", ".md", ".xlsx", ".ods", ".csv")
+# The retired notes mirror's subtree; still skipped by the Key Documents
+# folder search.
 NOTES_FOLDER_NAME = "Notes"
 
 # Fields requested for a file in changes/listing responses. createdTime and
@@ -212,62 +199,10 @@ def _walk_to_root(service, file_meta, root_id, folder_cache):
     return None
 
 
-def _in_notes_scope(parts):
-    """True if path parts are <matter>/Notes/... (a note file in scope)."""
-    return bool(parts) and len(parts) >= 3 and parts[1] == NOTES_FOLDER_NAME
-
-
-def _effective_ext(file_meta):
-    """Return the source extension to convert from.
-
-    Google-native files are exported: Docs -> .docx, Sheets -> .xlsx (XLSX
-    preserves every tab, whereas a CSV export would only yield the first sheet).
-    """
-    mime = file_meta.get("mimeType")
-    if mime == GOOGLE_DOC_MIME:
-        return ".docx"
-    if mime == GOOGLE_SHEET_MIME:
-        return ".xlsx"
-    return os.path.splitext(file_meta.get("name", ""))[1].lower()
-
-
-def _is_allowed(file_meta):
-    """True if the file is a convertible note (by extension or Google native)."""
-    if file_meta.get("mimeType") in (GOOGLE_DOC_MIME, GOOGLE_SHEET_MIME):
-        return True
-    return os.path.splitext(file_meta.get("name", ""))[1].lower() in ALLOWED_EXTENSIONS
-
-
 def _matters_by_folder():
     """Map Matter.drive_folder -> Matter for all linked matters."""
     qs = Matter.objects.exclude(drive_folder__isnull=True).exclude(drive_folder="")
     return {m.drive_folder: m for m in qs}
-
-
-# --------------------------------------------------------------------------- #
-# Optional debug mirror (off unless settings.DRIVE_NOTES_DEBUG_DIR is set)
-# --------------------------------------------------------------------------- #
-def _debug_path(debug_dir, rel_path):
-    return os.path.join(debug_dir, os.path.splitext(rel_path)[0] + ".md")
-
-
-def _write_debug(debug_dir, rel_path, markdown):
-    out = _debug_path(debug_dir, rel_path)
-    try:
-        os.makedirs(os.path.dirname(out), exist_ok=True)
-        with open(out, "w", encoding="utf-8") as fh:
-            fh.write(markdown)
-    except OSError as e:
-        logger.warning("Debug mirror write failed for %s: %s", rel_path, e)
-
-
-def _delete_debug(debug_dir, rel_path):
-    try:
-        out = _debug_path(debug_dir, rel_path)
-        if os.path.exists(out):
-            os.remove(out)
-    except OSError:
-        pass
 
 
 # --------------------------------------------------------------------------- #
@@ -293,79 +228,10 @@ def _download(service, file_meta):
 
 
 # --------------------------------------------------------------------------- #
-# Upsert / remove a single note
-# --------------------------------------------------------------------------- #
-def _ingest(service, file_meta, parts, matters, debug_dir, dry_run, stats, unmatched):
-    """Convert one note file and upsert its Note row."""
-    matter = matters.get(parts[0])
-    if matter is None:
-        unmatched.add(parts[0])
-        return
-
-    fid = file_meta["id"]
-    mtime = file_meta.get("modifiedTime")
-    rel_path = "/".join(parts)
-    title = os.path.splitext(file_meta["name"])[0]
-
-    existing = Note.objects.filter(drive_file_id=fid).first()
-    if existing and existing.drive_modified == mtime:
-        # Content unchanged; refresh path/matter if the file merely moved.
-        if not dry_run and (
-            existing.drive_path != rel_path or existing.matter_id != matter.id
-        ):
-            existing.drive_path = rel_path
-            existing.matter = matter
-            existing.drive_synced_at = timezone.now()
-            existing.save(update_fields=["drive_path", "matter", "drive_synced_at"])
-        stats["skipped"] += 1
-        return
-
-    if dry_run:
-        stats["would-convert"] += 1
-        return
-
-    content = _download(service, file_meta)
-    markdown = convert.to_markdown(content, _effective_ext(file_meta))
-
-    Note.objects.update_or_create(
-        drive_file_id=fid,
-        defaults={
-            "matter": matter,
-            "title": title,
-            "content": markdown,
-            "drive_path": rel_path,
-            "drive_modified": mtime,
-            "drive_synced_at": timezone.now(),
-        },
-    )
-    if debug_dir:
-        _write_debug(debug_dir, rel_path, markdown)
-    stats["converted"] += 1
-
-
-def _remove_note(file_id, debug_dir, dry_run, stats):
-    """Delete the Note (and debug file) for a removed/out-of-scope Drive file."""
-    note = Note.objects.filter(drive_file_id=file_id).first()
-    if not note:
-        return
-    if not dry_run:
-        if debug_dir and note.drive_path:
-            _delete_debug(debug_dir, note.drive_path)
-        note.delete()
-    stats["removed"] += 1
-
-
-# --------------------------------------------------------------------------- #
 # Bootstrap (full crawl) + incremental sync
 # --------------------------------------------------------------------------- #
 def _new_stats():
-    return {
-        "converted": 0,
-        "skipped": 0,
-        "removed": 0,
-        "would-convert": 0,
-        "failed": 0,
-    } | records.new_record_stats()
+    return records.new_record_stats()
 
 
 def _walk_record_folder(service, record_folder, prefix, links, dry_run, stats):
@@ -446,19 +312,16 @@ def _find_key_folders(service, matter_folder, children, links):
     return found
 
 
-def bootstrap(service, root_id, matters, links, debug_dir, dry_run=False):
-    """Crawl every <root>/<matter>/Notes/** file and upsert Note rows, and
-    every linked record folder's PDFs into Record Documents.
+def bootstrap(service, root_id, matters, links, dry_run=False):
+    """Crawl every linked record folder's PDFs into Record Documents, and
+    every Key Documents folder's PDFs into Evidence.
 
-    Reconciles NOTE deletions: any synced Note whose Drive file is no longer
-    present is removed. Record Documents are never reconciled away — that
-    mirror is append-only. Returns (stats, unmatched_folder_names,
-    missing_record_folders).
+    Both mirrors are append-only; nothing is ever reconciled away. Returns
+    (stats, unmatched_folder_names, missing_record_folders).
     """
     stats = _new_stats()
     unmatched = set()
     missing_records = set()
-    seen = set()
 
     for matter_folder in _list_children(service, root_id):
         if matter_folder.get("mimeType") != FOLDER_MIME:
@@ -472,37 +335,6 @@ def bootstrap(service, root_id, matters, links, debug_dir, dry_run=False):
             for c in _list_children(service, matter_folder["id"])
             if c.get("mimeType") == FOLDER_MIME
         ]
-        notes_folder = next(
-            (c for c in children if c.get("name") == NOTES_FOLDER_NAME), None
-        )
-
-        if notes_folder:
-            stack = [(notes_folder["id"], [matter_folder["name"], NOTES_FOLDER_NAME])]
-            while stack:
-                folder_id, prefix = stack.pop()
-                for child in _list_children(service, folder_id):
-                    if child.get("mimeType") == FOLDER_MIME:
-                        stack.append((child["id"], prefix + [child["name"]]))
-                        continue
-                    if not _is_allowed(child):
-                        continue
-                    # Mark seen before converting so a conversion failure
-                    # doesn't delete a previously-synced note as "stale".
-                    seen.add(child["id"])
-                    try:
-                        _ingest(
-                            service,
-                            child,
-                            prefix + [child["name"]],
-                            matters,
-                            debug_dir,
-                            dry_run,
-                            stats,
-                            unmatched,
-                        )
-                    except Exception:
-                        stats["failed"] += 1
-                        logger.exception("Failed to sync note %s", child.get("name"))
 
         # Linked record folders for this matter.
         for (m_folder, r_folder), _proceeding in links.items():
@@ -530,18 +362,6 @@ def bootstrap(service, root_id, matters, links, debug_dir, dry_run=False):
         ):
             _walk_key_folder(service, key_folder, prefix, matter, dry_run, stats)
 
-    # Any synced Note not seen in the crawl is stale. (Notes only — record
-    # Documents are append-only by contract.)
-    stale = Note.objects.filter(drive_file_id__isnull=False).exclude(
-        drive_file_id__in=seen
-    )
-    for note in stale:
-        if not dry_run:
-            if debug_dir and note.drive_path:
-                _delete_debug(debug_dir, note.drive_path)
-            note.delete()
-        stats["removed"] += 1
-
     return stats, unmatched, missing_records
 
 
@@ -552,19 +372,15 @@ def _process_change(
     matters,
     links,
     folder_cache,
-    debug_dir,
     dry_run,
     stats,
     unmatched,
 ):
-    file_id = change.get("fileId")
     file_meta = change.get("file")
 
-    # Removal / trash: we only get a fileId, so use our bookkeeping to delete.
-    # Notes only — the record mirror is append-only, so a removed record PDF
-    # leaves its Document (and OCR/highlights) untouched.
+    # Removal / trash: both mirrors are append-only, so a removed or trashed
+    # Drive file leaves its app rows (documents, notes) untouched.
     if change.get("removed") or (file_meta and file_meta.get("trashed")):
-        _remove_note(file_id, debug_dir, dry_run, stats)
         return
 
     if not file_meta or file_meta.get("mimeType") == FOLDER_MIME:
@@ -572,20 +388,6 @@ def _process_change(
         return
 
     parts = _walk_to_root(service, file_meta, root_id, folder_cache)
-
-    if _in_notes_scope(parts):
-        if not _is_allowed(file_meta):
-            # A note replaced by a disallowed type stops being a note.
-            _remove_note(file_id, debug_dir, dry_run, stats)
-            return
-        try:
-            _ingest(
-                service, file_meta, parts, matters, debug_dir, dry_run, stats, unmatched
-            )
-        except Exception:
-            stats["failed"] += 1
-            logger.exception("Failed to sync note %s", file_meta.get("name"))
-        return
 
     if records.in_record_scope(parts, links):
         if not records.is_pdf(file_meta):
@@ -618,31 +420,25 @@ def _process_change(
             logger.exception("Failed to sync key document %s", file_meta.get("name"))
         return
 
-    # Out of every scope; clean up a note we may have been tracking (a
-    # record Document, by contract, stays — dragging a file OUT of Key
-    # Documents likewise leaves its Evidence document in place).
-    _remove_note(file_id, debug_dir, dry_run, stats)
+    # Out of every scope: nothing to do (dragging a file out of a mirrored
+    # folder leaves its app rows in place — both mirrors are append-only).
 
 
-def sync(dry_run=False, full=False, debug_dir=None):
+def sync(dry_run=False, full=False):
     """Entry point for the sync. No-ops when no Drive account is linked.
 
     Returns a stats dict (with an ``unmatched`` list), or None when skipped.
     """
     if not check_credentials():
-        logger.info("Google Drive not linked; skipping case-notes sync.")
+        logger.info("Google Drive not linked; skipping Drive sync.")
         return None
 
     service = build_service()
     root_id = _find_root_folder(service)
     if not root_id:
-        logger.warning(
-            "Drive notes root folder %r not found.", settings.DRIVE_NOTES_ROOT
-        )
+        logger.warning("Drive root folder %r not found.", settings.DRIVE_NOTES_ROOT)
         return None
 
-    if debug_dir is None:
-        debug_dir = settings.DRIVE_NOTES_DEBUG_DIR or ""
     matters = _matters_by_folder()
     links = records.proceedings_by_folder()
     state, _ = DriveSyncState.objects.get_or_create(pk=1)
@@ -650,7 +446,7 @@ def sync(dry_run=False, full=False, debug_dir=None):
     # First run or forced full: crawl everything, then capture a start token.
     if full or not state.page_token:
         stats, unmatched, missing_records = bootstrap(
-            service, root_id, matters, links, debug_dir, dry_run
+            service, root_id, matters, links, dry_run
         )
         token = service.changes().getStartPageToken(**_page_token_args()).execute()
         if not dry_run:
@@ -659,8 +455,7 @@ def sync(dry_run=False, full=False, debug_dir=None):
             state.missing_record_folders = sorted(missing_records)
             state.save()
         logger.info(
-            "Drive notes bootstrap complete: %s (unmatched: %s, missing record "
-            "folders: %s)",
+            "Drive bootstrap complete: %s (unmatched: %s, missing record folders: %s)",
             stats,
             sorted(unmatched),
             sorted(missing_records),
@@ -700,7 +495,6 @@ def sync(dry_run=False, full=False, debug_dir=None):
                     matters,
                     links,
                     folder_cache,
-                    debug_dir,
                     dry_run,
                     stats,
                     unmatched,
@@ -721,10 +515,10 @@ def sync(dry_run=False, full=False, debug_dir=None):
             state.page_token = None
             if not dry_run:
                 state.save()
-            return sync(dry_run=dry_run, full=True, debug_dir=debug_dir)
+            return sync(dry_run=dry_run, full=True)
         raise
 
-    logger.info("Drive notes sync complete: %s", stats)
+    logger.info("Drive sync complete: %s", stats)
     return {**stats, "unmatched": sorted(unmatched)}
 
 
@@ -748,7 +542,6 @@ def get_sync_status():
     state = DriveSyncState.objects.first()
     return {
         "linked": check_credentials(),
-        "synced_count": Note.objects.filter(drive_file_id__isnull=False).count(),
         "linked_matters": linked_matters,
         "synced_records": Document.objects.filter(drive_file_id__isnull=False).count(),
         "linked_proceedings": len(records.proceedings_by_folder()),
@@ -760,7 +553,7 @@ def get_sync_status():
 # Per-matter folder linking (used by the Notes-tab "Link Drive Folder" UI)
 # --------------------------------------------------------------------------- #
 def _find_child_folder(service, parent_id, name):
-    """Return the child folder with the given name, or None."""
+    """Return the child folder with the given name, or None (records resync)."""
     for child in _list_children(service, parent_id):
         if child.get("mimeType") == FOLDER_MIME and child.get("name") == name:
             return child
@@ -789,87 +582,3 @@ def list_matter_folders():
     except HttpError:
         logger.exception("Failed to list Drive matter folders")
         return []
-
-
-def _delete_synced_for_matter(matter, debug_dir, keep_ids, stats):
-    """Delete this matter's synced notes whose Drive file is not in keep_ids."""
-    qs = Note.objects.filter(matter=matter, drive_file_id__isnull=False).exclude(
-        drive_file_id__in=keep_ids
-    )
-    for note in qs:
-        if debug_dir and note.drive_path:
-            _delete_debug(debug_dir, note.drive_path)
-        note.delete()
-        stats["removed"] += 1
-
-
-def resync_matter(matter, debug_dir=None):
-    """Re-sync just one matter's notes from its linked Drive folder.
-
-    Used when a user links/changes a matter's Drive folder in the UI: ingests
-    the folder's Notes/** files and removes this matter's synced notes that are
-    no longer present (e.g. after re-linking to a different folder). If the
-    matter is unlinked, simply drops its synced notes. No-op when Drive is not
-    linked. Resilient to per-file conversion failures. Returns a stats dict.
-    """
-    if not check_credentials():
-        return None
-    if debug_dir is None:
-        debug_dir = settings.DRIVE_NOTES_DEBUG_DIR or ""
-
-    stats = _new_stats()
-
-    if not matter.drive_folder:
-        _delete_synced_for_matter(matter, debug_dir, set(), stats)
-        return stats
-
-    service = build_service()
-    root_id = _find_root_folder(service)
-    if not root_id:
-        return None
-
-    matters = {matter.drive_folder: matter}
-    seen = set()
-    unmatched = set()
-
-    matter_folder = _find_child_folder(service, root_id, matter.drive_folder)
-    notes_folder = (
-        _find_child_folder(service, matter_folder["id"], NOTES_FOLDER_NAME)
-        if matter_folder
-        else None
-    )
-    if notes_folder:
-        stack = [(notes_folder["id"], [matter.drive_folder, NOTES_FOLDER_NAME])]
-        while stack:
-            folder_id, prefix = stack.pop()
-            for child in _list_children(service, folder_id):
-                if child.get("mimeType") == FOLDER_MIME:
-                    stack.append((child["id"], prefix + [child["name"]]))
-                    continue
-                if not _is_allowed(child):
-                    continue
-                # Mark seen before converting so a conversion failure doesn't
-                # delete a previously-synced note as "stale".
-                seen.add(child["id"])
-                try:
-                    _ingest(
-                        service,
-                        child,
-                        prefix + [child["name"]],
-                        matters,
-                        debug_dir,
-                        False,
-                        stats,
-                        unmatched,
-                    )
-                except Exception:
-                    stats["failed"] += 1
-                    logger.exception(
-                        "Failed to sync note %s for matter %s",
-                        child.get("name"),
-                        matter.pk,
-                    )
-
-    # Drop this matter's synced notes that are no longer in the folder.
-    _delete_synced_for_matter(matter, debug_dir, seen, stats)
-    return stats

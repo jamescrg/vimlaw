@@ -31,7 +31,7 @@ def test_chat_note_handle_becomes_link(matter):
 
 
 def test_chat_library_note_links_to_notes_app(matter):
-    folder = NoteFolder.objects.create(name="Library", ai_library=True)
+    folder = NoteFolder.objects.create(name="Library")
     note = Note.objects.create(folder=folder, title="Guide", content="x")
     text = resolve_handles_for_chat(f"[note:{note.id}]", matter)
     assert text == f"[Guide](/notes/{note.id}/)"

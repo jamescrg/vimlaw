@@ -43,7 +43,7 @@
         {% if result.object.time %}<span class="result-time">{{ result.object.time|time:"g:i A" }}</span>{% endif %}
       </div>
     {% elif result.type == "note" %}
-      <a href="{% url 'notes:note-view' result.object.id %}"
+      <a href="{% if result.object.matter_id %}{% url 'case:note-view' result.object.id %}{% else %}{% url 'notes:note-view' result.object.id %}{% endif %}"
          class="result-title">{{ result.object.title }}</a>
       <div class="result-meta">
         <span class="app-badge badge-{{ result.object.category }}">{{ result.object.get_category_display }}</span>

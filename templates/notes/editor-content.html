@@ -1,17 +1,10 @@
-<div class="note-canvas{% if note.is_synced %} note-readonly{% endif %}">
-  {% if note.is_synced %}
-    <div class="note-synced-banner">
-      <i class="icon-cloud"></i>
-      Synced from Google Drive — read-only here. Edit this note in Drive.
-    </div>
-  {% endif %}
+<div class="note-canvas">
   <div class="note-header">
     <input type="text"
            id="note-title"
            class="note-title-input"
            data-note-id="{{ note.id }}"
-           value="{{ note.title }}"
-           {% if note.is_synced %}readonly{% endif %}>
+           value="{{ note.title }}">
   </div>
   <div class="note-meta"
        hx-get="{% if note.matter %}{% url 'case:note-meta' note.id %}{% else %}{% url 'notes:note-meta' note.id %}{% endif %}"
@@ -36,7 +29,7 @@
 <script>
   window.NOTE_DATA = {
     id: {{ note.id }},
-    readOnly: {{ note.is_synced|yesno:"true,false" }},
+    readOnly: false,
     title: "{{ note.title|escapejs }}",
     content: "{{ note.content|escapejs }}",
     autosaveUrl: "{% if note.matter %}{% url 'case:note-autosave' note.id %}{% else %}{% url 'notes:note-autosave' note.id %}{% endif %}",

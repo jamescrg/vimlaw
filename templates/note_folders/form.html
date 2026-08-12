@@ -1,13 +1,7 @@
 <div class="modal-dialog modal-md">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title">
-        {% if not edit %}
-          Add Folder
-        {% else %}
-          Edit Folder
-        {% endif %}
-      </h1>
+      <h1 class="modal-title">Edit Folder</h1>
       <div>
         <button type="button" @click="$dispatch('close-modal')">
           <i class="icon-x"></i>
@@ -15,10 +9,13 @@
       </div>
     </div>
     <div class="modal-body">
+      {% comment %}
+      Success responds 204 + triggers (tree refresh, modal close), so swap
+      nothing.
+      {% endcomment %}
       <form id="note-folder-form"
             hx-post="{{ action }}"
-            hx-target="#note-folders"
-            hx-swap="innerHTML"
+            hx-swap="none"
             class="form-compact"
             role="form">
         {% csrf_token %}
@@ -36,20 +33,13 @@
             {% if form.name.errors %}<div class="text-danger">{{ form.name.errors }}</div>{% endif %}
           </div>
         </div>
-        <div class="form-group">
-          <label for="{{ form.ai_library.id_for_label }}">{{ form.ai_library.label }}</label>
-          <div>
-            {{ form.ai_library }}
-            {% if form.ai_library.errors %}<div class="text-danger">{{ form.ai_library.errors }}</div>{% endif %}
-          </div>
-        </div>
       </form>
     </div>
     <div class="modal-footer">
       {% if edit %}
         <button type="button"
                 class="btn btn-danger"
-                hx-get="{% url 'notes:folder-delete-confirm' folder.id %}"
+                hx-get="{% url 'notes:folder-delete-confirm' folder.id %}{% if editor_context %}?{{ extra_qs }}{% endif %}"
                 hx-target="#htmx-modal-container"
                 hx-swap="innerHTML">Delete</button>
       {% else %}

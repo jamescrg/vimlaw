@@ -4,6 +4,7 @@ from django.db.models.functions import Lower
 from django.shortcuts import render
 from watson import search as watson
 
+from apps.accounts.access import filter_matters_for_user
 from apps.contacts.models import Contact
 from apps.intakes.models import Intake
 from apps.matters.models import Matter
@@ -162,6 +163,12 @@ def results(request):
             models_to_search.append(Note)
 
         if models_to_search:
+            # Matter notes only surface for matters the user can access
+            accessible_matter_ids = set(
+                filter_matters_for_user(Matter.objects.all(), request.user).values_list(
+                    "id", flat=True
+                )
+            )
             # Use watson for fuzzy search
             seen_ids = {
                 "matter": set(),
@@ -185,8 +192,11 @@ def results(request):
                         seen_ids["intake"].add(obj.id)
                         intakes.append(obj)
                     elif isinstance(obj, Note) and obj.id not in seen_ids["note"]:
-                        # Only include standalone notes (no matter)
-                        if obj.matter is None:
+                        # General notes plus notes of matters the user can access
+                        if (
+                            obj.matter_id is None
+                            or obj.matter_id in accessible_matter_ids
+                        ):
                             seen_ids["note"].add(obj.id)
                             notes.append(obj)
 

@@ -1,0 +1,28 @@
+{% comment %}
+Matters pane: one node per open matter, each expanding to that matter's
+private folder tree and notes. Matter nodes are NOT draggable; each is a
+drop target meaning "this matter's root" (folder=None), and drag-and-drop
+never crosses matter boundaries (data-matter-id guards client-side, the
+move endpoints guard server-side).
+{% endcomment %}
+<ul class="file-tree matters-tree">
+  {% for entry in matters %}
+    <li class="file-tree-item file-tree-matter{% if not entry.is_expanded %} collapsed{% endif %}"
+        data-matter-id="{{ entry.matter.id }}"
+        data-toggle-url="{% url 'notes:matter-toggle' entry.matter.id %}"
+        data-note-add-url="{% url 'case:notes-add' entry.matter.id %}">
+      <span class="file-tree-toggle"><i class="icon-chevron-down"></i></span>
+      <span class="file-tree-name">{{ entry.matter.name }}</span>
+      <ul class="file-tree-children">
+        {% for node in entry.file_tree %}
+          {% include "notes/file-tree-node.html" %}
+        {% endfor %}
+        {% for n in entry.root_notes %}
+          {% include "notes/file-tree-note.html" %}
+        {% endfor %}
+      </ul>
+    </li>
+  {% empty %}
+    <li class="file-tree-empty">No open matters.</li>
+  {% endfor %}
+</ul>

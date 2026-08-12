@@ -8,13 +8,6 @@ from utils.models import AuditMixin
 
 User = get_user_model()
 
-# AI context inclusion modes (mirrors apps.case.models.AI_CONTEXT_CHOICES).
-AI_CONTEXT_CHOICES = [
-    ("auto", "Auto"),
-    ("always", "Always"),
-    ("never", "Never"),
-]
-
 
 class NoteFolder(AuditMixin, models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -26,22 +19,19 @@ class NoteFolder(AuditMixin, models.Model):
         blank=True,
         related_name="children",
     )
-    depth = models.IntegerField(default=0)
-    ai_library = models.BooleanField(
-        default=False,
-        help_text="Notes in this folder and its subfolders are offered to the matter AI",
+    matter = models.ForeignKey(
+        Matter,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="note_folders",
+        help_text="Null = general tree; set = this matter's private tree",
     )
+    depth = models.IntegerField(default=0)
     history = HistoricalRecords()
 
     def __str__(self):
         return self.name
-
-    @property
-    def in_ai_library(self):
-        """True when this folder or any ancestor is flagged as AI library."""
-        if self.ai_library:
-            return True
-        return any(a.ai_library for a in self.get_ancestors())
 
     class Meta:
         db_table = "app_note_folder"
@@ -74,6 +64,10 @@ class NoteFolder(AuditMixin, models.Model):
         if self.parent_id is not None:
             if self.parent_id == self.pk:
                 raise ValidationError("A folder cannot be its own parent.")
+            if self.parent.matter_id != self.matter_id:
+                raise ValidationError(
+                    "A folder must belong to the same matter as its parent."
+                )
             if self.parent.depth >= 3:
                 raise ValidationError("Maximum folder depth (4 levels) exceeded.")
             # Check for circular reference
@@ -99,32 +93,14 @@ class NoteFolder(AuditMixin, models.Model):
             child.update_descendant_depths()
 
 
-def library_folder_ids():
-    """Ids of AI-library folders: every flagged folder plus all descendants."""
-    folders = list(NoteFolder.objects.only("id", "parent_id", "ai_library"))
-    children = {}
-    for f in folders:
-        children.setdefault(f.parent_id, []).append(f)
-    ids = set()
-
-    def mark(folder):
-        if folder.id in ids:
-            return
-        ids.add(folder.id)
-        for child in children.get(folder.id, []):
-            mark(child)
-
-    for f in folders:
-        if f.ai_library:
-            mark(f)
-    return ids
-
-
 def get_library_notes():
-    """Standalone notes eligible for the AI library (folder opt-in, not never)."""
-    return Note.objects.filter(
-        matter__isnull=True, folder_id__in=library_folder_ids()
-    ).exclude(ai_context="never")
+    """Every standalone note: the whole Library tree feeds the AI.
+
+    Notes carry no AI knobs — library notes are all selectable, matter
+    notes are all selectable for their matter, and force-inclusion is
+    copy-paste into the chat.
+    """
+    return Note.objects.filter(matter__isnull=True)
 
 
 class Note(AuditMixin, models.Model):
@@ -150,6 +126,10 @@ class Note(AuditMixin, models.Model):
     matter = models.ForeignKey(
         Matter, on_delete=models.CASCADE, related_name="notes", null=True, blank=True
     )
+    # INVARIANT: folder is None, or folder.matter_id == self.matter_id — a
+    # note never files into another matter's (or the general) tree. Enforced
+    # at the view layer (validate_folder_move, note_move) because every move
+    # path saves with update_fields, which skips full_clean.
     folder = models.ForeignKey(
         NoteFolder, on_delete=models.SET_NULL, blank=True, null=True
     )
@@ -167,12 +147,6 @@ class Note(AuditMixin, models.Model):
     )
 
     importance = models.PositiveIntegerField(default=4)
-    ai_context = models.CharField(
-        max_length=6,
-        choices=AI_CONTEXT_CHOICES,
-        default="auto",
-        help_text="AI context inclusion: auto (selector decides), always, or never",
-    )
     summary = models.TextField(
         blank=True,
         default="",
@@ -183,24 +157,11 @@ class Note(AuditMixin, models.Model):
     summary_source_hash = models.CharField(max_length=32, blank=True, default="")
     labels = models.ManyToManyField("case.Label", related_name="notes", blank=True)
 
-    # Google Drive sync provenance — null for user-authored notes. A synced note
-    # is upserted by drive_file_id; drive_modified is the freshness marker used
-    # to skip unchanged files. Content history is tracked via HistoricalRecords.
-    drive_file_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    drive_path = models.CharField(max_length=1024, null=True, blank=True)
-    drive_modified = models.CharField(max_length=64, null=True, blank=True)
-    drive_synced_at = models.DateTimeField(null=True, blank=True)
-
     viewed_at = models.DateTimeField(null=True, blank=True)
     history = HistoricalRecords()
 
     def __str__(self):
         return self.title
-
-    @property
-    def is_synced(self):
-        """True if this note is mirrored from Google Drive (read-only in-app)."""
-        return bool(self.drive_file_id)
 
     class Meta:
         db_table = "app_note"

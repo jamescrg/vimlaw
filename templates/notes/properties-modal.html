@@ -1,0 +1,46 @@
+{% comment %}
+Note Properties (matter notes only): matter re-assignment. Re-assigning
+explicitly returns the note to the new matter's root (folder reset
+server-side). Notes carry no AI knobs — everything is selectable; to force
+a note into a chat, paste it in.
+{% endcomment %}
+<div class="modal-dialog modal-md">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Note Properties</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="note-reassign-form"
+            class="form-compact"
+            hx-post="{% url 'case:notes-reassign-matter' note.id %}"
+            hx-swap="none">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="reassign-matter">Matter</label>
+          <div>
+            <select name="matter" id="reassign-matter" class="form-control">
+              {% for m in matters %}
+                <option value="{{ m.id }}" {% if m.id == note.matter_id %}selected{% endif %}>{{ m.name }}</option>
+              {% endfor %}
+            </select>
+            <p class="detail-text">
+              Moving a note to another matter returns it to that matter's
+              root.
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Close</button>
+      <button type="submit" form="note-reassign-form" class="btn btn-success">Move</button>
+    </div>
+  </div>
+</div>

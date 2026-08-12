@@ -32,7 +32,7 @@
         </div>
         <div class="integrations-item integrations-item-stacked">
           <div class="integrations-item-row">
-            <span>Google Drive (Case Notes)</span>
+            <span>Google Drive (Documents)</span>
             {% if drive_token %}
               <a class="btn btn-danger"
                  href="{% url 'settings:google-logout' 'drive' %}">Disconnect</a>
@@ -44,14 +44,14 @@
           {% if drive_status %}
             {% if drive_status.linked_matters %}
               <p class="detail-text drive-sync-note">
-                {{ drive_status.synced_count }} case note{{ drive_status.synced_count|pluralize }}
-                synced across {{ drive_status.linked_matters }} matter{{ drive_status.linked_matters|pluralize }}.
+                {{ drive_status.linked_matters }} matter{{ drive_status.linked_matters|pluralize }}
+                linked to a Drive folder.
               </p>
             {% else %}
               <p class="detail-text drive-sync-note">
                 No matters are linked to a Drive folder yet. Open a matter's
                 <strong>Notes</strong> tab and choose <strong>Link Drive Folder</strong>
-                to start syncing its case notes.
+                to feed its document mirrors.
               </p>
             {% endif %}
             {% if drive_status.linked_proceedings %}

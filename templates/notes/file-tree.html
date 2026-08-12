@@ -1,0 +1,18 @@
+{% comment %}
+Files pane: the GENERAL folder/file tree (Obsidian-style). Expand state
+comes from the session key note_folders_expanded (plus the active note's
+ancestors) and is toggled client-side in static/js/notes/file-tree.js,
+which also handles drag-and-drop; after a move both panes re-render via
+notes:editor-file-tree into #file-tree-container. Folderless notes sit at
+the root, after the top-level folders; the ul itself is the root drop
+target.
+{% endcomment %}
+<ul class="file-tree">
+  {% for node in file_tree %}
+    {% include "notes/file-tree-node.html" %}
+  {% endfor %}
+  {% for n in root_notes %}
+    {% include "notes/file-tree-note.html" %}
+  {% endfor %}
+  {% if not file_tree and not root_notes %}<li class="file-tree-empty">No notes yet.</li>{% endif %}
+</ul>

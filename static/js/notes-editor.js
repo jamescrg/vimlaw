@@ -29,6 +29,12 @@ import { HighlightMark } from "./highlight-mark.js";
 import { PlainCopy } from "./plain-copy.js";
 
 import { state, getCSRFToken, bindClick } from "./notes/state.js";
+import {
+  setupFileTree,
+  refreshTree,
+  updateTreeCollapseIcon,
+} from "./notes/file-tree.js";
+import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
 import {
@@ -248,7 +254,11 @@ function setupTitleEdit() {
         if (data.saved) {
           originalTitle = data.title;
           input.value = data.title;
+          document.title = data.title + " - Kosmos";
           document.body.dispatchEvent(new Event("noteSaved"));
+          // The rename changes the note's alphabetical position too, so
+          // re-render the left panel trees rather than patching the text
+          refreshTree();
         } else {
           input.value = originalTitle;
         }
@@ -607,109 +617,129 @@ function setupHtmxHandlers() {
   });
 }
 
+// A note click only moves the active pill (the canvas and outline swap via
+// htmx). Panes never switch on their own — the user picks the pane, we
+// don't. Full-page loads get their pane from the server (active_pane).
 function updateSidebarActive(noteId) {
-  const sidebar = document.querySelector(".sidebar-notes-list");
-  if (!sidebar) return;
+  const container = document.getElementById("file-tree-container");
+  if (!container) return;
 
-  sidebar
-    .querySelectorAll("li")
+  container
+    .querySelectorAll("[data-note-id]")
     .forEach((item) => item.classList.remove("active"));
 
-  const activeItem = sidebar.querySelector('li[data-note-id="' + noteId + '"]');
-  if (activeItem) activeItem.classList.add("active");
+  // A note can have a tree row AND a recents row; light up both
+  const matches = container.querySelectorAll('[data-note-id="' + noteId + '"]');
+  if (!matches.length) return;
+  matches.forEach((item) => item.classList.add("active"));
+
+  // Expand the tree row's collapsed ancestors so the note is already
+  // visible if the user tabs over to its home pane (clicks from Recent
+  // land here). DOM-only; nothing is persisted.
+  const treeRow = matches[0]; // tree panes render before Recent
+  let node = treeRow.parentElement.closest(
+    ".file-tree-folder, .file-tree-matter",
+  );
+  while (node) {
+    node.classList.remove("collapsed");
+    node = node.parentElement.closest(".file-tree-folder, .file-tree-matter");
+  }
 }
 
-// ─── Panel Collapse + Tabs ───────────────────────────────────────────────────
+// Files | Matters tabs on the left panel. Initial state is server-rendered
+// (data-active-pane derives from the open note), so there is nothing to
+// restore from storage.
+function setLeftTab(tab) {
+  const panel = document.querySelector(".note-panel-left");
+  if (!panel) return;
+  panel.dataset.activePane = tab;
+  panel
+    .querySelectorAll(".panel-tab")
+    .forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+  updateTreeCollapseIcon(); // the button governs the newly active pane
+}
 
-const PANEL_STATE_KEY = "notes-editor-note-panel";
-const PANEL_TAB_KEY = "notes-editor-panel-tab";
-const PANEL_WIDTH_KEY = "notes-editor-panel-width";
+function setupLeftTabs() {
+  document.querySelectorAll(".note-panel-left .panel-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setLeftTab(btn.dataset.tab);
+      openPanel(PANELS[0]);
+    });
+  });
+}
+
+// ─── Panels (Files left, Outline right) ──────────────────────────────────────
+
 // Collapsed leaves a 3rem rail (so the bottom toggle stays reachable) —
 // only widths beyond it count as "open".
 const PANEL_RAIL_PX = 64;
 const PANEL_MIN_WIDTH = 180;
 const PANEL_MAX_WIDTH = 560;
 
+// The left panel keeps its pre-split storage keys so existing user state
+// survives. railBreakpoint mirrors each panel's auto-rail media query in
+// notes.css; resizeDir is the drag direction that widens the panel.
+const PANELS = [
+  {
+    selector: ".note-panel-left",
+    stateKey: "notes-editor-note-panel",
+    widthKey: "notes-editor-panel-width",
+    iconPrefix: "icon-panel-left-",
+    railBreakpoint: 1200,
+    resizeDir: 1,
+  },
+  {
+    selector: ".note-panel-right",
+    stateKey: "notes-editor-outline-panel",
+    widthKey: "notes-editor-outline-panel-width",
+    iconPrefix: "icon-panel-right-",
+    railBreakpoint: 1440,
+    resizeDir: -1,
+  },
+];
+
 // Point the toggle's icon at the action it will perform: an open panel
 // gets the "close" glyph, a collapsed one the "open" glyph.
-function syncPanelIcon(isOpen) {
-  const icon = document.querySelector("#panel-toggle-btn i");
-  if (icon) icon.className = "icon-panel-left-" + (isOpen ? "close" : "open");
+function syncPanelIcon(cfg, isOpen) {
+  const icon = document.querySelector(cfg.selector + " .panel-toggle i");
+  if (icon) icon.className = cfg.iconPrefix + (isOpen ? "close" : "open");
 }
 
-// Measured width is the ground truth (media queries collapse the panel
+// Measured width is the ground truth (media queries collapse the panels
 // without touching the classes), so re-sync from it on load and resize.
 function syncPanelIcons() {
-  const panel = document.querySelector(".note-panel");
-  if (panel) syncPanelIcon(panel.offsetWidth > PANEL_RAIL_PX);
+  for (const cfg of PANELS) {
+    const panel = document.querySelector(cfg.selector);
+    if (panel) syncPanelIcon(cfg, panel.offsetWidth > PANEL_RAIL_PX);
+  }
 }
 
-function togglePanel() {
-  const panel = document.querySelector(".note-panel");
+function togglePanel(cfg) {
+  const panel = document.querySelector(cfg.selector);
   if (!panel) return;
 
   const isVisible = panel.offsetWidth > PANEL_RAIL_PX;
   panel.classList.toggle("collapsed", isVisible);
   panel.classList.toggle("expanded", !isVisible);
-  localStorage.setItem(PANEL_STATE_KEY, isVisible ? "collapsed" : "expanded");
-  syncPanelIcon(!isVisible);
+  localStorage.setItem(cfg.stateKey, isVisible ? "collapsed" : "expanded");
+  syncPanelIcon(cfg, !isVisible);
 }
 
-function openPanel() {
-  const panel = document.querySelector(".note-panel");
+function openPanel(cfg) {
+  const panel = document.querySelector(cfg.selector);
   if (!panel) return;
 
   panel.classList.remove("collapsed");
   panel.classList.add("expanded");
-  localStorage.setItem(PANEL_STATE_KEY, "expanded");
-  syncPanelIcon(true);
+  localStorage.setItem(cfg.stateKey, "expanded");
+  syncPanelIcon(cfg, true);
 }
 
-function setPanelTab(tab) {
-  const panel = document.querySelector(".note-panel");
-  if (!panel) return;
-
-  panel.classList.toggle("tab-outline", tab === "outline");
-  panel
-    .querySelectorAll(".panel-tab, .rail-tab")
-    .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
-  localStorage.setItem(PANEL_TAB_KEY, tab);
-}
-
-function setupPanelTabs() {
-  document.querySelectorAll(".note-panel .panel-tab").forEach((btn) => {
-    btn.addEventListener("click", () => setPanelTab(btn.dataset.tab));
-  });
-
-  // Rail icons expand the collapsed panel straight onto their tab
-  document.querySelectorAll(".note-panel .rail-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setPanelTab(btn.dataset.tab);
-      openPanel();
-    });
-  });
-
-  // The sort menu lives in the static panel header while the list swaps
-  // elsewhere, so move its checkmark client-side.
-  document
-    .querySelectorAll(".panel-sort-menu .dropdown-item")
-    .forEach((item) => {
-      item.addEventListener("click", () => {
-        item
-          .closest(".panel-sort-menu")
-          .querySelectorAll(".dropdown-item")
-          .forEach((el) => el.classList.remove("active"));
-        item.classList.add("active");
-      });
-    });
-}
-
-function setupPanelResize() {
-  const panel = document.querySelector(".note-panel");
-  const resizer = panel && panel.querySelector(".panel-resizer");
+function setupPanelResize(cfg, panel) {
+  const resizer = panel.querySelector(".panel-resizer");
   if (!resizer) return;
 
-  const storedWidth = parseInt(localStorage.getItem(PANEL_WIDTH_KEY), 10);
+  const storedWidth = parseInt(localStorage.getItem(cfg.widthKey), 10);
   if (storedWidth) panel.style.setProperty("--panel-width", storedWidth + "px");
 
   resizer.addEventListener("pointerdown", (e) => {
@@ -722,7 +752,10 @@ function setupPanelResize() {
     const onMove = (ev) => {
       const width = Math.min(
         PANEL_MAX_WIDTH,
-        Math.max(PANEL_MIN_WIDTH, startWidth + ev.clientX - startX),
+        Math.max(
+          PANEL_MIN_WIDTH,
+          startWidth + cfg.resizeDir * (ev.clientX - startX),
+        ),
       );
       panel.style.setProperty("--panel-width", width + "px");
     };
@@ -730,7 +763,7 @@ function setupPanelResize() {
       resizer.removeEventListener("pointermove", onMove);
       resizer.removeEventListener("pointerup", onUp);
       panel.classList.remove("resizing");
-      localStorage.setItem(PANEL_WIDTH_KEY, String(panel.offsetWidth));
+      localStorage.setItem(cfg.widthKey, String(panel.offsetWidth));
     };
     resizer.addEventListener("pointermove", onMove);
     resizer.addEventListener("pointerup", onUp);
@@ -738,30 +771,42 @@ function setupPanelResize() {
 
   resizer.addEventListener("dblclick", () => {
     panel.style.removeProperty("--panel-width");
-    localStorage.removeItem(PANEL_WIDTH_KEY);
+    localStorage.removeItem(cfg.widthKey);
   });
 }
 
-function restorePanelStates() {
-  const panel = document.querySelector(".note-panel");
-  if (panel) {
-    const stored = localStorage.getItem(PANEL_STATE_KEY);
-    if (stored === "collapsed") panel.classList.add("collapsed");
-    else if (stored === "expanded" && window.innerWidth >= 1200)
-      panel.classList.add("expanded");
-  }
-  setPanelTab(localStorage.getItem(PANEL_TAB_KEY) || "files");
-}
+function setupPanel(cfg) {
+  const panel = document.querySelector(cfg.selector);
+  if (!panel) return;
 
-window.togglePanel = togglePanel;
+  // Restore stored state; only re-apply "expanded" above the panel's own
+  // auto-rail breakpoint so small screens still start railed.
+  const stored = localStorage.getItem(cfg.stateKey);
+  if (stored === "collapsed") panel.classList.add("collapsed");
+  else if (stored === "expanded" && window.innerWidth >= cfg.railBreakpoint)
+    panel.classList.add("expanded");
+
+  const toggle = panel.querySelector(".panel-toggle");
+  if (toggle) toggle.addEventListener("click", () => togglePanel(cfg));
+
+  // Rail icon expands the collapsed panel
+  const railBtn = panel.querySelector(".panel-rail .panel-btn");
+  if (railBtn) railBtn.addEventListener("click", () => openPanel(cfg));
+
+  setupPanelResize(cfg, panel);
+}
 
 // ─── Init ────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
-  restorePanelStates();
-  setupPanelTabs();
-  setupPanelResize();
+  localStorage.removeItem("notes-editor-panel-tab"); // retired key
+  PANELS.forEach(setupPanel);
+  setupLeftTabs();
   syncPanelIcons();
+  setupFileTree();
+  setupTreeMenu();
+  // Folder CRUD modals (tree context menu) announce success via HX-Trigger
+  document.body.addEventListener("noteFoldersChanged", refreshTree);
   initEditor();
   setupHtmxHandlers();
   setupOutlineCollapseAll();

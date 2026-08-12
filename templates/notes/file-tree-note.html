@@ -1,0 +1,20 @@
+{% comment %}
+One note row of the editor trees (expects `n`; `note` is the open note).
+Shared by the general Files tree and the per-matter trees; the htmx URLs
+branch on the note's matter. data-matter-id ("" for general) is the
+drag-and-drop scope guard.
+{% endcomment %}
+<li class="file-tree-item file-tree-note{% if n.id == note.id %} active{% endif %}"
+    draggable="true"
+    data-note-id="{{ n.id }}"
+    data-matter-id="{{ n.matter_id|default_if_none:'' }}"
+    data-move-url="{% url 'notes:note-move' n.id %}"
+    data-delete-url="{% if n.matter_id %}{% url 'case:notes-delete' n.id %}{% else %}{% url 'notes:delete' n.id %}{% endif %}"
+    {% if n.matter_id %}data-properties-url="{% url 'case:notes-properties' n.id %}"{% endif %}
+    hx-get="{% if n.matter_id %}{% url 'case:note-content-partial' n.id %}{% else %}{% url 'notes:note-content-partial' n.id %}{% endif %}"
+    hx-target="#note-editor-container"
+    hx-swap="innerHTML"
+    hx-push-url="{% if n.matter_id %}{% url 'case:note-view' n.id %}{% else %}{% url 'notes:note-view' n.id %}{% endif %}">
+  <span class="file-tree-toggle-spacer"></span>
+  <span class="file-tree-name">{{ n.title }}</span>
+</li>

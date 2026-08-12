@@ -754,7 +754,7 @@ def test_prior_research_section_built_from_trails(matter, user):
 def library_note(user):
     from apps.notes.models import Note, NoteFolder
 
-    folder = NoteFolder.objects.create(name="Firm Research", ai_library=True)
+    folder = NoteFolder.objects.create(name="Firm Research")
     return Note.objects.create(
         author=user,
         title="Restrictive Covenants",
@@ -790,9 +790,12 @@ def test_executor_reads_library_note(matter, library_note):
 def test_executor_library_note_not_found(matter, user):
     from apps.notes.models import Note
 
-    loose = Note.objects.create(author=user, title="Loose", content="text")
+    # Matter notes are never library reads; unknown ids also error
+    case_note = Note.objects.create(
+        author=user, title="Case", matter=matter, content="text"
+    )
     execute = make_executor(matter, "standard")
-    result, event = execute("read_library_note", {"note_id": loose.id})
+    result, event = execute("read_library_note", {"note_id": case_note.id})
     assert "error" in json.loads(result)
     assert event is None
 
@@ -817,10 +820,14 @@ def test_build_library_section_lists_notes(library_note):
 
 
 @pytest.mark.django_db
-def test_build_library_section_empty_without_flags(user):
+def test_build_library_section_lists_any_general_note(user):
     from apps.notes.models import Note
 
     Note.objects.create(author=user, title="Loose", content="text")
+    assert "Loose" in research_chat.build_library_section()
+
+
+def test_build_library_section_empty_without_notes():
     assert research_chat.build_library_section() == ""
 
 

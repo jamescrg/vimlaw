@@ -1,208 +1,56 @@
+import json
+
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, OuterRef, Subquery
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 import apps.drive.google as drive_google
+from apps.accounts.access import filter_matters_for_user
 from apps.case.models import Document, Highlight
-from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
+from apps.case.views import get_matter_from_url
 from apps.matters.models import Matter
-from apps.notes.models import Note, NoteView
-from apps.notes.views import record_note_view
-
-from .filters import NotesFilter
-from .forms import NoteForm
-
-# Notes synced from Google Drive are read-only in the app (Drive is the source
-# of truth); content/title edits would be overwritten on the next sync.
-SYNCED_READONLY_MSG = "This note syncs from Google Drive and is read-only here."
-
-
-def _synced_block(note):
-    """Return a 403 response if the note is Drive-synced, else None."""
-    if note.is_synced:
-        return HttpResponseForbidden(SYNCED_READONLY_MSG)
-    return None
-
-
-def get_notes_data(request, matter, matter_id):
-    """Get notes data with filters applied from session."""
-    filter_session_key = get_session_key("notes_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-
-    notes = []
-    if matter:
-        queryset = Note.objects.filter(matter=matter).order_by("-updated_at")
-
-        if filter_data:
-            notes_filter = NotesFilter(filter_data, queryset=queryset, matter=matter)
-            notes = notes_filter.qs
-        else:
-            notes = queryset
-
-    current_order = filter_data.get("order_by", "-updated_at")
-    if isinstance(current_order, list):
-        current_order = current_order[0] if current_order else "-updated_at"
-
-    keyword = filter_data.get("keyword", "")
-    if isinstance(keyword, list):
-        keyword = keyword[0] if keyword else ""
-
-    importance_value = filter_data.get("importance")
-    importance_value = (
-        int(importance_value) if importance_value not in (None, "", 0) else None
-    )
-
-    # Get category filter value
-    category_key = filter_data.get("category", "")
-    selected_category = ""
-    if category_key:
-        category_dict = dict(Note.CATEGORY_CHOICES)
-        selected_category = category_dict.get(category_key, "")
-
-    # Get selected topic
-    selected_topic = filter_data.get("topic", "")
-
-    # Get unique topics for dropdown
-    topics = []
-    if matter:
-        topics = (
-            Note.objects.filter(matter=matter)
-            .exclude(topic__isnull=True)
-            .exclude(topic="")
-            .values_list("topic", flat=True)
-            .distinct()
-            .order_by("topic")
-        )
-
-    return {
-        "notes": notes,
-        "current_order": current_order,
-        "keyword": keyword,
-        "importances": list(range(7, 0, -1)),
-        "importance_value": importance_value,
-        "selected_importance": (
-            {
-                7: "Highest",
-                6: "Higher",
-                5: "High",
-                4: "Normal",
-                3: "Low",
-                2: "Lower",
-                1: "Lowest",
-            }.get(importance_value, "")
-            if importance_value
-            else ""
-        ),
-        "category_choices": Note.CATEGORY_CHOICES,
-        "selected_category": selected_category,
-        "selected_category_key": category_key,
-        "topics": topics,
-        "selected_topic": selected_topic,
-    }
+from apps.notes.models import Note, NoteFolder
+from apps.notes.views import (
+    _expand_folder_in_session,
+    _next_untitled,
+    get_editor_file_tree,
+    record_note_view,
+)
 
 
 @login_required
-def notes_index(request, matter_id):
-    """Main notes view."""
-    matter, matters = get_matter_from_url(request, matter_id)
-    set_last_tab(request, matter_id, "notes")
-
-    context = {
-        "app": "matters",
-        "subapp": "notes",
-        "matter": matter,
-        "matters": matters,
-    } | get_notes_data(request, matter, matter_id)
-
-    return render(request, "case/notes/main.html", context)
-
-
-@login_required
-def notes_list(request, matter_id):
-    """HTMX partial for notes list."""
-    matter, matters = get_matter_from_url(request, matter_id)
-
-    context = {
-        "app": "matters",
-        "subapp": "notes",
-        "matter": matter,
-        "matters": matters,
-    } | get_notes_data(request, matter, matter_id)
-
-    return render(request, "case/notes/list.html", context)
-
-
-@login_required
+@require_POST
 def notes_add(request, matter_id):
-    """Add a new note."""
+    """Create a matter note instantly (no modal), optionally into one of the
+    matter's folders (?folder=<id>), auto-named among its siblings. The
+    HX-Redirect opens the new note in the editor.
+    """
     matter, matters = get_matter_from_url(request, matter_id)
 
-    if request.method == "POST":
-        form = NoteForm(request.POST, user=request.user, use_required_attribute=False)
-        if form.is_valid():
-            note = form.save(commit=False)
-            note.author = request.user
-            note.matter = matter
-            note.save()
+    folder = None
+    folder_id = request.GET.get("folder", "")
+    if folder_id.isdigit():
+        folder = get_object_or_404(NoteFolder, pk=folder_id)
+        if folder.matter_id != matter.id:
+            return HttpResponse("Folder belongs to another matter.", status=400)
 
-            # Open new note in a new browser tab
-            note_url = reverse("case:note-view", args=[note.id])
-            return HttpResponse(
-                f'<script>window.open("{note_url}", "_blank");'
-                "window.dispatchEvent(new CustomEvent('close-modal'));</script>",
-                headers={"HX-Trigger": "notesChanged"},
-            )
-    else:
-        form = NoteForm(
-            initial={"matter": matter}, user=request.user, use_required_attribute=False
-        )
-
-    context = {
-        "app": "matters",
-        "subapp": "notes",
-        "matter": matter,
-        "form": form,
-        "action": "Add",
-    }
-
-    return render(request, "case/notes/form.html", context)
-
-
-SIDEBAR_SORT_OPTIONS = [
-    ("-viewed_at", "Recently viewed"),
-    ("-updated_at", "Modified, new to old"),
-    ("-created_at", "Created, new to old"),
-    ("title", "Title (A-Z)"),
-]
-
-
-def get_sidebar_sort(request, matter_id):
-    """Get the current sidebar sort order from session."""
-    key = f"notes_sidebar_sort_{matter_id}"
-    return request.session.get(key, "-viewed_at")
-
-
-def get_sorted_notes(matter, user, sort_order="-viewed_at"):
-    """Get notes for a matter sorted by user's view history or specified order."""
-    notes = Note.objects.filter(matter=matter)
-
-    if sort_order == "-viewed_at":
-        # Sort by user's personal view history
-        user_views = NoteView.objects.filter(
-            user=user,
-            note=OuterRef("pk"),
-        ).values("viewed_at")[:1]
-
-        notes = notes.annotate(user_viewed_at=Subquery(user_views)).order_by(
-            F("user_viewed_at").desc(nulls_last=True)
-        )
-    else:
-        notes = notes.order_by(sort_order)
-
-    return notes
+    siblings = Note.objects.filter(matter=matter, folder=folder).values_list(
+        "title", flat=True
+    )
+    note = Note.objects.create(
+        title=_next_untitled(siblings),
+        author=request.user,
+        matter=matter,
+        folder=folder,
+    )
+    if folder:
+        _expand_folder_in_session(request, folder.pk)
+    return HttpResponse(
+        status=204,
+        headers={"HX-Redirect": reverse("case:note-view", args=[note.id])},
+    )
 
 
 @login_required
@@ -214,17 +62,7 @@ def note_view(request, note_id):
     # Record user's view of this note
     record_note_view(request.user, note)
 
-    # Get all notes for sidebar with sort order
-    sort_order = get_sidebar_sort(request, matter.id)
-    notes = get_sorted_notes(matter, request.user, sort_order)
-
-    context = {
-        "note": note,
-        "matter": matter,
-        "notes": notes,
-        "sidebar_sort_options": SIDEBAR_SORT_OPTIONS,
-        "current_sort": sort_order,
-    }
+    context = {"note": note, "matter": matter} | get_editor_file_tree(request, note)
     return render(request, "notes/editor.html", context)
 
 
@@ -244,73 +82,46 @@ def note_content_partial(request, note_id):
 
 
 @login_required
-def sidebar_sort(request, note_id, sort_key):
-    """Change sidebar sort order and return updated sidebar list."""
-    note = get_object_or_404(Note, pk=note_id)
-    matter = note.matter
-
-    # Validate sort key
-    valid_keys = [key for key, _ in SIDEBAR_SORT_OPTIONS]
-    if sort_key not in valid_keys:
-        sort_key = "-viewed_at"
-
-    # Save to session
-    session_key = f"notes_sidebar_sort_{matter.id}"
-    request.session[session_key] = sort_key
-
-    # Get sorted notes
-    notes = get_sorted_notes(matter, request.user, sort_key)
-
-    context = {
-        "note": note,
-        "matter": matter,
-        "notes": notes,
-        "sidebar_sort_options": SIDEBAR_SORT_OPTIONS,
-        "current_sort": sort_key,
-    }
-    return render(request, "notes/sidebar-list.html", context)
-
-
-@login_required
-def note_edit(request, note_id):
-    """Edit note metadata (title, importance)."""
-    note = get_object_or_404(Note, pk=note_id)
-    if blocked := _synced_block(note):
-        return blocked
-    matter = note.matter
-
-    if request.method == "POST":
-        form = NoteForm(
-            request.POST, instance=note, user=request.user, use_required_attribute=False
-        )
-        if form.is_valid():
-            form.save()
-            return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
-    else:
-        form = NoteForm(instance=note, user=request.user, use_required_attribute=False)
-
-    context = {
-        "app": "matters",
-        "subapp": "notes",
-        "matter": matter,
-        "note": note,
-        "form": form,
-        "action": "Edit",
-    }
-
-    return render(request, "case/notes/form.html", context)
-
-
-@login_required
 @require_POST
 def note_delete(request, note_id):
     """Delete a note."""
     note = get_object_or_404(Note, pk=note_id)
-    if blocked := _synced_block(note):
-        return blocked
     note.delete()
 
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
+
+
+@login_required
+def note_properties(request, note_id):
+    """Properties modal for a matter note (matter re-assignment)."""
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=False)
+    matters = filter_matters_for_user(
+        Matter.objects.filter(status="Open").order_by("name"), request.user
+    )
+    context = {"note": note, "matters": matters}
+    return render(request, "notes/properties-modal.html", context)
+
+
+@login_required
+@require_POST
+def note_reassign_matter(request, note_id):
+    """Move a matter note to another matter; folder resets to that matter's
+    root (a folder always belongs to exactly one matter's tree)."""
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=False)
+    matter = get_object_or_404(
+        filter_matters_for_user(Matter.objects.filter(status="Open"), request.user),
+        pk=request.POST.get("matter"),
+    )
+    if matter.id != note.matter_id:
+        note.matter = matter
+        note.folder = None
+        note.save(update_fields=["matter", "folder"])
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps({"noteFoldersChanged": True, "closeModal": True})
+        },
+    )
 
 
 @login_required
@@ -319,8 +130,6 @@ def note_content(request, note_id):
     note = get_object_or_404(Note, pk=note_id)
 
     if request.method == "POST":
-        if blocked := _synced_block(note):
-            return blocked
         content = request.POST.get("content", "")
         note.content = content
         note.save()
@@ -334,8 +143,6 @@ def note_content(request, note_id):
 def note_autosave(request, note_id):
     """Autosave endpoint for the editor."""
     note = get_object_or_404(Note, pk=note_id)
-    if blocked := _synced_block(note):
-        return blocked
 
     content = request.POST.get("content", "")
     note.content = content
@@ -351,8 +158,6 @@ def note_autosave(request, note_id):
 def note_title(request, note_id):
     """Update note title."""
     note = get_object_or_404(Note, pk=note_id)
-    if blocked := _synced_block(note):
-        return blocked
 
     title = request.POST.get("title", "").strip()
     if title:
@@ -371,119 +176,6 @@ def note_meta(request, note_id):
 
 
 @login_required
-def notes_filter(request, matter_id):
-    """Filter modal for notes."""
-    matter, matters = get_matter_from_url(request, matter_id)
-    filter_session_key = get_session_key("notes_filter", matter_id)
-
-    if request.method == "POST":
-        filter_data = {
-            key: value
-            for key, value in request.POST.items()
-            if key != "csrfmiddlewaretoken"
-        }
-        request.session[filter_session_key] = filter_data
-        request.session.modified = True
-        return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
-
-    filter_data = request.session.get(filter_session_key, {})
-    queryset = Note.objects.filter(matter=matter) if matter else Note.objects.none()
-    filter_obj = NotesFilter(filter_data, queryset=queryset, matter=matter)
-
-    return render(
-        request, "case/notes/filter.html", {"filter": filter_obj, "matter": matter}
-    )
-
-
-@login_required
-def notes_sort(request, matter_id, order):
-    """Sort notes by field."""
-    filter_session_key = get_session_key("notes_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-
-    current_order = filter_data.get("order_by", "")
-    if current_order == order:
-        new_order = f"-{order}" if not current_order.startswith("-") else order
-    else:
-        new_order = order
-
-    filter_data["order_by"] = new_order
-    request.session[filter_session_key] = filter_data
-    request.session.modified = True
-
-    return redirect("case:notes-list", matter_id=matter_id)
-
-
-@login_required
-def notes_filter_keyword(request, matter_id):
-    """Filter notes by keyword."""
-    matter, _ = get_matter_from_url(request, matter_id)
-    filter_session_key = get_session_key("notes_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-    keyword = request.GET.get("keyword", "").strip()
-
-    if keyword:
-        filter_data["keyword"] = keyword
-    else:
-        filter_data.pop("keyword", None)
-
-    request.session[filter_session_key] = filter_data
-
-    context = {"matter": matter} | get_notes_data(request, matter, matter_id)
-    return render(request, "case/notes/table.html", context)
-
-
-@login_required
-def notes_filter_importance(request, matter_id, importance_value):
-    """Filter notes by importance."""
-    filter_session_key = get_session_key("notes_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-    filter_data["importance"] = "" if importance_value == 0 else importance_value
-    request.session[filter_session_key] = filter_data
-
-    return redirect("case:notes-list", matter_id=matter_id)
-
-
-@login_required
-def notes_filter_category(request, matter_id, category):
-    """Filter notes by category."""
-    filter_session_key = get_session_key("notes_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-    if category:
-        filter_data["category"] = category
-    else:
-        filter_data.pop("category", None)
-
-    request.session[filter_session_key] = filter_data
-
-    return redirect("case:notes-list", matter_id=matter_id)
-
-
-@login_required
-def notes_filter_topic(request, matter_id, topic):
-    """Filter notes by topic."""
-    filter_session_key = get_session_key("notes_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-    filter_data["topic"] = topic
-    request.session[filter_session_key] = filter_data
-    request.session.modified = True
-
-    return redirect("case:notes-list", matter_id=matter_id)
-
-
-@login_required
-def notes_filter_topic_clear(request, matter_id):
-    """Clear topic filter for notes."""
-    filter_session_key = get_session_key("notes_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-    filter_data.pop("topic", None)
-    request.session[filter_session_key] = filter_data
-    request.session.modified = True
-
-    return redirect("case:notes-list", matter_id=matter_id)
-
-
-@login_required
 def notes_shortcuts(request, matter_id):
     """Show keyboard shortcuts modal."""
     return render(request, "notes/shortcuts-modal.html")
@@ -493,44 +185,6 @@ def notes_shortcuts(request, matter_id):
 def note_import_modal(request, note_id):
     """Show import markdown modal."""
     return render(request, "notes/import-modal.html")
-
-
-@login_required
-@require_POST
-def note_category(request, note_id, value):
-    """Update note category."""
-    note = get_object_or_404(Note, pk=note_id)
-    note.category = value
-    note.save(update_fields=["category"])
-    return redirect("case:notes-list", matter_id=note.matter_id)
-
-
-@login_required
-@require_POST
-def note_importance(request, note_id, value):
-    """Update note importance."""
-    note = get_object_or_404(Note, pk=note_id)
-    note.importance = value
-    note.save(update_fields=["importance"])
-    return redirect("case:notes-list", matter_id=note.matter_id)
-
-
-@login_required
-@require_POST
-def note_set_ai(request, note_id, state):
-    """Set the ai_context state on a note (auto/always/never).
-
-    Editable for synced notes too — ai_context is app-only metadata that the
-    Drive sync never overwrites.
-    """
-    if state not in ("auto", "always", "never"):
-        return HttpResponse(status=400)
-
-    note = get_object_or_404(Note, pk=note_id)
-    note.ai_context = state
-    note.save(update_fields=["ai_context", "updated_at", "updated_by"])
-
-    return render(request, "case/notes/ai-context-cell.html", {"note": note})
 
 
 @login_required
@@ -606,7 +260,7 @@ def drive_link_modal(request, matter_id):
         "current": matter.drive_folder,
         "linked": drive_google.check_credentials(),
     }
-    return render(request, "case/notes/drive-link-modal.html", context)
+    return render(request, "case/documents/drive-link-modal.html", context)
 
 
 @login_required
@@ -627,10 +281,8 @@ def drive_link(request, matter_id):
 
     matter.drive_folder = folder or None
     matter.save(update_fields=["drive_folder"])
-    # Resync this matter only (ingests the new folder, drops notes from any
-    # previously-linked folder). Synchronous so notes are present on reload;
-    # move to django-q async_task if matters ever carry very large note sets.
-    drive_google.resync_matter(matter)
+    # No note ingestion — the notes mirror is retired. The link only feeds
+    # the record/key-document mirrors' matter resolution.
 
     return HttpResponse(status=204, headers={"HX-Refresh": "true"})
 
@@ -638,10 +290,9 @@ def drive_link(request, matter_id):
 @login_required
 @require_POST
 def drive_unlink(request, matter_id):
-    """Unlink this matter's Drive folder and remove its synced notes."""
+    """Unlink this matter's Drive folder. Notes are app-owned and untouched."""
     matter, _ = get_matter_from_url(request, matter_id)
     matter.drive_folder = None
     matter.save(update_fields=["drive_folder"])
-    drive_google.resync_matter(matter)
 
     return HttpResponse(status=204, headers={"HX-Refresh": "true"})

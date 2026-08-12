@@ -10,16 +10,15 @@ writes nothing (same contract as create-facts).
 
 Guardrails: creation is limited to this matter's notes; edits reach this
 matter's notes plus firm-library notes (the ones the AI can already
-read), and never Drive-synced or ai_context="never" notes. Every content
-change lands in the note's HistoricalRecords trail, so a bad AI edit is
-recoverable.
+read). Every content change lands in the note's HistoricalRecords trail,
+so a bad AI edit is recoverable.
 """
 
 import json
 import logging
 import re
 
-from apps.notes.models import Note, library_folder_ids
+from apps.notes.models import Note
 
 from .handles import resolve_handles_for_note
 
@@ -66,9 +65,8 @@ research. "mode" is "append" (add your text after the existing content —
 the default, and almost always right) or "replace" (rewrite the whole
 note — only when the user explicitly says to rewrite or replace it).
 Edit only notes whose [note:ID] handle appears in the context; never
-guess an id. Notes synced from Google Drive are read-only and cannot be
-edited. Content is markdown; write it as a working file memo, not as a
-chat reply.
+guess an id. Content is markdown; write it as a working file memo, not
+as a chat reply.
 
 When a sentence in note content draws on a document or highlight from
 the context, cite it with the raw [hl:ID] or [doc:ID] handle, placed
@@ -118,18 +116,14 @@ def _apply_create(match, matter, requesting_user):
 
 
 def _editable_note(note_id, matter):
-    """Resolve an edit target the AI may touch: this matter's notes or
-    firm-library notes — never synced or AI-hidden ones."""
+    """Resolve an edit target the AI may touch: this matter's notes or any
+    library (standalone) note. Notes carry no AI knobs anymore."""
     try:
         note = Note.objects.get(id=int(note_id))
     except (Note.DoesNotExist, TypeError, ValueError):
         return None
 
-    in_matter = note.matter_id == matter.id
-    in_library = note.matter_id is None and note.folder_id in library_folder_ids()
-    if not (in_matter or in_library):
-        return None
-    if note.drive_file_id or note.ai_context == "never":
+    if note.matter_id is not None and note.matter_id != matter.id:
         return None
     return note
 

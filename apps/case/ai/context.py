@@ -157,25 +157,22 @@ def collect_context_items(
     current_conversation=None,
     since=None,
     include_auto=False,
-    include_library_always=False,
 ) -> list[ContextItem]:
     """
     Collect items that are always included in context (ai_context="always"
-    for Documents/CaseLaw, plus all Highlights, Facts, Notes, Conversations).
+    for Documents/CaseLaw, plus all Highlights, Facts, Conversations).
 
-    Items with ai_context="auto" are handled by the selector in selector.py.
-    Items with ai_context="never" are excluded entirely.
+    Items with ai_context="auto" are handled by the selector in selector.py;
+    so are all Notes (notes carry no AI knobs — library notes reach chats
+    only through the selector manifest).
 
     Args:
         matter: The Matter object
         current_conversation: Optional current Conversation to exclude from references
         since: Optional datetime — only include items updated at or after it
             (used by the nightly auto-summary to build an incremental delta)
-        include_auto: Include ai_context="auto" Documents/Notes/CaseLaw with
-            full content instead of leaving them to the selector
-        include_library_always: Include ai_context="always" firm-library notes
-            (standalone notes in AI-library folders). Off by default so the
-            nightly auto-summary and baseline assembly stay matter-only.
+        include_auto: Include ai_context="auto" Documents/CaseLaw (and all
+            Notes) with full content instead of leaving them to the selector
 
     Returns a list of ContextItem objects sorted by importance (most important first).
     """
@@ -262,12 +259,12 @@ def collect_context_items(
             )
         )
 
-    # Collect Notes — only "always" items get full content here. "auto" notes
-    # are chosen by the selector; "never" notes are excluded. Full content, no
-    # truncation (parity with Documents).
-    notes = Note.objects.filter(matter=matter).exclude(ai_context="never")
+    # Collect Notes — notes carry no AI knobs, so they are all selector
+    # material; full content only lands here in include_auto mode. Full
+    # content, no truncation (parity with Documents).
+    notes = Note.objects.filter(matter=matter)
     if not include_auto:
-        notes = notes.filter(ai_context="always")
+        notes = notes.none()
     if since:
         notes = notes.filter(updated_at__gte=since)
     for note in notes:
@@ -287,31 +284,6 @@ def collect_context_items(
                 source_id=note.id,
             )
         )
-
-    # Collect firm-library notes pinned to "always" — the library's "auto"
-    # notes go through the selector manifest instead (selector.build_manifest).
-    if include_library_always:
-        from apps.case.ai.selector import library_folder_path
-        from apps.notes.models import get_library_notes
-
-        library_always = get_library_notes().filter(ai_context="always")
-        if since:
-            library_always = library_always.filter(updated_at__gte=since)
-        for note in library_always:
-            if not note.content:
-                continue
-            folder_path = library_folder_path(note.folder)
-            items.append(
-                ContextItem(
-                    importance=note.importance,
-                    item_type="library",
-                    content=(
-                        f"**Library note [note:{note.id}]: {note.title}**"
-                        f" ({folder_path})\n{note.content}"
-                    ),
-                    source_id=note.id,
-                )
-            )
 
     # Collect Case Law — only "always" items
     caselaw_qs = CaseLaw.objects.filter(matter=matter).exclude(ai_context="never")
@@ -780,7 +752,6 @@ def assemble_matter_context_with_selection(
     always_items = collect_context_items(
         matter,
         current_conversation=conversation,
-        include_library_always=include_library,
     )
 
     # Build request info and legal prompt

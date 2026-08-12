@@ -11,7 +11,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def library_note(user):
-    folder = NoteFolder.objects.create(name="Research", ai_library=True)
+    folder = NoteFolder.objects.create(name="Research")
     return Note.objects.create(
         author=user,
         title="Adverse Possession",
@@ -97,10 +97,18 @@ class TestQueueing:
             tasks.queue_note_summary(library_note.id)
         assert async_task.call_count == 1
 
-    def test_queue_note_summary_skips_non_library(self, user):
+    def test_queue_note_summary_queues_any_general_note(self, user):
         loose = Note.objects.create(author=user, title="Loose", content="text")
         with patch("django_q.tasks.async_task") as async_task:
             tasks.queue_note_summary(loose.id)
+        assert async_task.called
+
+    def test_queue_note_summary_skips_matter_notes(self, user, matter):
+        note = Note.objects.create(
+            author=user, title="Case", matter=matter, content="text"
+        )
+        with patch("django_q.tasks.async_task") as async_task:
+            tasks.queue_note_summary(note.id)
         assert not async_task.called
 
     def test_queue_stale_library_summaries(self, library_note, user):

@@ -2,10 +2,10 @@
 # Migration to move Note model from case app to notes app.
 # State-only because the table is created by case.0025_add_note_model
 
-from django.conf import settings
-from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
+from django.conf import settings
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):

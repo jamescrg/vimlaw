@@ -99,13 +99,14 @@
     </div>
     <div class="search-cards">
       {% for note in notes %}
-        <a href="{% url 'notes:note-view' note.id %}"
+        <a href="{% if note.matter_id %}{% url 'case:note-view' note.id %}{% else %}{% url 'notes:note-view' note.id %}{% endif %}"
            class="search-card"
            target="_blank">
           <span class="app-badge app-badge-lg badge-gray"><i class="icon-sticky-note"></i></span>
           <div class="search-card-content">
             <div class="search-card-title">{{ note.title }}</div>
             <div class="search-card-meta">
+              {% if note.matter %}{{ note.matter.name }} &bull;{% endif %}
               {% if note.topic %}{{ note.topic }} &bull;{% endif %}
               {{ note.get_category_display }}
             </div>

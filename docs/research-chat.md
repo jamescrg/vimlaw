@@ -72,8 +72,8 @@ art once its reads teach it better language.
 
 ## Firm library
 
-Standalone notes in AI-library folders (NoteFolder.ai_library, see
-apps/notes/models.get_library_notes) are listed in a FIRM LIBRARY
+Every standalone note (the whole Library tree, see
+apps/notes/models.get_library_notes) is listed in a FIRM LIBRARY
 section of the system prompt (research_chat.build_library_section: id,
 folder path, title, summary excerpt) and readable via the
 read_library_note tool at every depth. Reads count against the same
