@@ -708,7 +708,8 @@ const PANELS = [
     selector: ".note-panel-left",
     stateKey: "notes-editor-note-panel",
     widthKey: "notes-editor-panel-width",
-    iconPrefix: "icon-panel-left-",
+    closeIcon: "icon-chevron-left",
+    openIcon: "icon-chevron-right",
     railBreakpoint: 1200,
     resizeDir: 1,
   },
@@ -716,17 +717,18 @@ const PANELS = [
     selector: ".note-panel-right",
     stateKey: "notes-editor-outline-panel",
     widthKey: "notes-editor-outline-panel-width",
-    iconPrefix: "icon-panel-right-",
+    closeIcon: "icon-chevron-right",
+    openIcon: "icon-chevron-left",
     railBreakpoint: 1440,
     resizeDir: -1,
   },
 ];
 
-// Point the toggle's icon at the action it will perform: an open panel
-// gets the "close" glyph, a collapsed one the "open" glyph.
+// Point the toggle's chevron at the action it will perform: an open
+// panel's chevron points toward the edge it will collapse into.
 function syncPanelIcon(cfg, isOpen) {
   const icon = document.querySelector(cfg.selector + " .panel-toggle i");
-  if (icon) icon.className = cfg.iconPrefix + (isOpen ? "close" : "open");
+  if (icon) icon.className = isOpen ? cfg.closeIcon : cfg.openIcon;
 }
 
 // Measured width is the ground truth (media queries collapse the panels

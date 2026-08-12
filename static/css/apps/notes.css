@@ -210,10 +210,12 @@ body:has(.note-page.standalone) {
   padding: 0 0.75rem;
 }
 
-/* Quiet static label (right panel) */
+/* Quiet static label (right panel); the margin keeps the decorative
+   icon off the panel edge, mirroring the toggle's own button padding */
 .note-panel .panel-title {
   color: var(--color-muted);
   font-size: 1rem;
+  margin-right: 0.5rem;
   user-select: none;
 }
 
