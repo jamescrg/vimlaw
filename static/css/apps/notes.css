@@ -687,6 +687,10 @@ body:has(.note-page.standalone) {
   align-items: center;
   background: var(--background-subnav);
   border-bottom: 1px solid var(--border-medium);
+  /* Sizing container: the format cluster overflows into the ellipsis menu
+     by the editor COLUMN's width (wide panels or a small screen), not the
+     viewport's */
+  container-type: inline-size;
   display: flex;
   flex-shrink: 0;
   height: 3rem;
@@ -722,10 +726,13 @@ body:has(.note-page.standalone) {
 }
 
 /* New-note and save sit just left of the format cluster, set off by a
-   divider matching the cluster's own. */
+   divider matching the cluster's own. nowrap overrides the global
+   .toolbar-left wrap: this band never breaks to a second line — buttons
+   demote into the ellipsis menu instead (container queries below). */
 .note-toolbar .toolbar-left {
   align-items: center;
   display: flex;
+  flex-wrap: nowrap;
   gap: 0.25rem;
   min-width: 0;
 }
@@ -778,6 +785,48 @@ body:has(.note-page.standalone) {
 .note-toolbar .dropdown-menu .dropdown-item i {
   color: var(--icon-muted);
   margin-right: 0.25rem;
+}
+
+/* Format overflow: as the editor column narrows, format buttons demote in
+   tiers into the ellipsis menu (their .fmt-overflow proxies appear there).
+   Bold, italic, and the highlight split button never demote. */
+.note-toolbar .fmt-overflow {
+  display: none;
+}
+
+@container (max-width: 38rem) {
+  .note-toolbar .format-toolbar :is([data-cmd="strike"], [data-cmd="h4"], [data-cmd="quote"]) {
+    display: none;
+  }
+
+  .note-toolbar .fmt-overflow-1 {
+    display: block;
+  }
+}
+
+@container (max-width: 33rem) {
+  .note-toolbar .format-toolbar :is([data-cmd="h3"], [data-cmd="ordered"]) {
+    display: none;
+  }
+
+  .note-toolbar .fmt-overflow-2 {
+    display: block;
+  }
+}
+
+@container (max-width: 28rem) {
+  .note-toolbar .format-toolbar :is([data-cmd="h2"], [data-cmd="bullet"]) {
+    display: none;
+  }
+
+  /* Heading and list groups are empty now; drop their dividers */
+  .note-toolbar .format-toolbar .toolbar-divider {
+    display: none;
+  }
+
+  .note-toolbar .fmt-overflow-3 {
+    display: block;
+  }
 }
 
 .note-toolbar #save-status-btn.active {

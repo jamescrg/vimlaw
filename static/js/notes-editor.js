@@ -800,6 +800,17 @@ function setupPanel(cfg) {
 
 document.addEventListener("DOMContentLoaded", () => {
   localStorage.removeItem("notes-editor-panel-tab"); // retired key
+  // Overflowed format items proxy a click to their hidden bar button, so
+  // the command wiring lives in one place (format-toolbar.js)
+  document.addEventListener("click", (e) => {
+    const item = e.target.closest("[data-fmt]");
+    if (!item) return;
+    e.preventDefault();
+    const btn = document.querySelector(
+      '.note-toolbar .format-toolbar [data-cmd="' + item.dataset.fmt + '"]',
+    );
+    if (btn) btn.click();
+  });
   PANELS.forEach(setupPanel);
   setupLeftTabs();
   syncPanelIcons();
