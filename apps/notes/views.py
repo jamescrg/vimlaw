@@ -9,7 +9,7 @@ from django.db.models import (
     When,
 )
 from django.db.models.functions import Lower
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.html import escape
@@ -346,33 +346,47 @@ def notes_launch(request):
         )
     if note is None:
         note = Note.objects.create(title="Untitled", author=request.user, matter=None)
-    if note.matter_id:
-        return redirect("case:note-view", note.id)
     return redirect("notes:note-view", note.id)
+
+
+def _get_note(request, note_id, **filters):
+    """Fetch a note for a per-note endpoint: general notes are shared,
+    matter notes require access to their matter (404 either way, so denial
+    doesn't confirm existence). Every /notes/<id>/... view goes through
+    here — the routes serve both kinds of note."""
+    note = get_object_or_404(
+        Note.objects.select_related("matter"), pk=note_id, **filters
+    )
+    if note.matter_id and not request.user.has_matter_access(note.matter):
+        raise Http404
+    return note
 
 
 @login_required
 def note_view(request, note_id):
-    """Standalone editor view for a note without a matter."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    """Standalone editor view for a note."""
+    note = _get_note(request, note_id)
 
     # Record user's view of this note
     record_note_view(request.user, note)
 
-    context = {"note": note} | get_editor_file_tree(request, note)
+    context = {"note": note, "matter": note.matter} | get_editor_file_tree(
+        request, note
+    )
     return render(request, "notes/editor.html", context)
 
 
 @login_required
 def note_content_partial(request, note_id):
     """HTMX partial for switching notes in the editor."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
 
     # Record user's view of this note
     record_note_view(request.user, note)
 
     context = {
         "note": note,
+        "matter": note.matter,
     }
     return render(request, "notes/editor-content.html", context)
 
@@ -388,7 +402,7 @@ def editor_file_tree(request):
     note_id = request.GET.get("note", "")
     if not note_id.isdigit():
         return HttpResponse("note parameter required", status=400)
-    note = get_object_or_404(Note, pk=note_id)
+    note = _get_note(request, note_id)
     context = {"note": note} | get_editor_file_tree(request, note)
     return render(request, "notes/editor-trees.html", context)
 
@@ -396,8 +410,8 @@ def editor_file_tree(request):
 @login_required
 @require_POST
 def note_delete(request, note_id):
-    """Delete a standalone note."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    """Delete a note."""
+    note = _get_note(request, note_id)
     note.delete()
 
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
@@ -406,13 +420,14 @@ def note_delete(request, note_id):
 @login_required
 def note_content(request, note_id):
     """GET returns markdown content, POST saves it."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
 
     if request.method == "POST":
         content = request.POST.get("content", "")
         note.content = content
         note.save()
-        queue_note_summary(note.id)
+        if note.matter_id is None:
+            queue_note_summary(note.id)
         return HttpResponse(status=204)
 
     return HttpResponse(note.content, content_type="text/plain; charset=utf-8")
@@ -422,14 +437,17 @@ def note_content(request, note_id):
 @require_POST
 def note_autosave(request, note_id):
     """Autosave endpoint for the editor."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
 
     content = request.POST.get("content", "")
     note.content = content
     # updated_by is set by AuditMixin.save; include it in update_fields so the
     # change is actually persisted.
     note.save(update_fields=["content", "updated_at", "updated_by"])
-    queue_note_summary(note.id)
+    # Library notes carry AI summaries for the selector manifest; matter
+    # notes feed their matter's context directly
+    if note.matter_id is None:
+        queue_note_summary(note.id)
 
     return JsonResponse({"saved": True, "updated_at": note.updated_at.isoformat()})
 
@@ -438,7 +456,7 @@ def note_autosave(request, note_id):
 @require_POST
 def note_title(request, note_id):
     """Update note title."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
 
     title = request.POST.get("title", "").strip()
     if title:
@@ -452,7 +470,7 @@ def note_title(request, note_id):
 @login_required
 def note_meta(request, note_id):
     """Render the note meta partial (used by HTMX to refresh after autosave)."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note = _get_note(request, note_id)
     return render(request, "notes/meta.html", {"note": note})
 
 
@@ -470,14 +488,29 @@ def note_import_modal(request, note_id):
 
 @login_required
 def reference_search(request, note_id):
-    """Search documents and highlights for note references."""
-    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    """Search the note's matter for documents and highlights to reference.
+    Library notes have no matter, so they get empty results."""
+    from apps.case.models import Document, Highlight
+
+    note = _get_note(request, note_id)
+    matter = note.matter
     query = request.GET.get("q", "").strip()
+
+    documents = []
+    highlights = []
+
+    if query and matter:
+        documents = Document.objects.filter(matter=matter, name__icontains=query)[:15]
+        highlights = (
+            Highlight.objects.filter(document__matter=matter)
+            .filter(Q(slug__icontains=query) | Q(text__icontains=query))
+            .select_related("document")[:15]
+        )
 
     context = {
         "note": note,
-        "documents": [],
-        "highlights": [],
+        "documents": documents,
+        "highlights": highlights,
         "query": query,
     }
     return render(request, "notes/reference-results.html", context)
@@ -486,7 +519,53 @@ def reference_search(request, note_id):
 @login_required
 def reference_citations(request, note_id):
     """Return current citations for references."""
-    return JsonResponse({})
+    from apps.case.models import Document, Highlight
+
+    doc_ids = request.GET.getlist("doc")
+    hl_ids = request.GET.getlist("hl")
+
+    citations = {}
+
+    for doc in Document.objects.filter(id__in=doc_ids):
+        citations[f"doc:{doc.id}"] = doc.citation
+
+    for hl in Highlight.objects.filter(id__in=hl_ids).select_related("document"):
+        citations[f"hl:{hl.id}"] = hl.citation
+
+    return JsonResponse(citations)
+
+
+@login_required
+def note_properties(request, note_id):
+    """Properties modal for a matter note (matter re-assignment)."""
+    note = _get_note(request, note_id, matter__isnull=False)
+    matters = filter_matters_for_user(
+        Matter.objects.filter(status="Open").order_by("name"), request.user
+    )
+    context = {"note": note, "matters": matters}
+    return render(request, "notes/properties-modal.html", context)
+
+
+@login_required
+@require_POST
+def note_reassign_matter(request, note_id):
+    """Move a matter note to another matter; folder resets to that matter's
+    root (a folder always belongs to exactly one matter's tree)."""
+    note = _get_note(request, note_id, matter__isnull=False)
+    matter = get_object_or_404(
+        filter_matters_for_user(Matter.objects.filter(status="Open"), request.user),
+        pk=request.POST.get("matter"),
+    )
+    if matter.id != note.matter_id:
+        note.matter = matter
+        note.folder = None
+        note.save(update_fields=["matter", "folder"])
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps({"noteFoldersChanged": True, "closeModal": True})
+        },
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -8,17 +8,50 @@ pytestmark = pytest.mark.django_db
 
 class TestNoteView:
     def test_note_view_loads(self, client_with_matter, note):
-        url = reverse("case:note-view", args=[note.id])
+        url = reverse("notes:note-view", args=[note.id])
         response = client_with_matter.get(url)
         assert response.status_code == 200
         assert b"Test Note" in response.content
 
     def test_note_view_updates_viewed_at(self, client_with_matter, note):
         assert note.viewed_at is None
-        url = reverse("case:note-view", args=[note.id])
+        url = reverse("notes:note-view", args=[note.id])
         client_with_matter.get(url)
         note.refresh_from_db()
         assert note.viewed_at is not None
+
+    def test_matter_note_404_without_matter_access(self, note):
+        from django.test import Client
+
+        from apps.accounts.models import CustomUser
+
+        restricted = CustomUser.objects.create(
+            username="outsider",
+            email="outsider@example.com",
+            user_rate=100,
+            perm_all_matters=False,
+        )
+        restricted.set_password("testpass123")
+        restricted.save()
+        c = Client()
+        c.login(username="outsider", password="testpass123")
+        c.get("/dash/")
+        assert c.get(reverse("notes:note-view", args=[note.id])).status_code == 404
+        assert (
+            c.get(reverse("notes:note-content-partial", args=[note.id])).status_code
+            == 404
+        )
+        assert (
+            c.post(
+                reverse("notes:note-autosave", args=[note.id]), {"content": "x"}
+            ).status_code
+            == 404
+        )
+
+    def test_old_case_url_redirects(self, client_with_matter, note):
+        response = client_with_matter.get(f"/case/notes/{note.id}/")
+        assert response.status_code == 302
+        assert response.url == reverse("notes:note-view", args=[note.id])
 
 
 class TestNotesAdd:
@@ -29,7 +62,7 @@ class TestNotesAdd:
         assert response.status_code == 204
         note = Note.objects.get(matter=matter, title="Untitled")
         assert response.headers["HX-Redirect"] == reverse(
-            "case:note-view", args=[note.id]
+            "notes:note-view", args=[note.id]
         )
 
     def test_get_not_allowed(self, client_with_matter):
@@ -41,7 +74,7 @@ class TestNotesAdd:
 class TestNoteDelete:
     def test_note_delete(self, client_with_matter, note):
         note_id = note.id
-        url = reverse("case:notes-delete", args=[note.id])
+        url = reverse("notes:delete", args=[note.id])
         response = client_with_matter.post(url)
         assert response.status_code == 204
         assert not Note.objects.filter(id=note_id).exists()
@@ -49,13 +82,13 @@ class TestNoteDelete:
 
 class TestNoteContent:
     def test_note_content_get(self, client_with_matter, note):
-        url = reverse("case:note-content", args=[note.id])
+        url = reverse("notes:note-content", args=[note.id])
         response = client_with_matter.get(url)
         assert response.status_code == 200
         assert response.content.decode() == note.content
 
     def test_note_content_post(self, client_with_matter, note):
-        url = reverse("case:note-content", args=[note.id])
+        url = reverse("notes:note-content", args=[note.id])
         new_content = "Updated markdown content"
         response = client_with_matter.post(url, {"content": new_content})
         assert response.status_code == 204
@@ -65,7 +98,7 @@ class TestNoteContent:
 
 class TestNoteAutosave:
     def test_note_autosave(self, client_with_matter, note):
-        url = reverse("case:note-autosave", args=[note.id])
+        url = reverse("notes:note-autosave", args=[note.id])
         new_content = "Autosaved content"
         response = client_with_matter.post(url, {"content": new_content})
         assert response.status_code == 200
@@ -76,7 +109,7 @@ class TestNoteAutosave:
 
 class TestNoteTitle:
     def test_note_title_update(self, client_with_matter, note):
-        url = reverse("case:note-title", args=[note.id])
+        url = reverse("notes:note-title", args=[note.id])
         response = client_with_matter.post(url, {"title": "New Title"})
         assert response.status_code == 200
         assert response.json()["saved"] is True
@@ -84,7 +117,7 @@ class TestNoteTitle:
         assert note.title == "New Title"
 
     def test_note_title_empty_rejected(self, client_with_matter, note):
-        url = reverse("case:note-title", args=[note.id])
+        url = reverse("notes:note-title", args=[note.id])
         response = client_with_matter.post(url, {"title": ""})
         assert response.status_code == 400
         assert response.json()["saved"] is False
@@ -151,7 +184,7 @@ class TestEditorFileTree:
         for title in ("Zeta", "Alpha"):
             Note.objects.create(author=user, matter=matter, title=title)
 
-        response = client_with_matter.get(reverse("case:note-view", args=[note.id]))
+        response = client_with_matter.get(reverse("notes:note-view", args=[note.id]))
         content = response.content.decode()
         # Matter notes land on the Matters pane with their matter's tree
         assert 'data-active-pane="matters"' in content
@@ -600,7 +633,7 @@ class TestNotesLaunch:
 
         resp = client.get(reverse("notes:launch"))
         assert resp.status_code == 302
-        assert resp.url == reverse("case:note-view", args=[recent.id])
+        assert resp.url == reverse("notes:note-view", args=[recent.id])
 
     def test_falls_back_to_latest_note(self, client, user):
         Note.objects.create(author=user, title="Only note")
@@ -676,7 +709,7 @@ class TestNoteProperties:
         from apps.matters.models import Matter as MatterModel
 
         MatterModel.objects.create(name="Closed one", status="Closed")
-        resp = client_with_matter.get(reverse("case:notes-properties", args=[note.id]))
+        resp = client_with_matter.get(reverse("notes:note-properties", args=[note.id]))
         assert resp.status_code == 200
         content = resp.content.decode()
         assert 'name="matter"' in content
@@ -686,7 +719,7 @@ class TestNoteProperties:
     def test_general_note_has_no_properties(self, client_with_matter, user):
         general = Note.objects.create(author=user, title="General")
         resp = client_with_matter.get(
-            reverse("case:notes-properties", args=[general.id])
+            reverse("notes:note-properties", args=[general.id])
         )
         assert resp.status_code == 404
 
@@ -704,7 +737,7 @@ class TestReassignMatter:
         other = MatterModel.objects.create(name="New home", status="Open")
 
         resp = client_with_matter.post(
-            reverse("case:notes-reassign-matter", args=[note.id]),
+            reverse("notes:note-reassign-matter", args=[note.id]),
             {"matter": other.id},
         )
         assert resp.status_code == 204
@@ -720,21 +753,21 @@ class TestReassignMatter:
 
         closed = MatterModel.objects.create(name="Closed", status="Closed")
         resp = client_with_matter.post(
-            reverse("case:notes-reassign-matter", args=[note.id]),
+            reverse("notes:note-reassign-matter", args=[note.id]),
             {"matter": closed.id},
         )
         assert resp.status_code == 404
 
         general = Note.objects.create(author=user, title="General")
         resp = client_with_matter.post(
-            reverse("case:notes-reassign-matter", args=[general.id]),
+            reverse("notes:note-reassign-matter", args=[general.id]),
             {"matter": client_with_matter.matter.id},
         )
         assert resp.status_code == 404
 
         assert (
             client_with_matter.get(
-                reverse("case:notes-reassign-matter", args=[note.id])
+                reverse("notes:note-reassign-matter", args=[note.id])
             ).status_code
             == 405
         )
@@ -758,7 +791,7 @@ class TestEditorRecents:
         listing = content[start:]
         # Most recent first; matter note links to the case editor URL
         assert listing.index("Matter recent") < listing.index("Gen recent")
-        assert reverse("case:note-view", args=[mnote.id]) in listing
+        assert reverse("notes:note-view", args=[mnote.id]) in listing
 
 
 class TestValidTabsFallback:
@@ -847,10 +880,10 @@ class TestSearchPalette:
         assert content.count(f'data-note-id="{n.id}"') == 1
         assert "Full-text matches" not in content
 
-    def test_matter_note_uses_case_urls(self, client_with_matter, note, url):
+    def test_matter_note_uses_unified_urls(self, client_with_matter, note, url):
         content = client_with_matter.post(url, {"q": "Test Note"}).content.decode()
-        assert reverse("case:note-content-partial", args=[note.id]) in content
-        assert reverse("case:note-view", args=[note.id]) in content
+        assert reverse("notes:note-content-partial", args=[note.id]) in content
+        assert reverse("notes:note-view", args=[note.id]) in content
 
     def test_matter_scope_excludes_unassigned_user(self, matter, user, url):
         from django.test import Client

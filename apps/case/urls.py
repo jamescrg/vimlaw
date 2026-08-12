@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.urls import path
+from django.views.generic import RedirectView
 
 from apps.case import views
 from apps.case.ai import views as ai
@@ -480,13 +481,8 @@ urlpatterns = [
         witnesses.remove_witness_from,
         name="remove-witness-from",
     ),
-    # Notes (matter-scoped)
+    # Notes (matter-scoped; per-note routes live under notes:)
     path("case/<int:matter_id>/notes/add/", notes.notes_add, name="notes-add"),
-    path(
-        "case/<int:matter_id>/notes/shortcuts/",
-        notes.notes_shortcuts,
-        name="notes-shortcuts",
-    ),
     path(
         "case/<int:matter_id>/notes/drive/link/",
         notes.drive_link_modal,
@@ -1004,54 +1000,11 @@ urlpatterns = [
         witnesses.witness_alignment,
         name="witness-alignment",
     ),
-    # Note operations
-    path("case/notes/<int:note_id>/", notes.note_view, name="note-view"),
+    # Notes moved to the unified /notes/<id>/ routes; this redirect keeps
+    # pre-unification /case/notes/<id>/ history entries and bookmarks alive
     path(
-        "case/notes/<int:note_id>/content-partial/",
-        notes.note_content_partial,
-        name="note-content-partial",
-    ),
-    path("case/notes/<int:note_id>/delete/", notes.note_delete, name="notes-delete"),
-    path("case/notes/<int:note_id>/content/", notes.note_content, name="note-content"),
-    path(
-        "case/notes/<int:note_id>/properties/",
-        notes.note_properties,
-        name="notes-properties",
-    ),
-    path(
-        "case/notes/<int:note_id>/reassign-matter/",
-        notes.note_reassign_matter,
-        name="notes-reassign-matter",
-    ),
-    path(
-        "case/notes/<int:note_id>/autosave/",
-        notes.note_autosave,
-        name="note-autosave",
-    ),
-    path(
-        "case/notes/<int:note_id>/title/",
-        notes.note_title,
-        name="note-title",
-    ),
-    path(
-        "case/notes/<int:note_id>/meta/",
-        notes.note_meta,
-        name="note-meta",
-    ),
-    path(
-        "case/notes/<int:note_id>/reference-search/",
-        notes.reference_search,
-        name="note-reference-search",
-    ),
-    path(
-        "case/notes/<int:note_id>/import/",
-        notes.note_import_modal,
-        name="note-import-modal",
-    ),
-    path(
-        "case/notes/<int:note_id>/citations/",
-        notes.reference_citations,
-        name="note-citations",
+        "case/notes/<int:note_id>/",
+        RedirectView.as_view(pattern_name="notes:note-view"),
     ),
     # Label operations
     path(

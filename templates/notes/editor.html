@@ -146,7 +146,7 @@
                 <li>
                   <a class="dropdown-item"
                      href="#"
-                     hx-get="{% if note.matter %}{% url 'case:note-import-modal' note.id %}{% else %}{% url 'notes:note-import-modal' note.id %}{% endif %}"
+                     hx-get="{% url 'notes:note-import-modal' note.id %}"
                      hx-target="#htmx-modal-container"
                      data-bs-toggle="modal"
                      data-bs-target="#htmx-modal-container"><i class="icon-upload"></i> Import from markdown</a>
@@ -157,7 +157,7 @@
                 <li>
                   <a class="dropdown-item"
                      href="#"
-                     hx-get="{% if note.matter %}{% url 'case:notes-shortcuts' note.matter.id %}{% else %}{% url 'notes:notes-shortcuts' %}{% endif %}"
+                     hx-get="{% url 'notes:notes-shortcuts' %}"
                      hx-target="#htmx-modal-container"
                      data-bs-toggle="modal"
                      data-bs-target="#htmx-modal-container"><i class="icon-keyboard"></i> Keyboard shortcuts</a>

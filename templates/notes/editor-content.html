@@ -7,7 +7,7 @@
            value="{{ note.title }}">
   </div>
   <div class="note-meta"
-       hx-get="{% if note.matter %}{% url 'case:note-meta' note.id %}{% else %}{% url 'notes:note-meta' note.id %}{% endif %}"
+       hx-get="{% url 'notes:note-meta' note.id %}"
        hx-trigger="noteSaved from:body"
        hx-swap="innerHTML">{% include "notes/meta.html" %}</div>
   <div id="note-editor"></div>
@@ -32,9 +32,9 @@
     readOnly: false,
     title: "{{ note.title|escapejs }}",
     content: "{{ note.content|escapejs }}",
-    autosaveUrl: "{% if note.matter %}{% url 'case:note-autosave' note.id %}{% else %}{% url 'notes:note-autosave' note.id %}{% endif %}",
-    titleUrl: "{% if note.matter %}{% url 'case:note-title' note.id %}{% else %}{% url 'notes:note-title' note.id %}{% endif %}",
-    searchUrl: "{% if note.matter %}{% url 'case:note-reference-search' note.id %}{% else %}{% url 'notes:note-reference-search' note.id %}{% endif %}",
-    citationsUrl: "{% if note.matter %}{% url 'case:note-citations' note.id %}{% else %}{% url 'notes:note-citations' note.id %}{% endif %}",
+    autosaveUrl: "{% url 'notes:note-autosave' note.id %}",
+    titleUrl: "{% url 'notes:note-title' note.id %}",
+    searchUrl: "{% url 'notes:note-reference-search' note.id %}",
+    citationsUrl: "{% url 'notes:note-citations' note.id %}",
   };
 </script>
