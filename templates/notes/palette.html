@@ -1,0 +1,30 @@
+{% comment %}
+The editor's Ctrl+K search palette. The root class must stay
+.notes-palette and NEVER "search" — main.js's capture-phase searchNav
+hijacks the keyboard whenever "#htmx-modal-container .search" exists.
+Alpine's modal open() focuses the [autofocus] input; CSRF for the hx-post
+rides the body's hx-headers.
+{% endcomment %}
+<div class="modal-dialog modal-lg notes-palette">
+  <div class="modal-content">
+    <div class="modal-body notes-palette-body">
+      <input type="text"
+             id="palette-input"
+             class="notes-palette-input"
+             name="q"
+             value="{{ q }}"
+             placeholder="Search notes..."
+             autocomplete="off"
+             autofocus
+             hx-post="{% url 'notes:search-palette' %}"
+             hx-trigger="keyup changed delay:300ms, search"
+             hx-target="#palette-results" />
+      <div id="palette-results" class="notes-palette-results">{% include "notes/palette-results.html" %}</div>
+      <div class="cmd-palette-hint">
+        <span><kbd>&uarr;&darr;</kbd> navigate</span>
+        <span><kbd>enter</kbd> open</span>
+        <span><kbd>esc</kbd> close</span>
+      </div>
+    </div>
+  </div>
+</div>

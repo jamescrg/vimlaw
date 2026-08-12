@@ -46,7 +46,9 @@ import {
   SearchHighlight,
   setupSearchBar,
   toggleSearchBar,
+  openSearchWithTerm,
 } from "./notes/search.js";
+import { setupPalette } from "./notes/palette.js";
 import {
   NoteRef,
   setupReferenceClicks,
@@ -222,6 +224,13 @@ function initEditor() {
   setupImportExport();
   refreshReferenceCitations();
   buildOutline();
+  // Palette handoff: a full-text result was opened — highlight + jump.
+  // Consumed here (after the editor exists) so the swap can't race it.
+  if (window.pendingDocSearch) {
+    const term = window.pendingDocSearch;
+    window.pendingDocSearch = null;
+    openSearchWithTerm(term);
+  }
 }
 
 // ─── Title Edit ──────────────────────────────────────────────────────────────
@@ -816,6 +825,7 @@ document.addEventListener("DOMContentLoaded", () => {
   syncPanelIcons();
   setupFileTree();
   setupTreeMenu();
+  setupPalette();
   // Folder CRUD modals (tree context menu) announce success via HX-Trigger
   document.body.addEventListener("noteFoldersChanged", refreshTree);
   initEditor();

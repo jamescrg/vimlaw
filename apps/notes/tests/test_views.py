@@ -774,3 +774,102 @@ class TestValidTabsFallback:
         assert resp.status_code == 200
         # get_last_tab sanitized the stale value to the default (documents)
         assert resp.request["PATH_INFO"].endswith("/documents/")
+
+
+class TestSearchPalette:
+    """The editor's Ctrl+K palette: bands, ranking, scoping, row wiring."""
+
+    @pytest.fixture
+    def url(self):
+        return reverse("notes:search-palette")
+
+    @staticmethod
+    def _index(*notes):
+        # Watson only auto-indexes inside a request's search context, so
+        # ORM-created fixtures must be indexed by hand.
+        from watson import search as watson
+
+        for n in notes:
+            watson.default_search_engine.update_obj_index(n)
+
+    def test_get_renders_palette_with_recents(self, client_with_matter, note, user):
+        from apps.notes.models import NoteView
+
+        NoteView.objects.create(user=user, note=note)
+        response = client_with_matter.get(reverse("notes:search-palette"))
+        content = response.content.decode()
+        assert response.status_code == 200
+        assert "notes-palette" in content
+        assert 'id="palette-input"' in content
+        # main.js hijacks keys when '#htmx-modal-container .search' exists
+        assert 'class="modal-dialog modal-lg notes-palette"' in content
+        assert "Test Note" in content
+
+    def test_short_query_returns_recents_only(
+        self, client_with_matter, note, user, url
+    ):
+        from apps.notes.models import NoteView
+
+        NoteView.objects.create(user=user, note=note)
+        response = client_with_matter.post(url, {"q": "a"})
+        content = response.content.decode()
+        assert "Recent" in content
+        assert "Title matches" not in content
+        assert "Full-text matches" not in content
+
+    def test_title_band_prefix_first(self, client_with_matter, user, url):
+        Note.objects.create(author=user, title="The Alpha", content="x")
+        Note.objects.create(author=user, title="Alpha brief", content="x")
+        content = client_with_matter.post(url, {"q": "alpha"}).content.decode()
+        assert "Title matches" in content
+        assert content.index("Alpha brief") < content.index("The Alpha")
+
+    def test_content_band_excerpt_and_search_term(self, client_with_matter, user, url):
+        n = Note.objects.create(
+            author=user,
+            title="Brewing notes",
+            content="A paragraph mentioning zymurgy somewhere in the middle.",
+        )
+        self._index(n)
+        content = client_with_matter.post(url, {"q": "zymurgy"}).content.decode()
+        assert "Full-text matches" in content
+        assert "<mark>zymurgy</mark>" in content
+        assert 'data-search-term="zymurgy"' in content
+
+    def test_title_match_excluded_from_content_band(
+        self, client_with_matter, user, url
+    ):
+        n = Note.objects.create(
+            author=user, title="Zymurgy handbook", content="All about zymurgy."
+        )
+        self._index(n)
+        content = client_with_matter.post(url, {"q": "zymurgy"}).content.decode()
+        assert content.count(f'data-note-id="{n.id}"') == 1
+        assert "Full-text matches" not in content
+
+    def test_matter_note_uses_case_urls(self, client_with_matter, note, url):
+        content = client_with_matter.post(url, {"q": "Test Note"}).content.decode()
+        assert reverse("case:note-content-partial", args=[note.id]) in content
+        assert reverse("case:note-view", args=[note.id]) in content
+
+    def test_matter_scope_excludes_unassigned_user(self, matter, user, url):
+        from django.test import Client
+
+        from apps.accounts.models import CustomUser
+
+        restricted = CustomUser.objects.create(
+            username="restricted",
+            email="restricted@example.com",
+            user_rate=100,
+            perm_all_matters=False,
+        )
+        restricted.set_password("testpass123")
+        restricted.save()
+        Note.objects.create(author=user, matter=matter, title="Secret matter memo")
+        Note.objects.create(author=user, title="Public library memo")
+        c = Client()
+        c.login(username="restricted", password="testpass123")
+        c.get("/dash/")
+        content = c.post(url, {"q": "memo"}).content.decode()
+        assert "Public library memo" in content
+        assert "Secret matter memo" not in content

@@ -1,12 +1,21 @@
 import json
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.contrib.postgres.search import SearchHeadline, SearchQuery
+from django.db.models import (
+    Case as SqlCase,
+    Q,
+    Value,
+    When,
+)
 from django.db.models.functions import Lower
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
+from watson import search as watson
 
 from apps.accounts.access import filter_matters_for_user
 from apps.matters.models import Matter
@@ -212,6 +221,105 @@ def record_note_view(user, note):
 
     note.viewed_at = timezone.now()
     note.save(update_fields=["viewed_at"])
+
+
+# Headline sentinels: ts_headline marks matches, we escape the whole
+# excerpt, then swap sentinels for <mark> — the HTML is safe by
+# construction (never |safe on raw note content).
+_HL_START, _HL_STOP = "\x02", "\x03"
+
+
+def _safe_excerpt(raw):
+    return mark_safe(
+        escape(raw).replace(_HL_START, "<mark>").replace(_HL_STOP, "</mark>")
+    )
+
+
+def _palette_context_label(note):
+    """Where the note lives: its matter's name, or its Library folder path."""
+    if note.matter_id:
+        return note.matter.name
+    if note.folder:
+        return "/".join(f.name for f in note.folder.get_ancestors() + [note.folder])
+    return "Library"
+
+
+@login_required
+def notes_search_palette(request):
+    """The editor's Ctrl+K search palette (Omnisearch-style).
+
+    GET renders the whole modal with the Recent band; the input's debounced
+    hx-post comes back here and gets just the results partial. Two ranked
+    bands: title matches (istartswith first), then full-text matches via
+    watson with a match-centered highlighted excerpt.
+    """
+    q = (request.POST.get("q") or request.GET.get("q") or "").strip()
+
+    accessible_matter_ids = set(
+        filter_matters_for_user(Matter.objects.all(), request.user).values_list(
+            "id", flat=True
+        )
+    )
+    scope = Note.objects.filter(
+        Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
+    )
+
+    title_notes, content_notes, recent_notes = [], [], []
+    if len(q) < 2:
+        recent_notes = [
+            nv.note
+            for nv in NoteView.objects.filter(user=request.user)
+            .select_related("note__matter", "note__folder")
+            .order_by("-viewed_at")[:10]
+        ]
+    else:
+        title_notes = list(
+            scope.filter(title__icontains=q)
+            .annotate(
+                _starts=SqlCase(
+                    When(title__istartswith=q, then=Value(0)), default=Value(1)
+                )
+            )
+            .order_by("_starts", Lower("title"))
+            .select_related("matter", "folder")[:8]
+        )
+
+        sq = SearchQuery(q, search_type="websearch", config="english")
+        content_notes = list(
+            watson.filter(scope, q)
+            .exclude(id__in=[n.id for n in title_notes])
+            .order_by("-watson_rank")
+            .annotate(
+                excerpt=SearchHeadline(
+                    "content",
+                    sq,
+                    config="english",
+                    start_sel=_HL_START,
+                    stop_sel=_HL_STOP,
+                    max_words=18,
+                    min_words=10,
+                )
+            )
+            .select_related("matter", "folder")[:10]
+        )
+
+    for n in title_notes + content_notes + recent_notes:
+        n.context_label = _palette_context_label(n)
+    for n in content_notes:
+        n.safe_excerpt = _safe_excerpt(n.excerpt)
+
+    template = (
+        "notes/palette-results.html"
+        if request.method == "POST"
+        else "notes/palette.html"
+    )
+    context = {
+        "q": q,
+        "title_notes": title_notes,
+        "content_notes": content_notes,
+        "recent_notes": recent_notes,
+    }
+    return render(request, template, context)
 
 
 @login_required

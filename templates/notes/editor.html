@@ -94,6 +94,13 @@
           </div>
           <div class="toolbar-right">
             <span class="toolbar-divider"></span>
+            <a href="#"
+               id="notes-palette-btn"
+               title="Search notes (Ctrl+K)"
+               hx-get="{% url 'notes:search-palette' %}"
+               hx-target="#htmx-modal-container">
+              <i class="icon-text-search"></i>
+            </a>
             <a href="#" id="search-toggle-btn" title="Search & Replace (Ctrl+H)">
               <i class="icon-search"></i>
             </a>

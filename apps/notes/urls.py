@@ -9,6 +9,7 @@ urlpatterns = [
     path("notes/add/", views.notes_add, name="add"),
     # Editor views
     path("notes/launch/", views.notes_launch, name="launch"),
+    path("notes/palette/", views.notes_search_palette, name="search-palette"),
     path("notes/<int:note_id>/", views.note_view, name="note-view"),
     path(
         "notes/<int:note_id>/content-partial/",

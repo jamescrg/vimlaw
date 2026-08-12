@@ -322,3 +322,12 @@ function replaceAllMatches() {
   updateSearchCount();
   scheduleAutosave();
 }
+
+// Palette handoff: open the bar prefilled with a cross-note query — the
+// count, next/prev, and Esc-to-clear come along for free.
+export function openSearchWithTerm(term) {
+  showSearchBar();
+  const input = document.getElementById("search-input");
+  if (input) input.value = term;
+  performSearch(term);
+}
