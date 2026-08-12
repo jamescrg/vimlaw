@@ -42,7 +42,12 @@ import {
   getMarkdownContent,
   scheduleAutosave,
   performAutosave,
+  isClean,
+  enterConflict,
+  clearConflict,
+  reloadNoteContent,
 } from "./notes/autosave.js";
+import { broadcast, setupBroadcast } from "./notes/broadcast.js";
 import {
   SearchHighlight,
   setupSearchBar,
@@ -253,6 +258,7 @@ function setupTitleEdit() {
 
     const formData = new FormData();
     formData.append("title", newTitle);
+    formData.append("base_version", window.NOTE_DATA.updatedAt || "");
 
     fetch(window.NOTE_DATA.titleUrl, {
       method: "POST",
@@ -264,13 +270,23 @@ function setupTitleEdit() {
         if (data.saved) {
           originalTitle = data.title;
           input.value = data.title;
+          window.NOTE_DATA.updatedAt = data.updated_at;
           document.title = data.title + " - Kosmos";
           document.body.dispatchEvent(new Event("noteSaved"));
           // The rename changes the note's alphabetical position too, so
           // re-render the left panel trees rather than patching the text
           refreshTree();
+          // ...and other tabs must re-sort too; a same-note tab also
+          // needs the new title (its clean path reloads content)
+          broadcast({ type: "tree-changed" });
+          broadcast({
+            type: "note-saved",
+            noteId: window.NOTE_DATA.id,
+            updatedAt: data.updated_at,
+          });
         } else {
           input.value = originalTitle;
+          if (data.conflict) enterConflict();
         }
       })
       .catch(() => {
@@ -602,7 +618,9 @@ function setupHtmxHandlers() {
   document.body.addEventListener("htmx:beforeRequest", (e) => {
     if (e.detail.target && e.detail.target.id === "note-editor-container") {
       if (state.autosaveTimer) clearTimeout(state.autosaveTimer);
-      performAutosave();
+      // A conflicted buffer is stale by definition — flushing it would
+      // just be one more doomed 409 (or worse, racing the reload)
+      if (!state.conflict) performAutosave();
 
       const clickedItem = e.detail.elt;
       if (clickedItem && clickedItem.dataset.noteId) {
@@ -621,6 +639,7 @@ function setupHtmxHandlers() {
       state.lastSavedContent = "";
       state.searchMatches = [];
       state.currentMatchIndex = -1;
+      clearConflict(); // every content swap lands on a fresh version
 
       setTimeout(initEditor, 50);
     }
@@ -826,8 +845,46 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFileTree();
   setupTreeMenu();
   setupPalette();
-  // Folder CRUD modals (tree context menu) announce success via HX-Trigger
-  document.body.addEventListener("noteFoldersChanged", refreshTree);
+  // Folder CRUD modals (tree context menu) announce success via HX-Trigger;
+  // sibling tabs learn about it over the broadcast channel
+  document.body.addEventListener("noteFoldersChanged", () => {
+    refreshTree();
+    broadcast({ type: "tree-changed" });
+  });
+  setupBroadcast({
+    "tree-changed": () => refreshTree(),
+    "note-saved": (msg) => {
+      if (msg.noteId !== window.NOTE_DATA.id) return;
+      if (msg.updatedAt === window.NOTE_DATA.updatedAt) return;
+      if (state.conflict) return; // already paused on the banner
+      if (isClean()) {
+        reloadNoteContent(); // silent catch-up
+      } else {
+        enterConflict(); // both tabs dirty: pause before data is lost
+      }
+    },
+    "note-deleted": (msg) => {
+      if (msg.noteId !== window.NOTE_DATA.id) return;
+      const container = document.getElementById("file-tree-container");
+      if (container) window.location.assign(container.dataset.launchUrl);
+    },
+  });
+  // Note creation ends in HX-Redirect (full navigation of the creating
+  // tab), so there's no in-page success hook — announce any redirecting
+  // response to sibling tabs before this page unloads
+  document.body.addEventListener("htmx:afterRequest", (e) => {
+    if (e.detail.xhr && e.detail.xhr.getResponseHeader("HX-Redirect")) {
+      broadcast({ type: "tree-changed" });
+    }
+  });
+  // The conflict banner is re-rendered with every content swap, so its
+  // reload button is wired by delegation
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#note-conflict-reload")) {
+      e.preventDefault();
+      reloadNoteContent();
+    }
+  });
   initEditor();
   setupHtmxHandlers();
   setupOutlineCollapseAll();

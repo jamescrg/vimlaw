@@ -398,11 +398,16 @@ def note_view(request, note_id):
 
 @login_required
 def note_content_partial(request, note_id):
-    """HTMX partial for switching notes in the editor."""
+    """HTMX partial for switching notes in the editor.
+
+    ?sync=1 marks a background reload (another tab saved this note) —
+    those must not count as the user viewing the note, or every silent
+    sync would reorder recents and hijack notes:launch.
+    """
     note = _get_note(request, note_id)
 
-    # Record user's view of this note
-    record_note_view(request.user, note)
+    if not request.GET.get("sync"):
+        record_note_view(request.user, note)
 
     context = {
         "note": note,
@@ -453,11 +458,35 @@ def note_content(request, note_id):
     return HttpResponse(note.content, content_type="text/plain; charset=utf-8")
 
 
+def _version_conflict(request, note):
+    """409 when the client's note is stale (edited from another tab).
+
+    The client echoes back the exact updated_at isoformat string it last
+    received (base_version); any difference means someone else saved
+    since. Optional: callers that don't send it save unconditionally.
+    """
+    base_version = request.POST.get("base_version", "")
+    if base_version and base_version != note.updated_at.isoformat():
+        return JsonResponse(
+            {
+                "saved": False,
+                "conflict": True,
+                "updated_at": note.updated_at.isoformat(),
+            },
+            status=409,
+        )
+    return None
+
+
 @login_required
 @require_POST
 def note_autosave(request, note_id):
     """Autosave endpoint for the editor."""
     note = _get_note(request, note_id)
+
+    conflict = _version_conflict(request, note)
+    if conflict:
+        return conflict
 
     content = request.POST.get("content", "")
     note.content = content
@@ -478,11 +507,21 @@ def note_title(request, note_id):
     """Update note title."""
     note = _get_note(request, note_id)
 
+    conflict = _version_conflict(request, note)
+    if conflict:
+        return conflict
+
     title = request.POST.get("title", "").strip()
     if title:
         note.title = title
         note.save(update_fields=["title", "updated_at", "updated_by"])
-        return JsonResponse({"saved": True, "title": note.title})
+        return JsonResponse(
+            {
+                "saved": True,
+                "title": note.title,
+                "updated_at": note.updated_at.isoformat(),
+            }
+        )
 
     return JsonResponse({"saved": False, "error": "Title cannot be empty"}, status=400)
 

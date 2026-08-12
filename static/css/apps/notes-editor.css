@@ -608,3 +608,25 @@
 :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .palette-row-excerpt mark {
   color: var(--stone-900);
 }
+
+/* Multi-tab conflict banner — another tab saved this note; editing is
+   paused until the user reloads (autosave.js enterConflict) */
+.note-conflict-banner {
+  align-items: center;
+  background: var(--toast-warning-body-bg);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.note-conflict-banner i {
+  color: var(--warning);
+}
+
+.note-conflict-banner button {
+  margin-left: auto;
+}

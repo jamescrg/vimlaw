@@ -8,6 +8,7 @@
 // tree refresh.
 
 import { refreshTree } from "./file-tree.js";
+import { broadcast } from "./broadcast.js";
 import { getCSRFToken } from "./state.js";
 import { setFolderExpanded, setMatterExpanded } from "./tab-state.js";
 
@@ -98,6 +99,8 @@ function deleteNote(li) {
     headers: { "X-CSRFToken": getCSRFToken() },
   }).then((resp) => {
     if (!resp.ok) return;
+    broadcast({ type: "note-deleted", noteId: Number(li.dataset.noteId) });
+    broadcast({ type: "tree-changed" });
     if (deletedOpenNote) {
       // The open document is gone; land on the most recent surviving note
       window.location.assign(container.dataset.launchUrl);

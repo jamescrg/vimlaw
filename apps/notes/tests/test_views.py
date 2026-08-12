@@ -867,3 +867,67 @@ class TestSearchPalette:
         content = c.post(url, {"q": "memo"}).content.decode()
         assert "Public library memo" in content
         assert "Secret matter memo" not in content
+
+
+class TestSaveConflicts:
+    """base_version guard: stale writes from another tab are rejected."""
+
+    def test_autosave_stale_base_version_409(self, client_with_matter, note):
+        url = reverse("notes:note-autosave", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"content": "stale tab", "base_version": "2000-01-01T00:00:00+00:00"}
+        )
+        assert resp.status_code == 409
+        body = resp.json()
+        assert body["saved"] is False
+        assert body["conflict"] is True
+        assert body["updated_at"] == note.updated_at.isoformat()
+        note.refresh_from_db()
+        assert note.content != "stale tab"
+
+    def test_autosave_fresh_base_version_saves(self, client_with_matter, note):
+        url = reverse("notes:note-autosave", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"content": "fresh", "base_version": note.updated_at.isoformat()}
+        )
+        assert resp.status_code == 200
+        note.refresh_from_db()
+        assert note.content == "fresh"
+        assert resp.json()["updated_at"] == note.updated_at.isoformat()
+
+    def test_autosave_without_base_version_saves(self, client_with_matter, note):
+        url = reverse("notes:note-autosave", args=[note.id])
+        resp = client_with_matter.post(url, {"content": "unguarded"})
+        assert resp.status_code == 200
+        note.refresh_from_db()
+        assert note.content == "unguarded"
+
+    def test_title_stale_base_version_409(self, client_with_matter, note):
+        url = reverse("notes:note-title", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"title": "Stale", "base_version": "2000-01-01T00:00:00+00:00"}
+        )
+        assert resp.status_code == 409
+        note.refresh_from_db()
+        assert note.title != "Stale"
+
+    def test_title_fresh_base_version_saves_with_updated_at(
+        self, client_with_matter, note
+    ):
+        url = reverse("notes:note-title", args=[note.id])
+        resp = client_with_matter.post(
+            url, {"title": "Fresh", "base_version": note.updated_at.isoformat()}
+        )
+        assert resp.status_code == 200
+        note.refresh_from_db()
+        assert note.title == "Fresh"
+        assert resp.json()["updated_at"] == note.updated_at.isoformat()
+
+    def test_sync_reload_skips_recency(self, client_with_matter, note):
+        from apps.notes.models import NoteView
+
+        url = reverse("notes:note-content-partial", args=[note.id])
+        assert client_with_matter.get(url + "?sync=1").status_code == 200
+        assert not NoteView.objects.filter(note=note).exists()
+        assert client_with_matter.get(url).status_code == 200
+        assert NoteView.objects.filter(note=note).exists()

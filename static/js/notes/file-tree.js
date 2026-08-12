@@ -4,6 +4,7 @@
 // follows every move.
 
 import { getCSRFToken } from "./state.js";
+import { broadcast } from "./broadcast.js";
 import {
   applyTreeState,
   setFolderExpanded,
@@ -278,6 +279,7 @@ async function onDrop(e) {
     setMatterExpanded(target.dataset.matterId, true);
   }
   refreshTree();
+  broadcast({ type: "tree-changed" });
 }
 
 function onDragEnd() {

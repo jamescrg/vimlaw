@@ -9,6 +9,9 @@ export const state = {
   currentMatchIndex: -1,
   langSelector: null,
   outlineTimer: null,
+  // Another tab saved this note past us: editing is paused until the
+  // user reloads (autosave.js enterConflict/clearConflict)
+  conflict: false,
 };
 
 export function getCSRFToken() {
