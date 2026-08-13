@@ -646,15 +646,19 @@ def note_reassign_matter(request, note_id):
         pk=request.POST.get("matter"),
     )
     if matter.id != note.matter_id:
-        if _sibling_note_exists(note.title, matter, None):
-            # 200 so htmx swaps the message into the modal's error slot
-            return HttpResponse(
-                f'<p class="error-text">A note named "{note.title}" already '
-                f"exists at {matter}'s root. Rename one first.</p>"
-            )
         note.matter = matter
         note.folder = None
-        note.save(update_fields=["matter", "folder"])
+        update_fields = ["matter", "folder"]
+        # Same-named note at the target root → serial suffix, like a
+        # filesystem move
+        siblings = Note.objects.filter(matter=matter, folder=None).values_list(
+            "title", flat=True
+        )
+        suffixed = _next_untitled(siblings, base=note.title)
+        if suffixed != note.title:
+            note.title = suffixed
+            update_fields += ["title", "updated_at", "updated_by"]
+        note.save(update_fields=update_fields)
     return HttpResponse(
         status=204,
         headers={
@@ -847,16 +851,22 @@ def note_folder_reparent(request, folder_id):
     error = validate_folder_move(folder, destination)
     if error:
         return HttpResponse(error, status=400)
-    if destination != folder.parent and _sibling_folder_exists(
-        folder.name, folder.matter, destination, folder.pk
-    ):
-        return HttpResponse(
-            f'A folder named "{folder.name}" already exists there.', status=400
-        )
 
     folder.parent = destination
     folder.depth = destination.depth + 1 if destination else 0
-    folder.save(update_fields=["parent", "depth"])
+    update_fields = ["parent", "depth"]
+    # Same-named sibling at the destination → serial suffix, like a
+    # filesystem move
+    siblings = (
+        NoteFolder.objects.filter(matter=folder.matter, parent=destination)
+        .exclude(pk=folder.pk)
+        .values_list("name", flat=True)
+    )
+    suffixed = _next_untitled(siblings, base=folder.name)
+    if suffixed != folder.name:
+        folder.name = suffixed
+        update_fields.append("name")
+    folder.save(update_fields=update_fields)
     folder.update_descendant_depths()
     return HttpResponse(status=204)
 
@@ -881,12 +891,18 @@ def note_move(request, note_id):
         destination = folder
     else:
         destination = None
-    if destination != note.folder and _sibling_note_exists(
-        note.title, note.matter, destination
-    ):
-        return HttpResponse(
-            f'A note named "{note.title}" already exists there.', status=400
-        )
     note.folder = destination
-    note.save(update_fields=["folder"])
+    update_fields = ["folder"]
+    # A same-named sibling at the destination gets a serial suffix
+    # (filesystem move behavior) rather than blocking the move
+    siblings = (
+        Note.objects.filter(matter=note.matter, folder=destination)
+        .exclude(pk=note.pk)
+        .values_list("title", flat=True)
+    )
+    suffixed = _next_untitled(siblings, base=note.title)
+    if suffixed != note.title:
+        note.title = suffixed
+        update_fields += ["title", "updated_at", "updated_by"]
+    note.save(update_fields=update_fields)
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})

@@ -1002,7 +1002,7 @@ class TestSiblingNameUniqueness:
         )
         assert resp.status_code == 200
 
-    def test_note_move_rejects_duplicate_in_destination(self, client, user):
+    def test_note_move_suffixes_duplicate_in_destination(self, client, user):
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Dest")
@@ -1011,9 +1011,10 @@ class TestSiblingNameUniqueness:
         resp = client.post(
             reverse("notes:note-move", args=[loose.id]), {"destination": folder.id}
         )
-        assert resp.status_code == 400
+        assert resp.status_code == 204
         loose.refresh_from_db()
-        assert loose.folder_id is None
+        assert loose.folder_id == folder.id
+        assert loose.title == "same 1"
 
     def test_folder_inline_rename_rejects_duplicate(self, client, user):
         from apps.notes.models import NoteFolder
@@ -1027,7 +1028,7 @@ class TestSiblingNameUniqueness:
         folder.refresh_from_db()
         assert folder.name == "Mine"
 
-    def test_folder_reparent_rejects_duplicate(self, client, user):
+    def test_folder_reparent_suffixes_duplicate(self, client, user):
         from apps.notes.models import NoteFolder
 
         dest = NoteFolder.objects.create(name="Dest")
@@ -1037,9 +1038,10 @@ class TestSiblingNameUniqueness:
             reverse("notes:folder-reparent", args=[mover.id]),
             {"destination": dest.id},
         )
-        assert resp.status_code == 400
+        assert resp.status_code == 204
         mover.refresh_from_db()
-        assert mover.parent_id is None
+        assert mover.parent_id == dest.id
+        assert mover.name == "same 1"
 
     def test_folder_edit_form_rejects_duplicate(self, client, user, note):
         from apps.notes.models import NoteFolder
@@ -1056,7 +1058,7 @@ class TestSiblingNameUniqueness:
         folder.refresh_from_db()
         assert folder.name == "Mine"
 
-    def test_reassign_matter_rejects_root_duplicate(
+    def test_reassign_matter_suffixes_root_duplicate(
         self, client_with_matter, note, user, contact, practice_area
     ):
         from apps.matters.models import Matter
@@ -1074,7 +1076,7 @@ class TestSiblingNameUniqueness:
             reverse("notes:note-reassign-matter", args=[note.id]),
             {"matter": other.id},
         )
-        assert resp.status_code == 200
-        assert b"already exists" in resp.content
+        assert resp.status_code == 204
         note.refresh_from_db()
-        assert note.matter_id != other.id
+        assert note.matter_id == other.id
+        assert note.title == "Test Note 1"
