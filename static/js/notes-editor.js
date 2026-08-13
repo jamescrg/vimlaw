@@ -243,6 +243,17 @@ function initEditor() {
     window.pendingDocSearch = null;
     openSearchWithTerm(term);
   }
+  // New-note handoff: title focused with "Untitled" selected, so typing
+  // names the note; Enter commits via the normal title-save path.
+  // Consumed after setupTitleEdit so the blur/Enter handlers are live.
+  if (window.pendingTitleFocus) {
+    window.pendingTitleFocus = false;
+    const title = document.getElementById("note-title");
+    if (title) {
+      title.focus();
+      title.select();
+    }
+  }
 }
 
 // ─── Title Edit ──────────────────────────────────────────────────────────────
@@ -883,7 +894,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = container.querySelector(
           `.file-tree-note[data-note-id="${e.detail.id}"]`,
         );
-        if (row) row.click();
+        if (row) {
+          // Obsidian-style: once the new note lands in the canvas, its
+          // title arrives focused and selected (consumed at initEditor
+          // tail, after the title handlers are bound)
+          window.pendingTitleFocus = true;
+          row.click();
+        }
       },
       { once: true },
     );
