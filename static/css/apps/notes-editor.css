@@ -583,12 +583,6 @@
   overflow-y: auto;
 }
 
-/* The results fade out at the bottom edge anyway; the hint reads
-   cleaner without its rule line inside the framed body */
-.notes-palette .cmd-palette-hint {
-  border-top: none;
-  padding-bottom: 0;
-}
 
 .palette-band {
   list-style: none;
