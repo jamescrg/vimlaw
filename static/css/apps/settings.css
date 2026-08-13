@@ -411,3 +411,30 @@ h2.settings-section {
 h2.settings-section:first-child {
   margin-top: 0;
 }
+
+/* Claude Desktop page: the rendered claude_desktop_config.json block,
+   with the copy button floating over its top-right corner. */
+.claude-config {
+  position: relative;
+}
+
+.claude-config-block {
+  background: var(--background-section);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  font-family: 'Courier Prime', monospace;
+  margin: 1rem 0;
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.claude-config-copy {
+  position: absolute;
+  right: 0.5rem;
+  top: 1.5rem;
+}
+
+.claude-token-actions {
+  display: flex;
+  gap: 0.75rem;
+}

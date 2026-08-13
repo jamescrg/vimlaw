@@ -252,6 +252,117 @@ def _palette_path(note):
     return "/".join(parts)
 
 
+def _parse_note_scope(user, scope_key, matter_qs=None):
+    """Normalize a search scope key into (key, Note queryset, matter id set).
+
+    scope_key: all (default) | library | matters | matter:<id>, 404 on a
+    matter the user can't see. matter_qs bounds which matters count as
+    accessible — the palette passes all of them, the JSON API open ones only.
+    """
+    if matter_qs is None:
+        matter_qs = Matter.objects.all()
+    accessible_matter_ids = set(
+        filter_matters_for_user(matter_qs, user).values_list("id", flat=True)
+    )
+    if scope_key == "library":
+        scope = Note.objects.filter(matter__isnull=True)
+    elif scope_key == "matters":
+        scope = Note.objects.filter(matter_id__in=accessible_matter_ids)
+    elif scope_key.startswith("matter:") and scope_key[7:].isdigit():
+        matter_id = int(scope_key[7:])
+        if matter_id not in accessible_matter_ids:
+            raise Http404
+        scope = Note.objects.filter(matter_id=matter_id)
+    else:
+        scope_key = "all"
+        scope = Note.objects.filter(
+            Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
+        )
+    return scope_key, scope, accessible_matter_ids
+
+
+def _folder_path_index():
+    """One folder sweep -> callable mapping a folder_id to its name path,
+    root first. Cheaper than per-note get_ancestors() when annotating many
+    notes at once."""
+    folders = {f["id"]: f for f in NoteFolder.objects.values("id", "name", "parent_id")}
+
+    def folder_path(folder_id):
+        parts = []
+        while folder_id:
+            folder = folders.get(folder_id)
+            if folder is None:
+                break
+            parts.append(folder["name"])
+            folder_id = folder["parent_id"]
+        return parts[::-1]
+
+    return folder_path
+
+
+def _palette_search(q, scope, title_limit=8, content_limit=10):
+    """Two ranked result bands over scope for a query of length >= 2.
+
+    Returns (title_notes, content_notes). The title band matches the query
+    against each note's full display path (title-prefix hits rank above
+    title-contains above path-only); the content band is watson full-text,
+    each note carrying a raw .excerpt with \\x02/\\x03 headline sentinels.
+    """
+    # Paths aren't stored anywhere, so the title band matches in
+    # memory: build each note's full display path from one folder
+    # sweep and one values() pass over the scope (a few thousand rows
+    # at most — cheap next to the round-trip)
+    q_lower = q.lower()
+    folder_path = _folder_path_index()
+
+    ranked = []
+    for row in scope.values("id", "title", "folder_id", "matter__name"):
+        parts = []
+        if row["matter__name"]:
+            parts.append(row["matter__name"])
+        parts.extend(folder_path(row["folder_id"]))
+        parts.append(row["title"])
+        if q_lower not in "/".join(parts).lower():
+            continue
+        title_lower = row["title"].lower()
+        if title_lower.startswith(q_lower):
+            rank = 0
+        elif q_lower in title_lower:
+            rank = 1
+        else:
+            rank = 2  # matched the path, not the title
+        ranked.append((rank, title_lower, row["id"]))
+    ranked.sort()
+    title_ids = [note_id for _, _, note_id in ranked[:title_limit]]
+    by_id = {
+        n.id: n
+        for n in Note.objects.filter(id__in=title_ids).select_related(
+            "matter", "folder"
+        )
+    }
+    title_notes = [by_id[note_id] for note_id in title_ids]
+
+    sq = SearchQuery(q, search_type="websearch", config="english")
+    content_notes = list(
+        watson.filter(scope, q)
+        .exclude(id__in=[n.id for n in title_notes])
+        .order_by("-watson_rank")
+        .annotate(
+            excerpt=SearchHeadline(
+                "content",
+                sq,
+                config="english",
+                start_sel=_HL_START,
+                stop_sel=_HL_STOP,
+                max_words=18,
+                min_words=10,
+            )
+        )
+        .select_related("matter", "folder")[:content_limit]
+    )
+    return title_notes, content_notes
+
+
 @login_required
 def notes_search_palette(request):
     """The editor's Ctrl+K search palette (Omnisearch-style).
@@ -269,26 +380,7 @@ def notes_search_palette(request):
     """
     q = (request.POST.get("q") or request.GET.get("q") or "").strip()
     scope_key = request.POST.get("scope") or request.GET.get("scope") or "all"
-
-    accessible_matter_ids = set(
-        filter_matters_for_user(Matter.objects.all(), request.user).values_list(
-            "id", flat=True
-        )
-    )
-    if scope_key == "library":
-        scope = Note.objects.filter(matter__isnull=True)
-    elif scope_key == "matters":
-        scope = Note.objects.filter(matter_id__in=accessible_matter_ids)
-    elif scope_key.startswith("matter:") and scope_key[7:].isdigit():
-        matter_id = int(scope_key[7:])
-        if matter_id not in accessible_matter_ids:
-            raise Http404
-        scope = Note.objects.filter(matter_id=matter_id)
-    else:
-        scope_key = "all"
-        scope = Note.objects.filter(
-            Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
-        )
+    scope_key, scope, accessible_matter_ids = _parse_note_scope(request.user, scope_key)
 
     # The open note's matter feeds the shell's one-click scope tab
     current_matter = None
@@ -309,70 +401,7 @@ def notes_search_palette(request):
             if nv.note_id in scoped_note_ids
         ][:10]
     else:
-        # Paths aren't stored anywhere, so the title band matches in
-        # memory: build each note's full display path from one folder
-        # sweep and one values() pass over the scope (a few thousand rows
-        # at most — cheap next to the round-trip)
-        q_lower = q.lower()
-        folders = {
-            f["id"]: f for f in NoteFolder.objects.values("id", "name", "parent_id")
-        }
-
-        def folder_path(folder_id):
-            parts = []
-            while folder_id:
-                folder = folders.get(folder_id)
-                if folder is None:
-                    break
-                parts.append(folder["name"])
-                folder_id = folder["parent_id"]
-            return parts[::-1]
-
-        ranked = []
-        for row in scope.values("id", "title", "folder_id", "matter__name"):
-            parts = []
-            if row["matter__name"]:
-                parts.append(row["matter__name"])
-            parts.extend(folder_path(row["folder_id"]))
-            parts.append(row["title"])
-            if q_lower not in "/".join(parts).lower():
-                continue
-            title_lower = row["title"].lower()
-            if title_lower.startswith(q_lower):
-                rank = 0
-            elif q_lower in title_lower:
-                rank = 1
-            else:
-                rank = 2  # matched the path, not the title
-            ranked.append((rank, title_lower, row["id"]))
-        ranked.sort()
-        title_ids = [note_id for _, _, note_id in ranked[:8]]
-        by_id = {
-            n.id: n
-            for n in Note.objects.filter(id__in=title_ids).select_related(
-                "matter", "folder"
-            )
-        }
-        title_notes = [by_id[note_id] for note_id in title_ids]
-
-        sq = SearchQuery(q, search_type="websearch", config="english")
-        content_notes = list(
-            watson.filter(scope, q)
-            .exclude(id__in=[n.id for n in title_notes])
-            .order_by("-watson_rank")
-            .annotate(
-                excerpt=SearchHeadline(
-                    "content",
-                    sq,
-                    config="english",
-                    start_sel=_HL_START,
-                    stop_sel=_HL_STOP,
-                    max_words=18,
-                    min_words=10,
-                )
-            )
-            .select_related("matter", "folder")[:10]
-        )
+        title_notes, content_notes = _palette_search(q, scope)
 
     for n in title_notes + content_notes + recent_notes:
         n.path_prefix = _palette_path(n)

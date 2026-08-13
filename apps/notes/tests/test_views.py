@@ -1148,3 +1148,212 @@ class TestPaletteScopes:
         ).content.decode()
         assert f'data-note-id="{general.id}"' in content
         assert f'data-note-id="{note.id}"' not in content
+
+
+class TestNotesApi:
+    """The read-only token-authed JSON API behind the Claude Desktop MCP
+    server: auth, scoping (open matters only), visibility, search bands."""
+
+    @staticmethod
+    def _token(user):
+        from apps.drafts.models import CompanionToken
+
+        return CompanionToken.for_user(user).key
+
+    @staticmethod
+    def _index(*notes):
+        from watson import search as watson
+
+        for n in notes:
+            watson.default_search_engine.update_obj_index(n)
+
+    @pytest.fixture
+    def library_note(self, user):
+        return Note.objects.create(
+            author=user,
+            title="Service by Publication",
+            content="The quick brown fox jumped over the lazy dog.",
+        )
+
+    @pytest.fixture
+    def api(self, user):
+        from django.test import Client
+
+        token = self._token(user)
+
+        def get(path, **params):
+            return Client().get(path, params, HTTP_X_KOSMOS_TOKEN=token)
+
+        return get
+
+    @pytest.fixture
+    def restricted_api(self):
+        from django.test import Client
+
+        from apps.accounts.models import CustomUser
+
+        outsider = CustomUser.objects.create(
+            username="api-outsider",
+            email="api-outsider@example.com",
+            user_rate=100,
+            perm_all_matters=False,
+        )
+        token = self._token(outsider)
+
+        def get(path, **params):
+            return Client().get(path, params, HTTP_X_KOSMOS_TOKEN=token)
+
+        return get
+
+    def test_missing_token_401_with_guidance(self, note):
+        from django.test import Client
+
+        response = Client().get(reverse("notes:api-notes"))
+        assert response.status_code == 401
+        assert "Kosmos settings" in response.json()["error"]
+
+    def test_bad_token_401(self):
+        from django.test import Client
+
+        response = Client().get(reverse("notes:api-notes"), HTTP_X_KOSMOS_TOKEN="nope")
+        assert response.status_code == 401
+
+    def test_inactive_user_401(self, user, note):
+        token = self._token(user)
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        from django.test import Client
+
+        response = Client().get(reverse("notes:api-notes"), HTTP_X_KOSMOS_TOKEN=token)
+        assert response.status_code == 401
+
+    def test_notes_list_shape(self, api, note, library_note, matter):
+        data = api(reverse("notes:api-notes")).json()
+        assert data["scope"] == "all"
+        by_id = {n["id"]: n for n in data["notes"]}
+        assert by_id[note.id]["matter"] == matter.name
+        assert by_id[note.id]["path"] == f"{matter.name}/Test Note"
+        assert by_id[library_note.id]["matter_id"] is None
+        assert by_id[library_note.id]["path"] == "Service by Publication"
+        assert {
+            "id",
+            "title",
+            "path",
+            "matter_id",
+            "matter",
+            "updated_at",
+            "summary",
+        } <= set(by_id[note.id])
+
+    def test_scope_library_excludes_matter_notes(self, api, note, library_note):
+        data = api(reverse("notes:api-notes"), scope="library").json()
+        ids = [n["id"] for n in data["notes"]]
+        assert library_note.id in ids
+        assert note.id not in ids
+
+    def test_scope_matter_filters(self, api, note, library_note, matter):
+        data = api(reverse("notes:api-notes"), scope=f"matter:{matter.id}").json()
+        ids = [n["id"] for n in data["notes"]]
+        assert ids == [note.id]
+
+    def test_closed_matter_scope_404_and_excluded_from_all(
+        self, api, note, matter, library_note
+    ):
+        matter.status = "Concluded"
+        matter.save(update_fields=["status"])
+        response = api(reverse("notes:api-notes"), scope=f"matter:{matter.id}")
+        assert response.status_code == 404
+        data = api(reverse("notes:api-notes")).json()
+        assert note.id not in [n["id"] for n in data["notes"]]
+
+    def test_inaccessible_matter_scope_404(self, restricted_api, note, matter):
+        response = restricted_api(
+            reverse("notes:api-notes"), scope=f"matter:{matter.id}"
+        )
+        assert response.status_code == 404
+        assert "access" in response.json()["error"]
+
+    def test_matter_note_detail_404_without_access(self, restricted_api, note):
+        response = restricted_api(reverse("notes:api-note", args=[note.id]))
+        assert response.status_code == 404
+
+    def test_library_note_detail_200_for_everyone(self, restricted_api, library_note):
+        data = restricted_api(reverse("notes:api-note", args=[library_note.id])).json()
+        assert data["title"] == "Service by Publication"
+        assert "brown fox" in data["content"]
+
+    def test_note_detail_content(self, api, note, matter):
+        data = api(reverse("notes:api-note", args=[note.id])).json()
+        assert data["content"] == note.content
+        assert data["matter"] == matter.name
+
+    def test_matters_list_and_q_filter(self, api, matter):
+        data = api(reverse("notes:api-matters")).json()
+        assert {"id": matter.id, "name": matter.name} in data["matters"]
+        assert api(reverse("notes:api-matters"), q="zzz").json()["matters"] == []
+        assert (
+            api(reverse("notes:api-matters"), q="test").json()["matters"][0]["id"]
+            == matter.id
+        )
+
+    def test_search_bands_and_excerpt_markers(self, api, note, library_note):
+        self._index(note, library_note)
+        data = api(reverse("notes:api-search"), q="publication").json()
+        assert [n["id"] for n in data["title_matches"]] == [library_note.id]
+        data = api(reverse("notes:api-search"), q="brown fox").json()
+        excerpts = [n["excerpt"] for n in data["content_matches"]]
+        assert any("**brown**" in e and "**fox**" in e for e in excerpts)
+        for e in excerpts:
+            assert "\x02" not in e and "\x03" not in e and "<mark>" not in e
+
+    def test_search_limit(self, api, user):
+        notes = [
+            Note.objects.create(author=user, title=f"Widget note {i}")
+            for i in range(25)
+        ]
+        self._index(*notes)
+        data = api(reverse("notes:api-search"), q="widget").json()
+        assert len(data["title_matches"]) == 20  # default cap
+        data = api(reverse("notes:api-search"), q="widget", limit=3).json()
+        assert len(data["title_matches"]) == 3
+
+    def test_search_short_query_400(self, api):
+        assert api(reverse("notes:api-search"), q="a").status_code == 400
+
+
+class TestClaudeSettings:
+    """The Connect Claude Desktop settings page: config rendering, token
+    rotate/revoke, script download."""
+
+    def test_page_renders_config_with_token(self, client, user):
+        from apps.drafts.models import CompanionToken
+
+        token = CompanionToken.for_user(user)
+        content = client.get(reverse("settings:claude-index")).content.decode()
+        assert token.key in content
+        assert "mcpServers" in content
+
+    def test_page_without_token_offers_generate(self, client):
+        content = client.get(reverse("settings:claude-index")).content.decode()
+        assert "Generate token" in content
+        assert "mcpServers" not in content
+
+    def test_rotate_changes_key(self, client, user):
+        from apps.drafts.models import CompanionToken
+
+        old = CompanionToken.for_user(user).key
+        response = client.post(reverse("settings:claude-rotate"))
+        assert response.status_code == 302
+        assert CompanionToken.objects.get(user=user).key != old
+
+    def test_revoke_deletes_token(self, client, user):
+        from apps.drafts.models import CompanionToken
+
+        CompanionToken.for_user(user)
+        client.post(reverse("settings:claude-revoke"))
+        assert not CompanionToken.objects.filter(user=user).exists()
+
+    def test_script_download(self, client):
+        response = client.get(reverse("settings:claude-script"))
+        assert response.status_code == 200
+        assert response["Content-Disposition"].endswith('kosmos_notes_mcp.py"')

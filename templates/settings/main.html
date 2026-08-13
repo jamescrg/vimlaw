@@ -46,6 +46,9 @@
           <li {% if subapp == "integrations" %}class="active"{% endif %}>
             <a href="{% url 'settings:integrations-index' %}">Integrations</a>
           </li>
+          <li {% if subapp == "claude" %}class="active"{% endif %}>
+            <a href="{% url 'settings:claude-index' %}">Claude Desktop</a>
+          </li>
           {% if user.role == 'ADMIN' or user.perm_intakes %}
             {% comment %}
               The page lives under /intakes/, which PermissionMiddleware gates
