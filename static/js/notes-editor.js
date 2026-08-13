@@ -303,7 +303,15 @@ function setupTitleEdit() {
           });
         } else {
           input.value = originalTitle;
-          if (data.conflict) enterConflict();
+          if (data.conflict) {
+            enterConflict();
+          } else {
+            // e.g. a sibling note already has this title: flash the
+            // input red; the console carries the server's reason
+            console.warn("Title rejected:", data.error);
+            input.classList.add("input-error");
+            setTimeout(() => input.classList.remove("input-error"), 1200);
+          }
         }
       })
       .catch(() => {

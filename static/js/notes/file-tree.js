@@ -135,9 +135,20 @@ export function startFolderRename(li) {
     li.draggable = true;
     if (commit && name && name !== nameSpan.textContent.trim()) {
       nameSpan.textContent = name; // optimistic; the refresh re-sorts
-      window.htmx.ajax("POST", li.dataset.renameUrl, {
-        swap: "none",
-        values: { name },
+      fetch(li.dataset.renameUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRFToken() },
+        body: new URLSearchParams({ name }),
+      }).then(async (resp) => {
+        if (resp.ok) {
+          // fetch doesn't process HX-Trigger; drive the same refresh +
+          // broadcast path the header would have
+          document.body.dispatchEvent(new Event("noteFoldersChanged"));
+        } else {
+          // e.g. a sibling already has this name: flash and revert
+          flashDropError(li, await resp.text());
+          refreshTree();
+        }
       });
     }
   };

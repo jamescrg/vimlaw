@@ -973,3 +973,108 @@ class TestFolderInlineRename:
         assert resp.status_code == 400
         folder.refresh_from_db()
         assert folder.name == "Keep"
+
+
+class TestSiblingNameUniqueness:
+    """Rename/move mutations enforce the folder/file metaphor:
+    case-insensitively unique names among siblings."""
+
+    def test_title_rename_rejects_duplicate_sibling(
+        self, client_with_matter, note, user
+    ):
+        Note.objects.create(author=user, matter=note.matter, title="Taken", content="x")
+        resp = client_with_matter.post(
+            reverse("notes:note-title", args=[note.id]), {"title": "taken"}
+        )
+        assert resp.status_code == 400
+        assert "already exists" in resp.json()["error"]
+        note.refresh_from_db()
+        assert note.title == "Test Note"
+
+    def test_title_rename_allows_same_name_other_folder(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Elsewhere")
+        Note.objects.create(author=user, title="Shared", folder=folder)
+        mine = Note.objects.create(author=user, title="Renaming")
+        resp = client.post(
+            reverse("notes:note-title", args=[mine.id]), {"title": "Shared"}
+        )
+        assert resp.status_code == 200
+
+    def test_note_move_rejects_duplicate_in_destination(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Dest")
+        Note.objects.create(author=user, title="Same", folder=folder)
+        loose = Note.objects.create(author=user, title="same")
+        resp = client.post(
+            reverse("notes:note-move", args=[loose.id]), {"destination": folder.id}
+        )
+        assert resp.status_code == 400
+        loose.refresh_from_db()
+        assert loose.folder_id is None
+
+    def test_folder_inline_rename_rejects_duplicate(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="Taken")
+        folder = NoteFolder.objects.create(name="Mine")
+        resp = client.post(
+            reverse("notes:folder-rename", args=[folder.id]), {"name": "TAKEN"}
+        )
+        assert resp.status_code == 400
+        folder.refresh_from_db()
+        assert folder.name == "Mine"
+
+    def test_folder_reparent_rejects_duplicate(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        dest = NoteFolder.objects.create(name="Dest")
+        NoteFolder.objects.create(name="Same", parent=dest)
+        mover = NoteFolder.objects.create(name="same")
+        resp = client.post(
+            reverse("notes:folder-reparent", args=[mover.id]),
+            {"destination": dest.id},
+        )
+        assert resp.status_code == 400
+        mover.refresh_from_db()
+        assert mover.parent_id is None
+
+    def test_folder_edit_form_rejects_duplicate(self, client, user, note):
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="Taken")
+        folder = NoteFolder.objects.create(name="Mine")
+        resp = client.post(
+            reverse("notes:folder-edit", args=[folder.id])
+            + f"?context=editor&note={note.id}",
+            {"name": "taken", "parent": ""},
+        )
+        assert resp.status_code == 200  # re-renders the modal with the error
+        assert b"already exists" in resp.content
+        folder.refresh_from_db()
+        assert folder.name == "Mine"
+
+    def test_reassign_matter_rejects_root_duplicate(
+        self, client_with_matter, note, user, contact, practice_area
+    ):
+        from apps.matters.models import Matter
+
+        other = Matter.objects.create(
+            user=user,
+            name="Other Matter",
+            status="Open",
+            date_start="2024-01-01",
+            practice_area=practice_area,
+            client=contact,
+        )
+        Note.objects.create(author=user, matter=other, title="Test Note")
+        resp = client_with_matter.post(
+            reverse("notes:note-reassign-matter", args=[note.id]),
+            {"matter": other.id},
+        )
+        assert resp.status_code == 200
+        assert b"already exists" in resp.content
+        note.refresh_from_db()
+        assert note.matter_id != other.id

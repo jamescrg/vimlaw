@@ -18,7 +18,8 @@ a note into a chat, paste it in.
       <form id="note-reassign-form"
             class="form-compact"
             hx-post="{% url 'notes:note-reassign-matter' note.id %}"
-            hx-swap="none">
+            hx-target="#reassign-error"
+            hx-swap="innerHTML">
         {% csrf_token %}
         <div class="form-group">
           <label for="reassign-matter">Matter</label>
@@ -34,6 +35,7 @@ a note into a chat, paste it in.
             </p>
           </div>
         </div>
+        <div id="reassign-error"></div>
       </form>
     </div>
     <div class="modal-footer">

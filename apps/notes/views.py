@@ -151,13 +151,35 @@ def get_editor_file_tree(request, note):
 
 def _next_untitled(existing_names, base="Untitled"):
     """Obsidian-style auto-name: Untitled, then Untitled 1, 2, ..."""
-    names = set(existing_names)
-    if base not in names:
+    names = {n.lower() for n in existing_names}
+    if base.lower() not in names:
         return base
     i = 1
-    while f"{base} {i}" in names:
+    while f"{base.lower()} {i}" in names:
         i += 1
     return f"{base} {i}"
+
+
+# Sibling-name uniqueness (the folder/file metaphor): checked at every
+# rename/move mutation, case-insensitively — a filesystem export must
+# not collide on macOS/Windows, which treat "Notes" and "notes" as the
+# same file. View-layer enforcement (like the matter-boundary
+# invariant): Postgres unique constraints treat the NULL folder/matter
+# scopes as distinct rows, so they can't express these rules anyway.
+
+
+def _sibling_note_exists(title, matter, folder, exclude_pk=None):
+    qs = Note.objects.filter(matter=matter, folder=folder, title__iexact=title)
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    return qs.exists()
+
+
+def _sibling_folder_exists(name, matter, parent, exclude_pk=None):
+    qs = NoteFolder.objects.filter(matter=matter, parent=parent, name__iexact=name)
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    return qs.exists()
 
 
 @login_required
@@ -515,6 +537,11 @@ def note_title(request, note_id):
         return conflict
 
     title = request.POST.get("title", "").strip()
+    if title and _sibling_note_exists(title, note.matter, note.folder, note.pk):
+        return JsonResponse(
+            {"saved": False, "error": f'A note named "{title}" already exists here.'},
+            status=400,
+        )
     if title:
         note.title = title
         note.save(update_fields=["title", "updated_at", "updated_by"])
@@ -619,6 +646,12 @@ def note_reassign_matter(request, note_id):
         pk=request.POST.get("matter"),
     )
     if matter.id != note.matter_id:
+        if _sibling_note_exists(note.title, matter, None):
+            # 200 so htmx swaps the message into the modal's error slot
+            return HttpResponse(
+                f'<p class="error-text">A note named "{note.title}" already '
+                f"exists at {matter}'s root. Rename one first.</p>"
+            )
         note.matter = matter
         note.folder = None
         note.save(update_fields=["matter", "folder"])
@@ -692,6 +725,8 @@ def note_folder_rename(request, folder_id):
     name = request.POST.get("name", "").strip()
     if not name:
         return HttpResponse("Name cannot be empty.", status=400)
+    if _sibling_folder_exists(name, folder.matter, folder.parent, folder.pk):
+        return HttpResponse(f'A folder named "{name}" already exists here.', status=400)
     folder.name = name
     folder.save(update_fields=["name"])
     return _editor_crud_response()
@@ -812,6 +847,12 @@ def note_folder_reparent(request, folder_id):
     error = validate_folder_move(folder, destination)
     if error:
         return HttpResponse(error, status=400)
+    if destination != folder.parent and _sibling_folder_exists(
+        folder.name, folder.matter, destination, folder.pk
+    ):
+        return HttpResponse(
+            f'A folder named "{folder.name}" already exists there.', status=400
+        )
 
     folder.parent = destination
     folder.depth = destination.depth + 1 if destination else 0
@@ -837,8 +878,15 @@ def note_move(request, note_id):
             return HttpResponse(
                 "Notes cannot move into another matter's folders.", status=400
             )
-        note.folder = folder
+        destination = folder
     else:
-        note.folder = None
+        destination = None
+    if destination != note.folder and _sibling_note_exists(
+        note.title, note.matter, destination
+    ):
+        return HttpResponse(
+            f'A note named "{note.title}" already exists there.', status=400
+        )
+    note.folder = destination
     note.save(update_fields=["folder"])
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})
