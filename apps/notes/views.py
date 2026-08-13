@@ -262,26 +262,52 @@ def notes_search_palette(request):
     display path — matter/folders/title — with title hits ranked above
     path-only hits), then full-text matches via watson with a
     match-centered highlighted excerpt.
+
+    ?scope= narrows both bands and the recents: all (default) | library |
+    matters | matter:<id>. The GET also takes ?note=<open note> so the
+    shell can offer that note's matter as a one-click scope tab.
     """
     q = (request.POST.get("q") or request.GET.get("q") or "").strip()
+    scope_key = request.POST.get("scope") or request.GET.get("scope") or "all"
 
     accessible_matter_ids = set(
         filter_matters_for_user(Matter.objects.all(), request.user).values_list(
             "id", flat=True
         )
     )
-    scope = Note.objects.filter(
-        Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
-    )
+    if scope_key == "library":
+        scope = Note.objects.filter(matter__isnull=True)
+    elif scope_key == "matters":
+        scope = Note.objects.filter(matter_id__in=accessible_matter_ids)
+    elif scope_key.startswith("matter:") and scope_key[7:].isdigit():
+        matter_id = int(scope_key[7:])
+        if matter_id not in accessible_matter_ids:
+            raise Http404
+        scope = Note.objects.filter(matter_id=matter_id)
+    else:
+        scope_key = "all"
+        scope = Note.objects.filter(
+            Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
+        )
+
+    # The open note's matter feeds the shell's one-click scope tab
+    current_matter = None
+    note_id = request.GET.get("note", "")
+    if request.method == "GET" and note_id.isdigit():
+        current = Note.objects.select_related("matter").filter(pk=note_id).first()
+        if current and current.matter_id in accessible_matter_ids:
+            current_matter = current.matter
 
     title_notes, content_notes, recent_notes = [], [], []
     if len(q) < 2:
+        scoped_note_ids = set(scope.values_list("id", flat=True))
         recent_notes = [
             nv.note
             for nv in NoteView.objects.filter(user=request.user)
             .select_related("note__matter", "note__folder")
-            .order_by("-viewed_at")[:10]
-        ]
+            .order_by("-viewed_at")[:30]
+            if nv.note_id in scoped_note_ids
+        ][:10]
     else:
         # Paths aren't stored anywhere, so the title band matches in
         # memory: build each note's full display path from one folder
@@ -360,6 +386,8 @@ def notes_search_palette(request):
     )
     context = {
         "q": q,
+        "scope": scope_key,
+        "current_matter": current_matter,
         "title_notes": title_notes,
         "content_notes": content_notes,
         "recent_notes": recent_notes,

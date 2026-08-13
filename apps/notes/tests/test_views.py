@@ -1080,3 +1080,71 @@ class TestSiblingNameUniqueness:
         note.refresh_from_db()
         assert note.matter_id == other.id
         assert note.title == "Test Note 1"
+
+
+class TestPaletteScopes:
+    @pytest.fixture
+    def url(self):
+        return reverse("notes:search-palette")
+
+    def test_library_scope_excludes_matter_notes(
+        self, client_with_matter, note, user, url
+    ):
+        Note.objects.create(author=user, title="Test General", content="x")
+        content = client_with_matter.post(
+            url, {"q": "test", "scope": "library"}
+        ).content.decode()
+        assert "Test General" in content
+        assert f'data-note-id="{note.id}"' not in content
+
+    def test_matters_scope_excludes_general_notes(
+        self, client_with_matter, note, user, url
+    ):
+        general = Note.objects.create(author=user, title="Test General", content="x")
+        content = client_with_matter.post(
+            url, {"q": "test", "scope": "matters"}
+        ).content.decode()
+        assert f'data-note-id="{note.id}"' in content
+        assert f'data-note-id="{general.id}"' not in content
+
+    def test_single_matter_scope(
+        self, client_with_matter, note, user, contact, practice_area, url
+    ):
+        from apps.matters.models import Matter
+
+        other = Matter.objects.create(
+            user=user,
+            name="Test Other",
+            status="Open",
+            date_start="2024-01-01",
+            practice_area=practice_area,
+            client=contact,
+        )
+        other_note = Note.objects.create(author=user, matter=other, title="Test Far")
+        content = client_with_matter.post(
+            url, {"q": "test", "scope": f"matter:{note.matter_id}"}
+        ).content.decode()
+        assert f'data-note-id="{note.id}"' in content
+        assert f'data-note-id="{other_note.id}"' not in content
+
+    def test_shell_offers_current_matter_tab(self, client_with_matter, note, url):
+        content = client_with_matter.get(url + f"?note={note.id}").content.decode()
+        assert f'data-scope="matter:{note.matter_id}"' in content
+        assert note.matter.name in content
+
+    def test_shell_without_matter_note_has_no_matter_tab(self, client, user, url):
+        general = Note.objects.create(author=user, title="Solo")
+        content = client.get(url + f"?note={general.id}").content.decode()
+        assert 'data-scope="matter:' not in content
+
+    def test_recents_respect_scope(self, client_with_matter, note, user, url):
+        from apps.notes.models import NoteView
+
+        general = Note.objects.create(author=user, title="Lib Recent")
+        NoteView.objects.create(user=user, note=note)
+        NoteView.objects.create(user=user, note=general)
+        content = client_with_matter.post(
+            url, {"q": "", "scope": "library"}
+        ).content.decode()
+        assert f'data-note-id="{general.id}"' in content
+        assert f'data-note-id="{note.id}"' not in content

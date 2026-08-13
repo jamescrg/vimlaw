@@ -67,6 +67,7 @@
            id="notes-palette-btn"
            title="Search notes (Ctrl+K)"
            hx-get="{% url 'notes:search-palette' %}"
+           hx-vals="js:{note: window.NOTE_DATA && window.NOTE_DATA.id}"
            hx-target="#htmx-modal-container"><i class="icon-search"></i></a>
         <button type="button"
                 class="panel-btn"
@@ -90,6 +91,7 @@
            class="panel-btn"
            title="Search notes (Ctrl+K)"
            hx-get="{% url 'notes:search-palette' %}"
+           hx-vals="js:{note: window.NOTE_DATA && window.NOTE_DATA.id}"
            hx-target="#htmx-modal-container"><i class="icon-search"></i></a>
       </div>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>

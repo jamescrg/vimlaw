@@ -27,10 +27,34 @@ rides the body's hx-headers.
                autofocus
                hx-post="{% url 'notes:search-palette' %}"
                hx-trigger="keyup changed delay:300ms, search"
+               hx-include="#palette-scope"
                hx-target="#palette-results" />
         <span class="notes-palette-input-icon">
           <i class="icon-search"></i>
         </span>
+      </div>
+      {% comment %}
+      Scope tabs (global-search idiom). The current-matter tab appears
+      only when the open note belongs to a matter; other matters are
+      reachable by typing their name (path search). palette.js handles
+      clicks: set the hidden scope, re-trigger the search.
+      {% endcomment %}
+      <div class="notes-palette-tabs">
+        <input type="hidden" id="palette-scope" name="scope" value="{{ scope }}" />
+        <button type="button"
+                class="palette-tab{% if scope == 'all' %} active{% endif %}"
+                data-scope="all">All</button>
+        <button type="button"
+                class="palette-tab{% if scope == 'library' %} active{% endif %}"
+                data-scope="library">Library</button>
+        <button type="button"
+                class="palette-tab{% if scope == 'matters' %} active{% endif %}"
+                data-scope="matters">Matters</button>
+        {% if current_matter %}
+          <button type="button"
+                  class="palette-tab"
+                  data-scope="matter:{{ current_matter.id }}">{{ current_matter.name }}</button>
+        {% endif %}
       </div>
       <div id="palette-results" class="notes-palette-results">{% include "notes/palette-results.html" %}</div>
       <div class="cmd-palette-hint">
