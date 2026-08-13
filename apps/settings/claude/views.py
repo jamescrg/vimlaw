@@ -24,21 +24,26 @@ SCRIPT_PATH = Path(settings.BASE_DIR) / "tools" / "kosmos_notes_mcp.py"
 
 
 def _config_block(request, token):
-    return json.dumps(
+    """The "mcpServers" member to paste inside claude_desktop_config.json.
+
+    Rendered without the file's outer braces: Desktop pre-populates the
+    config with defaults, so the paste target is always inside an existing
+    top-level object, never an empty file.
+    """
+    servers = json.dumps(
         {
-            "mcpServers": {
-                "kosmos": {
-                    "command": "uv",
-                    "args": ["run", "--script", "/path/to/kosmos_notes_mcp.py"],
-                    "env": {
-                        "KOSMOS_URL": f"{request.scheme}://{request.get_host()}",
-                        "KOSMOS_TOKEN": token.key,
-                    },
-                }
+            "kosmos": {
+                "command": "uv",
+                "args": ["run", "--script", "/path/to/kosmos_notes_mcp.py"],
+                "env": {
+                    "KOSMOS_URL": f"{request.scheme}://{request.get_host()}",
+                    "KOSMOS_TOKEN": token.key,
+                },
             }
         },
         indent=2,
     )
+    return f'"mcpServers": {servers}'
 
 
 @login_required

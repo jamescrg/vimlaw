@@ -35,8 +35,13 @@ Three pieces:
    save it somewhere permanent.
 3. In Claude Desktop: Settings → Developer → Edit Config. This opens
    `claude_desktop_config.json` — note this is Claude **Desktop's**
-   config, not Claude Code's `CLAUDE.md`/`.mcp.json`. Paste the block from
-   the Kosmos settings page, fixing the script path.
+   config, not Claude Code's `CLAUDE.md`/`.mcp.json`, and Desktop
+   pre-populates it with defaults. The block on the Kosmos settings page
+   is the `"mcpServers"` member only: paste it inside the file's
+   outermost braces as an additional top-level entry (comma after the
+   preceding entry), keeping what's already there, then fix the script
+   path. If an `mcpServers` section already exists, add just the
+   `"kosmos"` entry inside it.
 4. Restart Claude Desktop; the kosmos tools appear under the tools icon in
    the chat input.
 
