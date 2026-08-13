@@ -151,20 +151,43 @@ def get_editor_file_tree(request, note):
 
 def _next_untitled(existing_names, base="Untitled"):
     """Obsidian-style auto-name: Untitled, then Untitled 1, 2, ..."""
-    names = set(existing_names)
-    if base not in names:
+    names = {n.lower() for n in existing_names}
+    if base.lower() not in names:
         return base
     i = 1
-    while f"{base} {i}" in names:
+    while f"{base.lower()} {i}" in names:
         i += 1
     return f"{base} {i}"
+
+
+# Sibling-name uniqueness (the folder/file metaphor): checked at every
+# rename/move mutation, case-insensitively — a filesystem export must
+# not collide on macOS/Windows, which treat "Notes" and "notes" as the
+# same file. View-layer enforcement (like the matter-boundary
+# invariant): Postgres unique constraints treat the NULL folder/matter
+# scopes as distinct rows, so they can't express these rules anyway.
+
+
+def _sibling_note_exists(title, matter, folder, exclude_pk=None):
+    qs = Note.objects.filter(matter=matter, folder=folder, title__iexact=title)
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    return qs.exists()
+
+
+def _sibling_folder_exists(name, matter, parent, exclude_pk=None):
+    qs = NoteFolder.objects.filter(matter=matter, parent=parent, name__iexact=name)
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    return qs.exists()
 
 
 @login_required
 @require_POST
 def notes_add(request):
     """Create a general note instantly (no modal), optionally into a folder
-    (?folder=<id>), auto-named among its siblings. The HX-Redirect opens
+    (?folder=<id>), auto-named among its siblings. The noteCreated
+    trigger opens
     the new note in the editor.
     """
     folder = None
@@ -183,9 +206,11 @@ def notes_add(request):
         matter=None,
         folder=folder,
     )
+    # No navigation: the client refreshes the trees in place and opens
+    # the new note through the normal row-click swap (notes-editor.js)
     return HttpResponse(
         status=204,
-        headers={"HX-Redirect": reverse("notes:note-view", args=[note.id])},
+        headers={"HX-Trigger": json.dumps({"noteCreated": {"id": note.id}})},
     )
 
 
@@ -237,26 +262,52 @@ def notes_search_palette(request):
     display path — matter/folders/title — with title hits ranked above
     path-only hits), then full-text matches via watson with a
     match-centered highlighted excerpt.
+
+    ?scope= narrows both bands and the recents: all (default) | library |
+    matters | matter:<id>. The GET also takes ?note=<open note> so the
+    shell can offer that note's matter as a one-click scope tab.
     """
     q = (request.POST.get("q") or request.GET.get("q") or "").strip()
+    scope_key = request.POST.get("scope") or request.GET.get("scope") or "all"
 
     accessible_matter_ids = set(
         filter_matters_for_user(Matter.objects.all(), request.user).values_list(
             "id", flat=True
         )
     )
-    scope = Note.objects.filter(
-        Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
-    )
+    if scope_key == "library":
+        scope = Note.objects.filter(matter__isnull=True)
+    elif scope_key == "matters":
+        scope = Note.objects.filter(matter_id__in=accessible_matter_ids)
+    elif scope_key.startswith("matter:") and scope_key[7:].isdigit():
+        matter_id = int(scope_key[7:])
+        if matter_id not in accessible_matter_ids:
+            raise Http404
+        scope = Note.objects.filter(matter_id=matter_id)
+    else:
+        scope_key = "all"
+        scope = Note.objects.filter(
+            Q(matter__isnull=True) | Q(matter_id__in=accessible_matter_ids)
+        )
+
+    # The open note's matter feeds the shell's one-click scope tab
+    current_matter = None
+    note_id = request.GET.get("note", "")
+    if request.method == "GET" and note_id.isdigit():
+        current = Note.objects.select_related("matter").filter(pk=note_id).first()
+        if current and current.matter_id in accessible_matter_ids:
+            current_matter = current.matter
 
     title_notes, content_notes, recent_notes = [], [], []
     if len(q) < 2:
+        scoped_note_ids = set(scope.values_list("id", flat=True))
         recent_notes = [
             nv.note
             for nv in NoteView.objects.filter(user=request.user)
             .select_related("note__matter", "note__folder")
-            .order_by("-viewed_at")[:10]
-        ]
+            .order_by("-viewed_at")[:30]
+            if nv.note_id in scoped_note_ids
+        ][:10]
     else:
         # Paths aren't stored anywhere, so the title band matches in
         # memory: build each note's full display path from one folder
@@ -335,6 +386,8 @@ def notes_search_palette(request):
     )
     context = {
         "q": q,
+        "scope": scope_key,
+        "current_matter": current_matter,
         "title_notes": title_notes,
         "content_notes": content_notes,
         "recent_notes": recent_notes,
@@ -512,6 +565,11 @@ def note_title(request, note_id):
         return conflict
 
     title = request.POST.get("title", "").strip()
+    if title and _sibling_note_exists(title, note.matter, note.folder, note.pk):
+        return JsonResponse(
+            {"saved": False, "error": f'A note named "{title}" already exists here.'},
+            status=400,
+        )
     if title:
         note.title = title
         note.save(update_fields=["title", "updated_at", "updated_by"])
@@ -618,7 +676,17 @@ def note_reassign_matter(request, note_id):
     if matter.id != note.matter_id:
         note.matter = matter
         note.folder = None
-        note.save(update_fields=["matter", "folder"])
+        update_fields = ["matter", "folder"]
+        # Same-named note at the target root → serial suffix, like a
+        # filesystem move
+        siblings = Note.objects.filter(matter=matter, folder=None).values_list(
+            "title", flat=True
+        )
+        suffixed = _next_untitled(siblings, base=note.title)
+        if suffixed != note.title:
+            note.title = suffixed
+            update_fields += ["title", "updated_at", "updated_by"]
+        note.save(update_fields=update_fields)
     return HttpResponse(
         status=204,
         headers={
@@ -649,7 +717,8 @@ def note_folder_add(request):
 
     ?parent=<id> creates a subfolder (matter inherited from the parent);
     ?matter=<id> creates at a matter's root; neither means the general
-    root. Rename afterwards via the tree's context menu.
+    root. The folderCreated trigger starts an Obsidian-style inline
+    rename on the new row once the refreshed tree settles.
     """
     parent_id = request.GET.get("parent", "")
     matter_id = request.GET.get("matter", "")
@@ -665,9 +734,33 @@ def note_folder_add(request):
     siblings = NoteFolder.objects.filter(parent=parent, matter=matter).values_list(
         "name", flat=True
     )
-    NoteFolder.objects.create(
+    folder = NoteFolder.objects.create(
         name=_next_untitled(siblings), parent=parent, matter=matter
     )
+    # Key order matters: noteFoldersChanged's handler starts the tree
+    # refresh; folderCreated's then waits on that swap to settle
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps(
+                {"noteFoldersChanged": True, "folderCreated": {"id": folder.id}}
+            )
+        },
+    )
+
+
+@login_required
+@require_POST
+def note_folder_rename(request, folder_id):
+    """Name-only update (the tree's inline rename); parent/matter untouched."""
+    folder = get_object_or_404(NoteFolder, pk=folder_id)
+    name = request.POST.get("name", "").strip()
+    if not name:
+        return HttpResponse("Name cannot be empty.", status=400)
+    if _sibling_folder_exists(name, folder.matter, folder.parent, folder.pk):
+        return HttpResponse(f'A folder named "{name}" already exists here.', status=400)
+    folder.name = name
+    folder.save(update_fields=["name"])
     return _editor_crud_response()
 
 
@@ -789,7 +882,19 @@ def note_folder_reparent(request, folder_id):
 
     folder.parent = destination
     folder.depth = destination.depth + 1 if destination else 0
-    folder.save(update_fields=["parent", "depth"])
+    update_fields = ["parent", "depth"]
+    # Same-named sibling at the destination → serial suffix, like a
+    # filesystem move
+    siblings = (
+        NoteFolder.objects.filter(matter=folder.matter, parent=destination)
+        .exclude(pk=folder.pk)
+        .values_list("name", flat=True)
+    )
+    suffixed = _next_untitled(siblings, base=folder.name)
+    if suffixed != folder.name:
+        folder.name = suffixed
+        update_fields.append("name")
+    folder.save(update_fields=update_fields)
     folder.update_descendant_depths()
     return HttpResponse(status=204)
 
@@ -811,8 +916,21 @@ def note_move(request, note_id):
             return HttpResponse(
                 "Notes cannot move into another matter's folders.", status=400
             )
-        note.folder = folder
+        destination = folder
     else:
-        note.folder = None
-    note.save(update_fields=["folder"])
+        destination = None
+    note.folder = destination
+    update_fields = ["folder"]
+    # A same-named sibling at the destination gets a serial suffix
+    # (filesystem move behavior) rather than blocking the move
+    siblings = (
+        Note.objects.filter(matter=note.matter, folder=destination)
+        .exclude(pk=note.pk)
+        .values_list("title", flat=True)
+    )
+    suffixed = _next_untitled(siblings, base=note.title)
+    if suffixed != note.title:
+        note.title = suffixed
+        update_fields += ["title", "updated_at", "updated_by"]
+    note.save(update_fields=update_fields)
     return HttpResponse(status=204, headers={"HX-Trigger": "notesChanged"})

@@ -104,6 +104,71 @@ function setupTreeCollapseAll(container) {
   updateTreeCollapseIcon();
 }
 
+// ─── Inline folder rename ────────────────────────────────────────────────────
+
+// Obsidian-style: the folder's name swaps to a focused input with the
+// text selected, so typing replaces it. Enter/blur commit through the
+// rename endpoint (htmx.ajax, so the 204's noteFoldersChanged trigger
+// refreshes the trees + broadcasts); Escape keeps the current name.
+export function startFolderRename(li) {
+  const nameSpan = li.querySelector(":scope > .file-tree-name");
+  if (!nameSpan || li.querySelector(":scope > .file-tree-rename-input")) return;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "file-tree-rename-input";
+  input.value = nameSpan.textContent.trim();
+  nameSpan.style.display = "none";
+  nameSpan.after(input);
+  li.draggable = false; // a text-selection drag must not start a DnD move
+  li.scrollIntoView({ block: "nearest" });
+  input.focus();
+  input.select();
+
+  let done = false;
+  const finish = (commit) => {
+    if (done) return;
+    done = true;
+    const name = input.value.trim();
+    input.remove();
+    nameSpan.style.display = "";
+    li.draggable = true;
+    if (commit && name && name !== nameSpan.textContent.trim()) {
+      nameSpan.textContent = name; // optimistic; the refresh re-sorts
+      fetch(li.dataset.renameUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRFToken() },
+        body: new URLSearchParams({ name }),
+      }).then(async (resp) => {
+        if (resp.ok) {
+          // fetch doesn't process HX-Trigger; drive the same refresh +
+          // broadcast path the header would have
+          document.body.dispatchEvent(new Event("noteFoldersChanged"));
+        } else {
+          // e.g. a sibling already has this name: flash and revert
+          flashDropError(li, await resp.text());
+          refreshTree();
+        }
+      });
+    }
+  };
+
+  // Clicks inside the input must not reach the container's toggle handler
+  input.addEventListener("click", (e) => e.stopPropagation());
+  input.addEventListener("dblclick", (e) => e.stopPropagation());
+  input.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      finish(true);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      finish(false);
+    }
+  });
+  input.addEventListener("blur", () => finish(true));
+}
+
 // ─── Expand/collapse ─────────────────────────────────────────────────────────
 
 function onClick(e) {
@@ -302,21 +367,30 @@ export function refreshTree() {
   const container = document.getElementById("file-tree-container");
   // The innerHTML swap resets every list's scroll; capture and restore so
   // a rename/create/delete doesn't bounce the panel to the top. List order
-  // is stable (files tree, matter trees, recents).
+  // is stable (files tree, matter trees, recents). Restore on the swap
+  // EVENT, not the ajax promise: when refreshTree is called from inside
+  // an htmx trigger handler (noteCreated), the request gets queued behind
+  // the busy body element and htmx resolves its promise immediately —
+  // before any swap. The afterSwap listener registered at bind time
+  // (applyTreeState) runs first, so heights are final when this restores.
   const scrolls = Array.from(container.querySelectorAll(".file-tree")).map(
     (el) => el.scrollTop,
+  );
+  container.addEventListener(
+    "htmx:afterSwap",
+    () => {
+      container.querySelectorAll(".file-tree").forEach((el, i) => {
+        if (scrolls[i]) el.scrollTop = scrolls[i];
+      });
+    },
+    { once: true },
   );
   // htmx.ajax processes the swapped content, so the new note rows' hx-get
   // attributes keep working. NOTE_DATA is re-set on every content swap,
   // so the active pill follows the currently open note.
-  window.htmx
-    .ajax("GET", `${container.dataset.refreshUrl}?note=${window.NOTE_DATA.id}`, {
-      target: "#file-tree-container",
-      swap: "innerHTML",
-    })
-    .then(() => {
-      container.querySelectorAll(".file-tree").forEach((el, i) => {
-        if (scrolls[i]) el.scrollTop = scrolls[i];
-      });
-    });
+  window.htmx.ajax(
+    "GET",
+    `${container.dataset.refreshUrl}?note=${window.NOTE_DATA.id}`,
+    { target: "#file-tree-container", swap: "innerHTML" },
+  );
 }

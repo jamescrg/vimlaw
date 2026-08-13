@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.urls import reverse
 
@@ -61,9 +63,9 @@ class TestNotesAdd:
         response = client_with_matter.post(url)
         assert response.status_code == 204
         note = Note.objects.get(matter=matter, title="Untitled")
-        assert response.headers["HX-Redirect"] == reverse(
-            "notes:note-view", args=[note.id]
-        )
+        assert json.loads(response.headers["HX-Trigger"]) == {
+            "noteCreated": {"id": note.id}
+        }
 
     def test_get_not_allowed(self, client_with_matter):
         matter = client_with_matter.matter
@@ -557,9 +559,9 @@ class TestStandaloneNoteAddEdit:
             assert resp.status_code == 204
             note = Note.objects.get(title=expected)
             assert note.matter_id is None
-            assert resp.headers["HX-Redirect"] == reverse(
-                "notes:note-view", args=[note.id]
-            )
+            assert json.loads(resp.headers["HX-Trigger"]) == {
+                "noteCreated": {"id": note.id}
+            }
 
 
 class TestNotesLaunch:
@@ -931,3 +933,218 @@ class TestSaveConflicts:
         assert not NoteView.objects.filter(note=note).exists()
         assert client_with_matter.get(url).status_code == 200
         assert NoteView.objects.filter(note=note).exists()
+
+
+class TestFolderInlineRename:
+    def test_add_returns_folder_created_trigger(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        resp = client.post(reverse("notes:folder-add"))
+        assert resp.status_code == 204
+        folder = NoteFolder.objects.get(name="Untitled")
+        trigger = json.loads(resp.headers["HX-Trigger"])
+        assert trigger["folderCreated"] == {"id": folder.id}
+        assert trigger["noteFoldersChanged"] is True
+
+    def test_rename_updates_name_only(self, client, user, matter):
+        from apps.notes.models import NoteFolder
+
+        parent = NoteFolder.objects.create(name="Parent", matter=matter)
+        folder = NoteFolder.objects.create(
+            name="Untitled", parent=parent, matter=matter
+        )
+        resp = client.post(
+            reverse("notes:folder-rename", args=[folder.id]), {"name": "Renamed"}
+        )
+        assert resp.status_code == 204
+        assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
+        folder.refresh_from_db()
+        assert folder.name == "Renamed"
+        assert folder.parent_id == parent.id
+        assert folder.matter_id == matter.id
+
+    def test_rename_rejects_empty(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Keep")
+        resp = client.post(
+            reverse("notes:folder-rename", args=[folder.id]), {"name": " "}
+        )
+        assert resp.status_code == 400
+        folder.refresh_from_db()
+        assert folder.name == "Keep"
+
+
+class TestSiblingNameUniqueness:
+    """Rename/move mutations enforce the folder/file metaphor:
+    case-insensitively unique names among siblings."""
+
+    def test_title_rename_rejects_duplicate_sibling(
+        self, client_with_matter, note, user
+    ):
+        Note.objects.create(author=user, matter=note.matter, title="Taken", content="x")
+        resp = client_with_matter.post(
+            reverse("notes:note-title", args=[note.id]), {"title": "taken"}
+        )
+        assert resp.status_code == 400
+        assert "already exists" in resp.json()["error"]
+        note.refresh_from_db()
+        assert note.title == "Test Note"
+
+    def test_title_rename_allows_same_name_other_folder(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Elsewhere")
+        Note.objects.create(author=user, title="Shared", folder=folder)
+        mine = Note.objects.create(author=user, title="Renaming")
+        resp = client.post(
+            reverse("notes:note-title", args=[mine.id]), {"title": "Shared"}
+        )
+        assert resp.status_code == 200
+
+    def test_note_move_suffixes_duplicate_in_destination(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Dest")
+        Note.objects.create(author=user, title="Same", folder=folder)
+        loose = Note.objects.create(author=user, title="same")
+        resp = client.post(
+            reverse("notes:note-move", args=[loose.id]), {"destination": folder.id}
+        )
+        assert resp.status_code == 204
+        loose.refresh_from_db()
+        assert loose.folder_id == folder.id
+        assert loose.title == "same 1"
+
+    def test_folder_inline_rename_rejects_duplicate(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="Taken")
+        folder = NoteFolder.objects.create(name="Mine")
+        resp = client.post(
+            reverse("notes:folder-rename", args=[folder.id]), {"name": "TAKEN"}
+        )
+        assert resp.status_code == 400
+        folder.refresh_from_db()
+        assert folder.name == "Mine"
+
+    def test_folder_reparent_suffixes_duplicate(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        dest = NoteFolder.objects.create(name="Dest")
+        NoteFolder.objects.create(name="Same", parent=dest)
+        mover = NoteFolder.objects.create(name="same")
+        resp = client.post(
+            reverse("notes:folder-reparent", args=[mover.id]),
+            {"destination": dest.id},
+        )
+        assert resp.status_code == 204
+        mover.refresh_from_db()
+        assert mover.parent_id == dest.id
+        assert mover.name == "same 1"
+
+    def test_folder_edit_form_rejects_duplicate(self, client, user, note):
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="Taken")
+        folder = NoteFolder.objects.create(name="Mine")
+        resp = client.post(
+            reverse("notes:folder-edit", args=[folder.id])
+            + f"?context=editor&note={note.id}",
+            {"name": "taken", "parent": ""},
+        )
+        assert resp.status_code == 200  # re-renders the modal with the error
+        assert b"already exists" in resp.content
+        folder.refresh_from_db()
+        assert folder.name == "Mine"
+
+    def test_reassign_matter_suffixes_root_duplicate(
+        self, client_with_matter, note, user, contact, practice_area
+    ):
+        from apps.matters.models import Matter
+
+        other = Matter.objects.create(
+            user=user,
+            name="Other Matter",
+            status="Open",
+            date_start="2024-01-01",
+            practice_area=practice_area,
+            client=contact,
+        )
+        Note.objects.create(author=user, matter=other, title="Test Note")
+        resp = client_with_matter.post(
+            reverse("notes:note-reassign-matter", args=[note.id]),
+            {"matter": other.id},
+        )
+        assert resp.status_code == 204
+        note.refresh_from_db()
+        assert note.matter_id == other.id
+        assert note.title == "Test Note 1"
+
+
+class TestPaletteScopes:
+    @pytest.fixture
+    def url(self):
+        return reverse("notes:search-palette")
+
+    def test_library_scope_excludes_matter_notes(
+        self, client_with_matter, note, user, url
+    ):
+        Note.objects.create(author=user, title="Test General", content="x")
+        content = client_with_matter.post(
+            url, {"q": "test", "scope": "library"}
+        ).content.decode()
+        assert "Test General" in content
+        assert f'data-note-id="{note.id}"' not in content
+
+    def test_matters_scope_excludes_general_notes(
+        self, client_with_matter, note, user, url
+    ):
+        general = Note.objects.create(author=user, title="Test General", content="x")
+        content = client_with_matter.post(
+            url, {"q": "test", "scope": "matters"}
+        ).content.decode()
+        assert f'data-note-id="{note.id}"' in content
+        assert f'data-note-id="{general.id}"' not in content
+
+    def test_single_matter_scope(
+        self, client_with_matter, note, user, contact, practice_area, url
+    ):
+        from apps.matters.models import Matter
+
+        other = Matter.objects.create(
+            user=user,
+            name="Test Other",
+            status="Open",
+            date_start="2024-01-01",
+            practice_area=practice_area,
+            client=contact,
+        )
+        other_note = Note.objects.create(author=user, matter=other, title="Test Far")
+        content = client_with_matter.post(
+            url, {"q": "test", "scope": f"matter:{note.matter_id}"}
+        ).content.decode()
+        assert f'data-note-id="{note.id}"' in content
+        assert f'data-note-id="{other_note.id}"' not in content
+
+    def test_shell_offers_current_matter_tab(self, client_with_matter, note, url):
+        content = client_with_matter.get(url + f"?note={note.id}").content.decode()
+        assert f'data-scope="matter:{note.matter_id}"' in content
+        assert note.matter.name in content
+
+    def test_shell_without_matter_note_has_no_matter_tab(self, client, user, url):
+        general = Note.objects.create(author=user, title="Solo")
+        content = client.get(url + f"?note={general.id}").content.decode()
+        assert 'data-scope="matter:' not in content
+
+    def test_recents_respect_scope(self, client_with_matter, note, user, url):
+        from apps.notes.models import NoteView
+
+        general = Note.objects.create(author=user, title="Lib Recent")
+        NoteView.objects.create(user=user, note=note)
+        NoteView.objects.create(user=user, note=general)
+        content = client_with_matter.post(
+            url, {"q": "", "scope": "library"}
+        ).content.decode()
+        assert f'data-note-id="{general.id}"' in content
+        assert f'data-note-id="{note.id}"' not in content

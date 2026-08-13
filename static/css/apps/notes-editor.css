@@ -512,30 +512,77 @@
 
 /* Search palette (Ctrl+K) */
 
-.notes-palette .modal-body {
-  padding: 0;
+/* Framed like the app's standard search modal (apps/search.css isn't
+   loaded on base-minimal, so the input-group look is mirrored here
+   under palette class names — the root must never be "search") */
+.notes-palette-input-group {
+  display: flex;
 }
 
 .notes-palette-input {
-  background: var(--background-light);
-  border: none;
-  border-bottom: 1px solid var(--border-medium);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--input-background);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   color: var(--color-primary);
+  flex: 1;
   font-size: 1rem;
-  padding: 0.75rem 1rem;
-  width: 100%;
+  padding: 0.5rem 1rem;
 }
 
 .notes-palette-input:focus {
+  border-color: var(--border-medium);
+  box-shadow: none;
   outline: none;
 }
 
+.notes-palette-input-icon {
+  align-items: center;
+  background: var(--background-control);
+  border: 1px solid var(--border-medium);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--color-muted);
+  display: flex;
+  padding: 0.5rem 1rem;
+}
+
+/* Scope tabs — the panel-tab/search-tab selected convention */
+.notes-palette-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+
+.palette-tab {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  max-width: 16rem;
+  overflow: hidden;
+  padding: 0.25rem 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-tab:hover {
+  color: var(--color-primary);
+}
+
+.palette-tab.active {
+  background: var(--selected-background);
+  border-color: var(--selected-border);
+  color: var(--selected-color);
+}
+
 .notes-palette-results {
+  margin-top: 0.5rem;
   max-height: 24rem;
   overflow-y: auto;
-  padding: 0.25rem 0 0.5rem;
 }
+
 
 .palette-band {
   list-style: none;
@@ -562,6 +609,7 @@
 }
 
 .palette-row {
+  border-radius: var(--radius-sm);
   cursor: pointer;
   padding: 0.5rem 1rem;
 }

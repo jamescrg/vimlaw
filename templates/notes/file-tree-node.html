@@ -13,6 +13,7 @@ applies its own expansion state (notes/tab-state.js).
     data-depth="{{ node.folder.depth }}"
     data-matter-id="{{ node.folder.matter_id|default_if_none:'' }}"
     data-reparent-url="{% url 'notes:folder-reparent' node.folder.id %}"
+    data-rename-url="{% url 'notes:folder-rename' node.folder.id %}"
     data-edit-url="{% url 'notes:folder-edit' node.folder.id %}"
     data-delete-url="{% url 'notes:folder-delete-confirm' node.folder.id %}"
     data-note-add-url="{% if node.folder.matter_id %}{% url 'case:notes-add' node.folder.matter_id %}{% else %}{% url 'notes:add' %}{% endif %}">

@@ -17,7 +17,10 @@ export function setupPalette() {
       return;
     }
     if (paletteUrl) {
-      window.htmx.ajax("GET", paletteUrl, { target: "#htmx-modal-container" });
+      window.htmx.ajax("GET", paletteUrl, {
+        target: "#htmx-modal-container",
+        values: { note: window.NOTE_DATA && window.NOTE_DATA.id },
+      });
     }
   }
 
@@ -41,6 +44,24 @@ export function setupPalette() {
     const input = document.getElementById("palette-input");
     if (input) window.htmx.trigger(input, "htmx:abort");
   }
+
+  // Scope tabs: set the hidden field the input's hx-include carries,
+  // re-run the search, and keep the keyboard in the input
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest(".notes-palette .palette-tab");
+    if (!tab) return;
+    const scope = document.getElementById("palette-scope");
+    if (scope) scope.value = tab.dataset.scope;
+    tab
+      .closest(".notes-palette-tabs")
+      .querySelectorAll(".palette-tab")
+      .forEach((b) => b.classList.toggle("active", b === tab));
+    const input = document.getElementById("palette-input");
+    if (input) {
+      window.htmx.trigger(input, "search");
+      input.focus();
+    }
+  });
 
   // Unlike form modals (which require an explicit close so a stray click
   // can't eat half-entered data), the palette is read-only — a press

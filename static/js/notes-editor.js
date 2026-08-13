@@ -32,9 +32,15 @@ import { state, getCSRFToken, bindClick } from "./notes/state.js";
 import {
   setupFileTree,
   refreshTree,
+  startFolderRename,
   updateTreeCollapseIcon,
 } from "./notes/file-tree.js";
-import { getPane, setPane, revealActiveNote } from "./notes/tab-state.js";
+import {
+  getPane,
+  setPane,
+  revealActiveNote,
+  restoreTreeScroll,
+} from "./notes/tab-state.js";
 import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
@@ -237,6 +243,17 @@ function initEditor() {
     window.pendingDocSearch = null;
     openSearchWithTerm(term);
   }
+  // New-note handoff: title focused with "Untitled" selected, so typing
+  // names the note; Enter commits via the normal title-save path.
+  // Consumed after setupTitleEdit so the blur/Enter handlers are live.
+  if (window.pendingTitleFocus) {
+    window.pendingTitleFocus = false;
+    const title = document.getElementById("note-title");
+    if (title) {
+      title.focus();
+      title.select();
+    }
+  }
 }
 
 // ─── Title Edit ──────────────────────────────────────────────────────────────
@@ -286,7 +303,15 @@ function setupTitleEdit() {
           });
         } else {
           input.value = originalTitle;
-          if (data.conflict) enterConflict();
+          if (data.conflict) {
+            enterConflict();
+          } else {
+            // e.g. a sibling note already has this title: flash the
+            // input red; the console carries the server's reason
+            console.warn("Title rejected:", data.error);
+            input.classList.add("input-error");
+            setTimeout(() => input.classList.remove("input-error"), 1200);
+          }
         }
       })
       .catch(() => {
@@ -845,6 +870,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const storedPane = getPane();
   if (storedPane) setLeftTab(storedPane);
   setupFileTree();
+  // One-time reveal of the open note's ancestor chain (persisted). Note
+  // switches reveal via updateSidebarActive; tree refreshes deliberately
+  // do NOT re-reveal, so an explicit collapse of the chain sticks.
+  revealActiveNote();
+  // After expansion, put each pane back where this tab left it (full
+  // navigations — note creation, delete-to-launch — reset the DOM)
+  restoreTreeScroll();
   setupTreeMenu();
   setupPalette();
   // Folder CRUD modals (tree context menu) announce success via HX-Trigger;
@@ -852,6 +884,51 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("noteFoldersChanged", () => {
     refreshTree();
     broadcast({ type: "tree-changed" });
+  });
+  // Instant creation stays on-page: refresh the trees (scroll/expansion
+  // preserved), then open the new note by clicking its row — the same
+  // four-attr swap every note-open uses (canvas, URL push, active pill)
+  document.body.addEventListener("noteCreated", (e) => {
+    broadcast({ type: "tree-changed" });
+    // Open the new note once the refreshed tree is LIVE, by clicking its
+    // row — the same four-attr swap every note-open uses (canvas, URL
+    // push, active pill). Keyed to afterSettle: the ajax promise can
+    // resolve pre-swap (see refreshTree), and at afterSwap the new rows'
+    // htmx listeners aren't attached yet, so a click would be inert.
+    const container = document.getElementById("file-tree-container");
+    container.addEventListener(
+      "htmx:afterSettle",
+      () => {
+        const row = container.querySelector(
+          `.file-tree-note[data-note-id="${e.detail.id}"]`,
+        );
+        if (row) {
+          // Obsidian-style: once the new note lands in the canvas, its
+          // title arrives focused and selected (consumed at initEditor
+          // tail, after the title handlers are bound)
+          window.pendingTitleFocus = true;
+          row.click();
+        }
+      },
+      { once: true },
+    );
+    refreshTree();
+  });
+  // A new folder starts an inline rename (name selected, type to
+  // replace) once the refreshed tree settles. The noteFoldersChanged
+  // handler above kicks off the refresh; this waits for it.
+  document.body.addEventListener("folderCreated", (e) => {
+    const container = document.getElementById("file-tree-container");
+    container.addEventListener(
+      "htmx:afterSettle",
+      () => {
+        const li = container.querySelector(
+          `.file-tree-folder[data-folder-id="${e.detail.id}"]`,
+        );
+        if (li) startFolderRename(li);
+      },
+      { once: true },
+    );
   });
   setupBroadcast({
     "tree-changed": () => refreshTree(),
@@ -871,9 +948,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (container) window.location.assign(container.dataset.launchUrl);
     },
   });
-  // Note creation ends in HX-Redirect (full navigation of the creating
-  // tab), so there's no in-page success hook — announce any redirecting
-  // response to sibling tabs before this page unloads
+  // Genuine HX-Redirect navigations remain (deleting the open note via
+  // the folder-delete modal lands on launch) — announce them to sibling
+  // tabs before this page unloads
   document.body.addEventListener("htmx:afterRequest", (e) => {
     if (e.detail.xhr && e.detail.xhr.getResponseHeader("HX-Redirect")) {
       broadcast({ type: "tree-changed" });

@@ -119,9 +119,8 @@ function runAction(action) {
 
   if (action === "new-note") {
     // Instant creation: an Untitled note in this folder/matter root; the
-    // HX-Redirect opens it. Persist the target's expansion FIRST —
-    // sessionStorage survives the navigation, so the new note's home is
-    // open when the redirected page applies this tab's state.
+    // noteCreated trigger opens it in place. Persist the target's
+    // expansion FIRST so the refreshed tree shows the new note's home.
     if (li.dataset.folderId) setFolderExpanded(li.dataset.folderId, true);
     if (isMatter) setMatterExpanded(li.dataset.matterId, true);
     const folderParam = li.dataset.folderId

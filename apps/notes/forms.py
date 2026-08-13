@@ -50,3 +50,19 @@ class NoteFolderForm(forms.ModelForm):
             indent = "    " * folder.depth
             choices.append((folder.pk, f"{indent}{folder.name}"))
         self.fields["parent"].choices = choices
+
+    def clean(self):
+        # Sibling names are unique (case-insensitive) — the folder/file
+        # metaphor must survive a filesystem export
+        cleaned = super().clean()
+        name = cleaned.get("name")
+        parent = cleaned.get("parent")
+        if name:
+            clash = NoteFolder.objects.filter(
+                matter=self.matter, parent=parent, name__iexact=name
+            )
+            if self.instance.pk:
+                clash = clash.exclude(pk=self.instance.pk)
+            if clash.exists():
+                self.add_error("name", f'A folder named "{name}" already exists here.')
+        return cleaned
