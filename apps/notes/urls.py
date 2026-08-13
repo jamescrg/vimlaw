@@ -56,6 +56,11 @@ urlpatterns = [
         name="folder-edit",
     ),
     path(
+        "notes/folders/rename/<int:folder_id>/",
+        views.note_folder_rename,
+        name="folder-rename",
+    ),
+    path(
         "notes/folders/delete/<int:folder_id>/confirm",
         views.note_folder_delete_confirm,
         name="folder-delete-confirm",

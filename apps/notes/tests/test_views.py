@@ -933,3 +933,43 @@ class TestSaveConflicts:
         assert not NoteView.objects.filter(note=note).exists()
         assert client_with_matter.get(url).status_code == 200
         assert NoteView.objects.filter(note=note).exists()
+
+
+class TestFolderInlineRename:
+    def test_add_returns_folder_created_trigger(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        resp = client.post(reverse("notes:folder-add"))
+        assert resp.status_code == 204
+        folder = NoteFolder.objects.get(name="Untitled")
+        trigger = json.loads(resp.headers["HX-Trigger"])
+        assert trigger["folderCreated"] == {"id": folder.id}
+        assert trigger["noteFoldersChanged"] is True
+
+    def test_rename_updates_name_only(self, client, user, matter):
+        from apps.notes.models import NoteFolder
+
+        parent = NoteFolder.objects.create(name="Parent", matter=matter)
+        folder = NoteFolder.objects.create(
+            name="Untitled", parent=parent, matter=matter
+        )
+        resp = client.post(
+            reverse("notes:folder-rename", args=[folder.id]), {"name": "Renamed"}
+        )
+        assert resp.status_code == 204
+        assert "noteFoldersChanged" in resp.headers["HX-Trigger"]
+        folder.refresh_from_db()
+        assert folder.name == "Renamed"
+        assert folder.parent_id == parent.id
+        assert folder.matter_id == matter.id
+
+    def test_rename_rejects_empty(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Keep")
+        resp = client.post(
+            reverse("notes:folder-rename", args=[folder.id]), {"name": " "}
+        )
+        assert resp.status_code == 400
+        folder.refresh_from_db()
+        assert folder.name == "Keep"

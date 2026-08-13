@@ -437,6 +437,23 @@ body:has(.note-page.standalone) {
   cursor: pointer;
 }
 
+/* Inline rename (new-folder flow): sits where the name span was */
+.note-sidebar .file-tree-rename-input {
+  background: var(--background-body);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-xs);
+  color: var(--color-primary);
+  flex: 1;
+  font-size: 1rem;
+  min-width: 0;
+  padding: 0 0.25rem;
+}
+
+.note-sidebar .file-tree-rename-input:focus {
+  border-color: var(--field-focus);
+  outline: none;
+}
+
 .note-sidebar .file-tree-name:hover {
   color: var(--color-primary);
 }

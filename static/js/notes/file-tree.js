@@ -104,6 +104,60 @@ function setupTreeCollapseAll(container) {
   updateTreeCollapseIcon();
 }
 
+// ─── Inline folder rename ────────────────────────────────────────────────────
+
+// Obsidian-style: the folder's name swaps to a focused input with the
+// text selected, so typing replaces it. Enter/blur commit through the
+// rename endpoint (htmx.ajax, so the 204's noteFoldersChanged trigger
+// refreshes the trees + broadcasts); Escape keeps the current name.
+export function startFolderRename(li) {
+  const nameSpan = li.querySelector(":scope > .file-tree-name");
+  if (!nameSpan || li.querySelector(":scope > .file-tree-rename-input")) return;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "file-tree-rename-input";
+  input.value = nameSpan.textContent.trim();
+  nameSpan.style.display = "none";
+  nameSpan.after(input);
+  li.draggable = false; // a text-selection drag must not start a DnD move
+  li.scrollIntoView({ block: "nearest" });
+  input.focus();
+  input.select();
+
+  let done = false;
+  const finish = (commit) => {
+    if (done) return;
+    done = true;
+    const name = input.value.trim();
+    input.remove();
+    nameSpan.style.display = "";
+    li.draggable = true;
+    if (commit && name && name !== nameSpan.textContent.trim()) {
+      nameSpan.textContent = name; // optimistic; the refresh re-sorts
+      window.htmx.ajax("POST", li.dataset.renameUrl, {
+        swap: "none",
+        values: { name },
+      });
+    }
+  };
+
+  // Clicks inside the input must not reach the container's toggle handler
+  input.addEventListener("click", (e) => e.stopPropagation());
+  input.addEventListener("dblclick", (e) => e.stopPropagation());
+  input.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      finish(true);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      finish(false);
+    }
+  });
+  input.addEventListener("blur", () => finish(true));
+}
+
 // ─── Expand/collapse ─────────────────────────────────────────────────────────
 
 function onClick(e) {

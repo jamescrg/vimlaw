@@ -652,7 +652,8 @@ def note_folder_add(request):
 
     ?parent=<id> creates a subfolder (matter inherited from the parent);
     ?matter=<id> creates at a matter's root; neither means the general
-    root. Rename afterwards via the tree's context menu.
+    root. The folderCreated trigger starts an Obsidian-style inline
+    rename on the new row once the refreshed tree settles.
     """
     parent_id = request.GET.get("parent", "")
     matter_id = request.GET.get("matter", "")
@@ -668,9 +669,31 @@ def note_folder_add(request):
     siblings = NoteFolder.objects.filter(parent=parent, matter=matter).values_list(
         "name", flat=True
     )
-    NoteFolder.objects.create(
+    folder = NoteFolder.objects.create(
         name=_next_untitled(siblings), parent=parent, matter=matter
     )
+    # Key order matters: noteFoldersChanged's handler starts the tree
+    # refresh; folderCreated's then waits on that swap to settle
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps(
+                {"noteFoldersChanged": True, "folderCreated": {"id": folder.id}}
+            )
+        },
+    )
+
+
+@login_required
+@require_POST
+def note_folder_rename(request, folder_id):
+    """Name-only update (the tree's inline rename); parent/matter untouched."""
+    folder = get_object_or_404(NoteFolder, pk=folder_id)
+    name = request.POST.get("name", "").strip()
+    if not name:
+        return HttpResponse("Name cannot be empty.", status=400)
+    folder.name = name
+    folder.save(update_fields=["name"])
     return _editor_crud_response()
 
 

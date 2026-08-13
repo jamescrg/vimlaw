@@ -32,6 +32,7 @@ import { state, getCSRFToken, bindClick } from "./notes/state.js";
 import {
   setupFileTree,
   refreshTree,
+  startFolderRename,
   updateTreeCollapseIcon,
 } from "./notes/file-tree.js";
 import {
@@ -887,6 +888,22 @@ document.addEventListener("DOMContentLoaded", () => {
       { once: true },
     );
     refreshTree();
+  });
+  // A new folder starts an inline rename (name selected, type to
+  // replace) once the refreshed tree settles. The noteFoldersChanged
+  // handler above kicks off the refresh; this waits for it.
+  document.body.addEventListener("folderCreated", (e) => {
+    const container = document.getElementById("file-tree-container");
+    container.addEventListener(
+      "htmx:afterSettle",
+      () => {
+        const li = container.querySelector(
+          `.file-tree-folder[data-folder-id="${e.detail.id}"]`,
+        );
+        if (li) startFolderRename(li);
+      },
+      { once: true },
+    );
   });
   setupBroadcast({
     "tree-changed": () => refreshTree(),
