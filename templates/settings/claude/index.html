@@ -1,0 +1,85 @@
+{% extends "settings/main.html" %}
+{% block subcontent %}
+  <div class="settings">
+    <div class="toolbar">
+      <h1>Claude Desktop</h1>
+    </div>
+    <p class="detail-text">
+      Connect Claude Desktop on your computer to your Kosmos notes. Claude
+      can then list, search, and read the Library and the notes of any
+      matter you have access to. Access is read-only (Claude Desktop never
+      writes notes) and personal: it uses your token below, and sees exactly
+      what you can see.
+    </p>
+    {% if token %}
+      <h2 class="settings-section">Setup</h2>
+      <hr />
+      <ol class="companion-steps">
+        <li>
+          Install <a href="https://docs.astral.sh/uv/getting-started/installation/"
+    target="_blank">uv</a> if you don't have it (it runs the connector
+          script with no other setup).
+        </li>
+        <li>
+          <a href="{% url 'settings:claude-script' %}">Download kosmos_notes_mcp.py</a>
+          and save it somewhere permanent (for example your home folder).
+        </li>
+        <li>
+          In Claude Desktop, open Settings, then Developer, then Edit
+          Config. This opens <code>claude_desktop_config.json</code>. Paste
+          the block below, replacing <code>/path/to/kosmos_notes_mcp.py</code>
+          with where you saved the script.
+        </li>
+        <li>
+          Restart Claude Desktop. The kosmos tools appear under the tools
+          icon in the chat input.
+        </li>
+      </ol>
+      <div class="claude-config">
+        <button type="button"
+                class="btn btn-sm action-btn copy-btn claude-config-copy"
+                data-copy="{{ config_block }}"
+                title="Copy configuration">
+          <i class="icon-copy"></i>
+        </button>
+        <pre class="claude-config-block">{{ config_block }}</pre>
+      </div>
+      <p class="detail-text companion-note">
+        This block carries your personal access token. Do not share it.
+        Each user should copy their own from this page.
+      </p>
+      <h2 class="settings-section">Token</h2>
+      <hr />
+      <p class="detail-text">
+        Your token was created {{ token.created_at|date:"M j, Y" }}. It is
+        shared with the LibreOffice companion extension: rotating or
+        revoking it here re-keys that too (re-download the extension
+        afterwards if you use it).
+      </p>
+      <div class="claude-token-actions">
+        <form method="post" action="{% url 'settings:claude-rotate' %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="btn btn-secondary"
+                  onclick="return confirm('Rotate your token? Claude Desktop and the LibreOffice companion stop working until you update them with the new one.')">
+            Rotate token
+          </button>
+        </form>
+        <form method="post" action="{% url 'settings:claude-revoke' %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="btn btn-danger"
+                  onclick="return confirm('Revoke your token? Claude Desktop and the LibreOffice companion lose access immediately.')">
+            Revoke token
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <p class="detail-text">You don't have an access token yet.</p>
+      <form method="post" action="{% url 'settings:claude-rotate' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Generate token</button>
+      </form>
+    {% endif %}
+  </div>
+{% endblock subcontent %}

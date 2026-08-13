@@ -1,6 +1,7 @@
 from django.urls import path
 
 import apps.settings.appearance.views as appearance_urls
+import apps.settings.claude.views as claude_urls
 import apps.settings.contacts.views as contact_urls
 import apps.settings.firm.views as firm_urls
 import apps.settings.intake_emails.views as intake_email_urls
@@ -48,6 +49,11 @@ urlpatterns = [
         session_urls.keyboard_shortcuts,
         name="keyboard-shortcuts",
     ),
+    # Claude Desktop (notes MCP connector)
+    path("settings/claude/", claude_urls.claude_index, name="claude-index"),
+    path("settings/claude/rotate/", claude_urls.claude_rotate, name="claude-rotate"),
+    path("settings/claude/revoke/", claude_urls.claude_revoke, name="claude-revoke"),
+    path("settings/claude/script/", claude_urls.claude_script, name="claude-script"),
     # Integrations
     path("settings/integrations/", integration_urls.index, name="integrations-index"),
     path(
