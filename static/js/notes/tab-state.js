@@ -100,6 +100,10 @@ export function revealActiveNote(persist = true) {
 // Dress a freshly rendered (all-collapsed) tree in this tab's expansion
 // state. Runs on load and synchronously inside the tree's htmx:afterSwap
 // (before refreshTree's scroll restore, which needs final heights).
+// Deliberately NO revealActiveNote here: the reveal persists its ids at
+// note-open time, so re-revealing on every refresh would resurrect
+// ancestors the user has since explicitly collapsed (and shift the
+// restored scroll position by their height).
 export function applyTreeState() {
   const container = document.getElementById("file-tree-container");
   if (!container) return;
@@ -112,5 +116,4 @@ export function applyTreeState() {
   container.querySelectorAll(".file-tree-matter").forEach((li) => {
     li.classList.toggle("collapsed", !matters.has(Number(li.dataset.matterId)));
   });
-  revealActiveNote();
 }

@@ -845,6 +845,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const storedPane = getPane();
   if (storedPane) setLeftTab(storedPane);
   setupFileTree();
+  // One-time reveal of the open note's ancestor chain (persisted). Note
+  // switches reveal via updateSidebarActive; tree refreshes deliberately
+  // do NOT re-reveal, so an explicit collapse of the chain sticks.
+  revealActiveNote();
   setupTreeMenu();
   setupPalette();
   // Folder CRUD modals (tree context menu) announce success via HX-Trigger;
