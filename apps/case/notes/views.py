@@ -1,7 +1,8 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
-from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 import apps.drive.google as drive_google
@@ -16,7 +17,8 @@ from apps.notes.views import _next_untitled
 def notes_add(request, matter_id):
     """Create a matter note instantly (no modal), optionally into one of the
     matter's folders (?folder=<id>), auto-named among its siblings. The
-    HX-Redirect opens the new note in the editor.
+    noteCreated trigger opens the new note in the editor (in-place swap,
+    no navigation).
     """
     matter, matters = get_matter_from_url(request, matter_id)
 
@@ -38,7 +40,7 @@ def notes_add(request, matter_id):
     )
     return HttpResponse(
         status=204,
-        headers={"HX-Redirect": reverse("notes:note-view", args=[note.id])},
+        headers={"HX-Trigger": json.dumps({"noteCreated": {"id": note.id}})},
     )
 
 

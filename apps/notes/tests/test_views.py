@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.urls import reverse
 
@@ -61,9 +63,9 @@ class TestNotesAdd:
         response = client_with_matter.post(url)
         assert response.status_code == 204
         note = Note.objects.get(matter=matter, title="Untitled")
-        assert response.headers["HX-Redirect"] == reverse(
-            "notes:note-view", args=[note.id]
-        )
+        assert json.loads(response.headers["HX-Trigger"]) == {
+            "noteCreated": {"id": note.id}
+        }
 
     def test_get_not_allowed(self, client_with_matter):
         matter = client_with_matter.matter
@@ -557,9 +559,9 @@ class TestStandaloneNoteAddEdit:
             assert resp.status_code == 204
             note = Note.objects.get(title=expected)
             assert note.matter_id is None
-            assert resp.headers["HX-Redirect"] == reverse(
-                "notes:note-view", args=[note.id]
-            )
+            assert json.loads(resp.headers["HX-Trigger"]) == {
+                "noteCreated": {"id": note.id}
+            }
 
 
 class TestNotesLaunch:

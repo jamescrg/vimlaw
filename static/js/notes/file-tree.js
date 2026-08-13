@@ -302,21 +302,30 @@ export function refreshTree() {
   const container = document.getElementById("file-tree-container");
   // The innerHTML swap resets every list's scroll; capture and restore so
   // a rename/create/delete doesn't bounce the panel to the top. List order
-  // is stable (files tree, matter trees, recents).
+  // is stable (files tree, matter trees, recents). Restore on the swap
+  // EVENT, not the ajax promise: when refreshTree is called from inside
+  // an htmx trigger handler (noteCreated), the request gets queued behind
+  // the busy body element and htmx resolves its promise immediately —
+  // before any swap. The afterSwap listener registered at bind time
+  // (applyTreeState) runs first, so heights are final when this restores.
   const scrolls = Array.from(container.querySelectorAll(".file-tree")).map(
     (el) => el.scrollTop,
+  );
+  container.addEventListener(
+    "htmx:afterSwap",
+    () => {
+      container.querySelectorAll(".file-tree").forEach((el, i) => {
+        if (scrolls[i]) el.scrollTop = scrolls[i];
+      });
+    },
+    { once: true },
   );
   // htmx.ajax processes the swapped content, so the new note rows' hx-get
   // attributes keep working. NOTE_DATA is re-set on every content swap,
   // so the active pill follows the currently open note.
-  window.htmx
-    .ajax("GET", `${container.dataset.refreshUrl}?note=${window.NOTE_DATA.id}`, {
-      target: "#file-tree-container",
-      swap: "innerHTML",
-    })
-    .then(() => {
-      container.querySelectorAll(".file-tree").forEach((el, i) => {
-        if (scrolls[i]) el.scrollTop = scrolls[i];
-      });
-    });
+  window.htmx.ajax(
+    "GET",
+    `${container.dataset.refreshUrl}?note=${window.NOTE_DATA.id}`,
+    { target: "#file-tree-container", swap: "innerHTML" },
+  );
 }

@@ -865,6 +865,29 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshTree();
     broadcast({ type: "tree-changed" });
   });
+  // Instant creation stays on-page: refresh the trees (scroll/expansion
+  // preserved), then open the new note by clicking its row — the same
+  // four-attr swap every note-open uses (canvas, URL push, active pill)
+  document.body.addEventListener("noteCreated", (e) => {
+    broadcast({ type: "tree-changed" });
+    // Open the new note once the refreshed tree is LIVE, by clicking its
+    // row — the same four-attr swap every note-open uses (canvas, URL
+    // push, active pill). Keyed to afterSettle: the ajax promise can
+    // resolve pre-swap (see refreshTree), and at afterSwap the new rows'
+    // htmx listeners aren't attached yet, so a click would be inert.
+    const container = document.getElementById("file-tree-container");
+    container.addEventListener(
+      "htmx:afterSettle",
+      () => {
+        const row = container.querySelector(
+          `.file-tree-note[data-note-id="${e.detail.id}"]`,
+        );
+        if (row) row.click();
+      },
+      { once: true },
+    );
+    refreshTree();
+  });
   setupBroadcast({
     "tree-changed": () => refreshTree(),
     "note-saved": (msg) => {
@@ -883,9 +906,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (container) window.location.assign(container.dataset.launchUrl);
     },
   });
-  // Note creation ends in HX-Redirect (full navigation of the creating
-  // tab), so there's no in-page success hook — announce any redirecting
-  // response to sibling tabs before this page unloads
+  // Genuine HX-Redirect navigations remain (deleting the open note via
+  // the folder-delete modal lands on launch) — announce them to sibling
+  // tabs before this page unloads
   document.body.addEventListener("htmx:afterRequest", (e) => {
     if (e.detail.xhr && e.detail.xhr.getResponseHeader("HX-Redirect")) {
       broadcast({ type: "tree-changed" });

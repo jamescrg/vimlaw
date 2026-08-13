@@ -164,7 +164,8 @@ def _next_untitled(existing_names, base="Untitled"):
 @require_POST
 def notes_add(request):
     """Create a general note instantly (no modal), optionally into a folder
-    (?folder=<id>), auto-named among its siblings. The HX-Redirect opens
+    (?folder=<id>), auto-named among its siblings. The noteCreated
+    trigger opens
     the new note in the editor.
     """
     folder = None
@@ -183,9 +184,11 @@ def notes_add(request):
         matter=None,
         folder=folder,
     )
+    # No navigation: the client refreshes the trees in place and opens
+    # the new note through the normal row-click swap (notes-editor.js)
     return HttpResponse(
         status=204,
-        headers={"HX-Redirect": reverse("notes:note-view", args=[note.id])},
+        headers={"HX-Trigger": json.dumps({"noteCreated": {"id": note.id}})},
     )
 
 
