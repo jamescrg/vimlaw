@@ -17,7 +17,8 @@ Three pieces:
   with the Ctrl+K palette (`_parse_note_scope`, `_palette_search` in
   `apps/notes/views.py`), so the two surfaces cannot drift.
 - **MCP server** (`tools/kosmos_notes_mcp.py`): a single-file stdio
-  translator (FastMCP) that Claude Desktop launches itself. Tools:
+  translator (the mcp SDK's MCPServer, the FastMCP successor) that Claude
+  Desktop launches itself. Tools:
   `find_matter`, `list_library`, `list_matter_notes`, `search_notes`,
   `read_note` (truncates past 40k chars with an explicit marker). All
   intelligence lives in the API; the script only formats.

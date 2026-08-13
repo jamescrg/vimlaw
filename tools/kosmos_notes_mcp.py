@@ -33,14 +33,14 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 KOSMOS_URL = os.environ.get("KOSMOS_URL", "https://kosmos.craiglegal.law").rstrip("/")
 KOSMOS_TOKEN = os.environ.get("KOSMOS_TOKEN", "")
 
 READ_TRUNCATE_CHARS = 40_000
 
-mcp = FastMCP("kosmos-notes")
+mcp = MCPServer("kosmos-notes")
 
 
 def _get(path, **params):
