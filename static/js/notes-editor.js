@@ -34,7 +34,12 @@ import {
   refreshTree,
   updateTreeCollapseIcon,
 } from "./notes/file-tree.js";
-import { getPane, setPane, revealActiveNote } from "./notes/tab-state.js";
+import {
+  getPane,
+  setPane,
+  revealActiveNote,
+  restoreTreeScroll,
+} from "./notes/tab-state.js";
 import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
@@ -849,6 +854,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // switches reveal via updateSidebarActive; tree refreshes deliberately
   // do NOT re-reveal, so an explicit collapse of the chain sticks.
   revealActiveNote();
+  // After expansion, put each pane back where this tab left it (full
+  // navigations — note creation, delete-to-launch — reset the DOM)
+  restoreTreeScroll();
   setupTreeMenu();
   setupPalette();
   // Folder CRUD modals (tree context menu) announce success via HX-Trigger;

@@ -23,12 +23,13 @@ function loadState() {
           ? s.expandedMatters
           : [],
         pane: s.pane || null,
+        treeScroll: Array.isArray(s.treeScroll) ? s.treeScroll : [],
       };
     }
   } catch (e) {
     // fall through to a fresh default
   }
-  return { expandedFolders: [], expandedMatters: [], pane: null };
+  return { expandedFolders: [], expandedMatters: [], pane: null, treeScroll: [] };
 }
 
 function saveState(s) {
@@ -95,6 +96,30 @@ export function revealActiveNote(persist = true) {
     }
   });
   if (s) saveState(s);
+}
+
+// Pane scroll positions survive full-page navigations (note creation
+// ends in an HX-Redirect; delete-open-note lands on launch). Captured
+// positionally per .file-tree list — same convention as refreshTree's
+// in-place capture — at pagehide, restored at load AFTER the expansion
+// state is applied (scroll needs the final heights).
+window.addEventListener("pagehide", () => {
+  const container = document.getElementById("file-tree-container");
+  if (!container) return;
+  const s = loadState();
+  s.treeScroll = [...container.querySelectorAll(".file-tree")].map(
+    (el) => el.scrollTop,
+  );
+  saveState(s);
+});
+
+export function restoreTreeScroll() {
+  const container = document.getElementById("file-tree-container");
+  if (!container) return;
+  const lists = container.querySelectorAll(".file-tree");
+  loadState().treeScroll.forEach((top, i) => {
+    if (top && lists[i]) lists[i].scrollTop = top;
+  });
 }
 
 // Dress a freshly rendered (all-collapsed) tree in this tab's expansion
