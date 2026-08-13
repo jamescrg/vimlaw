@@ -26,9 +26,14 @@
         </li>
         <li>
           In Claude Desktop, open Settings, then Developer, then Edit
-          Config. This opens <code>claude_desktop_config.json</code>. Paste
-          the block below, replacing <code>/path/to/kosmos_notes_mcp.py</code>
-          with where you saved the script.
+          Config. This opens <code>claude_desktop_config.json</code>. The
+          block below is the complete file: replace everything in the file
+          with it (including the file's outer braces, which the block
+          already provides). Then change
+          <code>/path/to/kosmos_notes_mcp.py</code> to where you saved the
+          script. (If the file already lists other servers under
+          <code>mcpServers</code>, instead add just the
+          <code>"kosmos"</code> entry alongside them.)
         </li>
         <li>
           Restart Claude Desktop. The kosmos tools appear under the tools
