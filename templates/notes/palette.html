@@ -7,18 +7,31 @@ rides the body's hx-headers.
 {% endcomment %}
 <div class="modal-dialog modal-lg notes-palette">
   <div class="modal-content">
-    <div class="modal-body notes-palette-body">
-      <input type="text"
-             id="palette-input"
-             class="notes-palette-input"
-             name="q"
-             value="{{ q }}"
-             placeholder="Search notes..."
-             autocomplete="off"
-             autofocus
-             hx-post="{% url 'notes:search-palette' %}"
-             hx-trigger="keyup changed delay:300ms, search"
-             hx-target="#palette-results" />
+    <div class="modal-header">
+      <h1 class="modal-title">Search Notes</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="notes-palette-input-group">
+        <input type="text"
+               id="palette-input"
+               class="notes-palette-input"
+               name="q"
+               value="{{ q }}"
+               placeholder="Search notes..."
+               autocomplete="off"
+               autofocus
+               hx-post="{% url 'notes:search-palette' %}"
+               hx-trigger="keyup changed delay:300ms, search"
+               hx-target="#palette-results" />
+        <span class="notes-palette-input-icon">
+          <i class="icon-search"></i>
+        </span>
+      </div>
       <div id="palette-results" class="notes-palette-results">{% include "notes/palette-results.html" %}</div>
       <div class="cmd-palette-hint">
         <span><kbd>&uarr;&darr;</kbd> navigate</span>
