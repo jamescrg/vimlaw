@@ -30,27 +30,13 @@ The trail renders as a collapsible section under the answer
 (templates/case/ai/research-trail.html), each case linking to the
 cluster viewer. Claim-support vetting (vet_citations) runs unchanged.
 
-## Effort (Conversation.effort, low/medium/high)
+## Effort budgets (research_tools.EFFORT_BUDGETS)
 
-One dial, both modes. Formerly research-only "depth" (quick/standard/
-deep, remapped in case.0075); renamed to plain `effort` in case.0076
-when Analysis gained effort tiers too.
-
-**Analysis** (the context apparatus, assemble_matter_context_with_selection):
-- low: no selector pass and no material bodies. Documents, case law,
-  email threads, and reference conversations stay out, even
-  ai_context="always" ones; the context is the case-file spine
-  (overview, contacts, witnesses, proceedings, facts, highlights,
-  tasks, events, billing) plus a "Not Loaded (low effort)" note telling
-  the model to ask for specifics or suggest raising the effort.
-- medium: today's pipeline. Flash selection over the auto manifest,
-  10-minute per-conversation reuse cache.
-- high: a fresh selection on every turn (the reuse cache read is
-  bypassed; effort is also part of the cache fingerprint) run on the
-  stronger selector model (selector.THOROUGH_SELECTOR_MODEL,
-  gemini-pro-latest) with a review-every-item prompt addendum.
-
-**Research** (the tool-call budgets, research_tools.EFFORT_BUDGETS):
+Research-only: the effort pill shows only in Research mode. Formerly
+"depth" (quick/standard/deep), remapped in case.0075; the field is plain
+`Conversation.effort` since case.0076. (A 2026-08-14 experiment gave
+Analysis mode effort tiers over the context apparatus; pruned the same
+day in favor of answer streaming, which attacks the real latency.)
 
 | effort | tool calls | search page | read cap | treatment tool | plan first | total text cap |
 |---|---|---|---|---|---|---|

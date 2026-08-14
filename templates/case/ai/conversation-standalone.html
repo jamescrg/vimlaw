@@ -87,7 +87,10 @@
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
           {% include "case/ai/mode-pill.html" with conversation=conversation %}
           {% include "case/ai/llm-pill.html" with conversation=conversation %}
-          <span id="effortPillWrap">{% include "case/ai/effort-pill.html" with conversation=conversation %}</span>
+          <span id="effortPillWrap"
+                {% if conversation.kind != "research" %}class="hide"{% endif %}>
+            {% include "case/ai/effort-pill.html" with conversation=conversation %}
+          </span>
           {% comment %}
             The vet-citations toggle was removed from the header: vetting
             defaults on and nobody ever turned it off. The backend flag,
@@ -196,6 +199,7 @@
     function aiModeChanged(kind) {
       const research = kind === 'research';
       document.getElementById('modePill').classList.toggle('ai-research-badge', research);
+      document.getElementById('effortPillWrap').classList.toggle('hide', !research);
       document.getElementById('draftChip').classList.toggle('hide', research);
       aiSyncLlmOptions(research);
       const llmPill = document.getElementById('llmPill'); // saved conversations only

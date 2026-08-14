@@ -113,17 +113,12 @@ def process_ai_request(
                 cache_key,
             )
 
-        # Effort steers the context apparatus: low skips the selector and
-        # loads no material bodies, high re-selects fresh each turn on the
-        # stronger selector model. (Research turns branch above; their
-        # effort sets the tool-call budget instead.)
         context_text = assemble_matter_context_with_selection(
             matter,
             user_message=user_message,
             llm=llm,
             user=user,
             conversation=conversation,
-            effort=conversation.effort or "medium",
         )
 
         # A linked draft appends its text and the edit protocol; the AI can

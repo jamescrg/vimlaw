@@ -1078,9 +1078,8 @@ def test_new_chat_window_has_mode_dropdown(client, matter):
     assert response.status_code == 200
     html = response.content.decode()
     assert 'id="modePill"' in html
-    # The effort pill shows in both modes (analysis included).
-    assert 'id="effortPillWrap"' in html
-    assert not re.search(r'id="effortPillWrap"\s+class="hide"', html)
+    # Effort pill wrapper starts hidden for an analysis chat.
+    assert re.search(r'id="effortPillWrap"\s+class="hide"', html)
 
 
 def test_research_conversation_window_shows_effort_pill(client, matter, user):

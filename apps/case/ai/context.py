@@ -157,7 +157,6 @@ def collect_context_items(
     current_conversation=None,
     since=None,
     include_auto=False,
-    light=False,
 ) -> list[ContextItem]:
     """
     Collect items that are always included in context (ai_context="always"
@@ -174,20 +173,12 @@ def collect_context_items(
             (used by the nightly auto-summary to build an incremental delta)
         include_auto: Include ai_context="auto" Documents/CaseLaw (and all
             Notes) with full content instead of leaving them to the selector
-        light: Low-effort context. Skip the material bodies (documents,
-            case law, email threads, reference conversations, even
-            ai_context="always" ones) and keep only the curated, capped
-            spine: highlights and facts.
 
     Returns a list of ContextItem objects sorted by importance (most important first).
     """
     items = []
 
-    docs = (
-        Document.objects.none()
-        if light
-        else Document.objects.filter(matter=matter).exclude(ai_context="never")
-    )
+    docs = Document.objects.filter(matter=matter).exclude(ai_context="never")
     if since:
         docs = docs.filter(updated_at__gte=since)
 
@@ -295,11 +286,7 @@ def collect_context_items(
         )
 
     # Collect Case Law — only "always" items
-    caselaw_qs = (
-        CaseLaw.objects.none()
-        if light
-        else CaseLaw.objects.filter(matter=matter).exclude(ai_context="never")
-    )
+    caselaw_qs = CaseLaw.objects.filter(matter=matter).exclude(ai_context="never")
     if not include_auto:
         caselaw_qs = caselaw_qs.filter(ai_context="always")
     if since:
@@ -336,9 +323,7 @@ def collect_context_items(
     # incremental auto-summaries see just the delta.
     # dedup: a message synced from two mailboxes contributes once.
     emails_qs = (
-        Email.objects.none()
-        if light
-        else Email.objects.filter(matter=matter)
+        Email.objects.filter(matter=matter)
         .dedup()
         .exclude(ai_context="never")
         .prefetch_related("attachment_files")
@@ -363,13 +348,9 @@ def collect_context_items(
         )
 
     # Collect Conversations with ai_context="always" (full content, HIGH importance)
-    reference_convos = (
-        Conversation.objects.none()
-        if light
-        else Conversation.objects.filter(matter=matter, ai_context="always").order_by(
-            "-updated_at"
-        )
-    )
+    reference_convos = Conversation.objects.filter(
+        matter=matter, ai_context="always"
+    ).order_by("-updated_at")
     if since:
         reference_convos = reference_convos.filter(updated_at__gte=since)
     if current_conversation:
@@ -677,7 +658,7 @@ def assemble_matter_context(matter, user=None, conversation=None) -> str:
 CONTEXT_REUSE_SECONDS = 600
 
 
-def _context_fingerprint(matter, include_library, llm, user, effort="medium"):
+def _context_fingerprint(matter, include_library, llm, user):
     """Cheap change marker for the matter's AI-visible material.
 
     Count + latest-updated_at per source table. Any write to the material
@@ -702,7 +683,7 @@ def _context_fingerprint(matter, include_library, llm, user, effort="medium"):
     if include_library:
         querysets["lib"] = get_library_notes()
 
-    parts = [llm, str(include_library), str(user.id if user else ""), effort]
+    parts = [llm, str(include_library), str(user.id if user else "")]
     for label, qs in querysets.items():
         agg = qs.aggregate(n=Count("id"), latest=Max("updated_at"))
         parts.append(f"{label}:{agg['n']}:{agg['latest']}")
@@ -710,13 +691,7 @@ def _context_fingerprint(matter, include_library, llm, user, effort="medium"):
 
 
 def assemble_matter_context_with_selection(
-    matter,
-    user_message,
-    llm,
-    user=None,
-    conversation=None,
-    include_library=True,
-    effort="medium",
+    matter, user_message, llm, user=None, conversation=None, include_library=True
 ) -> str:
     """
     Assemble context using intelligent selection for ai_context="auto" items.
@@ -736,15 +711,6 @@ def assemble_matter_context_with_selection(
         include_library: Offer firm-library notes (standalone notes in
             AI-library folders) to the selector, and inject "always" library
             notes. The nightly auto-summary turns this off.
-        effort: How hard the context apparatus works (low/medium/high).
-            Low: no selector pass and no material bodies (documents, case
-            law, emails, reference conversations stay out, even "always"
-            ones); the assembled context is the curated case-file spine
-            and a note saying what was left out. Medium: today's pipeline
-            (Flash selection over the auto manifest, 10-minute reuse
-            cache). High: a fresh selection every turn (the reuse cache is
-            bypassed) run on the stronger selector model with a
-            review-everything prompt.
     """
     from .selector import (
         MODEL_CONTEXT_LIMITS,
@@ -761,12 +727,8 @@ def assemble_matter_context_with_selection(
     ctx_cache_key = f"ai_ctx_{conversation.id}" if conversation else None
     fingerprint = None
     if ctx_cache_key:
-        fingerprint = _context_fingerprint(matter, include_library, llm, user, effort)
-        # High effort re-selects fresh on every turn: a careful selection is
-        # per-question, and reusing the previous question's picks is exactly
-        # the corner the user opted out of. (The entry is still written, so
-        # nothing else changes.)
-        entry = None if effort == "high" else cache.get(ctx_cache_key)
+        fingerprint = _context_fingerprint(matter, include_library, llm, user)
+        entry = cache.get(ctx_cache_key)
         if entry and entry.get("fingerprint") == fingerprint:
             logger.info(
                 "Reusing assembled context for conversation %s", conversation.id
@@ -790,7 +752,6 @@ def assemble_matter_context_with_selection(
     always_items = collect_context_items(
         matter,
         current_conversation=conversation,
-        light=(effort == "low"),
     )
 
     # Build request info and legal prompt
@@ -834,25 +795,16 @@ def assemble_matter_context_with_selection(
     # Reserve 10K for conversation history + response
     remaining_budget = total_budget - fixed_tokens - 10_000
 
-    # Build manifest and run selector for "auto" items. Low effort skips
-    # the whole apparatus: no manifest (which eagerly materializes every
-    # auto document's OCR text, every conversation transcript, invoice
-    # aggregates, and the firm library) and no selector call.
-    manifest_items, content_map = ([], {})
-    if effort != "low":
-        manifest_items, content_map = build_manifest(
-            matter, current_conversation=conversation, include_library=include_library
-        )
+    # Build manifest and run selector for "auto" items
+    manifest_items, content_map = build_manifest(
+        matter, current_conversation=conversation, include_library=include_library
+    )
 
     selected_contents = []
     unselected_items = []
     if manifest_items and remaining_budget > 0:
         selected_contents, unselected_items = select_context(
-            manifest_items,
-            content_map,
-            user_message,
-            remaining_budget,
-            thorough=(effort == "high"),
+            manifest_items, content_map, user_message, remaining_budget
         )
 
     # Build the selected items section
@@ -866,15 +818,6 @@ def assemble_matter_context_with_selection(
 
     # Build "also available" section for non-selected auto items
     also_available = ""
-    if effort == "low":
-        also_available = (
-            "\n\n## Not Loaded (low effort)\n"
-            "This turn ran at low effort: document, email, case-law and "
-            "prior-conversation contents were not loaded, only the case-file "
-            "spine above. If the question turns on a specific document or "
-            "record, say which one and suggest raising the Effort control "
-            "in the chat header."
-        )
     if unselected_items:
         lines = [
             "\n\n## Also Available (not included in this context)",
