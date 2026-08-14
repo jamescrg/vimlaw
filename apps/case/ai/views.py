@@ -611,6 +611,8 @@ def ai_status(request, conv_id):
             "elapsed_seconds": elapsed_seconds,
             # Research runs accumulate a live log of searches/reads.
             "research_log": status_data.get("research_log"),
+            # Classic runs stream the answer text as it generates.
+            "partial": status_data.get("partial"),
         },
     )
 

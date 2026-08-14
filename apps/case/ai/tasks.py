@@ -68,20 +68,34 @@ def process_ai_request(
     cache_key = f"ai_status_{conversation_id}"
     started_at = time.time()
 
+    # The answer streams into the status payload as it generates: on_text
+    # below accumulates deltas here, and every status write carries the
+    # text so far, so the 1s status poll renders a growing partial answer
+    # and post-generation phases (applying/verifying) don't blank it.
+    partial_parts: list[str] = []
+    last_stream_push = [0.0]
+
     def update_status(status: str, message: str):
         """Update the cache with current status, unless cancelled."""
         current = cache.get(cache_key, {})
         if current.get("status") == "cancelled":
             return
-        cache.set(
-            cache_key,
-            {
-                "status": status,
-                "message": message,
-                "started_at": started_at,
-            },
-            timeout=600,
-        )
+        payload = {
+            "status": status,
+            "message": message,
+            "started_at": started_at,
+        }
+        if partial_parts:
+            payload["partial"] = "".join(partial_parts)
+        cache.set(cache_key, payload, timeout=600)
+
+    def on_text(delta: str):
+        """Accumulate streamed answer text; throttle cache writes to 2/s."""
+        partial_parts.append(delta)
+        now = time.monotonic()
+        if now - last_stream_push[0] >= 0.5:
+            last_stream_push[0] = now
+            update_status("streaming", "Writing...")
 
     def is_cancelled():
         """Check if the request has been cancelled."""
@@ -257,6 +271,7 @@ def process_ai_request(
                 chat_history,
                 model=model,
                 on_thought=on_thought,
+                on_text=on_text,
                 is_cancelled=is_cancelled,
                 conversation_id=conversation_id,
             )
@@ -270,6 +285,7 @@ def process_ai_request(
                 context_text,
                 chat_history,
                 model=claude_model,
+                on_text=on_text,
                 is_cancelled=is_cancelled,
             )
 

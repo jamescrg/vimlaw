@@ -340,3 +340,71 @@ class TestConversationListFilter:
         assert 'id="ai-participant-select"' in html
         assert 'name="q"' in html
         assert "ai-llm-select" not in html
+
+
+class TestAnswerStreaming:
+    """The classic answer streams into the status payload as it generates."""
+
+    def test_status_poll_renders_partial_answer(self, client, matter, user):
+        from django.core.cache import cache
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "streaming",
+                "message": "Writing...",
+                "partial": "The **contract** is enforceable because",
+                "started_at": 0,
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert "ai-message-streaming" in html
+        assert "contract" in html
+        # Still polling: the indicator must keep its refresh trigger.
+        assert 'id="ai-status-indicator"' in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_worker_streams_partial_then_completes(
+        self, client, matter, user, monkeypatch
+    ):
+        from django.core.cache import cache
+
+        from apps.case.ai import tasks as ai_tasks
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache_key = f"ai_status_{conversation.id}"
+        seen = {}
+
+        monkeypatch.setattr(
+            "apps.case.ai.context.assemble_matter_context_with_selection",
+            lambda *a, **k: "CTX",
+        )
+        monkeypatch.setattr(ai_tasks, "verify_all_citations", lambda text: [])
+        monkeypatch.setattr(ai_tasks.time, "sleep", lambda s: None)
+
+        def fake_stream(context, history, model, on_thought, on_text, **kwargs):
+            on_text("Hello ")
+            # The partial must be visible in the status payload mid-stream.
+            seen["mid"] = cache.get(cache_key, {})
+            on_text("world.")
+            return "Hello world.", 10, 5
+
+        monkeypatch.setattr(ai_tasks, "send_to_gemini_streaming", fake_stream)
+
+        ai_tasks.process_ai_request(
+            conversation.id, matter.id, "Hi", user.id, "gemini-pro-latest"
+        )
+
+        assert seen["mid"].get("partial") == "Hello "
+        final = cache.get(cache_key)
+        assert final["status"] == "complete"
+        assert final["response"] == "Hello world."
+        cache.delete(cache_key)

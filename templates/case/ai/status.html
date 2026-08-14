@@ -3,9 +3,27 @@
      hx-get="{% url 'case:ai-status' conversation.id %}"
      hx-trigger="load delay:1s"
      hx-swap="outerHTML">
+  {% if partial %}
+    {% comment %}
+    The answer so far, streamed from the worker (each poll swaps in the
+    latest text). Mid-stream markdown can be momentarily unbalanced;
+    the final assistant message replaces this whole indicator.
+    {% endcomment %}
+    <div class="ai-message ai-message-assistant ai-message-streaming">
+      <div class="ai-message-header">
+        <i class="icon-bot"></i>
+        <span>Assistant</span>
+      </div>
+      <div class="ai-message-content">
+        <div class="ai-message-text">{{ partial|render_markdown }}</div>
+      </div>
+    </div>
+  {% endif %}
   <div class="ai-status-content">
     {% if status == "context" %}
       <i class="icon-sparkles pulse"></i>
+    {% elif status == "streaming" %}
+      <i class="icon-pencil-square pulse"></i>
     {% elif status == "connecting" %}
       <i class="icon-cloud-upload spin"></i>
     {% elif status == "thinking" %}

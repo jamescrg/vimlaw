@@ -81,6 +81,7 @@ def send_to_claude(
     system_context: str,
     messages: list[dict],
     model: str = "claude-sonnet-4-6",
+    on_text: Callable[[str], None] | None = None,
     is_cancelled: Callable[[], bool] | None = None,
 ) -> tuple[str, int, int]:
     """
@@ -100,6 +101,8 @@ def send_to_claude(
         system_context: The system prompt with matter context
         messages: List of {"role": "user"|"assistant", "content": str}
         model: Claude model to use — see CLAUDE_MODELS in tasks.py
+        on_text: Optional callback called with each answer-text delta
+            (the caller accumulates; used to surface the partial answer)
         is_cancelled: Optional callback that returns True if request should be cancelled
 
     Returns:
@@ -132,6 +135,8 @@ def send_to_claude(
             if is_cancelled and is_cancelled():
                 raise InterruptedError("Request cancelled")
             response_parts.append(text)
+            if on_text:
+                on_text(text)
 
         # Get final usage stats
         final_message = stream.get_final_message()
