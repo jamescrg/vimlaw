@@ -1066,6 +1066,11 @@ def test_modal_keeps_requested_llm(client, matter):
     assert not re.search(r'value="gemini-pro-latest"\s+selected', html)
 
 
+def test_modal_model_sits_above_name(client, matter):
+    html = _prompt_html(client, matter)
+    assert html.index("new-conversation-llm") < html.index("new-conversation-title")
+
+
 def test_new_chat_window_has_mode_dropdown(client, matter):
     """A fresh chat opens in Analysis with the per-turn mode dropdown."""
     url = reverse("case:ai-new-conversation-view", args=[matter.id])

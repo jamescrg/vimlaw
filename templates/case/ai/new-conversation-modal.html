@@ -13,20 +13,20 @@
             class="form-compact"
             onsubmit="return aiLaunchNewConversation(event);">
         <div class="form-group">
-          <label for="new-conversation-title">Name</label>
-          <input type="text"
-                 id="new-conversation-title"
-                 class="form-control"
-                 required
-                 autofocus>
-        </div>
-        <div class="form-group">
           <label for="new-conversation-llm">Model</label>
           <select id="new-conversation-llm">
             {% for key, label in llm_choices %}
               <option value="{{ key }}" {% if key == llm %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
+        </div>
+        <div class="form-group">
+          <label for="new-conversation-title">Name</label>
+          <input type="text"
+                 id="new-conversation-title"
+                 class="form-control"
+                 required
+                 autofocus>
           <div class="detail-text">
             The chat opens in Analysis mode. The mode dropdown in the chat header switches any turn to Research (which defaults to Gemini).
           </div>

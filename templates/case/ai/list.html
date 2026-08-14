@@ -50,159 +50,59 @@
       <div class="filter-tools">
         <a href="#"
            class="btn-icon"
-           hx-get="{% url 'case:ai-new-conversation-prompt' matter.id %}?llm={{ selected_llm }}"
+           hx-get="{% url 'case:ai-new-conversation-prompt' matter.id %}"
            hx-target="#htmx-modal-container"
            hx-trigger="click"
-           title="New {{ selected_llm_display }} conversation">
+           title="New conversation">
           <i class="icon-plus"></i>
         </a>
         <div class="dropdown" x-data="dropdown()">
           <button type="button"
-                  id="ai-llm-select"
-                  class="select-btn filter-dropdown-button toggle-active"
+                  id="ai-participant-select"
+                  class="select-btn filter-dropdown-button {% if selected_participant %}toggle-active{% endif %}"
                   x-ref="button"
                   @click="toggle()"
                   :aria-expanded="open">
-            <span>{{ selected_llm_display }}</span>
+            <span>
+              {% if selected_participant %}
+                {{ selected_participant.get_full_name }}
+              {% else %}
+                All participants
+              {% endif %}
+            </span>
             <small>
               <i class="icon-chevron-down"></i>
             </small>
           </button>
-          <ul class="dropdown-menu" x-ref="menu" x-show="open">
-            {% for key, label in llm_choices %}
+          <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+            <li>
+              <a class="dropdown-item {% if not selected_participant %}active{% endif %}"
+                 href="#"
+                 hx-get="{% url 'case:ai-filter' matter.id %}?participant="
+                 hx-target="#ai-conversations">All participants</a>
+            </li>
+            {% for participant in participant_choices %}
               <li>
-                <a class="dropdown-item {% if key == selected_llm %}active{% endif %}"
+                <a class="dropdown-item {% if selected_participant.id == participant.id %}active{% endif %}"
                    href="#"
-                   hx-get="{% url 'case:ai-select-llm' matter.id key %}"
-                   hx-target="#ai-conversations">{{ label }}</a>
+                   hx-get="{% url 'case:ai-filter' matter.id %}?participant={{ participant.id }}"
+                   hx-target="#ai-conversations">{{ participant.get_full_name }}</a>
               </li>
             {% endfor %}
           </ul>
         </div>
-        <a href="{% url 'case:ai-context-preview' matter.id %}"
-           target="_blank"
-           class="btn-icon ai-context-btn"
-           title="Preview AI context">
-          <i class="icon-file-text"></i> Context
-        </a>
+        <input type="search"
+               name="q"
+               class="toolbar-search"
+               placeholder="Filter conversations . . ."
+               value="{{ filter_q }}"
+               autocomplete="off"
+               hx-get="{% url 'case:ai-filter' matter.id %}"
+               hx-vals='{"partial": "table"}'
+               hx-trigger="keyup changed delay:300ms, search"
+               hx-target="#ai-table">
       </div>
     {% endif %}
   </div>
 </div>
-<div class="table-container">
-  <table class="table ai-conversations-table">
-    <tr>
-      <th class="col-select">
-        {% url 'case:ai-select-all' matter.id as select_all_url %}
-        {% include "selection/select-all-btn.html" with select_all_url=select_all_url all_selected=all_selected %}
-      </th>
-      <th class="created">
-        Date
-        <button class="btn-sort {% if 'created_at' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:ai-sort' matter.id 'created_at' %}"
-                hx-target="#ai-conversations">
-          <i class="icon-chevrons-up-down"></i>
-        </button>
-      </th>
-      <th class="title">
-        Conversation
-        <button class="btn-sort {% if 'title' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:ai-sort' matter.id 'title' %}"
-                hx-target="#ai-conversations">
-          <i class="icon-chevrons-up-down"></i>
-        </button>
-      </th>
-      <th class="llm">Model</th>
-      <th class="messages">Messages</th>
-      <th class="participants">Participants</th>
-      <th class="updated">
-        Last Activity
-        <button class="btn-sort {% if 'last_activity' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:ai-sort' matter.id 'last_activity' %}"
-                hx-target="#ai-conversations">
-          <i class="icon-chevrons-up-down"></i>
-        </button>
-      </th>
-      <th class="reference">
-        AI
-        <button class="btn-sort {% if 'ai_context' in current_order %}active{% endif %}"
-                hx-get="{% url 'case:ai-sort' matter.id 'ai_context' %}"
-                hx-target="#ai-conversations">
-          <i class="icon-chevrons-up-down"></i>
-        </button>
-      </th>
-    </tr>
-    {% for conv in conversations %}
-      <tr class="ai-conversation-row">
-        <td class="col-select">
-          {% url 'case:ai-toggle-select' matter.id conv.id as toggle_url %}
-          {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=conv.id selected_ids=selected_conversations %}
-        </td>
-        <td class="created">{{ conv.created_at|date:"Y-m-d" }}</td>
-        <td class="title">
-          <div class="ai-title-cell">
-            <div class="dropdown" x-data="dropdown()">
-              <a href="#"
-                 class="ai-title-link"
-                 x-ref="button"
-                 @click.prevent="toggle()"
-                 :aria-expanded="open">{{ conv.title }}</a>
-              <ul class="dropdown-menu" x-ref="menu" x-show="open">
-                <li>
-                  <a class="dropdown-item"
-                     href="{% url 'case:ai-conversation-view' conv.id %}"
-                     target="_blank"><i class="icon-external-link"></i> Resume</a>
-                </li>
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-get="{% url 'case:ai-rename-form' conv.id %}"
-                     hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Rename</a>
-                </li>
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-post="{% url 'case:ai-clone-conversation' conv.id %}"
-                     hx-swap="none"><i class="icon-copy"></i> Clone</a>
-                </li>
-                <li>
-                  <a class="dropdown-item"
-                     href="#"
-                     hx-get="{% url 'case:ai-append-form' conv.id %}"
-                     hx-target="#htmx-modal-container"><i class="icon-arrow-right-to-line"></i> Append to...</a>
-                </li>
-                <li>
-                  <a class="dropdown-item text-danger"
-                     href="#"
-                     hx-post="{% url 'case:ai-delete-conversation' conv.id %}"
-                     hx-confirm="Delete this conversation?"
-                     hx-swap="none"><i class="icon-trash-2"></i> Delete</a>
-                </li>
-              </ul>
-            </div>
-            {% if conv.kind == "research" %}<span class="app-badge ai-research-badge">Research</span>{% endif %}
-            {% if conv.draft_link %}
-              <span class="app-badge ai-draft-badge" title="{{ conv.draft_link.name }}"><i class="icon-file-text"></i> Draft</span>
-            {% endif %}
-          </div>
-        </td>
-        <td class="llm">{{ conv.get_llm_display }}</td>
-        <td class="messages">{{ conv.messages.count }}</td>
-        <td class="participants">
-          {% with participants=conv.get_participants %}
-            {% for user in participants|slice:":3" %}
-              <span class="participant-badge" title="{{ user.get_full_name }}">{{ user.first_name|slice:":1"|default:user.username|slice:":1" }}</span>
-            {% endfor %}
-            {% if participants.count > 3 %}<span class="participant-more">+{{ participants.count|add:"-3" }}</span>{% endif %}
-          {% endwith %}
-        </td>
-        <td class="updated">{{ conv.last_activity|naturaltime }}</td>
-        <td class="reference" id="conv-ai-{{ conv.id }}">{% include "case/ai/ai-context-cell.html" %}</td>
-      </tr>
-    {% empty %}
-      <tr>
-        <td colspan="8" class="empty-message">No conversations yet. Click a button above to start a new conversation.</td>
-      </tr>
-    {% endfor %}
-  </table>
-</div>
+{% include "case/ai/table.html" %}

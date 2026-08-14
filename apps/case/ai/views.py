@@ -14,6 +14,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from apps.accounts.models import CustomUser
 from apps.case.models import Fact, Highlight
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.management.selection import (
@@ -57,17 +58,6 @@ def get_accessible_matters():
     return Matter.objects.all()
 
 
-def get_selected_llm(request):
-    """Get the selected LLM from session, defaulting to Gemini Pro (Latest)."""
-    return request.session.get("ai_selected_llm", "gemini-pro-latest")
-
-
-def get_llm_display(llm_key):
-    """Get the display name for an LLM key."""
-    llm_dict = dict(Conversation.LLM_CHOICES)
-    return llm_dict.get(llm_key, llm_key)
-
-
 def annotate_last_activity(queryset):
     """Annotate conversations with last message timestamp, falling back to created_at."""
     return queryset.select_related("draft_link").annotate(
@@ -75,31 +65,58 @@ def annotate_last_activity(queryset):
     )
 
 
+def get_conversation_list_context(request, matter):
+    """Filter/sort/selection context shared by the AI tab's list partials.
+
+    The keyword/participant filter and the sort order persist per matter in
+    the session ("ai_filter" key, applied through ConversationFilter);
+    row selection rides its own session key.
+    """
+    filter_session_key = get_session_key("ai_filter", matter.id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    conversations = annotate_last_activity(Conversation.objects.filter(matter=matter))
+    if filter_data:
+        conversations = ConversationFilter(filter_data, queryset=conversations).qs
+    else:
+        conversations = conversations.order_by("-created_at", "-id")
+
+    current_order = filter_data.get("order_by", "-created_at")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else "-created_at"
+
+    conv_list = list(conversations)
+    selection_key = get_session_key("selected_conversations", matter.id)
+    selected_conversations = get_selected_ids(request, selection_key)
+    visible_ids = [c.id for c in conv_list]
+
+    participant_choices = list(
+        CustomUser.objects.filter(ai_messages__conversation__matter=matter)
+        .distinct()
+        .order_by("first_name", "last_name")
+    )
+    participant_id = str(filter_data.get("participant", ""))
+    selected_participant = next(
+        (u for u in participant_choices if str(u.id) == participant_id), None
+    )
+
+    return {
+        "matter": matter,
+        "conversations": conv_list,
+        "current_order": current_order,
+        "selected_conversations": selected_conversations,
+        "all_selected": all_visible_selected(selected_conversations, visible_ids),
+        "filter_q": filter_data.get("q", ""),
+        "participant_choices": participant_choices,
+        "selected_participant": selected_participant,
+    }
+
+
 @login_required
 def ai_index(request, matter_id):
     """Main AI view - list of conversations."""
     matter, matters = get_matter_from_url(request, matter_id)
     set_last_tab(request, matter_id, "ai")
-
-    # Get filter data from session
-    filter_session_key = get_session_key("ai_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-
-    # Get conversations and apply filter with last_activity annotation
-    conversations = annotate_last_activity(Conversation.objects.filter(matter=matter))
-    if filter_data:
-        filter_obj = ConversationFilter(filter_data, queryset=conversations)
-        conversations = filter_obj.qs
-    else:
-        conversations = conversations.order_by("-created_at", "-id")
-
-    # Get current sort order
-    current_order = filter_data.get("order_by", "-created_at")
-    if isinstance(current_order, list):
-        current_order = current_order[0] if current_order else "-created_at"
-
-    # Get selected LLM from session
-    selected_llm = get_selected_llm(request)
 
     # Backfill: queue summary generation for documents missing summaries
     from apps.case.models import Document
@@ -141,13 +158,8 @@ def ai_index(request, matter_id):
     context = {
         "app": "matters",
         "subapp": "ai",
-        "matter": matter,
         "matters": matters,
-        "conversations": conversations,
-        "current_order": current_order,
-        "selected_llm": selected_llm,
-        "selected_llm_display": get_llm_display(selected_llm),
-        "llm_choices": Conversation.LLM_CHOICES,
+        **get_conversation_list_context(request, matter),
     }
 
     return render(request, "case/ai/main.html", context)
@@ -157,46 +169,8 @@ def ai_index(request, matter_id):
 def ai_list(request, matter_id):
     """Return conversation list partial (for HTMX refresh)."""
     matter, _ = get_matter_from_url(request, matter_id)
-
-    # Get filter data from session
-    filter_session_key = get_session_key("ai_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-
-    # Get conversations and apply filter with last_activity annotation
-    conversations = annotate_last_activity(Conversation.objects.filter(matter=matter))
-    if filter_data:
-        filter_obj = ConversationFilter(filter_data, queryset=conversations)
-        conversations = filter_obj.qs
-    else:
-        conversations = conversations.order_by("-created_at", "-id")
-
-    # Get current sort order
-    current_order = filter_data.get("order_by", "-created_at")
-    if isinstance(current_order, list):
-        current_order = current_order[0] if current_order else "-created_at"
-
-    # Get selected LLM from session
-    selected_llm = get_selected_llm(request)
-
-    # Selection state
-    conv_list = list(conversations)
-    session_key = get_session_key("selected_conversations", matter_id)
-    selected_conversations = get_selected_ids(request, session_key)
-    visible_ids = [c.id for c in conv_list]
-
     return render(
-        request,
-        "case/ai/list.html",
-        {
-            "conversations": conv_list,
-            "matter": matter,
-            "current_order": current_order,
-            "selected_llm": selected_llm,
-            "selected_llm_display": get_llm_display(selected_llm),
-            "llm_choices": Conversation.LLM_CHOICES,
-            "selected_conversations": selected_conversations,
-            "all_selected": all_visible_selected(selected_conversations, visible_ids),
-        },
+        request, "case/ai/list.html", get_conversation_list_context(request, matter)
     )
 
 
@@ -223,12 +197,37 @@ def ai_sort(request, matter_id, order):
 
 
 @login_required
-def ai_select_llm(request, matter_id, llm):
-    """Set the selected LLM in session."""
-    valid_llms = [choice[0] for choice in Conversation.LLM_CHOICES]
-    if llm in valid_llms:
-        request.session["ai_selected_llm"] = llm
-    return redirect("case:ai-list", matter_id=matter_id)
+def ai_filter(request, matter_id):
+    """Update the conversation keyword/participant filter (session-persisted).
+
+    The toolbar search input targets just the table (partial=table) so a
+    swap mid-typing never steals focus; participant picks re-render the
+    whole list so the dropdown's label updates too.
+    """
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("ai_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    if "q" in request.GET:
+        q = request.GET.get("q", "").strip()
+        if q:
+            filter_data["q"] = q
+        else:
+            filter_data.pop("q", None)
+    if "participant" in request.GET:
+        participant = request.GET.get("participant", "")
+        if participant.isdigit():
+            filter_data["participant"] = participant
+        else:
+            filter_data.pop("participant", None)
+    request.session[filter_session_key] = filter_data
+
+    template = (
+        "case/ai/table.html"
+        if request.GET.get("partial") == "table"
+        else "case/ai/list.html"
+    )
+    return render(request, template, get_conversation_list_context(request, matter))
 
 
 @login_required

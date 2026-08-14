@@ -2,7 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 
 from apps.accounts.access import matter_access_required
-from apps.management.selection import get_session_key
+
+# Re-exported: the case tab view modules import get_session_key from here.
+from apps.management.selection import get_session_key  # noqa: F401
 from apps.matters.models import Matter
 
 # Valid tabs for the case app
@@ -151,8 +153,6 @@ def tab_content(request, matter_id, tab):
 
 def _get_case_tab_data(request, matter, matters, matter_id, tab):
     """Fetch data for the specified case tab."""
-    from apps.case.ai.filters import ConversationFilter
-    from apps.case.ai.models import Conversation
     from apps.case.documents.views import get_document_data
     from apps.case.facts.views import get_facts_data
     from apps.case.highlights.views import get_highlights_data
@@ -205,40 +205,11 @@ def _get_case_tab_data(request, matter, matters, matter_id, tab):
         }
 
     elif tab == "ai":
-        # AI tab has custom logic
-        from apps.case.ai.views import annotate_last_activity
-
-        filter_session_key = get_session_key("ai_filter", matter_id)
-        filter_data = request.session.get(filter_session_key, {})
-
-        conversations = annotate_last_activity(
-            Conversation.objects.filter(matter=matter)
-        )
-        if filter_data:
-            filter_obj = ConversationFilter(filter_data, queryset=conversations)
-            conversations = filter_obj.qs
-        else:
-            conversations = conversations.order_by("-created_at", "-id")
-
-        current_order = filter_data.get("order_by", "-created_at")
-        if isinstance(current_order, list):
-            current_order = current_order[0] if current_order else "-created_at"
-
-        # Get LLM choices
-        llm_session_key = get_session_key("ai_llm", matter_id)
-        selected_llm = request.session.get(llm_session_key, "gemini-pro-latest")
-        llm_choices = Conversation.LLM_CHOICES
-        selected_llm_display = dict(llm_choices).get(
-            selected_llm, "Gemini Pro (Latest)"
-        )
+        from apps.case.ai.views import get_conversation_list_context
 
         return {
             "tab_template": "case/ai/list.html",
-            "conversations": conversations,
-            "current_order": current_order,
-            "llm_choices": llm_choices,
-            "selected_llm": selected_llm,
-            "selected_llm_display": selected_llm_display,
+            **get_conversation_list_context(request, matter),
         }
 
     elif tab == "research":

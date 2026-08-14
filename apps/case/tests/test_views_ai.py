@@ -1,7 +1,7 @@
 import pytest
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.case.ai.models import Conversation
+from apps.case.ai.models import Conversation, Message
 from apps.case.ai.selector import MODEL_CONTEXT_LIMITS, MODEL_HARD_LIMITS
 from apps.case.ai.tasks import CLAUDE_MODELS, GEMINI_MODELS
 from apps.case.ai.views import RETIRED_LLMS, VALID_LLMS
@@ -255,3 +255,88 @@ class TestSetConversationLLM:
             assert response.status_code == 400
         conversation.refresh_from_db()
         assert conversation.llm == "gemini-pro-latest"
+
+
+class TestConversationListFilter:
+    """The toolbar keyword search + participant dropdown (session-persisted)."""
+
+    def _conv(self, matter, user, title, content=None, msg_user=None):
+        conv = Conversation.objects.create(matter=matter, title=title, user=user)
+        if content:
+            Message.objects.create(
+                conversation=conv, role="user", content=content, user=msg_user or user
+            )
+        return conv
+
+    def test_keyword_matches_title(self, client, matter, user):
+        self._conv(matter, user, "Deposition prep")
+        self._conv(matter, user, "Billing question")
+        response = client.get(f"/case/{matter.id}/ai/filter/", {"q": "deposition"})
+        html = response.content.decode()
+        assert "Deposition prep" in html
+        assert "Billing question" not in html
+
+    def test_keyword_matches_message_content(self, client, matter, user):
+        self._conv(matter, user, "Chat A", content="the doctrine of laches")
+        self._conv(matter, user, "Chat B", content="something else")
+        html = client.get(
+            f"/case/{matter.id}/ai/filter/", {"q": "laches"}
+        ).content.decode()
+        assert "Chat A" in html
+        assert "Chat B" not in html
+
+    def test_keyword_filter_persists_in_session(self, client, matter, user):
+        self._conv(matter, user, "Deposition prep")
+        self._conv(matter, user, "Billing question")
+        client.get(f"/case/{matter.id}/ai/filter/", {"q": "deposition"})
+        html = client.get(f"/case/{matter.id}/ai/list/").content.decode()
+        assert "Deposition prep" in html
+        assert "Billing question" not in html
+
+    def test_empty_keyword_clears_filter(self, client, matter, user):
+        self._conv(matter, user, "Deposition prep")
+        self._conv(matter, user, "Billing question")
+        client.get(f"/case/{matter.id}/ai/filter/", {"q": "deposition"})
+        html = client.get(f"/case/{matter.id}/ai/filter/", {"q": ""}).content.decode()
+        assert "Deposition prep" in html
+        assert "Billing question" in html
+
+    def test_participant_filter(self, client, matter, user):
+        from django.contrib.auth import get_user_model
+
+        other = get_user_model().objects.create_user(
+            username="other",
+            email="other@example.com",
+            password="x",
+            first_name="Other",
+            last_name="Person",
+        )
+        self._conv(matter, user, "Mine", content="hi")
+        self._conv(matter, user, "Theirs", content="hello", msg_user=other)
+        html = client.get(
+            f"/case/{matter.id}/ai/filter/", {"participant": other.id}
+        ).content.decode()
+        assert "Theirs" in html
+        assert "Mine" not in html
+        # Blank participant clears it again.
+        html = client.get(
+            f"/case/{matter.id}/ai/filter/", {"participant": ""}
+        ).content.decode()
+        assert "Mine" in html
+
+    def test_partial_table_renders_table_only(self, client, matter, user):
+        from pytest_django.asserts import assertTemplateNotUsed
+
+        self._conv(matter, user, "Chat A")
+        response = client.get(
+            f"/case/{matter.id}/ai/filter/", {"q": "chat", "partial": "table"}
+        )
+        assertTemplateUsed(response, "case/ai/table.html")
+        assertTemplateNotUsed(response, "case/ai/list.html")
+
+    def test_toolbar_has_search_and_participant_controls(self, client, matter, user):
+        self._conv(matter, user, "Chat A", content="hi")
+        html = client.get(f"/case/{matter.id}/ai/list/").content.decode()
+        assert 'id="ai-participant-select"' in html
+        assert 'name="q"' in html
+        assert "ai-llm-select" not in html
