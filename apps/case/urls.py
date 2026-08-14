@@ -1141,9 +1141,9 @@ urlpatterns = [
         name="ai-set-llm",
     ),
     path(
-        "case/ai/conversations/<int:conv_id>/research-depth/<str:level>/",
-        ai.set_research_depth,
-        name="ai-set-research-depth",
+        "case/ai/conversations/<int:conv_id>/research-effort/<str:level>/",
+        ai.set_research_effort,
+        name="ai-set-research-effort",
     ),
     path(
         "case/ai/conversations/<int:conv_id>/vet-citations/<str:state>/",

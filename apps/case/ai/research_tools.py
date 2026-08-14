@@ -6,7 +6,7 @@ callable the loops invoke per tool call. Tools wrap the existing
 CourtListener clients — no new API surface — and every call emits a trail
 event that ends up on ``Message.research_trail``.
 
-Budgets are the depth dial: they cap tool calls, result sizes, and the
+Budgets are the effort dial: they cap tool calls, result sizes, and the
 running total of opinion text fed back into the loop (tool results are
 resent every model turn, so the total-chars cap is the token-cost lever).
 """
@@ -32,13 +32,13 @@ logger = logging.getLogger(__name__)
 
 SNIPPET_LIMIT = 500
 
-# Hard ceiling on results per search. The default page size is the depth's
+# Hard ceiling on results per search. The default page size is the effort level's
 # page_size; the model may ask for more (up to this cap) when a survey needs
-# depth. Result rows are resent every model turn, so the cap bounds cost.
+# more. Result rows are resent every model turn, so the cap bounds cost.
 MAX_SEARCH_RESULTS = 20
 
-DEPTH_BUDGETS = {
-    "quick": {
+EFFORT_BUDGETS = {
+    "low": {
         "max_tool_calls": 5,
         "page_size": 6,
         "read_char_cap": 20_000,
@@ -46,7 +46,7 @@ DEPTH_BUDGETS = {
         "plan_first": False,
         "total_char_cap": 120_000,
     },
-    "standard": {
+    "medium": {
         "max_tool_calls": 12,
         "page_size": 8,
         "read_char_cap": 30_000,
@@ -54,7 +54,7 @@ DEPTH_BUDGETS = {
         "plan_first": False,
         "total_char_cap": 300_000,
     },
-    "deep": {
+    "high": {
         "max_tool_calls": 25,
         "page_size": 10,
         "read_char_cap": 40_000,
@@ -65,13 +65,13 @@ DEPTH_BUDGETS = {
 }
 
 
-def budget_for(depth):
-    return DEPTH_BUDGETS.get(depth, DEPTH_BUDGETS["standard"])
+def budget_for(effort):
+    return EFFORT_BUDGETS.get(effort, EFFORT_BUDGETS["medium"])
 
 
-def build_tools(depth):
+def build_tools(effort):
     """Provider-neutral tool specs (name, description, JSON input schema)."""
-    budget = budget_for(depth)
+    budget = budget_for(effort)
     tools = [
         {
             "name": "search_caselaw",
@@ -264,20 +264,20 @@ def _opinion_for_cluster(cluster_id):
     return cluster, fetch_opinion(opinion_id)
 
 
-def make_executor(matter, depth, conversation_id=None):
+def make_executor(matter, effort, conversation_id=None):
     """Build the tool executor for one research request.
 
     Returns ``execute(name, tool_input) -> (result_json_str, trail_event)``.
     Never raises: failures become {"error": ...} results the model can react
     to. Holds per-request state: an opinion cache (re-reads are free), a
     search/lookup dedupe map, and the running opinion-text total against
-    the depth's cap. With ``conversation_id``, opinions also cache across
+    the effort level's cap. With ``conversation_id``, opinions also cache across
     the conversation's messages (django cache, 1h) so follow-up turns
     re-read earlier authorities without another API round-trip.
     """
     from django.core.cache import cache as django_cache
 
-    budget = budget_for(depth)
+    budget = budget_for(effort)
     opinion_cache = {}
     library_cache = {}
     state = {"chars_used": 0}

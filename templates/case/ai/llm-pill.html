@@ -1,9 +1,15 @@
 {% comment %}
 Model badge for the conversation header. Saved conversations render it
-as a select so the model can be switched mid-conversation (the toolbar
-dropdown on the AI tab only sets the default for NEW chats; sends always
+as a select so the model can be switched mid-conversation (sends always
 use conversation.llm). Unsaved previews stay a static badge until the
 first send creates the row.
+
+Claude is analysis-only: in Research mode the tool loop resends every
+tool result each turn, so Claude runs cost several times more. Claude
+options carry data-analysis-only and render disabled with an "(Analysis
+only)" suffix while the mode is Research; aiSyncLlmOptions() in
+conversation-standalone.html keeps that in sync with per-turn mode
+flips, and set_conversation_llm/send_message enforce it server-side.
 {% endcomment %}
 {% if not conversation.id %}
   <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
@@ -14,7 +20,7 @@ first send creates the row.
           hx-post="{% url 'case:ai-set-llm' conversation.id %}"
           hx-target="#llmPill"
           hx-swap="outerHTML"
-          title="Model for this conversation">
+          title="Model for this conversation. Claude is available in Analysis mode only.">
     {% if conversation.get_llm_display == conversation.llm %}
       {% comment %}
       Retired key: get_llm_display falls back to the raw key when the
@@ -24,7 +30,18 @@ first send creates the row.
       <option value="{{ conversation.llm }}" selected>{{ conversation.llm }}</option>
     {% endif %}
     {% for key, label in conversation.LLM_CHOICES %}
-      <option value="{{ key }}" {% if key == conversation.llm %}selected{% endif %}>{{ label }}</option>
+      {% if "claude" in key %}
+        <option value="{{ key }}"
+                data-analysis-only="1"
+                data-label="{{ label }}"
+                {% if key == conversation.llm %}selected{% endif %}
+                {% if conversation.kind == "research" %}disabled{% endif %}>
+          {{ label }}
+          {% if conversation.kind == "research" %}(Analysis only){% endif %}
+        </option>
+      {% else %}
+        <option value="{{ key }}" {% if key == conversation.llm %}selected{% endif %}>{{ label }}</option>
+      {% endif %}
     {% endfor %}
   </select>
 {% endif %}

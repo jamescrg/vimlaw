@@ -35,7 +35,7 @@ from .context import (
 )
 from .filters import ConversationFilter
 from .models import Conversation, Message
-from .tasks import process_ai_request
+from .tasks import CLAUDE_MODELS, process_ai_request
 
 logger = logging.getLogger(__name__)
 
@@ -262,14 +262,14 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
-    # Mode (analysis vs research) + research depth. New chats open in
-    # analysis; the header dropdown switches the mode per turn.
+    # Mode (analysis vs research) + research effort. New chats open in
+    # analysis; the header dropdowns switch mode and effort per turn.
     kind = request.GET.get("kind", "classic")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = "classic"
-    depth = request.GET.get("depth", "standard")
-    if depth not in dict(Conversation.DEPTH_CHOICES):
-        depth = "standard"
+    effort = request.GET.get("effort", "medium")
+    if effort not in dict(Conversation.EFFORT_CHOICES):
+        effort = "medium"
 
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
@@ -279,7 +279,7 @@ def new_conversation_view(request, matter_id):
         title=provided_title or "New Conversation",
         llm=llm,
         kind=kind,
-        research_depth=depth,
+        research_effort=effort,
     )
 
     context = {
@@ -312,16 +312,16 @@ def create_conversation(request, matter_id):
     kind = request.POST.get("kind", "classic")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = "classic"
-    research_depth = request.POST.get("research_depth", "standard")
-    if research_depth not in dict(Conversation.DEPTH_CHOICES):
-        research_depth = "standard"
+    research_effort = request.POST.get("research_effort", "medium")
+    if research_effort not in dict(Conversation.EFFORT_CHOICES):
+        research_effort = "medium"
     conversation = Conversation.objects.create(
         matter=matter,
         title=request.POST.get("title", "").strip() or "New Conversation",
         llm=llm,
         user=request.user,
         kind=kind,
-        research_depth=research_depth,
+        research_effort=research_effort,
     )
     return JsonResponse({"id": conversation.id})
 
@@ -423,18 +423,26 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
-        research_depth = request.POST.get("research_depth", "standard")
-        if research_depth not in dict(Conversation.DEPTH_CHOICES):
-            research_depth = "standard"
+        research_effort = request.POST.get("research_effort", "medium")
+        if research_effort not in dict(Conversation.EFFORT_CHOICES):
+            research_effort = "medium"
         conversation = Conversation.objects.create(
             matter=matter,
             title=title,
             llm=llm,
             user=request.user,
             kind=kind or "classic",
-            research_depth=research_depth,
+            research_effort=research_effort,
         )
         is_new = True
+
+    # Research turns run on Gemini only: the agentic loop resends every
+    # tool result on each model turn, which multiplies Claude's per-token
+    # cost. The header disables the Claude options while Research is
+    # selected; this is the server-side guarantee behind that.
+    if conversation.kind == "research" and conversation.llm in CLAUDE_MODELS:
+        conversation.llm = RESEARCH_DEFAULT_LLM
+        conversation.save(update_fields=["llm"])
 
     # Update title if this is first message and title is default
     if not is_new and conversation.title == "New Conversation":
@@ -742,7 +750,7 @@ def clone_conversation(request, conv_id):
         title=f"{conversation.title} (Copy)",
         llm=conversation.llm,
         kind=conversation.kind,
-        research_depth=conversation.research_depth,
+        research_effort=conversation.research_effort,
         vet_citations=conversation.vet_citations,
     )
 
@@ -852,7 +860,7 @@ def split_conversation(request, message_id):
         title=f"{conversation.title} (Split)",
         llm=conversation.llm,
         kind=conversation.kind,
-        research_depth=conversation.research_depth,
+        research_effort=conversation.research_effort,
         vet_citations=conversation.vet_citations,
     )
 
@@ -932,6 +940,10 @@ def set_conversation_llm(request, conv_id):
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
 
+    # Claude is analysis-only (see the research gate in send_message).
+    if conversation.kind == "research" and llm in CLAUDE_MODELS:
+        return HttpResponse(status=400)
+
     conversation.llm = llm
     conversation.save(update_fields=["llm"])
 
@@ -944,21 +956,21 @@ def set_conversation_llm(request, conv_id):
 
 @login_required
 @require_POST
-def set_research_depth(request, conv_id, level):
-    """Set a research conversation's search depth (quick/standard/deep)."""
-    if level not in dict(Conversation.DEPTH_CHOICES):
+def set_research_effort(request, conv_id, level):
+    """Set a research conversation's effort level (low/medium/high)."""
+    if level not in dict(Conversation.EFFORT_CHOICES):
         return HttpResponse(status=400)
 
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
 
-    conversation.research_depth = level
-    conversation.save(update_fields=["research_depth"])
+    conversation.research_effort = level
+    conversation.save(update_fields=["research_effort"])
 
     return render(
         request,
-        "case/ai/research-depth-pill.html",
+        "case/ai/research-effort-pill.html",
         {"conversation": conversation},
     )
 
@@ -1075,9 +1087,9 @@ def prompt_editor_modal(request, matter_id):
     kind = request.GET.get("kind", "")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = ""
-    research_depth = request.GET.get("research_depth", "standard")
-    if research_depth not in dict(Conversation.DEPTH_CHOICES):
-        research_depth = "standard"
+    research_effort = request.GET.get("research_effort", "medium")
+    if research_effort not in dict(Conversation.EFFORT_CHOICES):
+        research_effort = "medium"
 
     return render(
         request,
@@ -1088,7 +1100,7 @@ def prompt_editor_modal(request, matter_id):
             "llm": llm,
             "title": title,
             "kind": kind,
-            "research_depth": research_depth,
+            "research_effort": research_effort,
         },
     )
 

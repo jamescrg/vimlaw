@@ -3,7 +3,7 @@
 Runs instead of the classic single-completion path when
 ``conversation.kind == "research"`` (dispatched from process_ai_request;
 classic stays byte-identical). The model gets CourtListener tools, a
-grounded-citation contract, and a per-depth budget; its searches and
+grounded-citation contract, and a per-effort budget; its searches and
 reads stream to the status indicator live, and the full trail lands on
 the completion payload for ``Message.research_trail``.
 """
@@ -157,16 +157,16 @@ PROMPT_CONTRACT = (
 )
 
 
-def _depth_directive(depth):
-    budget = budget_for(depth)
+def _effort_directive(effort):
+    budget = budget_for(effort)
     lines = (
-        f"RESEARCH DEPTH: {depth}. You have a budget of "
+        f"RESEARCH EFFORT: {effort}. You have a budget of "
         f"{budget['max_tool_calls']} tool calls; spend them where they "
         "matter and answer once you have solid authority.\n"
     )
     if budget["plan_first"]:
         lines += (
-            "Deep mode: BEFORE any search, output a numbered research plan "
+            "High effort: BEFORE any search, output a numbered research plan "
             "(issues, jurisdictions, and the query strategy per issue), "
             "then execute it step by step, adjusting as results come in.\n"
         )
@@ -271,7 +271,7 @@ def build_library_section():
     )
 
 
-def build_research_system(context_text, depth, prior_research="", library_section=""):
+def build_research_system(context_text, effort, prior_research="", library_section=""):
     """Matter context first (the stable, cacheable prefix), research
     contract after."""
     return (
@@ -281,7 +281,7 @@ def build_research_system(context_text, depth, prior_research="", library_sectio
         + PROMPT_ROLE
         + COURTLISTENER_SYNTAX_RULES
         + PROMPT_CONTRACT
-        + _depth_directive(depth)
+        + _effort_directive(effort)
         + prior_research
     )
 
@@ -364,8 +364,8 @@ def run_research_request(
     """
     from .tasks import CLAUDE_MODELS, GEMINI_MODELS, MODEL_HARD_LIMITS, estimate_tokens
 
-    depth = conversation.research_depth or "standard"
-    budget = budget_for(depth)
+    effort = conversation.research_effort or "medium"
+    budget = budget_for(effort)
 
     update_status("context", "Building context...")
     context_text = assemble_matter_context_with_selection(
@@ -395,12 +395,12 @@ def run_research_request(
 
     system = build_research_system(
         context_text,
-        depth,
+        effort,
         prior_research_section(conversation),
         library_section=build_library_section(),
     )
-    tools = build_tools(depth)
-    execute_tool = make_executor(matter, depth, conversation_id=conversation.id)
+    tools = build_tools(effort)
+    execute_tool = make_executor(matter, effort, conversation_id=conversation.id)
 
     # Live research log: concise one-liners accumulated in the status
     # payload so the whole run stays visible in the conversation while it

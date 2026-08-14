@@ -94,7 +94,7 @@ def fake_cl(monkeypatch):
 # Executor
 # --------------------------------------------------------------------------- #
 def test_executor_search_and_read(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
 
     result_json, event = execute("search_caselaw", {"query": "partition AND tenancy"})
     payload = json.loads(result_json)
@@ -105,7 +105,7 @@ def test_executor_search_and_read(matter, fake_cl):
     result_json, event = execute("read_opinion", {"cluster_id": 101})
     payload = json.loads(result_json)
     assert payload["case_name"] == "Smith v. Jones"
-    assert payload["truncated"] is True  # capped at standard's 30k
+    assert payload["truncated"] is True  # capped at medium's 30k
     assert len(payload["text"]) == 30_000
     assert event["type"] == "read"
 
@@ -114,17 +114,17 @@ def test_executor_search_and_read(matter, fake_cl):
     assert event["cached"] is True
 
 
-def test_executor_page_size_clamped_by_depth(matter, fake_cl):
-    execute = make_executor(matter, "quick")
+def test_executor_page_size_clamped_by_effort(matter, fake_cl):
+    execute = make_executor(matter, "low")
     execute("search_caselaw", {"query": "q", "num_results": 99})
     assert fake_cl.searches[0]["limit"] == 20  # absolute clamp
     execute("search_caselaw", {"query": "q"})
-    assert fake_cl.searches[1]["limit"] == 6  # quick default page size
+    assert fake_cl.searches[1]["limit"] == 6  # low-effort default page size
 
 
 def test_executor_total_char_cap(matter, fake_cl, monkeypatch):
-    monkeypatch.setitem(research_tools.DEPTH_BUDGETS["quick"], "total_char_cap", 10_000)
-    execute = make_executor(matter, "quick")
+    monkeypatch.setitem(research_tools.EFFORT_BUDGETS["low"], "total_char_cap", 10_000)
+    execute = make_executor(matter, "low")
     execute("read_opinion", {"cluster_id": 101})
     result_json, event = execute("read_opinion", {"cluster_id": 202})
     assert "budget exhausted" in json.loads(result_json)["error"]
@@ -132,14 +132,14 @@ def test_executor_total_char_cap(matter, fake_cl, monkeypatch):
 
 
 def test_executor_missing_cluster_is_error_not_raise(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     result_json, event = execute("read_opinion", {"cluster_id": 999})
     assert "not available" in json.loads(result_json)["error"]
     assert event is None
 
 
 def test_executor_treatment_and_unknown_tool(matter, fake_cl):
-    execute = make_executor(matter, "deep")
+    execute = make_executor(matter, "high")
     result_json, event = execute("check_treatment", {"cluster_id": 202})
     assert json.loads(result_json)["has_negative_treatment"] is True
     assert event["type"] == "treatment"
@@ -148,10 +148,10 @@ def test_executor_treatment_and_unknown_tool(matter, fake_cl):
     assert "Unknown tool" in json.loads(result_json)["error"]
 
 
-def test_treatment_tool_omitted_on_quick():
-    names = [t["name"] for t in build_tools("quick")]
+def test_treatment_tool_omitted_on_low():
+    names = [t["name"] for t in build_tools("low")]
     assert "check_treatment" not in names
-    assert "check_treatment" in [t["name"] for t in build_tools("standard")]
+    assert "check_treatment" in [t["name"] for t in build_tools("medium")]
 
 
 # --------------------------------------------------------------------------- #
@@ -370,7 +370,7 @@ def test_run_research_request_payload(matter, user, monkeypatch):
         title="R",
         llm="claude-opus",
         kind="research",
-        research_depth="quick",
+        research_effort="low",
         user=user,
     )
     Message.objects.create(conversation=conversation, role="user", content="q")
@@ -468,13 +468,13 @@ def test_send_creates_research_conversation(client, matter, _no_worker):
             "message": "What is the law?",
             "llm": "claude-opus",
             "kind": "research",
-            "research_depth": "deep",
+            "research_effort": "high",
         },
     )
     assert response.status_code == 200
     conversation = Conversation.objects.get()
     assert conversation.kind == "research"
-    assert conversation.research_depth == "deep"
+    assert conversation.research_effort == "high"
 
 
 def test_send_defaults_to_classic(client, matter, _no_worker):
@@ -484,7 +484,7 @@ def test_send_defaults_to_classic(client, matter, _no_worker):
     )
     conversation = Conversation.objects.get()
     assert conversation.kind == "classic"
-    assert conversation.research_depth == "standard"
+    assert conversation.research_effort == "medium"
 
 
 def test_invalid_kind_coerced(client, matter, _no_worker):
@@ -552,7 +552,7 @@ def test_clone_copies_mode_fields(client, matter, user):
         matter=matter,
         title="R",
         kind="research",
-        research_depth="deep",
+        research_effort="high",
         vet_citations=False,
         user=user,
     )
@@ -562,23 +562,23 @@ def test_clone_copies_mode_fields(client, matter, user):
     assert response.status_code == 204
     clone = Conversation.objects.exclude(pk=conversation.pk).get()
     assert clone.kind == "research"
-    assert clone.research_depth == "deep"
+    assert clone.research_effort == "high"
     assert clone.vet_citations is False
 
 
-def test_depth_pill_cycles(client, matter, user):
+def test_effort_pill_cycles(client, matter, user):
     conversation = Conversation.objects.create(
-        matter=matter, title="R", kind="research", research_depth="standard", user=user
+        matter=matter, title="R", kind="research", research_effort="medium", user=user
     )
     response = client.post(
-        reverse("case:ai-set-research-depth", args=[conversation.id, "deep"])
+        reverse("case:ai-set-research-effort", args=[conversation.id, "high"])
     )
     assert response.status_code == 200
     conversation.refresh_from_db()
-    assert conversation.research_depth == "deep"
+    assert conversation.research_effort == "high"
     assert (
         client.post(
-            reverse("case:ai-set-research-depth", args=[conversation.id, "bogus"])
+            reverse("case:ai-set-research-effort", args=[conversation.id, "bogus"])
         ).status_code
         == 400
     )
@@ -706,7 +706,7 @@ def test_executor_lookup_citation(matter, fake_cl, monkeypatch):
             cluster_id=3405938,
         ),
     )
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     result_json, event = execute("lookup_citation", {"citation": "189 Ga. 696"})
     payload = json.loads(result_json)
     assert payload["found"] is True
@@ -758,7 +758,7 @@ def test_research_log_survives_status_updates(matter, user, monkeypatch):
 
 
 def test_executor_repeat_search_served_from_cache(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     execute("search_caselaw", {"query": "partition"})
     result_json, event = execute("search_caselaw", {"query": "partition"})
     payload = json.loads(result_json)
@@ -770,11 +770,11 @@ def test_executor_repeat_search_served_from_cache(matter, fake_cl):
 def test_read_cached_across_conversation_messages(matter, fake_cl):
     """A follow-up message's executor reuses opinions read earlier in the
     same conversation without another API round-trip."""
-    first = make_executor(matter, "standard", conversation_id=555)
+    first = make_executor(matter, "medium", conversation_id=555)
     first("read_opinion", {"cluster_id": 101})
 
     fake_cl.opinions.clear()  # API would now fail
-    second = make_executor(matter, "standard", conversation_id=555)
+    second = make_executor(matter, "medium", conversation_id=555)
     result_json, event = second("read_opinion", {"cluster_id": 101})
     assert json.loads(result_json)["case_name"] == "Smith v. Jones"
     assert event["cached"] is True
@@ -835,15 +835,15 @@ def library_note(user):
     )
 
 
-def test_read_library_note_tool_present_at_all_depths():
-    for depth in ("quick", "standard", "deep"):
-        names = [t["name"] for t in build_tools(depth)]
+def test_read_library_note_tool_present_at_all_efforts():
+    for effort in ("low", "medium", "high"):
+        names = [t["name"] for t in build_tools(effort)]
         assert "read_library_note" in names
 
 
 @pytest.mark.django_db
 def test_executor_reads_library_note(matter, library_note):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     result, event = execute("read_library_note", {"note_id": library_note.id})
     payload = json.loads(result)
     assert payload["title"] == "Restrictive Covenants"
@@ -865,7 +865,7 @@ def test_executor_library_note_not_found(matter, user):
     case_note = Note.objects.create(
         author=user, title="Case", matter=matter, content="text"
     )
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     result, event = execute("read_library_note", {"note_id": case_note.id})
     assert "error" in json.loads(result)
     assert event is None
@@ -873,8 +873,8 @@ def test_executor_library_note_not_found(matter, user):
 
 @pytest.mark.django_db
 def test_executor_library_read_respects_caps(matter, library_note, monkeypatch):
-    monkeypatch.setitem(research_tools.DEPTH_BUDGETS["standard"], "read_char_cap", 100)
-    execute = make_executor(matter, "standard")
+    monkeypatch.setitem(research_tools.EFFORT_BUDGETS["medium"], "read_char_cap", 100)
+    execute = make_executor(matter, "medium")
     result, _ = execute("read_library_note", {"note_id": library_note.id})
     payload = json.loads(result)
     assert len(payload["text"]) == 100
@@ -904,7 +904,7 @@ def test_build_library_section_empty_without_notes():
 
 def test_build_research_system_embeds_library():
     system = research_chat.build_research_system(
-        "CONTEXT", "standard", library_section="FIRM LIBRARY: stuff\n\n"
+        "CONTEXT", "medium", library_section="FIRM LIBRARY: stuff\n\n"
     )
     assert system.index("CONTEXT") < system.index("FIRM LIBRARY: stuff")
     assert system.index("FIRM LIBRARY: stuff") < system.index("RESEARCH MODE")
@@ -915,14 +915,14 @@ def test_build_research_system_embeds_library():
 # ---------------------------------------------------------------------------
 
 
-def test_find_citing_cases_tool_present_at_all_depths():
-    for depth in ("quick", "standard", "deep"):
-        names = [t["name"] for t in build_tools(depth)]
+def test_find_citing_cases_tool_present_at_all_efforts():
+    for effort in ("low", "medium", "high"):
+        names = [t["name"] for t in build_tools(effort)]
         assert "find_citing_cases" in names
 
 
 def test_executor_citing_composes_cites_query(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     result_json, event = execute("find_citing_cases", {"cluster_id": 101})
     assert fake_cl.searches[0]["query"] == "cites:(101)"
     payload = json.loads(result_json)
@@ -933,7 +933,7 @@ def test_executor_citing_composes_cites_query(matter, fake_cl):
 
 
 def test_executor_citing_with_filter_terms(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     execute(
         "find_citing_cases",
         {"cluster_id": 101, "query": "adverse possession", "num_results": 5},
@@ -943,21 +943,21 @@ def test_executor_citing_with_filter_terms(matter, fake_cl):
 
 
 def test_executor_citing_includes_read_case_name(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     execute("read_opinion", {"cluster_id": 101})
     _, event = execute("find_citing_cases", {"cluster_id": 101})
     assert event["case_name"] == "Smith v. Jones"
 
 
 def test_executor_citing_missing_cluster_id(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     result_json, event = execute("find_citing_cases", {})
     assert "cluster_id" in json.loads(result_json)["error"]
     assert event is None
 
 
 def test_executor_citing_dedupes_repeats(matter, fake_cl):
-    execute = make_executor(matter, "standard")
+    execute = make_executor(matter, "medium")
     execute("find_citing_cases", {"cluster_id": 101})
     _, event = execute("find_citing_cases", {"cluster_id": 101})
     assert event["repeat"] is True
@@ -1078,11 +1078,11 @@ def test_new_chat_window_has_mode_dropdown(client, matter):
     assert response.status_code == 200
     html = response.content.decode()
     assert 'id="modePill"' in html
-    # Depth pill wrapper starts hidden for an analysis chat.
-    assert re.search(r'id="depthPillWrap"\s+class="hide"', html)
+    # Effort pill wrapper starts hidden for an analysis chat.
+    assert re.search(r'id="effortPillWrap"\s+class="hide"', html)
 
 
-def test_research_conversation_window_shows_depth_pill(client, matter, user):
+def test_research_conversation_window_shows_effort_pill(client, matter, user):
     conversation = Conversation.objects.create(
         matter=matter, title="R", kind="research", user=user
     )
@@ -1091,8 +1091,8 @@ def test_research_conversation_window_shows_depth_pill(client, matter, user):
     assert response.status_code == 200
     html = response.content.decode()
     assert 'id="modePill"' in html
-    assert not re.search(r'id="depthPillWrap"\s+class="hide"', html)
-    assert 'id="researchDepthPill"' in html
+    assert not re.search(r'id="effortPillWrap"\s+class="hide"', html)
+    assert 'id="researchEffortPill"' in html
 
 
 def test_modal_launch_uses_model_select():
@@ -1121,3 +1121,78 @@ def test_survey_protocol_is_library_first():
 def test_library_listing_includes_note_date(library_note):
     section = research_chat.build_library_section()
     assert f"updated {library_note.updated_at.date()}" in section
+
+
+# ---------------------------------------------------------------------------
+# Claude is analysis-only
+# ---------------------------------------------------------------------------
+
+
+def test_research_turn_coerces_claude_to_gemini(client, matter, user, _no_worker):
+    """Server-side guarantee behind the disabled Claude options."""
+    conversation = Conversation.objects.create(
+        matter=matter, title="C", llm="claude-opus", kind="classic", user=user
+    )
+    client.post(
+        reverse("case:ai-send", args=[matter.id]),
+        {
+            "message": "Find case law",
+            "llm": "claude-opus",
+            "conversation_id": conversation.id,
+            "kind": "research",
+        },
+    )
+    conversation.refresh_from_db()
+    assert conversation.kind == "research"
+    assert conversation.llm == "gemini-pro-latest"
+
+
+def test_analysis_turn_keeps_claude(client, matter, user, _no_worker):
+    conversation = Conversation.objects.create(
+        matter=matter, title="C", llm="claude-opus", kind="classic", user=user
+    )
+    client.post(
+        reverse("case:ai-send", args=[matter.id]),
+        {
+            "message": "Hello",
+            "llm": "claude-opus",
+            "conversation_id": conversation.id,
+            "kind": "classic",
+        },
+    )
+    conversation.refresh_from_db()
+    assert conversation.llm == "claude-opus"
+
+
+def test_set_llm_rejects_claude_on_research_conversation(client, matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", kind="research", llm="gemini-pro-latest", user=user
+    )
+    response = client.post(
+        reverse("case:ai-set-llm", args=[conversation.id]), {"llm": "claude-opus"}
+    )
+    assert response.status_code == 400
+    conversation.refresh_from_db()
+    assert conversation.llm == "gemini-pro-latest"
+
+
+def test_llm_pill_marks_claude_analysis_only_in_research(client, matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", kind="research", user=user
+    )
+    url = reverse("case:ai-conversation-view", args=[conversation.id])
+    html = client.get(url).content.decode()
+    assert "(Analysis only)" in html
+
+
+def test_header_pill_order_mode_model_effort(client, matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", kind="research", user=user
+    )
+    url = reverse("case:ai-conversation-view", args=[conversation.id])
+    html = client.get(url).content.decode()
+    assert (
+        html.index('id="modePill"')
+        < html.index('id="llmPill"')
+        < html.index('id="effortPillWrap"')
+    )

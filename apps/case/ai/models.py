@@ -29,10 +29,10 @@ class Conversation(AuditMixin, models.Model):
         ("classic", "Analysis"),
         ("research", "Research"),
     ]
-    DEPTH_CHOICES = [
-        ("quick", "Quick"),
-        ("standard", "Standard"),
-        ("deep", "Deep"),
+    EFFORT_CHOICES = [
+        ("low", "Low"),
+        ("medium", "Medium"),
+        ("high", "High"),
     ]
 
     # A conversation belongs to exactly one of: a matter (case chat), an
@@ -83,10 +83,11 @@ class Conversation(AuditMixin, models.Model):
         help_text="AI-generated summary for intelligent context selection",
     )
     kind = models.CharField(max_length=10, choices=KIND_CHOICES, default="classic")
-    # Research-kind only: how extensive the case-law research runs (tool
-    # call budget; deep also plans before searching).
-    research_depth = models.CharField(
-        max_length=10, choices=DEPTH_CHOICES, default="standard"
+    # Research turns only: how extensive the case-law research runs (tool
+    # call budget; high effort also plans before searching). Formerly
+    # research_depth quick/standard/deep; migration 0075 remapped the values.
+    research_effort = models.CharField(
+        max_length=10, choices=EFFORT_CHOICES, default="medium"
     )
     vet_citations = models.BooleanField(
         default=True,

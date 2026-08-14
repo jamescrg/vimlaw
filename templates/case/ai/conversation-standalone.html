@@ -85,11 +85,11 @@
         <header class="ai-chat-header">
           <span class="app-badge badge-purple">{{ matter.name }}</span>
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
-          {% include "case/ai/llm-pill.html" with conversation=conversation %}
           {% include "case/ai/mode-pill.html" with conversation=conversation %}
-          <span id="depthPillWrap"
+          {% include "case/ai/llm-pill.html" with conversation=conversation %}
+          <span id="effortPillWrap"
                 {% if conversation.kind != "research" %}class="hide"{% endif %}>
-            {% include "case/ai/research-depth-pill.html" with conversation=conversation %}
+            {% include "case/ai/research-effort-pill.html" with conversation=conversation %}
           </span>
           {% comment %}
             The vet-citations toggle was removed from the header: vetting
@@ -127,8 +127,8 @@
                      value="{% if not is_new %}{{ conversation.id }}{% endif %}">
               <input type="hidden" name="llm" value="{{ conversation.llm }}">
               <input type="hidden"
-                     name="research_depth"
-                     value="{{ conversation.research_depth }}">
+                     name="research_effort"
+                     value="{{ conversation.research_effort }}">
               <input type="hidden"
                      name="title"
                      id="conversationTitleInput"
@@ -201,8 +201,9 @@
     function aiModeChanged(kind) {
       const research = kind === 'research';
       document.getElementById('modePill').classList.toggle('ai-research-badge', research);
-      document.getElementById('depthPillWrap').classList.toggle('hide', !research);
+      document.getElementById('effortPillWrap').classList.toggle('hide', !research);
       document.getElementById('draftChip').classList.toggle('hide', research);
+      aiSyncLlmOptions(research);
       const llmPill = document.getElementById('llmPill'); // saved conversations only
       if (!llmPill) return;
       if (research) {
@@ -217,6 +218,25 @@
         document.getElementById('llmPill').dispatchEvent(new Event('change'));
       }
     }
+
+    // Claude is analysis-only (its runs cost several times more in the
+    // research tool loop). Grey the Claude options out, with a label
+    // suffix saying why, whenever the mode dropdown reads Research. The
+    // set-llm swap re-renders the pill from the conversation's stored
+    // mode, so re-sync it to the dropdown after every pill swap.
+    function aiSyncLlmOptions(research) {
+      const llmPill = document.getElementById('llmPill');
+      if (!llmPill) return;
+      llmPill.querySelectorAll('option[data-analysis-only]').forEach(function (opt) {
+        opt.disabled = research;
+        opt.textContent = opt.dataset.label + (research ? ' (Analysis only)' : '');
+      });
+    }
+    document.body.addEventListener('htmx:afterSwap', function (e) {
+      if (e.target.id === 'llmPill' || e.target.querySelector?.('#llmPill')) {
+        aiSyncLlmOptions(document.getElementById('modePill').value === 'research');
+      }
+    });
 
     // Handle form submission completion
     document.getElementById('chatForm').addEventListener('htmx:afterRequest', function(event) {
@@ -271,7 +291,7 @@
       const params = new URLSearchParams();
       params.set('llm', form.querySelector('[name="llm"]').value);
       params.set('kind', document.getElementById('modePill').value);
-      params.set('research_depth', form.querySelector('[name="research_depth"]').value);
+      params.set('research_effort', form.querySelector('[name="research_effort"]').value);
       params.set('title', document.getElementById('conversationTitleInput').value);
       fetch('{% url "case:ai-create-conversation" matter.id %}', {
         method: 'POST',
@@ -363,8 +383,8 @@
       const title = titleInput ? titleInput.value : '';
       const llm = '{{ conversation.llm }}';
       const kind = document.getElementById('modePill').value;
-      const depth = document.querySelector('#chatForm [name="research_depth"]').value;
-      const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title) + '&kind=' + kind + '&research_depth=' + depth;
+      const effort = document.querySelector('#chatForm [name="research_effort"]').value;
+      const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title) + '&kind=' + kind + '&research_effort=' + effort;
       // Stash text for the modal to pick up (avoids URL length limits)
       if (text) {
         window._promptEditorInitialText = text;
