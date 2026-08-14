@@ -527,6 +527,7 @@ def ai_status(request, conv_id):
             output_tokens=status_data.get("output_tokens"),
             verified_citations=verified_citations,
             research_trail=status_data.get("research_trail", []),
+            activity_log=status_data.get("activity_log", []),
         )
 
         # Update conversation timestamp
@@ -575,6 +576,7 @@ def ai_status(request, conv_id):
             conversation=conversation,
             role="assistant",
             content=f"Error: Unable to get response. {status_data['message']}",
+            activity_log=status_data.get("activity_log", []),
         )
 
         # Clear the cache

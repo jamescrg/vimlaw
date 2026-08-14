@@ -158,6 +158,12 @@ class Message(AuditMixin, models.Model):
     # opinions read, treatment checks) rendered as a collapsible section.
     research_trail = models.JSONField(default=list, blank=True)
 
+    # Assistant messages: the live activity log preserved (context
+    # assembly, material selection, model call, cite check) so past turns
+    # stay inspectable. Rendered as a collapsible section like the trail;
+    # research answers show their richer trail instead.
+    activity_log = models.JSONField(default=list, blank=True)
+
     history = HistoricalRecords()
 
     class Meta:

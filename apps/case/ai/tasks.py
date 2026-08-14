@@ -424,6 +424,8 @@ def process_ai_request(
                 {
                     "status": "error",
                     "message": f"Error: {str(e)}",
+                    # How far the turn got before failing.
+                    "activity_log": activity_log,
                 },
                 timeout=600,
             )

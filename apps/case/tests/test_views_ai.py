@@ -411,3 +411,47 @@ class TestActivityLog:
         assert "Case file gathered: 4 facts, 2 highlights" in html
         assert "Selected 2 of 9 materials" in html
         cache.delete(f"ai_status_{conversation.id}")
+
+    def test_complete_persists_activity_log_on_message(
+        self, client, matter, user, monkeypatch
+    ):
+        from django.core.cache import cache
+        from django.urls import reverse
+
+        from apps.case.ai import tasks as ai_tasks
+
+        # Completion spawns a summary thread; keep it out of the test.
+        monkeypatch.setattr(
+            ai_tasks, "generate_conversation_summary", lambda conv_id: None
+        )
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "complete",
+                "message": "Complete",
+                "response": "Here is the answer.",
+                "input_tokens": 10,
+                "output_tokens": 5,
+                "citations": [],
+                "activity_log": [
+                    "Case file gathered: 1 fact",
+                    "2 citations checked",
+                ],
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+
+        message = conversation.messages.get(role="assistant")
+        assert message.activity_log == [
+            "Case file gathered: 1 fact",
+            "2 citations checked",
+        ]
+        # Rendered as a collapsible section on the message.
+        assert "Activity (2 steps)" in html
+        assert "Case file gathered: 1 fact" in html
