@@ -14,34 +14,42 @@ flips, and set_conversation_llm/send_message enforce it server-side.
 {% if not conversation.id %}
   <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
 {% else %}
-  <select id="llmPill"
-          name="llm"
-          class="app-badge badge-lg ai-llm-pill ai-llm-{{ conversation.llm }}"
-          hx-post="{% url 'case:ai-set-llm' conversation.id %}"
-          hx-target="#llmPill"
-          hx-swap="outerHTML"
-          title="Model for this conversation. Claude is available in Analysis mode only.">
-    {% if conversation.get_llm_display == conversation.llm %}
-      {% comment %}
+  {% comment %}
+  The swap targets the wrapper, not the select: the fragment renders
+  wrapper + chevron, so re-targeting #llmPill would nest a wrapper
+  inside the old one on every model switch.
+  {% endcomment %}
+  <span class="ai-pill-select" id="llmPillWrap">
+    <select id="llmPill"
+            name="llm"
+            class="app-badge badge-lg ai-llm-pill ai-llm-{{ conversation.llm }}"
+            hx-post="{% url 'case:ai-set-llm' conversation.id %}"
+            hx-target="#llmPillWrap"
+            hx-swap="outerHTML"
+            title="Model for this conversation. Claude is available in Analysis mode only.">
+      {% if conversation.get_llm_display == conversation.llm %}
+        {% comment %}
       Retired key: get_llm_display falls back to the raw key when the
       stored value is no longer in LLM_CHOICES. Keep it visible and
       selected; picking any current model moves off it for good.
-      {% endcomment %}
-      <option value="{{ conversation.llm }}" selected>{{ conversation.llm }}</option>
-    {% endif %}
-    {% for key, label in conversation.LLM_CHOICES %}
-      {% if "claude" in key %}
-        <option value="{{ key }}"
-                data-analysis-only="1"
-                data-label="{{ label }}"
-                {% if key == conversation.llm %}selected{% endif %}
-                {% if conversation.kind == "research" %}disabled{% endif %}>
-          {{ label }}
-          {% if conversation.kind == "research" %}(Analysis only){% endif %}
-        </option>
-      {% else %}
-        <option value="{{ key }}" {% if key == conversation.llm %}selected{% endif %}>{{ label }}</option>
+        {% endcomment %}
+        <option value="{{ conversation.llm }}" selected>{{ conversation.llm }}</option>
       {% endif %}
-    {% endfor %}
-  </select>
+      {% for key, label in conversation.LLM_CHOICES %}
+        {% if "claude" in key %}
+          <option value="{{ key }}"
+                  data-analysis-only="1"
+                  data-label="{{ label }}"
+                  {% if key == conversation.llm %}selected{% endif %}
+                  {% if conversation.kind == "research" %}disabled{% endif %}>
+            {{ label }}
+            {% if conversation.kind == "research" %}(Analysis only){% endif %}
+          </option>
+        {% else %}
+          <option value="{{ key }}" {% if key == conversation.llm %}selected{% endif %}>{{ label }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+    <i class="icon-chevron-down" aria-hidden="true"></i>
+  </span>
 {% endif %}

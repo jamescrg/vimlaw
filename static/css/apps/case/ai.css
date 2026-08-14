@@ -521,6 +521,34 @@ select.ai-llm-pill,
 select.ai-mode-pill {
   appearance: none;
   cursor: pointer;
+  padding-right: 1.5rem;
+}
+
+/* appearance:none also strips the UA dropdown arrow, and a <select> can't
+   hold an icon element, so the wrapper layers a chevron back over the
+   pill's right edge (decorative; clicks fall through). Muted rather than
+   the pill's own hue: it's chrome, not content. */
+.ai-pill-select {
+  display: inline-flex;
+  position: relative;
+  vertical-align: middle;
+}
+
+.ai-pill-select > .icon-chevron-down {
+  color: var(--color-muted);
+  pointer-events: none;
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* The effort pill cycles rather than drops down; the stacked chevrons
+   signal "click to step". Trailing icon, so flip the .app-badge i margin. */
+.ai-research-effort-pill .icon-chevrons-up-down {
+  color: var(--color-muted);
+  margin-left: 0.25rem;
+  margin-right: 0;
 }
 
 /* New conversation buttons */

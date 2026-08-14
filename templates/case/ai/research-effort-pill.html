@@ -18,7 +18,9 @@ conversations get a non-interactive preview). Hidden by the
               hx-post="{% url 'case:ai-set-research-effort' conversation.id next_level %}"
               hx-target="#researchEffortPill"
               hx-swap="outerHTML"
-              title="Low effort: a few searches, snippets only. Click for Medium.">Effort: Low</button>
+              title="Low effort: a few searches, snippets only. Click for Medium.">
+        Effort: Low <i class="icon-chevrons-up-down" aria-hidden="true"></i>
+      </button>
     {% endwith %}
   {% elif conversation.research_effort == "high" %}
     {% with next_level="low" %}
@@ -29,7 +31,7 @@ conversations get a non-interactive preview). Hidden by the
               hx-target="#researchEffortPill"
               hx-swap="outerHTML"
               title="High effort: plans first, many searches, reads and treatment-checks every authority. Click for Low.">
-        Effort: High
+        Effort: High <i class="icon-chevrons-up-down" aria-hidden="true"></i>
       </button>
     {% endwith %}
   {% else %}
@@ -41,7 +43,7 @@ conversations get a non-interactive preview). Hidden by the
               hx-target="#researchEffortPill"
               hx-swap="outerHTML"
               title="Medium effort: iterative searches, reads the leading opinions. Click for High.">
-        Effort: Medium
+        Effort: Medium <i class="icon-chevrons-up-down" aria-hidden="true"></i>
       </button>
     {% endwith %}
   {% endif %}
