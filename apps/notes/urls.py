@@ -22,6 +22,7 @@ urlpatterns = [
         name="note-content-partial",
     ),
     path("notes/<int:note_id>/move/", views.note_move, name="note-move"),
+    path("notes/<int:note_id>/ai-write/", views.note_ai_write, name="note-ai-write"),
     path("notes/<int:note_id>/delete/", views.note_delete, name="delete"),
     path("notes/<int:note_id>/content/", views.note_content, name="note-content"),
     path("notes/<int:note_id>/autosave/", views.note_autosave, name="note-autosave"),

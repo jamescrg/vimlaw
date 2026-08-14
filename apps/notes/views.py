@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.search import SearchHeadline, SearchQuery
@@ -7,6 +8,7 @@ from django.db.models.functions import Lower
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
@@ -512,6 +514,34 @@ def editor_file_tree(request):
     note = _get_note(request, note_id)
     context = {"note": note} | get_editor_file_tree(request, note)
     return render(request, "notes/editor-trees.html", context)
+
+
+AI_WRITE_HOURS = 24
+
+
+@login_required
+@require_POST
+def note_ai_write(request, note_id):
+    """Toggle the note's AI-write grant (Claude Desktop MCP writes).
+
+    On grants access for AI_WRITE_HOURS from now; off (or an expired
+    grant) clears/renews it. Saved with update_fields so updated_at stays
+    put: a bump here would make an open editor's autosave base_version
+    look stale and raise a spurious conflict banner.
+    """
+    note = _get_note(request, note_id)
+    if note.ai_write_until and note.ai_write_until > timezone.now():
+        note.ai_write_until = None
+    else:
+        note.ai_write_until = timezone.now() + timedelta(hours=AI_WRITE_HOURS)
+    note.save(update_fields=["ai_write_until"])
+    return JsonResponse(
+        {
+            "ai_write_until": (
+                note.ai_write_until.isoformat() if note.ai_write_until else None
+            )
+        }
+    )
 
 
 @login_required

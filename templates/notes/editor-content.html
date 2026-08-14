@@ -46,6 +46,8 @@
     titleUrl: "{% url 'notes:note-title' note.id %}",
     contentPartialUrl: "{% url 'notes:note-content-partial' note.id %}",
     updatedAt: "{{ note.updated_at.isoformat }}",
+    aiWriteUrl: "{% url 'notes:note-ai-write' note.id %}",
+    aiWriteUntil: "{% if note.ai_write_until %}{{ note.ai_write_until.isoformat }}{% endif %}",
     searchUrl: "{% url 'notes:note-reference-search' note.id %}",
     citationsUrl: "{% url 'notes:note-citations' note.id %}",
   };
