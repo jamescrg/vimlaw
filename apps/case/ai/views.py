@@ -609,8 +609,9 @@ def ai_status(request, conv_id):
             "message": status_data["message"],
             "conversation": conversation,
             "elapsed_seconds": elapsed_seconds,
-            # Research runs accumulate a live log of searches/reads.
-            "research_log": status_data.get("research_log"),
+            # Both modes accumulate a live log: research logs its
+            # searches/reads, classic logs context assembly + cite check.
+            "activity_log": status_data.get("activity_log"),
         },
     )
 

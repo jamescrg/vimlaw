@@ -340,3 +340,74 @@ class TestConversationListFilter:
         assert 'id="ai-participant-select"' in html
         assert 'name="q"' in html
         assert "ai-llm-select" not in html
+
+
+class TestActivityLog:
+    """Classic turns accumulate a live activity log like research does."""
+
+    def test_worker_logs_pipeline_stages(self, client, matter, user, monkeypatch):
+        from django.core.cache import cache
+
+        from apps.case.ai import tasks as ai_tasks
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache_key = f"ai_status_{conversation.id}"
+        cache.delete(cache_key)
+
+        monkeypatch.setattr(
+            "apps.case.ai.context.assemble_matter_context_with_selection",
+            lambda *a, **k: (
+                k.get("on_activity")
+                and k["on_activity"]("Context assembled (~5 tokens)")
+                or "CTX"
+            ),
+        )
+        monkeypatch.setattr(ai_tasks, "verify_all_citations", lambda text: [])
+        monkeypatch.setattr(ai_tasks.time, "sleep", lambda s: None)
+        monkeypatch.setattr(
+            ai_tasks,
+            "send_to_gemini_streaming",
+            lambda *a, **k: ("Hello world.", 10, 5),
+        )
+
+        ai_tasks.process_ai_request(
+            conversation.id, matter.id, "Hi", user.id, "gemini-pro-latest"
+        )
+
+        final = cache.get(cache_key)
+        assert final["status"] == "complete"
+        log = final["activity_log"]
+        assert "Context assembled (~5 tokens)" in log
+        assert any(line.startswith("History:") for line in log)
+        assert "Request submitted to gemini-pro-latest" in log
+        assert any(line.startswith("Response received") for line in log)
+        assert "No case citations to check" in log
+        cache.delete(cache_key)
+
+    def test_status_poll_renders_activity_log(self, client, matter, user):
+        from django.core.cache import cache
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "thinking",
+                "message": "Thinking...",
+                "started_at": 0,
+                "activity_log": [
+                    "Case file gathered: 4 facts, 2 highlights",
+                    "Selected 2 of 9 materials: Retainer, Complaint",
+                ],
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert "Case file gathered: 4 facts, 2 highlights" in html
+        assert "Selected 2 of 9 materials" in html
+        cache.delete(f"ai_status_{conversation.id}")

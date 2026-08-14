@@ -432,8 +432,8 @@ def test_run_research_request_payload(matter, user, monkeypatch):
     # carries the log — see test_research_log_survives_status_updates).
     assert statuses == [("context", "Building context...")]
     # The live log accumulated concise lines during the run.
-    assert "Searched `q1` (3 hits)" in payload["research_log"]
-    assert "Read *Smith*" in payload["research_log"]
+    assert "Searched `q1` (3 hits)" in payload["activity_log"]
+    assert "Read *Smith*" in payload["activity_log"]
 
 
 def test_process_ai_request_dispatches_research(matter, user, monkeypatch):
@@ -718,7 +718,7 @@ def test_executor_lookup_citation(matter, fake_cl, monkeypatch):
 def test_research_log_survives_status_updates(matter, user, monkeypatch):
     """Every status write during a research run carries the log (the
     vanishing-log bug: classic update_status wrote fresh payloads that
-    wiped research_log between tool results)."""
+    wiped the live log between tool results)."""
     from django.core.cache import cache
 
     conversation = Conversation.objects.create(
@@ -740,7 +740,7 @@ def test_research_log_survives_status_updates(matter, user, monkeypatch):
         on_activity("tool_result", {"type": "search", "query": "q1", "result_count": 2})
         # Streamed planning text used to wipe the log from the cache.
         on_activity("text", {"text": "thinking about the results"})
-        assert "Searched `q1` (2 hits)" in cache.get(cache_key)["research_log"]
+        assert "Searched `q1` (2 hits)" in cache.get(cache_key)["activity_log"]
         return "Answer.", 1, 1, []
 
     monkeypatch.setattr(research_chat, "send_to_claude_with_tools", fake_loop)
@@ -754,7 +754,7 @@ def test_research_log_survives_status_updates(matter, user, monkeypatch):
         lambda: False,
         cache_key,
     )
-    assert "Searched `q1` (2 hits)" in cache.get(cache_key)["research_log"]
+    assert "Searched `q1` (2 hits)" in cache.get(cache_key)["activity_log"]
 
 
 def test_executor_repeat_search_served_from_cache(matter, fake_cl):

@@ -406,7 +406,7 @@ def run_research_request(
     # payload so the whole run stays visible in the conversation while it
     # works. IMPORTANT: every status write in this function must go through
     # set_status below — the classic update_status closure writes a fresh
-    # payload dict, which would wipe research_log out of the cache between
+    # payload dict, which would wipe the log out of the cache between
     # tool results (the original "vanishing log" bug: planning-text updates
     # fire per streamed chunk and kept erasing it).
     log_lines = []
@@ -421,7 +421,7 @@ def run_research_request(
                 "status": status,
                 "message": message,
                 "started_at": current.get("started_at", time.time()),
-                "research_log": log_lines[-40:],
+                "activity_log": log_lines[-40:],
             },
             timeout=600,
         )
@@ -572,7 +572,7 @@ def run_research_request(
             "research_trail": trail,
             # Kept on the completion payload for debugging; the rendered
             # message shows the persisted trail instead.
-            "research_log": log_lines,
+            "activity_log": log_lines,
         },
         timeout=600,
     )

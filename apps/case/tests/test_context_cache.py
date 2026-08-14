@@ -64,3 +64,30 @@ def test_no_conversation_never_caches(user, matter, manifest_counter):
     assemble(matter, None, user, "nightly summary pass")
     assemble(matter, None, user, "nightly summary pass")
     assert manifest_counter["n"] == 2
+
+
+def test_assembly_emits_activity_lines(user, matter, conversation, manifest_counter):
+    lines = []
+    assemble_matter_context_with_selection(
+        matter,
+        user_message="q",
+        llm="claude-opus",
+        user=user,
+        conversation=conversation,
+        on_activity=lines.append,
+    )
+    assert any(line.startswith("Case file gathered") for line in lines)
+    assert "No additional materials to catalogue" in lines
+    assert any(line.startswith("Context assembled") for line in lines)
+
+    # Second call reuses the cached context and says so.
+    lines.clear()
+    assemble_matter_context_with_selection(
+        matter,
+        user_message="q2",
+        llm="claude-opus",
+        user=user,
+        conversation=conversation,
+        on_activity=lines.append,
+    )
+    assert lines == ["Context reused from the previous turn (case file unchanged)"]
