@@ -1,11 +1,15 @@
-"""Read-only JSON API for the notes library.
+"""JSON API for the notes library.
 
 Consumed by the Claude Desktop MCP server (tools/kosmos_notes_mcp.py) so a
 Desktop conversation can list, read, and search the user's notes. Auth is
 the same per-user X-Kosmos-Token bearer key the LibreOffice companion uses
-(CompanionToken), but with its own decorator so the 401 body can carry
-setup guidance the model relays verbatim. Strictly read-only: the in-app
-AI keeps the only note write path.
+(CompanionToken, via kosmos_api_auth) with a 401 body that carries setup
+guidance the model relays verbatim.
+
+Reads are unrestricted within the user's access; the single write path
+(api_note_write, append/replace) is additionally gated per note by the
+editor's AI-write toggle, a 24-hour grant stored in Note.ai_write_until.
+Notes cannot be created or deleted from here.
 
 Access mirrors the app: general (library) notes are shared, matter notes
 are gated by has_matter_access, and matter listings/scopes cover the
@@ -13,14 +17,17 @@ user's accessible OPEN matters only (matching the editor tree, not the
 palette, which also spans concluded matters).
 """
 
-from functools import wraps
+import json
 
 from django.http import Http404, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET
+from django.utils import timezone
+from django.views.decorators.http import require_GET, require_POST
 
 from apps.accounts.access import filter_matters_for_user
-from apps.drafts.models import CompanionToken
+from apps.drafts.api_auth import (
+    TOKEN_HELP,
+    kosmos_api_auth as notes_api_auth,
+)
 from apps.matters.models import Matter
 
 from .models import Note
@@ -32,40 +39,18 @@ from .views import (
     _parse_note_scope,
 )
 
-TOKEN_HELP = (
-    "Invalid or missing Kosmos token. "
-    "Visit the Claude Desktop page in Kosmos settings to issue a new one."
-)
+__all__ = ["TOKEN_HELP", "notes_api_auth"]
+
 MATTER_404 = "No such matter, or you do not have access to it."
 NOTE_404 = "No such note, or you do not have access to it."
+WRITE_403 = (
+    "AI write access is not enabled for this note. Ask the user to open "
+    "the note in the Kosmos editor and click the sparkles button in the "
+    "toolbar, which grants write access for 24 hours."
+)
 
 SEARCH_LIMIT_DEFAULT = 20
 SEARCH_LIMIT_MAX = 100
-
-
-def notes_api_auth(view):
-    """Token auth for the notes API; sets request.api_user.
-
-    Same X-Kosmos-Token contract as companion_auth, kept separate so this
-    401 body can be actionable without touching the .oxt client contract.
-    Inactive users are rejected: revoking a login must also revoke this.
-    """
-
-    @csrf_exempt
-    @wraps(view)
-    def wrapper(request, *args, **kwargs):
-        key = request.headers.get("X-Kosmos-Token", "")
-        token = (
-            CompanionToken.objects.select_related("user").filter(key=key).first()
-            if key
-            else None
-        )
-        if token is None or not token.user.is_active:
-            return JsonResponse({"error": TOKEN_HELP}, status=401)
-        request.api_user = token.user
-        return view(request, *args, **kwargs)
-
-    return wrapper
 
 
 def _open_matters(user):
@@ -152,6 +137,50 @@ def api_note(request, note_id):
     ):
         return JsonResponse({"error": NOTE_404}, status=404)
     return JsonResponse(dict(_note_payload(note), content=note.content))
+
+
+@notes_api_auth
+@require_POST
+def api_note_write(request, note_id):
+    """Append to or replace one note's markdown content.
+
+    Gated per note by the editor's AI-write toggle (Note.ai_write_until,
+    a 24-hour grant). Body: {"content": str, "mode": "append"|"replace"}
+    (default append; unknown modes fall back to append, matching the
+    in-app edit-note block). Content is stored as plain markdown; in-app
+    [doc:]/[hl:] handles are not resolved here. The save bumps
+    updated_at and lands in the note's history like any other edit.
+    """
+    note = Note.objects.select_related("matter", "folder").filter(pk=note_id).first()
+    if note is None or (
+        note.matter_id and not request.api_user.has_matter_access(note.matter)
+    ):
+        return JsonResponse({"error": NOTE_404}, status=404)
+    if not (note.ai_write_until and note.ai_write_until > timezone.now()):
+        return JsonResponse({"error": WRITE_403}, status=403)
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        body = None
+    if not isinstance(body, dict):
+        return JsonResponse(
+            {"error": "Request body must be a JSON object."}, status=400
+        )
+    content = (body.get("content") or "").strip()
+    if not content:
+        return JsonResponse({"error": "content is required."}, status=400)
+    mode = "replace" if body.get("mode") == "replace" else "append"
+
+    if mode == "replace":
+        note.content = content
+    else:
+        note.content = (note.content.rstrip() + "\n\n" + content).strip()
+    note.save()
+    verb = "Rewrote" if mode == "replace" else "Appended to"
+    return JsonResponse(
+        dict(_note_payload(note), message=f"{verb} note: **{note.title}**")
+    )
 
 
 @notes_api_auth

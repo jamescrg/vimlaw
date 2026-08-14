@@ -2,7 +2,10 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.views.generic import RedirectView
 
-from apps.case import views
+from apps.case import (
+    api as case_api,
+    views,
+)
 from apps.case.ai import views as ai
 from apps.case.caselaws import views as caselaws
 from apps.case.documents import views as documents
@@ -22,6 +25,39 @@ from apps.mail import views as mail
 app_name = "case"
 
 urlpatterns = [
+    # Token-authed JSON API for the Claude Desktop MCP server. The
+    # facts/witnesses/emails routes must precede the <str:section>
+    # catch-all so their POST/extra-segment forms match first.
+    path(
+        "case/api/matter/<int:matter_id>/facts/",
+        case_api.api_matter_facts,
+        name="api-matter-facts",
+    ),
+    path(
+        "case/api/matter/<int:matter_id>/witnesses/",
+        case_api.api_matter_witnesses,
+        name="api-matter-witnesses",
+    ),
+    path(
+        "case/api/matter/<int:matter_id>/emails/<str:thread_id>/",
+        case_api.api_email_thread,
+        name="api-email-thread",
+    ),
+    path(
+        "case/api/matter/<int:matter_id>/<str:section>/",
+        case_api.api_matter_section,
+        name="api-matter-section",
+    ),
+    path(
+        "case/api/documents/<int:document_id>/",
+        case_api.api_document,
+        name="api-document",
+    ),
+    path(
+        "case/api/tasks/",
+        case_api.api_create_task,
+        name="api-create-task",
+    ),
     # Root case URL - redirects to last viewed matter
     path("case/", views.case_index, name="case-index"),
     path("case/no-matter/", views.no_matter, name="no-matter"),

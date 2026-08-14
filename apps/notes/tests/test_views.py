@@ -1,7 +1,9 @@
 import json
+from datetime import timedelta
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.notes.models import Note
 
@@ -1357,3 +1359,62 @@ class TestClaudeSettings:
         response = client.get(reverse("settings:claude-script"))
         assert response.status_code == 200
         assert response["Content-Disposition"].endswith('kosmos_notes_mcp.py"')
+
+
+class TestNoteAiWriteToggle:
+    """The editor toolbar's AI-write button: a 24-hour per-note grant."""
+
+    def test_toggle_on(self, client, note):
+        response = client.post(reverse("notes:note-ai-write", args=[note.id]))
+        assert response.status_code == 200
+        note.refresh_from_db()
+        assert note.ai_write_until is not None
+        delta = note.ai_write_until - timezone.now()
+        assert timedelta(hours=23) < delta <= timedelta(hours=24)
+        assert response.json()["ai_write_until"] == note.ai_write_until.isoformat()
+
+    def test_toggle_off(self, client, note):
+        note.ai_write_until = timezone.now() + timedelta(hours=5)
+        note.save(update_fields=["ai_write_until"])
+        response = client.post(reverse("notes:note-ai-write", args=[note.id]))
+        assert response.json()["ai_write_until"] is None
+        note.refresh_from_db()
+        assert note.ai_write_until is None
+
+    def test_expired_grant_toggles_back_on(self, client, note):
+        note.ai_write_until = timezone.now() - timedelta(hours=1)
+        note.save(update_fields=["ai_write_until"])
+        client.post(reverse("notes:note-ai-write", args=[note.id]))
+        note.refresh_from_db()
+        assert note.ai_write_until > timezone.now()
+
+    def test_toggle_leaves_updated_at_alone(self, client, note):
+        before = note.updated_at
+        client.post(reverse("notes:note-ai-write", args=[note.id]))
+        note.refresh_from_db()
+        assert note.updated_at == before
+
+    def test_login_required(self, note):
+        from django.test import Client
+
+        response = Client().post(reverse("notes:note-ai-write", args=[note.id]))
+        assert response.status_code == 302
+
+    def test_denied_matter_note_is_404(self, note):
+        from django.test import Client
+
+        from apps.accounts.models import CustomUser
+
+        outsider = CustomUser.objects.create(
+            username="toggle-outsider",
+            email="toggle-outsider@example.com",
+            user_rate=100,
+            perm_all_matters=False,
+        )
+        outsider.set_password("testpass123")
+        outsider.save()
+        other = Client()
+        other.login(username="toggle-outsider", password="testpass123")
+        other.get("/dash/")
+        response = other.post(reverse("notes:note-ai-write", args=[note.id]))
+        assert response.status_code == 404

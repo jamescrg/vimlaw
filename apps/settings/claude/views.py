@@ -1,4 +1,4 @@
-"""Connect Claude Desktop: per-user setup page for the notes MCP server.
+"""Connect Claude Desktop: per-user setup page for the Kosmos MCP server.
 
 Generalizes the companion .oxt precedent (the artifact we hand out carries
 the user's token, so setup needs no manual configuration): the page renders

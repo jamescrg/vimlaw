@@ -852,6 +852,11 @@ body:has(.note-page.standalone) {
   color: var(--urgent);
 }
 
+/* AI write grant is live: same hot-state tint the save button uses */
+.note-toolbar #ai-write-btn.active {
+  color: var(--urgent);
+}
+
 /* =============================================================================
    Note Page - Virtual Page Container
    ============================================================================= */

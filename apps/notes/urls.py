@@ -5,10 +5,15 @@ from . import api, views
 app_name = "notes"
 
 urlpatterns = [
-    # Read-only JSON API for the Claude Desktop MCP server (token-authed)
+    # Token-authed JSON API for the Claude Desktop MCP server
     path("notes/api/matters/", api.api_matters, name="api-matters"),
     path("notes/api/notes/", api.api_notes, name="api-notes"),
     path("notes/api/notes/<int:note_id>/", api.api_note, name="api-note"),
+    path(
+        "notes/api/notes/<int:note_id>/write/",
+        api.api_note_write,
+        name="api-note-write",
+    ),
     path("notes/api/search/", api.api_search, name="api-search"),
     # List views
     path("notes/add/", views.notes_add, name="add"),
@@ -22,6 +27,7 @@ urlpatterns = [
         name="note-content-partial",
     ),
     path("notes/<int:note_id>/move/", views.note_move, name="note-move"),
+    path("notes/<int:note_id>/ai-write/", views.note_ai_write, name="note-ai-write"),
     path("notes/<int:note_id>/delete/", views.note_delete, name="delete"),
     path("notes/<int:note_id>/content/", views.note_content, name="note-content"),
     path("notes/<int:note_id>/autosave/", views.note_autosave, name="note-autosave"),

@@ -228,6 +228,7 @@ function initEditor() {
   state.lastSavedContent = getMarkdownContent();
   setupCodeBlockLangSelector();
   setupToolbar();
+  syncAiWriteButton();
   setupKeyboardShortcuts();
   setupReferencePicker();
   setupReferenceClicks();
@@ -328,6 +329,41 @@ function setupTitleEdit() {
       input.value = originalTitle;
       input.blur();
     }
+  });
+}
+
+// ─── AI write toggle ─────────────────────────────────────────────────────────
+
+// The button lives in the static toolbar but its state is per-note, so it
+// re-syncs from the fresh NOTE_DATA on every content swap (initEditor).
+function syncAiWriteButton() {
+  const btn = document.getElementById("ai-write-btn");
+  if (!btn) return;
+
+  const until = window.NOTE_DATA && window.NOTE_DATA.aiWriteUntil;
+  const active = !!until && new Date(until) > new Date();
+  btn.classList.toggle("active", active);
+  btn.title = active
+    ? "Claude Desktop can write to this note until " +
+      new Date(until).toLocaleString() +
+      ". Click to revoke."
+    : "Allow Claude Desktop to write to this note for 24 hours";
+}
+
+// Bound once at startup (the button survives note switches)
+function setupAiWriteToggle() {
+  bindClick("ai-write-btn", (e) => {
+    e.preventDefault();
+    fetch(window.NOTE_DATA.aiWriteUrl, {
+      method: "POST",
+      headers: { "X-CSRFToken": getCSRFToken() },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        window.NOTE_DATA.aiWriteUntil = data.ai_write_until || "";
+        syncAiWriteButton();
+      })
+      .catch(() => {});
   });
 }
 
@@ -964,6 +1000,7 @@ document.addEventListener("DOMContentLoaded", () => {
       reloadNoteContent();
     }
   });
+  setupAiWriteToggle();
   initEditor();
   setupHtmxHandlers();
   setupOutlineCollapseAll();
