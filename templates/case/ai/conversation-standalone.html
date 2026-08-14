@@ -87,10 +87,7 @@
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
           {% include "case/ai/mode-pill.html" with conversation=conversation %}
           {% include "case/ai/llm-pill.html" with conversation=conversation %}
-          <span id="effortPillWrap"
-                {% if conversation.kind != "research" %}class="hide"{% endif %}>
-            {% include "case/ai/research-effort-pill.html" with conversation=conversation %}
-          </span>
+          <span id="effortPillWrap">{% include "case/ai/effort-pill.html" with conversation=conversation %}</span>
           {% comment %}
             The vet-citations toggle was removed from the header: vetting
             defaults on and nobody ever turned it off. The backend flag,
@@ -126,9 +123,7 @@
                      id="conversationId"
                      value="{% if not is_new %}{{ conversation.id }}{% endif %}">
               <input type="hidden" name="llm" value="{{ conversation.llm }}">
-              <input type="hidden"
-                     name="research_effort"
-                     value="{{ conversation.research_effort }}">
+              <input type="hidden" name="effort" value="{{ conversation.effort }}">
               <input type="hidden"
                      name="title"
                      id="conversationTitleInput"
@@ -201,7 +196,6 @@
     function aiModeChanged(kind) {
       const research = kind === 'research';
       document.getElementById('modePill').classList.toggle('ai-research-badge', research);
-      document.getElementById('effortPillWrap').classList.toggle('hide', !research);
       document.getElementById('draftChip').classList.toggle('hide', research);
       aiSyncLlmOptions(research);
       const llmPill = document.getElementById('llmPill'); // saved conversations only
@@ -291,7 +285,7 @@
       const params = new URLSearchParams();
       params.set('llm', form.querySelector('[name="llm"]').value);
       params.set('kind', document.getElementById('modePill').value);
-      params.set('research_effort', form.querySelector('[name="research_effort"]').value);
+      params.set('effort', form.querySelector('[name="effort"]').value);
       params.set('title', document.getElementById('conversationTitleInput').value);
       fetch('{% url "case:ai-create-conversation" matter.id %}', {
         method: 'POST',
@@ -383,8 +377,8 @@
       const title = titleInput ? titleInput.value : '';
       const llm = '{{ conversation.llm }}';
       const kind = document.getElementById('modePill').value;
-      const effort = document.querySelector('#chatForm [name="research_effort"]').value;
-      const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title) + '&kind=' + kind + '&research_effort=' + effort;
+      const effort = document.querySelector('#chatForm [name="effort"]').value;
+      const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title) + '&kind=' + kind + '&effort=' + effort;
       // Stash text for the modal to pick up (avoids URL length limits)
       if (text) {
         window._promptEditorInitialText = text;

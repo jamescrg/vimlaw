@@ -370,7 +370,7 @@ def test_run_research_request_payload(matter, user, monkeypatch):
         title="R",
         llm="claude-opus",
         kind="research",
-        research_effort="low",
+        effort="low",
         user=user,
     )
     Message.objects.create(conversation=conversation, role="user", content="q")
@@ -468,13 +468,13 @@ def test_send_creates_research_conversation(client, matter, _no_worker):
             "message": "What is the law?",
             "llm": "claude-opus",
             "kind": "research",
-            "research_effort": "high",
+            "effort": "high",
         },
     )
     assert response.status_code == 200
     conversation = Conversation.objects.get()
     assert conversation.kind == "research"
-    assert conversation.research_effort == "high"
+    assert conversation.effort == "high"
 
 
 def test_send_defaults_to_classic(client, matter, _no_worker):
@@ -484,7 +484,7 @@ def test_send_defaults_to_classic(client, matter, _no_worker):
     )
     conversation = Conversation.objects.get()
     assert conversation.kind == "classic"
-    assert conversation.research_effort == "medium"
+    assert conversation.effort == "medium"
 
 
 def test_invalid_kind_coerced(client, matter, _no_worker):
@@ -552,7 +552,7 @@ def test_clone_copies_mode_fields(client, matter, user):
         matter=matter,
         title="R",
         kind="research",
-        research_effort="high",
+        effort="high",
         vet_citations=False,
         user=user,
     )
@@ -562,23 +562,23 @@ def test_clone_copies_mode_fields(client, matter, user):
     assert response.status_code == 204
     clone = Conversation.objects.exclude(pk=conversation.pk).get()
     assert clone.kind == "research"
-    assert clone.research_effort == "high"
+    assert clone.effort == "high"
     assert clone.vet_citations is False
 
 
 def test_effort_pill_cycles(client, matter, user):
     conversation = Conversation.objects.create(
-        matter=matter, title="R", kind="research", research_effort="medium", user=user
+        matter=matter, title="R", kind="research", effort="medium", user=user
     )
     response = client.post(
-        reverse("case:ai-set-research-effort", args=[conversation.id, "high"])
+        reverse("case:ai-set-effort", args=[conversation.id, "high"])
     )
     assert response.status_code == 200
     conversation.refresh_from_db()
-    assert conversation.research_effort == "high"
+    assert conversation.effort == "high"
     assert (
         client.post(
-            reverse("case:ai-set-research-effort", args=[conversation.id, "bogus"])
+            reverse("case:ai-set-effort", args=[conversation.id, "bogus"])
         ).status_code
         == 400
     )
@@ -1078,8 +1078,9 @@ def test_new_chat_window_has_mode_dropdown(client, matter):
     assert response.status_code == 200
     html = response.content.decode()
     assert 'id="modePill"' in html
-    # Effort pill wrapper starts hidden for an analysis chat.
-    assert re.search(r'id="effortPillWrap"\s+class="hide"', html)
+    # The effort pill shows in both modes (analysis included).
+    assert 'id="effortPillWrap"' in html
+    assert not re.search(r'id="effortPillWrap"\s+class="hide"', html)
 
 
 def test_research_conversation_window_shows_effort_pill(client, matter, user):
@@ -1091,8 +1092,7 @@ def test_research_conversation_window_shows_effort_pill(client, matter, user):
     assert response.status_code == 200
     html = response.content.decode()
     assert 'id="modePill"' in html
-    assert not re.search(r'id="effortPillWrap"\s+class="hide"', html)
-    assert 'id="researchEffortPill"' in html
+    assert 'id="effortPill"' in html
 
 
 def test_modal_launch_uses_model_select():

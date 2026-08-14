@@ -64,3 +64,64 @@ def test_no_conversation_never_caches(user, matter, manifest_counter):
     assemble(matter, None, user, "nightly summary pass")
     assemble(matter, None, user, "nightly summary pass")
     assert manifest_counter["n"] == 2
+
+
+# ---------------------------------------------------------------------------
+# Effort tiers (the context apparatus dial)
+# ---------------------------------------------------------------------------
+
+
+def _assemble_at(matter, conversation, user, message, effort):
+    return assemble_matter_context_with_selection(
+        matter,
+        user_message=message,
+        llm="claude-opus",
+        user=user,
+        conversation=conversation,
+        effort=effort,
+    )
+
+
+def test_low_effort_skips_manifest_and_flags_it(
+    user, matter, conversation, manifest_counter
+):
+    ctx = _assemble_at(matter, conversation, user, "quick question", "low")
+    assert manifest_counter["n"] == 0
+    assert "Not Loaded (low effort)" in ctx
+
+
+def test_low_effort_excludes_bodies_keeps_facts(
+    user, matter, conversation, manifest_counter
+):
+    from apps.case.ai.models import Message
+    from apps.case.models import Fact
+
+    ref = Conversation.objects.create(
+        matter=matter, title="Ref", ai_context="always", llm="claude-opus"
+    )
+    Message.objects.create(
+        conversation=ref, role="user", content="REFERENCE BODY", user=user
+    )
+    Fact.objects.create(matter=matter, description="KEY FACT LINE")
+
+    low = _assemble_at(matter, conversation, user, "quick question", "low")
+    assert "KEY FACT LINE" in low
+    assert "REFERENCE BODY" not in low
+
+    medium = assemble(matter, conversation, user, "quick question")
+    assert "REFERENCE BODY" in medium
+
+
+def test_high_effort_reselects_every_turn(user, matter, conversation, manifest_counter):
+    _assemble_at(matter, conversation, user, "question one", "high")
+    _assemble_at(matter, conversation, user, "question two", "high")
+    assert manifest_counter["n"] == 2
+
+
+def test_effort_is_part_of_the_fingerprint(
+    user, matter, conversation, manifest_counter
+):
+    assemble(matter, conversation, user, "question")  # medium, cached
+    low = _assemble_at(matter, conversation, user, "question", "low")
+    # The cached medium context must not be served to a low-effort turn.
+    assert "Not Loaded (low effort)" in low

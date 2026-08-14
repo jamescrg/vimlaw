@@ -79,6 +79,20 @@ guides), not case materials. Include one only when its topic clearly bears on \
 the legal question being asked, and select at most 5 library items.
 - Return ONLY the JSON object, no other text."""
 
+# Appended at high effort, where the selection runs on the stronger model:
+# trade speed for a careful, per-item pass instead of Flash's quick skim.
+THOROUGH_SELECTOR_ADDENDUM = """
+
+High-effort selection: consider EVERY item in the manifest individually \
+before answering. For each item, reason about direct relevance and about \
+indirect relevance (background agreements, prior analyses, correspondence \
+that frames the dispute, procedural history bearing on the question). Err \
+toward inclusion for anything plausibly useful, while still respecting the \
+token budget and the invoice and library rules above."""
+
+# Model for the high-effort selection pass. Flash skims; this reads.
+THOROUGH_SELECTOR_MODEL = "gemini-pro-latest"
+
 
 @dataclass
 class ManifestItem:
@@ -408,15 +422,18 @@ def select_context(
     content_map: dict,
     user_message: str,
     token_budget: int,
+    thorough: bool = False,
 ) -> tuple[list[str], list[ManifestItem]]:
     """
-    Use Gemini Flash to select which materials are relevant to the question.
+    Use Gemini to select which materials are relevant to the question.
 
     Args:
         manifest_items: Lightweight descriptions of available materials
         content_map: Maps (type, id) to full content strings
         user_message: The user's question
         token_budget: Available token budget for materials
+        thorough: High-effort selection — run on the stronger selector
+            model with a review-every-item prompt instead of Flash
 
     Returns:
         tuple: (selected_contents, unselected_items)
@@ -456,15 +473,21 @@ def select_context(
                     all_contents.append(content)
         return all_contents, []
 
-    # Call Gemini Flash for intelligent selection
+    # Call Gemini for intelligent selection
     manifest_text = format_manifest_for_prompt(manifest_items, token_budget)
     prompt = f"USER'S QUESTION: {user_message}\n\nAVAILABLE MATERIALS:\n{manifest_text}"
 
+    system_prompt = SELECTOR_SYSTEM_PROMPT
+    model = "gemini-2.5-flash"
+    if thorough:
+        system_prompt = SELECTOR_SYSTEM_PROMPT + THOROUGH_SELECTOR_ADDENDUM
+        model = THOROUGH_SELECTOR_MODEL
+
     try:
         response_text, _, _ = send_to_gemini(
-            system_context=SELECTOR_SYSTEM_PROMPT,
+            system_context=system_prompt,
             messages=[{"role": "user", "content": prompt}],
-            model="gemini-2.5-flash",
+            model=model,
         )
 
         selected_keys = _parse_selector_response(response_text)

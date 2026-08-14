@@ -279,7 +279,7 @@ def new_conversation_view(request, matter_id):
         title=provided_title or "New Conversation",
         llm=llm,
         kind=kind,
-        research_effort=effort,
+        effort=effort,
     )
 
     context = {
@@ -312,16 +312,16 @@ def create_conversation(request, matter_id):
     kind = request.POST.get("kind", "classic")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = "classic"
-    research_effort = request.POST.get("research_effort", "medium")
-    if research_effort not in dict(Conversation.EFFORT_CHOICES):
-        research_effort = "medium"
+    effort = request.POST.get("effort", "medium")
+    if effort not in dict(Conversation.EFFORT_CHOICES):
+        effort = "medium"
     conversation = Conversation.objects.create(
         matter=matter,
         title=request.POST.get("title", "").strip() or "New Conversation",
         llm=llm,
         user=request.user,
         kind=kind,
-        research_effort=research_effort,
+        effort=effort,
     )
     return JsonResponse({"id": conversation.id})
 
@@ -423,16 +423,16 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
-        research_effort = request.POST.get("research_effort", "medium")
-        if research_effort not in dict(Conversation.EFFORT_CHOICES):
-            research_effort = "medium"
+        effort = request.POST.get("effort", "medium")
+        if effort not in dict(Conversation.EFFORT_CHOICES):
+            effort = "medium"
         conversation = Conversation.objects.create(
             matter=matter,
             title=title,
             llm=llm,
             user=request.user,
             kind=kind or "classic",
-            research_effort=research_effort,
+            effort=effort,
         )
         is_new = True
 
@@ -750,7 +750,7 @@ def clone_conversation(request, conv_id):
         title=f"{conversation.title} (Copy)",
         llm=conversation.llm,
         kind=conversation.kind,
-        research_effort=conversation.research_effort,
+        effort=conversation.effort,
         vet_citations=conversation.vet_citations,
     )
 
@@ -860,7 +860,7 @@ def split_conversation(request, message_id):
         title=f"{conversation.title} (Split)",
         llm=conversation.llm,
         kind=conversation.kind,
-        research_effort=conversation.research_effort,
+        effort=conversation.effort,
         vet_citations=conversation.vet_citations,
     )
 
@@ -956,8 +956,8 @@ def set_conversation_llm(request, conv_id):
 
 @login_required
 @require_POST
-def set_research_effort(request, conv_id, level):
-    """Set a research conversation's effort level (low/medium/high)."""
+def set_effort(request, conv_id, level):
+    """Set a conversation's effort level (low/medium/high, both modes)."""
     if level not in dict(Conversation.EFFORT_CHOICES):
         return HttpResponse(status=400)
 
@@ -965,12 +965,12 @@ def set_research_effort(request, conv_id, level):
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
 
-    conversation.research_effort = level
-    conversation.save(update_fields=["research_effort"])
+    conversation.effort = level
+    conversation.save(update_fields=["effort"])
 
     return render(
         request,
-        "case/ai/research-effort-pill.html",
+        "case/ai/effort-pill.html",
         {"conversation": conversation},
     )
 
@@ -1087,9 +1087,9 @@ def prompt_editor_modal(request, matter_id):
     kind = request.GET.get("kind", "")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = ""
-    research_effort = request.GET.get("research_effort", "medium")
-    if research_effort not in dict(Conversation.EFFORT_CHOICES):
-        research_effort = "medium"
+    effort = request.GET.get("effort", "medium")
+    if effort not in dict(Conversation.EFFORT_CHOICES):
+        effort = "medium"
 
     return render(
         request,
@@ -1100,7 +1100,7 @@ def prompt_editor_modal(request, matter_id):
             "llm": llm,
             "title": title,
             "kind": kind,
-            "research_effort": research_effort,
+            "effort": effort,
         },
     )
 

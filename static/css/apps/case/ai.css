@@ -543,9 +543,15 @@ select.ai-mode-pill {
   transform: translateY(-50%);
 }
 
-/* The effort pill cycles rather than drops down; the stacked chevrons
-   signal "click to step". Trailing icon, so flip the .app-badge i margin. */
-.ai-research-effort-pill .icon-chevrons-up-down {
+/* The effort pill (both modes) cycles rather than dropping down; the
+   stacked chevrons signal "click to step". Same tint as the research
+   badge, its own class since it's no longer research-only. Trailing
+   icon, so flip the .app-badge i margin. */
+.ai-effort-pill {
+  background: var(--selected-background);
+}
+
+.ai-effort-pill .icon-chevrons-up-down {
   color: var(--color-muted);
   margin-left: 0.25rem;
   margin-right: 0;

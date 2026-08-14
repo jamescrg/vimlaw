@@ -1,0 +1,52 @@
+{% comment %}
+Effort badge for every turn, both modes: "Effort: Medium". Clicking
+cycles low -> medium -> high -> low (unsaved conversations get a
+non-interactive preview). Analysis: effort sets the context apparatus
+(low skips the selector and loads no material bodies; high re-selects
+each turn with a stronger selector model). Research: effort sets the
+tool-call budget.
+{% endcomment %}
+{% if not conversation.id %}
+  <span class="app-badge badge-lg ai-effort-pill"
+        title="Effort for this conversation. Send your first message to be able to change it.">
+    Effort: {{ conversation.get_effort_display }}
+  </span>
+{% else %}
+  {% if conversation.effort == "low" %}
+    {% with next_level="medium" %}
+      <button type="button"
+              id="effortPill"
+              class="app-badge badge-lg ai-effort-pill"
+              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
+              hx-target="#effortPill"
+              hx-swap="outerHTML"
+              title="Low effort: the fast lane. Analysis loads only the case-file spine (no document contents, no selection pass); Research runs a few quick searches. Click for Medium.">
+        Effort: Low <i class="icon-chevrons-up-down" aria-hidden="true"></i>
+      </button>
+    {% endwith %}
+  {% elif conversation.effort == "high" %}
+    {% with next_level="low" %}
+      <button type="button"
+              id="effortPill"
+              class="app-badge badge-lg ai-effort-pill"
+              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
+              hx-target="#effortPill"
+              hx-swap="outerHTML"
+              title="High effort: thorough. Analysis re-selects materials fresh every turn with a stronger selector model; Research plans first and treatment-checks every authority. Click for Low.">
+        Effort: High <i class="icon-chevrons-up-down" aria-hidden="true"></i>
+      </button>
+    {% endwith %}
+  {% else %}
+    {% with next_level="high" %}
+      <button type="button"
+              id="effortPill"
+              class="app-badge badge-lg ai-effort-pill"
+              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
+              hx-target="#effortPill"
+              hx-swap="outerHTML"
+              title="Medium effort: the default. Analysis auto-selects relevant materials; Research reads the leading opinions. Click for High.">
+        Effort: Medium <i class="icon-chevrons-up-down" aria-hidden="true"></i>
+      </button>
+    {% endwith %}
+  {% endif %}
+{% endif %}

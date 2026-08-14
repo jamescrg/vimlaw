@@ -364,7 +364,7 @@ def run_research_request(
     """
     from .tasks import CLAUDE_MODELS, GEMINI_MODELS, MODEL_HARD_LIMITS, estimate_tokens
 
-    effort = conversation.research_effort or "medium"
+    effort = conversation.effort or "medium"
     budget = budget_for(effort)
 
     update_status("context", "Building context...")

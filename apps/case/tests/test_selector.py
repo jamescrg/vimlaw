@@ -115,3 +115,28 @@ class TestLibrarySelection:
         keys = _fallback_by_importance(items, content_map, 10_000)
         assert ("library", 1) not in keys
         assert ("document", 2) in keys
+
+
+class TestEffortTiers:
+    def test_thorough_selection_uses_pro_model_and_addendum(self):
+        items = [_mk("document", 1), _mk("library", 2)]
+        content_map = {("document", 1): "doc text", ("library", 2): "lib text"}
+        with patch(
+            "apps.case.ai.selector.send_to_gemini",
+            return_value=('{"selected": []}', 1, 1),
+        ) as send:
+            select_context(items, content_map, "q", 10_000, thorough=True)
+        assert send.called
+        assert send.call_args.kwargs["model"] == "gemini-pro-latest"
+        assert "High-effort selection" in send.call_args.kwargs["system_context"]
+
+    def test_default_selection_stays_on_flash(self):
+        items = [_mk("document", 1), _mk("library", 2)]
+        content_map = {("document", 1): "doc text", ("library", 2): "lib text"}
+        with patch(
+            "apps.case.ai.selector.send_to_gemini",
+            return_value=('{"selected": []}', 1, 1),
+        ) as send:
+            select_context(items, content_map, "q", 10_000)
+        assert send.call_args.kwargs["model"] == "gemini-2.5-flash"
+        assert "High-effort selection" not in send.call_args.kwargs["system_context"]
