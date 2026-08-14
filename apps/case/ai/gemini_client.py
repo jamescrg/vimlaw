@@ -98,7 +98,6 @@ def send_to_gemini_streaming(
     messages: list[dict],
     model: str = "gemini-2.5-flash",
     on_thought: Callable[[str], None] | None = None,
-    on_text: Callable[[str], None] | None = None,
     is_cancelled: Callable[[], bool] | None = None,
     conversation_id: int | None = None,
 ) -> tuple[str, int, int]:
@@ -112,8 +111,6 @@ def send_to_gemini_streaming(
         messages: List of {"role": "user"|"assistant", "content": str}
         model: Gemini model to use (gemini-2.5-flash or gemini-2.5-pro)
         on_thought: Optional callback called with each thought summary
-        on_text: Optional callback called with each answer-text delta
-            (the caller accumulates; used to surface the partial answer)
         is_cancelled: Optional callback that returns True if request should be cancelled
         conversation_id: Optional conversation id. When provided (and the
             system prompt is large enough), the system prompt is cached
@@ -216,8 +213,6 @@ def send_to_gemini_streaming(
                         on_thought(part.text)
                 else:
                     response_parts.append(part.text)
-                    if on_text:
-                        on_text(part.text)
     except InterruptedError:
         raise
     except Exception:
