@@ -21,46 +21,14 @@
                  autofocus>
         </div>
         <div class="form-group">
-          <label>Chat style</label>
-          <div class="ai-kind-options">
-            <label class="ai-kind-option">
-              <input type="radio"
-                     name="kind"
-                     value="classic"
-                     {% if default_kind != "research" %}checked{% endif %}
-                     onchange="aiNewChatKindChanged('classic')">
-              <span class="ai-kind-name">Classic</span>
-              <span class="detail-text">Answers from the case file and the model's knowledge.</span>
-            </label>
-            <label class="ai-kind-option">
-              <input type="radio"
-                     name="kind"
-                     value="research"
-                     {% if default_kind == "research" %}checked{% endif %}
-                     onchange="aiNewChatKindChanged('research')">
-              <span class="ai-kind-name">Research</span>
-              <span class="detail-text">Actively searches CourtListener, reads opinions, and cites only what it retrieved.</span>
-            </label>
-          </div>
-        </div>
-        <div class="form-group {% if default_kind != 'research' %}hide{% endif %}"
-             id="research-depth-group">
-          <label for="new-conversation-depth">Search depth</label>
-          <select id="new-conversation-depth">
-            <option value="quick">Quick</option>
-            <option value="standard" selected>Standard</option>
-            <option value="deep">Deep</option>
-          </select>
-        </div>
-        <div class="form-group">
           <label for="new-conversation-llm">Model</label>
           <select id="new-conversation-llm">
             {% for key, label in llm_choices %}
-              <option value="{{ key }}" {% if key == initial_llm %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ key }}" {% if key == llm %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
           <div class="detail-text">
-            Research chats default to Gemini. (Tool results are resent every turn, so Claude runs cost several times more.)
+            The chat opens in Analysis mode. The mode dropdown in the chat header switches any turn to Research (which defaults to Gemini).
           </div>
         </div>
       </form>
@@ -74,21 +42,6 @@
   </div>
 </div>
 <script>
-  {% comment %}Flipping the chat style re-applies each style's default model
-  (research: Gemini; classic: the session's sticky pick). An explicit
-selection made after the flip is what launches.{% endcomment %}
-  window.aiNewChatKindChanged = function(kind) {
-    const depthGroup = document.getElementById('research-depth-group');
-    const llmSelect = document.getElementById('new-conversation-llm');
-    if (kind === 'research') {
-      depthGroup.classList.remove('hide');
-      llmSelect.value = '{{ research_default_llm }}';
-    } else {
-      depthGroup.classList.add('hide');
-      llmSelect.value = '{{ llm }}';
-    }
-  };
-
   window.aiLaunchNewConversation = function(event) {
     event.preventDefault();
     const input = document.getElementById('new-conversation-title');
@@ -99,9 +52,7 @@ selection made after the flip is what launches.{% endcomment %}
     }
     const baseUrl = '{% url "case:ai-new-conversation-view" matter.id %}';
     const llm = document.getElementById('new-conversation-llm').value;
-    const kind = document.querySelector('input[name="kind"]:checked').value;
-    const depth = document.getElementById('new-conversation-depth').value;
-    const url = `${baseUrl}?llm=${encodeURIComponent(llm)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}&depth=${encodeURIComponent(depth)}`;
+    const url = `${baseUrl}?llm=${encodeURIComponent(llm)}&title=${encodeURIComponent(title)}`;
     window.open(url, '_blank');
     window.dispatchEvent(new CustomEvent('close-modal'));
     return false;

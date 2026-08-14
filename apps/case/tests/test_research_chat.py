@@ -495,6 +495,77 @@ def test_invalid_kind_coerced(client, matter, _no_worker):
     assert Conversation.objects.get().kind == "classic"
 
 
+def test_send_switches_mode_on_existing_conversation(client, matter, user, _no_worker):
+    """The header dropdown posts kind with every turn; a flip persists."""
+    conversation = Conversation.objects.create(
+        matter=matter, title="C", llm="gemini-pro-latest", kind="classic", user=user
+    )
+    client.post(
+        reverse("case:ai-send", args=[matter.id]),
+        {
+            "message": "Find case law",
+            "llm": "gemini-pro-latest",
+            "conversation_id": conversation.id,
+            "kind": "research",
+        },
+    )
+    conversation.refresh_from_db()
+    assert conversation.kind == "research"
+
+
+def test_send_without_kind_keeps_mode(client, matter, user, _no_worker):
+    """Legacy composers post no kind; the stored mode must survive."""
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", llm="gemini-pro-latest", kind="research", user=user
+    )
+    client.post(
+        reverse("case:ai-send", args=[matter.id]),
+        {
+            "message": "Hello",
+            "llm": "gemini-pro-latest",
+            "conversation_id": conversation.id,
+        },
+    )
+    conversation.refresh_from_db()
+    assert conversation.kind == "research"
+
+
+def test_send_invalid_kind_keeps_mode(client, matter, user, _no_worker):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", llm="gemini-pro-latest", kind="research", user=user
+    )
+    client.post(
+        reverse("case:ai-send", args=[matter.id]),
+        {
+            "message": "Hello",
+            "llm": "gemini-pro-latest",
+            "conversation_id": conversation.id,
+            "kind": "bogus",
+        },
+    )
+    conversation.refresh_from_db()
+    assert conversation.kind == "research"
+
+
+def test_clone_copies_mode_fields(client, matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter,
+        title="R",
+        kind="research",
+        research_depth="deep",
+        vet_citations=False,
+        user=user,
+    )
+    response = client.post(
+        reverse("case:ai-clone-conversation", args=[conversation.id])
+    )
+    assert response.status_code == 204
+    clone = Conversation.objects.exclude(pk=conversation.pk).get()
+    assert clone.kind == "research"
+    assert clone.research_depth == "deep"
+    assert clone.vet_citations is False
+
+
 def test_depth_pill_cycles(client, matter, user):
     conversation = Conversation.objects.create(
         matter=matter, title="R", kind="research", research_depth="standard", user=user
@@ -971,30 +1042,52 @@ def test_claude_loop_rolls_cache_marker(fake_anthropic):
 
 
 # ---------------------------------------------------------------------------
-# Research default model in the new-conversation modal
+# The new-conversation modal (mode retired from it: per-turn dropdown in chat)
 # ---------------------------------------------------------------------------
 
 
-def _prompt_html(client, matter, llm="claude-opus", kind=None):
-    if kind is not None:
-        session = client.session
-        session["ai_new_chat_kind"] = kind
-        session.save()
+def _prompt_html(client, matter, llm="claude-opus"):
     url = reverse("case:ai-new-conversation-prompt", args=[matter.id])
     response = client.get(url, {"llm": llm})
     assert response.status_code == 200
     return response.content.decode()
 
 
-def test_modal_defaults_to_gemini_when_research_remembered(client, matter):
-    html = _prompt_html(client, matter, llm="claude-opus", kind="research")
-    assert re.search(r'value="gemini-pro-latest"\s+selected', html)
+def test_modal_has_no_mode_controls(client, matter):
+    """Mode moved to the chat header's per-turn dropdown."""
+    html = _prompt_html(client, matter)
+    assert 'name="kind"' not in html
+    assert "research-depth" not in html
 
 
-def test_modal_keeps_sticky_llm_for_classic(client, matter):
-    html = _prompt_html(client, matter, llm="claude-opus", kind="classic")
+def test_modal_keeps_requested_llm(client, matter):
+    html = _prompt_html(client, matter, llm="claude-opus")
     assert re.search(r'value="claude-opus"\s+selected', html)
     assert not re.search(r'value="gemini-pro-latest"\s+selected', html)
+
+
+def test_new_chat_window_has_mode_dropdown(client, matter):
+    """A fresh chat opens in Analysis with the per-turn mode dropdown."""
+    url = reverse("case:ai-new-conversation-view", args=[matter.id])
+    response = client.get(url, {"llm": "claude-opus", "title": "T"})
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert 'id="modePill"' in html
+    # Depth pill wrapper starts hidden for an analysis chat.
+    assert re.search(r'id="depthPillWrap"\s+class="hide"', html)
+
+
+def test_research_conversation_window_shows_depth_pill(client, matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", kind="research", user=user
+    )
+    url = reverse("case:ai-conversation-view", args=[conversation.id])
+    response = client.get(url)
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert 'id="modePill"' in html
+    assert not re.search(r'id="depthPillWrap"\s+class="hide"', html)
+    assert 'id="researchDepthPill"' in html
 
 
 def test_modal_launch_uses_model_select():

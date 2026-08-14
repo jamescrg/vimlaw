@@ -26,6 +26,8 @@
         <input type="hidden" name="conversation_id" value="{{ conversation_id }}">
         <input type="hidden" name="llm" value="{{ llm }}">
         <input type="hidden" name="title" value="{{ title }}">
+        {% if kind %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
+        <input type="hidden" name="research_depth" value="{{ research_depth }}">
         <input type="hidden" name="message" id="promptEditorMessage">
       </form>
     </div>

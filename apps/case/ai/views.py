@@ -245,6 +245,7 @@ def conversation_view(request, conv_id):
         "matter": matter,
         "conversation": conversation,
         "messages": messages,
+        "research_default_llm": RESEARCH_DEFAULT_LLM,
     }
 
     return render(request, "case/ai/conversation-standalone.html", context)
@@ -262,15 +263,14 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
-    # Chat style (classic vs research) + research depth, remembered per
-    # session like the model choice.
+    # Mode (analysis vs research) + research depth. New chats open in
+    # analysis; the header dropdown switches the mode per turn.
     kind = request.GET.get("kind", "classic")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = "classic"
     depth = request.GET.get("depth", "standard")
     if depth not in dict(Conversation.DEPTH_CHOICES):
         depth = "standard"
-    request.session["ai_new_chat_kind"] = kind
 
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
@@ -290,6 +290,7 @@ def new_conversation_view(request, matter_id):
         "is_new": True,
         "llm": llm,
         "provided_title": provided_title,
+        "research_default_llm": RESEARCH_DEFAULT_LLM,
     }
 
     return render(request, "case/ai/conversation-standalone.html", context)
@@ -334,21 +335,13 @@ def new_conversation_prompt(request, matter_id):
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
 
-    default_kind = request.session.get("ai_new_chat_kind", "classic")
-    # Research defaults to Gemini: the agentic loop resends tool results
-    # every turn, which is far cheaper per token there, and quality holds.
-    # Claude stays one explicit pick away in the modal's model select.
-    initial_llm = RESEARCH_DEFAULT_LLM if default_kind == "research" else llm
     return render(
         request,
         "case/ai/new-conversation-modal.html",
         {
             "matter": matter,
             "llm": llm,
-            "initial_llm": initial_llm,
-            "research_default_llm": RESEARCH_DEFAULT_LLM,
             "llm_choices": Conversation.LLM_CHOICES,
-            "default_kind": default_kind,
         },
     )
 
@@ -406,12 +399,21 @@ def send_message(request, matter_id):
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
 
+    # Mode for THIS turn, from the header dropdown. Absent (legacy in-tab
+    # composer) or invalid means "keep the conversation's current mode".
+    kind = request.POST.get("kind")
+    if kind not in dict(Conversation.KIND_CHOICES):
+        kind = None
+
     # Get or create conversation
     is_new = False
     if conversation_id:
         conversation = get_object_or_404(
             Conversation, pk=conversation_id, matter__in=get_accessible_matters()
         )
+        if kind and kind != conversation.kind:
+            conversation.kind = kind
+            conversation.save(update_fields=["kind"])
     else:
         # Create conversation on first message. Prefer the title the user
         # entered in the new-conversation prompt; otherwise fall back to the
@@ -422,9 +424,6 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
-        kind = request.POST.get("kind", "classic")
-        if kind not in dict(Conversation.KIND_CHOICES):
-            kind = "classic"
         research_depth = request.POST.get("research_depth", "standard")
         if research_depth not in dict(Conversation.DEPTH_CHOICES):
             research_depth = "standard"
@@ -433,7 +432,7 @@ def send_message(request, matter_id):
             title=title,
             llm=llm,
             user=request.user,
-            kind=kind,
+            kind=kind or "classic",
             research_depth=research_depth,
         )
         is_new = True
@@ -743,6 +742,9 @@ def clone_conversation(request, conv_id):
         user=request.user,
         title=f"{conversation.title} (Copy)",
         llm=conversation.llm,
+        kind=conversation.kind,
+        research_depth=conversation.research_depth,
+        vet_citations=conversation.vet_citations,
     )
 
     # Clone all messages
@@ -850,6 +852,9 @@ def split_conversation(request, message_id):
         user=request.user,
         title=f"{conversation.title} (Split)",
         llm=conversation.llm,
+        kind=conversation.kind,
+        research_depth=conversation.research_depth,
+        vet_citations=conversation.vet_citations,
     )
 
     # Move messages to new conversation
@@ -1066,6 +1071,14 @@ def prompt_editor_modal(request, matter_id):
     conversation_id = request.GET.get("conversation_id", "")
     llm = request.GET.get("llm", "gemini-pro-latest")
     title = request.GET.get("title", "")
+    # Mirror the chat window's current mode dropdown so a send from the
+    # expanded editor carries the same per-turn mode as the composer.
+    kind = request.GET.get("kind", "")
+    if kind not in dict(Conversation.KIND_CHOICES):
+        kind = ""
+    research_depth = request.GET.get("research_depth", "standard")
+    if research_depth not in dict(Conversation.DEPTH_CHOICES):
+        research_depth = "standard"
 
     return render(
         request,
@@ -1075,6 +1088,8 @@ def prompt_editor_modal(request, matter_id):
             "conversation_id": conversation_id,
             "llm": llm,
             "title": title,
+            "kind": kind,
+            "research_depth": research_depth,
         },
     )
 

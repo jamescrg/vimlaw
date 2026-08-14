@@ -1,14 +1,16 @@
 # Research Chat
 
-The "research" chat style (Conversation.kind) runs an agentic CourtListener
-research loop instead of the classic single completion. Classic chats are
-untouched; the style is chosen per conversation in the new-conversation
-modal and remembered per session.
+The "research" chat mode (Conversation.kind) runs an agentic CourtListener
+research loop instead of the classic single completion (shown as
+"Analysis"). Analysis chats are untouched; the mode is chosen per turn via
+a dropdown in the chat header (it posts with every send and send_message
+persists it, so `kind` always holds the latest turn's mode). New chats
+open in Analysis.
 
 ## Architecture
 
 ```
-send_message (kind=research on create)
+send_message (kind posted per turn; persisted on the conversation)
   -> process_ai_request           three-line dispatch at the top
     -> run_research_request       apps/case/ai/research_chat.py
         system = matter context + research prompt

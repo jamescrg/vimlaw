@@ -86,9 +86,11 @@
           <span class="app-badge badge-purple">{{ matter.name }}</span>
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
           {% include "case/ai/llm-pill.html" with conversation=conversation %}
-          {% if conversation.kind == "research" %}
+          {% include "case/ai/mode-pill.html" with conversation=conversation %}
+          <span id="depthPillWrap"
+                {% if conversation.kind != "research" %}class="hide"{% endif %}>
             {% include "case/ai/research-depth-pill.html" with conversation=conversation %}
-          {% endif %}
+          </span>
           {% comment %}
             The vet-citations toggle was removed from the header: vetting
             defaults on and nobody ever turned it off. The backend flag,
@@ -111,7 +113,10 @@
         </div>
         <div class="ai-input-container">
           <div class="ai-input-row">
-            <span id="draftChip">{% include "case/ai/draft-chip.html" %}</span>
+            <span id="draftChip"
+                  {% if conversation.kind == "research" %}class="hide"{% endif %}>
+              {% include "case/ai/draft-chip.html" %}
+            </span>
             <form id="chatForm"
                   hx-post="{% url 'case:ai-send' matter.id %}"
                   hx-target="#messageContainer"
@@ -121,7 +126,6 @@
                      id="conversationId"
                      value="{% if not is_new %}{{ conversation.id }}{% endif %}">
               <input type="hidden" name="llm" value="{{ conversation.llm }}">
-              <input type="hidden" name="kind" value="{{ conversation.kind }}">
               <input type="hidden"
                      name="research_depth"
                      value="{{ conversation.research_depth }}">
@@ -186,6 +190,34 @@
       document.getElementById('aiMessageInput').value = '';
     }
 
+    // Mode dropdown (header): the value rides along with the next send, so
+    // flipping it needs no server call. It does re-apply each mode's
+    // default model, as the old new-chat modal did: research runs on
+    // Gemini by default (the agentic loop resends tool results every turn,
+    // which costs several times more on Claude), and flipping back to
+    // Analysis restores whatever model was in use before. The model pill
+    // stays one click away to override either way.
+    let aiPreResearchLlm = null;
+    function aiModeChanged(kind) {
+      const research = kind === 'research';
+      document.getElementById('modePill').classList.toggle('ai-research-badge', research);
+      document.getElementById('depthPillWrap').classList.toggle('hide', !research);
+      document.getElementById('draftChip').classList.toggle('hide', research);
+      const llmPill = document.getElementById('llmPill'); // saved conversations only
+      if (!llmPill) return;
+      if (research) {
+        if (llmPill.value !== '{{ research_default_llm }}') {
+          aiPreResearchLlm = llmPill.value;
+          llmPill.value = '{{ research_default_llm }}';
+          llmPill.dispatchEvent(new Event('change'));
+        }
+      } else if (aiPreResearchLlm) {
+        document.getElementById('llmPill').value = aiPreResearchLlm;
+        aiPreResearchLlm = null;
+        document.getElementById('llmPill').dispatchEvent(new Event('change'));
+      }
+    }
+
     // Handle form submission completion
     document.getElementById('chatForm').addEventListener('htmx:afterRequest', function(event) {
       clearChatInput();
@@ -238,7 +270,7 @@
       const form = document.getElementById('chatForm');
       const params = new URLSearchParams();
       params.set('llm', form.querySelector('[name="llm"]').value);
-      params.set('kind', form.querySelector('[name="kind"]').value);
+      params.set('kind', document.getElementById('modePill').value);
       params.set('research_depth', form.querySelector('[name="research_depth"]').value);
       params.set('title', document.getElementById('conversationTitleInput').value);
       fetch('{% url "case:ai-create-conversation" matter.id %}', {
@@ -330,7 +362,9 @@
       const titleInput = document.getElementById('conversationTitleInput');
       const title = titleInput ? titleInput.value : '';
       const llm = '{{ conversation.llm }}';
-      const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title);
+      const kind = document.getElementById('modePill').value;
+      const depth = document.querySelector('#chatForm [name="research_depth"]').value;
+      const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title) + '&kind=' + kind + '&research_depth=' + depth;
       // Stash text for the modal to pick up (avoids URL length limits)
       if (text) {
         window._promptEditorInitialText = text;

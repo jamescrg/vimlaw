@@ -20,12 +20,13 @@ class Conversation(AuditMixin, models.Model):
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
     ]
 
-    # Chat styles: "classic" is the original single-completion chat;
-    # "research" runs an agentic CourtListener tool loop (searches, reads
-    # opinions, cites only what it retrieved). Classic stays untouched as
-    # the fallback while research proves itself.
+    # Chat modes: "classic" (shown as Analysis) is the original
+    # single-completion chat; "research" runs an agentic CourtListener tool
+    # loop (searches, reads opinions, cites only what it retrieved). The
+    # mode is picked per turn via the chat-header dropdown; `kind` holds
+    # the mode of the latest turn (and the default for the next one).
     KIND_CHOICES = [
-        ("classic", "Classic"),
+        ("classic", "Analysis"),
         ("research", "Research"),
     ]
     DEPTH_CHOICES = [

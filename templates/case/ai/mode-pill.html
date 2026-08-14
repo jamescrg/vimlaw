@@ -1,0 +1,18 @@
+{% comment %}
+Mode dropdown for the conversation header: Analysis vs Research, applied
+per turn. The select is form-associated with #chatForm (form= attribute),
+so the chosen mode posts with every send and send_message persists it on
+the conversation. Flipping it also re-applies each mode's default model
+via aiModeChanged() in conversation-standalone.html.
+{% endcomment %}
+<select id="modePill"
+        name="kind"
+        form="chatForm"
+        class="app-badge badge-lg ai-mode-pill{% if conversation.kind == 'research' %} ai-research-badge{% endif %}"
+        onchange="aiModeChanged(this.value)"
+        title="Mode for the next message. Analysis answers from the case file and the model's knowledge; Research actively searches CourtListener and cites only what it retrieved.">
+  {% for key, label in conversation.KIND_CHOICES %}
+    <option value="{{ key }}"
+            {% if key == conversation.kind %}selected{% endif %}>{{ label }}</option>
+  {% endfor %}
+</select>

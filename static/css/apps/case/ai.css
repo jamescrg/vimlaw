@@ -514,9 +514,11 @@
   color: var(--label-green-line);
 }
 
-/* Model switcher: the header badge is a <select>; strip the UA chrome so
-   the .app-badge look carries, and signal it's interactive. */
-select.ai-llm-pill {
+/* Model and mode switchers: the header badges are <select>s; strip the
+   UA chrome so the .app-badge look carries, and signal they're
+   interactive. */
+select.ai-llm-pill,
+select.ai-mode-pill {
   appearance: none;
   cursor: pointer;
 }
@@ -2122,40 +2124,9 @@ select.ai-llm-pill {
   text-align: center;
 }
 
-/* Research chat: new-conversation style options, header badge, trail.
-   One row per style — radio | name | description — sharing a single grid
-   so the description column starts at the same x for every row instead
-   of trailing each name inline. display: contents lifts each label's
-   children into the shared grid while keeping the label's
-   click-to-select. */
-.ai-kind-options {
-  align-items: baseline;
-  display: grid;
-  gap: 0.5rem 0.75rem;
-  grid-template-columns: auto auto 1fr;
-}
-
-/* Outranks forms.css's `.form-compact .form-group label { display: block }`,
-   which otherwise turns the labels into side-by-side grid items. */
-.form-group .ai-kind-options .ai-kind-option {
-  display: contents;
-}
-
-.ai-kind-option input[type="radio"] {
-  margin: 0;
-  width: auto;
-}
-
-.ai-kind-option input[type="radio"],
-.ai-kind-option .ai-kind-name,
-.ai-kind-option .detail-text {
-  cursor: pointer;
-}
-
-.ai-kind-option input[type="radio"] {
-  width: auto;
-}
-
+/* Research mode: header badge tint + the per-message research trail.
+   (The new-conversation modal's mode radios retired with the per-turn
+   mode dropdown; the .ai-kind-* rules went with them.) */
 .ai-research-badge {
   background: var(--selected-background);
 }
