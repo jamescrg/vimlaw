@@ -46,21 +46,29 @@ EFFORT_BUDGETS = {
         "plan_first": False,
         "total_char_cap": 120_000,
     },
+    # Medium/high raised 2026-08-15 (12/300k and 25/600k before) after the
+    # CourtListener Tier 3 upgrade (20/min, 250/hour, 1,000/day): runs were
+    # exhausting the call budget before treatment-checking their citations.
+    # CL requests per tool call: search 1, read_opinion 2 (cluster +
+    # opinion; conversation-cached repeats 0), check_treatment up to ~11,
+    # library reads 0 — the loop's model turns space them naturally and the
+    # throttle's 429 backoff absorbs bursts. total_char_cap stays the token
+    # cost lever: tool results are resent every model turn.
     "medium": {
-        "max_tool_calls": 12,
+        "max_tool_calls": 18,
         "page_size": 8,
         "read_char_cap": 30_000,
         "treatment_tool": True,
         "plan_first": False,
-        "total_char_cap": 300_000,
+        "total_char_cap": 450_000,
     },
     "high": {
-        "max_tool_calls": 25,
+        "max_tool_calls": 35,
         "page_size": 10,
         "read_char_cap": 40_000,
         "treatment_tool": True,
         "plan_first": True,
-        "total_char_cap": 600_000,
+        "total_char_cap": 900_000,
     },
 }
 

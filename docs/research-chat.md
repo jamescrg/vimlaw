@@ -41,8 +41,14 @@ day in favor of answer streaming, which attacks the real latency.)
 | effort | tool calls | search page | read cap | treatment tool | plan first | total text cap |
 |---|---|---|---|---|---|---|
 | low | 5 | 6 | 20k chars | no | no | 120k chars |
-| medium | 12 | 8 | 30k | yes | no | 300k |
-| high | 25 | 10 | 40k | yes | yes | 600k |
+| medium | 18 | 8 | 30k | yes | no | 450k |
+| high | 35 | 10 | 40k | yes | yes | 900k |
+
+Medium/high raised 2026-08-15 with the CourtListener Tier 3 upgrade
+(20/min, 250/hour, 1,000/day). A tool call is not one CL request:
+searches cost 1, opinion reads 2 (cluster + opinion), treatment checks
+up to ~11, library reads 0; repeats served from the per-conversation
+cache cost 0.
 
 The search page is the default; the model may request up to
 MAX_SEARCH_RESULTS (20) per search when a survey needs more. Tool
