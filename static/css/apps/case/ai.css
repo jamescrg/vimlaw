@@ -2169,9 +2169,14 @@ select.ai-mode-pill {
   background: var(--selected-background);
 }
 
+/* Post-response sections (research trail and analysis activity log):
+   visually continuous with the live status box they replace (same
+   ground, border hue, and type size), and with each other. */
 .ai-research-trail {
-  border: 1px solid var(--border-medium);
+  background: var(--ai-raised);
+  border: 1px solid var(--violet-300);
   border-radius: var(--radius-sm);
+  font-size: 1rem;
   margin-bottom: 0.75rem;
 }
 
@@ -2242,14 +2247,6 @@ select.ai-mode-pill {
    classic one-line indicator keeps its exact layout. */
 .ai-status-content:has(.ai-research-log) {
   flex-wrap: wrap;
-}
-
-/* Post-response Activity section: visually continuous with the live
-   status box it replaces (same ground, border hue, and type size). */
-.ai-activity-log {
-  background: var(--ai-raised);
-  border-color: var(--violet-300);
-  font-size: 1rem;
 }
 
 /* Conversation-list title cell: title left, kind badge pushed right so it
