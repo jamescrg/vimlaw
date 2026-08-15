@@ -95,6 +95,17 @@ a seminal case to the current statement of the rule. A LEARNED
 VOCABULARY rule has the model re-search with the courts' own terms of
 art once its reads teach it better language.
 
+Query design (QUERY_DESIGN_RULES in query_syntax.py, 2026-08-15, after
+run 892's five rephrasings of one concept set): terms must be words a
+court would write (no narrative filler like "after"), search the
+doctrine's operative phrases, statute numbers bare and quoted (never
+subsections), 2-3 concept groups, one NEW concept per query, stem*
+over inflection ORs. The executor backs the rule mechanically: every
+search's results are scored against all previously returned
+cluster_ids, and a mostly-seen-before result set comes back with a
+note telling the model to change a concept or triage what it has
+(overlap also shows in the live log and trail).
+
 ## Firm library
 
 Every standalone note (the whole Library tree, see

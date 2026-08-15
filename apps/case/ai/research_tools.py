@@ -324,6 +324,11 @@ def make_executor(matter, effort, conversation_id=None):
     # of re-hitting the API, and flag the repeat so it shows in the log.
     seen_searches = {}
     seen_lookups = {}
+    # Every cluster_id any search has returned. Lets follow-up searches be
+    # scored for redundancy: a query whose results were mostly seen before
+    # gets told so, which curbs the rephrase-the-same-concepts loop far
+    # better than standing instructions do.
+    seen_result_ids = set()
 
     def _run_query(query, court_ids, limit, event_type, event_extra=None):
         """Shared body of search_caselaw and find_citing_cases: dedupe,
@@ -362,12 +367,22 @@ def make_executor(matter, effort, conversation_id=None):
         payload = {"results": rows}
         if status != 200:
             payload["error"] = f"Search failed (status {status}). Adjust the query."
+        overlap = sum(1 for r in rows if r["cluster_id"] in seen_result_ids)
+        seen_result_ids.update(r["cluster_id"] for r in rows)
+        if rows and overlap >= max(2, (len(rows) * 3) // 5):
+            payload["note"] = (
+                f"{overlap} of {len(rows)} results already appeared in your "
+                "earlier searches - this query mostly re-covered old ground. "
+                "Change a concept (not the phrasing), triage the results you "
+                "already have, or re-run one query with a larger num_results."
+            )
         seen_searches[dedupe_key] = payload
         event = {
             "type": event_type,
             "query": query,
             "court_ids": court_ids,
             "result_count": len(rows),
+            "overlap_count": overlap,
             "results": [
                 {"case_name": r["case_name"], "cluster_id": r["cluster_id"]}
                 for r in rows

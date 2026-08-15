@@ -1252,3 +1252,51 @@ def test_effort_directive_prices_both_pools():
     text = research_chat._effort_directive("medium")
     assert "18 substantive tool calls" in text
     assert "20 cheap" in text
+
+
+# ---------------------------------------------------------------------------
+# Query design: doctrine in the prompt, redundancy feedback in the tool
+# ---------------------------------------------------------------------------
+
+
+def test_system_prompt_carries_query_design_rules():
+    system = research_chat.build_research_system("CTX", "medium")
+    assert "QUERY DESIGN" in system
+    assert "ONE NEW CONCEPT PER QUERY" in system
+    assert "NEVER include subsections" in system
+
+
+def test_redundant_search_gets_overlap_feedback(matter, monkeypatch):
+    rows = (
+        [
+            {
+                "case_name": f"Case {n}",
+                "citation": [f"{n} Ga. 1"],
+                "court": "Supreme Court of Georgia",
+                "date_filed": "2005-01-01",
+                "cluster_id": n,
+                "snippet": "x",
+                "score": 1.0,
+                "cite_count": 1,
+                "courtlistener_url": f"https://cl/{n}",
+            }
+            for n in (1, 2, 3)
+        ],
+        200,
+    )
+    monkeypatch.setattr(
+        research_tools, "search_opinions", lambda query, court=None, limit=10: rows
+    )
+    execute = make_executor(matter, "medium")
+
+    result_json, event = execute("search_caselaw", {"query": "compel* AND expense*"})
+    payload = json.loads(result_json)
+    assert "note" not in payload
+    assert event["overlap_count"] == 0
+
+    result_json, event = execute(
+        "search_caselaw", {"query": "expense* AND compel* AND moot*"}
+    )
+    payload = json.loads(result_json)
+    assert "re-covered old ground" in payload["note"]
+    assert event["overlap_count"] == 3

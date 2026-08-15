@@ -14,7 +14,10 @@ import time
 
 from django.core.cache import cache
 
-from apps.case.research.query_syntax import COURTLISTENER_SYNTAX_RULES
+from apps.case.research.query_syntax import (
+    COURTLISTENER_SYNTAX_RULES,
+    QUERY_DESIGN_RULES,
+)
 
 from .anthropic_client import send_to_claude_with_tools
 from .citations import citations_to_dict, verify_all_citations
@@ -286,6 +289,7 @@ def build_research_system(context_text, effort, prior_research="", library_secti
         + library_section
         + PROMPT_ROLE
         + COURTLISTENER_SYNTAX_RULES
+        + QUERY_DESIGN_RULES
         + PROMPT_CONTRACT
         + _effort_directive(effort)
         + prior_research
@@ -475,9 +479,11 @@ def run_research_request(
             etype = event.get("type")
             if etype == "search":
                 repeat = " — repeat, served from cache" if event.get("repeat") else ""
+                overlap = event.get("overlap_count") or 0
+                seen = f", {overlap} seen before" if overlap else ""
                 push_log(
                     f"Searched `{event.get('query', '')}` "
-                    f"({event.get('result_count', 0)} hits){repeat}"
+                    f"({event.get('result_count', 0)} hits{seen}){repeat}"
                 )
             elif etype == "citing":
                 cited = event.get("case_name") or event.get("cluster_id")
