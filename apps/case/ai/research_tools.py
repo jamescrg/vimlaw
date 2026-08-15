@@ -747,7 +747,13 @@ def make_executor(matter, effort, conversation_id=None, question=""):
 
     def _treatment(tool_input):
         cluster_id = int(tool_input.get("cluster_id") or 0)
-        known = opinion_cache.get(cluster_id, {})
+        # The case may be known from a full read, a brief, or a skim.
+        known = (
+            opinion_cache.get(cluster_id)
+            or abstract_cache.get(cluster_id)
+            or skim_cache.get(cluster_id)
+            or {}
+        )
         outcome = check_negative_treatment(
             cluster_id, known.get("case_name", ""), known.get("citation", "")
         )
