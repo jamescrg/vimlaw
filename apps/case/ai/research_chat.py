@@ -506,7 +506,7 @@ def run_research_request(
                 if event.get("suppressed"):
                     seen += ", repeats withheld"
                 push_log(
-                    f"Searched: {event.get('query', '')} "
+                    f"Searched: `{event.get('query', '')}` "
                     f"({event.get('result_count', 0)} hits{seen}){repeat}"
                 )
             elif etype == "citing":

@@ -2206,9 +2206,24 @@
   margin-left: 0.5rem;
 }
 
-/* Search terms in the trail: body type, one shade darker for scanning. */
+/* Search terms in the trail and live log: the code-block face (Courier
+   Prime) rendered INLINE at body size - no block, no indent, one shade
+   darker. The scoped code override neutralizes typeography.css's
+   display:block code rule for backticked terms in the live log. */
 .ai-search-term {
   color: var(--color-darker);
+  font-family: 'Courier Prime', monospace;
+}
+
+.ai-research-log code,
+.ai-research-steps code {
+  background: none;
+  color: var(--color-darker);
+  display: inline;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1em;
+  margin-left: 0;
+  white-space: normal;
 }
 
 /* Authorities under a research answer: viewer links + expandable
