@@ -94,9 +94,13 @@ PROMPT_ROLE = (
     "larger num_results and triage the deeper list — one deep result "
     "list beats several near-identical queries. Say which way you are "
     "adjusting and why, in one line.\n"
-    "6. SELECT: once results look on point, state a shortlist — "
+    "6. SELECT: triage before you commit. skim_cluster the promising "
+    "result rows (metadata plus editorial syllabus when available; "
+    "skims are cheap and draw on their own budget) and use snippets "
+    "and skims to cut the field. Then state a shortlist — "
     "'Candidates:' with each case on one line (name, court, year, and a "
-    "few words on why it made the list).\n"
+    "few words on why it made the list). A skim is never a read: only "
+    "read_opinion makes a case citable.\n"
     "7. EVALUATE: read_opinion each shortlisted case. After each read, "
     "give AT MOST two sentences: the holding, and whether it helps or "
     "hurts here. Run check_treatment (when available) on every case "
@@ -161,8 +165,10 @@ def _effort_directive(effort):
     budget = budget_for(effort)
     lines = (
         f"RESEARCH EFFORT: {effort}. You have a budget of "
-        f"{budget['max_tool_calls']} tool calls; spend them where they "
-        "matter and answer once you have solid authority.\n"
+        f"{budget['max_tool_calls']} substantive tool calls (searches, "
+        f"reads, treatment checks) plus {budget['max_skims']} cheap "
+        "skims; survey wide with skims, spend the substantive calls "
+        "where they matter, and answer once you have solid authority.\n"
     )
     if budget["plan_first"]:
         lines += (
@@ -450,6 +456,8 @@ def run_research_request(
                 set_status(
                     "reading", f"Reading opinion {tool_input.get('cluster_id', '')}..."
                 )
+            elif name == "skim_cluster":
+                set_status("reading", f"Skimming {tool_input.get('cluster_id', '')}...")
             elif name == "check_treatment":
                 set_status(
                     "reading",
@@ -477,6 +485,10 @@ def run_research_request(
             elif etype == "read":
                 name = event.get("case_name") or event.get("cluster_id")
                 push_log(f"Read *{name}*")
+            elif etype == "skim":
+                name = event.get("case_name") or event.get("cluster_id")
+                detail = "syllabus" if event.get("has_syllabus") else "metadata only"
+                push_log(f"Skimmed *{name}* ({detail})")
             elif etype == "treatment":
                 name = event.get("case_name") or event.get("cluster_id")
                 verdict = (
@@ -513,7 +525,7 @@ def run_research_request(
             tools,
             execute_tool,
             model=GEMINI_MODELS[llm],
-            max_tool_calls=budget["max_tool_calls"],
+            max_tool_calls=budget["max_tool_calls"] + budget["max_skims"],
             is_cancelled=is_cancelled,
             on_activity=on_activity,
         )
@@ -524,7 +536,7 @@ def run_research_request(
             tools,
             execute_tool,
             model=CLAUDE_MODELS.get(llm, "claude-opus-4-8"),
-            max_tool_calls=budget["max_tool_calls"],
+            max_tool_calls=budget["max_tool_calls"] + budget["max_skims"],
             is_cancelled=is_cancelled,
             on_activity=on_activity,
         )

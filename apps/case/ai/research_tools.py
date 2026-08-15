@@ -37,9 +37,14 @@ SNIPPET_LIMIT = 500
 # more. Result rows are resent every model turn, so the cap bounds cost.
 MAX_SEARCH_RESULTS = 20
 
+# Cap on the editorial syllabus/headnotes text a skim injects. Skims are
+# the survey lane: wide triage at a fraction of a read's token cost.
+SKIM_CHAR_LIMIT = 2_000
+
 EFFORT_BUDGETS = {
     "low": {
         "max_tool_calls": 5,
+        "max_skims": 8,
         "page_size": 6,
         "read_char_cap": 20_000,
         "treatment_tool": False,
@@ -56,6 +61,7 @@ EFFORT_BUDGETS = {
     # cost lever: tool results are resent every model turn.
     "medium": {
         "max_tool_calls": 18,
+        "max_skims": 20,
         "page_size": 8,
         "read_char_cap": 30_000,
         "treatment_tool": True,
@@ -64,6 +70,7 @@ EFFORT_BUDGETS = {
     },
     "high": {
         "max_tool_calls": 35,
+        "max_skims": 40,
         "page_size": 10,
         "read_char_cap": 40_000,
         "treatment_tool": True,
@@ -183,6 +190,28 @@ def build_tools(effort):
             },
         },
         {
+            "name": "skim_cluster",
+            "description": (
+                "Cheap triage: fetch a case's metadata and editorial "
+                "syllabus/headnotes (when available) WITHOUT the full "
+                "opinion text. Skims draw on their own, larger budget - "
+                "use them to survey many candidates from search results "
+                "before spending full reads on the few that matter. A "
+                "skim is NOT a read: never characterize a holding or cite "
+                "a case from a skim alone; read_opinion the finalists."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "cluster_id": {
+                        "type": "integer",
+                        "description": "The CourtListener cluster id.",
+                    }
+                },
+                "required": ["cluster_id"],
+            },
+        },
+        {
             "name": "lookup_citation",
             "description": (
                 "Resolve an exact reporter citation (e.g. '148 Ga. 616') to "
@@ -288,7 +317,8 @@ def make_executor(matter, effort, conversation_id=None):
     budget = budget_for(effort)
     opinion_cache = {}
     library_cache = {}
-    state = {"chars_used": 0}
+    skim_cache = {}
+    state = {"chars_used": 0, "calls_used": 0, "skims_used": 0}
     # Within-run dedupe: the model sometimes repeats a search or lookup it
     # already ran (especially failed ones). Serve the stored result instead
     # of re-hitting the API, and flag the repeat so it shows in the log.
@@ -454,6 +484,63 @@ def make_executor(matter, effort, conversation_id=None):
         }
         return payload, event
 
+    def _skim(tool_input):
+        from django.utils.html import strip_tags
+
+        cluster_id = int(tool_input.get("cluster_id") or 0)
+        if not cluster_id:
+            return {"error": "skim_cluster needs a cluster_id."}, None
+        if cluster_id in skim_cache:
+            cached = dict(skim_cache[cluster_id])
+            cached["note"] = "Already skimmed this cluster in this request."
+            event = {
+                "type": "skim",
+                "cluster_id": cluster_id,
+                "case_name": cached.get("case_name", ""),
+                "citation": cached.get("citation", ""),
+                "has_syllabus": bool(cached.get("syllabus")),
+                "cached": True,
+                "ts": _now(),
+            }
+            return cached, event
+
+        cluster = fetch_cluster(cluster_id)
+        if not cluster:
+            return {"error": f"Cluster {cluster_id} not available."}, None
+        citation = format_citations_with_year(
+            cluster.get("citations", []), None
+        ) or cluster.get("citation_string", "")
+        summary_text = ""
+        for field in ("syllabus", "headnotes", "summary", "headmatter"):
+            value = strip_tags(str(cluster.get(field) or "")).strip()
+            if value:
+                summary_text = value[:SKIM_CHAR_LIMIT]
+                break
+        state["chars_used"] += len(summary_text)
+        payload = {
+            "cluster_id": cluster_id,
+            "case_name": cluster.get("case_name", ""),
+            "citation": citation,
+            "court": cluster.get("court", ""),
+            "date_filed": cluster.get("date_filed", ""),
+            "syllabus": summary_text or None,
+        }
+        if not summary_text:
+            payload["note"] = (
+                "No editorial summary on this cluster; metadata only. "
+                "read_opinion it if the metadata looks on point."
+            )
+        skim_cache[cluster_id] = payload
+        event = {
+            "type": "skim",
+            "cluster_id": cluster_id,
+            "case_name": payload["case_name"],
+            "citation": citation,
+            "has_syllabus": bool(summary_text),
+            "ts": _now(),
+        }
+        return payload, event
+
     def _treatment(tool_input):
         cluster_id = int(tool_input.get("cluster_id") or 0)
         known = opinion_cache.get(cluster_id, {})
@@ -580,6 +667,7 @@ def make_executor(matter, effort, conversation_id=None):
         "search_caselaw": _search,
         "find_citing_cases": _citing,
         "read_opinion": _read,
+        "skim_cluster": _skim,
         "check_treatment": _treatment,
         "lookup_citation": _lookup,
         "list_saved_caselaw": _saved,
@@ -590,6 +678,32 @@ def make_executor(matter, effort, conversation_id=None):
         handler = handlers.get(name)
         if handler is None:
             return json.dumps({"error": f"Unknown tool {name!r}."}), None
+        # Two-pool call accounting: skims are cheap and plentiful; the
+        # substantive pool (searches, reads, treatment checks) is what the
+        # effort level really prices. The provider loop's own ceiling is
+        # the sum of both pools, as a backstop.
+        if name == "skim_cluster":
+            if state["skims_used"] >= budget["max_skims"]:
+                return json.dumps(
+                    {
+                        "error": (
+                            "Skim budget exhausted. Read your strongest "
+                            "candidates in full or answer."
+                        )
+                    }
+                ), None
+            state["skims_used"] += 1
+        else:
+            if state["calls_used"] >= budget["max_tool_calls"]:
+                return json.dumps(
+                    {
+                        "error": (
+                            "Tool budget exhausted. Provide your best "
+                            "answer from the opinions already read."
+                        )
+                    }
+                ), None
+            state["calls_used"] += 1
         try:
             payload, event = handler(tool_input or {})
         except Exception:

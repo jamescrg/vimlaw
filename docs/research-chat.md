@@ -38,11 +38,20 @@ Research-only: the effort pill shows only in Research mode. Formerly
 Analysis mode effort tiers over the context apparatus; pruned the same
 day in favor of answer streaming, which attacks the real latency.)
 
-| effort | tool calls | search page | read cap | treatment tool | plan first | total text cap |
-|---|---|---|---|---|---|---|
-| low | 5 | 6 | 20k chars | no | no | 120k chars |
-| medium | 18 | 8 | 30k | yes | no | 450k |
-| high | 35 | 10 | 40k | yes | yes | 900k |
+| effort | tool calls | skims | search page | read cap | treatment tool | plan first | total text cap |
+|---|---|---|---|---|---|---|---|
+| low | 5 | 8 | 6 | 20k chars | no | no | 120k chars |
+| medium | 18 | 20 | 8 | 30k | yes | no | 450k |
+| high | 35 | 40 | 10 | 40k | yes | yes | 900k |
+
+Skims (`skim_cluster`, 2026-08-15) are the survey lane: cluster
+metadata plus the editorial syllabus/headnotes (2k-char cap, HTML
+stripped), costing 1 CL request and a fraction of a read's tokens.
+They draw on their own pool so wide triage can't starve reads; the
+executor enforces both pools and the provider loop's ceiling is their
+sum. A skim is never citable: the prompt requires read_opinion before
+characterizing or citing, and the SELECT step now says skim-triage
+first, then shortlist, then read the finalists.
 
 Medium/high raised 2026-08-15 with the CourtListener Tier 3 upgrade
 (20/min, 250/hour, 1,000/day). A tool call is not one CL request:

@@ -28,6 +28,7 @@ def fake_cl(monkeypatch):
             self.clusters = {
                 101: {
                     "case_name": "Smith v. Jones",
+                    "syllabus": "<p>The court held that partition applies to joint tenancies.</p>",
                     "citations": [{"volume": 279, "reporter": "Ga.", "page": 326}],
                     "court": "Supreme Court of Georgia",
                     "date_filed": "2005-05-23",
@@ -1195,3 +1196,59 @@ def test_header_pill_order_mode_model_effort(client, matter, user):
         < html.index('id="llmPill"')
         < html.index('id="effortPillWrap"')
     )
+
+
+# ---------------------------------------------------------------------------
+# Skim tool / two-pool budgets
+# ---------------------------------------------------------------------------
+
+
+def test_skim_tool_present_at_all_efforts():
+    for effort in ("low", "medium", "high"):
+        assert "skim_cluster" in [t["name"] for t in build_tools(effort)]
+
+
+def test_skim_returns_stripped_syllabus(matter, fake_cl):
+    execute = make_executor(matter, "medium")
+    result_json, event = execute("skim_cluster", {"cluster_id": 101})
+    payload = json.loads(result_json)
+    assert payload["case_name"] == "Smith v. Jones"
+    assert "held that partition" in payload["syllabus"]
+    assert "<p>" not in payload["syllabus"]
+    assert event["type"] == "skim"
+    assert event["has_syllabus"] is True
+
+
+def test_skim_without_syllabus_flags_metadata_only(matter, fake_cl):
+    execute = make_executor(matter, "medium")
+    result_json, event = execute("skim_cluster", {"cluster_id": 202})
+    payload = json.loads(result_json)
+    assert payload["syllabus"] is None
+    assert "metadata only" in payload["note"]
+    assert event["has_syllabus"] is False
+
+
+def test_skims_draw_on_their_own_pool(matter, fake_cl, monkeypatch):
+    """Exhausting the substantive pool must not block skims, and vice versa."""
+    monkeypatch.setitem(research_tools.EFFORT_BUDGETS["medium"], "max_tool_calls", 1)
+    execute = make_executor(matter, "medium")
+    execute("search_caselaw", {"query": "q"})
+    result_json, _ = execute("skim_cluster", {"cluster_id": 101})
+    assert "error" not in json.loads(result_json)
+    result_json, _ = execute("read_opinion", {"cluster_id": 101})
+    assert "Tool budget exhausted" in json.loads(result_json)["error"]
+
+
+def test_skim_budget_exhaustion(matter, fake_cl, monkeypatch):
+    monkeypatch.setitem(research_tools.EFFORT_BUDGETS["medium"], "max_skims", 1)
+    execute = make_executor(matter, "medium")
+    execute("skim_cluster", {"cluster_id": 101})
+    result_json, event = execute("skim_cluster", {"cluster_id": 202})
+    assert "Skim budget exhausted" in json.loads(result_json)["error"]
+    assert event is None
+
+
+def test_effort_directive_prices_both_pools():
+    text = research_chat._effort_directive("medium")
+    assert "18 substantive tool calls" in text
+    assert "20 cheap" in text

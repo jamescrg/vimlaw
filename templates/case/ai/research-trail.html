@@ -63,6 +63,23 @@ without crowding the dialogue.
             {% if event.cached %}<span class="detail-text">(from earlier read)</span>{% endif %}
           </div>
         </li>
+      {% elif event.type == "skim" %}
+        <li class="ai-research-step">
+          <i class="icon-eye"></i>
+          <div>
+            Skimmed
+            <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id event.cluster_id %}"
+               target="_blank">{{ event.case_name|default:event.cluster_id }}</a>
+            {% if event.citation %}<span class="detail-text">{{ event.citation }}</span>{% endif %}
+            <span class="detail-text">
+              {% if event.has_syllabus %}
+                (syllabus)
+              {% else %}
+                (metadata only)
+              {% endif %}
+            </span>
+          </div>
+        </li>
       {% elif event.type == "lookup" %}
         <li class="ai-research-step">
           <i class="icon-crosshair"></i>
