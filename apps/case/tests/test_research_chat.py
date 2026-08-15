@@ -567,22 +567,36 @@ def test_clone_copies_mode_fields(client, matter, user):
     assert clone.vet_citations is False
 
 
-def test_effort_pill_cycles(client, matter, user):
+def test_send_switches_effort_per_turn(client, matter, user, _no_worker):
+    """The effort dropdown posts with every send, like the mode dropdown."""
     conversation = Conversation.objects.create(
         matter=matter, title="R", kind="research", effort="medium", user=user
     )
-    response = client.post(
-        reverse("case:ai-set-effort", args=[conversation.id, "high"])
+    client.post(
+        reverse("case:ai-send", args=[matter.id]),
+        {
+            "message": "Go deep",
+            "llm": "gemini-pro-latest",
+            "conversation_id": conversation.id,
+            "kind": "research",
+            "effort": "high",
+        },
     )
-    assert response.status_code == 200
     conversation.refresh_from_db()
     assert conversation.effort == "high"
-    assert (
-        client.post(
-            reverse("case:ai-set-effort", args=[conversation.id, "bogus"])
-        ).status_code
-        == 400
+    # Invalid effort is ignored, not applied.
+    client.post(
+        reverse("case:ai-send", args=[matter.id]),
+        {
+            "message": "Again",
+            "llm": "gemini-pro-latest",
+            "conversation_id": conversation.id,
+            "kind": "research",
+            "effort": "bogus",
+        },
     )
+    conversation.refresh_from_db()
+    assert conversation.effort == "high"
 
 
 # --------------------------------------------------------------------------- #

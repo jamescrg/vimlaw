@@ -514,14 +514,29 @@
   color: var(--label-green-line);
 }
 
-/* Model and mode switchers: the header badges are <select>s; strip the
-   UA chrome so the .app-badge look carries, and signal they're
-   interactive. */
+/* Header pill controls (mode, model, effort): styled like the site's
+   toolbar buttons (chrome mirrored from toolbar.css, which the
+   standalone chat page doesn't load) rather than badges, for
+   consistency with the toolbars on the rest of the site. */
 select.ai-llm-pill,
-select.ai-mode-pill {
+select.ai-mode-pill,
+select.ai-effort-pill {
   appearance: none;
+  background: var(--background-control);
+  border: solid 1px var(--button-border);
+  border-radius: var(--radius-sm);
+  color: var(--button-toolbar);
   cursor: pointer;
-  padding-right: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.25;
+  padding: 0.5rem 1.75rem 0.5rem 0.75rem;
+}
+
+/* Research is a state; show it the way toolbars show an active filter. */
+select.ai-mode-pill.ai-research-badge {
+  background: var(--selected-background);
+  border-color: var(--selected-border);
+  color: var(--selected-color);
 }
 
 /* appearance:none also strips the UA dropdown arrow, and a <select> can't
@@ -541,20 +556,6 @@ select.ai-mode-pill {
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
-}
-
-/* The effort pill (both modes) cycles rather than dropping down; the
-   stacked chevrons signal "click to step". Same tint as the research
-   badge, its own class since it's no longer research-only. Trailing
-   icon, so flip the .app-badge i margin. */
-.ai-effort-pill {
-  background: var(--selected-background);
-}
-
-.ai-effort-pill .icon-chevrons-up-down {
-  color: var(--color-muted);
-  margin-left: 0.25rem;
-  margin-right: 0;
 }
 
 /* New conversation buttons */

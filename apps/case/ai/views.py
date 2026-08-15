@@ -398,11 +398,15 @@ def send_message(request, matter_id):
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
 
-    # Mode for THIS turn, from the header dropdown. Absent (legacy in-tab
-    # composer) or invalid means "keep the conversation's current mode".
+    # Mode and effort for THIS turn, from the header dropdowns. Absent
+    # (legacy in-tab composer) or invalid means "keep the conversation's
+    # current value".
     kind = request.POST.get("kind")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = None
+    effort = request.POST.get("effort")
+    if effort not in dict(Conversation.EFFORT_CHOICES):
+        effort = None
 
     # Get or create conversation
     is_new = False
@@ -410,9 +414,15 @@ def send_message(request, matter_id):
         conversation = get_object_or_404(
             Conversation, pk=conversation_id, matter__in=get_accessible_matters()
         )
+        update_fields = []
         if kind and kind != conversation.kind:
             conversation.kind = kind
-            conversation.save(update_fields=["kind"])
+            update_fields.append("kind")
+        if effort and effort != conversation.effort:
+            conversation.effort = effort
+            update_fields.append("effort")
+        if update_fields:
+            conversation.save(update_fields=update_fields)
     else:
         # Create conversation on first message. Prefer the title the user
         # entered in the new-conversation prompt; otherwise fall back to the
@@ -423,16 +433,13 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
-        effort = request.POST.get("effort", "medium")
-        if effort not in dict(Conversation.EFFORT_CHOICES):
-            effort = "medium"
         conversation = Conversation.objects.create(
             matter=matter,
             title=title,
             llm=llm,
             user=request.user,
             kind=kind or "classic",
-            effort=effort,
+            effort=effort or "medium",
         )
         is_new = True
 
@@ -975,27 +982,6 @@ def set_conversation_llm(request, conv_id):
     return render(
         request,
         "case/ai/llm-pill.html",
-        {"conversation": conversation},
-    )
-
-
-@login_required
-@require_POST
-def set_effort(request, conv_id, level):
-    """Set a conversation's effort level (low/medium/high, both modes)."""
-    if level not in dict(Conversation.EFFORT_CHOICES):
-        return HttpResponse(status=400)
-
-    conversation = get_object_or_404(
-        Conversation, pk=conv_id, matter__in=get_accessible_matters()
-    )
-
-    conversation.effort = level
-    conversation.save(update_fields=["effort"])
-
-    return render(
-        request,
-        "case/ai/effort-pill.html",
         {"conversation": conversation},
     )
 

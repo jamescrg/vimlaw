@@ -9,7 +9,7 @@ via aiModeChanged() in conversation-standalone.html.
   <select id="modePill"
           name="kind"
           form="chatForm"
-          class="app-badge badge-lg ai-mode-pill{% if conversation.kind == 'research' %} ai-research-badge{% endif %}"
+          class="ai-mode-pill{% if conversation.kind == 'research' %} ai-research-badge{% endif %}"
           onchange="aiModeChanged(this.value)"
           title="Mode for the next message. Analysis answers from the case file and the model's knowledge; Research actively searches CourtListener and cites only what it retrieved.">
     {% for key, label in conversation.KIND_CHOICES %}

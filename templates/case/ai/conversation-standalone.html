@@ -126,7 +126,6 @@
                      id="conversationId"
                      value="{% if not is_new %}{{ conversation.id }}{% endif %}">
               <input type="hidden" name="llm" value="{{ conversation.llm }}">
-              <input type="hidden" name="effort" value="{{ conversation.effort }}">
               <input type="hidden"
                      name="title"
                      id="conversationTitleInput"
@@ -290,7 +289,7 @@
       const params = new URLSearchParams();
       params.set('llm', form.querySelector('[name="llm"]').value);
       params.set('kind', document.getElementById('modePill').value);
-      params.set('effort', form.querySelector('[name="effort"]').value);
+      params.set('effort', document.getElementById('effortPill').value);
       params.set('title', document.getElementById('conversationTitleInput').value);
       fetch('{% url "case:ai-create-conversation" matter.id %}', {
         method: 'POST',
@@ -382,7 +381,7 @@
       const title = titleInput ? titleInput.value : '';
       const llm = '{{ conversation.llm }}';
       const kind = document.getElementById('modePill').value;
-      const effort = document.querySelector('#chatForm [name="effort"]').value;
+      const effort = document.getElementById('effortPill').value;
       const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title) + '&kind=' + kind + '&effort=' + effort;
       // Stash text for the modal to pick up (avoids URL length limits)
       if (text) {

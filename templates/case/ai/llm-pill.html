@@ -22,7 +22,7 @@ flips, and set_conversation_llm/send_message enforce it server-side.
   <span class="ai-pill-select" id="llmPillWrap">
     <select id="llmPill"
             name="llm"
-            class="app-badge badge-lg ai-llm-pill ai-llm-{{ conversation.llm }}"
+            class="ai-llm-pill"
             hx-post="{% url 'case:ai-set-llm' conversation.id %}"
             hx-target="#llmPillWrap"
             hx-swap="outerHTML"
