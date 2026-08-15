@@ -185,6 +185,9 @@
 
 #note-editor .ProseMirror th,
 #note-editor .ProseMirror td {
+  /* The global td/th fills (tables.css) leak in here; cells stay the
+     canvas ground, only the header row gets a wash. */
+  background: transparent;
   border: 1px solid var(--border-medium);
   padding: 0.25rem 0.5rem;
   position: relative;
@@ -192,7 +195,7 @@
 }
 
 #note-editor .ProseMirror th {
-  background: var(--background-th);
+  background: var(--background-td);
   font-weight: 500;
   text-align: left;
 }
