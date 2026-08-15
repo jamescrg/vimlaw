@@ -391,9 +391,11 @@ def make_executor(matter, effort, conversation_id=None, question=""):
     seen_lookups = {}
     # Every cluster_id any search has returned. Lets follow-up searches be
     # scored for redundancy: a query whose results were mostly seen before
-    # gets told so, which curbs the rephrase-the-same-concepts loop far
-    # better than standing instructions do.
+    # gets told so, and repeat offenses get their repeated rows WITHHELD
+    # (conversation 898 showed the polite note alone being ignored) - only
+    # genuinely new results come back, so rephrasing buys nothing.
     seen_result_ids = set()
+    overlap_strikes = [0]
 
     def _run_query(query, court_ids, limit, event_type, event_extra=None):
         """Shared body of search_caselaw and find_citing_cases: dedupe,
@@ -433,14 +435,31 @@ def make_executor(matter, effort, conversation_id=None, question=""):
         if status != 200:
             payload["error"] = f"Search failed (status {status}). Adjust the query."
         overlap = sum(1 for r in rows if r["cluster_id"] in seen_result_ids)
+        fresh = [r for r in rows if r["cluster_id"] not in seen_result_ids]
         seen_result_ids.update(r["cluster_id"] for r in rows)
+        suppressed = False
         if rows and overlap >= max(2, (len(rows) * 3) // 5):
-            payload["note"] = (
-                f"{overlap} of {len(rows)} results already appeared in your "
-                "earlier searches - this query mostly re-covered old ground. "
-                "Change a concept (not the phrasing), triage the results you "
-                "already have, or re-run one query with a larger num_results."
-            )
+            overlap_strikes[0] += 1
+            if overlap_strikes[0] >= 2:
+                # Second offense onward: withhold the repeated rows.
+                suppressed = True
+                payload["results"] = fresh
+                payload["note"] = (
+                    f"{overlap} of {len(rows)} results were already returned "
+                    "by your earlier searches and have been WITHHELD; only "
+                    f"the {len(fresh)} new result(s) are shown. Rephrasing "
+                    "the same concepts returns the same cases. Change a "
+                    "concept, triage the results you already have, or re-run "
+                    "one earlier query with a larger num_results."
+                )
+            else:
+                payload["note"] = (
+                    f"{overlap} of {len(rows)} results already appeared in "
+                    "your earlier searches - this query mostly re-covered "
+                    "old ground. Change a concept (not the phrasing), triage "
+                    "the results you already have, or re-run one query with "
+                    "a larger num_results."
+                )
         seen_searches[dedupe_key] = payload
         event = {
             "type": event_type,
@@ -448,6 +467,7 @@ def make_executor(matter, effort, conversation_id=None, question=""):
             "court_ids": court_ids,
             "result_count": len(rows),
             "overlap_count": overlap,
+            "suppressed": suppressed,
             "results": [
                 {"case_name": r["case_name"], "cluster_id": r["cluster_id"]}
                 for r in rows

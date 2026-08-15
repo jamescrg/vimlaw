@@ -1389,3 +1389,46 @@ def test_abstract_failure_points_at_read_opinion(matter, fake_cl, monkeypatch):
 
 def test_evaluate_step_prefers_abstracts():
     assert "abstract_opinion each shortlisted case" in research_chat.PROMPT_ROLE
+
+
+def test_repeat_overlap_withholds_rows(matter, monkeypatch):
+    """First high-overlap search gets a note; later ones lose the rows."""
+    rows = (
+        [
+            {
+                "case_name": f"Case {n}",
+                "citation": [f"{n} Ga. 1"],
+                "court": "Supreme Court of Georgia",
+                "date_filed": "2005-01-01",
+                "cluster_id": n,
+                "snippet": "x",
+                "score": 1.0,
+                "cite_count": 1,
+                "courtlistener_url": f"https://cl/{n}",
+            }
+            for n in (1, 2, 3)
+        ],
+        200,
+    )
+    monkeypatch.setattr(
+        research_tools, "search_opinions", lambda query, court=None, limit=10: rows
+    )
+    execute = make_executor(matter, "medium")
+
+    execute("search_caselaw", {"query": "compel* AND expense*"})
+    result_json, event = execute("search_caselaw", {"query": "expense* AND moot*"})
+    payload = json.loads(result_json)
+    assert len(payload["results"]) == 3  # first strike keeps the rows
+    assert event["suppressed"] is False
+
+    result_json, event = execute("search_caselaw", {"query": "moot* AND compel*"})
+    payload = json.loads(result_json)
+    assert payload["results"] == []  # second strike: repeats withheld
+    assert "WITHHELD" in payload["note"]
+    assert event["suppressed"] is True
+    assert event["overlap_count"] == 3
+
+
+def test_answer_step_cites_the_line():
+    assert "LINE of authority" in research_chat.PROMPT_ROLE
+    assert "slip opinion" in research_chat.PROMPT_ROLE

@@ -115,7 +115,12 @@ PROMPT_ROLE = (
     "(when available) on every case your answer will rely on. Drop "
     "cases that do not hold up, saying so in a few words.\n"
     "8. ANSWER concisely. No lengthy case summaries: the attorney will "
-    "ask for elaboration on specific cases if wanted.\n\n"
+    "ask for elaboration on specific cases if wanted. Cite the "
+    "supporting LINE of authority, not just the newest case: when "
+    "several cases you read or briefed support the rule, cite the "
+    "leading statement and the most recent application, and do not let "
+    "authorities you relied on go uncited. Flag any slip opinion or "
+    "case with no citing history as new and not yet settled law.\n\n"
     "CITATION CHASING (all protocols): opinions you read cite the "
     "authorities they rely on. When an on-point opinion rests its rule "
     "on earlier cases, run down the one or two most load-bearing "
@@ -488,6 +493,8 @@ def run_research_request(
                 repeat = " — repeat, served from cache" if event.get("repeat") else ""
                 overlap = event.get("overlap_count") or 0
                 seen = f", {overlap} seen before" if overlap else ""
+                if event.get("suppressed"):
+                    seen += ", repeats withheld"
                 push_log(
                     f"Searched `{event.get('query', '')}` "
                     f"({event.get('result_count', 0)} hits{seen}){repeat}"
