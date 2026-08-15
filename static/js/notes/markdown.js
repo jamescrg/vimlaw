@@ -32,6 +32,77 @@ function formatInline(text) {
   );
 }
 
+// GFM pipe tables. Rows must carry outer pipes (| a | b |) — that's what
+// every table the AI emits and every hand-typed table looks like, and it
+// keeps prose containing stray pipes from parsing as a table. Column
+// alignment colons are accepted but not preserved (the editor's table
+// has no per-column alignment to store them in).
+export function isPipeRow(line) {
+  return line.length > 1 && line.startsWith("|") && line.indexOf("|", 1) !== -1;
+}
+
+export function isTableSeparator(line) {
+  return /^\|(\s*:?-+:?\s*\|)+\s*$/.test(line);
+}
+
+// Column alignment lives in the separator row's colons (:-- / :-: / --:).
+// null means "no explicit alignment" and round-trips as plain dashes.
+export function separatorAligns(line) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((seg) => {
+      const s = seg.trim();
+      const left = s.startsWith(":");
+      const right = s.endsWith(":");
+      if (left && right) return "center";
+      if (right) return "right";
+      if (left) return "left";
+      return null;
+    });
+}
+
+const ALIGN_DASHES = { left: ":--", center: ":-:", right: "--:" };
+
+export function alignsToSeparator(aligns) {
+  return (
+    "| " + aligns.map((a) => ALIGN_DASHES[a] || "---").join(" | ") + " |"
+  );
+}
+
+export function splitPipeRow(line) {
+  const inner = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return inner.split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
+}
+
+export function buildTableHtml(header, rows, aligns) {
+  const width = Math.max(header.length, ...rows.map((r) => r.length), 1);
+  const cell = (tag, content, align) =>
+    "<" +
+    tag +
+    (align ? ' style="text-align: ' + align + '"' : "") +
+    "><p>" +
+    formatInline(content || "") +
+    "</p></" +
+    tag +
+    ">";
+  const row = (tag, cells) => {
+    let html = "<tr>";
+    for (let c = 0; c < width; c++) {
+      html += cell(tag, cells[c], aligns ? aligns[c] : null);
+    }
+    return html + "</tr>";
+  };
+  return (
+    "<table><tbody>" +
+    row("th", header) +
+    rows.map((r) => row("td", r)).join("") +
+    "</tbody></table>"
+  );
+}
+
 function buildBlockquote(lines, minDepth) {
   let html = "<blockquote>";
   let j = 0;
@@ -155,6 +226,26 @@ export function markdownToHtml(md) {
       continue;
     }
 
+    // Tables: a pipe row followed by a separator row starts one; body rows
+    // run until the first non-pipe line (which the outer loop re-reads).
+    if (
+      isPipeRow(trimmed) &&
+      i + 1 < lines.length &&
+      isTableSeparator(lines[i + 1].trim())
+    ) {
+      const header = splitPipeRow(trimmed);
+      const aligns = separatorAligns(lines[i + 1].trim());
+      const rows = [];
+      i += 2;
+      while (i < lines.length && isPipeRow(lines[i].trim())) {
+        rows.push(splitPipeRow(lines[i].trim()));
+        i++;
+      }
+      i--;
+      parsed.push({ type: "table", header, aligns, rows });
+      continue;
+    }
+
     // Regular paragraph
     parsed.push({ type: "paragraph", content: formatInline(trimmed) });
   }
@@ -251,6 +342,12 @@ export function markdownToHtml(md) {
 
     if (item.type === "paragraph") {
       result.push("<p>" + item.content + "</p>");
+      i++;
+      continue;
+    }
+
+    if (item.type === "table") {
+      result.push(buildTableHtml(item.header, item.rows, item.aligns));
       i++;
       continue;
     }
@@ -381,6 +478,41 @@ export function htmlToMarkdown(html) {
         });
 
         return indent + prefix + textContent.trim() + "\n" + nestedLists;
+      }
+      case "table": {
+        // Pipe syntax can't express merged cells or block content, so cells
+        // flatten to one line of inline markdown and literal pipes escape.
+        const cellText = (cell) =>
+          Array.from(cell.childNodes)
+            .map((child) => processNode(child, 0, null, 0))
+            .join("")
+            .replace(/\s*\n\s*/g, " ")
+            .trim()
+            // Escape literal pipes, but not the one inside a reference
+            // token ([[doc:1|label]]) — that pipe is syntax the loader's
+            // ref regex must still match.
+            .replace(/\[\[(?:doc|hl):\d+\|[^\]]+\]\]|\|/g, (m) =>
+              m === "|" ? "\\|" : m,
+            );
+        const grid = Array.from(node.rows).map((tr) =>
+          Array.from(tr.cells).map(cellText),
+        );
+        if (!grid.length) return "";
+        const width = Math.max(...grid.map((r) => r.length));
+        const line = (cells) => {
+          const padded = cells.concat(Array(width - cells.length).fill(""));
+          return "| " + padded.join(" | ") + " |";
+        };
+        // Column alignment reads off the header row's text-align styles
+        // and becomes the separator's colons
+        const headerCells = Array.from(node.rows[0].cells);
+        const aligns = Array.from({ length: width }, (_, c) => {
+          const cellEl = headerCells[c];
+          return (cellEl && cellEl.style.textAlign) || null;
+        });
+        const separator = alignsToSeparator(aligns);
+        const [head, ...body] = grid;
+        return [line(head), separator, ...body.map(line)].join("\n") + "\n\n";
       }
       case "br":
         return "\n";

@@ -175,6 +175,45 @@
   margin: 0.5rem 0;
 }
 
+/* Tables (all tokens retint in dark themes; no structural dark rule needed) */
+#note-editor .ProseMirror table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  /* Content-sized columns (GitHub-style): pipe markdown can't store
+     dragged widths, so width comes from content, capped at the canvas */
+  max-width: 100%;
+  width: auto;
+}
+
+#note-editor .ProseMirror th,
+#note-editor .ProseMirror td {
+  /* The global td/th fills (tables.css) leak in here; cells stay the
+     canvas ground, only the header row gets a wash. */
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  min-width: 4rem;
+  padding: 0.25rem 0.5rem;
+  position: relative;
+  vertical-align: top;
+}
+
+#note-editor .ProseMirror th {
+  background: var(--background-td);
+  font-weight: 500;
+  text-align: left;
+}
+
+#note-editor .ProseMirror th p,
+#note-editor .ProseMirror td p {
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ProseMirror marks cell-selections with .selectedCell */
+#note-editor .ProseMirror .selectedCell {
+  background: var(--selected-background);
+}
+
 #note-editor code {
   background: var(--background-section);
   border-radius: 0.25rem;
@@ -683,4 +722,46 @@
 
 .note-conflict-banner button {
   margin-left: auto;
+}
+
+/* Print — a printer-friendly view of the note alone (the ⋯ menu's Print
+   calls window.print()). Chrome disappears, the scroll containers unclip
+   so the full note paginates, and text forces to ink-black so dark themes
+   don't print pale-on-white. */
+@media print {
+  .note-panel-left,
+  .note-panel-right,
+  .panel-resizer,
+  .note-toolbar-wrapper,
+  .search-replace-bar,
+  .table-bar,
+  .note-meta,
+  .sources-picker,
+  #code-lang-selector,
+  #note-conflict-banner {
+    display: none !important;
+  }
+
+  .note-editor-layout,
+  .note-main,
+  .note-main .note-page {
+    display: block;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .note-main .note-page {
+    max-width: none;
+    padding: 0;
+  }
+
+  .note-canvas,
+  .note-canvas * {
+    color: #000;
+  }
+
+  .note-header .note-title-input {
+    padding: 0 0 0.5rem;
+  }
 }

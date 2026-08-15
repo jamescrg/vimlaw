@@ -5,6 +5,11 @@
 // formatting UX.
 
 const COMMANDS = {
+  undo: {
+    run: (e) => e.chain().focus().undo().run(),
+    active: () => false,
+    enabled: (e) => e.can().undo(),
+  },
   bold: {
     run: (e) => e.chain().focus().toggleBold().run(),
     active: (e) => e.isActive("bold"),
@@ -46,6 +51,17 @@ const COMMANDS = {
     active: (e) => e.isActive("blockquote"),
   },
 };
+
+// The table button toggles the notes table bar; that wiring lives with the
+// bar itself (notes/table-bar.js) since only the notes editor has one. Here
+// we just hide the button on surfaces whose editor lacks the Table
+// extension (the AI compose-prompt modal).
+function wireTable(toolbar, editor) {
+  const btn = toolbar.querySelector("[data-table-toggle]");
+  if (!btn) return;
+  btn.style.display =
+    typeof editor.commands.insertTable === "function" ? "" : "none";
+}
 
 // The last-used highlight color, shared across surfaces so the swatch the
 // user picked in one editor greets them in the next ("" = default yellow).
@@ -132,10 +148,13 @@ export function connectFormatToolbar(toolbar, editor) {
     (btn) => COMMANDS[btn.dataset.cmd],
   );
   const hlToggleBtn = wireHighlight(toolbar, editor);
+  wireTable(toolbar, editor);
 
   const update = () => {
     for (const btn of buttons) {
-      btn.classList.toggle("active", COMMANDS[btn.dataset.cmd].active(editor));
+      const cmd = COMMANDS[btn.dataset.cmd];
+      btn.classList.toggle("active", cmd.active(editor));
+      if (cmd.enabled) btn.disabled = !cmd.enabled(editor);
     }
     if (hlToggleBtn) {
       hlToggleBtn.classList.toggle("active", editor.isActive("highlight"));
