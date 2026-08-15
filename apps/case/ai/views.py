@@ -506,7 +506,26 @@ def ai_status(request, conv_id):
     conversation = get_object_or_404(Conversation, pk=conv_id)
 
     cache_key = f"ai_status_{conv_id}"
-    status_data = cache.get(cache_key, {"status": "unknown", "message": "Checking..."})
+    status_data = cache.get(cache_key)
+    if status_data is None:
+        # send_message seeds this entry before spawning the worker thread,
+        # so a missing entry while an indicator is still polling means the
+        # run died with its process (the status cache is in-process
+        # LocMem, and a worker reload kills both the daemon thread and the
+        # cache). Say so plainly instead of polling "Checking..." forever.
+        interrupted = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content=(
+                "This request was interrupted before it finished (the "
+                "server restarted mid-run). Please re-send your message."
+            ),
+        )
+        return render(
+            request,
+            "case/ai/message-single.html",
+            {"message": interrupted},
+        )
 
     if status_data["status"] == "complete":
         # Get verified citations from status data

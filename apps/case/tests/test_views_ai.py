@@ -455,3 +455,19 @@ class TestActivityLog:
         # Rendered as a collapsible section on the message.
         assert "Activity (2 steps)" in html
         assert "Case file gathered: 1 fact" in html
+
+    def test_missing_status_entry_reports_interruption(self, client, matter, user):
+        """A dead worker (reload killed the thread + LocMem cache) must not
+        poll 'Checking...' forever; the user gets told to re-send."""
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert "interrupted" in html
+        message = conversation.messages.get(role="assistant")
+        assert "re-send" in message.content
+        # Terminal: the response is a message, not a polling indicator.
+        assert "every 1s" not in html
