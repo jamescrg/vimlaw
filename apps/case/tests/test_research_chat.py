@@ -1330,3 +1330,62 @@ def test_redundant_search_gets_overlap_feedback(matter, monkeypatch):
     payload = json.loads(result_json)
     assert "re-covered old ground" in payload["note"]
     assert event["overlap_count"] == 3
+
+
+# ---------------------------------------------------------------------------
+# Read-and-abstract: the briefing agent
+# ---------------------------------------------------------------------------
+
+
+def test_abstract_tool_present_at_all_efforts():
+    for effort in ("low", "medium", "high"):
+        assert "abstract_opinion" in [t["name"] for t in build_tools(effort)]
+
+
+def test_abstract_reads_full_opinion_and_briefs(matter, fake_cl, monkeypatch):
+    captured = {}
+
+    def fake_flash(system_context, messages, model):
+        captured["system"] = system_context
+        captured["content"] = messages[0]["content"]
+        captured["model"] = model
+        return 'CASE: Smith v. Jones\nHOLDING: "partition applies."', 100, 50
+
+    monkeypatch.setattr("apps.case.ai.gemini_client.send_to_gemini", fake_flash)
+    execute = make_executor(matter, "medium", question="Can we partition?")
+    result_json, event = execute("abstract_opinion", {"cluster_id": 101})
+    payload = json.loads(result_json)
+
+    # The abstractor saw the question and the WHOLE opinion (40k chars,
+    # beyond the 30k read cap that truncates read_opinion).
+    assert "Can we partition?" in captured["content"]
+    assert len(captured["content"]) > 39_000
+    assert captured["model"] == "gemini-2.5-flash"
+    assert "VERBATIM" in captured["system"]
+
+    assert payload["abstract"].startswith("CASE: Smith v. Jones")
+    assert payload["opinion_chars_read"] == 40_000
+    assert event["type"] == "abstract"
+    assert event["abstract"] == payload["abstract"]
+
+    # Second call: served from the per-run cache, no second Flash call.
+    captured.clear()
+    result_json, event = execute("abstract_opinion", {"cluster_id": 101})
+    assert json.loads(result_json)["note"] == "Already abstracted in this request."
+    assert event["cached"] is True
+    assert not captured
+
+
+def test_abstract_failure_points_at_read_opinion(matter, fake_cl, monkeypatch):
+    def boom(*a, **k):
+        raise RuntimeError("flash down")
+
+    monkeypatch.setattr("apps.case.ai.gemini_client.send_to_gemini", boom)
+    execute = make_executor(matter, "medium", question="q")
+    result_json, event = execute("abstract_opinion", {"cluster_id": 101})
+    assert "read_opinion instead" in json.loads(result_json)["error"]
+    assert event is None
+
+
+def test_evaluate_step_prefers_abstracts():
+    assert "abstract_opinion each shortlisted case" in research_chat.PROMPT_ROLE

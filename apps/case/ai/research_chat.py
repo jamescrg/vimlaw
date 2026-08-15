@@ -104,11 +104,16 @@ PROMPT_ROLE = (
     "'Candidates:' with each case on one line (name, court, year, and a "
     "few words on why it made the list). A skim is never a read: only "
     "read_opinion makes a case citable.\n"
-    "7. EVALUATE: read_opinion each shortlisted case. After each read, "
-    "give AT MOST two sentences: the holding, and whether it helps or "
-    "hurts here. Run check_treatment (when available) on every case "
-    "your answer will rely on. Drop cases that do not hold up, saying "
-    "so in a few words.\n"
+    "7. EVALUATE: abstract_opinion each shortlisted case. The briefing "
+    "agent reads the ENTIRE opinion and returns a structured abstract "
+    "with verbatim holding language; build your analysis from the "
+    "abstracts, quoting only quoted language they contain. Use "
+    "read_opinion only when you must study exact language at length "
+    "(reconciling conflicting authorities, parsing a controlling "
+    "passage). After each abstract, give AT MOST two sentences: the "
+    "holding, and whether it helps or hurts here. Run check_treatment "
+    "(when available) on every case your answer will rely on. Drop "
+    "cases that do not hold up, saying so in a few words.\n"
     "8. ANSWER concisely. No lengthy case summaries: the attorney will "
     "ask for elaboration on specific cases if wanted.\n\n"
     "CITATION CHASING (all protocols): opinions you read cite the "
@@ -410,7 +415,9 @@ def run_research_request(
         library_section=build_library_section(),
     )
     tools = build_tools(effort)
-    execute_tool = make_executor(matter, effort, conversation_id=conversation.id)
+    execute_tool = make_executor(
+        matter, effort, conversation_id=conversation.id, question=user_message
+    )
 
     # Live research log: concise one-liners accumulated in the status
     # payload so the whole run stays visible in the conversation while it
@@ -496,6 +503,9 @@ def run_research_request(
                 name = event.get("case_name") or event.get("cluster_id")
                 detail = "syllabus" if event.get("has_syllabus") else "metadata only"
                 push_log(f"Skimmed *{name}* ({detail})")
+            elif etype == "abstract":
+                name = event.get("case_name") or event.get("cluster_id")
+                push_log(f"Read and briefed *{name}*")
             elif etype == "treatment":
                 name = event.get("case_name") or event.get("cluster_id")
                 verdict = (

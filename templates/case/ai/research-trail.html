@@ -1,3 +1,4 @@
+{% load markdown_extras %}
 {% comment %}
 Collapsible research trail under a research-chat answer: the plan, every
 search (query + hits), every opinion read (linked to the cluster viewer),
@@ -62,6 +63,24 @@ without crowding the dialogue.
             {% if event.citation %}<span class="detail-text">{{ event.citation }}</span>{% endif %}
             {% if event.part %}<span class="detail-text">(part {{ event.part }})</span>{% endif %}
             {% if event.cached %}<span class="detail-text">(from earlier read)</span>{% endif %}
+          </div>
+        </li>
+      {% elif event.type == "abstract" %}
+        <li class="ai-research-step">
+          <i class="icon-file-text"></i>
+          <div>
+            Read and briefed
+            <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id event.cluster_id %}"
+               target="_blank">{{ event.case_name|default:event.cluster_id }}</a>
+            {% if event.citation %}<span class="detail-text">{{ event.citation }}</span>{% endif %}
+            {% if event.cached %}
+              <span class="detail-text">(from earlier brief)</span>
+            {% else %}
+              <details class="ai-abstract">
+                <summary class="detail-text">case brief</summary>
+                <div class="ai-abstract-text">{{ event.abstract|render_markdown }}</div>
+              </details>
+            {% endif %}
           </div>
         </li>
       {% elif event.type == "skim" %}

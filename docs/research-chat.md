@@ -44,6 +44,19 @@ day in favor of answer streaming, which attacks the real latency.)
 | medium | 18 | 20 | 8 | 30k | yes | no | 450k |
 | high | 35 | 40 | 10 | 40k | yes | yes | 900k |
 
+Read-and-abstract (`abstract_opinion`, 2026-08-15) is the default way
+to study a shortlisted case, mirroring attorney practice (read the
+whole opinion, brief it into the outline): a Gemini Flash briefing
+agent reads the ENTIRE opinion (ABSTRACT_READ_CAP 250k, no head/tail
+truncation) against the question presented and returns a structured
+abstract - CASE/POSTURE/HOLDING (verbatim quotes required)/RELEVANCE/
+CAUTIONS/SCOPE, under 400 words plus quotations. The loop carries ~2k
+chars per case instead of a 30k slice, so many more cases fit a run;
+the final ANSWER step synthesizes from the abstracts. read_opinion
+(with its beginning+end truncation and part reads) remains the escape
+hatch for studying exact language at length. Abstracts persist in the
+trail as expandable case briefs.
+
 Skims (`skim_cluster`, 2026-08-15) are the survey lane: cluster
 metadata plus the editorial syllabus/headnotes (2k-char cap, HTML
 stripped), costing 1 CL request and a fraction of a read's tokens.

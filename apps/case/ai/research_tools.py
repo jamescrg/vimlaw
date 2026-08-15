@@ -41,6 +41,33 @@ MAX_SEARCH_RESULTS = 20
 # the survey lane: wide triage at a fraction of a read's token cost.
 SKIM_CHAR_LIMIT = 2_000
 
+# The abstractor reads the ENTIRE opinion (this is only a runaway guard,
+# matching the treatment checker's full-read cap) and returns a short
+# structured brief, so the loop carries ~2k chars per case instead of a
+# 30k truncated slice. Mirrors how an attorney works: read everything,
+# outline the holding and its bearing on the matter, brief the file.
+ABSTRACT_READ_CAP = 250_000
+
+ABSTRACT_SYSTEM = """\
+You are a careful legal research assistant briefing a case for an
+attorney's outline. You are given a QUESTION PRESENTED and the FULL text
+of one judicial opinion. Write a compact abstract with these sections:
+
+CASE: name, citation, court, date.
+POSTURE: procedural posture in one line.
+HOLDING: the holding(s), each with a VERBATIM quotation of the court's
+operative language in quotation marks. Never paraphrase inside quotes.
+RELEVANCE: how the reasoning bears on the question presented, citing the
+specific passages (quote the key sentences verbatim).
+CAUTIONS: anything that limits the case (dicta, distinguishable facts,
+partial dissents, later history noted in the text).
+SCOPE: one line listing other issues the opinion covers, so the reader
+knows what else is in it.
+
+Under 400 words plus quotations. If the opinion is genuinely irrelevant
+to the question, say so in one line under RELEVANCE and keep the rest
+minimal."""
+
 EFFORT_BUDGETS = {
     "low": {
         "max_tool_calls": 5,
@@ -203,6 +230,29 @@ def build_tools(effort):
             },
         },
         {
+            "name": "abstract_opinion",
+            "description": (
+                "The default way to study a shortlisted case: a briefing "
+                "agent reads the ENTIRE opinion (no truncation) and returns "
+                "a structured abstract - holding with VERBATIM quotes, "
+                "relevance to the question presented, cautions, and scope. "
+                "Costs a fraction of read_opinion in your context. Prefer "
+                "this for every shortlisted case; use read_opinion only "
+                "when you must study exact language at length (e.g. "
+                "reconciling conflicting authorities)."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "cluster_id": {
+                        "type": "integer",
+                        "description": "The CourtListener cluster id.",
+                    }
+                },
+                "required": ["cluster_id"],
+            },
+        },
+        {
             "name": "skim_cluster",
             "description": (
                 "Cheap triage: fetch a case's metadata and editorial "
@@ -314,14 +364,15 @@ def _opinion_for_cluster(cluster_id):
     return cluster, fetch_opinion(opinion_id)
 
 
-def make_executor(matter, effort, conversation_id=None):
+def make_executor(matter, effort, conversation_id=None, question=""):
     """Build the tool executor for one research request.
 
     Returns ``execute(name, tool_input) -> (result_json_str, trail_event)``.
     Never raises: failures become {"error": ...} results the model can react
     to. Holds per-request state: an opinion cache (re-reads are free), a
     search/lookup dedupe map, and the running opinion-text total against
-    the effort level's cap. With ``conversation_id``, opinions also cache across
+    the effort level's cap; ``question`` is the user's question presented,
+    given to the abstractor. With ``conversation_id``, opinions also cache across
     the conversation's messages (django cache, 1h) so follow-up turns
     re-read earlier authorities without another API round-trip.
     """
@@ -331,6 +382,7 @@ def make_executor(matter, effort, conversation_id=None):
     opinion_cache = {}
     library_cache = {}
     skim_cache = {}
+    abstract_cache = {}
     state = {"chars_used": 0, "calls_used": 0, "skims_used": 0}
     # Within-run dedupe: the model sometimes repeats a search or lookup it
     # already ran (especially failed ones). Serve the stored result instead
@@ -553,6 +605,89 @@ def make_executor(matter, effort, conversation_id=None):
             event["part"] = requested_part
         return payload, event
 
+    def _abstract(tool_input):
+        from .gemini_client import send_to_gemini
+
+        cluster_id = int(tool_input.get("cluster_id") or 0)
+        if not cluster_id:
+            return {"error": "abstract_opinion needs a cluster_id."}, None
+        if cluster_id in abstract_cache:
+            cached = dict(abstract_cache[cluster_id])
+            cached["note"] = "Already abstracted in this request."
+            event = {
+                "type": "abstract",
+                "cluster_id": cluster_id,
+                "case_name": cached.get("case_name", ""),
+                "citation": cached.get("citation", ""),
+                "cached": True,
+                "ts": _now(),
+            }
+            return cached, event
+
+        if state["chars_used"] >= budget["total_char_cap"]:
+            return {
+                "error": (
+                    "Research reading budget exhausted. Answer from the "
+                    "material you already have."
+                )
+            }, None
+
+        cluster, opinion = _opinion_for_cluster(cluster_id)
+        if cluster is None or opinion is None or not opinion.found:
+            return {"error": f"Opinion for cluster {cluster_id} not available."}, None
+
+        full = (opinion.plain_text or "")[:ABSTRACT_READ_CAP]
+        citation = format_citations_with_year(
+            cluster.get("citations", []), None
+        ) or cluster.get("citation_string", "")
+        header = (
+            f"{cluster.get('case_name', '')}, {citation} "
+            f"({cluster.get('court', '')} {cluster.get('date_filed', '')})"
+        )
+        try:
+            abstract_text, _, _ = send_to_gemini(
+                system_context=ABSTRACT_SYSTEM,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"QUESTION PRESENTED: {question or 'not stated'}\n\n"
+                            f"OPINION: {header}\n\n{full}"
+                        ),
+                    }
+                ],
+                model="gemini-2.5-flash",
+            )
+        except Exception:
+            logger.exception("Abstractor failed for cluster %s", cluster_id)
+            return {
+                "error": (
+                    "The abstractor failed for this opinion; use read_opinion instead."
+                )
+            }, None
+
+        state["chars_used"] += len(abstract_text)
+        payload = {
+            "cluster_id": cluster_id,
+            "case_name": cluster.get("case_name", ""),
+            "citation": citation,
+            "court": cluster.get("court", ""),
+            "date_filed": cluster.get("date_filed", ""),
+            "abstract": abstract_text,
+            "opinion_chars_read": len(full),
+        }
+        abstract_cache[cluster_id] = payload
+        event = {
+            "type": "abstract",
+            "cluster_id": cluster_id,
+            "case_name": payload["case_name"],
+            "citation": citation,
+            "abstract": abstract_text,
+            "opinion_chars_read": len(full),
+            "ts": _now(),
+        }
+        return payload, event
+
     def _skim(tool_input):
         from django.utils.html import strip_tags
 
@@ -736,6 +871,7 @@ def make_executor(matter, effort, conversation_id=None):
         "search_caselaw": _search,
         "find_citing_cases": _citing,
         "read_opinion": _read,
+        "abstract_opinion": _abstract,
         "skim_cluster": _skim,
         "check_treatment": _treatment,
         "lookup_citation": _lookup,

@@ -2201,6 +2201,22 @@
   margin-left: 0.5rem;
 }
 
+/* Inline case brief inside a trail step (the abstractor's output). */
+.ai-abstract summary {
+  color: var(--link);
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 0.25rem;
+}
+
+.ai-abstract-text {
+  background: var(--background-section);
+  border-radius: var(--radius-sm);
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  white-space: pre-wrap;
+}
+
 .ai-research-hits {
   display: flex;
   flex-wrap: wrap;
