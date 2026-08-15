@@ -3,13 +3,20 @@
 Polled every second. hx-swap="morph" (idiomorph) updates the existing
 DOM in place instead of replacing it, so the icon animations don't
 restart, the log keeps its scroll position, and the box doesn't flicker
-between polls. The cancel button sits BEFORE the log so it stays at the
+between polls. Because morph PRESERVES this element, the trigger must be
+a standing interval ("every 1s") — the old load-delay chain relied on
+each swap creating a fresh element whose load event scheduled the next
+poll, which morph never does (the chain died after one poll).
+hx-sync drops a tick if the previous request is still in flight. The
+completion response swaps in the message (different root), which ends
+the interval. The cancel button sits BEFORE the log so it stays at the
 right end of the status row (the log wraps to its own full-width row via
 .ai-status-content:has(.ai-research-log)).
 {% endcomment %}
 <div id="ai-status-indicator"
      hx-get="{% url 'case:ai-status' conversation.id %}"
-     hx-trigger="load delay:1s"
+     hx-trigger="every 1s"
+     hx-sync="this:drop"
      hx-ext="morph"
      hx-swap="morph">
   <div class="ai-status-content">

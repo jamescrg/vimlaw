@@ -592,10 +592,13 @@ def ai_status(request, conv_id):
         )
 
     if status_data["status"] == "cancelled":
-        # Return empty div to remove the status indicator.
+        # Return an empty div under a DIFFERENT id: the poll swaps with
+        # morph, and a same-id root would be patched in place, keeping the
+        # element (and its every-1s interval) alive forever. A mismatched
+        # root forces a replacement, which ends the polling with the node.
         # Keep cache entry (don't delete) so background thread's
         # is_cancelled() check continues to see "cancelled" status.
-        return HttpResponse('<div id="ai-status-indicator"></div>')
+        return HttpResponse('<div id="ai-status-ended"></div>')
 
     # Calculate elapsed time if available
     elapsed_seconds = None
