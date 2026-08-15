@@ -107,12 +107,28 @@ def test_executor_search_and_read(matter, fake_cl):
     payload = json.loads(result_json)
     assert payload["case_name"] == "Smith v. Jones"
     assert payload["truncated"] is True  # capped at medium's 30k
-    assert len(payload["text"]) == 30_000
+    # Long opinions read as beginning + END with the middle marked omitted.
+    assert "omitted from the MIDDLE" in payload["text"]
+    assert payload["parts"] == 2
+    assert len(payload["text"]) < 31_000
     assert event["type"] == "read"
 
     # Cached re-read: no extra chars, flagged in the event.
     _, event = execute("read_opinion", {"cluster_id": 101})
     assert event["cached"] is True
+
+
+def test_read_part_fetches_contiguous_slice(matter, fake_cl):
+    execute = make_executor(matter, "medium")
+    full = fake_cl.opinions[9101]
+    result_json, event = execute("read_opinion", {"cluster_id": 101, "part": 2})
+    payload = json.loads(result_json)
+    assert payload["part"] == 2
+    assert payload["text"] == full[30_000:60_000]
+    assert event["part"] == 2
+    # Beyond the last part: a clear error, not empty text.
+    result_json, _ = execute("read_opinion", {"cluster_id": 101, "part": 9})
+    assert "no part 9" in json.loads(result_json)["error"]
 
 
 def test_executor_page_size_clamped_by_effort(matter, fake_cl):

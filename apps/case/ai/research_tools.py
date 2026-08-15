@@ -174,9 +174,13 @@ def build_tools(effort):
         {
             "name": "read_opinion",
             "description": (
-                "Fetch the full text of an opinion by its cluster_id (from "
+                "Fetch the text of an opinion by its cluster_id (from "
                 "search results or saved case law). ALWAYS read an opinion "
-                "before characterizing its holding or citing it."
+                "before characterizing its holding or citing it. Long "
+                "opinions come back truncated as beginning + END (holdings "
+                "and dispositions live at the end) with the omitted middle "
+                "marked; request specific parts when the omitted analysis "
+                "matters."
             ),
             "input_schema": {
                 "type": "object",
@@ -184,7 +188,16 @@ def build_tools(effort):
                     "cluster_id": {
                         "type": "integer",
                         "description": "The CourtListener cluster id.",
-                    }
+                    },
+                    "part": {
+                        "type": "integer",
+                        "description": (
+                            "Optional: fetch one contiguous slice of a long "
+                            "opinion (2, 3, ...) as numbered in a truncated "
+                            "read's omission marker. Omit for the normal "
+                            "beginning-plus-end read."
+                        ),
+                    },
                 },
                 "required": ["cluster_id"],
             },
@@ -433,7 +446,8 @@ def make_executor(matter, effort, conversation_id=None):
 
     def _read(tool_input):
         cluster_id = int(tool_input.get("cluster_id") or 0)
-        if cluster_id in opinion_cache:
+        requested_part = int(tool_input.get("part") or 0)
+        if requested_part <= 1 and cluster_id in opinion_cache:
             cached = opinion_cache[cluster_id]
             event = {
                 "type": "read",
@@ -453,7 +467,8 @@ def make_executor(matter, effort, conversation_id=None):
             }, None
 
         # Read earlier in this conversation (a previous message's run)?
-        if conversation_id:
+        # Part reads bypass both caches: they fetch a specific slice.
+        if conversation_id and requested_part <= 1:
             stored = django_cache.get(_conv_cache_key(cluster_id))
             if stored:
                 state["chars_used"] += len(stored.get("text", ""))
@@ -472,11 +487,42 @@ def make_executor(matter, effort, conversation_id=None):
         if cluster is None or opinion is None or not opinion.found:
             return {"error": f"Opinion for cluster {cluster_id} not available."}, None
 
-        text = (opinion.plain_text or "")[: budget["read_char_cap"]]
-        state["chars_used"] += len(text)
+        full = opinion.plain_text or ""
+        cap = budget["read_char_cap"]
+        total_parts = max(1, -(-len(full) // cap))
         citation = format_citations_with_year(
             cluster.get("citations", []), None
         ) or cluster.get("citation_string", "")
+
+        if requested_part > 1:
+            # Explicit continuation: a contiguous cap-sized slice.
+            text = full[cap * (requested_part - 1) : cap * requested_part]
+            if not text:
+                return {
+                    "error": (
+                        f"Opinion has no part {requested_part}: it is "
+                        f"{len(full):,} characters ({total_parts} parts)."
+                    )
+                }, None
+        elif len(full) <= cap:
+            text = full
+        else:
+            # Default read of a long opinion: beginning AND end, because
+            # holdings and dispositions live at the end. The omitted middle
+            # stays reachable via part reads.
+            head = (cap * 2) // 3
+            tail = cap - head
+            omitted = len(full) - head - tail
+            text = (
+                full[:head]
+                + f"\n\n[... {omitted:,} characters omitted from the MIDDLE "
+                f"of this opinion. The beginning and the END are included "
+                f"above and below this marker. To read omitted text, call "
+                f"read_opinion with part=2..{total_parts} (each part is a "
+                f"contiguous {cap:,}-character slice of the full opinion). "
+                f"...]\n\n" + full[-tail:]
+            )
+        state["chars_used"] += len(text)
         payload = {
             "case_name": cluster.get("case_name", ""),
             "citation": citation,
@@ -484,11 +530,17 @@ def make_executor(matter, effort, conversation_id=None):
             "date_filed": cluster.get("date_filed", ""),
             "cluster_id": cluster_id,
             "text": text,
-            "truncated": len(opinion.plain_text or "") > len(text),
+            "truncated": len(full) > cap,
+            "length_chars": len(full),
+            "parts": total_parts,
         }
-        opinion_cache[cluster_id] = payload
-        if conversation_id:
-            django_cache.set(_conv_cache_key(cluster_id), payload, timeout=3600)
+        if requested_part > 1:
+            payload["part"] = requested_part
+        else:
+            # Only the default (head+tail) read is cached and reused.
+            opinion_cache[cluster_id] = payload
+            if conversation_id:
+                django_cache.set(_conv_cache_key(cluster_id), payload, timeout=3600)
         event = {
             "type": "read",
             "cluster_id": cluster_id,
@@ -497,6 +549,8 @@ def make_executor(matter, effort, conversation_id=None):
             "chars": len(text),
             "ts": _now(),
         }
+        if requested_part > 1:
+            event["part"] = requested_part
         return payload, event
 
     def _skim(tool_input):

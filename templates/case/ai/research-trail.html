@@ -60,6 +60,7 @@ without crowding the dialogue.
             <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id event.cluster_id %}"
                target="_blank">{{ event.case_name|default:event.cluster_id }}</a>
             {% if event.citation %}<span class="detail-text">{{ event.citation }}</span>{% endif %}
+            {% if event.part %}<span class="detail-text">(part {{ event.part }})</span>{% endif %}
             {% if event.cached %}<span class="detail-text">(from earlier read)</span>{% endif %}
           </div>
         </li>

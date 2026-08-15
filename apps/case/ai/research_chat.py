@@ -490,7 +490,8 @@ def run_research_request(
                 push_log(f"Found {event.get('result_count', 0)} cases citing *{cited}*")
             elif etype == "read":
                 name = event.get("case_name") or event.get("cluster_id")
-                push_log(f"Read *{name}*")
+                part = f" (part {event['part']})" if event.get("part") else ""
+                push_log(f"Read *{name}*{part}")
             elif etype == "skim":
                 name = event.get("case_name") or event.get("cluster_id")
                 detail = "syllabus" if event.get("has_syllabus") else "metadata only"
