@@ -1,55 +1,53 @@
 {% comment %}
-Model badge for the conversation header. Saved conversations render it
-as a select so the model can be switched mid-conversation (sends always
-use conversation.llm). Unsaved previews stay a static badge until the
-first send creates the row.
+Model dropdown for the conversation header. Saved conversations get the
+site-standard Alpine dropdown; picking a model posts to
+set_conversation_llm and the whole #llmPillWrap re-renders. Unsaved
+previews stay a static badge until the first send creates the row.
 
 Claude is analysis-only: in Research mode the tool loop resends every
 tool result each turn, so Claude runs cost several times more. Claude
-options carry data-analysis-only and render disabled with an "(Analysis
-only)" suffix while the mode is Research; aiSyncLlmOptions() in
-conversation-standalone.html keeps that in sync with per-turn mode
-flips, and set_conversation_llm/send_message enforce it server-side.
+items carry data-analysis-only and are disabled while the mode is
+Research; aiSyncLlmOptions() in conversation-standalone.html keeps that
+in sync with per-turn mode flips, and set_conversation_llm/send_message
+enforce it server-side.
 {% endcomment %}
 {% if not conversation.id %}
   <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
 {% else %}
-  {% comment %}
-  The swap targets the wrapper, not the select: the fragment renders
-  wrapper + chevron, so re-targeting #llmPill would nest a wrapper
-  inside the old one on every model switch.
-  {% endcomment %}
-  <span class="ai-pill-select" id="llmPillWrap">
-    <select id="llmPill"
-            name="llm"
-            class="ai-llm-pill"
-            hx-post="{% url 'case:ai-set-llm' conversation.id %}"
-            hx-target="#llmPillWrap"
-            hx-swap="outerHTML"
-            title="Model for this conversation. Claude is available in Analysis mode only.">
-      {% if conversation.get_llm_display == conversation.llm %}
-        {% comment %}
-      Retired key: get_llm_display falls back to the raw key when the
-      stored value is no longer in LLM_CHOICES. Keep it visible and
-      selected; picking any current model moves off it for good.
-        {% endcomment %}
-        <option value="{{ conversation.llm }}" selected>{{ conversation.llm }}</option>
-      {% endif %}
-      {% for key, label in conversation.LLM_CHOICES %}
-        {% if "claude" in key %}
-          <option value="{{ key }}"
-                  data-analysis-only="1"
-                  data-label="{{ label }}"
-                  {% if key == conversation.llm %}selected{% endif %}
-                  {% if conversation.kind == "research" %}disabled{% endif %}>
-            {{ label }}
-            {% if conversation.kind == "research" %}(Analysis only){% endif %}
-          </option>
-        {% else %}
-          <option value="{{ key }}" {% if key == conversation.llm %}selected{% endif %}>{{ label }}</option>
-        {% endif %}
-      {% endfor %}
-    </select>
-    <i class="icon-chevron-down" aria-hidden="true"></i>
+  <span id="llmPillWrap">
+    <div class="dropdown" x-data="dropdown()">
+      <button type="button"
+              id="llmPill"
+              data-llm="{{ conversation.llm }}"
+              class="select-btn filter-dropdown-button ai-llm-pill"
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open"
+              title="Model for this conversation. Claude is available in Analysis mode only.">
+        <span>{{ conversation.get_llm_display }}</span>
+        <small><i class="icon-chevron-down"></i></small>
+      </button>
+      <ul class="dropdown-menu"
+          x-ref="menu"
+          x-show="open"
+          @click="close()"
+          id="llmMenu">
+        {% for key, label in conversation.LLM_CHOICES %}
+          <li>
+            <a class="dropdown-item {% if key == conversation.llm %}active{% endif %}{% if 'claude' in key and conversation.kind == 'research' %} disabled{% endif %}"
+               href="#"
+               data-llm="{{ key }}"
+               {% if "claude" in key %}data-analysis-only="1"{% endif %}
+               hx-post="{% url 'case:ai-set-llm' conversation.id %}"
+               hx-vals='{"llm": "{{ key }}"}'
+               hx-target="#llmPillWrap"
+               hx-swap="outerHTML">
+              {{ label }}
+              {% if "claude" in key %}<span class="detail-text">(Analysis only)</span>{% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
   </span>
 {% endif %}

@@ -1,21 +1,38 @@
 {% comment %}
-Mode dropdown for the conversation header: Analysis vs Research, applied
-per turn. The select is form-associated with #chatForm (form= attribute),
-so the chosen mode posts with every send and send_message persists it on
-the conversation. Flipping it also re-applies each mode's default model
-via aiModeChanged() in conversation-standalone.html.
+Mode dropdown for the chat header: Analysis vs Research, applied per
+turn. Site-standard Alpine dropdown; picking an item writes the hidden
+kind field in #chatForm (the value rides the next send, which persists
+it), updates the button label, and runs aiModeChanged() in
+conversation-standalone.html. Research shows as toggle-active, the way
+toolbars show an engaged filter.
 {% endcomment %}
-<span class="ai-pill-select">
-  <select id="modePill"
-          name="kind"
-          form="chatForm"
-          class="ai-mode-pill{% if conversation.kind == 'research' %} ai-research-badge{% endif %}"
-          onchange="aiModeChanged(this.value)"
+<div class="dropdown" x-data="dropdown()">
+  <button type="button"
+          id="modePill"
+          class="select-btn filter-dropdown-button ai-mode-pill{% if conversation.kind == 'research' %} toggle-active{% endif %}"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open"
           title="Mode for the next message. Analysis answers from the case file and the model's knowledge; Research actively searches CourtListener and cites only what it retrieved.">
-    {% for key, label in conversation.KIND_CHOICES %}
-      <option value="{{ key }}"
-              {% if key == conversation.kind %}selected{% endif %}>{{ label }}</option>
-    {% endfor %}
-  </select>
-  <i class="icon-chevron-down" aria-hidden="true"></i>
-</span>
+    <span>
+      {% if conversation.kind == "research" %}
+        Research
+      {% else %}
+        Analysis
+      {% endif %}
+    </span>
+    <small><i class="icon-chevron-down"></i></small>
+  </button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    <li>
+      <a class="dropdown-item {% if conversation.kind != 'research' %}active{% endif %}"
+         href="#"
+         onclick="aiSetMode('classic', this); return false;">Analysis</a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if conversation.kind == 'research' %}active{% endif %}"
+         href="#"
+         onclick="aiSetMode('research', this); return false;">Research</a>
+    </li>
+  </ul>
+</div>

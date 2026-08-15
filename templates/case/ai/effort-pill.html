@@ -1,21 +1,29 @@
 {% comment %}
 Effort dropdown for the chat header: Low/Medium/High, applied per turn.
-Like the mode pill, the select is form-associated with #chatForm, so the
-chosen effort posts with every send and send_message persists it on the
-conversation. That makes it live from the first moment of an UNSAVED
-chat too (it just rides the first send). Research: the tool-call and
-skim budgets. Hidden by #effortPillWrap while the mode reads Analysis.
+Site-standard Alpine dropdown; picking an item writes the hidden effort
+field in #chatForm, so it works from the first moment of an UNSAVED
+chat (the value just rides the first send; send_message persists it).
+Research budgets: tool calls and skims. Hidden by #effortPillWrap while
+the mode reads Analysis.
 {% endcomment %}
-<span class="ai-pill-select">
-  <select id="effortPill"
-          name="effort"
-          form="chatForm"
-          class="ai-effort-pill"
+<div class="dropdown" x-data="dropdown()">
+  <button type="button"
+          id="effortPill"
+          class="select-btn filter-dropdown-button ai-effort-pill"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open"
           title="Research effort for the next message. Low: a few quick searches. Medium: iterative searches, reads the leading opinions. High: plans first, surveys wide, treatment-checks every authority.">
+    <span>Effort: {{ conversation.get_effort_display }}</span>
+    <small><i class="icon-chevron-down"></i></small>
+  </button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
     {% for key, label in conversation.EFFORT_CHOICES %}
-      <option value="{{ key }}"
-              {% if key == conversation.effort %}selected{% endif %}>Effort: {{ label }}</option>
+      <li>
+        <a class="dropdown-item {% if key == conversation.effort %}active{% endif %}"
+           href="#"
+           onclick="aiSetEffort('{{ key }}', '{{ label }}', this); return false;">{{ label }}</a>
+      </li>
     {% endfor %}
-  </select>
-  <i class="icon-chevron-down" aria-hidden="true"></i>
-</span>
+  </ul>
+</div>
