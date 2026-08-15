@@ -23,6 +23,10 @@ import {
   History,
   Dropcursor,
   Gapcursor,
+  Table,
+  TableRow,
+  TableHeader,
+  TableCell,
 } from "./vendor/tiptap.bundle.js";
 
 import { HighlightMark } from "./highlight-mark.js";
@@ -44,6 +48,7 @@ import {
 import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
+import { TableAutoRender } from "./notes/tables.js";
 import {
   getMarkdownContent,
   scheduleAutosave,
@@ -210,6 +215,13 @@ function initEditor() {
       Code,
       CodeBlockLowlight.configure({ lowlight: createLowlight(lowlightAll) }),
       HorizontalRule,
+      // No resizing or cell merging — the markdown storage format can't
+      // express either, so the editor never creates what a save would lose.
+      Table,
+      TableRow,
+      TableHeader,
+      TableCell,
+      TableAutoRender,
       NoteRef,
       SearchHighlight,
       PlainCopy,

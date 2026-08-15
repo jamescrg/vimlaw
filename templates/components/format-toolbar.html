@@ -39,6 +39,33 @@ connectFormatToolbar() from js/format-toolbar.js (buttons match by data-cmd).
 <button type="button" class="btn-icon" data-cmd="quote" title="Blockquote">
   <i class="icon-quote"></i>
 </button>
+{% comment %}
+Table split button: the main half inserts a table (or opens the menu when
+the caret is already inside one), the caret opens the row/column operations
+menu. Hidden by connectFormatToolbar() when the editor lacks the Table
+extension.
+{% endcomment %}
+<div class="table-split">
+  <button type="button" class="btn-icon" data-table-insert title="Insert table">
+    <i class="icon-table"></i>
+  </button>
+  <button type="button"
+          class="btn-icon table-caret"
+          data-table-caret
+          title="Table options">
+    <i class="icon-chevron-down"></i>
+  </button>
+  <div class="table-menu" data-table-menu hidden>
+    <button type="button" data-table-op="addRowBefore">Add row above</button>
+    <button type="button" data-table-op="addRowAfter">Add row below</button>
+    <button type="button" data-table-op="addColumnBefore">Add column left</button>
+    <button type="button" data-table-op="addColumnAfter">Add column right</button>
+    <button type="button" data-table-op="deleteRow">Delete row</button>
+    <button type="button" data-table-op="deleteColumn">Delete column</button>
+    <button type="button" data-table-op="toggleHeaderRow">Toggle header row</button>
+    <button type="button" data-table-op="deleteTable">Delete table</button>
+  </div>
+</div>
 <span class="toolbar-divider"></span>
 {% comment %}
 LibreOffice-style split button: the main half toggles the current highlight

@@ -32,6 +32,41 @@ function formatInline(text) {
   );
 }
 
+// GFM pipe tables. Rows must carry outer pipes (| a | b |) — that's what
+// every table the AI emits and every hand-typed table looks like, and it
+// keeps prose containing stray pipes from parsing as a table. Column
+// alignment colons are accepted but not preserved (the editor's table
+// has no per-column alignment to store them in).
+export function isPipeRow(line) {
+  return line.length > 1 && line.startsWith("|") && line.indexOf("|", 1) !== -1;
+}
+
+export function isTableSeparator(line) {
+  return /^\|(\s*:?-+:?\s*\|)+\s*$/.test(line);
+}
+
+export function splitPipeRow(line) {
+  const inner = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return inner.split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
+}
+
+export function buildTableHtml(header, rows) {
+  const width = Math.max(header.length, ...rows.map((r) => r.length), 1);
+  const cell = (tag, content) =>
+    "<" + tag + "><p>" + formatInline(content || "") + "</p></" + tag + ">";
+  const row = (tag, cells) => {
+    let html = "<tr>";
+    for (let c = 0; c < width; c++) html += cell(tag, cells[c]);
+    return html + "</tr>";
+  };
+  return (
+    "<table><tbody>" +
+    row("th", header) +
+    rows.map((r) => row("td", r)).join("") +
+    "</tbody></table>"
+  );
+}
+
 function buildBlockquote(lines, minDepth) {
   let html = "<blockquote>";
   let j = 0;
@@ -155,6 +190,25 @@ export function markdownToHtml(md) {
       continue;
     }
 
+    // Tables: a pipe row followed by a separator row starts one; body rows
+    // run until the first non-pipe line (which the outer loop re-reads).
+    if (
+      isPipeRow(trimmed) &&
+      i + 1 < lines.length &&
+      isTableSeparator(lines[i + 1].trim())
+    ) {
+      const header = splitPipeRow(trimmed);
+      const rows = [];
+      i += 2;
+      while (i < lines.length && isPipeRow(lines[i].trim())) {
+        rows.push(splitPipeRow(lines[i].trim()));
+        i++;
+      }
+      i--;
+      parsed.push({ type: "table", header, rows });
+      continue;
+    }
+
     // Regular paragraph
     parsed.push({ type: "paragraph", content: formatInline(trimmed) });
   }
@@ -251,6 +305,12 @@ export function markdownToHtml(md) {
 
     if (item.type === "paragraph") {
       result.push("<p>" + item.content + "</p>");
+      i++;
+      continue;
+    }
+
+    if (item.type === "table") {
+      result.push(buildTableHtml(item.header, item.rows));
       i++;
       continue;
     }
@@ -381,6 +441,34 @@ export function htmlToMarkdown(html) {
         });
 
         return indent + prefix + textContent.trim() + "\n" + nestedLists;
+      }
+      case "table": {
+        // Pipe syntax can't express merged cells or block content, so cells
+        // flatten to one line of inline markdown and literal pipes escape.
+        const cellText = (cell) =>
+          Array.from(cell.childNodes)
+            .map((child) => processNode(child, 0, null, 0))
+            .join("")
+            .replace(/\s*\n\s*/g, " ")
+            .trim()
+            // Escape literal pipes, but not the one inside a reference
+            // token ([[doc:1|label]]) — that pipe is syntax the loader's
+            // ref regex must still match.
+            .replace(/\[\[(?:doc|hl):\d+\|[^\]]+\]\]|\|/g, (m) =>
+              m === "|" ? "\\|" : m,
+            );
+        const grid = Array.from(node.rows).map((tr) =>
+          Array.from(tr.cells).map(cellText),
+        );
+        if (!grid.length) return "";
+        const width = Math.max(...grid.map((r) => r.length));
+        const line = (cells) => {
+          const padded = cells.concat(Array(width - cells.length).fill(""));
+          return "| " + padded.join(" | ") + " |";
+        };
+        const separator = "| " + Array(width).fill("---").join(" | ") + " |";
+        const [head, ...body] = grid;
+        return [line(head), separator, ...body.map(line)].join("\n") + "\n\n";
       }
       case "br":
         return "\n";

@@ -175,6 +175,39 @@
   margin: 0.5rem 0;
 }
 
+/* Tables (all tokens retint in dark themes; no structural dark rule needed) */
+#note-editor .ProseMirror table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  table-layout: fixed;
+  width: 100%;
+}
+
+#note-editor .ProseMirror th,
+#note-editor .ProseMirror td {
+  border: 1px solid var(--border-medium);
+  padding: 0.25rem 0.5rem;
+  position: relative;
+  vertical-align: top;
+}
+
+#note-editor .ProseMirror th {
+  background: var(--background-th);
+  font-weight: 500;
+  text-align: left;
+}
+
+#note-editor .ProseMirror th p,
+#note-editor .ProseMirror td p {
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ProseMirror marks cell-selections with .selectedCell */
+#note-editor .ProseMirror .selectedCell {
+  background: var(--selected-background);
+}
+
 #note-editor code {
   background: var(--background-section);
   border-radius: 0.25rem;

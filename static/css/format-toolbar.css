@@ -109,6 +109,58 @@
   border-color: var(--border-dark);
 }
 
+/* Table split button — same LibreOffice split pattern as the highlighter:
+   main half inserts (or, inside a table, opens the menu), caret opens the
+   row/column operations menu. */
+.format-toolbar .table-split {
+  display: flex;
+  position: relative;
+}
+
+.format-toolbar .table-caret {
+  padding: 0.25rem 0;
+}
+
+.format-toolbar .table-menu {
+  background: var(--background-light);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  min-width: 11rem;
+  padding: 0.25rem;
+  position: absolute;
+  top: 100%;
+  z-index: 60;
+}
+
+.format-toolbar .table-menu[hidden] {
+  display: none;
+}
+
+.format-toolbar .table-menu button {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.75rem;
+  text-align: left;
+}
+
+.format-toolbar .table-menu button:disabled {
+  color: var(--color-lighter);
+  cursor: default;
+}
+
+.format-toolbar .table-menu button:hover:not(:disabled) {
+  background: var(--background-control);
+  color: var(--color-darker);
+}
+
 /* One fill map for both the button swatch and the menu chips. "none"
    (far-left chip, remove-highlight mode) paints as the canvas ground -
    the ring alone outlines it, reading as an empty swatch. */
