@@ -628,6 +628,13 @@ function setupImportExport() {
     exportToMarkdown();
   });
 
+  // Printer-friendly view: the print stylesheet (notes-editor.css) hides
+  // everything but the note canvas
+  bindClick("print-btn", (e) => {
+    e.preventDefault();
+    window.print();
+  });
+
   document.body.addEventListener("htmx:afterSwap", () => {
     if (document.getElementById("import-confirm-btn")) setupImportModal();
   });

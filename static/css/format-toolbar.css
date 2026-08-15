@@ -26,7 +26,13 @@
   padding: 0.25rem 0.5rem;
 }
 
-.format-toolbar .btn-icon:hover {
+/* Undo greys out at the bottom of the history stack */
+.format-toolbar .btn-icon:disabled {
+  color: var(--color-lighter);
+  cursor: default;
+}
+
+.format-toolbar .btn-icon:hover:not(:disabled) {
   background: var(--background-control);
   color: var(--color-darker);
 }

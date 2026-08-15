@@ -723,3 +723,45 @@
 .note-conflict-banner button {
   margin-left: auto;
 }
+
+/* Print — a printer-friendly view of the note alone (the ⋯ menu's Print
+   calls window.print()). Chrome disappears, the scroll containers unclip
+   so the full note paginates, and text forces to ink-black so dark themes
+   don't print pale-on-white. */
+@media print {
+  .note-panel-left,
+  .note-panel-right,
+  .panel-resizer,
+  .note-toolbar-wrapper,
+  .search-replace-bar,
+  .table-bar,
+  .note-meta,
+  .sources-picker,
+  #code-lang-selector,
+  #note-conflict-banner {
+    display: none !important;
+  }
+
+  .note-editor-layout,
+  .note-main,
+  .note-main .note-page {
+    display: block;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .note-main .note-page {
+    max-width: none;
+    padding: 0;
+  }
+
+  .note-canvas,
+  .note-canvas * {
+    color: #000;
+  }
+
+  .note-header .note-title-input {
+    padding: 0 0 0.5rem;
+  }
+}

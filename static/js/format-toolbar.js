@@ -5,6 +5,11 @@
 // formatting UX.
 
 const COMMANDS = {
+  undo: {
+    run: (e) => e.chain().focus().undo().run(),
+    active: () => false,
+    enabled: (e) => e.can().undo(),
+  },
   bold: {
     run: (e) => e.chain().focus().toggleBold().run(),
     active: (e) => e.isActive("bold"),
@@ -147,7 +152,9 @@ export function connectFormatToolbar(toolbar, editor) {
 
   const update = () => {
     for (const btn of buttons) {
-      btn.classList.toggle("active", COMMANDS[btn.dataset.cmd].active(editor));
+      const cmd = COMMANDS[btn.dataset.cmd];
+      btn.classList.toggle("active", cmd.active(editor));
+      if (cmd.enabled) btn.disabled = !cmd.enabled(editor);
     }
     if (hlToggleBtn) {
       hlToggleBtn.classList.toggle("active", editor.isActive("highlight"));

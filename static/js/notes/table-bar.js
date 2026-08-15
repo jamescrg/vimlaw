@@ -29,7 +29,6 @@ const OPS = {
   colRight: (e) => e.chain().focus().addColumnAfter().run(),
   colDelete: (e) => e.chain().focus().deleteColumn().run(),
   headerRow: (e) => e.chain().focus().toggleHeaderRow().run(),
-  deleteTable: (e) => e.chain().focus().deleteTable().run(),
 };
 
 function bar() {
