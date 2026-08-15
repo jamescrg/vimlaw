@@ -716,7 +716,9 @@ body:has(.note-page.standalone) {
   padding: 0 0.75rem;
   position: sticky;
   top: 0;
-  z-index: 50;
+  /* Above the search/table bars (z 100): the ellipsis dropdown lives in
+     this stacking context and would otherwise clip under them */
+  z-index: 110;
 }
 
 
