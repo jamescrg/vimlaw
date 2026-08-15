@@ -981,10 +981,14 @@ select.ai-mode-pill {
 
 .ai-status-content i {
   color: var(--violet-600);
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
+/* Muted like the log lines above it, so the live line reads as the
+   newest entry of one typographical stream (the animated icon alone
+   marks it as in progress). */
 .ai-status-message {
+  color: var(--color-muted);
   flex: 1;
 }
 
