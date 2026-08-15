@@ -38,11 +38,22 @@ Research-only: the effort pill shows only in Research mode. Formerly
 Analysis mode effort tiers over the context apparatus; pruned the same
 day in favor of answer streaming, which attacks the real latency.)
 
-| effort | tool calls | skims | search page | read cap | treatment tool | plan first | total text cap |
-|---|---|---|---|---|---|---|---|
-| low | 5 | 8 | 6 | 20k chars | no | no | 120k chars |
-| medium | 18 | 20 | 8 | 30k | yes | no | 450k |
-| high | 35 | 40 | 10 | 40k | yes | yes | 900k |
+| effort | searches | study calls | skims | search page | read cap | treatment tool | plan first | total text cap |
+|---|---|---|---|---|---|---|---|---|
+| low | 3 | 4 | 8 | 6 | 20k chars | no | no | 120k chars |
+| medium | 7 | 12 | 20 | 8 | 30k | yes | no | 450k |
+| high | 12 | 25 | 40 | 10 | 40k | yes | yes | 900k |
+
+Three pools (2026-08-15, after runs 892/898/899): searches
+(search_caselaw + find_citing_cases) run dry at their cap - the overlap
+guard dampened rephrase-looping but never stopped it, and looping
+starved treatment checks. Study calls are reads, briefs, treatment
+checks and lookups. The provider loop ceiling is the pools' sum.
+Vehicle discipline (same day): the protocol states the question's exact
+procedural vehicle before searching and forbids blending vehicles (a
+9-11-37(d) sanctions rule is not authority on a 9-11-37(a)(4) fee
+question), and the abstractor's brief carries a VEHICLE section flagging
+mismatches.
 
 Read-and-abstract (`abstract_opinion`, 2026-08-15) is the default way
 to study a shortlisted case, mirroring attorney practice (read the

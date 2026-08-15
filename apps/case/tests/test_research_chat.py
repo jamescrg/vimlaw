@@ -449,7 +449,7 @@ def test_run_research_request_payload(matter, user, monkeypatch):
     # carries the log — see test_research_log_survives_status_updates).
     assert statuses == [("context", "Building context...")]
     # The live log accumulated concise lines during the run.
-    assert "Searched `q1` (3 hits)" in payload["activity_log"]
+    assert "Searched q1 (3 hits)" in payload["activity_log"]
     assert "Read *Smith*" in payload["activity_log"]
 
 
@@ -771,7 +771,7 @@ def test_research_log_survives_status_updates(matter, user, monkeypatch):
         on_activity("tool_result", {"type": "search", "query": "q1", "result_count": 2})
         # Streamed planning text used to wipe the log from the cache.
         on_activity("text", {"text": "thinking about the results"})
-        assert "Searched `q1` (2 hits)" in cache.get(cache_key)["activity_log"]
+        assert "Searched q1 (2 hits)" in cache.get(cache_key)["activity_log"]
         return "Answer.", 1, 1, []
 
     monkeypatch.setattr(research_chat, "send_to_claude_with_tools", fake_loop)
@@ -785,7 +785,7 @@ def test_research_log_survives_status_updates(matter, user, monkeypatch):
         lambda: False,
         cache_key,
     )
-    assert "Searched `q1` (2 hits)" in cache.get(cache_key)["activity_log"]
+    assert "Searched q1 (2 hits)" in cache.get(cache_key)["activity_log"]
 
 
 def test_executor_repeat_search_served_from_cache(matter, fake_cl):
@@ -1258,15 +1258,23 @@ def test_skim_without_syllabus_flags_metadata_only(matter, fake_cl):
     assert event["has_syllabus"] is False
 
 
-def test_skims_draw_on_their_own_pool(matter, fake_cl, monkeypatch):
-    """Exhausting the substantive pool must not block skims, and vice versa."""
+def test_pools_are_independent(matter, fake_cl, monkeypatch):
+    """Searches, skims and study calls each draw on their own pool."""
     monkeypatch.setitem(research_tools.EFFORT_BUDGETS["medium"], "max_tool_calls", 1)
+    monkeypatch.setitem(research_tools.EFFORT_BUDGETS["medium"], "max_searches", 1)
     execute = make_executor(matter, "medium")
+    # One search allowed, the second runs dry - without touching skims/study.
     execute("search_caselaw", {"query": "q"})
+    result_json, event = execute("search_caselaw", {"query": "q2"})
+    assert "Search budget exhausted" in json.loads(result_json)["error"]
+    assert event is None
     result_json, _ = execute("skim_cluster", {"cluster_id": 101})
     assert "error" not in json.loads(result_json)
+    # Study pool of one: first read fine, second study call runs dry.
     result_json, _ = execute("read_opinion", {"cluster_id": 101})
-    assert "Tool budget exhausted" in json.loads(result_json)["error"]
+    assert "error" not in json.loads(result_json)
+    result_json, _ = execute("read_opinion", {"cluster_id": 202})
+    assert "Study budget exhausted" in json.loads(result_json)["error"]
 
 
 def test_skim_budget_exhaustion(matter, fake_cl, monkeypatch):
@@ -1278,10 +1286,17 @@ def test_skim_budget_exhaustion(matter, fake_cl, monkeypatch):
     assert event is None
 
 
-def test_effort_directive_prices_both_pools():
+def test_effort_directive_prices_all_pools():
     text = research_chat._effort_directive("medium")
-    assert "18 substantive tool calls" in text
-    assert "20 cheap" in text
+    assert "7 searches" in text
+    assert "12 study calls" in text
+    assert "20 cheap skims" in text
+
+
+def test_vehicle_discipline_in_prompts():
+    assert "PROCEDURAL VEHICLE" in research_chat.PROMPT_ROLE
+    assert "never blend the vehicles" in research_chat.PROMPT_ROLE
+    assert "VEHICLE:" in research_tools.ABSTRACT_SYSTEM
 
 
 # ---------------------------------------------------------------------------

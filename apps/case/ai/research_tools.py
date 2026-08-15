@@ -55,6 +55,12 @@ of one judicial opinion. Write a compact abstract with these sections:
 
 CASE: name, citation, court, date.
 POSTURE: procedural posture in one line.
+VEHICLE: the exact statutory or procedural basis of the decision (the
+statute AND subsection, rule, or motion type the court decided under).
+If it differs from the vehicle the question presented implies, say so
+here and again under CAUTIONS: a case decided under a different
+subsection or motion type is not authority for this question without an
+explicit distinction.
 HOLDING: the holding(s), each with a VERBATIM quotation of the court's
 operative language in quotation marks. Never paraphrase inside quotes.
 RELEVANCE: how the reasoning bears on the question presented, citing the
@@ -70,7 +76,8 @@ minimal."""
 
 EFFORT_BUDGETS = {
     "low": {
-        "max_tool_calls": 5,
+        "max_searches": 3,
+        "max_tool_calls": 4,
         "max_skims": 8,
         "page_size": 6,
         "read_char_cap": 20_000,
@@ -78,16 +85,21 @@ EFFORT_BUDGETS = {
         "plan_first": False,
         "total_char_cap": 120_000,
     },
-    # Medium/high raised 2026-08-15 (12/300k and 25/600k before) after the
-    # CourtListener Tier 3 upgrade (20/min, 250/hour, 1,000/day): runs were
-    # exhausting the call budget before treatment-checking their citations.
+    # Three pools per run: searches, skims, and study calls (reads,
+    # briefs, treatment checks, lookups). Searches were split into their
+    # own capped pool 2026-08-15 after runs 892/898/899 kept burning the
+    # shared budget on rephrased queries and starving treatment checks -
+    # the overlap guard dampened but never stopped the looping, so the
+    # search tool now simply runs dry. Medium/high raised same day after
+    # the CourtListener Tier 3 upgrade (20/min, 250/hour, 1,000/day).
     # CL requests per tool call: search 1, read_opinion 2 (cluster +
     # opinion; conversation-cached repeats 0), check_treatment up to ~11,
     # library reads 0 — the loop's model turns space them naturally and the
     # throttle's 429 backoff absorbs bursts. total_char_cap stays the token
     # cost lever: tool results are resent every model turn.
     "medium": {
-        "max_tool_calls": 18,
+        "max_searches": 7,
+        "max_tool_calls": 12,
         "max_skims": 20,
         "page_size": 8,
         "read_char_cap": 30_000,
@@ -96,7 +108,8 @@ EFFORT_BUDGETS = {
         "total_char_cap": 450_000,
     },
     "high": {
-        "max_tool_calls": 35,
+        "max_searches": 12,
+        "max_tool_calls": 25,
         "max_skims": 40,
         "page_size": 10,
         "read_char_cap": 40_000,
@@ -383,7 +396,7 @@ def make_executor(matter, effort, conversation_id=None, question=""):
     library_cache = {}
     skim_cache = {}
     abstract_cache = {}
-    state = {"chars_used": 0, "calls_used": 0, "skims_used": 0}
+    state = {"chars_used": 0, "calls_used": 0, "skims_used": 0, "searches_used": 0}
     # Within-run dedupe: the model sometimes repeats a search or lookup it
     # already ran (especially failed ones). Serve the stored result instead
     # of re-hitting the API, and flag the repeat so it shows in the log.
@@ -909,11 +922,23 @@ def make_executor(matter, effort, conversation_id=None, question=""):
         handler = handlers.get(name)
         if handler is None:
             return json.dumps({"error": f"Unknown tool {name!r}."}), None
-        # Two-pool call accounting: skims are cheap and plentiful; the
-        # substantive pool (searches, reads, treatment checks) is what the
-        # effort level really prices. The provider loop's own ceiling is
-        # the sum of both pools, as a backstop.
-        if name == "skim_cluster":
+        # Three-pool call accounting: searches, skims, and study calls
+        # (reads, briefs, treatment checks, lookups). The provider loop's
+        # own ceiling is the sum of all pools, as a backstop.
+        if name in ("search_caselaw", "find_citing_cases"):
+            if state["searches_used"] >= budget["max_searches"]:
+                return json.dumps(
+                    {
+                        "error": (
+                            f"Search budget exhausted "
+                            f"({budget['max_searches']} searches). Study "
+                            "what you already have: skim, brief, or read "
+                            "the results your searches returned, or answer."
+                        )
+                    }
+                ), None
+            state["searches_used"] += 1
+        elif name == "skim_cluster":
             if state["skims_used"] >= budget["max_skims"]:
                 return json.dumps(
                     {
@@ -929,7 +954,7 @@ def make_executor(matter, effort, conversation_id=None, question=""):
                 return json.dumps(
                     {
                         "error": (
-                            "Tool budget exhausted. Provide your best "
+                            "Study budget exhausted. Provide your best "
                             "answer from the opinions already read."
                         )
                     }

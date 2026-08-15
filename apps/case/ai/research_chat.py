@@ -121,6 +121,14 @@ PROMPT_ROLE = (
     "leading statement and the most recent application, and do not let "
     "authorities you relied on go uncited. Flag any slip opinion or "
     "case with no citing history as new and not yet settled law.\n\n"
+    "PROCEDURAL VEHICLE (all protocols): before your first search, state "
+    "the exact procedural vehicle of the question - the statute AND "
+    "subsection, rule, or motion type it arises under. Match authorities "
+    "to that vehicle: a case decided under a different subsection or "
+    "motion type (for example, a motion-for-sanctions ruling under OCGA "
+    "9-11-37(d) offered on a motion-to-compel fee question under "
+    "9-11-37(a)(4)) is not authority for the question; use it only with "
+    "an explicit distinction, and never blend the vehicles' rules.\n"
     "CITATION CHASING (all protocols): opinions you read cite the "
     "authorities they rely on. When an on-point opinion rests its rule "
     "on earlier cases, run down the one or two most load-bearing "
@@ -177,11 +185,13 @@ PROMPT_CONTRACT = (
 def _effort_directive(effort):
     budget = budget_for(effort)
     lines = (
-        f"RESEARCH EFFORT: {effort}. You have a budget of "
-        f"{budget['max_tool_calls']} substantive tool calls (searches, "
-        f"reads, treatment checks) plus {budget['max_skims']} cheap "
-        "skims; survey wide with skims, spend the substantive calls "
-        "where they matter, and answer once you have solid authority.\n"
+        f"RESEARCH EFFORT: {effort}. Budgets: {budget['max_searches']} "
+        f"searches, {budget['max_tool_calls']} study calls (reads, "
+        f"briefs, treatment checks, lookups), and {budget['max_skims']} "
+        "cheap skims. Searches run dry fast: two or three well-designed "
+        "queries should surface the field; survey wide with skims, spend "
+        "study calls on the cases that matter, and always keep enough "
+        "study budget to treatment-check what you cite.\n"
     )
     if budget["plan_first"]:
         lines += (
@@ -496,7 +506,7 @@ def run_research_request(
                 if event.get("suppressed"):
                     seen += ", repeats withheld"
                 push_log(
-                    f"Searched `{event.get('query', '')}` "
+                    f"Searched {event.get('query', '')} "
                     f"({event.get('result_count', 0)} hits{seen}){repeat}"
                 )
             elif etype == "citing":
@@ -549,7 +559,9 @@ def run_research_request(
             tools,
             execute_tool,
             model=GEMINI_MODELS[llm],
-            max_tool_calls=budget["max_tool_calls"] + budget["max_skims"],
+            max_tool_calls=budget["max_tool_calls"]
+            + budget["max_skims"]
+            + budget["max_searches"],
             is_cancelled=is_cancelled,
             on_activity=on_activity,
         )
@@ -560,7 +572,9 @@ def run_research_request(
             tools,
             execute_tool,
             model=CLAUDE_MODELS.get(llm, "claude-opus-4-8"),
-            max_tool_calls=budget["max_tool_calls"] + budget["max_skims"],
+            max_tool_calls=budget["max_tool_calls"]
+            + budget["max_skims"]
+            + budget["max_searches"],
             is_cancelled=is_cancelled,
             on_activity=on_activity,
         )
