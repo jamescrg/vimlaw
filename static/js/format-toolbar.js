@@ -47,79 +47,15 @@ const COMMANDS = {
   },
 };
 
-const TABLE_OPS = {
-  addRowBefore: (e) => e.chain().focus().addRowBefore().run(),
-  addRowAfter: (e) => e.chain().focus().addRowAfter().run(),
-  addColumnBefore: (e) => e.chain().focus().addColumnBefore().run(),
-  addColumnAfter: (e) => e.chain().focus().addColumnAfter().run(),
-  deleteRow: (e) => e.chain().focus().deleteRow().run(),
-  deleteColumn: (e) => e.chain().focus().deleteColumn().run(),
-  toggleHeaderRow: (e) => e.chain().focus().toggleHeaderRow().run(),
-  deleteTable: (e) => e.chain().focus().deleteTable().run(),
-};
-
-// Table split button: the main half inserts a 3×3 table with a header row
-// (or opens the operations menu when the caret is already inside a table),
-// the caret opens the menu directly. Row/column operations only apply
-// inside a table, so the menu disables them elsewhere. Returns the main
-// button and a sync callback, or null when the surface has no Table support.
+// The table button toggles the notes table bar; that wiring lives with the
+// bar itself (notes/table-bar.js) since only the notes editor has one. Here
+// we just hide the button on surfaces whose editor lacks the Table
+// extension (the AI compose-prompt modal).
 function wireTable(toolbar, editor) {
-  const split = toolbar.querySelector(".table-split");
-  if (!split) return null;
-
-  // Surfaces whose editor lacks the Table extension lose the button
-  if (typeof editor.commands.insertTable !== "function") {
-    split.style.display = "none";
-    return null;
-  }
-  split.style.display = "";
-
-  const insertBtn = split.querySelector("[data-table-insert]");
-  const menu = split.querySelector("[data-table-menu]");
-  const opButtons = Array.from(menu.querySelectorAll("[data-table-op]"));
-
-  const sync = () => {
-    const inTable = editor.isActive("table");
-    insertBtn.classList.toggle("active", inTable);
-    for (const btn of opButtons) btn.disabled = !inTable;
-  };
-
-  insertBtn.onclick = () => {
-    if (editor.isActive("table")) {
-      menu.hidden = !menu.hidden;
-      return;
-    }
-    menu.hidden = true;
-    editor
-      .chain()
-      .focus()
-      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-      .run();
-  };
-
-  split.querySelector("[data-table-caret]").onclick = () => {
-    menu.hidden = !menu.hidden;
-  };
-
-  for (const btn of opButtons) {
-    btn.onclick = () => {
-      menu.hidden = true;
-      const op = TABLE_OPS[btn.dataset.tableOp];
-      if (op) op(editor);
-    };
-  }
-
-  // Close the menu on any outside click (bound once; the toolbar element
-  // survives editor rebuilds)
-  if (!toolbar.dataset.tableOutsideBound) {
-    toolbar.dataset.tableOutsideBound = "true";
-    document.addEventListener("click", (e) => {
-      if (!split.contains(e.target)) menu.hidden = true;
-    });
-  }
-
-  sync();
-  return sync;
+  const btn = toolbar.querySelector("[data-table-toggle]");
+  if (!btn) return;
+  btn.style.display =
+    typeof editor.commands.insertTable === "function" ? "" : "none";
 }
 
 // The last-used highlight color, shared across surfaces so the swatch the
@@ -207,7 +143,7 @@ export function connectFormatToolbar(toolbar, editor) {
     (btn) => COMMANDS[btn.dataset.cmd],
   );
   const hlToggleBtn = wireHighlight(toolbar, editor);
-  const syncTable = wireTable(toolbar, editor);
+  wireTable(toolbar, editor);
 
   const update = () => {
     for (const btn of buttons) {
@@ -216,7 +152,6 @@ export function connectFormatToolbar(toolbar, editor) {
     if (hlToggleBtn) {
       hlToggleBtn.classList.toggle("active", editor.isActive("highlight"));
     }
-    if (syncTable) syncTable();
   };
 
   for (const btn of buttons) {

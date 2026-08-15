@@ -25,8 +25,6 @@ import {
   Gapcursor,
   Table,
   TableRow,
-  TableHeader,
-  TableCell,
 } from "./vendor/tiptap.bundle.js";
 
 import { HighlightMark } from "./highlight-mark.js";
@@ -48,7 +46,12 @@ import {
 import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { markdownToHtml } from "./notes/markdown.js";
-import { TableAutoRender } from "./notes/tables.js";
+import {
+  TableAutoRender,
+  NoteTableCell,
+  NoteTableHeader,
+} from "./notes/tables.js";
+import { setupTableBar } from "./notes/table-bar.js";
 import {
   getMarkdownContent,
   scheduleAutosave,
@@ -217,10 +220,12 @@ function initEditor() {
       HorizontalRule,
       // No resizing or cell merging — the markdown storage format can't
       // express either, so the editor never creates what a save would lose.
+      // Column alignment DOES round-trip (separator-row colons), carried by
+      // the extended cell types.
       Table,
       TableRow,
-      TableHeader,
-      TableCell,
+      NoteTableHeader,
+      NoteTableCell,
       TableAutoRender,
       NoteRef,
       SearchHighlight,
@@ -240,6 +245,7 @@ function initEditor() {
   state.lastSavedContent = getMarkdownContent();
   setupCodeBlockLangSelector();
   setupToolbar();
+  setupTableBar();
   syncAiWriteButton();
   setupKeyboardShortcuts();
   setupReferencePicker();

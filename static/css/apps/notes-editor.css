@@ -179,8 +179,10 @@
 #note-editor .ProseMirror table {
   border-collapse: collapse;
   margin: 1rem 0;
-  table-layout: fixed;
-  width: 100%;
+  /* Content-sized columns (GitHub-style): pipe markdown can't store
+     dragged widths, so width comes from content, capped at the canvas */
+  max-width: 100%;
+  width: auto;
 }
 
 #note-editor .ProseMirror th,
@@ -189,6 +191,7 @@
      canvas ground, only the header row gets a wash. */
   background: transparent;
   border: 1px solid var(--border-medium);
+  min-width: 4rem;
   padding: 0.25rem 0.5rem;
   position: relative;
   vertical-align: top;

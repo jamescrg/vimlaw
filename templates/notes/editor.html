@@ -202,6 +202,55 @@
           <i class="icon-x"></i>
         </button>
       </div>
+      <!-- Table Bar -->
+      <div id="table-bar" class="table-bar">
+        <button type="button" data-tb="insert" title="Insert table">
+          <i class="icon-table"></i>
+        </button>
+        <span class="table-bar-divider"></span>
+        <span class="table-bar-label">Row</span>
+        <button type="button" data-tb="rowAbove" title="Add row above">
+          <i class="icon-between-horizontal-start"></i>
+        </button>
+        <button type="button" data-tb="rowBelow" title="Add row below">
+          <i class="icon-between-horizontal-end"></i>
+        </button>
+        <button type="button" data-tb="rowDelete" title="Delete row">
+          <i class="icon-trash-2"></i>
+        </button>
+        <span class="table-bar-divider"></span>
+        <span class="table-bar-label">Column</span>
+        <button type="button" data-tb="colLeft" title="Add column left">
+          <i class="icon-between-vertical-start"></i>
+        </button>
+        <button type="button" data-tb="colRight" title="Add column right">
+          <i class="icon-between-vertical-end"></i>
+        </button>
+        <button type="button" data-tb="colDelete" title="Delete column">
+          <i class="icon-trash-2"></i>
+        </button>
+        <span class="table-bar-divider"></span>
+        <span class="table-bar-label">Align</span>
+        <button type="button" data-tb="alignLeft" title="Align column left">
+          <i class="icon-align-left"></i>
+        </button>
+        <button type="button" data-tb="alignCenter" title="Align column center">
+          <i class="icon-align-center"></i>
+        </button>
+        <button type="button" data-tb="alignRight" title="Align column right">
+          <i class="icon-align-right"></i>
+        </button>
+        <span class="table-bar-divider"></span>
+        <button type="button" data-tb="headerRow" title="Toggle header row">
+          <i class="icon-panel-top"></i>
+        </button>
+        <button type="button" data-tb="deleteTable" title="Delete table">
+          <i class="icon-grid-2x2-x"></i>
+        </button>
+        <button type="button" id="table-bar-close" title="Close">
+          <i class="icon-x"></i>
+        </button>
+      </div>
       <div class="note-page standalone">
         <div id="note-editor-container">{% include "notes/editor-content.html" %}</div>
       </div>

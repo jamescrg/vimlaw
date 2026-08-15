@@ -45,18 +45,54 @@ export function isTableSeparator(line) {
   return /^\|(\s*:?-+:?\s*\|)+\s*$/.test(line);
 }
 
+// Column alignment lives in the separator row's colons (:-- / :-: / --:).
+// null means "no explicit alignment" and round-trips as plain dashes.
+export function separatorAligns(line) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((seg) => {
+      const s = seg.trim();
+      const left = s.startsWith(":");
+      const right = s.endsWith(":");
+      if (left && right) return "center";
+      if (right) return "right";
+      if (left) return "left";
+      return null;
+    });
+}
+
+const ALIGN_DASHES = { left: ":--", center: ":-:", right: "--:" };
+
+export function alignsToSeparator(aligns) {
+  return (
+    "| " + aligns.map((a) => ALIGN_DASHES[a] || "---").join(" | ") + " |"
+  );
+}
+
 export function splitPipeRow(line) {
   const inner = line.trim().replace(/^\|/, "").replace(/\|$/, "");
   return inner.split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
 }
 
-export function buildTableHtml(header, rows) {
+export function buildTableHtml(header, rows, aligns) {
   const width = Math.max(header.length, ...rows.map((r) => r.length), 1);
-  const cell = (tag, content) =>
-    "<" + tag + "><p>" + formatInline(content || "") + "</p></" + tag + ">";
+  const cell = (tag, content, align) =>
+    "<" +
+    tag +
+    (align ? ' style="text-align: ' + align + '"' : "") +
+    "><p>" +
+    formatInline(content || "") +
+    "</p></" +
+    tag +
+    ">";
   const row = (tag, cells) => {
     let html = "<tr>";
-    for (let c = 0; c < width; c++) html += cell(tag, cells[c]);
+    for (let c = 0; c < width; c++) {
+      html += cell(tag, cells[c], aligns ? aligns[c] : null);
+    }
     return html + "</tr>";
   };
   return (
@@ -198,6 +234,7 @@ export function markdownToHtml(md) {
       isTableSeparator(lines[i + 1].trim())
     ) {
       const header = splitPipeRow(trimmed);
+      const aligns = separatorAligns(lines[i + 1].trim());
       const rows = [];
       i += 2;
       while (i < lines.length && isPipeRow(lines[i].trim())) {
@@ -205,7 +242,7 @@ export function markdownToHtml(md) {
         i++;
       }
       i--;
-      parsed.push({ type: "table", header, rows });
+      parsed.push({ type: "table", header, aligns, rows });
       continue;
     }
 
@@ -310,7 +347,7 @@ export function markdownToHtml(md) {
     }
 
     if (item.type === "table") {
-      result.push(buildTableHtml(item.header, item.rows));
+      result.push(buildTableHtml(item.header, item.rows, item.aligns));
       i++;
       continue;
     }
@@ -466,7 +503,14 @@ export function htmlToMarkdown(html) {
           const padded = cells.concat(Array(width - cells.length).fill(""));
           return "| " + padded.join(" | ") + " |";
         };
-        const separator = "| " + Array(width).fill("---").join(" | ") + " |";
+        // Column alignment reads off the header row's text-align styles
+        // and becomes the separator's colons
+        const headerCells = Array.from(node.rows[0].cells);
+        const aligns = Array.from({ length: width }, (_, c) => {
+          const cellEl = headerCells[c];
+          return (cellEl && cellEl.style.textAlign) || null;
+        });
+        const separator = alignsToSeparator(aligns);
         const [head, ...body] = grid;
         return [line(head), separator, ...body.map(line)].join("\n") + "\n\n";
       }

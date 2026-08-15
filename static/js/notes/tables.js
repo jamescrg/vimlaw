@@ -7,7 +7,14 @@
 //  - Pasting: plain text containing a pipe table is treated as markdown and
 //    converted wholesale (a table paste is a markdown paste in practice).
 
-import { Extension, Plugin, PluginKey } from "../vendor/tiptap.bundle.js";
+import {
+  Extension,
+  Plugin,
+  PluginKey,
+  TableCell,
+  TableHeader,
+  TableMap,
+} from "../vendor/tiptap.bundle.js";
 import {
   isPipeRow,
   isTableSeparator,
@@ -15,6 +22,97 @@ import {
   buildTableHtml,
   markdownToHtml,
 } from "./markdown.js";
+
+// Per-cell alignment attribute. It renders as an inline text-align and
+// serializes to the separator row's colons — alignment is per COLUMN in
+// pipe markdown, so setColumnAlign below always stamps a full column.
+const alignAttribute = {
+  align: {
+    default: null,
+    parseHTML: (el) => el.style.textAlign || null,
+    renderHTML: (attrs) =>
+      attrs.align ? { style: "text-align: " + attrs.align } : {},
+  },
+};
+
+export const NoteTableCell = TableCell.extend({
+  addAttributes() {
+    return { ...this.parent?.(), ...alignAttribute };
+  },
+});
+
+export const NoteTableHeader = TableHeader.extend({
+  addAttributes() {
+    return { ...this.parent?.(), ...alignAttribute };
+  },
+});
+
+// Locate the table and current column from the selection; null outside one
+function currentColumn(state) {
+  const { $from } = state.selection;
+  for (let d = $from.depth; d > 0; d--) {
+    const name = $from.node(d).type.name;
+    if (name === "tableCell" || name === "tableHeader") {
+      const table = $from.node(d - 2);
+      const tableStart = $from.start(d - 2);
+      const map = TableMap.get(table);
+      const rect = map.findCell($from.before(d) - tableStart);
+      return { table, tableStart, map, col: rect.left };
+    }
+  }
+  return null;
+}
+
+// Stamp align onto every cell of the caret's column (null clears)
+export function setColumnAlign(editor, align) {
+  const loc = currentColumn(editor.state);
+  if (!loc) return false;
+  const { table, tableStart, map, col } = loc;
+  let tr = editor.state.tr;
+  for (let row = 0; row < map.height; row++) {
+    const pos = map.map[row * map.width + col];
+    const cell = table.nodeAt(pos);
+    tr = tr.setNodeMarkup(tableStart + pos, null, {
+      ...cell.attrs,
+      align: align || null,
+    });
+  }
+  editor.view.dispatch(tr);
+  return true;
+}
+
+// Re-stamp every column's alignment from its header cell — freshly added
+// rows are born with null cells, and pipe markdown treats alignment as a
+// column property, so the header is the source of truth.
+export function normalizeTableAligns(editor) {
+  const loc = currentColumn(editor.state);
+  if (!loc) return;
+  const { table, tableStart, map } = loc;
+  let tr = editor.state.tr;
+  let changed = false;
+  for (let col = 0; col < map.width; col++) {
+    const align = table.nodeAt(map.map[col]).attrs.align || null;
+    for (let row = 1; row < map.height; row++) {
+      const pos = map.map[row * map.width + col];
+      const cell = table.nodeAt(pos);
+      if ((cell.attrs.align || null) !== align) {
+        tr = tr.setNodeMarkup(tableStart + pos, null, {
+          ...cell.attrs,
+          align,
+        });
+        changed = true;
+      }
+    }
+  }
+  if (changed) editor.view.dispatch(tr);
+}
+
+export function getColumnAlign(editor) {
+  const loc = currentColumn(editor.state);
+  if (!loc) return null;
+  const { table, map, col } = loc;
+  return table.nodeAt(map.map[col]).attrs.align || null;
+}
 
 function textHasPipeTable(text) {
   const lines = text.split(/\r?\n/);
