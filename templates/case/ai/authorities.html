@@ -1,0 +1,29 @@
+{% load markdown_extras %}
+{% comment %}
+Authorities under a research answer: viewer links plus expandable case
+briefs, ONLY for the cases the answer actually cited (grounded). The
+viewer link is a live CourtListener preview; nothing is stored. The
+trail above stays a process record without per-case links or briefs.
+{% endcomment %}
+{% with authorities=message.cited_authorities %}
+  {% if authorities %}
+    <div class="ai-authorities">
+      <div class="ai-authorities-title">Authorities</div>
+      <ul>
+        {% for auth in authorities %}
+          <li>
+            <a href="{% url 'case:caselaw-viewer-cluster' message.conversation.matter_id auth.cluster_id %}"
+               target="_blank">{{ auth.case_name|default:auth.cluster_id }}</a>
+            {% if auth.citation %}<span class="detail-text">{{ auth.citation }}</span>{% endif %}
+            {% if auth.abstract %}
+              <details class="ai-abstract">
+                <summary class="detail-text">case brief</summary>
+                <div class="ai-abstract-text">{{ auth.abstract|render_markdown }}</div>
+              </details>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+{% endwith %}

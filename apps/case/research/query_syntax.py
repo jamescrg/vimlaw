@@ -16,9 +16,7 @@ COURTLISTENER_SYNTAX_RULES = (
     "  Use wildcards instead of OR-listing inflections of the same word:\n"
     "  BAD:  (waive OR waived OR waiver OR waiving)\n"
     "  GOOD: waiv*\n"
-    "  OR groups are still correct for genuinely different terms (e.g. suit OR action)\n"
-    '- "phrase"~N: proximity — words within N words of each other (ONLY after quoted phrases)\n'
-    "- term~: fuzzy match for spelling variations (no number after ~)\n\n"
+    "  OR groups are still correct for genuinely different terms (e.g. suit OR action)\n\n"
     "CRITICAL SYNTAX RULES — violating these causes server errors:\n"
     "- The ~ operator ONLY works two ways:\n"
     '  1. "quoted phrase"~N → proximity (OK: "summary judgment"~5)\n'
@@ -36,4 +34,34 @@ COURTLISTENER_SYNTAX_RULES = (
     "- Group related concepts with parentheses and connect groups with AND\n"
     "- Keep the query under 3 levels of nesting to avoid complexity issues\n"
     "- Keep the query concise — 120 characters or fewer\n\n"
+)
+
+# Term selection, not syntax: what makes a query GOOD. Shared with the
+# research chat's tool loop; grew out of run 892 (five rephrasings of one
+# concept set, a subsectioned statute cite, and 'after' as a keyword).
+QUERY_DESIGN_RULES = (
+    "QUERY DESIGN (what to search, not how to spell it):\n"
+    "- Every term must be a word a COURT would write in the controlling "
+    "paragraph of an opinion. Never use narrative or procedural filler "
+    "words: after, before, during, following, provide, obtain, response, "
+    "party, case. They match everything and distinguish nothing.\n"
+    "- Search the doctrine's own language. Statutes and leading opinions "
+    "have operative phrases; quote those, not a description of your "
+    'situation. ("expenses of the motion" beats fees AND compel.)\n'
+    "- Statute numbers: a bare quoted number works — courts write the "
+    'number in text ("9-11-37"). NEVER include subsections '
+    '("9-11-37(a)(4)(A)"): punctuation makes matching unreliable and '
+    "over-narrow. Pair the number with doctrine vocabulary instead: "
+    '("9-11-37" OR "motion to compel").\n'
+    "- 2-3 concept groups per query, connected with AND; each group is "
+    "one concept expressed as its best term of art plus true synonyms. "
+    "More groups makes queries brittle, not precise.\n"
+    "- ONE NEW CONCEPT PER QUERY: a follow-up search must change WHAT is "
+    "asked — a different element, a different doctrine, a different "
+    "synonym family — never a reshuffle of the same terms. If your next "
+    "query would share most of its terms with one you already ran, do "
+    "not run it: triage the results you already have, or re-run one "
+    "query with a larger num_results.\n"
+    "- Prefer stem* wildcards to OR-lists of inflections (moot* covers "
+    "moot, mooted, mootness).\n\n"
 )

@@ -1,50 +1,29 @@
 {% comment %}
-Effort badge for research turns, shown beside the mode badge: "Effort:
-Medium" (the tool-call budget). Clicking cycles low -> medium -> high ->
-low (unsaved conversations get a non-interactive preview). Hidden by the
-#effortPillWrap wrapper while the mode dropdown says Analysis.
+Effort dropdown for the chat header: Low/Medium/High, applied per turn.
+Site-standard Alpine dropdown; picking an item writes the hidden effort
+field in #chatForm, so it works from the first moment of an UNSAVED
+chat (the value just rides the first send; send_message persists it).
+Research budgets: tool calls and skims. Hidden by #effortPillWrap while
+the mode reads Analysis.
 {% endcomment %}
-{% if not conversation.id %}
-  <span class="app-badge badge-lg ai-effort-pill"
-        title="Research effort. Send your first message to be able to change it.">
-    Effort: {{ conversation.get_effort_display }}
-  </span>
-{% else %}
-  {% if conversation.effort == "low" %}
-    {% with next_level="medium" %}
-      <button type="button"
-              id="effortPill"
-              class="app-badge badge-lg ai-effort-pill"
-              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
-              hx-target="#effortPill"
-              hx-swap="outerHTML"
-              title="Low effort: a few searches, snippets only. Click for Medium.">
-        Effort: Low <i class="icon-chevrons-up-down" aria-hidden="true"></i>
-      </button>
-    {% endwith %}
-  {% elif conversation.effort == "high" %}
-    {% with next_level="low" %}
-      <button type="button"
-              id="effortPill"
-              class="app-badge badge-lg ai-effort-pill"
-              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
-              hx-target="#effortPill"
-              hx-swap="outerHTML"
-              title="High effort: plans first, many searches, reads and treatment-checks every authority. Click for Low.">
-        Effort: High <i class="icon-chevrons-up-down" aria-hidden="true"></i>
-      </button>
-    {% endwith %}
-  {% else %}
-    {% with next_level="high" %}
-      <button type="button"
-              id="effortPill"
-              class="app-badge badge-lg ai-effort-pill"
-              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
-              hx-target="#effortPill"
-              hx-swap="outerHTML"
-              title="Medium effort: iterative searches, reads the leading opinions. Click for High.">
-        Effort: Medium <i class="icon-chevrons-up-down" aria-hidden="true"></i>
-      </button>
-    {% endwith %}
-  {% endif %}
-{% endif %}
+<div class="dropdown" x-data="dropdown()">
+  <button type="button"
+          id="effortPill"
+          class="select-btn filter-dropdown-button ai-effort-pill"
+          x-ref="button"
+          @click="toggle()"
+          :aria-expanded="open"
+          title="Research effort for the next message. Low: a few quick searches. Medium: iterative searches, reads the leading opinions. High: plans first, surveys wide, treatment-checks every authority.">
+    <span>Effort: {{ conversation.get_effort_display }}</span>
+    <small><i class="icon-chevron-down"></i></small>
+  </button>
+  <ul class="dropdown-menu" x-ref="menu" x-show="open" @click="close()">
+    {% for key, label in conversation.EFFORT_CHOICES %}
+      <li>
+        <a class="dropdown-item {% if key == conversation.effort %}active{% endif %}"
+           href="#"
+           onclick="aiSetEffort('{{ key }}', '{{ label }}', this); return false;">{{ label }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

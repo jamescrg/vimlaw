@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="{% static_v 'css/buttons.css' %}" />
     <link rel="stylesheet" href="{% static_v 'css/icons.css' %}" />
     <link rel="stylesheet" href="{% static_v 'css/forms.css' %}" />
+    <link rel="stylesheet" href="{% static_v 'css/interface.css' %}" />
     <link rel="stylesheet" href="{% static_v 'css/modals.css' %}" />
     <link rel="stylesheet" href="{% static_v 'css/format-toolbar.css' %}" />
     <link rel="stylesheet" href="{% static_v 'css/apps/case/ai.css' %}" />
@@ -85,12 +86,14 @@
         <header class="ai-chat-header">
           <span class="app-badge badge-purple">{{ matter.name }}</span>
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
-          {% include "case/ai/mode-pill.html" with conversation=conversation %}
-          {% include "case/ai/llm-pill.html" with conversation=conversation %}
-          <span id="effortPillWrap"
-                {% if conversation.kind != "research" %}class="hide"{% endif %}>
-            {% include "case/ai/effort-pill.html" with conversation=conversation %}
-          </span>
+          <div class="ai-header-controls">
+            {% include "case/ai/mode-pill.html" with conversation=conversation %}
+            {% include "case/ai/llm-pill.html" with conversation=conversation %}
+            <span id="effortPillWrap"
+                  {% if conversation.kind != "research" %}class="hide"{% endif %}>
+              {% include "case/ai/effort-pill.html" with conversation=conversation %}
+            </span>
+          </div>
           {% comment %}
             The vet-citations toggle was removed from the header: vetting
             defaults on and nobody ever turned it off. The backend flag,
@@ -126,6 +129,7 @@
                      id="conversationId"
                      value="{% if not is_new %}{{ conversation.id }}{% endif %}">
               <input type="hidden" name="llm" value="{{ conversation.llm }}">
+              <input type="hidden" name="kind" value="{{ conversation.kind }}">
               <input type="hidden" name="effort" value="{{ conversation.effort }}">
               <input type="hidden"
                      name="title"
@@ -189,51 +193,77 @@
       document.getElementById('aiMessageInput').value = '';
     }
 
-    // Mode dropdown (header): the value rides along with the next send, so
-    // flipping it needs no server call. It does re-apply each mode's
-    // default model, as the old new-chat modal did: research runs on
-    // Gemini by default (the agentic loop resends tool results every turn,
-    // which costs several times more on Claude), and flipping back to
-    // Analysis restores whatever model was in use before. The model pill
-    // stays one click away to override either way.
+    // Header dropdowns write these hidden #chatForm fields; the values
+    // ride along with the next send (send_message persists them per turn).
+    function aiField(name) {
+      return document.querySelector('#chatForm [name="' + name + '"]');
+    }
+
+    function aiMenuSelect(el) {
+      el.closest('.dropdown-menu').querySelectorAll('.dropdown-item').forEach(function (a) {
+        a.classList.toggle('active', a === el);
+      });
+    }
+
+    function aiSetMode(kind, el) {
+      if (el) aiMenuSelect(el);
+      aiField('kind').value = kind;
+      document.querySelector('#modePill > span').textContent =
+        kind === 'research' ? 'Research' : 'Analysis';
+      aiModeChanged(kind);
+    }
+
+    function aiSetEffort(key, label, el) {
+      if (el) aiMenuSelect(el);
+      aiField('effort').value = key;
+      document.querySelector('#effortPill > span').textContent = 'Effort: ' + label;
+    }
+
+    // Flipping the mode re-applies each mode's default model, as the old
+    // new-chat modal did: research runs on Gemini by default (the agentic
+    // loop resends tool results every turn, which costs several times more
+    // on Claude), and flipping back to Analysis restores whatever model
+    // was in use before. The model dropdown stays one click away either way.
     let aiPreResearchLlm = null;
     function aiModeChanged(kind) {
       const research = kind === 'research';
-      document.getElementById('modePill').classList.toggle('ai-research-badge', research);
+      document.getElementById('modePill').classList.toggle('toggle-active', research);
       document.getElementById('effortPillWrap').classList.toggle('hide', !research);
       document.getElementById('draftChip').classList.toggle('hide', research);
       aiSyncLlmOptions(research);
-      const llmPill = document.getElementById('llmPill'); // saved conversations only
-      if (!llmPill) return;
+      const current = aiCurrentLlm();
+      if (current === null) return; // unsaved: static model badge
       if (research) {
-        if (llmPill.value !== '{{ research_default_llm }}') {
-          aiPreResearchLlm = llmPill.value;
-          llmPill.value = '{{ research_default_llm }}';
-          llmPill.dispatchEvent(new Event('change'));
+        if (current !== '{{ research_default_llm }}') {
+          aiPreResearchLlm = current;
+          aiPickLlm('{{ research_default_llm }}');
         }
       } else if (aiPreResearchLlm) {
-        document.getElementById('llmPill').value = aiPreResearchLlm;
+        aiPickLlm(aiPreResearchLlm);
         aiPreResearchLlm = null;
-        document.getElementById('llmPill').dispatchEvent(new Event('change'));
       }
     }
 
     // Claude is analysis-only (its runs cost several times more in the
-    // research tool loop). Grey the Claude options out, with a label
-    // suffix saying why, whenever the mode dropdown reads Research. The
-    // set-llm swap re-renders the pill from the conversation's stored
-    // mode, so re-sync it to the dropdown after every pill swap.
+    // research tool loop). Disable the Claude menu items whenever the mode
+    // reads Research. The set-llm swap re-renders the menu from the
+    // conversation's stored mode, so re-sync after every pill swap.
+    function aiCurrentLlm() {
+      const btn = document.getElementById('llmPill');
+      return btn ? btn.dataset.llm : null;
+    }
+    function aiPickLlm(key) {
+      const item = document.querySelector('#llmMenu [data-llm="' + key + '"]');
+      if (item) item.click();
+    }
     function aiSyncLlmOptions(research) {
-      const llmPill = document.getElementById('llmPill');
-      if (!llmPill) return;
-      llmPill.querySelectorAll('option[data-analysis-only]').forEach(function (opt) {
-        opt.disabled = research;
-        opt.textContent = opt.dataset.label + (research ? ' (Analysis only)' : '');
+      document.querySelectorAll('#llmMenu [data-analysis-only]').forEach(function (a) {
+        a.classList.toggle('disabled', research);
       });
     }
     document.body.addEventListener('htmx:afterSwap', function (e) {
-      if (e.target.id === 'llmPill' || e.target.querySelector?.('#llmPill')) {
-        aiSyncLlmOptions(document.getElementById('modePill').value === 'research');
+      if (e.target.id === 'llmPillWrap' || e.target.querySelector?.('#llmPill')) {
+        aiSyncLlmOptions(aiField('kind').value === 'research');
       }
     });
 
@@ -289,8 +319,8 @@
       const form = document.getElementById('chatForm');
       const params = new URLSearchParams();
       params.set('llm', form.querySelector('[name="llm"]').value);
-      params.set('kind', document.getElementById('modePill').value);
-      params.set('effort', form.querySelector('[name="effort"]').value);
+      params.set('kind', aiField('kind').value);
+      params.set('effort', aiField('effort').value);
       params.set('title', document.getElementById('conversationTitleInput').value);
       fetch('{% url "case:ai-create-conversation" matter.id %}', {
         method: 'POST',
@@ -381,8 +411,8 @@
       const titleInput = document.getElementById('conversationTitleInput');
       const title = titleInput ? titleInput.value : '';
       const llm = '{{ conversation.llm }}';
-      const kind = document.getElementById('modePill').value;
-      const effort = document.querySelector('#chatForm [name="effort"]').value;
+      const kind = aiField('kind').value;
+      const effort = aiField('effort').value;
       const url = '{% url "case:ai-prompt-editor" matter.id %}?conversation_id=' + convId + '&llm=' + llm + '&title=' + encodeURIComponent(title) + '&kind=' + kind + '&effort=' + effort;
       // Stash text for the modal to pick up (avoids URL length limits)
       if (text) {

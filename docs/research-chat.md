@@ -38,11 +38,50 @@ Research-only: the effort pill shows only in Research mode. Formerly
 Analysis mode effort tiers over the context apparatus; pruned the same
 day in favor of answer streaming, which attacks the real latency.)
 
-| effort | tool calls | search page | read cap | treatment tool | plan first | total text cap |
-|---|---|---|---|---|---|---|
-| low | 5 | 6 | 20k chars | no | no | 120k chars |
-| medium | 12 | 8 | 30k | yes | no | 300k |
-| high | 25 | 10 | 40k | yes | yes | 600k |
+| effort | searches | study calls | skims | search page | read cap | treatment tool | plan first | total text cap |
+|---|---|---|---|---|---|---|---|---|
+| low | 3 | 4 | 8 | 6 | 20k chars | no | no | 120k chars |
+| medium | 7 | 12 | 20 | 8 | 30k | yes | no | 450k |
+| high | 12 | 25 | 40 | 10 | 40k | yes | yes | 900k |
+
+Three pools (2026-08-15, after runs 892/898/899): searches
+(search_caselaw + find_citing_cases) run dry at their cap - the overlap
+guard dampened rephrase-looping but never stopped it, and looping
+starved treatment checks. Study calls are reads, briefs, treatment
+checks and lookups. The provider loop ceiling is the pools' sum.
+Vehicle discipline (same day): the protocol states the question's exact
+procedural vehicle before searching and forbids blending vehicles (a
+9-11-37(d) sanctions rule is not authority on a 9-11-37(a)(4) fee
+question), and the abstractor's brief carries a VEHICLE section flagging
+mismatches.
+
+Read-and-abstract (`abstract_opinion`, 2026-08-15) is the default way
+to study a shortlisted case, mirroring attorney practice (read the
+whole opinion, brief it into the outline): a Gemini Flash briefing
+agent reads the ENTIRE opinion (ABSTRACT_READ_CAP 250k, no head/tail
+truncation) against the question presented and returns a structured
+abstract - CASE/POSTURE/HOLDING (verbatim quotes required)/RELEVANCE/
+CAUTIONS/SCOPE, under 400 words plus quotations. The loop carries ~2k
+chars per case instead of a 30k slice, so many more cases fit a run;
+the final ANSWER step synthesizes from the abstracts. read_opinion
+(with its beginning+end truncation and part reads) remains the escape
+hatch for studying exact language at length. Abstracts persist in the
+trail as expandable case briefs.
+
+Skims (`skim_cluster`, 2026-08-15) are the survey lane: cluster
+metadata plus the editorial syllabus/headnotes (2k-char cap, HTML
+stripped), costing 1 CL request and a fraction of a read's tokens.
+They draw on their own pool so wide triage can't starve reads; the
+executor enforces both pools and the provider loop's ceiling is their
+sum. A skim is never citable: the prompt requires read_opinion before
+characterizing or citing, and the SELECT step now says skim-triage
+first, then shortlist, then read the finalists.
+
+Medium/high raised 2026-08-15 with the CourtListener Tier 3 upgrade
+(20/min, 250/hour, 1,000/day). A tool call is not one CL request:
+searches cost 1, opinion reads 2 (cluster + opinion), treatment checks
+up to ~11, library reads 0; repeats served from the per-conversation
+cache cost 0.
 
 The search page is the default; the model may request up to
 MAX_SEARCH_RESULTS (20) per search when a survey needs more. Tool
@@ -79,6 +118,17 @@ authorities an opinion rests on; find_citing_cases (tool-side
 a seminal case to the current statement of the rule. A LEARNED
 VOCABULARY rule has the model re-search with the courts' own terms of
 art once its reads teach it better language.
+
+Query design (QUERY_DESIGN_RULES in query_syntax.py, 2026-08-15, after
+run 892's five rephrasings of one concept set): terms must be words a
+court would write (no narrative filler like "after"), search the
+doctrine's operative phrases, statute numbers bare and quoted (never
+subsections), 2-3 concept groups, one NEW concept per query, stem*
+over inflection ORs. The executor backs the rule mechanically: every
+search's results are scored against all previously returned
+cluster_ids, and a mostly-seen-before result set comes back with a
+note telling the model to change a concept or triage what it has
+(overlap also shows in the live log and trail).
 
 ## Firm library
 

@@ -37,30 +37,85 @@ SNIPPET_LIMIT = 500
 # more. Result rows are resent every model turn, so the cap bounds cost.
 MAX_SEARCH_RESULTS = 20
 
+# Cap on the editorial syllabus/headnotes text a skim injects. Skims are
+# the survey lane: wide triage at a fraction of a read's token cost.
+SKIM_CHAR_LIMIT = 2_000
+
+# The abstractor reads the ENTIRE opinion (this is only a runaway guard,
+# matching the treatment checker's full-read cap) and returns a short
+# structured brief, so the loop carries ~2k chars per case instead of a
+# 30k truncated slice. Mirrors how an attorney works: read everything,
+# outline the holding and its bearing on the matter, brief the file.
+ABSTRACT_READ_CAP = 250_000
+
+ABSTRACT_SYSTEM = """\
+You are a careful legal research assistant briefing a case for an
+attorney's outline. You are given a QUESTION PRESENTED and the FULL text
+of one judicial opinion. Write a compact abstract with these sections:
+
+CASE: name, citation, court, date.
+POSTURE: procedural posture in one line.
+VEHICLE: the exact statutory or procedural basis of the decision (the
+statute AND subsection, rule, or motion type the court decided under).
+If it differs from the vehicle the question presented implies, say so
+here and again under CAUTIONS: a case decided under a different
+subsection or motion type is not authority for this question without an
+explicit distinction.
+HOLDING: the holding(s), each with a VERBATIM quotation of the court's
+operative language in quotation marks. Never paraphrase inside quotes.
+RELEVANCE: how the reasoning bears on the question presented, citing the
+specific passages (quote the key sentences verbatim).
+CAUTIONS: anything that limits the case (dicta, distinguishable facts,
+partial dissents, later history noted in the text).
+SCOPE: one line listing other issues the opinion covers, so the reader
+knows what else is in it.
+
+Under 400 words plus quotations. If the opinion is genuinely irrelevant
+to the question, say so in one line under RELEVANCE and keep the rest
+minimal."""
+
 EFFORT_BUDGETS = {
     "low": {
-        "max_tool_calls": 5,
+        "max_searches": 3,
+        "max_tool_calls": 4,
+        "max_skims": 8,
         "page_size": 6,
         "read_char_cap": 20_000,
         "treatment_tool": False,
         "plan_first": False,
         "total_char_cap": 120_000,
     },
+    # Three pools per run: searches, skims, and study calls (reads,
+    # briefs, treatment checks, lookups). Searches were split into their
+    # own capped pool 2026-08-15 after runs 892/898/899 kept burning the
+    # shared budget on rephrased queries and starving treatment checks -
+    # the overlap guard dampened but never stopped the looping, so the
+    # search tool now simply runs dry. Medium/high raised same day after
+    # the CourtListener Tier 3 upgrade (20/min, 250/hour, 1,000/day).
+    # CL requests per tool call: search 1, read_opinion 2 (cluster +
+    # opinion; conversation-cached repeats 0), check_treatment up to ~11,
+    # library reads 0 — the loop's model turns space them naturally and the
+    # throttle's 429 backoff absorbs bursts. total_char_cap stays the token
+    # cost lever: tool results are resent every model turn.
     "medium": {
+        "max_searches": 7,
         "max_tool_calls": 12,
+        "max_skims": 20,
         "page_size": 8,
         "read_char_cap": 30_000,
         "treatment_tool": True,
         "plan_first": False,
-        "total_char_cap": 300_000,
+        "total_char_cap": 450_000,
     },
     "high": {
+        "max_searches": 12,
         "max_tool_calls": 25,
+        "max_skims": 40,
         "page_size": 10,
         "read_char_cap": 40_000,
         "treatment_tool": True,
         "plan_first": True,
-        "total_char_cap": 600_000,
+        "total_char_cap": 900_000,
     },
 }
 
@@ -159,9 +214,67 @@ def build_tools(effort):
         {
             "name": "read_opinion",
             "description": (
-                "Fetch the full text of an opinion by its cluster_id (from "
+                "Fetch the text of an opinion by its cluster_id (from "
                 "search results or saved case law). ALWAYS read an opinion "
-                "before characterizing its holding or citing it."
+                "before characterizing its holding or citing it. Long "
+                "opinions come back truncated as beginning + END (holdings "
+                "and dispositions live at the end) with the omitted middle "
+                "marked; request specific parts when the omitted analysis "
+                "matters."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "cluster_id": {
+                        "type": "integer",
+                        "description": "The CourtListener cluster id.",
+                    },
+                    "part": {
+                        "type": "integer",
+                        "description": (
+                            "Optional: fetch one contiguous slice of a long "
+                            "opinion (2, 3, ...) as numbered in a truncated "
+                            "read's omission marker. Omit for the normal "
+                            "beginning-plus-end read."
+                        ),
+                    },
+                },
+                "required": ["cluster_id"],
+            },
+        },
+        {
+            "name": "abstract_opinion",
+            "description": (
+                "The default way to study a shortlisted case: a briefing "
+                "agent reads the ENTIRE opinion (no truncation) and returns "
+                "a structured abstract - holding with VERBATIM quotes, "
+                "relevance to the question presented, cautions, and scope. "
+                "Costs a fraction of read_opinion in your context. Prefer "
+                "this for every shortlisted case; use read_opinion only "
+                "when you must study exact language at length (e.g. "
+                "reconciling conflicting authorities)."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "cluster_id": {
+                        "type": "integer",
+                        "description": "The CourtListener cluster id.",
+                    }
+                },
+                "required": ["cluster_id"],
+            },
+        },
+        {
+            "name": "skim_cluster",
+            "description": (
+                "Cheap triage: fetch a case's metadata and editorial "
+                "syllabus/headnotes (when available) WITHOUT the full "
+                "opinion text. Skims draw on their own, larger budget - "
+                "use them to survey many candidates from search results "
+                "before spending full reads on the few that matter. A "
+                "skim is NOT a read: never characterize a holding or cite "
+                "a case from a skim alone; read_opinion the finalists."
             ),
             "input_schema": {
                 "type": "object",
@@ -264,14 +377,15 @@ def _opinion_for_cluster(cluster_id):
     return cluster, fetch_opinion(opinion_id)
 
 
-def make_executor(matter, effort, conversation_id=None):
+def make_executor(matter, effort, conversation_id=None, question=""):
     """Build the tool executor for one research request.
 
     Returns ``execute(name, tool_input) -> (result_json_str, trail_event)``.
     Never raises: failures become {"error": ...} results the model can react
     to. Holds per-request state: an opinion cache (re-reads are free), a
     search/lookup dedupe map, and the running opinion-text total against
-    the effort level's cap. With ``conversation_id``, opinions also cache across
+    the effort level's cap; ``question`` is the user's question presented,
+    given to the abstractor. With ``conversation_id``, opinions also cache across
     the conversation's messages (django cache, 1h) so follow-up turns
     re-read earlier authorities without another API round-trip.
     """
@@ -280,12 +394,21 @@ def make_executor(matter, effort, conversation_id=None):
     budget = budget_for(effort)
     opinion_cache = {}
     library_cache = {}
-    state = {"chars_used": 0}
+    skim_cache = {}
+    abstract_cache = {}
+    state = {"chars_used": 0, "calls_used": 0, "skims_used": 0, "searches_used": 0}
     # Within-run dedupe: the model sometimes repeats a search or lookup it
     # already ran (especially failed ones). Serve the stored result instead
     # of re-hitting the API, and flag the repeat so it shows in the log.
     seen_searches = {}
     seen_lookups = {}
+    # Every cluster_id any search has returned. Lets follow-up searches be
+    # scored for redundancy: a query whose results were mostly seen before
+    # gets told so, and repeat offenses get their repeated rows WITHHELD
+    # (conversation 898 showed the polite note alone being ignored) - only
+    # genuinely new results come back, so rephrasing buys nothing.
+    seen_result_ids = set()
+    overlap_strikes = [0]
 
     def _run_query(query, court_ids, limit, event_type, event_extra=None):
         """Shared body of search_caselaw and find_citing_cases: dedupe,
@@ -324,12 +447,40 @@ def make_executor(matter, effort, conversation_id=None):
         payload = {"results": rows}
         if status != 200:
             payload["error"] = f"Search failed (status {status}). Adjust the query."
+        overlap = sum(1 for r in rows if r["cluster_id"] in seen_result_ids)
+        fresh = [r for r in rows if r["cluster_id"] not in seen_result_ids]
+        seen_result_ids.update(r["cluster_id"] for r in rows)
+        suppressed = False
+        if rows and overlap >= max(2, (len(rows) * 3) // 5):
+            overlap_strikes[0] += 1
+            if overlap_strikes[0] >= 2:
+                # Second offense onward: withhold the repeated rows.
+                suppressed = True
+                payload["results"] = fresh
+                payload["note"] = (
+                    f"{overlap} of {len(rows)} results were already returned "
+                    "by your earlier searches and have been WITHHELD; only "
+                    f"the {len(fresh)} new result(s) are shown. Rephrasing "
+                    "the same concepts returns the same cases. Change a "
+                    "concept, triage the results you already have, or re-run "
+                    "one earlier query with a larger num_results."
+                )
+            else:
+                payload["note"] = (
+                    f"{overlap} of {len(rows)} results already appeared in "
+                    "your earlier searches - this query mostly re-covered "
+                    "old ground. Change a concept (not the phrasing), triage "
+                    "the results you already have, or re-run one query with "
+                    "a larger num_results."
+                )
         seen_searches[dedupe_key] = payload
         event = {
             "type": event_type,
             "query": query,
             "court_ids": court_ids,
             "result_count": len(rows),
+            "overlap_count": overlap,
+            "suppressed": suppressed,
             "results": [
                 {"case_name": r["case_name"], "cluster_id": r["cluster_id"]}
                 for r in rows
@@ -380,7 +531,8 @@ def make_executor(matter, effort, conversation_id=None):
 
     def _read(tool_input):
         cluster_id = int(tool_input.get("cluster_id") or 0)
-        if cluster_id in opinion_cache:
+        requested_part = int(tool_input.get("part") or 0)
+        if requested_part <= 1 and cluster_id in opinion_cache:
             cached = opinion_cache[cluster_id]
             event = {
                 "type": "read",
@@ -400,7 +552,8 @@ def make_executor(matter, effort, conversation_id=None):
             }, None
 
         # Read earlier in this conversation (a previous message's run)?
-        if conversation_id:
+        # Part reads bypass both caches: they fetch a specific slice.
+        if conversation_id and requested_part <= 1:
             stored = django_cache.get(_conv_cache_key(cluster_id))
             if stored:
                 state["chars_used"] += len(stored.get("text", ""))
@@ -419,11 +572,42 @@ def make_executor(matter, effort, conversation_id=None):
         if cluster is None or opinion is None or not opinion.found:
             return {"error": f"Opinion for cluster {cluster_id} not available."}, None
 
-        text = (opinion.plain_text or "")[: budget["read_char_cap"]]
-        state["chars_used"] += len(text)
+        full = opinion.plain_text or ""
+        cap = budget["read_char_cap"]
+        total_parts = max(1, -(-len(full) // cap))
         citation = format_citations_with_year(
             cluster.get("citations", []), None
         ) or cluster.get("citation_string", "")
+
+        if requested_part > 1:
+            # Explicit continuation: a contiguous cap-sized slice.
+            text = full[cap * (requested_part - 1) : cap * requested_part]
+            if not text:
+                return {
+                    "error": (
+                        f"Opinion has no part {requested_part}: it is "
+                        f"{len(full):,} characters ({total_parts} parts)."
+                    )
+                }, None
+        elif len(full) <= cap:
+            text = full
+        else:
+            # Default read of a long opinion: beginning AND end, because
+            # holdings and dispositions live at the end. The omitted middle
+            # stays reachable via part reads.
+            head = (cap * 2) // 3
+            tail = cap - head
+            omitted = len(full) - head - tail
+            text = (
+                full[:head]
+                + f"\n\n[... {omitted:,} characters omitted from the MIDDLE "
+                f"of this opinion. The beginning and the END are included "
+                f"above and below this marker. To read omitted text, call "
+                f"read_opinion with part=2..{total_parts} (each part is a "
+                f"contiguous {cap:,}-character slice of the full opinion). "
+                f"...]\n\n" + full[-tail:]
+            )
+        state["chars_used"] += len(text)
         payload = {
             "case_name": cluster.get("case_name", ""),
             "citation": citation,
@@ -431,11 +615,17 @@ def make_executor(matter, effort, conversation_id=None):
             "date_filed": cluster.get("date_filed", ""),
             "cluster_id": cluster_id,
             "text": text,
-            "truncated": len(opinion.plain_text or "") > len(text),
+            "truncated": len(full) > cap,
+            "length_chars": len(full),
+            "parts": total_parts,
         }
-        opinion_cache[cluster_id] = payload
-        if conversation_id:
-            django_cache.set(_conv_cache_key(cluster_id), payload, timeout=3600)
+        if requested_part > 1:
+            payload["part"] = requested_part
+        else:
+            # Only the default (head+tail) read is cached and reused.
+            opinion_cache[cluster_id] = payload
+            if conversation_id:
+                django_cache.set(_conv_cache_key(cluster_id), payload, timeout=3600)
         event = {
             "type": "read",
             "cluster_id": cluster_id,
@@ -444,11 +634,159 @@ def make_executor(matter, effort, conversation_id=None):
             "chars": len(text),
             "ts": _now(),
         }
+        if requested_part > 1:
+            event["part"] = requested_part
+        return payload, event
+
+    def _abstract(tool_input):
+        from .gemini_client import send_to_gemini
+
+        cluster_id = int(tool_input.get("cluster_id") or 0)
+        if not cluster_id:
+            return {"error": "abstract_opinion needs a cluster_id."}, None
+        if cluster_id in abstract_cache:
+            cached = dict(abstract_cache[cluster_id])
+            cached["note"] = "Already abstracted in this request."
+            event = {
+                "type": "abstract",
+                "cluster_id": cluster_id,
+                "case_name": cached.get("case_name", ""),
+                "citation": cached.get("citation", ""),
+                "cached": True,
+                "ts": _now(),
+            }
+            return cached, event
+
+        if state["chars_used"] >= budget["total_char_cap"]:
+            return {
+                "error": (
+                    "Research reading budget exhausted. Answer from the "
+                    "material you already have."
+                )
+            }, None
+
+        cluster, opinion = _opinion_for_cluster(cluster_id)
+        if cluster is None or opinion is None or not opinion.found:
+            return {"error": f"Opinion for cluster {cluster_id} not available."}, None
+
+        full = (opinion.plain_text or "")[:ABSTRACT_READ_CAP]
+        citation = format_citations_with_year(
+            cluster.get("citations", []), None
+        ) or cluster.get("citation_string", "")
+        header = (
+            f"{cluster.get('case_name', '')}, {citation} "
+            f"({cluster.get('court', '')} {cluster.get('date_filed', '')})"
+        )
+        try:
+            abstract_text, _, _ = send_to_gemini(
+                system_context=ABSTRACT_SYSTEM,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"QUESTION PRESENTED: {question or 'not stated'}\n\n"
+                            f"OPINION: {header}\n\n{full}"
+                        ),
+                    }
+                ],
+                model="gemini-2.5-flash",
+            )
+        except Exception:
+            logger.exception("Abstractor failed for cluster %s", cluster_id)
+            return {
+                "error": (
+                    "The abstractor failed for this opinion; use read_opinion instead."
+                )
+            }, None
+
+        state["chars_used"] += len(abstract_text)
+        payload = {
+            "cluster_id": cluster_id,
+            "case_name": cluster.get("case_name", ""),
+            "citation": citation,
+            "court": cluster.get("court", ""),
+            "date_filed": cluster.get("date_filed", ""),
+            "abstract": abstract_text,
+            "opinion_chars_read": len(full),
+        }
+        abstract_cache[cluster_id] = payload
+        event = {
+            "type": "abstract",
+            "cluster_id": cluster_id,
+            "case_name": payload["case_name"],
+            "citation": citation,
+            "abstract": abstract_text,
+            "opinion_chars_read": len(full),
+            "ts": _now(),
+        }
+        return payload, event
+
+    def _skim(tool_input):
+        from django.utils.html import strip_tags
+
+        cluster_id = int(tool_input.get("cluster_id") or 0)
+        if not cluster_id:
+            return {"error": "skim_cluster needs a cluster_id."}, None
+        if cluster_id in skim_cache:
+            cached = dict(skim_cache[cluster_id])
+            cached["note"] = "Already skimmed this cluster in this request."
+            event = {
+                "type": "skim",
+                "cluster_id": cluster_id,
+                "case_name": cached.get("case_name", ""),
+                "citation": cached.get("citation", ""),
+                "has_syllabus": bool(cached.get("syllabus")),
+                "cached": True,
+                "ts": _now(),
+            }
+            return cached, event
+
+        cluster = fetch_cluster(cluster_id)
+        if not cluster:
+            return {"error": f"Cluster {cluster_id} not available."}, None
+        citation = format_citations_with_year(
+            cluster.get("citations", []), None
+        ) or cluster.get("citation_string", "")
+        summary_text = ""
+        for field in ("syllabus", "headnotes", "summary", "headmatter"):
+            value = strip_tags(str(cluster.get(field) or "")).strip()
+            if value:
+                summary_text = value[:SKIM_CHAR_LIMIT]
+                break
+        state["chars_used"] += len(summary_text)
+        payload = {
+            "cluster_id": cluster_id,
+            "case_name": cluster.get("case_name", ""),
+            "citation": citation,
+            "court": cluster.get("court", ""),
+            "date_filed": cluster.get("date_filed", ""),
+            "syllabus": summary_text or None,
+        }
+        if not summary_text:
+            payload["note"] = (
+                "No editorial summary on this cluster; metadata only. "
+                "read_opinion it if the metadata looks on point."
+            )
+        skim_cache[cluster_id] = payload
+        event = {
+            "type": "skim",
+            "cluster_id": cluster_id,
+            "case_name": payload["case_name"],
+            "citation": citation,
+            "has_syllabus": bool(summary_text),
+            "ts": _now(),
+        }
         return payload, event
 
     def _treatment(tool_input):
         cluster_id = int(tool_input.get("cluster_id") or 0)
-        known = opinion_cache.get(cluster_id, {})
+        # The case may be known from a full read, a brief, or a skim.
+        known = (
+            opinion_cache.get(cluster_id)
+            or abstract_cache.get(cluster_id)
+            or skim_cache.get(cluster_id)
+            or {}
+        )
         outcome = check_negative_treatment(
             cluster_id, known.get("case_name", ""), known.get("citation", "")
         )
@@ -572,6 +910,8 @@ def make_executor(matter, effort, conversation_id=None):
         "search_caselaw": _search,
         "find_citing_cases": _citing,
         "read_opinion": _read,
+        "abstract_opinion": _abstract,
+        "skim_cluster": _skim,
         "check_treatment": _treatment,
         "lookup_citation": _lookup,
         "list_saved_caselaw": _saved,
@@ -582,6 +922,44 @@ def make_executor(matter, effort, conversation_id=None):
         handler = handlers.get(name)
         if handler is None:
             return json.dumps({"error": f"Unknown tool {name!r}."}), None
+        # Three-pool call accounting: searches, skims, and study calls
+        # (reads, briefs, treatment checks, lookups). The provider loop's
+        # own ceiling is the sum of all pools, as a backstop.
+        if name in ("search_caselaw", "find_citing_cases"):
+            if state["searches_used"] >= budget["max_searches"]:
+                return json.dumps(
+                    {
+                        "error": (
+                            f"Search budget exhausted "
+                            f"({budget['max_searches']} searches). Study "
+                            "what you already have: skim, brief, or read "
+                            "the results your searches returned, or answer."
+                        )
+                    }
+                ), None
+            state["searches_used"] += 1
+        elif name == "skim_cluster":
+            if state["skims_used"] >= budget["max_skims"]:
+                return json.dumps(
+                    {
+                        "error": (
+                            "Skim budget exhausted. Read your strongest "
+                            "candidates in full or answer."
+                        )
+                    }
+                ), None
+            state["skims_used"] += 1
+        else:
+            if state["calls_used"] >= budget["max_tool_calls"]:
+                return json.dumps(
+                    {
+                        "error": (
+                            "Study budget exhausted. Provide your best "
+                            "answer from the opinions already read."
+                        )
+                    }
+                ), None
+            state["calls_used"] += 1
         try:
             payload, event = handler(tool_input or {})
         except Exception:

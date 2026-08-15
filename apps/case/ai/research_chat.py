@@ -14,7 +14,10 @@ import time
 
 from django.core.cache import cache
 
-from apps.case.research.query_syntax import COURTLISTENER_SYNTAX_RULES
+from apps.case.research.query_syntax import (
+    COURTLISTENER_SYNTAX_RULES,
+    QUERY_DESIGN_RULES,
+)
 
 from .anthropic_client import send_to_claude_with_tools
 from .citations import citations_to_dict, verify_all_citations
@@ -94,16 +97,38 @@ PROMPT_ROLE = (
     "larger num_results and triage the deeper list — one deep result "
     "list beats several near-identical queries. Say which way you are "
     "adjusting and why, in one line.\n"
-    "6. SELECT: once results look on point, state a shortlist — "
+    "6. SELECT: triage before you commit. skim_cluster the promising "
+    "result rows (metadata plus editorial syllabus when available; "
+    "skims are cheap and draw on their own budget) and use snippets "
+    "and skims to cut the field. Then state a shortlist — "
     "'Candidates:' with each case on one line (name, court, year, and a "
-    "few words on why it made the list).\n"
-    "7. EVALUATE: read_opinion each shortlisted case. After each read, "
-    "give AT MOST two sentences: the holding, and whether it helps or "
-    "hurts here. Run check_treatment (when available) on every case "
-    "your answer will rely on. Drop cases that do not hold up, saying "
-    "so in a few words.\n"
+    "few words on why it made the list). A skim is never a read: only "
+    "read_opinion makes a case citable.\n"
+    "7. EVALUATE: abstract_opinion each shortlisted case. The briefing "
+    "agent reads the ENTIRE opinion and returns a structured abstract "
+    "with verbatim holding language; build your analysis from the "
+    "abstracts, quoting only quoted language they contain. Use "
+    "read_opinion only when you must study exact language at length "
+    "(reconciling conflicting authorities, parsing a controlling "
+    "passage). After each abstract, give AT MOST two sentences: the "
+    "holding, and whether it helps or hurts here. Run check_treatment "
+    "(when available) on every case your answer will rely on. Drop "
+    "cases that do not hold up, saying so in a few words.\n"
     "8. ANSWER concisely. No lengthy case summaries: the attorney will "
-    "ask for elaboration on specific cases if wanted.\n\n"
+    "ask for elaboration on specific cases if wanted. Cite the "
+    "supporting LINE of authority, not just the newest case: when "
+    "several cases you read or briefed support the rule, cite the "
+    "leading statement and the most recent application, and do not let "
+    "authorities you relied on go uncited. Flag any slip opinion or "
+    "case with no citing history as new and not yet settled law.\n\n"
+    "PROCEDURAL VEHICLE (all protocols): before your first search, state "
+    "the exact procedural vehicle of the question - the statute AND "
+    "subsection, rule, or motion type it arises under. Match authorities "
+    "to that vehicle: a case decided under a different subsection or "
+    "motion type (for example, a motion-for-sanctions ruling under OCGA "
+    "9-11-37(d) offered on a motion-to-compel fee question under "
+    "9-11-37(a)(4)) is not authority for the question; use it only with "
+    "an explicit distinction, and never blend the vehicles' rules.\n"
     "CITATION CHASING (all protocols): opinions you read cite the "
     "authorities they rely on. When an on-point opinion rests its rule "
     "on earlier cases, run down the one or two most load-bearing "
@@ -160,9 +185,13 @@ PROMPT_CONTRACT = (
 def _effort_directive(effort):
     budget = budget_for(effort)
     lines = (
-        f"RESEARCH EFFORT: {effort}. You have a budget of "
-        f"{budget['max_tool_calls']} tool calls; spend them where they "
-        "matter and answer once you have solid authority.\n"
+        f"RESEARCH EFFORT: {effort}. Budgets: {budget['max_searches']} "
+        f"searches, {budget['max_tool_calls']} study calls (reads, "
+        f"briefs, treatment checks, lookups), and {budget['max_skims']} "
+        "cheap skims. Searches run dry fast: two or three well-designed "
+        "queries should surface the field; survey wide with skims, spend "
+        "study calls on the cases that matter, and always keep enough "
+        "study budget to treatment-check what you cite.\n"
     )
     if budget["plan_first"]:
         lines += (
@@ -280,6 +309,7 @@ def build_research_system(context_text, effort, prior_research="", library_secti
         + library_section
         + PROMPT_ROLE
         + COURTLISTENER_SYNTAX_RULES
+        + QUERY_DESIGN_RULES
         + PROMPT_CONTRACT
         + _effort_directive(effort)
         + prior_research
@@ -400,7 +430,9 @@ def run_research_request(
         library_section=build_library_section(),
     )
     tools = build_tools(effort)
-    execute_tool = make_executor(matter, effort, conversation_id=conversation.id)
+    execute_tool = make_executor(
+        matter, effort, conversation_id=conversation.id, question=user_message
+    )
 
     # Live research log: concise one-liners accumulated in the status
     # payload so the whole run stays visible in the conversation while it
@@ -450,6 +482,8 @@ def run_research_request(
                 set_status(
                     "reading", f"Reading opinion {tool_input.get('cluster_id', '')}..."
                 )
+            elif name == "skim_cluster":
+                set_status("reading", f"Skimming {tool_input.get('cluster_id', '')}...")
             elif name == "check_treatment":
                 set_status(
                     "reading",
@@ -467,16 +501,28 @@ def run_research_request(
             etype = event.get("type")
             if etype == "search":
                 repeat = " — repeat, served from cache" if event.get("repeat") else ""
+                overlap = event.get("overlap_count") or 0
+                seen = f", {overlap} seen before" if overlap else ""
+                if event.get("suppressed"):
+                    seen += ", repeats withheld"
                 push_log(
-                    f"Searched `{event.get('query', '')}` "
-                    f"({event.get('result_count', 0)} hits){repeat}"
+                    f"Searched: `{event.get('query', '')}` "
+                    f"({event.get('result_count', 0)} hits{seen}){repeat}"
                 )
             elif etype == "citing":
                 cited = event.get("case_name") or event.get("cluster_id")
                 push_log(f"Found {event.get('result_count', 0)} cases citing *{cited}*")
             elif etype == "read":
                 name = event.get("case_name") or event.get("cluster_id")
-                push_log(f"Read *{name}*")
+                part = f" (part {event['part']})" if event.get("part") else ""
+                push_log(f"Read *{name}*{part}")
+            elif etype == "skim":
+                name = event.get("case_name") or event.get("cluster_id")
+                detail = "syllabus" if event.get("has_syllabus") else "metadata only"
+                push_log(f"Skimmed *{name}* ({detail})")
+            elif etype == "abstract":
+                name = event.get("case_name") or event.get("cluster_id")
+                push_log(f"Read and briefed *{name}*")
             elif etype == "treatment":
                 name = event.get("case_name") or event.get("cluster_id")
                 verdict = (
@@ -513,7 +559,9 @@ def run_research_request(
             tools,
             execute_tool,
             model=GEMINI_MODELS[llm],
-            max_tool_calls=budget["max_tool_calls"],
+            max_tool_calls=budget["max_tool_calls"]
+            + budget["max_skims"]
+            + budget["max_searches"],
             is_cancelled=is_cancelled,
             on_activity=on_activity,
         )
@@ -524,7 +572,9 @@ def run_research_request(
             tools,
             execute_tool,
             model=CLAUDE_MODELS.get(llm, "claude-opus-4-8"),
-            max_tool_calls=budget["max_tool_calls"],
+            max_tool_calls=budget["max_tool_calls"]
+            + budget["max_skims"]
+            + budget["max_searches"],
             is_cancelled=is_cancelled,
             on_activity=on_activity,
         )
