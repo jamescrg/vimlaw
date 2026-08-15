@@ -19,7 +19,7 @@ without crowding the dialogue.
         <li class="ai-research-step">
           <i class="icon-search"></i>
           <div>
-            Searched “{{ event.query }}”
+            Searched: <span class="ai-search-term">{{ event.query }}</span>
             {% if event.court_ids %}<span class="detail-text">(courts: {{ event.court_ids }})</span>{% endif %}
             <span class="detail-text">{{ event.result_count }} result{{ event.result_count|pluralize }}</span>
           </div>

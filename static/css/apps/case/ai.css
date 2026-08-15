@@ -2206,6 +2206,11 @@
   margin-left: 0.5rem;
 }
 
+/* Search terms in the trail: body type, one shade darker for scanning. */
+.ai-search-term {
+  color: var(--color-darker);
+}
+
 /* Authorities under a research answer: viewer links + expandable
    briefs for the cases the answer actually cited. */
 .ai-authorities {
