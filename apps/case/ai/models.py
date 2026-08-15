@@ -166,6 +166,39 @@ class Message(AuditMixin, models.Model):
 
     history = HistoricalRecords()
 
+    def cited_authorities(self):
+        """Cases the answer actually cited, with their briefs.
+
+        The grounding event's cited_clusters define the set; names,
+        citations and briefs come from the abstract/read/skim/lookup
+        events. Rendered under the answer (authorities belong with the
+        response; the trail stays a process record)."""
+        trail = self.research_trail or []
+        cited = []
+        for event in trail:
+            if event.get("type") == "grounding":
+                cited = event.get("cited_clusters") or []
+        results = []
+        for cluster_id in cited:
+            entry = {
+                "cluster_id": cluster_id,
+                "case_name": "",
+                "citation": "",
+                "abstract": "",
+            }
+            for event in trail:
+                if event.get("cluster_id") != cluster_id:
+                    continue
+                if event.get("type") in ("abstract", "read", "skim", "lookup"):
+                    entry["case_name"] = entry["case_name"] or event.get(
+                        "case_name", ""
+                    )
+                    entry["citation"] = entry["citation"] or event.get("citation", "")
+                if event.get("type") == "abstract" and event.get("abstract"):
+                    entry["abstract"] = event["abstract"]
+            results.append(entry)
+        return results
+
     class Meta:
         ordering = ["created_at"]
         db_table = "matters_message"  # Keep same table name

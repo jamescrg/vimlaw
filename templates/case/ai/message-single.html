@@ -83,6 +83,9 @@
         {% include "case/ai/activity-log.html" with message=message %}
       {% endif %}
       {% include "case/ai/vetting-wrapper.html" with message=message %}
+      {% if message.research_trail %}
+        {% include "case/ai/authorities.html" with message=message %}
+      {% endif %}
     {% else %}
       <div class="ai-message-text">{{ message.content|linebreaks }}</div>
     {% endif %}

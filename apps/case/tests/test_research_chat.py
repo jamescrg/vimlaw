@@ -1432,3 +1432,70 @@ def test_repeat_overlap_withholds_rows(matter, monkeypatch):
 def test_answer_step_cites_the_line():
     assert "LINE of authority" in research_chat.PROMPT_ROLE
     assert "slip opinion" in research_chat.PROMPT_ROLE
+
+
+def test_cited_authorities_only_grounded_cases(matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", kind="research", user=user
+    )
+    message = Message.objects.create(
+        conversation=conversation,
+        role="assistant",
+        content="Answer.",
+        research_trail=[
+            {
+                "type": "abstract",
+                "cluster_id": 1,
+                "case_name": "Birg v. Emory",
+                "citation": "",
+                "abstract": "CASE: Birg...",
+            },
+            {
+                "type": "read",
+                "cluster_id": 2,
+                "case_name": "Toles",
+                "citation": "300 Ga. App. 1",
+            },
+            {"type": "skim", "cluster_id": 3, "case_name": "Unused v. Case"},
+            {"type": "grounding", "cited_clusters": [1, 2]},
+        ],
+    )
+    auths = message.cited_authorities()
+    assert [a["cluster_id"] for a in auths] == [1, 2]
+    assert auths[0]["abstract"].startswith("CASE: Birg")
+    assert auths[1]["case_name"] == "Toles"
+    assert all(a["cluster_id"] != 3 for a in auths)
+
+
+def test_authorities_render_under_answer_not_in_trail(client, matter, user):
+    conversation = Conversation.objects.create(
+        matter=matter, title="R", kind="research", user=user
+    )
+    Message.objects.create(
+        conversation=conversation,
+        role="assistant",
+        content="Answer.",
+        research_trail=[
+            {
+                "type": "search",
+                "query": "q",
+                "result_count": 8,
+                "results": [{"case_name": "Hit One", "cluster_id": 11}],
+            },
+            {
+                "type": "abstract",
+                "cluster_id": 1,
+                "case_name": "Birg v. Emory",
+                "citation": "",
+                "abstract": "CASE: Birg brief text",
+            },
+            {"type": "grounding", "cited_clusters": [1]},
+        ],
+    )
+    url = reverse("case:ai-conversation-view", args=[conversation.id])
+    html = client.get(url).content.decode()
+    assert "Authorities" in html
+    assert "Birg brief text" in html
+    # Trail no longer links every search hit.
+    assert "ai-research-hits" not in html
+    assert "Hit One" not in html

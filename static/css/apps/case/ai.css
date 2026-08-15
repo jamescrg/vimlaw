@@ -2201,7 +2201,29 @@
   margin-left: 0.5rem;
 }
 
-/* Inline case brief inside a trail step (the abstractor's output). */
+/* Authorities under a research answer: viewer links + expandable
+   briefs for the cases the answer actually cited. */
+.ai-authorities {
+  border-top: 1px solid var(--border-medium);
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.ai-authorities-title {
+  color: var(--color-muted);
+}
+
+.ai-authorities ul {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+}
+
+.ai-authorities li {
+  margin: 0.25rem 0;
+}
+
+/* Inline case brief (the abstractor's output). */
 .ai-abstract summary {
   color: var(--link);
   cursor: pointer;
