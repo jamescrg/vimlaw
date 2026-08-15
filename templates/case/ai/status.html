@@ -1,8 +1,17 @@
 {% load markdown_extras %}
+{% comment %}
+Polled every second. hx-swap="morph" (idiomorph) updates the existing
+DOM in place instead of replacing it, so the icon animations don't
+restart, the log keeps its scroll position, and the box doesn't flicker
+between polls. The cancel button sits BEFORE the log so it stays at the
+right end of the status row (the log wraps to its own full-width row via
+.ai-status-content:has(.ai-research-log)).
+{% endcomment %}
 <div id="ai-status-indicator"
      hx-get="{% url 'case:ai-status' conversation.id %}"
      hx-trigger="load delay:1s"
-     hx-swap="outerHTML">
+     hx-ext="morph"
+     hx-swap="morph">
   <div class="ai-status-content">
     {% if status == "context" %}
       <i class="icon-sparkles pulse"></i>
@@ -27,22 +36,6 @@
     {% endif %}
     <span class="ai-status-message">{{ message|render_markdown }}</span>
     {% if elapsed_seconds %}<span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>{% endif %}
-    {% if activity_log %}
-      <ul class="ai-research-log" id="ai-research-log">
-        {% for line in activity_log %}<li>{{ line|render_markdown }}</li>{% endfor %}
-      </ul>
-      {% comment %}
-      Each poll swaps the whole indicator, resetting the list's scroll to
-      the top; pin it to the bottom so the newest step stays in view.
-      htmx runs script tags found in swapped content.
-      {% endcomment %}
-      <script>
-        (function () {
-          var log = document.getElementById("ai-research-log");
-          if (log) log.scrollTop = log.scrollHeight;
-        })();
-      </script>
-    {% endif %}
     {% if status != "cancelled" %}
       <button type="button"
               class="ai-cancel-btn"
@@ -51,6 +44,30 @@
               title="Cancel request">
         <i class="icon-x"></i>
       </button>
+    {% endif %}
+    {% if activity_log %}
+      <ul class="ai-research-log" id="ai-research-log">
+        {% for line in activity_log %}<li>{{ line|render_markdown }}</li>{% endfor %}
+      </ul>
+      {% comment %}
+      Pin the log's scroll to the bottom so the newest step stays in
+      view. Morph swaps don't re-execute an unchanged script tag, so the
+      first render installs a document-level listener that re-pins after
+      every settle; the direct call below covers that first render.
+      {% endcomment %}
+      <script>
+        (function () {
+          function pinLog() {
+            var log = document.getElementById("ai-research-log");
+            if (log) log.scrollTop = log.scrollHeight;
+          }
+          if (!window._aiLogScrollPinned) {
+            window._aiLogScrollPinned = true;
+            document.body.addEventListener("htmx:afterSettle", pinLog);
+          }
+          pinLog();
+        })();
+      </script>
     {% endif %}
   </div>
 </div>
