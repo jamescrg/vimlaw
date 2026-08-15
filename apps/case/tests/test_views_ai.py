@@ -1,7 +1,7 @@
 import pytest
 from pytest_django.asserts import assertTemplateUsed
 
-from apps.case.ai.models import Conversation
+from apps.case.ai.models import Conversation, Message
 from apps.case.ai.selector import MODEL_CONTEXT_LIMITS, MODEL_HARD_LIMITS
 from apps.case.ai.tasks import CLAUDE_MODELS, GEMINI_MODELS
 from apps.case.ai.views import RETIRED_LLMS, VALID_LLMS
@@ -255,3 +255,203 @@ class TestSetConversationLLM:
             assert response.status_code == 400
         conversation.refresh_from_db()
         assert conversation.llm == "gemini-pro-latest"
+
+
+class TestConversationListFilter:
+    """The toolbar keyword search + participant dropdown (session-persisted)."""
+
+    def _conv(self, matter, user, title, content=None, msg_user=None):
+        conv = Conversation.objects.create(matter=matter, title=title, user=user)
+        if content:
+            Message.objects.create(
+                conversation=conv, role="user", content=content, user=msg_user or user
+            )
+        return conv
+
+    def test_keyword_matches_title(self, client, matter, user):
+        self._conv(matter, user, "Deposition prep")
+        self._conv(matter, user, "Billing question")
+        response = client.get(f"/case/{matter.id}/ai/filter/", {"q": "deposition"})
+        html = response.content.decode()
+        assert "Deposition prep" in html
+        assert "Billing question" not in html
+
+    def test_keyword_matches_message_content(self, client, matter, user):
+        self._conv(matter, user, "Chat A", content="the doctrine of laches")
+        self._conv(matter, user, "Chat B", content="something else")
+        html = client.get(
+            f"/case/{matter.id}/ai/filter/", {"q": "laches"}
+        ).content.decode()
+        assert "Chat A" in html
+        assert "Chat B" not in html
+
+    def test_keyword_filter_persists_in_session(self, client, matter, user):
+        self._conv(matter, user, "Deposition prep")
+        self._conv(matter, user, "Billing question")
+        client.get(f"/case/{matter.id}/ai/filter/", {"q": "deposition"})
+        html = client.get(f"/case/{matter.id}/ai/list/").content.decode()
+        assert "Deposition prep" in html
+        assert "Billing question" not in html
+
+    def test_empty_keyword_clears_filter(self, client, matter, user):
+        self._conv(matter, user, "Deposition prep")
+        self._conv(matter, user, "Billing question")
+        client.get(f"/case/{matter.id}/ai/filter/", {"q": "deposition"})
+        html = client.get(f"/case/{matter.id}/ai/filter/", {"q": ""}).content.decode()
+        assert "Deposition prep" in html
+        assert "Billing question" in html
+
+    def test_participant_filter(self, client, matter, user):
+        from django.contrib.auth import get_user_model
+
+        other = get_user_model().objects.create_user(
+            username="other",
+            email="other@example.com",
+            password="x",
+            first_name="Other",
+            last_name="Person",
+        )
+        self._conv(matter, user, "Mine", content="hi")
+        self._conv(matter, user, "Theirs", content="hello", msg_user=other)
+        html = client.get(
+            f"/case/{matter.id}/ai/filter/", {"participant": other.id}
+        ).content.decode()
+        assert "Theirs" in html
+        assert "Mine" not in html
+        # Blank participant clears it again.
+        html = client.get(
+            f"/case/{matter.id}/ai/filter/", {"participant": ""}
+        ).content.decode()
+        assert "Mine" in html
+
+    def test_partial_table_renders_table_only(self, client, matter, user):
+        from pytest_django.asserts import assertTemplateNotUsed
+
+        self._conv(matter, user, "Chat A")
+        response = client.get(
+            f"/case/{matter.id}/ai/filter/", {"q": "chat", "partial": "table"}
+        )
+        assertTemplateUsed(response, "case/ai/table.html")
+        assertTemplateNotUsed(response, "case/ai/list.html")
+
+    def test_toolbar_has_search_and_participant_controls(self, client, matter, user):
+        self._conv(matter, user, "Chat A", content="hi")
+        html = client.get(f"/case/{matter.id}/ai/list/").content.decode()
+        assert 'id="ai-participant-select"' in html
+        assert 'name="q"' in html
+        assert "ai-llm-select" not in html
+
+
+class TestActivityLog:
+    """Classic turns accumulate a live activity log like research does."""
+
+    def test_worker_logs_pipeline_stages(self, client, matter, user, monkeypatch):
+        from django.core.cache import cache
+
+        from apps.case.ai import tasks as ai_tasks
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache_key = f"ai_status_{conversation.id}"
+        cache.delete(cache_key)
+
+        monkeypatch.setattr(
+            "apps.case.ai.context.assemble_matter_context_with_selection",
+            lambda *a, **k: (
+                k.get("on_activity")
+                and k["on_activity"]("Context assembled (~5 tokens)")
+                or "CTX"
+            ),
+        )
+        monkeypatch.setattr(ai_tasks, "verify_all_citations", lambda text: [])
+        monkeypatch.setattr(ai_tasks.time, "sleep", lambda s: None)
+        monkeypatch.setattr(
+            ai_tasks,
+            "send_to_gemini_streaming",
+            lambda *a, **k: ("Hello world.", 10, 5),
+        )
+
+        ai_tasks.process_ai_request(
+            conversation.id, matter.id, "Hi", user.id, "gemini-pro-latest"
+        )
+
+        final = cache.get(cache_key)
+        assert final["status"] == "complete"
+        log = final["activity_log"]
+        assert "Context assembled (~5 tokens)" in log
+        assert any(line.startswith("History:") for line in log)
+        assert "Request submitted to gemini-pro-latest" in log
+        assert any(line.startswith("Response received") for line in log)
+        assert "No case citations to check" in log
+        cache.delete(cache_key)
+
+    def test_status_poll_renders_activity_log(self, client, matter, user):
+        from django.core.cache import cache
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "thinking",
+                "message": "Thinking...",
+                "started_at": 0,
+                "activity_log": [
+                    "Case file gathered: 4 facts, 2 highlights",
+                    "Selected 2 of 9 materials: Retainer, Complaint",
+                ],
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert "Case file gathered: 4 facts, 2 highlights" in html
+        assert "Selected 2 of 9 materials" in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_complete_persists_activity_log_on_message(
+        self, client, matter, user, monkeypatch
+    ):
+        from django.core.cache import cache
+        from django.urls import reverse
+
+        from apps.case.ai import tasks as ai_tasks
+
+        # Completion spawns a summary thread; keep it out of the test.
+        monkeypatch.setattr(
+            ai_tasks, "generate_conversation_summary", lambda conv_id: None
+        )
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "complete",
+                "message": "Complete",
+                "response": "Here is the answer.",
+                "input_tokens": 10,
+                "output_tokens": 5,
+                "citations": [],
+                "activity_log": [
+                    "Case file gathered: 1 fact",
+                    "2 citations checked",
+                ],
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+
+        message = conversation.messages.get(role="assistant")
+        assert message.activity_log == [
+            "Case file gathered: 1 fact",
+            "2 citations checked",
+        ]
+        # Rendered as a collapsible section on the message.
+        assert "Activity (2 steps)" in html
+        assert "Case file gathered: 1 fact" in html

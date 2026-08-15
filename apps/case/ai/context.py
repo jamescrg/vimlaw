@@ -691,7 +691,13 @@ def _context_fingerprint(matter, include_library, llm, user):
 
 
 def assemble_matter_context_with_selection(
-    matter, user_message, llm, user=None, conversation=None, include_library=True
+    matter,
+    user_message,
+    llm,
+    user=None,
+    conversation=None,
+    include_library=True,
+    on_activity=None,
 ) -> str:
     """
     Assemble context using intelligent selection for ai_context="auto" items.
@@ -711,6 +717,8 @@ def assemble_matter_context_with_selection(
         include_library: Offer firm-library notes (standalone notes in
             AI-library folders) to the selector, and inject "always" library
             notes. The nightly auto-summary turns this off.
+        on_activity: Optional callback receiving one-line progress notes
+            (chat surfaces them in the live activity log).
     """
     from .selector import (
         MODEL_CONTEXT_LIMITS,
@@ -719,6 +727,20 @@ def assemble_matter_context_with_selection(
         estimate_tokens,
         select_context,
     )
+
+    def emit(line):
+        if on_activity:
+            on_activity(line)
+
+    def count_line(items, type_labels):
+        counts = {}
+        for item in items:
+            counts[item.item_type] = counts.get(item.item_type, 0) + 1
+        parts = []
+        for item_type, n in counts.items():
+            label = type_labels.get(item_type, item_type)
+            parts.append(f"{n} {label}{'s' if n != 1 else ''}")
+        return ", ".join(parts)
 
     # Quick follow-ups reuse the context assembled for the previous turn
     # (skipping the expensive Flash selection) as long as nothing the
@@ -733,6 +755,7 @@ def assemble_matter_context_with_selection(
             logger.info(
                 "Reusing assembled context for conversation %s", conversation.id
             )
+            emit("Context reused from the previous turn (case file unchanged)")
             return entry["context"]
 
     # Build the fixed sections (same as assemble_matter_context)
@@ -753,6 +776,11 @@ def assemble_matter_context_with_selection(
         matter,
         current_conversation=conversation,
     )
+    gathered = count_line(
+        always_items,
+        {"caselaw": "case-law item", "email": "email thread"},
+    )
+    emit("Case file gathered: " + (gathered if gathered else "core sections only"))
 
     # Build request info and legal prompt
     company = Firm.objects.first()
@@ -789,6 +817,7 @@ def assemble_matter_context_with_selection(
         + sections["settlement"]
     )
     fixed_tokens = estimate_tokens(fixed_content)
+    emit(f"Fixed sections assembled (~{fixed_tokens:,} tokens)")
 
     # Calculate remaining budget for auto items
     total_budget = MODEL_CONTEXT_LIMITS.get(llm, 150_000)
@@ -799,13 +828,39 @@ def assemble_matter_context_with_selection(
     manifest_items, content_map = build_manifest(
         matter, current_conversation=conversation, include_library=include_library
     )
+    if manifest_items:
+        emit(
+            f"Catalogued {len(manifest_items)} materials for selection: "
+            + count_line(
+                manifest_items,
+                {
+                    "caselaw": "case-law item",
+                    "email": "email thread",
+                    "library": "library note",
+                },
+            )
+        )
+    else:
+        emit("No additional materials to catalogue")
 
     selected_contents = []
     unselected_items = []
     if manifest_items and remaining_budget > 0:
+        emit("Selecting relevant materials...")
         selected_contents, unselected_items = select_context(
             manifest_items, content_map, user_message, remaining_budget
         )
+        unselected_keys = {(i.item_type, i.item_id) for i in unselected_items}
+        picked = [
+            i for i in manifest_items if (i.item_type, i.item_id) not in unselected_keys
+        ]
+        if picked:
+            names = ", ".join(i.name for i in picked[:6])
+            if len(picked) > 6:
+                names += f" (+{len(picked) - 6} more)"
+            emit(f"Selected {len(picked)} of {len(manifest_items)} materials: {names}")
+        else:
+            emit(f"Selected none of the {len(manifest_items)} materials")
 
     # Build the selected items section
     selected_section = ""
@@ -864,6 +919,10 @@ def assemble_matter_context_with_selection(
         f"{selected_section}{also_available}"
     )
     if estimate_tokens(provisional) > safe_ceiling and selected_contents:
+        emit(
+            "Assembled context exceeded the model window; selected "
+            "materials demoted to a listing"
+        )
         logger.warning(
             "Assembled context (~%d tokens) exceeds safe ceiling for %s (%d); "
             "demoting %d auto-selected items to 'Also Available'.",
@@ -900,6 +959,7 @@ def assemble_matter_context_with_selection(
             {"context": assembled, "fingerprint": fingerprint},
             timeout=CONTEXT_REUSE_SECONDS,
         )
+    emit(f"Context assembled (~{estimate_tokens(assembled):,} tokens)")
     return assembled
 
 

@@ -20,18 +20,19 @@ class Conversation(AuditMixin, models.Model):
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
     ]
 
-    # Chat styles: "classic" is the original single-completion chat;
-    # "research" runs an agentic CourtListener tool loop (searches, reads
-    # opinions, cites only what it retrieved). Classic stays untouched as
-    # the fallback while research proves itself.
+    # Chat modes: "classic" (shown as Analysis) is the original
+    # single-completion chat; "research" runs an agentic CourtListener tool
+    # loop (searches, reads opinions, cites only what it retrieved). The
+    # mode is picked per turn via the chat-header dropdown; `kind` holds
+    # the mode of the latest turn (and the default for the next one).
     KIND_CHOICES = [
-        ("classic", "Classic"),
+        ("classic", "Analysis"),
         ("research", "Research"),
     ]
-    DEPTH_CHOICES = [
-        ("quick", "Quick"),
-        ("standard", "Standard"),
-        ("deep", "Deep"),
+    EFFORT_CHOICES = [
+        ("low", "Low"),
+        ("medium", "Medium"),
+        ("high", "High"),
     ]
 
     # A conversation belongs to exactly one of: a matter (case chat), an
@@ -82,11 +83,13 @@ class Conversation(AuditMixin, models.Model):
         help_text="AI-generated summary for intelligent context selection",
     )
     kind = models.CharField(max_length=10, choices=KIND_CHOICES, default="classic")
-    # Research-kind only: how extensive the case-law research runs (tool
-    # call budget; deep also plans before searching).
-    research_depth = models.CharField(
-        max_length=10, choices=DEPTH_CHOICES, default="standard"
-    )
+    # How hard each turn works, in both modes. Research: the tool-call
+    # budget (high also plans before searching). Analysis: the context
+    # apparatus (low skips the selector and loads no material bodies; high
+    # re-selects every turn with a stronger selector model). Formerly
+    # research_depth quick/standard/deep (remapped in 0075), then
+    # research_effort (renamed in 0076 when Analysis gained effort too).
+    effort = models.CharField(max_length=10, choices=EFFORT_CHOICES, default="medium")
     vet_citations = models.BooleanField(
         default=True,
         help_text=(
@@ -154,6 +157,12 @@ class Message(AuditMixin, models.Model):
     # Research-kind assistant messages: the research trail (plan, searches,
     # opinions read, treatment checks) rendered as a collapsible section.
     research_trail = models.JSONField(default=list, blank=True)
+
+    # Assistant messages: the live activity log preserved (context
+    # assembly, material selection, model call, cite check) so past turns
+    # stay inspectable. Rendered as a collapsible section like the trail;
+    # research answers show their richer trail instead.
+    activity_log = models.JSONField(default=list, blank=True)
 
     history = HistoricalRecords()
 

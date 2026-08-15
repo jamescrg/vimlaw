@@ -1,0 +1,50 @@
+{% comment %}
+Effort badge for research turns, shown beside the mode badge: "Effort:
+Medium" (the tool-call budget). Clicking cycles low -> medium -> high ->
+low (unsaved conversations get a non-interactive preview). Hidden by the
+#effortPillWrap wrapper while the mode dropdown says Analysis.
+{% endcomment %}
+{% if not conversation.id %}
+  <span class="app-badge badge-lg ai-effort-pill"
+        title="Research effort. Send your first message to be able to change it.">
+    Effort: {{ conversation.get_effort_display }}
+  </span>
+{% else %}
+  {% if conversation.effort == "low" %}
+    {% with next_level="medium" %}
+      <button type="button"
+              id="effortPill"
+              class="app-badge badge-lg ai-effort-pill"
+              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
+              hx-target="#effortPill"
+              hx-swap="outerHTML"
+              title="Low effort: a few searches, snippets only. Click for Medium.">
+        Effort: Low <i class="icon-chevrons-up-down" aria-hidden="true"></i>
+      </button>
+    {% endwith %}
+  {% elif conversation.effort == "high" %}
+    {% with next_level="low" %}
+      <button type="button"
+              id="effortPill"
+              class="app-badge badge-lg ai-effort-pill"
+              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
+              hx-target="#effortPill"
+              hx-swap="outerHTML"
+              title="High effort: plans first, many searches, reads and treatment-checks every authority. Click for Low.">
+        Effort: High <i class="icon-chevrons-up-down" aria-hidden="true"></i>
+      </button>
+    {% endwith %}
+  {% else %}
+    {% with next_level="high" %}
+      <button type="button"
+              id="effortPill"
+              class="app-badge badge-lg ai-effort-pill"
+              hx-post="{% url 'case:ai-set-effort' conversation.id next_level %}"
+              hx-target="#effortPill"
+              hx-swap="outerHTML"
+              title="Medium effort: iterative searches, reads the leading opinions. Click for High.">
+        Effort: Medium <i class="icon-chevrons-up-down" aria-hidden="true"></i>
+      </button>
+    {% endwith %}
+  {% endif %}
+{% endif %}

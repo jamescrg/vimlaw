@@ -1,0 +1,21 @@
+{% load markdown_extras %}
+{% comment %}
+Collapsible activity log under an analysis answer: how the turn was
+built (context reuse or assembly, material selection, model call, block
+application, cite check). Data is Message.activity_log (list of lines).
+Research answers render their richer research trail instead; collapsed
+by default like the trail so history stays uncrowded.
+{% endcomment %}
+<details class="ai-research-trail ai-activity-log">
+  <summary>
+    <i class="icon-list-checks"></i>
+    Activity ({{ message.activity_log|length }} step{{ message.activity_log|length|pluralize }})
+  </summary>
+  <ol class="ai-research-steps">
+    {% for line in message.activity_log %}
+      <li class="ai-research-step">
+        <div>{{ line|render_markdown }}</div>
+      </li>
+    {% endfor %}
+  </ol>
+</details>

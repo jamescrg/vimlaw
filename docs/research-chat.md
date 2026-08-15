@@ -1,20 +1,22 @@
 # Research Chat
 
-The "research" chat style (Conversation.kind) runs an agentic CourtListener
-research loop instead of the classic single completion. Classic chats are
-untouched; the style is chosen per conversation in the new-conversation
-modal and remembered per session.
+The "research" chat mode (Conversation.kind) runs an agentic CourtListener
+research loop instead of the classic single completion (shown as
+"Analysis"). Analysis chats are untouched; the mode is chosen per turn via
+a dropdown in the chat header (it posts with every send and send_message
+persists it, so `kind` always holds the latest turn's mode). New chats
+open in Analysis.
 
 ## Architecture
 
 ```
-send_message (kind=research on create)
+send_message (kind posted per turn; persisted on the conversation)
   -> process_ai_request           three-line dispatch at the top
     -> run_research_request       apps/case/ai/research_chat.py
         system = matter context + research prompt
                  (strategy announcement, CourtListener syntax rules,
-                  grounded-citation contract, depth directive)
-        tools  = apps/case/ai/research_tools.py (per-depth)
+                  grounded-citation contract, effort directive)
+        tools  = apps/case/ai/research_tools.py (per-effort)
         loop   = send_to_claude_with_tools  (anthropic_client)
               or send_to_gemini_with_tools  (gemini_client)
         tool events -> update_status (live "Searching:/Reading:" in the
@@ -28,19 +30,27 @@ The trail renders as a collapsible section under the answer
 (templates/case/ai/research-trail.html), each case linking to the
 cluster viewer. Claim-support vetting (vet_citations) runs unchanged.
 
-## Depth budgets (research_tools.DEPTH_BUDGETS)
+## Effort budgets (research_tools.EFFORT_BUDGETS)
 
-| depth | tool calls | search page | read cap | treatment tool | plan first | total text cap |
+Research-only: the effort pill shows only in Research mode. Formerly
+"depth" (quick/standard/deep), remapped in case.0075; the field is plain
+`Conversation.effort` since case.0076. (A 2026-08-14 experiment gave
+Analysis mode effort tiers over the context apparatus; pruned the same
+day in favor of answer streaming, which attacks the real latency.)
+
+| effort | tool calls | search page | read cap | treatment tool | plan first | total text cap |
 |---|---|---|---|---|---|---|
-| quick | 5 | 6 | 20k chars | no | no | 120k chars |
-| standard | 12 | 8 | 30k | yes | no | 300k |
-| deep | 25 | 10 | 40k | yes | yes | 600k |
+| low | 5 | 6 | 20k chars | no | no | 120k chars |
+| medium | 12 | 8 | 30k | yes | no | 300k |
+| high | 25 | 10 | 40k | yes | yes | 600k |
 
 The search page is the default; the model may request up to
-MAX_SEARCH_RESULTS (20) per search when a survey needs depth. Tool
+MAX_SEARCH_RESULTS (20) per search when a survey needs more. Tool
 results are resent every model turn, so the total text cap is the
-token-cost lever. Deep on Claude Opus is dollars per question; Gemini is
-far cheaper per token.
+token-cost lever. That cost profile is also why research turns are
+Gemini-only: the Claude options are disabled (labelled "Analysis only")
+while the mode dropdown reads Research, and send_message /
+set_conversation_llm enforce it server-side.
 
 ## Search strategy
 
@@ -76,7 +86,7 @@ Every standalone note (the whole Library tree, see
 apps/notes/models.get_library_notes) is listed in a FIRM LIBRARY
 section of the system prompt (research_chat.build_library_section: id,
 folder path, title, summary excerpt) and readable via the
-read_library_note tool at every depth. Reads count against the same
+read_library_note tool at every effort level. Reads count against the same
 read/total char caps as opinions; the trail shows a library_read event
 linking to the note. The prompt frames library notes as internal work
 product: consult before external search, never citable, no [cluster:n]

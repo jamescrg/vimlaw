@@ -68,20 +68,34 @@ def process_ai_request(
     cache_key = f"ai_status_{conversation_id}"
     started_at = time.time()
 
+    # Live activity log: durable one-liners describing each stage of the
+    # turn (context assembly, material selection, the model call, block
+    # application, cite checking), rendered under the status line by the
+    # 1s poll — the classic counterpart of the research log. Every status
+    # write carries the log so transient status updates never blank it.
+    # (Research turns build their own log in run_research_request.)
+    activity_log: list[str] = []
+    last_status = ["starting", "Starting..."]
+
     def update_status(status: str, message: str):
         """Update the cache with current status, unless cancelled."""
         current = cache.get(cache_key, {})
         if current.get("status") == "cancelled":
             return
-        cache.set(
-            cache_key,
-            {
-                "status": status,
-                "message": message,
-                "started_at": started_at,
-            },
-            timeout=600,
-        )
+        last_status[:] = [status, message]
+        payload = {
+            "status": status,
+            "message": message,
+            "started_at": started_at,
+        }
+        if activity_log:
+            payload["activity_log"] = activity_log[-40:]
+        cache.set(cache_key, payload, timeout=600)
+
+    def log_activity(line: str):
+        """Append a line to the live log and refresh the status payload."""
+        activity_log.append(line)
+        update_status(*last_status)
 
     def is_cancelled():
         """Check if the request has been cancelled."""
@@ -119,6 +133,7 @@ def process_ai_request(
             llm=llm,
             user=user,
             conversation=conversation,
+            on_activity=log_activity,
         )
 
         # A linked draft appends its text and the edit protocol; the AI can
@@ -128,6 +143,7 @@ def process_ai_request(
             from apps.drafts import chat as drafts_chat
 
             context_text += drafts_chat.build_draft_section(draft_link)
+            log_activity(f"Linked draft loaded: {draft_link.name}")
 
         # The AI can record timeline facts and witnesses when directed;
         # the fenced blocks it emits are applied after the response arrives.
@@ -169,12 +185,18 @@ def process_ai_request(
                 .values_list("content", flat=True)[:4]
             )
         )
+        armed_protocols = []
         if FACTS_TRIGGER_RE.search(recent_user_text):
             context_text += "\n\n" + FACTS_PROTOCOL
+            armed_protocols.append("facts")
         if WITNESS_TRIGGER_RE.search(recent_user_text):
             context_text += "\n\n" + WITNESSES_PROTOCOL
+            armed_protocols.append("witnesses")
         if NOTES_TRIGGER_RE.search(recent_user_text):
             context_text += "\n\n" + NOTES_PROTOCOL
+            armed_protocols.append("notes")
+        if armed_protocols:
+            log_activity("Write protocols included: " + ", ".join(armed_protocols))
 
         if is_cancelled():
             logger.info("AI request cancelled for conversation %s", conversation_id)
@@ -208,6 +230,9 @@ def process_ai_request(
                 chat_history.pop(0)
                 dropped += 1
             history_tokens = _history_tokens(chat_history)
+            log_activity(
+                f"Trimmed {dropped} oldest chat messages to fit the model window"
+            )
             logger.warning(
                 "AI prompt over send ceiling for %s (~%d tokens > %d). "
                 "Dropped %d oldest chat messages; final estimate ~%d tokens.",
@@ -227,6 +252,11 @@ def process_ai_request(
                     send_ceiling,
                 )
 
+        log_activity(
+            f"History: {len(chat_history)} messages; "
+            f"sending ~{context_tokens + history_tokens:,} tokens total"
+        )
+
         # Set connecting status
         update_status("connecting", "Connecting to AI...")
 
@@ -242,6 +272,7 @@ def process_ai_request(
             # Use streaming with thought summaries for Gemini
             model = GEMINI_MODELS[llm]
 
+            log_activity(f"Request submitted to {model}")
             update_status("thinking", "Thinking...")
 
             def on_thought(thought_text: str):
@@ -265,6 +296,7 @@ def process_ai_request(
             update_status("generating", "Generating response...")
 
             claude_model = CLAUDE_MODELS.get(llm, CLAUDE_FALLBACK_MODEL)
+            log_activity(f"Request submitted to {claude_model}")
 
             response_text, input_tokens, output_tokens = send_to_claude(
                 context_text,
@@ -278,6 +310,11 @@ def process_ai_request(
             logger.info("AI request cancelled for conversation %s", conversation_id)
             return
 
+        log_activity(
+            f"Response received (~{output_tokens:,} tokens, "
+            f"{int(time.time() - started_at)}s)"
+        )
+
         # Apply draft edits before citation verification, so the stored
         # message carries the outcome text instead of the raw block.
         if draft_link:
@@ -286,6 +323,7 @@ def process_ai_request(
             if drafts_chat.DRAFT_EDITS_RE.search(response_text):
                 update_status("applying", "Applying edits to the draft...")
                 response_text = drafts_chat.apply_edit_blocks(response_text, draft_link)
+                log_activity("Draft edits applied")
 
         # Create any facts and witnesses the AI was directed to record,
         # replacing each block with confirmation lines before the message
@@ -293,9 +331,11 @@ def process_ai_request(
         if FACT_BLOCK_RE.search(response_text):
             update_status("applying", "Adding facts to the timeline...")
             response_text = apply_fact_blocks(response_text, matter, user)
+            log_activity("Facts recorded on the timeline")
         if WITNESS_BLOCK_RE.search(response_text):
             update_status("applying", "Adding witnesses...")
             response_text = apply_witness_blocks(response_text, matter, user)
+            log_activity("Witnesses recorded")
         # Order matters: imitation confirmations are scrubbed from the raw
         # response first (only model-written lines can match at this
         # point), then real blocks are applied and produce the genuine
@@ -304,6 +344,7 @@ def process_ai_request(
         if NOTE_BLOCKS_RE.search(response_text):
             update_status("applying", "Writing notes...")
             response_text = apply_note_blocks(response_text, matter, user)
+            log_activity("Notes written")
 
         # Any raw [doc:]/[hl:]/[note:] handles the model leaked into prose
         # become human-readable markdown links (hallucinated ids are
@@ -316,12 +357,17 @@ def process_ai_request(
 
         # Verify citations in the response
         update_status("verifying", "Verifying citations...")
+        log_activity("Checking citations against CourtListener...")
         logger.info(
             "Starting citation verification for conversation %s", conversation_id
         )
         try:
             verified_citations = verify_all_citations(response_text)
             citations_data = citations_to_dict(verified_citations)
+            if citations_data:
+                log_activity(f"{len(citations_data)} citations checked")
+            else:
+                log_activity("No case citations to check")
             logger.info(
                 "Citation verification complete for conversation %s: %d citations found",
                 conversation_id,
@@ -334,6 +380,7 @@ def process_ai_request(
                 e,
             )
             citations_data = []
+            log_activity("Citation check failed; skipped")
 
         # Set complete status with response data (unless cancelled)
         if is_cancelled():
@@ -354,6 +401,9 @@ def process_ai_request(
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
                 "citations": citations_data,
+                # Kept on the completion payload for debugging, like the
+                # research log; the rendered message replaces the live view.
+                "activity_log": activity_log,
             },
             timeout=600,
         )
@@ -374,6 +424,8 @@ def process_ai_request(
                 {
                     "status": "error",
                     "message": f"Error: {str(e)}",
+                    # How far the turn got before failing.
+                    "activity_log": activity_log,
                 },
                 timeout=600,
             )

@@ -14,6 +14,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from apps.accounts.models import CustomUser
 from apps.case.models import Fact, Highlight
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.management.selection import (
@@ -34,7 +35,7 @@ from .context import (
 )
 from .filters import ConversationFilter
 from .models import Conversation, Message
-from .tasks import process_ai_request
+from .tasks import CLAUDE_MODELS, process_ai_request
 
 logger = logging.getLogger(__name__)
 
@@ -57,17 +58,6 @@ def get_accessible_matters():
     return Matter.objects.all()
 
 
-def get_selected_llm(request):
-    """Get the selected LLM from session, defaulting to Gemini Pro (Latest)."""
-    return request.session.get("ai_selected_llm", "gemini-pro-latest")
-
-
-def get_llm_display(llm_key):
-    """Get the display name for an LLM key."""
-    llm_dict = dict(Conversation.LLM_CHOICES)
-    return llm_dict.get(llm_key, llm_key)
-
-
 def annotate_last_activity(queryset):
     """Annotate conversations with last message timestamp, falling back to created_at."""
     return queryset.select_related("draft_link").annotate(
@@ -75,31 +65,58 @@ def annotate_last_activity(queryset):
     )
 
 
+def get_conversation_list_context(request, matter):
+    """Filter/sort/selection context shared by the AI tab's list partials.
+
+    The keyword/participant filter and the sort order persist per matter in
+    the session ("ai_filter" key, applied through ConversationFilter);
+    row selection rides its own session key.
+    """
+    filter_session_key = get_session_key("ai_filter", matter.id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    conversations = annotate_last_activity(Conversation.objects.filter(matter=matter))
+    if filter_data:
+        conversations = ConversationFilter(filter_data, queryset=conversations).qs
+    else:
+        conversations = conversations.order_by("-created_at", "-id")
+
+    current_order = filter_data.get("order_by", "-created_at")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else "-created_at"
+
+    conv_list = list(conversations)
+    selection_key = get_session_key("selected_conversations", matter.id)
+    selected_conversations = get_selected_ids(request, selection_key)
+    visible_ids = [c.id for c in conv_list]
+
+    participant_choices = list(
+        CustomUser.objects.filter(ai_messages__conversation__matter=matter)
+        .distinct()
+        .order_by("first_name", "last_name")
+    )
+    participant_id = str(filter_data.get("participant", ""))
+    selected_participant = next(
+        (u for u in participant_choices if str(u.id) == participant_id), None
+    )
+
+    return {
+        "matter": matter,
+        "conversations": conv_list,
+        "current_order": current_order,
+        "selected_conversations": selected_conversations,
+        "all_selected": all_visible_selected(selected_conversations, visible_ids),
+        "filter_q": filter_data.get("q", ""),
+        "participant_choices": participant_choices,
+        "selected_participant": selected_participant,
+    }
+
+
 @login_required
 def ai_index(request, matter_id):
     """Main AI view - list of conversations."""
     matter, matters = get_matter_from_url(request, matter_id)
     set_last_tab(request, matter_id, "ai")
-
-    # Get filter data from session
-    filter_session_key = get_session_key("ai_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-
-    # Get conversations and apply filter with last_activity annotation
-    conversations = annotate_last_activity(Conversation.objects.filter(matter=matter))
-    if filter_data:
-        filter_obj = ConversationFilter(filter_data, queryset=conversations)
-        conversations = filter_obj.qs
-    else:
-        conversations = conversations.order_by("-created_at", "-id")
-
-    # Get current sort order
-    current_order = filter_data.get("order_by", "-created_at")
-    if isinstance(current_order, list):
-        current_order = current_order[0] if current_order else "-created_at"
-
-    # Get selected LLM from session
-    selected_llm = get_selected_llm(request)
 
     # Backfill: queue summary generation for documents missing summaries
     from apps.case.models import Document
@@ -141,13 +158,8 @@ def ai_index(request, matter_id):
     context = {
         "app": "matters",
         "subapp": "ai",
-        "matter": matter,
         "matters": matters,
-        "conversations": conversations,
-        "current_order": current_order,
-        "selected_llm": selected_llm,
-        "selected_llm_display": get_llm_display(selected_llm),
-        "llm_choices": Conversation.LLM_CHOICES,
+        **get_conversation_list_context(request, matter),
     }
 
     return render(request, "case/ai/main.html", context)
@@ -157,46 +169,8 @@ def ai_index(request, matter_id):
 def ai_list(request, matter_id):
     """Return conversation list partial (for HTMX refresh)."""
     matter, _ = get_matter_from_url(request, matter_id)
-
-    # Get filter data from session
-    filter_session_key = get_session_key("ai_filter", matter_id)
-    filter_data = request.session.get(filter_session_key, {})
-
-    # Get conversations and apply filter with last_activity annotation
-    conversations = annotate_last_activity(Conversation.objects.filter(matter=matter))
-    if filter_data:
-        filter_obj = ConversationFilter(filter_data, queryset=conversations)
-        conversations = filter_obj.qs
-    else:
-        conversations = conversations.order_by("-created_at", "-id")
-
-    # Get current sort order
-    current_order = filter_data.get("order_by", "-created_at")
-    if isinstance(current_order, list):
-        current_order = current_order[0] if current_order else "-created_at"
-
-    # Get selected LLM from session
-    selected_llm = get_selected_llm(request)
-
-    # Selection state
-    conv_list = list(conversations)
-    session_key = get_session_key("selected_conversations", matter_id)
-    selected_conversations = get_selected_ids(request, session_key)
-    visible_ids = [c.id for c in conv_list]
-
     return render(
-        request,
-        "case/ai/list.html",
-        {
-            "conversations": conv_list,
-            "matter": matter,
-            "current_order": current_order,
-            "selected_llm": selected_llm,
-            "selected_llm_display": get_llm_display(selected_llm),
-            "llm_choices": Conversation.LLM_CHOICES,
-            "selected_conversations": selected_conversations,
-            "all_selected": all_visible_selected(selected_conversations, visible_ids),
-        },
+        request, "case/ai/list.html", get_conversation_list_context(request, matter)
     )
 
 
@@ -223,12 +197,37 @@ def ai_sort(request, matter_id, order):
 
 
 @login_required
-def ai_select_llm(request, matter_id, llm):
-    """Set the selected LLM in session."""
-    valid_llms = [choice[0] for choice in Conversation.LLM_CHOICES]
-    if llm in valid_llms:
-        request.session["ai_selected_llm"] = llm
-    return redirect("case:ai-list", matter_id=matter_id)
+def ai_filter(request, matter_id):
+    """Update the conversation keyword/participant filter (session-persisted).
+
+    The toolbar search input targets just the table (partial=table) so a
+    swap mid-typing never steals focus; participant picks re-render the
+    whole list so the dropdown's label updates too.
+    """
+    matter, _ = get_matter_from_url(request, matter_id)
+    filter_session_key = get_session_key("ai_filter", matter_id)
+    filter_data = request.session.get(filter_session_key, {})
+
+    if "q" in request.GET:
+        q = request.GET.get("q", "").strip()
+        if q:
+            filter_data["q"] = q
+        else:
+            filter_data.pop("q", None)
+    if "participant" in request.GET:
+        participant = request.GET.get("participant", "")
+        if participant.isdigit():
+            filter_data["participant"] = participant
+        else:
+            filter_data.pop("participant", None)
+    request.session[filter_session_key] = filter_data
+
+    template = (
+        "case/ai/table.html"
+        if request.GET.get("partial") == "table"
+        else "case/ai/list.html"
+    )
+    return render(request, template, get_conversation_list_context(request, matter))
 
 
 @login_required
@@ -245,6 +244,7 @@ def conversation_view(request, conv_id):
         "matter": matter,
         "conversation": conversation,
         "messages": messages,
+        "research_default_llm": RESEARCH_DEFAULT_LLM,
     }
 
     return render(request, "case/ai/conversation-standalone.html", context)
@@ -262,15 +262,14 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
-    # Chat style (classic vs research) + research depth, remembered per
-    # session like the model choice.
+    # Mode (analysis vs research) + research effort. New chats open in
+    # analysis; the header dropdowns switch mode and effort per turn.
     kind = request.GET.get("kind", "classic")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = "classic"
-    depth = request.GET.get("depth", "standard")
-    if depth not in dict(Conversation.DEPTH_CHOICES):
-        depth = "standard"
-    request.session["ai_new_chat_kind"] = kind
+    effort = request.GET.get("effort", "medium")
+    if effort not in dict(Conversation.EFFORT_CHOICES):
+        effort = "medium"
 
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
@@ -280,7 +279,7 @@ def new_conversation_view(request, matter_id):
         title=provided_title or "New Conversation",
         llm=llm,
         kind=kind,
-        research_depth=depth,
+        effort=effort,
     )
 
     context = {
@@ -290,6 +289,7 @@ def new_conversation_view(request, matter_id):
         "is_new": True,
         "llm": llm,
         "provided_title": provided_title,
+        "research_default_llm": RESEARCH_DEFAULT_LLM,
     }
 
     return render(request, "case/ai/conversation-standalone.html", context)
@@ -312,16 +312,16 @@ def create_conversation(request, matter_id):
     kind = request.POST.get("kind", "classic")
     if kind not in dict(Conversation.KIND_CHOICES):
         kind = "classic"
-    research_depth = request.POST.get("research_depth", "standard")
-    if research_depth not in dict(Conversation.DEPTH_CHOICES):
-        research_depth = "standard"
+    effort = request.POST.get("effort", "medium")
+    if effort not in dict(Conversation.EFFORT_CHOICES):
+        effort = "medium"
     conversation = Conversation.objects.create(
         matter=matter,
         title=request.POST.get("title", "").strip() or "New Conversation",
         llm=llm,
         user=request.user,
         kind=kind,
-        research_depth=research_depth,
+        effort=effort,
     )
     return JsonResponse({"id": conversation.id})
 
@@ -334,21 +334,13 @@ def new_conversation_prompt(request, matter_id):
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
 
-    default_kind = request.session.get("ai_new_chat_kind", "classic")
-    # Research defaults to Gemini: the agentic loop resends tool results
-    # every turn, which is far cheaper per token there, and quality holds.
-    # Claude stays one explicit pick away in the modal's model select.
-    initial_llm = RESEARCH_DEFAULT_LLM if default_kind == "research" else llm
     return render(
         request,
         "case/ai/new-conversation-modal.html",
         {
             "matter": matter,
             "llm": llm,
-            "initial_llm": initial_llm,
-            "research_default_llm": RESEARCH_DEFAULT_LLM,
             "llm_choices": Conversation.LLM_CHOICES,
-            "default_kind": default_kind,
         },
     )
 
@@ -406,12 +398,21 @@ def send_message(request, matter_id):
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
 
+    # Mode for THIS turn, from the header dropdown. Absent (legacy in-tab
+    # composer) or invalid means "keep the conversation's current mode".
+    kind = request.POST.get("kind")
+    if kind not in dict(Conversation.KIND_CHOICES):
+        kind = None
+
     # Get or create conversation
     is_new = False
     if conversation_id:
         conversation = get_object_or_404(
             Conversation, pk=conversation_id, matter__in=get_accessible_matters()
         )
+        if kind and kind != conversation.kind:
+            conversation.kind = kind
+            conversation.save(update_fields=["kind"])
     else:
         # Create conversation on first message. Prefer the title the user
         # entered in the new-conversation prompt; otherwise fall back to the
@@ -422,21 +423,26 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
-        kind = request.POST.get("kind", "classic")
-        if kind not in dict(Conversation.KIND_CHOICES):
-            kind = "classic"
-        research_depth = request.POST.get("research_depth", "standard")
-        if research_depth not in dict(Conversation.DEPTH_CHOICES):
-            research_depth = "standard"
+        effort = request.POST.get("effort", "medium")
+        if effort not in dict(Conversation.EFFORT_CHOICES):
+            effort = "medium"
         conversation = Conversation.objects.create(
             matter=matter,
             title=title,
             llm=llm,
             user=request.user,
-            kind=kind,
-            research_depth=research_depth,
+            kind=kind or "classic",
+            effort=effort,
         )
         is_new = True
+
+    # Research turns run on Gemini only: the agentic loop resends every
+    # tool result on each model turn, which multiplies Claude's per-token
+    # cost. The header disables the Claude options while Research is
+    # selected; this is the server-side guarantee behind that.
+    if conversation.kind == "research" and conversation.llm in CLAUDE_MODELS:
+        conversation.llm = RESEARCH_DEFAULT_LLM
+        conversation.save(update_fields=["llm"])
 
     # Update title if this is first message and title is default
     if not is_new and conversation.title == "New Conversation":
@@ -521,6 +527,7 @@ def ai_status(request, conv_id):
             output_tokens=status_data.get("output_tokens"),
             verified_citations=verified_citations,
             research_trail=status_data.get("research_trail", []),
+            activity_log=status_data.get("activity_log", []),
         )
 
         # Update conversation timestamp
@@ -569,6 +576,7 @@ def ai_status(request, conv_id):
             conversation=conversation,
             role="assistant",
             content=f"Error: Unable to get response. {status_data['message']}",
+            activity_log=status_data.get("activity_log", []),
         )
 
         # Clear the cache
@@ -584,10 +592,13 @@ def ai_status(request, conv_id):
         )
 
     if status_data["status"] == "cancelled":
-        # Return empty div to remove the status indicator.
+        # Return an empty div under a DIFFERENT id: the poll swaps with
+        # morph, and a same-id root would be patched in place, keeping the
+        # element (and its every-1s interval) alive forever. A mismatched
+        # root forces a replacement, which ends the polling with the node.
         # Keep cache entry (don't delete) so background thread's
         # is_cancelled() check continues to see "cancelled" status.
-        return HttpResponse('<div id="ai-status-indicator"></div>')
+        return HttpResponse('<div id="ai-status-ended"></div>')
 
     # Calculate elapsed time if available
     elapsed_seconds = None
@@ -603,8 +614,9 @@ def ai_status(request, conv_id):
             "message": status_data["message"],
             "conversation": conversation,
             "elapsed_seconds": elapsed_seconds,
-            # Research runs accumulate a live log of searches/reads.
-            "research_log": status_data.get("research_log"),
+            # Both modes accumulate a live log: research logs its
+            # searches/reads, classic logs context assembly + cite check.
+            "activity_log": status_data.get("activity_log"),
         },
     )
 
@@ -743,6 +755,9 @@ def clone_conversation(request, conv_id):
         user=request.user,
         title=f"{conversation.title} (Copy)",
         llm=conversation.llm,
+        kind=conversation.kind,
+        effort=conversation.effort,
+        vet_citations=conversation.vet_citations,
     )
 
     # Clone all messages
@@ -850,6 +865,9 @@ def split_conversation(request, message_id):
         user=request.user,
         title=f"{conversation.title} (Split)",
         llm=conversation.llm,
+        kind=conversation.kind,
+        effort=conversation.effort,
+        vet_citations=conversation.vet_citations,
     )
 
     # Move messages to new conversation
@@ -928,6 +946,10 @@ def set_conversation_llm(request, conv_id):
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
 
+    # Claude is analysis-only (see the research gate in send_message).
+    if conversation.kind == "research" and llm in CLAUDE_MODELS:
+        return HttpResponse(status=400)
+
     conversation.llm = llm
     conversation.save(update_fields=["llm"])
 
@@ -940,21 +962,21 @@ def set_conversation_llm(request, conv_id):
 
 @login_required
 @require_POST
-def set_research_depth(request, conv_id, level):
-    """Set a research conversation's search depth (quick/standard/deep)."""
-    if level not in dict(Conversation.DEPTH_CHOICES):
+def set_effort(request, conv_id, level):
+    """Set a conversation's effort level (low/medium/high, both modes)."""
+    if level not in dict(Conversation.EFFORT_CHOICES):
         return HttpResponse(status=400)
 
     conversation = get_object_or_404(
         Conversation, pk=conv_id, matter__in=get_accessible_matters()
     )
 
-    conversation.research_depth = level
-    conversation.save(update_fields=["research_depth"])
+    conversation.effort = level
+    conversation.save(update_fields=["effort"])
 
     return render(
         request,
-        "case/ai/research-depth-pill.html",
+        "case/ai/effort-pill.html",
         {"conversation": conversation},
     )
 
@@ -1066,6 +1088,14 @@ def prompt_editor_modal(request, matter_id):
     conversation_id = request.GET.get("conversation_id", "")
     llm = request.GET.get("llm", "gemini-pro-latest")
     title = request.GET.get("title", "")
+    # Mirror the chat window's current mode dropdown so a send from the
+    # expanded editor carries the same per-turn mode as the composer.
+    kind = request.GET.get("kind", "")
+    if kind not in dict(Conversation.KIND_CHOICES):
+        kind = ""
+    effort = request.GET.get("effort", "medium")
+    if effort not in dict(Conversation.EFFORT_CHOICES):
+        effort = "medium"
 
     return render(
         request,
@@ -1075,6 +1105,8 @@ def prompt_editor_modal(request, matter_id):
             "conversation_id": conversation_id,
             "llm": llm,
             "title": title,
+            "kind": kind,
+            "effort": effort,
         },
     )
 
