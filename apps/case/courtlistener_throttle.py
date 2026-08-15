@@ -4,9 +4,10 @@ Every CourtListener request in the app (citation lookups, cluster/opinion
 fetches, searches, forward-citation queries) funnels through
 ``throttled_request`` so concurrent callers — the vetting thread pool, the
 research pipeline, and the research chat's tool loop — share one polite
-request rate instead of stampeding the API. CourtListener allows 5,000
-requests/hour generally but only 60/minute on citation-lookup, so the
-spacing is deliberately conservative.
+request rate instead of stampeding the API. Since CourtListener's May
+2026 policy change, limits are per-account membership tiers (ours: Free
+Law Project Tier 3, 20/minute, 250/hour, 1,000/day), so the spacing is
+deliberately conservative and the 429 backoff carries the rest.
 
 Behavior: enforce a minimum interval between requests (spacing bookkeeping
 under a lock, the HTTP call itself outside it); on 429 honor Retry-After
