@@ -537,6 +537,11 @@
   padding: 0.5rem 0.75rem;
 }
 
+/* Unsaved-chat model badge: button chrome without interactivity. */
+.ai-header-controls .ai-llm-static {
+  cursor: default;
+}
+
 /* Claude items while the mode reads Research (analysis-only). */
 .dropdown-menu .dropdown-item.disabled {
   color: var(--color-muted);

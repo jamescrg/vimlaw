@@ -12,7 +12,12 @@ in sync with per-turn mode flips, and set_conversation_llm/send_message
 enforce it server-side.
 {% endcomment %}
 {% if not conversation.id %}
-  <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
+  {% comment %}
+  Unsaved chat: same chrome as the dropdown buttons, minus the chevron.
+  The switcher needs a conversation row, so this stays non-interactive
+  until the first send creates one.
+  {% endcomment %}
+  <span class="select-btn filter-dropdown-button ai-llm-static"><span>{{ conversation.get_llm_display }}</span></span>
 {% else %}
   <span id="llmPillWrap">
     <div class="dropdown" x-data="dropdown()">
