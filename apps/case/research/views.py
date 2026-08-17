@@ -305,10 +305,37 @@ def research_confirm(request, matter_id, query_id):
         ResearchQuery, pk=query_id, matter=matter, created_by=request.user
     )
 
-    structured_query = request.POST.get("structured_query", "").strip()
-    if structured_query:
-        query.structured_query = sanitize_query(structured_query)
-        query.save(update_fields=["structured_query"])
+    variants = list(query.query_variants or [])
+    if variants:
+        # The approval screen posts one checkbox + editable text per
+        # proposed variant; the user runs any subset, edited freely.
+        selected = []
+        for i, variant in enumerate(variants):
+            if f"use_{i}" not in request.POST:
+                continue
+            text = sanitize_query(request.POST.get(f"q_{i}", "").strip()[:300])
+            if text:
+                selected.append(
+                    {"label": variant.get("label", "Search"), "query": text}
+                )
+        if not selected:
+            return render(
+                request,
+                "case/research/refinement.html",
+                {
+                    "query": query,
+                    "matter": matter,
+                    "error": "Select at least one search to run.",
+                },
+            )
+        query.query_variants = selected
+        query.structured_query = "\n".join(v["query"] for v in selected)
+        query.save(update_fields=["query_variants", "structured_query"])
+    else:
+        structured_query = request.POST.get("structured_query", "").strip()
+        if structured_query:
+            query.structured_query = sanitize_query(structured_query)
+            query.save(update_fields=["structured_query"])
 
     query.status = "searching"
     query.save(update_fields=["status"])

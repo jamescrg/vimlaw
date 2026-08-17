@@ -208,7 +208,9 @@ class FakePipelineCL:
         if "triage" in system_context:
             reject = any(name in prompt for name in self.reject_names)
             return (
-                _json.dumps({"proceed": not reject, "reason": "Clearly unrelated."}),
+                _json.dumps(
+                    {"score": 1 if reject else 8, "reason": "Clearly unrelated."}
+                ),
                 0,
                 0,
             )
@@ -399,9 +401,9 @@ def test_date_slice_and_citation_chases(matter, user, patch_pipeline, sync_qclus
 
     searches = fake.searches
     assert searches[0]["order_by"] == "score desc"
-    assert searches[0]["limit"] == research_tasks.SEARCH_PRIMARY_LIMIT
+    assert searches[0]["limit"] == research_tasks.VARIANT_SCORE_LIMIT
     assert searches[1]["order_by"] == "dateFiled desc"
-    assert searches[1]["limit"] == research_tasks.SEARCH_DATE_LIMIT
+    assert searches[1]["limit"] == research_tasks.VARIANT_DATE_LIMIT
     # cites:() takes OPINION ids (seed cluster 1's opinion is 10), never
     # cluster ids - cites:(cluster_id) silently returns nothing.
     assert searches[2]["query"] == "cites:(10)"
@@ -708,7 +710,15 @@ def test_update_query_bumps_heartbeat(matter, user):
 # --------------------------------------------------------------------------- #
 # Refiner prompt
 # --------------------------------------------------------------------------- #
-def test_refiner_prompt_carries_design_and_vehicle_rules(matter, monkeypatch):
+VARIANTS_JSON = """
+{"variants": [
+  {"label": "Colloquial", "query": "(\\"motion to compel\\") AND (\\"attorney fees\\" OR expenses) AND moot*"},
+  {"label": "Statutory", "query": "\\"9-11-37\\" AND \\"attorney fees\\" AND moot*"}
+]}
+"""
+
+
+def test_refiner_proposes_variants_with_rules(matter, monkeypatch):
     from apps.case.research.models import ResearchQuery
 
     query = ResearchQuery.objects.create(
@@ -718,7 +728,7 @@ def test_refiner_prompt_carries_design_and_vehicle_rules(matter, monkeypatch):
 
     def fake_gemini(system, messages, **kwargs):
         captured["system"] = system
-        return ('"expenses of the motion" AND compel', 0, 0)
+        return (VARIANTS_JSON, 0, 0)
 
     monkeypatch.setattr(research_tasks, "send_to_gemini", fake_gemini)
     research_tasks._refine_query(query.id)
@@ -728,9 +738,190 @@ def test_refiner_prompt_carries_design_and_vehicle_rules(matter, monkeypatch):
     )
     assert "PROCEDURAL VEHICLE" in captured["system"]
     assert "9-11-37(a)(4)" in captured["system"]
-    # The statute-number hook: courts often never write the colloquial
-    # motion phrase (run 32's Birg miss - zero uses of "compel").
-    assert "STATUTE NUMBER AS A HOOK" in captured["system"]
-    assert 'OR "9-11-37"' in captured["system"]
+    # Statute eagerness replaces the single-query straitjacket: one
+    # variant centers on the code section (run 32's Birg miss - the
+    # opinion never uses the word "compel").
+    assert "BE EAGER WITH CODE SECTIONS" in captured["system"]
+    assert "VARIANTS" in captured["system"]
     query.refresh_from_db()
-    assert query.structured_query == '"expenses of the motion" AND compel'
+    assert [v["label"] for v in query.query_variants] == ["Colloquial", "Statutory"]
+    assert query.query_variants[1]["query"] == '"9-11-37" AND "attorney fees" AND moot*'
+    assert query.structured_query.count("\n") == 1
+
+
+def test_refiner_falls_back_to_raw_question_variant(matter, monkeypatch):
+    from apps.case.research.models import ResearchQuery
+
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="Can I recover fees after a mooted motion?"
+    )
+    monkeypatch.setattr(
+        research_tasks, "send_to_gemini", lambda s, m, **k: ("not json at all", 0, 0)
+    )
+    research_tasks._refine_query(query.id)
+    query.refresh_from_db()
+    assert len(query.query_variants) == 1
+    assert query.query_variants[0]["label"] == "Search"
+    assert "mooted motion" in query.query_variants[0]["query"]
+
+
+def test_refiner_mines_library_notes(matter, monkeypatch):
+    from apps.case.research.models import ResearchQuery
+    from apps.notes.models import Note
+
+    note = Note.objects.create(
+        title="Discovery fee shifting",
+        content="OCGA 9-11-37 governs expenses of motions to compel. See Birg.",
+    )
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="Can I recover fees after a mooted motion?"
+    )
+    calls = []
+
+    def fake_gemini(system, messages, **kwargs):
+        calls.append({"system": system, "prompt": messages[0]["content"]})
+        if "note_ids" in system:
+            return ('{"note_ids": [%d]}' % note.id, 0, 0)
+        return (VARIANTS_JSON, 0, 0)
+
+    monkeypatch.setattr(research_tasks, "send_to_gemini", fake_gemini)
+    research_tasks._refine_query(query.id)
+
+    assert len(calls) == 2
+    # The mining pass saw the listing; the variant pass saw the note text.
+    assert "Discovery fee shifting" in calls[0]["prompt"]
+    assert "FIRM LIBRARY NOTES" in calls[1]["prompt"]
+    assert "OCGA 9-11-37 governs" in calls[1]["prompt"]
+
+
+def test_confirm_runs_selected_edited_variants(client, matter, user, monkeypatch):
+    from django.urls import reverse as dj_reverse
+
+    from apps.case.research import views as research_views
+    from apps.case.research.models import ResearchQuery
+
+    query = ResearchQuery.objects.create(
+        matter=matter,
+        query_text="q",
+        status="refined",
+        created_by=user,
+        query_variants=[
+            {"label": "Colloquial", "query": "one AND two"},
+            {"label": "Statutory", "query": '"9-11-37" AND fees'},
+        ],
+    )
+    launched = []
+    monkeypatch.setattr(
+        research_views, "process_research_query", lambda qid: launched.append(qid)
+    )
+    url = dj_reverse("case:research-confirm", args=[matter.id, query.id])
+    response = client.post(
+        url,
+        {"use_1": "on", "q_0": "one AND two", "q_1": '"9-11-37" AND fees AND moot*'},
+    )
+    assert response.status_code == 200
+    query.refresh_from_db()
+    # Only the checked variant survives, with the user's edit.
+    assert query.query_variants == [
+        {"label": "Statutory", "query": '"9-11-37" AND fees AND moot*'}
+    ]
+    assert query.status == "searching"
+    assert launched == [query.id]
+
+
+def test_confirm_requires_a_selection(client, matter, user, monkeypatch):
+    from django.urls import reverse as dj_reverse
+
+    from apps.case.research import views as research_views
+    from apps.case.research.models import ResearchQuery
+
+    query = ResearchQuery.objects.create(
+        matter=matter,
+        query_text="q",
+        status="refined",
+        created_by=user,
+        query_variants=[{"label": "Colloquial", "query": "one AND two"}],
+    )
+    launched = []
+    monkeypatch.setattr(
+        research_views, "process_research_query", lambda qid: launched.append(qid)
+    )
+    url = dj_reverse("case:research-confirm", args=[matter.id, query.id])
+    html = client.post(url, {"q_0": "one AND two"}).content.decode()
+    assert "Select at least one search" in html
+    query.refresh_from_db()
+    assert query.status == "refined"
+    assert launched == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_variants_merge_with_hit_counts(matter, user, patch_pipeline):
+    """A case surfaced by two variants gets hit_count=2; brief slots rank
+    by hit count before CL position."""
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    class TwoVariantCL(FakePipelineCL):
+        def search_opinions(self, query, court="", limit=5, order_by="score desc"):
+            self.searches.append(
+                {"query": query, "court": court, "limit": limit, "order_by": order_by}
+            )
+            if query.startswith("cites:("):
+                return [], 200
+            if order_by.startswith("dateFiled"):
+                return [], 200
+            if "9-11-37" in query:
+                return [_row("Shared Case", 1), _row("Statute Only", 2)], 200
+            return [_row("Colloquial Only", 3), _row("Shared Case", 1)], 200
+
+    fake = patch_pipeline(
+        TwoVariantCL(
+            [],
+            clusters={
+                cid: {"sub_opinions": [f"https://api/opinions/{cid}0/"]}
+                for cid in (1, 2, 3)
+            },
+            opinions={10: "One.", 20: "Two.", 30: "Three."},
+        )
+    )
+    query = ResearchQuery.objects.create(
+        matter=matter,
+        query_text="fees",
+        created_by=user,
+        query_variants=[
+            {"label": "Colloquial", "query": "colloquial terms"},
+            {"label": "Statutory", "query": '"9-11-37" AND fees'},
+        ],
+    )
+    research_tasks._process_query(query.id)
+
+    rows = {r.case_name: r for r in ResearchResult.objects.filter(query=query)}
+    assert rows["Shared Case"].hit_count == 2
+    assert sorted(rows["Shared Case"].matched_variants) == ["Colloquial", "Statutory"]
+    assert rows["Statute Only"].hit_count == 1
+    assert rows["Colloquial Only"].hit_count == 1
+    # Four searches ran: score + date per variant.
+    assert len([s for s in fake.searches if not s["query"].startswith("cites:")]) == 4
+    # All rows briefed (under cap) and scored at triage.
+    assert all(r.triage_score == 8.0 for r in rows.values())
+
+
+def test_triage_scores_below_threshold_reject(matter, user, patch_pipeline):
+    fake = patch_pipeline(FakePipelineCL([], clusters={}, opinions={}))
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    query = ResearchQuery.objects.create(matter=matter, query_text="q", created_by=user)
+    result = ResearchResult.objects.create(
+        query=query,
+        position=1,
+        case_name="Off Topic",
+        cluster_id=5,
+        snippet="something",
+        relevance="pending",
+    )
+    fake.reject_names = ("Off Topic",)
+    score, reason = research_tasks._triage_by_snippet(result, "q")
+    assert score == 1
+    assert reason == "Clearly unrelated."
+    # Missing snippet scores neutral, never rejects.
+    result.snippet = ""
+    assert research_tasks._triage_by_snippet(result, "q") == (5.0, "")

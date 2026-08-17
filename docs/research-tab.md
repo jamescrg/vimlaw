@@ -11,19 +11,31 @@ snippet/8k-excerpt pipeline.
 
 ## Flow
 
-1. **Refine** (`_refine_and_pause`, flash): the question becomes ONE
-   CourtListener query. The prompt carries COURTLISTENER_SYNTAX_RULES,
-   QUERY_DESIGN_RULES, and the procedural-vehicle rule (never blend
-   37(d)-style vehicles into a 37(a)(4)-style question). Pauses at
-   status=refined; the user reviews and can EDIT the query, then confirms.
-2. **Search** (`_process_query`): the approved query runs twice — the
-   relevance page (score desc, 20) plus a newest-first slice of the SAME
-   query (dateFiled desc, 10) that rescues recent opinions CL's score
-   disfavors. Merged and deduped; date-only rows are tagged "Recent" and
-   get guaranteed brief slots.
-3. **Triage** (flash, snippet-only, inclusive): clearly-unrelated rows
-   become relevance=rejected WITH the model's reason — nothing is
-   deleted; they render in the collapsed "Ruled out" section.
+1. **Refine** (`_refine_and_pause`, flash): first a library-mining pass
+   (`_mine_library`) picks up to 2 firm-library notes whose text feeds
+   the proposal (statutes, terms of art, key cases — the retired chat's
+   library-pass advantage). Then the refiner proposes **3-5 labeled
+   query VARIANTS** (Colloquial / Statutory / Doctrinal / Broad), eager
+   about code sections — one variant centers on the governing statute's
+   bare number. The prompt carries COURTLISTENER_SYNTAX_RULES,
+   QUERY_DESIGN_RULES, and the procedural-vehicle rule. Pauses at
+   status=refined; the approval screen shows each variant as a checkbox
+   + editable text row, so the user prunes, edits, or composes the set.
+2. **Search** (`_process_query`): every selected variant runs twice —
+   a relevance page (score desc, 15) plus a thin newest-first slice
+   (dateFiled desc, 8) that rescues recent opinions CL's score
+   disfavors. All results merge, deduped by cluster, each case recording
+   `hit_count` / `matched_variants` — a case surfaced by several
+   differently-worded queries is a strong free relevance signal.
+   Searches are the cheap lever (one credit each); the expensive stages
+   stay hard-capped.
+3. **Triage** (flash, snippet-only): each candidate gets a 0-10 promise
+   score plus reason from CL's keyword-context snippet (missing snippet
+   scores a neutral 5 — slip opinions have none). Below 3 =
+   relevance=rejected WITH the reason — nothing is deleted; ruled-out
+   rows render in the collapsed "Ruled out" section. Brief slots then go
+   by (hit_count, triage score, CL order) with a recency guarantee (the
+   3 newest candidates always get slots).
 4. **Brief** (`_brief_result`, flash): each surviving case (≤BRIEF_MAX)
    is briefed from its ENTIRE cluster — every sub-opinion concatenated,
    250k cap — using the structured abstract prompt in briefing.py
@@ -48,10 +60,10 @@ snippet/8k-excerpt pipeline.
 
 ## Budgets (tasks.py constants)
 
-~46 CourtListener requests per typical run, spaced by the 0.25s
-throttle: 2 searches + ≤15 briefs (cluster+opinions) + 2 citing searches
-+ ≤4 chased briefs + ≤4 lookups + treatment walks. ~50 flash calls + 1
-pro call.
+~50 CourtListener requests per typical run, spaced by the 0.25s
+throttle: 2 searches per variant (typically 6-8 total) + ≤15 briefs
+(cluster+opinions) + 2 citing searches + ≤4 chased briefs + ≤4 lookups
++ treatment walks. ~55 flash calls + 1 pro call.
 
 ## Infrastructure
 

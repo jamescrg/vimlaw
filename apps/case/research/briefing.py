@@ -64,14 +64,14 @@ PROCEDURAL_VEHICLE_RULES = (
     "motion-to-compel fee question under 9-11-37(a)(4)) are not "
     "authority for the question; never blend the vehicles' terms into "
     "one query.\n"
-    "STATUTE NUMBER AS A HOOK: when the vehicle is statutory and you "
-    "know the statute, its bare quoted number (no subsections, e.g. "
-    '"9-11-37") MUST appear in the query as an OR-alternative inside '
-    "the group holding the colloquial motion phrase - for example "
-    '("motion to compel" OR "9-11-37") - NEVER as its own required AND '
-    "group and never omitted. Courts routinely decide these questions "
-    "without ever writing the colloquial phrase, and a required phrase "
-    "the opinion never uses makes the controlling case unfindable.\n\n"
+    "BE EAGER WITH CODE SECTIONS: whenever you can identify the "
+    "governing statute, code section, or rule (from your own knowledge "
+    "or the firm library notes), USE its bare quoted number (no "
+    'subsections, e.g. "9-11-37") as a search term, and make one '
+    "variant center on it. Courts routinely decide these questions "
+    "without ever writing the colloquial motion phrase - a query that "
+    "requires a phrase the opinion never uses makes the controlling "
+    "case unfindable, while the statute number almost always appears.\n\n"
 )
 
 _VERDICT_RE = re.compile(r"RELEVANCE VERDICT:\s*(HIGH|MODERATE|LOW)", re.IGNORECASE)

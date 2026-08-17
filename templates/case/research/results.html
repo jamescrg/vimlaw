@@ -6,7 +6,15 @@
   <div class="research-results-header">
     <div>
       <h3>{{ query.query_text }}</h3>
-      {% if query.structured_query %}<div class="research-results-structured">{{ query.structured_query }}</div>{% endif %}
+      {% if query.query_variants %}
+        {% for variant in query.query_variants %}
+          <div class="research-results-structured">
+            <span class="detail-text">{{ variant.label }}:</span> {{ variant.query }}
+          </div>
+        {% endfor %}
+      {% elif query.structured_query %}
+        <div class="research-results-structured">{{ query.structured_query }}</div>
+      {% endif %}
       <span class="research-results-meta">{{ query.jurisdiction_display }} &middot; {{ query.created_at|date:"M j, Y g:i A" }}</span>
     </div>
     <div class="research-results-actions">

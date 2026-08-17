@@ -59,6 +59,12 @@
         &middot; Cited {{ result.forward_citation_count }} time{{ result.forward_citation_count|pluralize }}
       </span>
     {% endif %}
+    {% if result.hit_count > 1 %}
+      <span class="detail-text"
+            title="Surfaced by: {{ result.matched_variants|join:", " }}">
+        &middot; Matched {{ result.hit_count }} queries
+      </span>
+    {% endif %}
   </div>
   {% if result.brief %}
     {% if result.eval_reason %}<div class="research-summary">{{ result.eval_reason }}</div>{% endif %}

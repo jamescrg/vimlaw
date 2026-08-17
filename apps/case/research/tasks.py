@@ -42,12 +42,22 @@ from .models import CaseBrief, CitationVerification, ResearchQuery, ResearchResu
 
 logger = logging.getLogger(__name__)
 
-# Per-run pipeline budgets. Two searches (relevance page + newest-first
-# slice of the same approved query), full-opinion briefs for the strongest
-# candidates, then bounded citation chasing from the HIGH briefs. Roughly
-# 45 CourtListener requests per typical run, spaced by the throttle.
-SEARCH_PRIMARY_LIMIT = 20
-SEARCH_DATE_LIMIT = 10
+# Per-run pipeline budgets. Searches are the cheap lever (one credit
+# each): every approved query variant runs as a relevance page plus a
+# thin newest-first slice, results merge with per-case hit counts, and
+# the expensive stages (full-opinion briefs, chases, treatment) stay
+# hard-capped. Roughly 50 CourtListener requests per typical run, spaced
+# by the throttle.
+QUERY_VARIANT_MAX = 5
+VARIANT_SCORE_LIMIT = 15
+VARIANT_DATE_LIMIT = 8
+LIBRARY_NOTE_PICK_MAX = 2
+LIBRARY_NOTE_CHAR_CAP = 8_000
+# Snippet-stage promise scores below this mean "clearly unrelated".
+TRIAGE_REJECT_BELOW = 3.0
+# The newest candidates always get brief slots: brand-new law is what
+# keyword ranking most reliably buries.
+RECENT_GUARANTEE = 3
 BRIEF_MAX = 15
 BRIEF_OPINION_CHAR_CAP = 250_000
 CITING_SEED_MAX = 2
@@ -162,47 +172,161 @@ def sanitize_query(query):
     return query
 
 
-def _refine_query(query_id):
-    """Use AI to convert natural language query into structured search syntax."""
-    _update_query(query_id, status="refining")
+def _parse_json(text):
+    """Best-effort JSON object extraction from a model response."""
+    cleaned = (text or "").strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        return json.loads(cleaned[start : end + 1])
+    except json.JSONDecodeError:
+        return None
 
-    query = ResearchQuery.objects.get(pk=query_id)
+
+def _library_listing():
+    """One line per firm-library note, for the refiner's mining pass."""
+    from apps.case.ai.selector import library_folder_path
+    from apps.notes.models import get_library_notes
+
+    lines = []
+    notes = (
+        get_library_notes().select_related("folder").order_by("folder__name", "title")
+    )
+    for note in notes:
+        if not note.content:
+            continue
+        excerpt = (note.summary or note.content)[:160].replace("\n", " ").strip()
+        lines.append(
+            f"- [id {note.id}] {library_folder_path(note.folder)}: "
+            f"{note.title}: {excerpt}"
+        )
+    return lines
+
+
+def _mine_library(question):
+    """Read the most relevant firm-library notes for the refiner.
+
+    The library pass was one of the retired research chat's real
+    advantages: firm notes name the governing statutes, the terms of art
+    courts actually use, and the key cases. One cheap flash call picks
+    the notes; their text feeds the variant proposal. Returns "" when
+    the library is empty or nothing is on point.
+    """
+    from apps.notes.models import get_library_notes
+
+    listing = _library_listing()
+    if not listing:
+        return ""
 
     system_prompt = (
-        "You are a legal research strategist. Your job is to understand what the user "
-        "is really trying to find out, identify the core legal issue, and then craft a "
-        "CourtListener search query that will surface the most relevant case law.\n\n"
-        "STEP 1 — Understand the question:\n"
-        "- What is the user trying to determine? What legal issue or principle is at stake?\n"
-        "- What kind of cases would actually answer this question?\n"
-        "- Think about the legal doctrines, standards, and tests that courts apply here.\n\n"
-        "STEP 2 — Design the query:\n"
-        "- Target the legal concepts and doctrines that relevant cases would discuss, "
-        "not just the keywords from the user's question.\n"
-        "- Include the legal terminology courts actually use when addressing this issue.\n"
-        "- Think about what holdings, standards, or tests a relevant opinion would contain.\n\n"
-        + COURTLISTENER_SYNTAX_RULES
-        + QUERY_DESIGN_RULES
-        + PROCEDURAL_VEHICLE_RULES
-        + "Example input: Can a joint tenant with right of survivorship file an "
-        "equitable partition suit?\n"
-        'Example output: ("joint tenancy" OR "joint tenant") '
-        'AND "right of survivorship" AND ("equitable partition" OR partition) '
-        'AND (suit OR action OR "cause of action")\n\n'
-        "Return ONLY the search query string, nothing else."
+        "You are a legal research assistant. You are given a research "
+        "question and a list of the firm's internal research notes. Pick "
+        f"up to {LIBRARY_NOTE_PICK_MAX} notes whose content would help "
+        "design case-law searches for this question (governing statutes "
+        "or code sections, terms of art, key cases). Respond ONLY with "
+        'JSON: {"note_ids": [id, ...]} - an empty list if nothing is on '
+        "point."
     )
-    user_prompt = query.query_text
-
+    user_prompt = "QUESTION: " + question + "\n\nNOTES:\n" + "\n".join(listing)
     try:
         response_text, _, _ = send_to_gemini(
             system_prompt, [{"role": "user", "content": user_prompt}]
         )
-        structured = response_text.strip().strip("`").strip()
-        structured = sanitize_query(structured)
-        _update_query(query_id, structured_query=structured)
+        parsed = _parse_json(response_text) or {}
+        note_ids = [int(n) for n in parsed.get("note_ids", [])][:LIBRARY_NOTE_PICK_MAX]
     except Exception:
-        logger.exception("Error refining query %s, using raw text", query_id)
-        _update_query(query_id, structured_query=query.query_text)
+        logger.exception("Library mining failed; refining without notes")
+        return ""
+
+    if not note_ids:
+        return ""
+
+    sections = []
+    for note in get_library_notes().filter(pk__in=note_ids):
+        if note.content:
+            sections.append(f"## {note.title}\n{note.content[:LIBRARY_NOTE_CHAR_CAP]}")
+    if not sections:
+        return ""
+    return (
+        "FIRM LIBRARY NOTES (internal work product - mine them for "
+        "statutes, code sections, terms of art, and key cases; never "
+        "citable, and their statements of the law must be verified "
+        "against the search results):\n\n" + "\n\n".join(sections) + "\n\n"
+    )
+
+
+def _refine_query(query_id):
+    """Propose labeled search-query variants for the user to review.
+
+    One phrasing is fragile: run 32 missed the controlling case because
+    its opinion never used the query's required phrase. The refiner now
+    mines the firm library for vocabulary, then proposes several
+    differently-angled queries; the approval screen lets the user prune
+    and edit the set.
+    """
+    _update_query(query_id, status="refining")
+
+    query = ResearchQuery.objects.get(pk=query_id)
+
+    library_section = _mine_library(query.query_text)
+
+    system_prompt = (
+        "You are a legal research strategist. Understand what the user is "
+        "really trying to find out, identify the core legal issue, and "
+        "then craft SEVERAL differently-angled CourtListener search "
+        "queries that together will surface the most relevant case law.\n\n"
+        "STEP 1 — Understand the question:\n"
+        "- What is the user trying to determine? What legal issue or principle is at stake?\n"
+        "- What is the exact procedural vehicle, and which statute, code section, or rule governs it?\n"
+        "- Think about the legal doctrines, standards, and tests that courts apply here.\n\n"
+        "STEP 2 — Design 3 to 5 query VARIANTS, each attacking from a different angle:\n"
+        '- "Colloquial": the motion/doctrine phrasing a practitioner would use.\n'
+        '- "Statutory": centered on the governing statute or rule, its bare quoted number as a term.\n'
+        '- "Doctrinal": the standard\'s operative language - the words the COURT writes in the holding.\n'
+        '- "Broad": a wider net that drops the least essential concept group.\n'
+        "Vary the WORDS between variants, not just the punctuation: a case "
+        "is only findable through terms its opinion actually contains, and "
+        "different opinions word the same rule differently.\n\n"
+        + COURTLISTENER_SYNTAX_RULES
+        + QUERY_DESIGN_RULES
+        + PROCEDURAL_VEHICLE_RULES
+        + "Respond ONLY with JSON in this exact shape:\n"
+        '{"variants": [{"label": "Colloquial", "query": "..."}, '
+        '{"label": "Statutory", "query": "..."}]}\n'
+    )
+    user_prompt = library_section + "QUESTION: " + query.query_text
+
+    variants = []
+    try:
+        response_text, _, _ = send_to_gemini(
+            system_prompt, [{"role": "user", "content": user_prompt}]
+        )
+        parsed = _parse_json(response_text) or {}
+        for item in parsed.get("variants", [])[:QUERY_VARIANT_MAX]:
+            variant_query = sanitize_query(str(item.get("query", ""))[:300])
+            if not variant_query:
+                continue
+            variants.append(
+                {
+                    "label": str(item.get("label", "Search"))[:40],
+                    "query": variant_query,
+                }
+            )
+    except Exception:
+        logger.exception("Error refining query %s, falling back to raw text", query_id)
+
+    if not variants:
+        variants = [{"label": "Search", "query": sanitize_query(query.query_text)}]
+
+    _update_query(
+        query_id,
+        query_variants=variants,
+        structured_query="\n".join(v["query"] for v in variants),
+    )
 
 
 def _refine_and_pause(query_id):
@@ -229,73 +353,100 @@ def _process_query(query_id):
     try:
         _update_query(query_id, status="searching")
 
-        search_text = query.structured_query or query.query_text
         court = get_court_ids(query.state, query.include_federal)
 
-        results, status_code = search_opinions(
-            search_text, court=court, limit=SEARCH_PRIMARY_LIMIT
-        )
+        variants = list(query.query_variants or [])
+        if not variants:
+            variants = [
+                {
+                    "label": "Search",
+                    "query": query.structured_query or query.query_text,
+                }
+            ]
+        variants = variants[:QUERY_VARIANT_MAX]
 
-        # If the structured query caused a server error, retry with raw query text
-        if not results and status_code == 500 and query.structured_query:
-            logger.warning(
-                "Structured query failed for %s, retrying with raw text", query_id
-            )
-            results, status_code = search_opinions(
-                query.query_text, court=court, limit=SEARCH_PRIMARY_LIMIT
-            )
-
-        if not results:
-            if status_code == 500:
-                msg = "CourtListener returned an error. The search query may be too complex."
-            elif status_code != 200:
-                msg = f"CourtListener search failed (status {status_code})."
-            else:
-                msg = "No results found on CourtListener."
-            _update_query(query_id, status="error", error_message=msg)
-            return
-
-        # Newest-first slice of the SAME approved query. CL's relevance
-        # score disfavors very recent opinions with empty citation graphs
-        # (slip opinions especially), so a date-ordered page rescues what
-        # the score-ordered page never surfaces. Failure is non-fatal.
-        date_results, date_status = search_opinions(
-            search_text,
-            court=court,
-            limit=SEARCH_DATE_LIMIT,
-            order_by="dateFiled desc",
-        )
-        if date_status != 200:
-            date_results = []
-
-        # Deduplicate by cluster_id and by citation + date_filed, keeping
-        # track of which search surfaced each row.
-        candidates = [(r, "search") for r in results] + [
-            (r, "date") for r in date_results
-        ]
-        seen_clusters = set()
+        # Every approved variant runs twice: the relevance page, and a
+        # thin newest-first slice (CL's score disfavors brand-new
+        # opinions with empty citation graphs; the date slice rescues
+        # them). Results merge with per-case hit counts - a case matching
+        # several differently-worded queries is a strong signal.
+        merged = {}
+        keyless = []
         seen_citations = set()
-        unique_results = []
-        for result, source in candidates:
-            cid = result.get("cluster_id")
-            if cid and cid in seen_clusters:
-                continue
+        server_error = False
+        for variant in variants:
+            for order_by, limit, source in (
+                ("score desc", VARIANT_SCORE_LIMIT, "search"),
+                ("dateFiled desc", VARIANT_DATE_LIMIT, "date"),
+            ):
+                rows, status_code = search_opinions(
+                    variant["query"], court=court, limit=limit, order_by=order_by
+                )
+                if status_code == 500:
+                    server_error = True
+                if status_code != 200:
+                    continue
+                for row in rows:
+                    cid = row.get("cluster_id")
+                    if not cid:
+                        citation = row.get("citation", [])
+                        cite_str = str(citation) + "|" + row.get("date_filed", "")
+                        if citation and cite_str in seen_citations:
+                            continue
+                        if citation:
+                            seen_citations.add(cite_str)
+                        keyless.append((row, source, variant["label"]))
+                        continue
+                    entry = merged.get(cid)
+                    if entry is None:
+                        citation = row.get("citation", [])
+                        cite_str = str(citation) + "|" + row.get("date_filed", "")
+                        if citation and cite_str in seen_citations:
+                            continue
+                        if citation:
+                            seen_citations.add(cite_str)
+                        merged[cid] = {
+                            "row": row,
+                            "source": source,
+                            "labels": [variant["label"]],
+                        }
+                    else:
+                        if variant["label"] not in entry["labels"]:
+                            entry["labels"].append(variant["label"])
+                        if entry["source"] == "date" and source == "search":
+                            entry["source"] = "search"
 
-            citation = result.get("citation", [])
-            date_filed = result.get("date_filed", "")
-            cite_str = str(citation) + "|" + date_filed
-            if citation and cite_str in seen_citations:
-                continue
+        # All variants dry or erroring: one last try with the raw question.
+        if not merged and not keyless:
+            rows, status_code = search_opinions(
+                query.query_text, court=court, limit=VARIANT_SCORE_LIMIT
+            )
+            if status_code == 200 and rows:
+                for row in rows:
+                    cid = row.get("cluster_id")
+                    if cid and cid not in merged:
+                        merged[cid] = {
+                            "row": row,
+                            "source": "search",
+                            "labels": ["Fallback"],
+                        }
+            else:
+                msg = (
+                    "CourtListener returned an error. The search queries may "
+                    "be too complex."
+                    if server_error or status_code == 500
+                    else "No results found on CourtListener."
+                )
+                _update_query(query_id, status="error", error_message=msg)
+                return
 
-            if cid:
-                seen_clusters.add(cid)
-            if citation:
-                seen_citations.add(cite_str)
-            unique_results.append((result, source))
-
-        # Create result records
-        for i, (result, source) in enumerate(unique_results, 1):
-            citation_list = result.get("citation", [])
+        # Create result records (first-seen order; positions re-rank later)
+        creations = [
+            (entry["row"], entry["source"], entry["labels"])
+            for entry in merged.values()
+        ] + [(row, source, [label]) for row, source, label in keyless]
+        for i, (row, source, labels) in enumerate(creations, 1):
+            citation_list = row.get("citation", [])
             citation_str = (
                 ", ".join(citation_list)
                 if isinstance(citation_list, list)
@@ -305,18 +456,20 @@ def _process_query(query_id):
             ResearchResult.objects.create(
                 query_id=query_id,
                 position=i,
-                case_name=result.get("case_name", ""),
+                case_name=row.get("case_name", ""),
                 citation=citation_str,
-                court=result.get("court", ""),
-                date_filed=result.get("date_filed", ""),
-                cluster_id=result.get("cluster_id"),
-                snippet=result.get("snippet", ""),
-                score=result.get("score"),
-                forward_citation_count=result.get("cite_count"),
-                courtlistener_url=result.get("courtlistener_url", ""),
+                court=row.get("court", ""),
+                date_filed=row.get("date_filed", ""),
+                cluster_id=row.get("cluster_id"),
+                snippet=row.get("snippet", ""),
+                score=row.get("score"),
+                forward_citation_count=row.get("cite_count"),
+                courtlistener_url=row.get("courtlistener_url", ""),
                 relevance="pending",
                 status_message="Evaluating...",
                 source=source,
+                hit_count=len(labels),
+                matched_variants=labels,
             )
 
         # ── Phase 2: Snippet Triage (Pass 1) ──
@@ -337,18 +490,21 @@ def _process_query(query_id):
                 try:
                     triage_results[r.id] = future.result()
                 except Exception:
-                    triage_results[r.id] = (True, "")
+                    triage_results[r.id] = (5.0, "")
 
         # Rejected rows are kept (relevance="rejected", reason stored) so
         # the ruled-out list stays inspectable - a wrongly-triaged case
         # used to vanish without a trace.
-        for rid, (proceed, reason) in triage_results.items():
-            if not proceed:
+        for rid, (score, reason) in triage_results.items():
+            if score < TRIAGE_REJECT_BELOW:
                 ResearchResult.objects.filter(pk=rid).update(
                     relevance="rejected",
                     eval_reason=reason,
+                    triage_score=score,
                     status_message="Ruled out at triage",
                 )
+            else:
+                ResearchResult.objects.filter(pk=rid).update(triage_score=score)
 
         # ── Phase 3: Full-opinion briefing ──
         survivors = list(
@@ -356,12 +512,25 @@ def _process_query(query_id):
                 query_id=query_id, relevance="pending"
             ).order_by("position")
         )
-        # Newest-first rows get guaranteed brief slots: CL's relevance
-        # ranking already had its say in the primary ordering, and the
-        # date slice exists precisely to rescue opinions it disfavors.
-        survivors.sort(key=lambda r: (r.source != "date", r.position))
+        # Brief slots go by cross-variant hit count, then snippet-stage
+        # promise, then CL's ordering - with a recency guarantee, because
+        # brand-new law is what keyword ranking most reliably buries.
+        survivors.sort(
+            key=lambda r: (-r.hit_count, -(r.triage_score or 5.0), r.position)
+        )
         to_brief = survivors[:BRIEF_MAX]
-        overflow = survivors[BRIEF_MAX:]
+        chosen = {r.id for r in to_brief}
+        newest = sorted(survivors, key=lambda r: r.date_filed or "", reverse=True)[
+            :RECENT_GUARANTEE
+        ]
+        for recent in newest:
+            if recent.id in chosen or not to_brief:
+                continue
+            dropped = to_brief.pop()
+            chosen.discard(dropped.id)
+            to_brief.append(recent)
+            chosen.add(recent.id)
+        overflow = [r for r in survivors if r.id not in chosen]
         if overflow:
             ResearchResult.objects.filter(pk__in=[r.id for r in overflow]).update(
                 relevance="none", status_message="Not briefed (run cap)"
@@ -634,42 +803,46 @@ def _summarize_result(result_id):
 
 
 def _triage_by_snippet(result, query_text):
-    """Pass 1: quick relevance check using only the search snippet.
+    """Pass 1: promise-score a result from its snippet and metadata.
 
-    Returns (proceed, reason). Slip opinions often have no snippet at all
-    (no editorial syllabus), so an empty snippet always proceeds.
+    Returns (score 0-10, reason). The snippet is CourtListener's
+    keyword-context fragments - enough to spot the clearly unrelated and
+    to RANK which candidates deserve a full-opinion brief, never enough
+    to judge a holding. Slip opinions often have no snippet at all (no
+    editorial syllabus): a missing snippet scores a neutral 5.
     """
     if not result.snippet:
-        return True, ""
+        return 5.0, ""
 
     system_prompt = (
         "You are a legal research assistant performing a quick relevance triage. "
         "Respond ONLY with valid JSON."
     )
     user_prompt = (
-        f"Based on the search snippet below, determine if this case is potentially "
-        f"relevant to the research query. Be INCLUSIVE — only mark as skip if the case "
-        f"is clearly unrelated to the legal issue being researched.\n\n"
-        f"Research Query: {query_text}\n\n"
+        f"Score how likely this case is to bear on the research question, "
+        f"from 0 (clearly unrelated) to 10 (directly on point), based ONLY "
+        f"on the snippet and metadata below. The snippet is keyword "
+        f"context, not the holding - be generous when uncertain. Scores "
+        f"below 3 mean clearly unrelated and remove the case from "
+        f"consideration.\n\n"
+        f"Research Question: {query_text}\n\n"
         f"Case: {result.case_name}\n"
         f"Court: {result.court}\n"
         f"Date Filed: {result.date_filed}\n\n"
         f"Search Snippet:\n{result.snippet[:2000]}\n\n"
-        f'Respond with JSON: {{"proceed": true or false, "reason": "one sentence"}}'
+        f'Respond with JSON: {{"score": 0-10, "reason": "one sentence"}}'
     )
 
     try:
         response_text, _, _ = send_to_gemini(
             system_prompt, [{"role": "user", "content": user_prompt}]
         )
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-        parsed = json.loads(cleaned)
-        return parsed.get("proceed", True), str(parsed.get("reason", ""))
+        parsed = _parse_json(response_text) or {}
+        score = max(0.0, min(10.0, float(parsed.get("score", 5))))
+        return score, str(parsed.get("reason", ""))
     except Exception:
         logger.exception("Snippet triage error for result %s", result.id)
-        return True, ""
+        return 5.0, ""
 
 
 def _reorder_results(query_id):

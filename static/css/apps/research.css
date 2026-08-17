@@ -564,6 +564,35 @@
   display: inline-block;
 }
 
+/* Variant picker on the approval screen: one checkbox + editable query
+   per proposed search angle. */
+.research-variant-form {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.research-variant-row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.research-variant-row .research-review-input {
+  flex: 1;
+}
+
+.research-variant-label {
+  color: var(--color-muted);
+  font-size: 1rem;
+  min-width: 6rem;
+}
+
+.research-variant-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* Full case brief on a result card: collapsed under the one-line
    relevance rationale so the card stays scannable. */
 .research-brief {

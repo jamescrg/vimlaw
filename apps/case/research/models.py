@@ -45,6 +45,11 @@ class ResearchQuery(AuditMixin):
     state = models.CharField(max_length=20, blank=True, default="")
     include_federal = models.BooleanField(default=False)
     structured_query = models.TextField(blank=True, default="")
+    # Labeled query variants ([{"label": ..., "query": ...}]): proposed by
+    # the refiner, then narrowed/edited by the user on the approval
+    # screen. structured_query keeps the selected queries newline-joined
+    # for legacy display.
+    query_variants = models.JSONField(default=list, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     final_summary = models.TextField(blank=True, default="")
     error_message = models.TextField(blank=True, default="")
@@ -102,6 +107,13 @@ class ResearchResult(AuditMixin):
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default="search")
     # The case that led here, for citing/authority rows.
     via_case = models.CharField(max_length=500, blank=True, default="")
+    # How many of the run's query variants surfaced this case, and which:
+    # a case matching several differently-worded queries is a strong
+    # pre-read relevance signal that costs nothing.
+    hit_count = models.PositiveSmallIntegerField(default=1)
+    matched_variants = models.JSONField(default=list, blank=True)
+    # Snippet-stage promise score (0-10) from triage; ranks brief slots.
+    triage_score = models.FloatField(null=True, blank=True)
     status_message = models.CharField(max_length=200, blank=True, default="")
     forward_citation_count = models.IntegerField(null=True, blank=True)
     verify_status = models.CharField(
