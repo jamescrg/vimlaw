@@ -755,14 +755,46 @@ def test_refiner_falls_back_to_raw_question_variant(matter, monkeypatch):
     query = ResearchQuery.objects.create(
         matter=matter, query_text="Can I recover fees after a mooted motion?"
     )
-    monkeypatch.setattr(
-        research_tasks, "send_to_gemini", lambda s, m, **k: ("not json at all", 0, 0)
-    )
+    calls = []
+
+    def fake_gemini(s, m, **k):
+        calls.append(m)
+        return ("not json at all", 0, 0)
+
+    monkeypatch.setattr(research_tasks, "send_to_gemini", fake_gemini)
     research_tasks._refine_query(query.id)
     query.refresh_from_db()
+    # Unparseable output gets one corrective retry before the fallback.
+    assert len(calls) == 2
+    assert "not valid JSON" in calls[1][-1]["content"]
     assert len(query.query_variants) == 1
     assert query.query_variants[0]["label"] == "Search"
     assert "mooted motion" in query.query_variants[0]["query"]
+
+
+def test_refiner_retry_recovers_variants(matter, monkeypatch):
+    from apps.case.research.models import ResearchQuery
+
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="Can I recover fees after a mooted motion?"
+    )
+    responses = ["garbled {", VARIANTS_JSON]
+    monkeypatch.setattr(
+        research_tasks, "send_to_gemini", lambda s, m, **k: (responses.pop(0), 0, 0)
+    )
+    research_tasks._refine_query(query.id)
+    query.refresh_from_db()
+    assert [v["label"] for v in query.query_variants] == ["Colloquial", "Statutory"]
+
+
+def test_parse_variants_salvages_bare_array():
+    text = (
+        '```json\n[{"label": "Statutory", "query": "\\"9-11-37\\" AND fees"},'
+        ' {"label": "Broad", "query": "fees AND moot*"}]\n```'
+    )
+    variants = research_tasks._parse_variants(text)
+    assert [v["label"] for v in variants] == ["Statutory", "Broad"]
+    assert variants[0]["query"] == '"9-11-37" AND fees'
 
 
 def test_refiner_mines_library_notes(matter, monkeypatch):

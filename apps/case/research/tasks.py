@@ -187,6 +187,40 @@ def _parse_json(text):
         return None
 
 
+def _parse_variants(response_text):
+    """Extract [{"label", "query"}] from a refiner response.
+
+    Accepts the contracted {"variants": [...]} object, or salvages a
+    bare JSON array. Queries are sanitized; empty ones dropped.
+    """
+    parsed = _parse_json(response_text) or {}
+    items = parsed.get("variants")
+    if not items:
+        cleaned = (response_text or "").strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        start = cleaned.find("[")
+        end = cleaned.rfind("]")
+        if start >= 0 and end > start:
+            try:
+                items = json.loads(cleaned[start : end + 1])
+            except json.JSONDecodeError:
+                items = []
+    variants = []
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        variant_query = sanitize_query(str(item.get("query", ""))[:300])
+        if not variant_query:
+            continue
+        variants.append(
+            {"label": str(item.get("label", "Search"))[:40], "query": variant_query}
+        )
+        if len(variants) == QUERY_VARIANT_MAX:
+            break
+    return variants
+
+
 def _library_listing():
     """One line per firm-library note, for the refiner's mining pass."""
     from apps.case.ai.selector import library_folder_path
@@ -300,24 +334,38 @@ def _refine_query(query_id):
     )
     user_prompt = library_section + "QUESTION: " + query.query_text
 
+    # One corrective retry: an unparseable response (truncated JSON, a
+    # bare array, an empty thinking-heavy reply) used to fall back to the
+    # raw question SILENTLY - run 33 shipped the user's sentence as the
+    # only "variant" with nothing in the logs.
     variants = []
-    try:
-        response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
+    messages = [{"role": "user", "content": user_prompt}]
+    for attempt in range(2):
+        try:
+            response_text, _, _ = send_to_gemini(system_prompt, messages)
+        except Exception:
+            logger.exception("Error refining query %s", query_id)
+            break
+        variants = _parse_variants(response_text)
+        if variants:
+            break
+        logger.warning(
+            "Refiner variants unparseable for query %s (attempt %s): %r",
+            query_id,
+            attempt + 1,
+            (response_text or "")[:400],
         )
-        parsed = _parse_json(response_text) or {}
-        for item in parsed.get("variants", [])[:QUERY_VARIANT_MAX]:
-            variant_query = sanitize_query(str(item.get("query", ""))[:300])
-            if not variant_query:
-                continue
-            variants.append(
-                {
-                    "label": str(item.get("label", "Search"))[:40],
-                    "query": variant_query,
-                }
-            )
-    except Exception:
-        logger.exception("Error refining query %s, falling back to raw text", query_id)
+        messages = messages + [
+            {"role": "assistant", "content": response_text or ""},
+            {
+                "role": "user",
+                "content": (
+                    "Your reply was not valid JSON in the required shape. "
+                    'Reply with ONLY the JSON object: {"variants": '
+                    '[{"label": "...", "query": "..."}, ...]}'
+                ),
+            },
+        ]
 
     if not variants:
         variants = [{"label": "Search", "query": sanitize_query(query.query_text)}]
