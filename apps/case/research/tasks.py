@@ -14,8 +14,12 @@ from apps.case.courtlistener import (
     get_api_token,
 )
 from apps.case.courtlistener_throttle import throttled_request
-from apps.case.research.query_syntax import COURTLISTENER_SYNTAX_RULES
+from apps.case.research.query_syntax import (
+    COURTLISTENER_SYNTAX_RULES,
+    QUERY_DESIGN_RULES,
+)
 
+from .briefing import PROCEDURAL_VEHICLE_RULES
 from .courtlistener import (
     count_forward_citations,
     get_forward_citations,
@@ -100,6 +104,8 @@ def _refine_query(query_id):
         "- Include the legal terminology courts actually use when addressing this issue.\n"
         "- Think about what holdings, standards, or tests a relevant opinion would contain.\n\n"
         + COURTLISTENER_SYNTAX_RULES
+        + QUERY_DESIGN_RULES
+        + PROCEDURAL_VEHICLE_RULES
         + "Example input: Can a joint tenant with right of survivorship file an "
         "equitable partition suit?\n"
         'Example output: ("joint tenancy" OR "joint tenant") '
