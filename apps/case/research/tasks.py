@@ -19,9 +19,12 @@ from apps.case.research.query_syntax import (
     QUERY_DESIGN_RULES,
 )
 
-from .briefing import PROCEDURAL_VEHICLE_RULES
+from .briefing import (
+    PROCEDURAL_VEHICLE_RULES,
+    RESEARCH_ABSTRACT_SYSTEM,
+    parse_brief,
+)
 from .courtlistener import (
-    count_forward_citations,
     get_forward_citations,
     search_opinions,
 )
@@ -29,6 +32,21 @@ from .jurisdictions import get_court_ids
 from .models import CaseBrief, CitationVerification, ResearchQuery, ResearchResult
 
 logger = logging.getLogger(__name__)
+
+# Per-run pipeline budgets. Two searches (relevance page + newest-first
+# slice of the same approved query), full-opinion briefs for the strongest
+# candidates, then bounded citation chasing from the HIGH briefs. Roughly
+# 45 CourtListener requests per typical run, spaced by the throttle.
+SEARCH_PRIMARY_LIMIT = 20
+SEARCH_DATE_LIMIT = 10
+BRIEF_MAX = 15
+BRIEF_OPINION_CHAR_CAP = 250_000
+CITING_SEED_MAX = 2
+CITING_RESULT_LIMIT = 10
+CITING_BRIEF_MAX = 4
+CHASE_AUTHORITY_MAX = 4
+# The answer is the product; briefs stay on the flash default.
+ANSWER_MODEL = "gemini-pro-latest"
 
 
 def refine_research_query(query_id):
@@ -242,50 +260,58 @@ def _process_query(query_id):
                 try:
                     triage_results[r.id] = future.result()
                 except Exception:
-                    triage_results[r.id] = True
+                    triage_results[r.id] = (True, "")
 
-        skip_ids = [rid for rid, proceed in triage_results.items() if not proceed]
-        if skip_ids:
-            ResearchResult.objects.filter(pk__in=skip_ids).delete()
+        # Rejected rows are kept (relevance="rejected", reason stored) so
+        # the ruled-out list stays inspectable - a wrongly-triaged case
+        # used to vanish without a trace.
+        for rid, (proceed, reason) in triage_results.items():
+            if not proceed:
+                ResearchResult.objects.filter(pk=rid).update(
+                    relevance="rejected",
+                    eval_reason=reason,
+                    status_message="Ruled out at triage",
+                )
 
-        # ── Phase 3: Full Evaluation (Pass 2) ──
-        remaining = list(
-            ResearchResult.objects.filter(query_id=query_id).order_by("position")
+        # ── Phase 3: Full-opinion briefing ──
+        survivors = list(
+            ResearchResult.objects.filter(
+                query_id=query_id, relevance="pending"
+            ).order_by("position")
         )
+        # Newest-first rows get guaranteed brief slots: CL's relevance
+        # ranking already had its say in the primary ordering, and the
+        # date slice exists precisely to rescue opinions it disfavors.
+        survivors.sort(key=lambda r: (r.source != "date", r.position))
+        to_brief = survivors[:BRIEF_MAX]
+        overflow = survivors[BRIEF_MAX:]
+        if overflow:
+            ResearchResult.objects.filter(pk__in=[r.id for r in overflow]).update(
+                relevance="none", status_message="Not briefed (run cap)"
+            )
 
-        if remaining:
-            ResearchResult.objects.filter(pk__in=[r.id for r in remaining]).update(
+        if to_brief:
+            ResearchResult.objects.filter(pk__in=[r.id for r in to_brief]).update(
                 status_message="Fetching opinion..."
             )
 
             with ThreadPoolExecutor(max_workers=3) as executor:
                 futures = {
-                    executor.submit(_evaluate_full, r, query.query_text): r
-                    for r in remaining
+                    executor.submit(_brief_result, r, query.query_text): r
+                    for r in to_brief
                 }
                 for future in as_completed(futures):
                     try:
                         future.result()
                     except Exception:
                         r = futures[future]
-                        logger.exception("Error evaluating result %s", r.id)
+                        logger.exception("Error briefing result %s", r.id)
                         ResearchResult.objects.filter(pk=r.id).update(
-                            relevance="error", status_message="Evaluation failed"
+                            relevance="error", status_message="Briefing failed"
                         )
 
-        # ── Phase 4: Filter & Reorder ──
-        ResearchResult.objects.filter(query_id=query_id, relevance="low").delete()
-
-        RELEVANCE_ORDER = {"high": 0, "medium": 1, "error": 2}
-        final_results = list(
-            ResearchResult.objects.filter(query_id=query_id).order_by("position")
-        )
-        final_results.sort(
-            key=lambda r: (RELEVANCE_ORDER.get(r.relevance, 1), r.position)
-        )
-        for i, result in enumerate(final_results, 1):
-            if result.position != i:
-                ResearchResult.objects.filter(pk=result.id).update(position=i)
+        # ── Phase 4: Reorder (nothing is deleted; ruled-out rows sink) ──
+        _reorder_results(query_id)
 
         # ── Phase 5: Negative History Check ──
         high_results = list(
@@ -324,85 +350,35 @@ def summarize_result(result_id):
 
 
 def _summarize_result(result_id):
-    """Fetch opinion and generate AI summary for a single result."""
+    """On-demand briefing of a single result (the Brief-case button):
+    same full-opinion path the pipeline uses."""
     try:
         result = ResearchResult.objects.select_related("query").get(pk=result_id)
     except ResearchResult.DoesNotExist:
         return
 
     ResearchResult.objects.filter(pk=result_id).update(
-        relevance="pending", status_message="Summarizing..."
+        relevance="pending", status_message="Briefing..."
     )
 
     try:
-        if not result.cluster_id:
-            ResearchResult.objects.filter(pk=result_id).update(
-                relevance="error", status_message="No cluster ID"
-            )
-            return
-
-        opinion_text = _get_opinion_text(result.cluster_id)
-        if not opinion_text:
-            ResearchResult.objects.filter(pk=result_id).update(
-                relevance="error", status_message="Could not fetch opinion text"
-            )
-            return
-
-        query_text = result.query.query_text if result.query_id else ""
-        truncated_text = opinion_text[:8000]
-
-        system_prompt = (
-            "You are a legal research assistant. Respond ONLY with valid JSON."
-        )
-        user_prompt = (
-            f"Evaluate the relevance of this case to the following legal research query.\n\n"
-            f"Research Query: {query_text}\n\n"
-            f"Case: {result.case_name}\n"
-            f"Court: {result.court}\n"
-            f"Date Filed: {result.date_filed}\n\n"
-            f"Opinion Text (excerpt):\n{truncated_text}\n\n"
-            f"Respond with JSON in this exact format:\n"
-            f'{{"relevance": "high" or "medium" or "low", "reason": "brief explanation", '
-            f'"summary": "100-word summary if relevance is high or medium, otherwise empty string"}}'
-        )
-
-        response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
-        )
-
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-
-        parsed = json.loads(cleaned)
-        relevance = parsed.get("relevance", "medium")
-        if relevance not in ("high", "medium", "low"):
-            relevance = "medium"
-
-        summary = parsed.get("summary", "")
-
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance=relevance,
-            gemini_summary=summary,
-            status_message="Complete",
-        )
-
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to parse Gemini response for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="medium", status_message="Complete"
-        )
+        question = result.query.query_text if result.query_id else ""
+        _brief_result(result, question)
     except Exception:
-        logger.exception("Gemini error for result %s", result_id)
+        logger.exception("Error briefing result %s", result_id)
         ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="AI evaluation failed"
+            relevance="error", status_message="Briefing failed"
         )
 
 
 def _triage_by_snippet(result, query_text):
-    """Pass 1: Quick relevance check using only the search snippet. Returns True to proceed."""
+    """Pass 1: quick relevance check using only the search snippet.
+
+    Returns (proceed, reason). Slip opinions often have no snippet at all
+    (no editorial syllabus), so an empty snippet always proceeds.
+    """
     if not result.snippet:
-        return True
+        return True, ""
 
     system_prompt = (
         "You are a legal research assistant performing a quick relevance triage. "
@@ -428,14 +404,75 @@ def _triage_by_snippet(result, query_text):
         if cleaned.startswith("```"):
             cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
         parsed = json.loads(cleaned)
-        return parsed.get("proceed", True)
+        return parsed.get("proceed", True), str(parsed.get("reason", ""))
     except Exception:
         logger.exception("Snippet triage error for result %s", result.id)
-        return True
+        return True, ""
 
 
-def _evaluate_full(result, query_text):
-    """Pass 2: Fetch full opinion and evaluate relevance with Gemini."""
+def _reorder_results(query_id):
+    """Renumber positions: strong cases first, ruled-out rows at the end."""
+    relevance_order = {
+        "high": 0,
+        "medium": 1,
+        "error": 2,
+        "none": 3,
+        "pending": 3,
+        "low": 4,
+        "rejected": 5,
+    }
+    final_results = list(
+        ResearchResult.objects.filter(query_id=query_id).order_by("position")
+    )
+    final_results.sort(key=lambda r: (relevance_order.get(r.relevance, 3), r.position))
+    for i, result in enumerate(final_results, 1):
+        if result.position != i:
+            ResearchResult.objects.filter(pk=result.id).update(position=i)
+
+
+def _get_all_opinion_texts(cluster_id, cap=BRIEF_OPINION_CHAR_CAP):
+    """Concatenated plain text of EVERY opinion in a cluster, up to cap.
+
+    The majority opinion comes first (CourtListener lists it first);
+    concurrences and dissents follow with separators. The old
+    single-opinion read was blind to holdings outside sub_opinions[0].
+    """
+    cluster = fetch_cluster(cluster_id)
+    if not cluster:
+        return ""
+
+    parts = []
+    total = 0
+    for opinion_url in cluster.get("sub_opinions", []):
+        if total >= cap:
+            break
+        try:
+            opinion_id = int(opinion_url.rstrip("/").split("/")[-1])
+        except (ValueError, IndexError):
+            continue
+        opinion = fetch_opinion(opinion_id)
+        text = opinion.plain_text if opinion.found else ""
+        if not text:
+            continue
+        if parts:
+            parts.append(
+                "\n\n--- next opinion in this cluster (concurrence or dissent) ---\n\n"
+            )
+        parts.append(text)
+        total += len(text)
+
+    return "".join(parts)[:cap]
+
+
+def _brief_result(result, question):
+    """Brief one case from its FULL opinion text.
+
+    The briefing agent reads the entire cluster (every sub-opinion, capped
+    only against freak 500-page opinions) and returns the structured
+    abstract; parse_brief maps its verdict onto the relevance field.
+    Replaces the old 8,000-character excerpt evaluation, which scored
+    syllabus-less slip opinions low because it never reached the holding.
+    """
     result_id = result.id
 
     if not result.cluster_id:
@@ -448,7 +485,7 @@ def _evaluate_full(result, query_text):
         status_message="Downloading opinion..."
     )
 
-    opinion_text = _get_opinion_text(result.cluster_id)
+    opinion_text = _get_all_opinion_texts(result.cluster_id)
     if not opinion_text:
         ResearchResult.objects.filter(pk=result_id).update(
             relevance="error", status_message="Could not fetch opinion text"
@@ -457,55 +494,35 @@ def _evaluate_full(result, query_text):
 
     ResearchResult.objects.filter(pk=result_id).update(
         opinion_text=opinion_text[:50000],
-        status_message="Evaluating relevance...",
+        status_message="Briefing...",
     )
 
-    truncated_text = opinion_text[:8000]
-    system_prompt = "You are a legal research assistant. Respond ONLY with valid JSON."
+    citation = result.citation or "no reporter citation (slip opinion)"
+    header = f"{result.case_name}, {citation} ({result.court} {result.date_filed})"
     user_prompt = (
-        f"Evaluate the relevance of this case to the following legal research query.\n\n"
-        f"Research Query: {query_text}\n\n"
-        f"Case: {result.case_name}\n"
-        f"Court: {result.court}\n"
-        f"Date Filed: {result.date_filed}\n\n"
-        f"Opinion Text (excerpt):\n{truncated_text}\n\n"
-        f"Respond with JSON in this exact format:\n"
-        f'{{"relevance": "high" or "medium" or "low", "reason": "brief explanation", '
-        f'"summary": "100-word summary if relevance is high or medium, otherwise empty string"}}'
+        f"QUESTION PRESENTED: {question}\n\nOPINION: {header}\n\n{opinion_text}"
     )
 
     try:
         response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
-        )
-
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-
-        parsed = json.loads(cleaned)
-        relevance = parsed.get("relevance", "medium")
-        if relevance not in ("high", "medium", "low"):
-            relevance = "medium"
-
-        summary = parsed.get("summary", "")
-
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance=relevance,
-            gemini_summary=summary,
-            status_message="Complete",
-        )
-
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to parse Gemini response for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="medium", status_message="Complete"
+            RESEARCH_ABSTRACT_SYSTEM, [{"role": "user", "content": user_prompt}]
         )
     except Exception:
-        logger.exception("Gemini error for result %s", result_id)
+        logger.exception("Briefing failed for result %s", result_id)
         ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="AI evaluation failed"
+            relevance="error", status_message="Briefing failed"
         )
+        return
+
+    brief_text = response_text.strip()
+    parsed = parse_brief(brief_text)
+    ResearchResult.objects.filter(pk=result_id).update(
+        brief=brief_text,
+        relevance=parsed["verdict"],
+        eval_reason=parsed["reason"],
+        key_authorities=parsed["key_authorities"],
+        status_message="Complete",
+    )
 
 
 # Treatment-check tuning. Depth is CourtListener's per-citing-opinion count
@@ -686,121 +703,6 @@ def _check_negative_history(result):
     if outcome["checked"]:
         ResearchResult.objects.filter(pk=result.id).update(
             has_negative_history=outcome["has_negative_treatment"]
-        )
-
-
-def _process_result(result, query_text):
-    """Download opinion and evaluate relevance for a single result."""
-    result_id = result.id
-
-    if not result.cluster_id:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="No cluster ID"
-        )
-        return
-
-    # Download opinion
-    ResearchResult.objects.filter(pk=result_id).update(
-        status_message="Downloading opinion..."
-    )
-
-    cluster = fetch_cluster(result.cluster_id)
-    if not cluster:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="Could not fetch case details"
-        )
-        return
-
-    # Get opinion ID from cluster
-    sub_opinions = cluster.get("sub_opinions", [])
-    if not sub_opinions:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="No opinion text available"
-        )
-        return
-
-    opinion_url = sub_opinions[0]
-    try:
-        opinion_id = int(opinion_url.rstrip("/").split("/")[-1])
-    except (ValueError, IndexError):
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="Could not parse opinion ID"
-        )
-        return
-
-    # Fetch forward citation count
-    fwd_count = count_forward_citations(opinion_id)
-    if fwd_count is not None:
-        ResearchResult.objects.filter(pk=result_id).update(
-            forward_citation_count=fwd_count
-        )
-
-    opinion = fetch_opinion(opinion_id)
-    if not opinion.found:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="Could not fetch opinion text"
-        )
-        return
-
-    # Store opinion text temporarily
-    ResearchResult.objects.filter(pk=result_id).update(
-        opinion_text=opinion.plain_text[:50000]
-    )
-
-    # Evaluate relevance with Gemini
-    ResearchResult.objects.filter(pk=result_id).update(
-        status_message="Evaluating relevance..."
-    )
-
-    truncated_text = opinion.plain_text[:8000]
-    system_prompt = "You are a legal research assistant. Respond ONLY with valid JSON."
-    user_prompt = f"""Evaluate the relevance of this case to the following legal research query.
-
-Research Query: {query_text}
-
-Case: {result.case_name}
-Court: {result.court}
-Date Filed: {result.date_filed}
-
-Opinion Text (excerpt):
-{truncated_text}
-
-Respond with JSON in this exact format:
-{{"relevance": "high" or "medium" or "low", "reason": "brief explanation", """
-    user_prompt += """"summary": "100-word summary if relevance is high, otherwise empty string"}}"""
-
-    try:
-        response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
-        )
-
-        # Parse JSON from response (handle markdown code blocks)
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-
-        parsed = json.loads(cleaned)
-        relevance = parsed.get("relevance", "medium")
-        if relevance not in ("high", "medium", "low"):
-            relevance = "medium"
-
-        summary = parsed.get("summary", "") if relevance == "high" else ""
-
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance=relevance,
-            gemini_summary=summary,
-            status_message="Complete",
-        )
-
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to parse Gemini response for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="medium", status_message="Complete"
-        )
-    except Exception:
-        logger.exception("Gemini error for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="AI evaluation failed"
         )
 
 

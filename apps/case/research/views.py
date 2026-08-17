@@ -214,7 +214,14 @@ def research_results(request, matter_id, query_id):
         "citations": "-forward_citation_count",
     }
     order_field = sort_map.get(sort, "-score")
-    results = query.results.all().order_by(order_field)
+    # Ruled-out rows (triage rejects and low-verdict briefs) are kept for
+    # inspection but live in their own collapsed section, unpaginated.
+    ruled_out = list(
+        query.results.filter(relevance__in=["rejected", "low"]).order_by("position")
+    )
+    results = query.results.exclude(relevance__in=["rejected", "low"]).order_by(
+        order_field
+    )
 
     session_key = f"research_results_{query_id}"
     pagination = CustomPaginator(
@@ -246,6 +253,7 @@ def research_results(request, matter_id, query_id):
         {
             "query": query,
             "results": results,
+            "ruled_out": ruled_out,
             "matter": matter,
             "sort": sort,
             "pagination": pagination,

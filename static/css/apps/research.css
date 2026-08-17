@@ -564,6 +564,52 @@
   display: inline-block;
 }
 
+/* Full case brief on a result card: collapsed under the one-line
+   relevance rationale so the card stays scannable. */
+.research-brief {
+  margin-top: 0.5rem;
+}
+
+.research-brief summary {
+  color: var(--link);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.research-brief-text {
+  border-left: 2px solid var(--border-medium);
+  color: var(--color-muted);
+  margin-top: 0.5rem;
+  padding-left: 0.75rem;
+  white-space: pre-line;
+}
+
+.research-brief-text p {
+  margin-bottom: 0.5rem;
+}
+
+/* Ruled-out cases: kept for inspection instead of deleted, collapsed
+   below the live results. */
+.research-ruled-out {
+  margin-top: 1rem;
+}
+
+.research-ruled-out summary {
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.research-ruled-out-row {
+  border-top: 1px solid var(--border-light);
+  padding: 0.5rem 0;
+}
+
+.research-ruled-out-reason {
+  color: var(--color-muted);
+  font-size: 1rem;
+}
+
 /* ==========================================================================
    Responsive
    ========================================================================== */
