@@ -12,6 +12,7 @@ from apps.case.courtlistener import (
     fetch_cluster,
     fetch_opinion,
     get_api_token,
+    lookup_citation,
 )
 from apps.case.courtlistener_throttle import throttled_request
 from apps.case.research.query_syntax import (
@@ -172,7 +173,9 @@ def _process_query(query_id):
         search_text = query.structured_query or query.query_text
         court = get_court_ids(query.state, query.include_federal)
 
-        results, status_code = search_opinions(search_text, court=court, limit=20)
+        results, status_code = search_opinions(
+            search_text, court=court, limit=SEARCH_PRIMARY_LIMIT
+        )
 
         # If the structured query caused a server error, retry with raw query text
         if not results and status_code == 500 and query.structured_query:
@@ -180,7 +183,7 @@ def _process_query(query_id):
                 "Structured query failed for %s, retrying with raw text", query_id
             )
             results, status_code = search_opinions(
-                query.query_text, court=court, limit=20
+                query.query_text, court=court, limit=SEARCH_PRIMARY_LIMIT
             )
 
         if not results:
@@ -195,11 +198,28 @@ def _process_query(query_id):
             )
             return
 
-        # Deduplicate by cluster_id and by citation + date_filed
+        # Newest-first slice of the SAME approved query. CL's relevance
+        # score disfavors very recent opinions with empty citation graphs
+        # (slip opinions especially), so a date-ordered page rescues what
+        # the score-ordered page never surfaces. Failure is non-fatal.
+        date_results, date_status = search_opinions(
+            search_text,
+            court=court,
+            limit=SEARCH_DATE_LIMIT,
+            order_by="dateFiled desc",
+        )
+        if date_status != 200:
+            date_results = []
+
+        # Deduplicate by cluster_id and by citation + date_filed, keeping
+        # track of which search surfaced each row.
+        candidates = [(r, "search") for r in results] + [
+            (r, "date") for r in date_results
+        ]
         seen_clusters = set()
         seen_citations = set()
         unique_results = []
-        for result in results:
+        for result, source in candidates:
             cid = result.get("cluster_id")
             if cid and cid in seen_clusters:
                 continue
@@ -214,11 +234,10 @@ def _process_query(query_id):
                 seen_clusters.add(cid)
             if citation:
                 seen_citations.add(cite_str)
-            unique_results.append(result)
-        results = unique_results
+            unique_results.append((result, source))
 
         # Create result records
-        for i, result in enumerate(results, 1):
+        for i, (result, source) in enumerate(unique_results, 1):
             citation_list = result.get("citation", [])
             citation_str = (
                 ", ".join(citation_list)
@@ -240,6 +259,7 @@ def _process_query(query_id):
                 courtlistener_url=result.get("courtlistener_url", ""),
                 relevance="pending",
                 status_message="Evaluating...",
+                source=source,
             )
 
         # ── Phase 2: Snippet Triage (Pass 1) ──
@@ -313,7 +333,176 @@ def _process_query(query_id):
         # ── Phase 4: Reorder (nothing is deleted; ruled-out rows sink) ──
         _reorder_results(query_id)
 
-        # ── Phase 5: Negative History Check ──
+    except Exception:
+        logger.exception("Error processing research query %s", query_id)
+        ResearchQuery.objects.filter(pk=query_id).update(
+            status="error", error_message="An unexpected error occurred."
+        )
+        return
+
+    _run_enrichment(query_id)
+
+
+def _add_new_results(query, rows, source, via_case):
+    """Create rows for chase hits not already in this run.
+
+    Returns the created (pending) results; rows whose cluster is already
+    present are skipped silently.
+    """
+    existing = set(
+        ResearchResult.objects.filter(query_id=query.id).values_list(
+            "cluster_id", flat=True
+        )
+    )
+    next_position = ResearchResult.objects.filter(query_id=query.id).count()
+    created = []
+    for row in rows:
+        cid = row.get("cluster_id")
+        if not cid or cid in existing:
+            continue
+        existing.add(cid)
+        next_position += 1
+        citation_list = row.get("citation", [])
+        citation_str = (
+            ", ".join(citation_list)
+            if isinstance(citation_list, list)
+            else str(citation_list)
+        )
+        created.append(
+            ResearchResult.objects.create(
+                query_id=query.id,
+                position=next_position,
+                case_name=row.get("case_name", ""),
+                citation=citation_str,
+                court=row.get("court", ""),
+                date_filed=row.get("date_filed", ""),
+                cluster_id=cid,
+                snippet=row.get("snippet", ""),
+                score=row.get("score"),
+                forward_citation_count=row.get("cite_count"),
+                courtlistener_url=row.get("courtlistener_url", ""),
+                relevance="pending",
+                status_message="Found by citation chase...",
+                source=source,
+                via_case=via_case,
+            )
+        )
+    return created
+
+
+def _chase_citing_cases(query, court):
+    """Forward chase: search cases citing the strongest HIGH results.
+
+    A brand-new opinion applying the controlling rule is nearly invisible
+    to keyword relevance ranking but appears immediately in a
+    forward-citation search from the line's seminal cases - this is how a
+    slip opinion gets found. The cites:() query is composed tool-side
+    (never model-written, so it skips sanitize_query).
+    """
+    seeds = list(
+        ResearchResult.objects.filter(query_id=query.id, relevance="high").order_by(
+            "-forward_citation_count", "position"
+        )
+    )[:CITING_SEED_MAX]
+    created = []
+    for seed in seeds:
+        if not seed.cluster_id:
+            continue
+        rows, status = search_opinions(
+            f"cites:({seed.cluster_id})", court=court, limit=CITING_RESULT_LIMIT
+        )
+        if status != 200:
+            continue
+        created += _add_new_results(query, rows, "citing", seed.case_name)
+    return created
+
+
+def _chase_key_authorities(query):
+    """Backward chase: resolve the reporter citations the HIGH briefs say
+    their holdings rest on, and pull in any the run hasn't seen. Capped
+    at CHASE_AUTHORITY_MAX lookup attempts."""
+    from .courtlistener import COURTLISTENER_BASE_URL
+
+    seen_cites = set()
+    attempts = 0
+    created = []
+    highs = ResearchResult.objects.filter(query_id=query.id, relevance="high")
+    for result in highs:
+        for cite in result.key_authorities or []:
+            normalized = " ".join(cite.split()).lower()
+            if normalized in seen_cites:
+                continue
+            seen_cites.add(normalized)
+            if attempts >= CHASE_AUTHORITY_MAX:
+                return created
+            attempts += 1
+            lookup = lookup_citation(cite)
+            if not lookup.found or not lookup.cluster_id:
+                continue
+            url = (
+                f"{COURTLISTENER_BASE_URL}{lookup.absolute_url}"
+                if lookup.absolute_url
+                else ""
+            )
+            created += _add_new_results(
+                query,
+                [
+                    {
+                        "case_name": lookup.case_name,
+                        "citation": lookup.citation or cite,
+                        "court": lookup.court,
+                        "date_filed": str(lookup.date_filed or ""),
+                        "cluster_id": lookup.cluster_id,
+                        "courtlistener_url": url,
+                    }
+                ],
+                "authority",
+                result.case_name,
+            )
+    return created
+
+
+def _run_enrichment(query_id):
+    """Citation chasing, treatment checks, and the final answer."""
+    try:
+        query = ResearchQuery.objects.get(pk=query_id)
+    except ResearchQuery.DoesNotExist:
+        return
+
+    try:
+        ResearchQuery.objects.filter(pk=query_id).update(status="enriching")
+        court = get_court_ids(query.state, query.include_federal)
+
+        citing_rows = _chase_citing_cases(query, court)
+        citing_rows.sort(key=lambda r: -(r.forward_citation_count or 0))
+        to_brief = citing_rows[:CITING_BRIEF_MAX]
+        skipped = citing_rows[CITING_BRIEF_MAX:]
+        if skipped:
+            ResearchResult.objects.filter(pk__in=[r.id for r in skipped]).update(
+                relevance="none", status_message="Not briefed (run cap)"
+            )
+        # Authority rows are already capped hard; brief them all.
+        to_brief += _chase_key_authorities(query)
+
+        if to_brief:
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {
+                    executor.submit(_brief_result, r, query.query_text): r
+                    for r in to_brief
+                }
+                for future in as_completed(futures):
+                    try:
+                        future.result()
+                    except Exception:
+                        r = futures[future]
+                        logger.exception("Error briefing result %s", r.id)
+                        ResearchResult.objects.filter(pk=r.id).update(
+                            relevance="error", status_message="Briefing failed"
+                        )
+
+        _reorder_results(query_id)
+
+        # ── Negative History Check (every HIGH row, chased ones included) ──
         high_results = list(
             ResearchResult.objects.filter(query_id=query_id, relevance="high").order_by(
                 "position"
@@ -333,11 +522,12 @@ def _process_query(query_id):
                             "Error checking negative history for result %s", r.id
                         )
 
-        # ── Phase 6: Final Summary ──
+        # ── Final Answer ──
+        ResearchQuery.objects.filter(pk=query_id).update(status="synthesizing")
         _generate_final_summary(query_id)
 
     except Exception:
-        logger.exception("Error processing research query %s", query_id)
+        logger.exception("Error enriching research query %s", query_id)
         ResearchQuery.objects.filter(pk=query_id).update(
             status="error", error_message="An unexpected error occurred."
         )

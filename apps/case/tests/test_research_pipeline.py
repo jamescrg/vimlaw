@@ -147,7 +147,15 @@ class FakePipelineCL:
     so ThreadPoolExecutor ordering can't break the script."""
 
     def __init__(
-        self, search_results, clusters, opinions, reject_names=(), low_names=()
+        self,
+        search_results,
+        clusters,
+        opinions,
+        reject_names=(),
+        low_names=(),
+        date_results=(),
+        citing_results=(),
+        lookups=None,
     ):
         from apps.case.courtlistener import OpinionResult
 
@@ -159,6 +167,9 @@ class FakePipelineCL:
         }
         self.reject_names = reject_names
         self.low_names = low_names
+        self.date_results = date_results
+        self.citing_results = citing_results
+        self.lookups = lookups or {}
         self.searches = []
         self.opinion_fetches = []
         self.brief_prompts = []
@@ -167,7 +178,18 @@ class FakePipelineCL:
         self.searches.append(
             {"query": query, "court": court, "limit": limit, "order_by": order_by}
         )
+        if query.startswith("cites:("):
+            return list(self.citing_results), 200
+        if order_by.startswith("dateFiled"):
+            return list(self.date_results), 200
         return list(self.search_results), 200
+
+    def lookup_citation(self, citation):
+        from apps.case.courtlistener import CaseLookupResult
+
+        return self.lookups.get(
+            citation, CaseLookupResult(found=False, error="not found")
+        )
 
     def fetch_cluster(self, cluster_id):
         return self.clusters.get(cluster_id, {})
@@ -218,6 +240,7 @@ def patch_pipeline(monkeypatch):
         monkeypatch.setattr(research_tasks, "fetch_cluster", fake.fetch_cluster)
         monkeypatch.setattr(research_tasks, "fetch_opinion", fake.fetch_opinion)
         monkeypatch.setattr(research_tasks, "send_to_gemini", fake.send_to_gemini)
+        monkeypatch.setattr(research_tasks, "lookup_citation", fake.lookup_citation)
         monkeypatch.setattr(
             research_tasks, "get_forward_citations", lambda opinion_id, limit=5: []
         )
@@ -312,6 +335,130 @@ def test_pipeline_keeps_rejected_and_low_rows(matter, user, patch_pipeline):
 
     # The rejected case was never fetched or briefed.
     assert all("Case Two" not in p for p in fake.brief_prompts)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_date_slice_and_citation_chases(matter, user, patch_pipeline):
+    """The three search moves: primary + newest-first slice + forward
+    citation chase, plus the backward authority chase off HIGH briefs."""
+    from apps.case.courtlistener import CaseLookupResult
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    clusters = {
+        cid: {"sub_opinions": [f"https://api/opinions/{cid}0/"]} for cid in (1, 9, 50)
+    }
+    opinions = {10: "Seed opinion.", 90: "Birg opinion.", 500: "Old opinion."}
+    fake = patch_pipeline(
+        FakePipelineCL(
+            [dict(_row("Seed Case", 1), cite_count=44)],
+            clusters=clusters,
+            opinions=opinions,
+            # Date slice re-surfaces the seed (dedupe) plus nothing new.
+            date_results=[dict(_row("Seed Case", 1), cite_count=44)],
+            citing_results=[_row("Birg v. Emory", 9)],
+            lookups={
+                "279 Ga. 326": CaseLookupResult(
+                    found=True,
+                    case_name="Old Case",
+                    citation="279 Ga. 326",
+                    court="Supreme Court of Georgia",
+                    cluster_id=50,
+                ),
+            },
+        )
+    )
+    query = ResearchQuery.objects.create(
+        matter=matter,
+        query_text="fees after mooted motion",
+        state="ga",
+        created_by=user,
+    )
+    research_tasks._process_query(query.id)
+
+    searches = fake.searches
+    assert searches[0]["order_by"] == "score desc"
+    assert searches[0]["limit"] == research_tasks.SEARCH_PRIMARY_LIMIT
+    assert searches[1]["order_by"] == "dateFiled desc"
+    assert searches[1]["limit"] == research_tasks.SEARCH_DATE_LIMIT
+    assert searches[2]["query"] == "cites:(1)"
+    assert searches[2]["court"] == "ga gactapp"
+
+    rows = {r.case_name: r for r in ResearchResult.objects.filter(query=query)}
+    # Date-slice duplicate of the seed was deduped, not doubled.
+    assert len(rows) == 3
+
+    birg = rows["Birg v. Emory"]
+    assert birg.source == "citing"
+    assert birg.via_case == "Seed Case"
+    assert birg.relevance == "high"
+    assert birg.brief
+
+    old = rows["Old Case"]
+    assert old.source == "authority"
+    assert old.via_case == "Seed Case"
+    assert old.brief
+
+    query.refresh_from_db()
+    assert query.status == "complete"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_forward_chase_caps_seeds(matter, user, patch_pipeline):
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    fake = patch_pipeline(
+        FakePipelineCL(
+            [],
+            clusters={},
+            opinions={},
+        )
+    )
+    query = ResearchQuery.objects.create(matter=matter, query_text="q", created_by=user)
+    for i in range(4):
+        ResearchResult.objects.create(
+            query=query,
+            position=i + 1,
+            case_name=f"High {i}",
+            relevance="high",
+            cluster_id=100 + i,
+            forward_citation_count=10 - i,
+        )
+    research_tasks._chase_citing_cases(query, "ga")
+    cites_queries = [s["query"] for s in fake.searches]
+    assert cites_queries == ["cites:(100)", "cites:(101)"]
+
+
+def test_backward_chase_dedupes_and_caps(matter, user, patch_pipeline, monkeypatch):
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    fake = patch_pipeline(FakePipelineCL([], clusters={}, opinions={}))
+    query = ResearchQuery.objects.create(matter=matter, query_text="q", created_by=user)
+    ResearchResult.objects.create(
+        query=query,
+        position=1,
+        case_name="One",
+        relevance="high",
+        cluster_id=1,
+        key_authorities=["1 Ga. 1", "2 Ga. 2", "1 Ga. 1"],
+    )
+    ResearchResult.objects.create(
+        query=query,
+        position=2,
+        case_name="Two",
+        relevance="high",
+        cluster_id=2,
+        key_authorities=["1 Ga. 1", "3 Ga. 3", "4 Ga. 4", "5 Ga. 5"],
+    )
+    lookup_calls = []
+
+    def counting_lookup(citation):
+        lookup_calls.append(citation)
+        return fake.lookup_citation(citation)
+
+    monkeypatch.setattr(research_tasks, "lookup_citation", counting_lookup)
+    research_tasks._chase_key_authorities(query)
+    # Duplicates collapse; attempts stop at the cap.
+    assert lookup_calls == ["1 Ga. 1", "2 Ga. 2", "3 Ga. 3", "4 Ga. 4"]
 
 
 def test_results_view_splits_ruled_out(client, matter, user):
