@@ -8,6 +8,8 @@ STATUS_CHOICES = [
     ("refined", "Refined"),
     ("searching", "Searching"),
     ("processing", "Processing"),
+    ("enriching", "Enriching"),
+    ("synthesizing", "Synthesizing"),
     ("complete", "Complete"),
     ("error", "Error"),
 ]
@@ -18,7 +20,18 @@ RELEVANCE_CHOICES = [
     ("high", "High"),
     ("medium", "Medium"),
     ("low", "Low"),
+    ("rejected", "Ruled out at triage"),
     ("error", "Error"),
+]
+
+# How a result entered the run: the relevance-ranked search, the
+# newest-first slice of the same query, a forward-citation search from a
+# strong case, or a backward chase of an authority a brief relied on.
+SOURCE_CHOICES = [
+    ("search", "Search"),
+    ("date", "Recent"),
+    ("citing", "Citing case"),
+    ("authority", "Cited authority"),
 ]
 
 
@@ -78,6 +91,17 @@ class ResearchResult(AuditMixin):
         max_length=20, choices=RELEVANCE_CHOICES, default="none"
     )
     gemini_summary = models.TextField(blank=True, default="")
+    # Full structured abstract (CASE/POSTURE/VEHICLE/HOLDING/...); replaces
+    # gemini_summary on new runs, which stays populated on legacy rows.
+    brief = models.TextField(blank=True, default="")
+    # Triage rejection reason, or the brief's relevance rationale - kept so
+    # ruled-out rows stay debuggable instead of vanishing.
+    eval_reason = models.TextField(blank=True, default="")
+    # Reporter citations the brief says the holding rests on (chase seeds).
+    key_authorities = models.JSONField(default=list, blank=True)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default="search")
+    # The case that led here, for citing/authority rows.
+    via_case = models.CharField(max_length=500, blank=True, default="")
     status_message = models.CharField(max_length=200, blank=True, default="")
     forward_citation_count = models.IntegerField(null=True, blank=True)
     verify_status = models.CharField(
@@ -95,6 +119,10 @@ class ResearchResult(AuditMixin):
     @property
     def unassessed_count(self):
         return self.verifications.filter(summary="").count()
+
+    @property
+    def is_ruled_out(self):
+        return self.relevance in ("low", "rejected")
 
 
 TREATMENT_CHOICES = [
