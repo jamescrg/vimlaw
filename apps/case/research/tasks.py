@@ -524,7 +524,7 @@ def _run_enrichment(query_id):
 
         # ── Final Answer ──
         ResearchQuery.objects.filter(pk=query_id).update(status="synthesizing")
-        _generate_final_summary(query_id)
+        _generate_final_answer(query_id)
 
     except Exception:
         logger.exception("Error enriching research query %s", query_id)
@@ -896,37 +896,79 @@ def _check_negative_history(result):
         )
 
 
-def _generate_final_summary(query_id):
-    """Generate a synthesis of all high-relevance results."""
-    query = ResearchQuery.objects.get(pk=query_id)
-    high_results = ResearchResult.objects.filter(
-        query_id=query_id, relevance="high"
-    ).exclude(gemini_summary="")
+def _generate_final_answer(query_id):
+    """Answer the research question from the FULL briefs of the high cases.
 
-    if not high_results.exists():
+    Runs on the pro model - the answer is the run's product; everything
+    upstream stays on the flash default. Completes without a summary when
+    nothing rated high.
+    """
+    query = ResearchQuery.objects.get(pk=query_id)
+    high_results = list(
+        ResearchResult.objects.filter(query_id=query_id, relevance="high")
+        .exclude(brief="")
+        .order_by("position")
+    )
+
+    if not high_results:
         ResearchQuery.objects.filter(pk=query_id).update(status="complete")
+        ResearchResult.objects.filter(query_id=query_id).update(opinion_text="")
         return
 
-    summaries = []
+    blocks = []
     for r in high_results:
-        summaries.append(f"- {r.case_name}: {r.gemini_summary}")
+        citation = r.citation or "no reporter citation - slip opinion"
+        cites = (
+            f"cited {r.forward_citation_count} times"
+            if r.forward_citation_count
+            else "no citing history yet"
+        )
+        if r.has_negative_history is True:
+            treatment = "NEGATIVE treatment detected in citing cases"
+        elif r.has_negative_history is False:
+            treatment = "treatment checked: no negative treatment found"
+        else:
+            treatment = "treatment not checked"
+        blocks.append(
+            f"CASE: {r.case_name}\n"
+            f"CITATION: {citation}\n"
+            f"COURT: {r.court} ({r.date_filed})\n"
+            f"CITING HISTORY: {cites}\n"
+            f"TREATMENT: {treatment}\n"
+            f"BRIEF:\n{r.brief}"
+        )
 
-    summaries_text = "\n".join(summaries)
-
-    system_prompt = "You are a legal research assistant synthesizing case law findings."
-    user_prompt = f"""Based on the following legal research query and relevant case summaries, \
-provide a 200-word synthesis of the key legal principles and how these cases address the query.
-
-Research Query: {query.query_text}
-
-Relevant Cases:
-{summaries_text}
-
-Provide a concise synthesis:"""
+    system_prompt = (
+        "You are a legal research assistant writing up the results of a "
+        "case-law search for an attorney. You are given the research "
+        "question and the full structured briefs of the relevant cases. "
+        "Write the answer as follows:\n"
+        "1. ANSWER FIRST: a direct answer to the question in a short "
+        "paragraph, stating the controlling rule and its exact statutory "
+        "or procedural vehicle (statute AND subsection, rule, or motion "
+        "type).\n"
+        "2. Then discuss each case under its own heading, UNDER 200 "
+        "WORDS per case: what it holds (quote the operative language "
+        "from its brief verbatim) and how it bears on the question.\n"
+        "3. Match authorities to the question's procedural vehicle: a "
+        "case whose VEHICLE section shows a different subsection or "
+        "motion type must be excluded or explicitly distinguished, "
+        "never blended in.\n"
+        "4. Flag every slip opinion or case with no citing history as "
+        "new and not yet settled law, and note any case marked "
+        "'treatment not checked' or carrying negative treatment.\n"
+        "5. Cite ONLY the cases provided. If the briefs do not answer "
+        "the question, say so plainly instead of stretching them."
+    )
+    user_prompt = f"RESEARCH QUESTION: {query.query_text}\n\n" + "\n\n---\n\n".join(
+        blocks
+    )
 
     try:
         response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
+            system_prompt,
+            [{"role": "user", "content": user_prompt}],
+            model=ANSWER_MODEL,
         )
 
         ResearchQuery.objects.filter(pk=query_id).update(
@@ -934,7 +976,7 @@ Provide a concise synthesis:"""
         )
 
     except Exception:
-        logger.exception("Error generating final summary for query %s", query_id)
+        logger.exception("Error generating final answer for query %s", query_id)
         ResearchQuery.objects.filter(pk=query_id).update(status="complete")
 
     # Clean up opinion text to save space

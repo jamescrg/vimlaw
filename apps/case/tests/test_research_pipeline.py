@@ -173,6 +173,7 @@ class FakePipelineCL:
         self.searches = []
         self.opinion_fetches = []
         self.brief_prompts = []
+        self.answer_calls = []
 
     def search_opinions(self, query, court="", limit=5, order_by="score desc"):
         self.searches.append(
@@ -216,6 +217,9 @@ class FakePipelineCL:
             if any(name in prompt for name in self.low_names):
                 return LOW_BRIEF, 0, 0
             return HIGH_BRIEF, 0, 0
+        self.answer_calls.append(
+            {"system": system_context, "prompt": prompt, "model": kwargs.get("model")}
+        )
         return "Synthesis.", 0, 0
 
 
@@ -459,6 +463,68 @@ def test_backward_chase_dedupes_and_caps(matter, user, patch_pipeline, monkeypat
     research_tasks._chase_key_authorities(query)
     # Duplicates collapse; attempts stop at the cap.
     assert lookup_calls == ["1 Ga. 1", "2 Ga. 2", "3 Ga. 3", "4 Ga. 4"]
+
+
+def test_final_answer_runs_on_pro_with_briefs_and_flags(matter, user, patch_pipeline):
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    fake = patch_pipeline(FakePipelineCL([], clusters={}, opinions={}))
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="fees after mooted motion", created_by=user
+    )
+    ResearchResult.objects.create(
+        query=query,
+        position=1,
+        case_name="Birg v. Emory",
+        citation="",
+        relevance="high",
+        cluster_id=9,
+        brief=HIGH_BRIEF,
+        opinion_text="leftover",
+    )
+    ResearchResult.objects.create(
+        query=query,
+        position=2,
+        case_name="Bad Case",
+        citation="1 Ga. 1",
+        relevance="high",
+        cluster_id=8,
+        brief=LOW_BRIEF,
+        has_negative_history=True,
+        forward_citation_count=12,
+    )
+    research_tasks._generate_final_answer(query.id)
+
+    assert len(fake.answer_calls) == 1
+    call = fake.answer_calls[0]
+    assert call["model"] == research_tasks.ANSWER_MODEL
+    assert "RESEARCH QUESTION: fees after mooted motion" in call["prompt"]
+    assert "no reporter citation - slip opinion" in call["prompt"]
+    assert "no citing history yet" in call["prompt"]
+    assert "treatment not checked" in call["prompt"]
+    assert "NEGATIVE treatment detected" in call["prompt"]
+    assert 'The court held that "the motion must be granted"' in call["prompt"]
+    assert "UNDER 200" in call["system"]
+    assert "vehicle" in call["system"].lower()
+
+    query.refresh_from_db()
+    assert query.status == "complete"
+    assert query.final_summary == "Synthesis."
+    assert not ResearchResult.objects.filter(query=query).exclude(opinion_text="")
+
+
+def test_final_answer_without_high_cases_completes_quietly(
+    matter, user, patch_pipeline
+):
+    from apps.case.research.models import ResearchQuery
+
+    fake = patch_pipeline(FakePipelineCL([], clusters={}, opinions={}))
+    query = ResearchQuery.objects.create(matter=matter, query_text="q", created_by=user)
+    research_tasks._generate_final_answer(query.id)
+    assert fake.answer_calls == []
+    query.refresh_from_db()
+    assert query.status == "complete"
+    assert query.final_summary == ""
 
 
 def test_results_view_splits_ruled_out(client, matter, user):
