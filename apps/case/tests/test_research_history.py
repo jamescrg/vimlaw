@@ -29,7 +29,7 @@ def test_header_shows_static_model_badge(client, matter, user):
     )
     url = reverse("case:ai-conversation-view", args=[conversation.id])
     html = client.get(url).content.decode()
-    assert "ai-llm-static" in html
+    assert "app-badge badge-lg ai-llm-claude-opus" in html
     assert conversation.get_llm_display() in html
     for retired in ("modePill", "effortPill", "llmPill", "llmMenu"):
         assert retired not in html
@@ -38,7 +38,7 @@ def test_header_shows_static_model_badge(client, matter, user):
 def test_new_chat_window_has_no_mode_controls(client, matter):
     url = reverse("case:ai-new-conversation-view", args=[matter.id])
     html = client.get(url, {"llm": "claude-opus", "title": "T"}).content.decode()
-    assert "ai-llm-static" in html
+    assert "app-badge badge-lg ai-llm-claude-opus" in html
     for retired in ("modePill", "effortPill", "llmPill"):
         assert retired not in html
 
@@ -49,7 +49,7 @@ def test_legacy_research_conversation_gets_static_badge(client, matter, user):
     )
     url = reverse("case:ai-conversation-view", args=[conversation.id])
     html = client.get(url).content.decode()
-    assert "ai-llm-static" in html
+    assert "app-badge badge-lg ai-llm-" in html
     assert "modePill" not in html
 
 

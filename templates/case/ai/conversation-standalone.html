@@ -86,9 +86,7 @@
         <header class="ai-chat-header">
           <span class="app-badge badge-purple">{{ matter.name }}</span>
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
-          <div class="ai-header-controls">
-            <span class="select-btn filter-dropdown-button ai-llm-static"><span>{{ conversation.get_llm_display }}</span></span>
-          </div>
+          <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
           {% comment %}
             The vet-citations toggle was removed from the header: vetting
             defaults on and nobody ever turned it off. The backend flag,
