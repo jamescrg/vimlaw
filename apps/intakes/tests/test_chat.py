@@ -1,9 +1,9 @@
 import json
 
 import pytest
-from django.core.cache import cache
 
 from apps.case.ai.models import Conversation, Message
+from apps.case.ai.status import status_cache as cache
 from apps.intakes.models import Note
 
 pytestmark = pytest.mark.django_db

@@ -5,12 +5,11 @@ Background tasks for AI chat processing.
 import logging
 import time
 
-from django.core.cache import cache
-
 from .anthropic_client import send_to_claude
 from .citations import citations_to_dict, verify_all_citations
 from .gemini_client import send_to_gemini, send_to_gemini_streaming
 from .selector import MODEL_HARD_LIMITS, estimate_tokens
+from .status import FINAL_TTL, RUNNING_TTL, RunHeartbeat, status_cache
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +78,7 @@ def process_ai_request(
 
     def update_status(status: str, message: str):
         """Update the cache with current status, unless cancelled."""
-        current = cache.get(cache_key, {})
+        current = status_cache.get(cache_key, {})
         if current.get("status") == "cancelled":
             return
         last_status[:] = [status, message]
@@ -90,7 +89,7 @@ def process_ai_request(
         }
         if activity_log:
             payload["activity_log"] = activity_log[-40:]
-        cache.set(cache_key, payload, timeout=600)
+        status_cache.set(cache_key, payload, timeout=RUNNING_TTL)
 
     def log_activity(line: str):
         """Append a line to the live log and refresh the status payload."""
@@ -99,9 +98,10 @@ def process_ai_request(
 
     def is_cancelled():
         """Check if the request has been cancelled."""
-        status_data = cache.get(cache_key, {})
+        status_data = status_cache.get(cache_key, {})
         return status_data.get("status") == "cancelled"
 
+    heartbeat = RunHeartbeat(conversation_id).start()
     try:
         # Assemble context (may call Gemini Flash for intelligent selection)
         update_status("context", "Building context...")
@@ -392,7 +392,7 @@ def process_ai_request(
             len(citations_data),
             conversation_id,
         )
-        cache.set(
+        status_cache.set(
             cache_key,
             {
                 "status": "complete",
@@ -405,7 +405,7 @@ def process_ai_request(
                 # research log; the rendered message replaces the live view.
                 "activity_log": activity_log,
             },
-            timeout=600,
+            timeout=FINAL_TTL,
         )
 
     except InterruptedError:
@@ -417,9 +417,9 @@ def process_ai_request(
             "Error in background AI request for conversation %s", conversation_id
         )
         # Don't overwrite if already cancelled
-        current = cache.get(cache_key, {})
+        current = status_cache.get(cache_key, {})
         if current.get("status") != "cancelled":
-            cache.set(
+            status_cache.set(
                 cache_key,
                 {
                     "status": "error",
@@ -427,8 +427,10 @@ def process_ai_request(
                     # How far the turn got before failing.
                     "activity_log": activity_log,
                 },
-                timeout=600,
+                timeout=FINAL_TTL,
             )
+    finally:
+        heartbeat.stop()
 
 
 # ── Conversation Summary ─────────────────────────────────────────────────────

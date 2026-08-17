@@ -12,8 +12,6 @@ import logging
 import re
 import time
 
-from django.core.cache import cache
-
 from apps.case.research.query_syntax import (
     COURTLISTENER_SYNTAX_RULES,
     QUERY_DESIGN_RULES,
@@ -24,6 +22,7 @@ from .citations import citations_to_dict, verify_all_citations
 from .context import assemble_matter_context_with_selection, build_chat_history
 from .gemini_client import send_to_gemini_with_tools
 from .research_tools import budget_for, build_tools, make_executor
+from .status import FINAL_TTL, RUNNING_TTL, status_cache
 
 logger = logging.getLogger(__name__)
 
@@ -444,10 +443,10 @@ def run_research_request(
     log_lines = []
 
     def set_status(status, message):
-        current = cache.get(cache_key, {})
+        current = status_cache.get(cache_key, {})
         if current.get("status") == "cancelled":
             return
-        cache.set(
+        status_cache.set(
             cache_key,
             {
                 "status": status,
@@ -455,7 +454,7 @@ def run_research_request(
                 "started_at": current.get("started_at", time.time()),
                 "activity_log": log_lines[-40:],
             },
-            timeout=600,
+            timeout=RUNNING_TTL,
         )
 
     def push_log(line, status=None, message=None):
@@ -610,7 +609,7 @@ def run_research_request(
     if is_cancelled():
         return
 
-    cache.set(
+    status_cache.set(
         cache_key,
         {
             "status": "complete",
@@ -624,5 +623,5 @@ def run_research_request(
             # message shows the persisted trail instead.
             "activity_log": log_lines,
         },
-        timeout=600,
+        timeout=FINAL_TTL,
     )

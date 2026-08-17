@@ -200,7 +200,7 @@ def test_context_exposes_source_handles(matter, document, highlight):
 
 def test_classic_chat_applies_fact_blocks(user, matter, monkeypatch):
     """process_ai_request appends the protocol and applies the block."""
-    from django.core.cache import cache
+    from apps.case.ai.status import status_cache as cache
 
     conversation = Conversation.objects.create(
         matter=matter, user=user, llm="claude-opus", kind="classic"

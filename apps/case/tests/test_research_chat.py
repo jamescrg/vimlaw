@@ -423,7 +423,7 @@ def test_run_research_request_payload(matter, user, monkeypatch):
 
     monkeypatch.setattr(research_chat, "send_to_claude_with_tools", fake_loop)
 
-    from django.core.cache import cache
+    from apps.case.ai.status import status_cache as cache
 
     cache_key = f"ai_status_{conversation.id}"
     cache.delete(cache_key)
@@ -750,7 +750,7 @@ def test_research_log_survives_status_updates(matter, user, monkeypatch):
     """Every status write during a research run carries the log (the
     vanishing-log bug: classic update_status wrote fresh payloads that
     wiped the live log between tool results)."""
-    from django.core.cache import cache
+    from apps.case.ai.status import status_cache as cache
 
     conversation = Conversation.objects.create(
         matter=matter, title="R", llm="claude-opus", kind="research", user=user

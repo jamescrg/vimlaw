@@ -140,7 +140,7 @@ def test_format_witnesses_lists_fields(matter):
 
 def test_classic_chat_applies_witness_blocks(user, matter, monkeypatch):
     """process_ai_request appends the protocol and applies the block."""
-    from django.core.cache import cache
+    from apps.case.ai.status import status_cache as cache
 
     conversation = Conversation.objects.create(
         matter=matter, user=user, llm="claude-opus", kind="classic"

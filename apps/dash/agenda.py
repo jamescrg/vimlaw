@@ -22,7 +22,6 @@ import threading
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -34,6 +33,12 @@ from apps.accounts.models import CustomUser
 from apps.activity.time.models import TimeEntry
 from apps.calendar.models import Event
 from apps.case.ai.models import Conversation, Message
+from apps.case.ai.status import (
+    FINAL_TTL,
+    RUNNING_TTL,
+    RunHeartbeat,
+    status_cache,
+)
 from apps.intakes.models import Intake, Note
 from apps.matters.models import Matter
 from apps.tasks.constants import ACTIVE_STATUSES
@@ -429,7 +434,7 @@ def _process_agenda_chat(conversation_id, user_id):
     cache_key = f"ai_status_{conversation_id}"
 
     def is_cancelled():
-        current = cache.get(cache_key)
+        current = status_cache.get(cache_key)
         return bool(current) and current.get("status") == "cancelled"
 
     def update_status(status, message):
@@ -437,11 +442,12 @@ def _process_agenda_chat(conversation_id, user_id):
             return
         import time as _time
 
-        current = cache.get(cache_key) or {}
+        current = status_cache.get(cache_key) or {}
         payload = {"status": status, "message": message}
         payload["started_at"] = current.get("started_at", _time.time())
-        cache.set(cache_key, payload, timeout=600)
+        status_cache.set(cache_key, payload, timeout=RUNNING_TTL)
 
+    heartbeat = RunHeartbeat(conversation_id).start()
     try:
         update_status("context", "Building context...")
         user = CustomUser.objects.get(id=user_id)
@@ -472,7 +478,7 @@ def _process_agenda_chat(conversation_id, user_id):
         # Create any directed tasks and store the cleaned, confirmed text
         response_text = _apply_task_blocks(response_text, user)
 
-        cache.set(
+        status_cache.set(
             cache_key,
             {
                 "status": "complete",
@@ -482,25 +488,27 @@ def _process_agenda_chat(conversation_id, user_id):
                 "output_tokens": output_tokens,
                 "citations": [],
             },
-            timeout=600,
+            timeout=FINAL_TTL,
         )
     except InterruptedError:
         pass
     except Exception as exc:
         logger.exception("Agenda chat request failed")
         if not is_cancelled():
-            cache.set(
+            status_cache.set(
                 cache_key,
                 {"status": "error", "message": str(exc)},
-                timeout=600,
+                timeout=FINAL_TTL,
             )
+    finally:
+        heartbeat.stop()
 
 
 def _start_processing(conversation, user):
-    cache.set(
+    status_cache.set(
         f"ai_status_{conversation.id}",
         {"status": "starting", "message": "Starting..."},
-        timeout=600,
+        timeout=RUNNING_TTL,
     )
     threading.Thread(
         target=_process_agenda_chat,
