@@ -1,4 +1,16 @@
-"""State-based jurisdiction list for CourtListener search."""
+"""State-based jurisdiction list for CourtListener search.
+
+Each state lists its supreme court, intermediate appellate courts, and home
+federal circuit. A state may also carry a "district" list of its federal
+district courts, included (with the circuit and SCOTUS) when the user checks
+Federal. District ids follow CourtListener's <state><region>d pattern
+(gand = N.D. Ga.); verify any new id against
+courtlistener.com/api/rest/v4/courts/ before adding it - a typo silently
+narrows every search that uses the filter. States are filled in as users
+need them; Georgia is done.
+"""
+
+SCOTUS = "scotus"
 
 STATES = [
     {
@@ -69,6 +81,7 @@ STATES = [
         "name": "Georgia",
         "supreme": "ga",
         "appellate": ["gactapp"],
+        "district": ["gand", "gamd", "gasd"],
         "circuit": "ca11",
     },
     {
@@ -351,11 +364,15 @@ def get_state_display(state_id):
 
 
 def get_court_ids(state_id, include_federal=False):
-    """Return space-separated court IDs for CourtListener API."""
+    """Return space-separated court IDs for CourtListener API.
+
+    Federal adds the state's district courts (when listed), its home
+    circuit, and the Supreme Court.
+    """
     state = _STATE_MAP.get(state_id)
     if not state:
         return ""
     courts = [state["supreme"]] + state["appellate"]
     if include_federal:
-        courts.append(state["circuit"])
+        courts += state.get("district", []) + [state["circuit"], SCOTUS]
     return " ".join(courts)

@@ -6,7 +6,15 @@
   <div class="research-results-header">
     <div>
       <h3>{{ query.query_text }}</h3>
-      {% if query.structured_query %}<div class="research-results-structured">{{ query.structured_query }}</div>{% endif %}
+      {% if query.query_variants %}
+        {% for variant in query.query_variants %}
+          <div class="research-results-structured">
+            <span class="detail-text">{{ variant.label }}:</span> {{ variant.query }}
+          </div>
+        {% endfor %}
+      {% elif query.structured_query %}
+        <div class="research-results-structured">{{ query.structured_query }}</div>
+      {% endif %}
       <span class="research-results-meta">{{ query.jurisdiction_display }} &middot; {{ query.created_at|date:"M j, Y g:i A" }}</span>
     </div>
     <div class="research-results-actions">
@@ -73,14 +81,22 @@
       <i class="icon-loader spin"></i>
       <span>Searching CourtListener...</span>
     </div>
-  {% elif query.status == "processing" %}
+  {% elif query.status == "processing" or query.status == "enriching" or query.status == "synthesizing" %}
     <div class="research-processing-banner"
          hx-get="{% url 'case:research-results' matter.id query.id %}{% if sort %}?sort={{ sort }}{% endif %}"
          hx-trigger="load delay:3s"
          hx-target="#research-results"
          hx-swap="innerHTML">
       <i class="icon-loader spin"></i>
-      <span>Evaluating relevance...</span>
+      <span>
+        {% if query.status == "processing" %}
+          Briefing cases...
+        {% elif query.status == "enriching" %}
+          Chasing citations...
+        {% else %}
+          Writing answer...
+        {% endif %}
+      </span>
     </div>
     {% if results %}
       <div class="research-cards">
@@ -100,8 +116,16 @@
       <div class="flex-start-space">
         <div>{% include "pagination.html" %}</div>
       </div>
-    {% else %}
+    {% elif not ruled_out %}
       <div class="research-empty-state">No results found.</div>
+    {% endif %}
+    {% if ruled_out %}
+      <details class="research-ruled-out">
+        <summary>Ruled out ({{ ruled_out|length }})</summary>
+        {% for result in ruled_out %}
+          {% include "case/research/ruled-out-row.html" %}
+        {% endfor %}
+      </details>
     {% endif %}
   {% endif %}
 </div>

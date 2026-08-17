@@ -1,17 +1,51 @@
 {% if query.status == "refined" %}
   <div class="research-refinement-card">
-    <p class="research-review-label">Review search parameters before proceeding:</p>
-    <form class="research-review-form"
+    {% if query.query_variants %}
+      <p class="research-review-label">
+        Proposed searches, each from a different angle. Uncheck any you
+        don't want, edit freely, then run the set:
+      </p>
+    {% else %}
+      <p class="research-review-label">Review search parameters before proceeding:</p>
+    {% endif %}
+    {% if error %}
+      <div class="research-error">
+        <i class="icon-alert-triangle"></i>
+        {{ error }}
+      </div>
+    {% endif %}
+    <form class="research-review-form{% if query.query_variants %} research-variant-form{% endif %}"
           hx-post="{% url 'case:research-confirm' matter.id query.id %}"
           hx-target="#research-refinement"
           hx-swap="innerHTML">
-      <input type="text"
-             name="structured_query"
-             class="research-review-input"
-             value="{{ query.structured_query }}">
-      <button type="submit" class="btn btn-success">
-        <i class="icon-play"></i> Run
-      </button>
+      {% if query.query_variants %}
+        {% for variant in query.query_variants %}
+          <div class="research-variant-row">
+            <input type="checkbox"
+                   name="use_{{ forloop.counter0 }}"
+                   id="variant-{{ forloop.counter0 }}"
+                   checked>
+            <label for="variant-{{ forloop.counter0 }}" class="research-variant-label">{{ variant.label }}</label>
+            <input type="text"
+                   name="q_{{ forloop.counter0 }}"
+                   class="research-review-input"
+                   value="{{ variant.query }}">
+          </div>
+        {% endfor %}
+        <div class="research-variant-actions">
+          <button type="submit" class="btn btn-success">
+            <i class="icon-play"></i> Run
+          </button>
+        </div>
+      {% else %}
+        <input type="text"
+               name="structured_query"
+               class="research-review-input"
+               value="{{ query.structured_query }}">
+        <button type="submit" class="btn btn-success">
+          <i class="icon-play"></i> Run
+        </button>
+      {% endif %}
     </form>
   </div>
 {% elif query.status == "pending" or query.status == "refining" %}

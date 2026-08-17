@@ -1,7 +1,7 @@
 {% load markdown_extras %}
 {% if query.status == "complete" and query.final_summary %}
   <div class="research-final-summary">
-    <h4>Research Summary</h4>
+    <h4>Answer</h4>
     <div>{{ query.final_summary|render_markdown }}</div>
   </div>
 {% endif %}

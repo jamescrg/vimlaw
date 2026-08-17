@@ -1,10 +1,18 @@
-"""Background task for processing research queries."""
+"""Background tasks for processing research queries.
+
+The pipeline runs on django-q (qcluster), not daemon threads, so a
+gunicorn reload no longer kills runs mid-flight. Each launcher below
+enqueues its worker function by dotted path; the search phase chains the
+enrichment phase as a second task to stay inside Q_CLUSTER's 600s
+timeout. Runs stranded by a qcluster restart are flagged by
+reap_stale_queries (called from the tab views).
+"""
 
 import json
 import logging
 import re
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import timedelta
 
 from apps.case.ai.gemini_client import send_to_gemini
 from apps.case.courtlistener import (
@@ -12,12 +20,20 @@ from apps.case.courtlistener import (
     fetch_cluster,
     fetch_opinion,
     get_api_token,
+    lookup_citation,
 )
 from apps.case.courtlistener_throttle import throttled_request
-from apps.case.research.query_syntax import COURTLISTENER_SYNTAX_RULES
+from apps.case.research.query_syntax import (
+    COURTLISTENER_SYNTAX_RULES,
+    QUERY_DESIGN_RULES,
+)
 
+from .briefing import (
+    PROCEDURAL_VEHICLE_RULES,
+    RESEARCH_ABSTRACT_SYSTEM,
+    parse_brief,
+)
 from .courtlistener import (
-    count_forward_citations,
     get_forward_citations,
     search_opinions,
 )
@@ -26,17 +42,93 @@ from .models import CaseBrief, CitationVerification, ResearchQuery, ResearchResu
 
 logger = logging.getLogger(__name__)
 
+# Per-run pipeline budgets. Searches are the cheap lever (one credit
+# each): every approved query variant runs as a relevance page plus a
+# thin newest-first slice, results merge with per-case hit counts, and
+# the expensive stages (full-opinion briefs, chases, treatment) stay
+# hard-capped. Roughly 50 CourtListener requests per typical run, spaced
+# by the throttle.
+QUERY_VARIANT_MAX = 5
+VARIANT_SCORE_LIMIT = 15
+VARIANT_DATE_LIMIT = 8
+LIBRARY_NOTE_PICK_MAX = 2
+LIBRARY_NOTE_CHAR_CAP = 8_000
+# Snippet-stage promise scores below this mean "clearly unrelated".
+TRIAGE_REJECT_BELOW = 3.0
+# The newest candidates always get brief slots: brand-new law is what
+# keyword ranking most reliably buries.
+RECENT_GUARANTEE = 3
+BRIEF_MAX = 15
+BRIEF_OPINION_CHAR_CAP = 250_000
+CITING_SEED_MAX = 2
+CITING_RESULT_LIMIT = 10
+CITING_BRIEF_MAX = 4
+CHASE_AUTHORITY_MAX = 4
+# The answer is the product; briefs stay on the flash default.
+ANSWER_MODEL = "gemini-pro-latest"
+
+# A run whose heartbeat (ResearchQuery.updated_at, bumped by every
+# _update_query write) is older than this while still in an active status
+# was stranded by a restart; the reaper flags it for a re-run. Both
+# pipeline tasks finish well inside this window.
+RESEARCH_STALE_MINUTES = 30
+ACTIVE_QUERY_STATUSES = [
+    "pending",
+    "refining",
+    "searching",
+    "processing",
+    "enriching",
+    "synthesizing",
+]
+
+
+def _queue(fn_name, obj_id, label):
+    from django_q.tasks import async_task
+
+    async_task(
+        f"apps.case.research.tasks.{fn_name}",
+        obj_id,
+        task_name=f"{label}-{obj_id}",
+        group="research",
+    )
+
+
+def _update_query(query_id, **fields):
+    """Query writes that also bump updated_at: the queryset .update()
+    path skips auto_now, and the stale-run reaper reads updated_at as
+    the run's heartbeat."""
+    from django.utils import timezone
+
+    ResearchQuery.objects.filter(pk=query_id).update(
+        updated_at=timezone.now(), **fields
+    )
+
+
+def reap_stale_queries(matter, user):
+    """Flag runs stranded mid-pipeline (qcluster restart or crash) so the
+    UI shows an actionable error instead of polling forever."""
+    from django.utils import timezone
+
+    cutoff = timezone.now() - timedelta(minutes=RESEARCH_STALE_MINUTES)
+    ResearchQuery.objects.filter(
+        matter=matter,
+        created_by=user,
+        status__in=ACTIVE_QUERY_STATUSES,
+        updated_at__lt=cutoff,
+    ).update(
+        status="error",
+        error_message="Interrupted before it finished. Run the search again.",
+    )
+
 
 def refine_research_query(query_id):
-    """Run query refinement in a background daemon thread, then pause for user review."""
-    thread = threading.Thread(target=_refine_and_pause, args=(query_id,), daemon=True)
-    thread.start()
+    """Queue query refinement; pauses at status=refined for user review."""
+    _queue("_refine_and_pause", query_id, "ResearchRefine")
 
 
 def process_research_query(query_id):
-    """Run search + processing in a background daemon thread (after user confirms)."""
-    thread = threading.Thread(target=_process_query, args=(query_id,), daemon=True)
-    thread.start()
+    """Queue search + briefing (after the user confirms the query)."""
+    _queue("_process_query", query_id, "ResearchSearch")
 
 
 def sanitize_query(query):
@@ -80,58 +172,174 @@ def sanitize_query(query):
     return query
 
 
-def _refine_query(query_id):
-    """Use AI to convert natural language query into structured search syntax."""
-    ResearchQuery.objects.filter(pk=query_id).update(status="refining")
+def _parse_json(text):
+    """Best-effort JSON object extraction from a model response."""
+    cleaned = (text or "").strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        return json.loads(cleaned[start : end + 1])
+    except json.JSONDecodeError:
+        return None
 
-    query = ResearchQuery.objects.get(pk=query_id)
+
+def _library_listing():
+    """One line per firm-library note, for the refiner's mining pass."""
+    from apps.case.ai.selector import library_folder_path
+    from apps.notes.models import get_library_notes
+
+    lines = []
+    notes = (
+        get_library_notes().select_related("folder").order_by("folder__name", "title")
+    )
+    for note in notes:
+        if not note.content:
+            continue
+        excerpt = (note.summary or note.content)[:160].replace("\n", " ").strip()
+        lines.append(
+            f"- [id {note.id}] {library_folder_path(note.folder)}: "
+            f"{note.title}: {excerpt}"
+        )
+    return lines
+
+
+def _mine_library(question):
+    """Read the most relevant firm-library notes for the refiner.
+
+    The library pass was one of the retired research chat's real
+    advantages: firm notes name the governing statutes, the terms of art
+    courts actually use, and the key cases. One cheap flash call picks
+    the notes; their text feeds the variant proposal. Returns "" when
+    the library is empty or nothing is on point.
+    """
+    from apps.notes.models import get_library_notes
+
+    listing = _library_listing()
+    if not listing:
+        return ""
 
     system_prompt = (
-        "You are a legal research strategist. Your job is to understand what the user "
-        "is really trying to find out, identify the core legal issue, and then craft a "
-        "CourtListener search query that will surface the most relevant case law.\n\n"
-        "STEP 1 — Understand the question:\n"
-        "- What is the user trying to determine? What legal issue or principle is at stake?\n"
-        "- What kind of cases would actually answer this question?\n"
-        "- Think about the legal doctrines, standards, and tests that courts apply here.\n\n"
-        "STEP 2 — Design the query:\n"
-        "- Target the legal concepts and doctrines that relevant cases would discuss, "
-        "not just the keywords from the user's question.\n"
-        "- Include the legal terminology courts actually use when addressing this issue.\n"
-        "- Think about what holdings, standards, or tests a relevant opinion would contain.\n\n"
-        + COURTLISTENER_SYNTAX_RULES
-        + "Example input: Can a joint tenant with right of survivorship file an "
-        "equitable partition suit?\n"
-        'Example output: ("joint tenancy" OR "joint tenant") '
-        'AND "right of survivorship" AND ("equitable partition" OR partition) '
-        'AND (suit OR action OR "cause of action")\n\n'
-        "Return ONLY the search query string, nothing else."
+        "You are a legal research assistant. You are given a research "
+        "question and a list of the firm's internal research notes. Pick "
+        f"up to {LIBRARY_NOTE_PICK_MAX} notes whose content would help "
+        "design case-law searches for this question (governing statutes "
+        "or code sections, terms of art, key cases). Respond ONLY with "
+        'JSON: {"note_ids": [id, ...]} - an empty list if nothing is on '
+        "point."
     )
-    user_prompt = query.query_text
-
+    user_prompt = "QUESTION: " + question + "\n\nNOTES:\n" + "\n".join(listing)
     try:
         response_text, _, _ = send_to_gemini(
             system_prompt, [{"role": "user", "content": user_prompt}]
         )
-        structured = response_text.strip().strip("`").strip()
-        structured = sanitize_query(structured)
-        ResearchQuery.objects.filter(pk=query_id).update(structured_query=structured)
+        parsed = _parse_json(response_text) or {}
+        note_ids = [int(n) for n in parsed.get("note_ids", [])][:LIBRARY_NOTE_PICK_MAX]
     except Exception:
-        logger.exception("Error refining query %s, using raw text", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(
-            structured_query=query.query_text
+        logger.exception("Library mining failed; refining without notes")
+        return ""
+
+    if not note_ids:
+        return ""
+
+    sections = []
+    for note in get_library_notes().filter(pk__in=note_ids):
+        if note.content:
+            sections.append(f"## {note.title}\n{note.content[:LIBRARY_NOTE_CHAR_CAP]}")
+    if not sections:
+        return ""
+    return (
+        "FIRM LIBRARY NOTES (internal work product - mine them for "
+        "statutes, code sections, terms of art, and key cases; never "
+        "citable, and their statements of the law must be verified "
+        "against the search results):\n\n" + "\n\n".join(sections) + "\n\n"
+    )
+
+
+def _refine_query(query_id):
+    """Propose labeled search-query variants for the user to review.
+
+    One phrasing is fragile: run 32 missed the controlling case because
+    its opinion never used the query's required phrase. The refiner now
+    mines the firm library for vocabulary, then proposes several
+    differently-angled queries; the approval screen lets the user prune
+    and edit the set.
+    """
+    _update_query(query_id, status="refining")
+
+    query = ResearchQuery.objects.get(pk=query_id)
+
+    library_section = _mine_library(query.query_text)
+
+    system_prompt = (
+        "You are a legal research strategist. Understand what the user is "
+        "really trying to find out, identify the core legal issue, and "
+        "then craft SEVERAL differently-angled CourtListener search "
+        "queries that together will surface the most relevant case law.\n\n"
+        "STEP 1 — Understand the question:\n"
+        "- What is the user trying to determine? What legal issue or principle is at stake?\n"
+        "- What is the exact procedural vehicle, and which statute, code section, or rule governs it?\n"
+        "- Think about the legal doctrines, standards, and tests that courts apply here.\n\n"
+        "STEP 2 — Design 3 to 5 query VARIANTS, each attacking from a different angle:\n"
+        '- "Colloquial": the motion/doctrine phrasing a practitioner would use.\n'
+        '- "Statutory": centered on the governing statute or rule, its bare quoted number as a term.\n'
+        '- "Doctrinal": the standard\'s operative language - the words the COURT writes in the holding.\n'
+        '- "Broad": a wider net that drops the least essential concept group.\n'
+        "Vary the WORDS between variants, not just the punctuation: a case "
+        "is only findable through terms its opinion actually contains, and "
+        "different opinions word the same rule differently.\n\n"
+        + COURTLISTENER_SYNTAX_RULES
+        + QUERY_DESIGN_RULES
+        + PROCEDURAL_VEHICLE_RULES
+        + "Respond ONLY with JSON in this exact shape:\n"
+        '{"variants": [{"label": "Colloquial", "query": "..."}, '
+        '{"label": "Statutory", "query": "..."}]}\n'
+    )
+    user_prompt = library_section + "QUESTION: " + query.query_text
+
+    variants = []
+    try:
+        response_text, _, _ = send_to_gemini(
+            system_prompt, [{"role": "user", "content": user_prompt}]
         )
+        parsed = _parse_json(response_text) or {}
+        for item in parsed.get("variants", [])[:QUERY_VARIANT_MAX]:
+            variant_query = sanitize_query(str(item.get("query", ""))[:300])
+            if not variant_query:
+                continue
+            variants.append(
+                {
+                    "label": str(item.get("label", "Search"))[:40],
+                    "query": variant_query,
+                }
+            )
+    except Exception:
+        logger.exception("Error refining query %s, falling back to raw text", query_id)
+
+    if not variants:
+        variants = [{"label": "Search", "query": sanitize_query(query.query_text)}]
+
+    _update_query(
+        query_id,
+        query_variants=variants,
+        structured_query="\n".join(v["query"] for v in variants),
+    )
 
 
 def _refine_and_pause(query_id):
     """Refine the query with AI, then pause for user review."""
     try:
         _refine_query(query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(status="refined")
+        _update_query(query_id, status="refined")
     except Exception:
         logger.exception("Error refining research query %s", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(
-            status="error", error_message="An error occurred while refining the query."
+        _update_query(
+            query_id,
+            status="error",
+            error_message="An error occurred while refining the query.",
         )
 
 
@@ -143,59 +351,102 @@ def _process_query(query_id):
         return
 
     try:
-        ResearchQuery.objects.filter(pk=query_id).update(status="searching")
+        _update_query(query_id, status="searching")
 
-        search_text = query.structured_query or query.query_text
         court = get_court_ids(query.state, query.include_federal)
 
-        results, status_code = search_opinions(search_text, court=court, limit=20)
+        variants = list(query.query_variants or [])
+        if not variants:
+            variants = [
+                {
+                    "label": "Search",
+                    "query": query.structured_query or query.query_text,
+                }
+            ]
+        variants = variants[:QUERY_VARIANT_MAX]
 
-        # If the structured query caused a server error, retry with raw query text
-        if not results and status_code == 500 and query.structured_query:
-            logger.warning(
-                "Structured query failed for %s, retrying with raw text", query_id
-            )
-            results, status_code = search_opinions(
-                query.query_text, court=court, limit=20
-            )
-
-        if not results:
-            if status_code == 500:
-                msg = "CourtListener returned an error. The search query may be too complex."
-            elif status_code != 200:
-                msg = f"CourtListener search failed (status {status_code})."
-            else:
-                msg = "No results found on CourtListener."
-            ResearchQuery.objects.filter(pk=query_id).update(
-                status="error", error_message=msg
-            )
-            return
-
-        # Deduplicate by cluster_id and by citation + date_filed
-        seen_clusters = set()
+        # Every approved variant runs twice: the relevance page, and a
+        # thin newest-first slice (CL's score disfavors brand-new
+        # opinions with empty citation graphs; the date slice rescues
+        # them). Results merge with per-case hit counts - a case matching
+        # several differently-worded queries is a strong signal.
+        merged = {}
+        keyless = []
         seen_citations = set()
-        unique_results = []
-        for result in results:
-            cid = result.get("cluster_id")
-            if cid and cid in seen_clusters:
-                continue
+        server_error = False
+        for variant in variants:
+            for order_by, limit, source in (
+                ("score desc", VARIANT_SCORE_LIMIT, "search"),
+                ("dateFiled desc", VARIANT_DATE_LIMIT, "date"),
+            ):
+                rows, status_code = search_opinions(
+                    variant["query"], court=court, limit=limit, order_by=order_by
+                )
+                if status_code == 500:
+                    server_error = True
+                if status_code != 200:
+                    continue
+                for row in rows:
+                    cid = row.get("cluster_id")
+                    if not cid:
+                        citation = row.get("citation", [])
+                        cite_str = str(citation) + "|" + row.get("date_filed", "")
+                        if citation and cite_str in seen_citations:
+                            continue
+                        if citation:
+                            seen_citations.add(cite_str)
+                        keyless.append((row, source, variant["label"]))
+                        continue
+                    entry = merged.get(cid)
+                    if entry is None:
+                        citation = row.get("citation", [])
+                        cite_str = str(citation) + "|" + row.get("date_filed", "")
+                        if citation and cite_str in seen_citations:
+                            continue
+                        if citation:
+                            seen_citations.add(cite_str)
+                        merged[cid] = {
+                            "row": row,
+                            "source": source,
+                            "labels": [variant["label"]],
+                        }
+                    else:
+                        if variant["label"] not in entry["labels"]:
+                            entry["labels"].append(variant["label"])
+                        if entry["source"] == "date" and source == "search":
+                            entry["source"] = "search"
 
-            citation = result.get("citation", [])
-            date_filed = result.get("date_filed", "")
-            cite_str = str(citation) + "|" + date_filed
-            if citation and cite_str in seen_citations:
-                continue
+        # All variants dry or erroring: one last try with the raw question.
+        if not merged and not keyless:
+            rows, status_code = search_opinions(
+                query.query_text, court=court, limit=VARIANT_SCORE_LIMIT
+            )
+            if status_code == 200 and rows:
+                for row in rows:
+                    cid = row.get("cluster_id")
+                    if cid and cid not in merged:
+                        merged[cid] = {
+                            "row": row,
+                            "source": "search",
+                            "labels": ["Fallback"],
+                        }
+            else:
+                msg = (
+                    "CourtListener returned an error. The search queries may "
+                    "be too complex."
+                    if server_error or status_code == 500
+                    else "No results found on CourtListener."
+                )
+                _update_query(query_id, status="error", error_message=msg)
+                return
 
-            if cid:
-                seen_clusters.add(cid)
-            if citation:
-                seen_citations.add(cite_str)
-            unique_results.append(result)
-        results = unique_results
-
-        # Create result records
-        for i, result in enumerate(results, 1):
-            citation_list = result.get("citation", [])
+        # Create result records (first-seen order; positions re-rank later)
+        creations = [
+            (entry["row"], entry["source"], entry["labels"])
+            for entry in merged.values()
+        ] + [(row, source, [label]) for row, source, label in keyless]
+        for i, (row, source, labels) in enumerate(creations, 1):
+            citation_list = row.get("citation", [])
             citation_str = (
                 ", ".join(citation_list)
                 if isinstance(citation_list, list)
@@ -205,21 +456,24 @@ def _process_query(query_id):
             ResearchResult.objects.create(
                 query_id=query_id,
                 position=i,
-                case_name=result.get("case_name", ""),
+                case_name=row.get("case_name", ""),
                 citation=citation_str,
-                court=result.get("court", ""),
-                date_filed=result.get("date_filed", ""),
-                cluster_id=result.get("cluster_id"),
-                snippet=result.get("snippet", ""),
-                score=result.get("score"),
-                forward_citation_count=result.get("cite_count"),
-                courtlistener_url=result.get("courtlistener_url", ""),
+                court=row.get("court", ""),
+                date_filed=row.get("date_filed", ""),
+                cluster_id=row.get("cluster_id"),
+                snippet=row.get("snippet", ""),
+                score=row.get("score"),
+                forward_citation_count=row.get("cite_count"),
+                courtlistener_url=row.get("courtlistener_url", ""),
                 relevance="pending",
                 status_message="Evaluating...",
+                source=source,
+                hit_count=len(labels),
+                matched_variants=labels,
             )
 
         # ── Phase 2: Snippet Triage (Pass 1) ──
-        ResearchQuery.objects.filter(pk=query_id).update(status="processing")
+        _update_query(query_id, status="processing")
 
         result_records = list(
             ResearchResult.objects.filter(query_id=query_id).order_by("position")
@@ -236,52 +490,261 @@ def _process_query(query_id):
                 try:
                     triage_results[r.id] = future.result()
                 except Exception:
-                    triage_results[r.id] = True
+                    triage_results[r.id] = (5.0, "")
 
-        skip_ids = [rid for rid, proceed in triage_results.items() if not proceed]
-        if skip_ids:
-            ResearchResult.objects.filter(pk__in=skip_ids).delete()
+        # Rejected rows are kept (relevance="rejected", reason stored) so
+        # the ruled-out list stays inspectable - a wrongly-triaged case
+        # used to vanish without a trace.
+        for rid, (score, reason) in triage_results.items():
+            if score < TRIAGE_REJECT_BELOW:
+                ResearchResult.objects.filter(pk=rid).update(
+                    relevance="rejected",
+                    eval_reason=reason,
+                    triage_score=score,
+                    status_message="Ruled out at triage",
+                )
+            else:
+                ResearchResult.objects.filter(pk=rid).update(triage_score=score)
 
-        # ── Phase 3: Full Evaluation (Pass 2) ──
-        remaining = list(
-            ResearchResult.objects.filter(query_id=query_id).order_by("position")
+        # ── Phase 3: Full-opinion briefing ──
+        survivors = list(
+            ResearchResult.objects.filter(
+                query_id=query_id, relevance="pending"
+            ).order_by("position")
         )
+        # Brief slots go by cross-variant hit count, then snippet-stage
+        # promise, then CL's ordering - with a recency guarantee, because
+        # brand-new law is what keyword ranking most reliably buries.
+        survivors.sort(
+            key=lambda r: (-r.hit_count, -(r.triage_score or 5.0), r.position)
+        )
+        to_brief = survivors[:BRIEF_MAX]
+        chosen = {r.id for r in to_brief}
+        newest = sorted(survivors, key=lambda r: r.date_filed or "", reverse=True)[
+            :RECENT_GUARANTEE
+        ]
+        for recent in newest:
+            if recent.id in chosen or not to_brief:
+                continue
+            dropped = to_brief.pop()
+            chosen.discard(dropped.id)
+            to_brief.append(recent)
+            chosen.add(recent.id)
+        overflow = [r for r in survivors if r.id not in chosen]
+        if overflow:
+            ResearchResult.objects.filter(pk__in=[r.id for r in overflow]).update(
+                relevance="none", status_message="Not briefed (run cap)"
+            )
 
-        if remaining:
-            ResearchResult.objects.filter(pk__in=[r.id for r in remaining]).update(
+        if to_brief:
+            ResearchResult.objects.filter(pk__in=[r.id for r in to_brief]).update(
                 status_message="Fetching opinion..."
             )
 
             with ThreadPoolExecutor(max_workers=3) as executor:
                 futures = {
-                    executor.submit(_evaluate_full, r, query.query_text): r
-                    for r in remaining
+                    executor.submit(_brief_result, r, query.query_text): r
+                    for r in to_brief
                 }
                 for future in as_completed(futures):
                     try:
                         future.result()
                     except Exception:
                         r = futures[future]
-                        logger.exception("Error evaluating result %s", r.id)
+                        logger.exception("Error briefing result %s", r.id)
                         ResearchResult.objects.filter(pk=r.id).update(
-                            relevance="error", status_message="Evaluation failed"
+                            relevance="error", status_message="Briefing failed"
                         )
 
-        # ── Phase 4: Filter & Reorder ──
-        ResearchResult.objects.filter(query_id=query_id, relevance="low").delete()
+        # ── Phase 4: Reorder (nothing is deleted; ruled-out rows sink) ──
+        _reorder_results(query_id)
 
-        RELEVANCE_ORDER = {"high": 0, "medium": 1, "error": 2}
-        final_results = list(
-            ResearchResult.objects.filter(query_id=query_id).order_by("position")
+    except Exception:
+        logger.exception("Error processing research query %s", query_id)
+        _update_query(
+            query_id, status="error", error_message="An unexpected error occurred."
         )
-        final_results.sort(
-            key=lambda r: (RELEVANCE_ORDER.get(r.relevance, 1), r.position)
-        )
-        for i, result in enumerate(final_results, 1):
-            if result.position != i:
-                ResearchResult.objects.filter(pk=result.id).update(position=i)
+        return
 
-        # ── Phase 5: Negative History Check ──
+    # Chain the enrichment phase as its own qcluster task: the two
+    # halves together can exceed Q_CLUSTER's 600s timeout.
+    _update_query(query_id, status="enriching")
+    _queue("_run_enrichment", query_id, "ResearchEnrich")
+
+
+def _add_new_results(query, rows, source, via_case):
+    """Create rows for chase hits not already in this run.
+
+    Returns the created (pending) results; rows whose cluster is already
+    present are skipped silently.
+    """
+    existing = set(
+        ResearchResult.objects.filter(query_id=query.id).values_list(
+            "cluster_id", flat=True
+        )
+    )
+    next_position = ResearchResult.objects.filter(query_id=query.id).count()
+    created = []
+    for row in rows:
+        cid = row.get("cluster_id")
+        if not cid or cid in existing:
+            continue
+        existing.add(cid)
+        next_position += 1
+        citation_list = row.get("citation", [])
+        citation_str = (
+            ", ".join(citation_list)
+            if isinstance(citation_list, list)
+            else str(citation_list)
+        )
+        created.append(
+            ResearchResult.objects.create(
+                query_id=query.id,
+                position=next_position,
+                case_name=row.get("case_name", ""),
+                citation=citation_str,
+                court=row.get("court", ""),
+                date_filed=row.get("date_filed", ""),
+                cluster_id=cid,
+                snippet=row.get("snippet", ""),
+                score=row.get("score"),
+                forward_citation_count=row.get("cite_count"),
+                courtlistener_url=row.get("courtlistener_url", ""),
+                relevance="pending",
+                status_message="Found by citation chase...",
+                source=source,
+                via_case=via_case,
+            )
+        )
+    return created
+
+
+def _chase_citing_cases(query, court):
+    """Forward chase: search cases citing the strongest HIGH results.
+
+    A brand-new opinion applying the controlling rule is nearly invisible
+    to keyword relevance ranking but appears immediately in a
+    forward-citation search from the line's seminal cases - this is how a
+    slip opinion gets found. The cites:() query is composed tool-side
+    (never model-written, so it skips sanitize_query) and takes OPINION
+    ids, not cluster ids - cites:(cluster_id) silently returns nothing
+    (verified against the live API, 2026-08-17).
+    """
+    seeds = list(
+        ResearchResult.objects.filter(query_id=query.id, relevance="high").order_by(
+            "-forward_citation_count", "position"
+        )
+    )[:CITING_SEED_MAX]
+    created = []
+    for seed in seeds:
+        if not seed.cluster_id:
+            continue
+        cluster = fetch_cluster(seed.cluster_id)
+        opinion_ids = []
+        for opinion_url in cluster.get("sub_opinions", []):
+            try:
+                opinion_ids.append(int(opinion_url.rstrip("/").split("/")[-1]))
+            except (ValueError, IndexError):
+                continue
+        if not opinion_ids:
+            continue
+        rows, status = search_opinions(
+            f"cites:({' '.join(str(oid) for oid in opinion_ids)})",
+            court=court,
+            limit=CITING_RESULT_LIMIT,
+        )
+        if status != 200:
+            continue
+        created += _add_new_results(query, rows, "citing", seed.case_name)
+    return created
+
+
+def _chase_key_authorities(query):
+    """Backward chase: resolve the reporter citations the HIGH briefs say
+    their holdings rest on, and pull in any the run hasn't seen. Capped
+    at CHASE_AUTHORITY_MAX lookup attempts."""
+    from .courtlistener import COURTLISTENER_BASE_URL
+
+    seen_cites = set()
+    attempts = 0
+    created = []
+    highs = ResearchResult.objects.filter(query_id=query.id, relevance="high")
+    for result in highs:
+        for cite in result.key_authorities or []:
+            normalized = " ".join(cite.split()).lower()
+            if normalized in seen_cites:
+                continue
+            seen_cites.add(normalized)
+            if attempts >= CHASE_AUTHORITY_MAX:
+                return created
+            attempts += 1
+            lookup = lookup_citation(cite)
+            if not lookup.found or not lookup.cluster_id:
+                continue
+            url = (
+                f"{COURTLISTENER_BASE_URL}{lookup.absolute_url}"
+                if lookup.absolute_url
+                else ""
+            )
+            created += _add_new_results(
+                query,
+                [
+                    {
+                        "case_name": lookup.case_name,
+                        "citation": lookup.citation or cite,
+                        "court": lookup.court,
+                        "date_filed": str(lookup.date_filed or ""),
+                        "cluster_id": lookup.cluster_id,
+                        "courtlistener_url": url,
+                    }
+                ],
+                "authority",
+                result.case_name,
+            )
+    return created
+
+
+def _run_enrichment(query_id):
+    """Citation chasing, treatment checks, and the final answer."""
+    try:
+        query = ResearchQuery.objects.get(pk=query_id)
+    except ResearchQuery.DoesNotExist:
+        return
+
+    try:
+        _update_query(query_id, status="enriching")
+        court = get_court_ids(query.state, query.include_federal)
+
+        citing_rows = _chase_citing_cases(query, court)
+        citing_rows.sort(key=lambda r: -(r.forward_citation_count or 0))
+        to_brief = citing_rows[:CITING_BRIEF_MAX]
+        skipped = citing_rows[CITING_BRIEF_MAX:]
+        if skipped:
+            ResearchResult.objects.filter(pk__in=[r.id for r in skipped]).update(
+                relevance="none", status_message="Not briefed (run cap)"
+            )
+        # Authority rows are already capped hard; brief them all.
+        to_brief += _chase_key_authorities(query)
+
+        if to_brief:
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {
+                    executor.submit(_brief_result, r, query.query_text): r
+                    for r in to_brief
+                }
+                for future in as_completed(futures):
+                    try:
+                        future.result()
+                    except Exception:
+                        r = futures[future]
+                        logger.exception("Error briefing result %s", r.id)
+                        ResearchResult.objects.filter(pk=r.id).update(
+                            relevance="error", status_message="Briefing failed"
+                        )
+
+        _reorder_results(query_id)
+
+        # ── Negative History Check (every HIGH row, chased ones included) ──
         high_results = list(
             ResearchResult.objects.filter(query_id=query_id, relevance="high").order_by(
                 "position"
@@ -301,135 +764,150 @@ def _process_query(query_id):
                             "Error checking negative history for result %s", r.id
                         )
 
-        # ── Phase 6: Final Summary ──
-        _generate_final_summary(query_id)
+        # ── Final Answer ──
+        _update_query(query_id, status="synthesizing")
+        _generate_final_answer(query_id)
 
     except Exception:
-        logger.exception("Error processing research query %s", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(
-            status="error", error_message="An unexpected error occurred."
+        logger.exception("Error enriching research query %s", query_id)
+        _update_query(
+            query_id, status="error", error_message="An unexpected error occurred."
         )
 
 
 def summarize_result(result_id):
-    """Run on-demand summarization of a single result in a background thread."""
-    thread = threading.Thread(target=_summarize_result, args=(result_id,), daemon=True)
-    thread.start()
+    """Queue on-demand briefing of a single result."""
+    _queue("_summarize_result", result_id, "ResearchBrief")
 
 
 def _summarize_result(result_id):
-    """Fetch opinion and generate AI summary for a single result."""
+    """On-demand briefing of a single result (the Brief-case button):
+    same full-opinion path the pipeline uses."""
     try:
         result = ResearchResult.objects.select_related("query").get(pk=result_id)
     except ResearchResult.DoesNotExist:
         return
 
     ResearchResult.objects.filter(pk=result_id).update(
-        relevance="pending", status_message="Summarizing..."
+        relevance="pending", status_message="Briefing..."
     )
 
     try:
-        if not result.cluster_id:
-            ResearchResult.objects.filter(pk=result_id).update(
-                relevance="error", status_message="No cluster ID"
-            )
-            return
-
-        opinion_text = _get_opinion_text(result.cluster_id)
-        if not opinion_text:
-            ResearchResult.objects.filter(pk=result_id).update(
-                relevance="error", status_message="Could not fetch opinion text"
-            )
-            return
-
-        query_text = result.query.query_text if result.query_id else ""
-        truncated_text = opinion_text[:8000]
-
-        system_prompt = (
-            "You are a legal research assistant. Respond ONLY with valid JSON."
-        )
-        user_prompt = (
-            f"Evaluate the relevance of this case to the following legal research query.\n\n"
-            f"Research Query: {query_text}\n\n"
-            f"Case: {result.case_name}\n"
-            f"Court: {result.court}\n"
-            f"Date Filed: {result.date_filed}\n\n"
-            f"Opinion Text (excerpt):\n{truncated_text}\n\n"
-            f"Respond with JSON in this exact format:\n"
-            f'{{"relevance": "high" or "medium" or "low", "reason": "brief explanation", '
-            f'"summary": "100-word summary if relevance is high or medium, otherwise empty string"}}'
-        )
-
-        response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
-        )
-
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-
-        parsed = json.loads(cleaned)
-        relevance = parsed.get("relevance", "medium")
-        if relevance not in ("high", "medium", "low"):
-            relevance = "medium"
-
-        summary = parsed.get("summary", "")
-
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance=relevance,
-            gemini_summary=summary,
-            status_message="Complete",
-        )
-
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to parse Gemini response for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="medium", status_message="Complete"
-        )
+        question = result.query.query_text if result.query_id else ""
+        _brief_result(result, question)
     except Exception:
-        logger.exception("Gemini error for result %s", result_id)
+        logger.exception("Error briefing result %s", result_id)
         ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="AI evaluation failed"
+            relevance="error", status_message="Briefing failed"
         )
 
 
 def _triage_by_snippet(result, query_text):
-    """Pass 1: Quick relevance check using only the search snippet. Returns True to proceed."""
+    """Pass 1: promise-score a result from its snippet and metadata.
+
+    Returns (score 0-10, reason). The snippet is CourtListener's
+    keyword-context fragments - enough to spot the clearly unrelated and
+    to RANK which candidates deserve a full-opinion brief, never enough
+    to judge a holding. Slip opinions often have no snippet at all (no
+    editorial syllabus): a missing snippet scores a neutral 5.
+    """
     if not result.snippet:
-        return True
+        return 5.0, ""
 
     system_prompt = (
         "You are a legal research assistant performing a quick relevance triage. "
         "Respond ONLY with valid JSON."
     )
     user_prompt = (
-        f"Based on the search snippet below, determine if this case is potentially "
-        f"relevant to the research query. Be INCLUSIVE — only mark as skip if the case "
-        f"is clearly unrelated to the legal issue being researched.\n\n"
-        f"Research Query: {query_text}\n\n"
+        f"Score how likely this case is to bear on the research question, "
+        f"from 0 (clearly unrelated) to 10 (directly on point), based ONLY "
+        f"on the snippet and metadata below. The snippet is keyword "
+        f"context, not the holding - be generous when uncertain. Scores "
+        f"below 3 mean clearly unrelated and remove the case from "
+        f"consideration.\n\n"
+        f"Research Question: {query_text}\n\n"
         f"Case: {result.case_name}\n"
         f"Court: {result.court}\n"
         f"Date Filed: {result.date_filed}\n\n"
         f"Search Snippet:\n{result.snippet[:2000]}\n\n"
-        f'Respond with JSON: {{"proceed": true or false, "reason": "one sentence"}}'
+        f'Respond with JSON: {{"score": 0-10, "reason": "one sentence"}}'
     )
 
     try:
         response_text, _, _ = send_to_gemini(
             system_prompt, [{"role": "user", "content": user_prompt}]
         )
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-        parsed = json.loads(cleaned)
-        return parsed.get("proceed", True)
+        parsed = _parse_json(response_text) or {}
+        score = max(0.0, min(10.0, float(parsed.get("score", 5))))
+        return score, str(parsed.get("reason", ""))
     except Exception:
         logger.exception("Snippet triage error for result %s", result.id)
-        return True
+        return 5.0, ""
 
 
-def _evaluate_full(result, query_text):
-    """Pass 2: Fetch full opinion and evaluate relevance with Gemini."""
+def _reorder_results(query_id):
+    """Renumber positions: strong cases first, ruled-out rows at the end."""
+    relevance_order = {
+        "high": 0,
+        "medium": 1,
+        "error": 2,
+        "none": 3,
+        "pending": 3,
+        "low": 4,
+        "rejected": 5,
+    }
+    final_results = list(
+        ResearchResult.objects.filter(query_id=query_id).order_by("position")
+    )
+    final_results.sort(key=lambda r: (relevance_order.get(r.relevance, 3), r.position))
+    for i, result in enumerate(final_results, 1):
+        if result.position != i:
+            ResearchResult.objects.filter(pk=result.id).update(position=i)
+
+
+def _get_all_opinion_texts(cluster_id, cap=BRIEF_OPINION_CHAR_CAP):
+    """Concatenated plain text of EVERY opinion in a cluster, up to cap.
+
+    The majority opinion comes first (CourtListener lists it first);
+    concurrences and dissents follow with separators. The old
+    single-opinion read was blind to holdings outside sub_opinions[0].
+    """
+    cluster = fetch_cluster(cluster_id)
+    if not cluster:
+        return ""
+
+    parts = []
+    total = 0
+    for opinion_url in cluster.get("sub_opinions", []):
+        if total >= cap:
+            break
+        try:
+            opinion_id = int(opinion_url.rstrip("/").split("/")[-1])
+        except (ValueError, IndexError):
+            continue
+        opinion = fetch_opinion(opinion_id)
+        text = opinion.plain_text if opinion.found else ""
+        if not text:
+            continue
+        if parts:
+            parts.append(
+                "\n\n--- next opinion in this cluster (concurrence or dissent) ---\n\n"
+            )
+        parts.append(text)
+        total += len(text)
+
+    return "".join(parts)[:cap]
+
+
+def _brief_result(result, question):
+    """Brief one case from its FULL opinion text.
+
+    The briefing agent reads the entire cluster (every sub-opinion, capped
+    only against freak 500-page opinions) and returns the structured
+    abstract; parse_brief maps its verdict onto the relevance field.
+    Replaces the old 8,000-character excerpt evaluation, which scored
+    syllabus-less slip opinions low because it never reached the holding.
+    """
     result_id = result.id
 
     if not result.cluster_id:
@@ -442,7 +920,7 @@ def _evaluate_full(result, query_text):
         status_message="Downloading opinion..."
     )
 
-    opinion_text = _get_opinion_text(result.cluster_id)
+    opinion_text = _get_all_opinion_texts(result.cluster_id)
     if not opinion_text:
         ResearchResult.objects.filter(pk=result_id).update(
             relevance="error", status_message="Could not fetch opinion text"
@@ -451,55 +929,35 @@ def _evaluate_full(result, query_text):
 
     ResearchResult.objects.filter(pk=result_id).update(
         opinion_text=opinion_text[:50000],
-        status_message="Evaluating relevance...",
+        status_message="Briefing...",
     )
 
-    truncated_text = opinion_text[:8000]
-    system_prompt = "You are a legal research assistant. Respond ONLY with valid JSON."
+    citation = result.citation or "no reporter citation (slip opinion)"
+    header = f"{result.case_name}, {citation} ({result.court} {result.date_filed})"
     user_prompt = (
-        f"Evaluate the relevance of this case to the following legal research query.\n\n"
-        f"Research Query: {query_text}\n\n"
-        f"Case: {result.case_name}\n"
-        f"Court: {result.court}\n"
-        f"Date Filed: {result.date_filed}\n\n"
-        f"Opinion Text (excerpt):\n{truncated_text}\n\n"
-        f"Respond with JSON in this exact format:\n"
-        f'{{"relevance": "high" or "medium" or "low", "reason": "brief explanation", '
-        f'"summary": "100-word summary if relevance is high or medium, otherwise empty string"}}'
+        f"QUESTION PRESENTED: {question}\n\nOPINION: {header}\n\n{opinion_text}"
     )
 
     try:
         response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
-        )
-
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-
-        parsed = json.loads(cleaned)
-        relevance = parsed.get("relevance", "medium")
-        if relevance not in ("high", "medium", "low"):
-            relevance = "medium"
-
-        summary = parsed.get("summary", "")
-
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance=relevance,
-            gemini_summary=summary,
-            status_message="Complete",
-        )
-
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to parse Gemini response for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="medium", status_message="Complete"
+            RESEARCH_ABSTRACT_SYSTEM, [{"role": "user", "content": user_prompt}]
         )
     except Exception:
-        logger.exception("Gemini error for result %s", result_id)
+        logger.exception("Briefing failed for result %s", result_id)
         ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="AI evaluation failed"
+            relevance="error", status_message="Briefing failed"
         )
+        return
+
+    brief_text = response_text.strip()
+    parsed = parse_brief(brief_text)
+    ResearchResult.objects.filter(pk=result_id).update(
+        brief=brief_text,
+        relevance=parsed["verdict"],
+        eval_reason=parsed["reason"],
+        key_authorities=parsed["key_authorities"],
+        status_message="Complete",
+    )
 
 
 # Treatment-check tuning. Depth is CourtListener's per-citing-opinion count
@@ -683,178 +1141,99 @@ def _check_negative_history(result):
         )
 
 
-def _process_result(result, query_text):
-    """Download opinion and evaluate relevance for a single result."""
-    result_id = result.id
+def _generate_final_answer(query_id):
+    """Answer the research question from the FULL briefs of the high cases.
 
-    if not result.cluster_id:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="No cluster ID"
-        )
-        return
-
-    # Download opinion
-    ResearchResult.objects.filter(pk=result_id).update(
-        status_message="Downloading opinion..."
-    )
-
-    cluster = fetch_cluster(result.cluster_id)
-    if not cluster:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="Could not fetch case details"
-        )
-        return
-
-    # Get opinion ID from cluster
-    sub_opinions = cluster.get("sub_opinions", [])
-    if not sub_opinions:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="No opinion text available"
-        )
-        return
-
-    opinion_url = sub_opinions[0]
-    try:
-        opinion_id = int(opinion_url.rstrip("/").split("/")[-1])
-    except (ValueError, IndexError):
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="Could not parse opinion ID"
-        )
-        return
-
-    # Fetch forward citation count
-    fwd_count = count_forward_citations(opinion_id)
-    if fwd_count is not None:
-        ResearchResult.objects.filter(pk=result_id).update(
-            forward_citation_count=fwd_count
-        )
-
-    opinion = fetch_opinion(opinion_id)
-    if not opinion.found:
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="Could not fetch opinion text"
-        )
-        return
-
-    # Store opinion text temporarily
-    ResearchResult.objects.filter(pk=result_id).update(
-        opinion_text=opinion.plain_text[:50000]
-    )
-
-    # Evaluate relevance with Gemini
-    ResearchResult.objects.filter(pk=result_id).update(
-        status_message="Evaluating relevance..."
-    )
-
-    truncated_text = opinion.plain_text[:8000]
-    system_prompt = "You are a legal research assistant. Respond ONLY with valid JSON."
-    user_prompt = f"""Evaluate the relevance of this case to the following legal research query.
-
-Research Query: {query_text}
-
-Case: {result.case_name}
-Court: {result.court}
-Date Filed: {result.date_filed}
-
-Opinion Text (excerpt):
-{truncated_text}
-
-Respond with JSON in this exact format:
-{{"relevance": "high" or "medium" or "low", "reason": "brief explanation", """
-    user_prompt += """"summary": "100-word summary if relevance is high, otherwise empty string"}}"""
-
-    try:
-        response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
-        )
-
-        # Parse JSON from response (handle markdown code blocks)
-        cleaned = response_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-
-        parsed = json.loads(cleaned)
-        relevance = parsed.get("relevance", "medium")
-        if relevance not in ("high", "medium", "low"):
-            relevance = "medium"
-
-        summary = parsed.get("summary", "") if relevance == "high" else ""
-
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance=relevance,
-            gemini_summary=summary,
-            status_message="Complete",
-        )
-
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to parse Gemini response for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="medium", status_message="Complete"
-        )
-    except Exception:
-        logger.exception("Gemini error for result %s", result_id)
-        ResearchResult.objects.filter(pk=result_id).update(
-            relevance="error", status_message="AI evaluation failed"
-        )
-
-
-def _generate_final_summary(query_id):
-    """Generate a synthesis of all high-relevance results."""
+    Runs on the pro model - the answer is the run's product; everything
+    upstream stays on the flash default. Completes without a summary when
+    nothing rated high.
+    """
     query = ResearchQuery.objects.get(pk=query_id)
-    high_results = ResearchResult.objects.filter(
-        query_id=query_id, relevance="high"
-    ).exclude(gemini_summary="")
+    high_results = list(
+        ResearchResult.objects.filter(query_id=query_id, relevance="high")
+        .exclude(brief="")
+        .order_by("position")
+    )
 
-    if not high_results.exists():
-        ResearchQuery.objects.filter(pk=query_id).update(status="complete")
+    if not high_results:
+        _update_query(query_id, status="complete")
+        ResearchResult.objects.filter(query_id=query_id).update(opinion_text="")
         return
 
-    summaries = []
+    blocks = []
     for r in high_results:
-        summaries.append(f"- {r.case_name}: {r.gemini_summary}")
+        citation = r.citation or "no reporter citation - slip opinion"
+        cites = (
+            f"cited {r.forward_citation_count} times"
+            if r.forward_citation_count
+            else "no citing history yet"
+        )
+        if r.has_negative_history is True:
+            treatment = "NEGATIVE treatment detected in citing cases"
+        elif r.has_negative_history is False:
+            treatment = "treatment checked: no negative treatment found"
+        else:
+            treatment = "treatment not checked"
+        blocks.append(
+            f"CASE: {r.case_name}\n"
+            f"CITATION: {citation}\n"
+            f"COURT: {r.court} ({r.date_filed})\n"
+            f"CITING HISTORY: {cites}\n"
+            f"TREATMENT: {treatment}\n"
+            f"BRIEF:\n{r.brief}"
+        )
 
-    summaries_text = "\n".join(summaries)
-
-    system_prompt = "You are a legal research assistant synthesizing case law findings."
-    user_prompt = f"""Based on the following legal research query and relevant case summaries, \
-provide a 200-word synthesis of the key legal principles and how these cases address the query.
-
-Research Query: {query.query_text}
-
-Relevant Cases:
-{summaries_text}
-
-Provide a concise synthesis:"""
+    system_prompt = (
+        "You are a legal research assistant writing up the results of a "
+        "case-law search for an attorney. You are given the research "
+        "question and the full structured briefs of the relevant cases. "
+        "Write the answer as follows:\n"
+        "1. ANSWER FIRST: a direct answer to the question in a short "
+        "paragraph, stating the controlling rule and its exact statutory "
+        "or procedural vehicle (statute AND subsection, rule, or motion "
+        "type).\n"
+        "2. Then discuss each case under its own heading, UNDER 200 "
+        "WORDS per case: what it holds (quote the operative language "
+        "from its brief verbatim) and how it bears on the question.\n"
+        "3. Match authorities to the question's procedural vehicle: a "
+        "case whose VEHICLE section shows a different subsection or "
+        "motion type must be excluded or explicitly distinguished, "
+        "never blended in.\n"
+        "4. Flag every slip opinion or case with no citing history as "
+        "new and not yet settled law, and note any case marked "
+        "'treatment not checked' or carrying negative treatment.\n"
+        "5. Cite ONLY the cases provided. If the briefs do not answer "
+        "the question, say so plainly instead of stretching them."
+    )
+    user_prompt = f"RESEARCH QUESTION: {query.query_text}\n\n" + "\n\n---\n\n".join(
+        blocks
+    )
 
     try:
         response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
+            system_prompt,
+            [{"role": "user", "content": user_prompt}],
+            model=ANSWER_MODEL,
         )
 
-        ResearchQuery.objects.filter(pk=query_id).update(
-            status="complete", final_summary=response_text.strip()
-        )
+        _update_query(query_id, status="complete", final_summary=response_text.strip())
 
     except Exception:
-        logger.exception("Error generating final summary for query %s", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(status="complete")
+        logger.exception("Error generating final answer for query %s", query_id)
+        _update_query(query_id, status="complete")
 
     # Clean up opinion text to save space
     ResearchResult.objects.filter(query_id=query_id).update(opinion_text="")
 
 
 def review_result(result_id):
-    """Run citation review in a background daemon thread."""
-    thread = threading.Thread(target=_review_result, args=(result_id,), daemon=True)
-    thread.start()
+    """Queue citation review."""
+    _queue("_review_result", result_id, "ResearchReview")
 
 
 def review_more_citations(result_id):
-    """Evaluate more unevaluated forward citations in a background thread."""
-    thread = threading.Thread(
-        target=_review_more_citations, args=(result_id,), daemon=True
-    )
-    thread.start()
+    """Queue evaluation of more unevaluated forward citations."""
+    _queue("_review_more_citations", result_id, "ResearchReviewMore")
 
 
 def _review_result(result_id):
@@ -1017,11 +1396,8 @@ def _assess_citations(result, verifications):
 
 
 def assess_single_citation(verification_id):
-    """Assess a single citation in a background thread."""
-    thread = threading.Thread(
-        target=_assess_single_citation, args=(verification_id,), daemon=True
-    )
-    thread.start()
+    """Queue assessment of a single citation."""
+    _queue("_assess_single_citation", verification_id, "ResearchAssess")
 
 
 def _assess_single_citation(verification_id):
@@ -1121,11 +1497,8 @@ def _get_opinion_metadata(opinion_id):
 
 
 def generate_caselaw_summary(caselaw_id):
-    """Generate a 200-word AI summary for a CaseLaw entry in a background thread."""
-    thread = threading.Thread(
-        target=_generate_caselaw_summary, args=(caselaw_id,), daemon=True
-    )
-    thread.start()
+    """Queue the 200-word AI summary for a CaseLaw entry."""
+    _queue("_generate_caselaw_summary", caselaw_id, "CaseLawSummary")
 
 
 def _generate_caselaw_summary(caselaw_id):
@@ -1175,9 +1548,8 @@ def _generate_caselaw_summary(caselaw_id):
 
 
 def generate_brief(brief_id):
-    """Run case brief generation in a background daemon thread."""
-    thread = threading.Thread(target=_generate_brief, args=(brief_id,), daemon=True)
-    thread.start()
+    """Queue case brief generation."""
+    _queue("_generate_brief", brief_id, "CaseBrief")
 
 
 def _get_opinion_text(cluster_id):

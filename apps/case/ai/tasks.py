@@ -70,9 +70,8 @@ def process_ai_request(
     # Live activity log: durable one-liners describing each stage of the
     # turn (context assembly, material selection, the model call, block
     # application, cite checking), rendered under the status line by the
-    # 1s poll — the classic counterpart of the research log. Every status
-    # write carries the log so transient status updates never blank it.
-    # (Research turns build their own log in run_research_request.)
+    # 1s poll. Every status write carries the log so transient status
+    # updates never blank it.
     activity_log: list[str] = []
     last_status = ["starting", "Starting..."]
 
@@ -110,22 +109,6 @@ def process_ai_request(
         matter = Matter.objects.get(id=matter_id)
         user = User.objects.get(id=user_id)
         conversation = Conversation.objects.get(id=conversation_id)
-
-        # Research-kind conversations run the agentic CourtListener loop
-        # instead; everything below stays the untouched classic path.
-        if conversation.kind == "research":
-            from .research_chat import run_research_request
-
-            return run_research_request(
-                conversation,
-                matter,
-                user,
-                user_message,
-                llm,
-                update_status,
-                is_cancelled,
-                cache_key,
-            )
 
         context_text = assemble_matter_context_with_selection(
             matter,
