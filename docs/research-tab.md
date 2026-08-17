@@ -32,9 +32,11 @@ snippet/8k-excerpt pipeline.
    relevance high/medium/low; the brief, rationale, and key authorities
    are stored on the row.
 5. **Enrich** (`_run_enrichment`, chained qcluster task): forward
-   `cites:(cluster_id)` searches from the 1-2 strongest HIGH cases (how
-   slip opinions actually get found) and backward `lookup_citation` of
-   the authorities the HIGH briefs rest on. New clusters join as rows
+   `cites:()` searches from the 1-2 strongest HIGH cases (how slip
+   opinions get found when they cite the line) and backward
+   `lookup_citation` of the authorities the HIGH briefs rest on. NOTE:
+   `cites:()` takes OPINION ids, never cluster ids — `cites:(cluster_id)`
+   silently returns zero results (verified live 2026-08-17). New clusters join as rows
    with provenance badges ("Citing case" / "Cited authority") and get
    the same full-opinion briefs.
 6. **Treatment**: `check_negative_treatment` on every HIGH row.
@@ -73,7 +75,18 @@ pro call.
 The acceptance question: "If I file a motion to compel and the other
 side supplements their responses to moot the motion, can I still seek
 attorney fees?" (Georgia + Federal). A passing run surfaces Birg v.
-Emory (June 2026 slip op, OCGA 9-11-37(a)(4)) with a HIGH brief quoting
-the holding, flags its slip status, and answers on the right vehicle.
+Emory University (June 2026 slip op, cluster 10875036, OCGA 9-11-37)
+with a HIGH brief quoting the holding, flags its slip status, and
+answers on the right vehicle.
+
+Lesson from the first benchmark run (query 32, 2026-08-17): the refined
+query required the phrase "motion to compel" — and Birg's opinion never
+uses the word "compel" at all (it says "9-11-37" 14 times). A required
+colloquial phrase group makes such a case unfindable by BOTH the
+relevance page and the date slice; the statute number must ride as an
+OR-alternative inside that group (the STATUTE NUMBER AS A HOOK rule in
+briefing.py). `"9-11-37" AND "attorney fees" AND moot*` puts Birg in
+the top 5 by relevance. The forward chase also could not have rescued
+that run: Birg cites none of the compel-phrase cluster's cases.
 
 Tests: apps/case/tests/test_research_pipeline.py (+ test_treatment.py).

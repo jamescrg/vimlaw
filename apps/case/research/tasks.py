@@ -457,7 +457,9 @@ def _chase_citing_cases(query, court):
     to keyword relevance ranking but appears immediately in a
     forward-citation search from the line's seminal cases - this is how a
     slip opinion gets found. The cites:() query is composed tool-side
-    (never model-written, so it skips sanitize_query).
+    (never model-written, so it skips sanitize_query) and takes OPINION
+    ids, not cluster ids - cites:(cluster_id) silently returns nothing
+    (verified against the live API, 2026-08-17).
     """
     seeds = list(
         ResearchResult.objects.filter(query_id=query.id, relevance="high").order_by(
@@ -468,8 +470,19 @@ def _chase_citing_cases(query, court):
     for seed in seeds:
         if not seed.cluster_id:
             continue
+        cluster = fetch_cluster(seed.cluster_id)
+        opinion_ids = []
+        for opinion_url in cluster.get("sub_opinions", []):
+            try:
+                opinion_ids.append(int(opinion_url.rstrip("/").split("/")[-1]))
+            except (ValueError, IndexError):
+                continue
+        if not opinion_ids:
+            continue
         rows, status = search_opinions(
-            f"cites:({seed.cluster_id})", court=court, limit=CITING_RESULT_LIMIT
+            f"cites:({' '.join(str(oid) for oid in opinion_ids)})",
+            court=court,
+            limit=CITING_RESULT_LIMIT,
         )
         if status != 200:
             continue

@@ -402,7 +402,9 @@ def test_date_slice_and_citation_chases(matter, user, patch_pipeline, sync_qclus
     assert searches[0]["limit"] == research_tasks.SEARCH_PRIMARY_LIMIT
     assert searches[1]["order_by"] == "dateFiled desc"
     assert searches[1]["limit"] == research_tasks.SEARCH_DATE_LIMIT
-    assert searches[2]["query"] == "cites:(1)"
+    # cites:() takes OPINION ids (seed cluster 1's opinion is 10), never
+    # cluster ids - cites:(cluster_id) silently returns nothing.
+    assert searches[2]["query"] == "cites:(10)"
     assert searches[2]["court"] == "ga gactapp"
 
     rows = {r.case_name: r for r in ResearchResult.objects.filter(query=query)}
@@ -431,7 +433,10 @@ def test_forward_chase_caps_seeds(matter, user, patch_pipeline):
     fake = patch_pipeline(
         FakePipelineCL(
             [],
-            clusters={},
+            clusters={
+                100 + i: {"sub_opinions": [f"https://api/opinions/{1000 + i}/"]}
+                for i in range(4)
+            },
             opinions={},
         )
     )
@@ -447,7 +452,7 @@ def test_forward_chase_caps_seeds(matter, user, patch_pipeline):
         )
     research_tasks._chase_citing_cases(query, "ga")
     cites_queries = [s["query"] for s in fake.searches]
-    assert cites_queries == ["cites:(100)", "cites:(101)"]
+    assert cites_queries == ["cites:(1000)", "cites:(1001)"]
 
 
 def test_backward_chase_dedupes_and_caps(matter, user, patch_pipeline, monkeypatch):
@@ -723,5 +728,9 @@ def test_refiner_prompt_carries_design_and_vehicle_rules(matter, monkeypatch):
     )
     assert "PROCEDURAL VEHICLE" in captured["system"]
     assert "9-11-37(a)(4)" in captured["system"]
+    # The statute-number hook: courts often never write the colloquial
+    # motion phrase (run 32's Birg miss - zero uses of "compel").
+    assert "STATUTE NUMBER AS A HOOK" in captured["system"]
+    assert 'OR "9-11-37"' in captured["system"]
     query.refresh_from_db()
     assert query.structured_query == '"expenses of the motion" AND compel'

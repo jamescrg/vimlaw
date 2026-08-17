@@ -63,7 +63,15 @@ PROCEDURAL_VEHICLE_RULES = (
     "motion-for-sanctions ruling under OCGA 9-11-37(d) offered on a "
     "motion-to-compel fee question under 9-11-37(a)(4)) are not "
     "authority for the question; never blend the vehicles' terms into "
-    "one query.\n\n"
+    "one query.\n"
+    "STATUTE NUMBER AS A HOOK: when the vehicle is statutory and you "
+    "know the statute, its bare quoted number (no subsections, e.g. "
+    '"9-11-37") MUST appear in the query as an OR-alternative inside '
+    "the group holding the colloquial motion phrase - for example "
+    '("motion to compel" OR "9-11-37") - NEVER as its own required AND '
+    "group and never omitted. Courts routinely decide these questions "
+    "without ever writing the colloquial phrase, and a required phrase "
+    "the opinion never uses makes the controlling case unfindable.\n\n"
 )
 
 _VERDICT_RE = re.compile(r"RELEVANCE VERDICT:\s*(HIGH|MODERATE|LOW)", re.IGNORECASE)
