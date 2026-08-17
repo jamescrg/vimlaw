@@ -25,7 +25,7 @@
       </span>
     {% endif %}
     {% if result.relevance == "pending" %}
-      <span class="app-badge app-badge-sm"><i class="icon-loader spin"></i> Summarizing</span>
+      <span class="app-badge app-badge-sm"><i class="icon-loader spin"></i> Briefing</span>
     {% elif result.relevance == "high" %}
       <span class="app-badge app-badge-sm badge-green">High</span>
     {% elif result.relevance == "medium" %}
@@ -34,6 +34,20 @@
       <span class="app-badge app-badge-sm">Low</span>
     {% elif result.relevance == "error" %}
       <span class="app-badge app-badge-sm badge-red">Error</span>
+    {% endif %}
+    {% if result.source == "citing" %}
+      <span class="app-badge app-badge-sm badge-purple"
+            title="Found in a search for cases citing {{ result.via_case }}">Citing case</span>
+    {% elif result.source == "authority" %}
+      <span class="app-badge app-badge-sm badge-purple"
+            title="Authority relied on by {{ result.via_case }}">Cited authority</span>
+    {% elif result.source == "date" %}
+      <span class="app-badge app-badge-sm badge-blue"
+            title="From the newest-first slice of the search">Recent</span>
+    {% endif %}
+    {% if result.cluster_id and not result.citation %}
+      <span class="app-badge app-badge-sm badge-orange"
+            title="No reporter citation yet: new and not yet settled law">Slip opinion</span>
     {% endif %}
   </div>
   <div class="research-card-citation">
@@ -45,25 +59,37 @@
         &middot; Cited {{ result.forward_citation_count }} time{{ result.forward_citation_count|pluralize }}
       </span>
     {% endif %}
+    {% if result.hit_count > 1 %}
+      <span class="detail-text"
+            title="Surfaced by: {{ result.matched_variants|join:", " }}">
+        &middot; Matched {{ result.hit_count }} queries
+      </span>
+    {% endif %}
   </div>
-  {% if result.gemini_summary %}
+  {% if result.brief %}
+    {% if result.eval_reason %}<div class="research-summary">{{ result.eval_reason }}</div>{% endif %}
+    <details class="research-brief">
+      <summary>Case brief</summary>
+      <div class="research-brief-text">{{ result.brief|linebreaks }}</div>
+    </details>
+  {% elif result.gemini_summary %}
     <div class="research-summary">{{ result.gemini_summary|render_markdown }}</div>
   {% elif result.snippet %}
     <div class="research-snippet">{{ result.snippet|safe }}</div>
   {% endif %}
   <div class="research-card-actions">
-    {% if result.gemini_summary %}
+    {% if result.brief or result.gemini_summary %}
     {% elif result.relevance == "pending" %}
       <span class="research-status-msg">
         <i class="icon-loader spin"></i>
-        {{ result.status_message|default:"Summarizing..." }}
+        {{ result.status_message|default:"Briefing..." }}
       </span>
     {% elif result.cluster_id %}
       <button class="btn"
               hx-post="{% url 'case:research-summarize-result' result.id %}"
               hx-target="#result-{{ result.id }}"
               hx-swap="outerHTML">
-        <i class="icon-sparkles"></i> Summarize
+        <i class="icon-sparkles"></i> Brief case
       </button>
     {% endif %}
     {% if save_error %}

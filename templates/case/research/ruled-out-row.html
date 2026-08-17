@@ -1,0 +1,27 @@
+{% comment %}
+One line per ruled-out result (triage reject or low-verdict brief) inside
+the collapsed "Ruled out" section: enough to see WHY a case was dropped
+and to reopen it in the cluster viewer if the model was wrong.
+{% endcomment %}
+<div class="research-ruled-out-row">
+  <div>
+    {% if result.cluster_id %}
+      <a href="{% url 'case:caselaw-viewer-cluster' result.query.matter.id result.cluster_id %}"
+         target="_blank">{{ result.case_name }}</a>
+    {% else %}
+      {{ result.case_name }}
+    {% endif %}
+    <span class="detail-text">
+      {% if result.citation %}{{ result.citation }} &middot;{% endif %}
+      {{ result.court }}
+      {% if result.date_filed %}({{ result.date_filed }}){% endif %}
+      &middot;
+      {% if result.relevance == "rejected" %}
+        ruled out at triage
+      {% else %}
+        briefed, rated low
+      {% endif %}
+    </span>
+  </div>
+  {% if result.eval_reason %}<div class="research-ruled-out-reason">{{ result.eval_reason }}</div>{% endif %}
+</div>

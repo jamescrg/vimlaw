@@ -35,7 +35,7 @@ from .context import (
 )
 from .filters import ConversationFilter
 from .models import Conversation, Message
-from .tasks import CLAUDE_MODELS, process_ai_request
+from .tasks import process_ai_request
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +45,6 @@ logger = logging.getLogger(__name__)
 # a model to LLM_CHOICES doesn't have to be mirrored in each request handler.
 RETIRED_LLMS = ("claude", "gemini-pro")
 VALID_LLMS = {key for key, _ in Conversation.LLM_CHOICES} | set(RETIRED_LLMS)
-
-# Default model for research-style chats. The research loop resends every
-# tool result on each model turn, so per-token price dominates run cost;
-# Gemini is the economical default and Claude remains an explicit choice
-# in the new-conversation modal.
-RESEARCH_DEFAULT_LLM = "gemini-pro-latest"
 
 
 def get_accessible_matters():
@@ -244,7 +238,6 @@ def conversation_view(request, conv_id):
         "matter": matter,
         "conversation": conversation,
         "messages": messages,
-        "research_default_llm": RESEARCH_DEFAULT_LLM,
     }
 
     return render(request, "case/ai/conversation-standalone.html", context)
@@ -262,15 +255,6 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
-    # Mode (analysis vs research) + research effort. New chats open in
-    # analysis; the header dropdowns switch mode and effort per turn.
-    kind = request.GET.get("kind", "classic")
-    if kind not in dict(Conversation.KIND_CHOICES):
-        kind = "classic"
-    effort = request.GET.get("effort", "medium")
-    if effort not in dict(Conversation.EFFORT_CHOICES):
-        effort = "medium"
-
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
     # the display title; otherwise show the legacy "New Conversation" placeholder.
@@ -278,8 +262,6 @@ def new_conversation_view(request, matter_id):
         matter=matter,
         title=provided_title or "New Conversation",
         llm=llm,
-        kind=kind,
-        effort=effort,
     )
 
     context = {
@@ -289,7 +271,6 @@ def new_conversation_view(request, matter_id):
         "is_new": True,
         "llm": llm,
         "provided_title": provided_title,
-        "research_default_llm": RESEARCH_DEFAULT_LLM,
     }
 
     return render(request, "case/ai/conversation-standalone.html", context)
@@ -309,19 +290,11 @@ def create_conversation(request, matter_id):
     llm = request.POST.get("llm", "gemini-pro-latest")
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
-    kind = request.POST.get("kind", "classic")
-    if kind not in dict(Conversation.KIND_CHOICES):
-        kind = "classic"
-    effort = request.POST.get("effort", "medium")
-    if effort not in dict(Conversation.EFFORT_CHOICES):
-        effort = "medium"
     conversation = Conversation.objects.create(
         matter=matter,
         title=request.POST.get("title", "").strip() or "New Conversation",
         llm=llm,
         user=request.user,
-        kind=kind,
-        effort=effort,
     )
     return JsonResponse({"id": conversation.id})
 
@@ -398,31 +371,12 @@ def send_message(request, matter_id):
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
 
-    # Mode and effort for THIS turn, from the header dropdowns. Absent
-    # (legacy in-tab composer) or invalid means "keep the conversation's
-    # current value".
-    kind = request.POST.get("kind")
-    if kind not in dict(Conversation.KIND_CHOICES):
-        kind = None
-    effort = request.POST.get("effort")
-    if effort not in dict(Conversation.EFFORT_CHOICES):
-        effort = None
-
     # Get or create conversation
     is_new = False
     if conversation_id:
         conversation = get_object_or_404(
             Conversation, pk=conversation_id, matter__in=get_accessible_matters()
         )
-        update_fields = []
-        if kind and kind != conversation.kind:
-            conversation.kind = kind
-            update_fields.append("kind")
-        if effort and effort != conversation.effort:
-            conversation.effort = effort
-            update_fields.append("effort")
-        if update_fields:
-            conversation.save(update_fields=update_fields)
     else:
         # Create conversation on first message. Prefer the title the user
         # entered in the new-conversation prompt; otherwise fall back to the
@@ -438,18 +392,8 @@ def send_message(request, matter_id):
             title=title,
             llm=llm,
             user=request.user,
-            kind=kind or "classic",
-            effort=effort or "medium",
         )
         is_new = True
-
-    # Research turns run on Gemini only: the agentic loop resends every
-    # tool result on each model turn, which multiplies Claude's per-token
-    # cost. The header disables the Claude options while Research is
-    # selected; this is the server-side guarantee behind that.
-    if conversation.kind == "research" and conversation.llm in CLAUDE_MODELS:
-        conversation.llm = RESEARCH_DEFAULT_LLM
-        conversation.save(update_fields=["llm"])
 
     # Update title if this is first message and title is default
     if not is_new and conversation.title == "New Conversation":
@@ -957,36 +901,6 @@ def set_vet_citations(request, conv_id, state):
 
 
 @login_required
-@require_POST
-def set_conversation_llm(request, conv_id):
-    """Switch which model an existing conversation sends with.
-
-    Retired keys are not offered: a conversation can move off one but
-    never back onto it.
-    """
-    llm = request.POST.get("llm", "")
-    if llm not in dict(Conversation.LLM_CHOICES):
-        return HttpResponse(status=400)
-
-    conversation = get_object_or_404(
-        Conversation, pk=conv_id, matter__in=get_accessible_matters()
-    )
-
-    # Claude is analysis-only (see the research gate in send_message).
-    if conversation.kind == "research" and llm in CLAUDE_MODELS:
-        return HttpResponse(status=400)
-
-    conversation.llm = llm
-    conversation.save(update_fields=["llm"])
-
-    return render(
-        request,
-        "case/ai/llm-pill.html",
-        {"conversation": conversation},
-    )
-
-
-@login_required
 def citation_vetting_detail(request, message_id, citation_index):
     """Return a modal fragment describing the Flash vetting verdict for one citation."""
     message = get_object_or_404(
@@ -1093,14 +1007,6 @@ def prompt_editor_modal(request, matter_id):
     conversation_id = request.GET.get("conversation_id", "")
     llm = request.GET.get("llm", "gemini-pro-latest")
     title = request.GET.get("title", "")
-    # Mirror the chat window's current mode dropdown so a send from the
-    # expanded editor carries the same per-turn mode as the composer.
-    kind = request.GET.get("kind", "")
-    if kind not in dict(Conversation.KIND_CHOICES):
-        kind = ""
-    effort = request.GET.get("effort", "medium")
-    if effort not in dict(Conversation.EFFORT_CHOICES):
-        effort = "medium"
 
     return render(
         request,
@@ -1110,8 +1016,6 @@ def prompt_editor_modal(request, matter_id):
             "conversation_id": conversation_id,
             "llm": llm,
             "title": title,
-            "kind": kind,
-            "effort": effort,
         },
     )
 

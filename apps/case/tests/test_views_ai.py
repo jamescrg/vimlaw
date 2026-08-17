@@ -229,34 +229,6 @@ class TestBuildChatHistory:
         assert "] [Ada Law]: Adding on" in history[1]["content"]
 
 
-class TestSetConversationLLM:
-    def _conversation(self, matter, user, llm="gemini-pro-latest"):
-        return Conversation.objects.create(
-            matter=matter, user=user, title="Doc Analysis", llm=llm
-        )
-
-    def test_switches_model(self, client_with_matter, user):
-        conversation = self._conversation(client_with_matter.matter, user)
-        response = client_with_matter.post(
-            f"/case/ai/conversations/{conversation.id}/set-llm/",
-            {"llm": "claude-opus"},
-        )
-        assert response.status_code == 200
-        conversation.refresh_from_db()
-        assert conversation.llm == "claude-opus"
-
-    def test_rejects_unknown_and_retired_keys(self, client_with_matter, user):
-        conversation = self._conversation(client_with_matter.matter, user)
-        for bad in ("gpt-5", "claude", ""):
-            response = client_with_matter.post(
-                f"/case/ai/conversations/{conversation.id}/set-llm/",
-                {"llm": bad},
-            )
-            assert response.status_code == 400
-        conversation.refresh_from_db()
-        assert conversation.llm == "gemini-pro-latest"
-
-
 class TestConversationListFilter:
     """The toolbar keyword search + participant dropdown (session-persisted)."""
 

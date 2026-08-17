@@ -91,7 +91,7 @@ def count_forward_citations(opinion_id):
         return None
 
 
-def search_opinions(query, court="", limit=5):
+def search_opinions(query, court="", limit=5, order_by="score desc"):
     """
     Search CourtListener for opinions matching a query.
 
@@ -99,6 +99,8 @@ def search_opinions(query, court="", limit=5):
         query: Natural language search query
         court: CourtListener court ID to filter by (empty for all)
         limit: Number of results to return
+        order_by: CL sort expression ("score desc" relevance default;
+            "dateFiled desc" for the newest-first slice)
 
     Returns:
         List of result dicts with case_name, court, date_filed, etc.
@@ -110,7 +112,7 @@ def search_opinions(query, court="", limit=5):
     params = {
         "q": query,
         "type": "o",
-        "order_by": "score desc",
+        "order_by": order_by,
         "page_size": limit,
         "highlight": "on",
     }
