@@ -238,6 +238,22 @@ def _row(name, cluster_id, snippet="some snippet"):
 
 
 @pytest.fixture
+def sync_qcluster(monkeypatch):
+    """Run enqueued qcluster tasks synchronously and record the queue."""
+    import importlib
+
+    enqueued = []
+
+    def fake_async_task(dotted, *args, **kwargs):
+        enqueued.append({"fn": dotted, "args": args, **kwargs})
+        module_path, fn_name = dotted.rsplit(".", 1)
+        getattr(importlib.import_module(module_path), fn_name)(*args)
+
+    monkeypatch.setattr("django_q.tasks.async_task", fake_async_task)
+    return enqueued
+
+
+@pytest.fixture
 def patch_pipeline(monkeypatch):
     def _install(fake):
         monkeypatch.setattr(research_tasks, "search_opinions", fake.search_opinions)
@@ -296,7 +312,9 @@ def test_get_all_opinion_texts_respects_cap(patch_pipeline):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_pipeline_keeps_rejected_and_low_rows(matter, user, patch_pipeline):
+def test_pipeline_keeps_rejected_and_low_rows(
+    matter, user, patch_pipeline, sync_qcluster
+):
     """End-to-end _process_query run. transaction=True because the briefing
     ThreadPoolExecutor's threads write on their own DB connections, which
     can't see rows still inside a test transaction."""
@@ -342,7 +360,7 @@ def test_pipeline_keeps_rejected_and_low_rows(matter, user, patch_pipeline):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_date_slice_and_citation_chases(matter, user, patch_pipeline):
+def test_date_slice_and_citation_chases(matter, user, patch_pipeline, sync_qcluster):
     """The three search moves: primary + newest-first slice + forward
     citation chase, plus the backward authority chase off HIGH briefs."""
     from apps.case.courtlistener import CaseLookupResult
@@ -602,6 +620,84 @@ def test_bookmark_saves_slip_opinion_by_cluster_id(client, matter, user, monkeyp
     assert str(saved.date_filed) == "2026-06-15"
     assert saved.opinion_id == 90
     assert lookup_calls == []
+
+
+# --------------------------------------------------------------------------- #
+# qcluster wrappers + stale-run reaper
+# --------------------------------------------------------------------------- #
+def test_launchers_enqueue_dotted_paths(monkeypatch):
+    enqueued = []
+    monkeypatch.setattr(
+        "django_q.tasks.async_task",
+        lambda dotted, *args, **kwargs: enqueued.append((dotted, args)),
+    )
+    research_tasks.refine_research_query(1)
+    research_tasks.process_research_query(2)
+    research_tasks.summarize_result(3)
+    research_tasks.review_result(4)
+    research_tasks.generate_caselaw_summary(5)
+    research_tasks.generate_brief(6)
+    assert enqueued == [
+        ("apps.case.research.tasks._refine_and_pause", (1,)),
+        ("apps.case.research.tasks._process_query", (2,)),
+        ("apps.case.research.tasks._summarize_result", (3,)),
+        ("apps.case.research.tasks._review_result", (4,)),
+        ("apps.case.research.tasks._generate_caselaw_summary", (5,)),
+        ("apps.case.research.tasks._generate_brief", (6,)),
+    ]
+
+
+def test_reaper_flags_only_stale_active_runs(matter, user):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.case.research.models import ResearchQuery
+
+    stale = ResearchQuery.objects.create(
+        matter=matter, query_text="stale", status="processing", created_by=user
+    )
+    fresh = ResearchQuery.objects.create(
+        matter=matter, query_text="fresh", status="processing", created_by=user
+    )
+    awaiting = ResearchQuery.objects.create(
+        matter=matter, query_text="awaiting", status="refined", created_by=user
+    )
+    done = ResearchQuery.objects.create(
+        matter=matter, query_text="done", status="complete", created_by=user
+    )
+    old = timezone.now() - timedelta(minutes=45)
+    ResearchQuery.objects.filter(pk__in=[stale.id, awaiting.id, done.id]).update(
+        updated_at=old
+    )
+
+    research_tasks.reap_stale_queries(matter, user)
+
+    stale.refresh_from_db()
+    fresh.refresh_from_db()
+    awaiting.refresh_from_db()
+    done.refresh_from_db()
+    assert stale.status == "error"
+    assert "Run the search again" in stale.error_message
+    assert fresh.status == "processing"
+    # refined waits on the user indefinitely; complete is terminal.
+    assert awaiting.status == "refined"
+    assert done.status == "complete"
+
+
+def test_update_query_bumps_heartbeat(matter, user):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.case.research.models import ResearchQuery
+
+    query = ResearchQuery.objects.create(matter=matter, query_text="q", created_by=user)
+    old = timezone.now() - timedelta(minutes=45)
+    ResearchQuery.objects.filter(pk=query.id).update(updated_at=old)
+    research_tasks._update_query(query.id, status="processing")
+    query.refresh_from_db()
+    assert query.updated_at > old + timedelta(minutes=40)
 
 
 # --------------------------------------------------------------------------- #

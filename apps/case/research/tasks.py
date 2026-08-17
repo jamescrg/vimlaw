@@ -1,10 +1,18 @@
-"""Background task for processing research queries."""
+"""Background tasks for processing research queries.
+
+The pipeline runs on django-q (qcluster), not daemon threads, so a
+gunicorn reload no longer kills runs mid-flight. Each launcher below
+enqueues its worker function by dotted path; the search phase chains the
+enrichment phase as a second task to stay inside Q_CLUSTER's 600s
+timeout. Runs stranded by a qcluster restart are flagged by
+reap_stale_queries (called from the tab views).
+"""
 
 import json
 import logging
 import re
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import timedelta
 
 from apps.case.ai.gemini_client import send_to_gemini
 from apps.case.courtlistener import (
@@ -49,17 +57,68 @@ CHASE_AUTHORITY_MAX = 4
 # The answer is the product; briefs stay on the flash default.
 ANSWER_MODEL = "gemini-pro-latest"
 
+# A run whose heartbeat (ResearchQuery.updated_at, bumped by every
+# _update_query write) is older than this while still in an active status
+# was stranded by a restart; the reaper flags it for a re-run. Both
+# pipeline tasks finish well inside this window.
+RESEARCH_STALE_MINUTES = 30
+ACTIVE_QUERY_STATUSES = [
+    "pending",
+    "refining",
+    "searching",
+    "processing",
+    "enriching",
+    "synthesizing",
+]
+
+
+def _queue(fn_name, obj_id, label):
+    from django_q.tasks import async_task
+
+    async_task(
+        f"apps.case.research.tasks.{fn_name}",
+        obj_id,
+        task_name=f"{label}-{obj_id}",
+        group="research",
+    )
+
+
+def _update_query(query_id, **fields):
+    """Query writes that also bump updated_at: the queryset .update()
+    path skips auto_now, and the stale-run reaper reads updated_at as
+    the run's heartbeat."""
+    from django.utils import timezone
+
+    ResearchQuery.objects.filter(pk=query_id).update(
+        updated_at=timezone.now(), **fields
+    )
+
+
+def reap_stale_queries(matter, user):
+    """Flag runs stranded mid-pipeline (qcluster restart or crash) so the
+    UI shows an actionable error instead of polling forever."""
+    from django.utils import timezone
+
+    cutoff = timezone.now() - timedelta(minutes=RESEARCH_STALE_MINUTES)
+    ResearchQuery.objects.filter(
+        matter=matter,
+        created_by=user,
+        status__in=ACTIVE_QUERY_STATUSES,
+        updated_at__lt=cutoff,
+    ).update(
+        status="error",
+        error_message="Interrupted before it finished. Run the search again.",
+    )
+
 
 def refine_research_query(query_id):
-    """Run query refinement in a background daemon thread, then pause for user review."""
-    thread = threading.Thread(target=_refine_and_pause, args=(query_id,), daemon=True)
-    thread.start()
+    """Queue query refinement; pauses at status=refined for user review."""
+    _queue("_refine_and_pause", query_id, "ResearchRefine")
 
 
 def process_research_query(query_id):
-    """Run search + processing in a background daemon thread (after user confirms)."""
-    thread = threading.Thread(target=_process_query, args=(query_id,), daemon=True)
-    thread.start()
+    """Queue search + briefing (after the user confirms the query)."""
+    _queue("_process_query", query_id, "ResearchSearch")
 
 
 def sanitize_query(query):
@@ -105,7 +164,7 @@ def sanitize_query(query):
 
 def _refine_query(query_id):
     """Use AI to convert natural language query into structured search syntax."""
-    ResearchQuery.objects.filter(pk=query_id).update(status="refining")
+    _update_query(query_id, status="refining")
 
     query = ResearchQuery.objects.get(pk=query_id)
 
@@ -140,23 +199,23 @@ def _refine_query(query_id):
         )
         structured = response_text.strip().strip("`").strip()
         structured = sanitize_query(structured)
-        ResearchQuery.objects.filter(pk=query_id).update(structured_query=structured)
+        _update_query(query_id, structured_query=structured)
     except Exception:
         logger.exception("Error refining query %s, using raw text", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(
-            structured_query=query.query_text
-        )
+        _update_query(query_id, structured_query=query.query_text)
 
 
 def _refine_and_pause(query_id):
     """Refine the query with AI, then pause for user review."""
     try:
         _refine_query(query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(status="refined")
+        _update_query(query_id, status="refined")
     except Exception:
         logger.exception("Error refining research query %s", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(
-            status="error", error_message="An error occurred while refining the query."
+        _update_query(
+            query_id,
+            status="error",
+            error_message="An error occurred while refining the query.",
         )
 
 
@@ -168,7 +227,7 @@ def _process_query(query_id):
         return
 
     try:
-        ResearchQuery.objects.filter(pk=query_id).update(status="searching")
+        _update_query(query_id, status="searching")
 
         search_text = query.structured_query or query.query_text
         court = get_court_ids(query.state, query.include_federal)
@@ -193,9 +252,7 @@ def _process_query(query_id):
                 msg = f"CourtListener search failed (status {status_code})."
             else:
                 msg = "No results found on CourtListener."
-            ResearchQuery.objects.filter(pk=query_id).update(
-                status="error", error_message=msg
-            )
+            _update_query(query_id, status="error", error_message=msg)
             return
 
         # Newest-first slice of the SAME approved query. CL's relevance
@@ -263,7 +320,7 @@ def _process_query(query_id):
             )
 
         # ── Phase 2: Snippet Triage (Pass 1) ──
-        ResearchQuery.objects.filter(pk=query_id).update(status="processing")
+        _update_query(query_id, status="processing")
 
         result_records = list(
             ResearchResult.objects.filter(query_id=query_id).order_by("position")
@@ -335,12 +392,15 @@ def _process_query(query_id):
 
     except Exception:
         logger.exception("Error processing research query %s", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(
-            status="error", error_message="An unexpected error occurred."
+        _update_query(
+            query_id, status="error", error_message="An unexpected error occurred."
         )
         return
 
-    _run_enrichment(query_id)
+    # Chain the enrichment phase as its own qcluster task: the two
+    # halves together can exceed Q_CLUSTER's 600s timeout.
+    _update_query(query_id, status="enriching")
+    _queue("_run_enrichment", query_id, "ResearchEnrich")
 
 
 def _add_new_results(query, rows, source, via_case):
@@ -470,7 +530,7 @@ def _run_enrichment(query_id):
         return
 
     try:
-        ResearchQuery.objects.filter(pk=query_id).update(status="enriching")
+        _update_query(query_id, status="enriching")
         court = get_court_ids(query.state, query.include_federal)
 
         citing_rows = _chase_citing_cases(query, court)
@@ -523,20 +583,19 @@ def _run_enrichment(query_id):
                         )
 
         # ── Final Answer ──
-        ResearchQuery.objects.filter(pk=query_id).update(status="synthesizing")
+        _update_query(query_id, status="synthesizing")
         _generate_final_answer(query_id)
 
     except Exception:
         logger.exception("Error enriching research query %s", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(
-            status="error", error_message="An unexpected error occurred."
+        _update_query(
+            query_id, status="error", error_message="An unexpected error occurred."
         )
 
 
 def summarize_result(result_id):
-    """Run on-demand summarization of a single result in a background thread."""
-    thread = threading.Thread(target=_summarize_result, args=(result_id,), daemon=True)
-    thread.start()
+    """Queue on-demand briefing of a single result."""
+    _queue("_summarize_result", result_id, "ResearchBrief")
 
 
 def _summarize_result(result_id):
@@ -911,7 +970,7 @@ def _generate_final_answer(query_id):
     )
 
     if not high_results:
-        ResearchQuery.objects.filter(pk=query_id).update(status="complete")
+        _update_query(query_id, status="complete")
         ResearchResult.objects.filter(query_id=query_id).update(opinion_text="")
         return
 
@@ -971,30 +1030,24 @@ def _generate_final_answer(query_id):
             model=ANSWER_MODEL,
         )
 
-        ResearchQuery.objects.filter(pk=query_id).update(
-            status="complete", final_summary=response_text.strip()
-        )
+        _update_query(query_id, status="complete", final_summary=response_text.strip())
 
     except Exception:
         logger.exception("Error generating final answer for query %s", query_id)
-        ResearchQuery.objects.filter(pk=query_id).update(status="complete")
+        _update_query(query_id, status="complete")
 
     # Clean up opinion text to save space
     ResearchResult.objects.filter(query_id=query_id).update(opinion_text="")
 
 
 def review_result(result_id):
-    """Run citation review in a background daemon thread."""
-    thread = threading.Thread(target=_review_result, args=(result_id,), daemon=True)
-    thread.start()
+    """Queue citation review."""
+    _queue("_review_result", result_id, "ResearchReview")
 
 
 def review_more_citations(result_id):
-    """Evaluate more unevaluated forward citations in a background thread."""
-    thread = threading.Thread(
-        target=_review_more_citations, args=(result_id,), daemon=True
-    )
-    thread.start()
+    """Queue evaluation of more unevaluated forward citations."""
+    _queue("_review_more_citations", result_id, "ResearchReviewMore")
 
 
 def _review_result(result_id):
@@ -1157,11 +1210,8 @@ def _assess_citations(result, verifications):
 
 
 def assess_single_citation(verification_id):
-    """Assess a single citation in a background thread."""
-    thread = threading.Thread(
-        target=_assess_single_citation, args=(verification_id,), daemon=True
-    )
-    thread.start()
+    """Queue assessment of a single citation."""
+    _queue("_assess_single_citation", verification_id, "ResearchAssess")
 
 
 def _assess_single_citation(verification_id):
@@ -1261,11 +1311,8 @@ def _get_opinion_metadata(opinion_id):
 
 
 def generate_caselaw_summary(caselaw_id):
-    """Generate a 200-word AI summary for a CaseLaw entry in a background thread."""
-    thread = threading.Thread(
-        target=_generate_caselaw_summary, args=(caselaw_id,), daemon=True
-    )
-    thread.start()
+    """Queue the 200-word AI summary for a CaseLaw entry."""
+    _queue("_generate_caselaw_summary", caselaw_id, "CaseLawSummary")
 
 
 def _generate_caselaw_summary(caselaw_id):
@@ -1315,9 +1362,8 @@ def _generate_caselaw_summary(caselaw_id):
 
 
 def generate_brief(brief_id):
-    """Run case brief generation in a background daemon thread."""
-    thread = threading.Thread(target=_generate_brief, args=(brief_id,), daemon=True)
-    thread.start()
+    """Queue case brief generation."""
+    _queue("_generate_brief", brief_id, "CaseBrief")
 
 
 def _get_opinion_text(cluster_id):

@@ -19,6 +19,7 @@ from .tasks import (
     generate_brief,
     generate_caselaw_summary,
     process_research_query,
+    reap_stale_queries,
     refine_research_query,
     review_more_citations,
     review_result,
@@ -86,6 +87,8 @@ def research_caselaws_tab(request, matter_id):
 def research_search_tab(request, matter_id):
     """HTMX partial for the Search sub-tab content."""
     matter, _ = get_matter_from_url(request, matter_id)
+
+    reap_stale_queries(matter, request.user)
 
     active_query = (
         ResearchQuery.objects.filter(matter=matter, created_by=request.user)
@@ -203,6 +206,9 @@ def research_results(request, matter_id, query_id):
     from apps.management.pagination import CustomPaginator
 
     matter, _ = get_matter_from_url(request, matter_id)
+
+    reap_stale_queries(matter, request.user)
+
     query = get_object_or_404(
         ResearchQuery, pk=query_id, matter=matter, created_by=request.user
     )
