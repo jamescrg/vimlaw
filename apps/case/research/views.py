@@ -4,8 +4,8 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
 from apps.case.courtlistener import (
-    fetch_case_by_citation,
     fetch_cluster,
+    format_citations_with_year,
     lookup_citation,
 )
 from apps.case.models import CaseLaw
@@ -562,10 +562,11 @@ def research_save_to_caselaws(request, result_id):
                 {"result": result, "matter": matter, "saved_to_caselaws": True},
             )
 
-    # Fetch full case data from CourtListener
-    case_data = fetch_case_by_citation(result.citation or result.case_name)
-
-    if not case_data.get("found"):
+    # Build the CaseLaw row from the cluster the result already points at.
+    # The old path round-tripped through the citation-lookup API, which
+    # cannot resolve a slip opinion (no reporter citation to parse).
+    cluster = fetch_cluster(result.cluster_id) if result.cluster_id else {}
+    if not cluster:
         return render(
             request,
             "case/research/result-row.html",
@@ -576,17 +577,48 @@ def research_save_to_caselaws(request, result_id):
             },
         )
 
+    date_filed = None
+    if cluster.get("date_filed"):
+        from datetime import date
+
+        try:
+            date_filed = date.fromisoformat(cluster["date_filed"])
+        except ValueError:
+            date_filed = None
+
+    # The cluster's "court" field is an API URL; the display name comes
+    # from the search result and the id from the URL tail.
+    court_id = str(cluster.get("court") or "").rstrip("/").split("/")[-1]
+
+    opinion_id = None
+    sub_opinions = cluster.get("sub_opinions", [])
+    if sub_opinions:
+        try:
+            opinion_id = int(sub_opinions[0].rstrip("/").split("/")[-1])
+        except (ValueError, IndexError):
+            opinion_id = None
+
+    citation = (
+        format_citations_with_year(cluster.get("citations", []), None)
+        or result.citation
+    )
+
     case_law = CaseLaw.objects.create(
         matter=matter,
-        case_name=case_data.get("case_name", result.case_name),
-        citation=case_data.get("citation", result.citation),
-        court=case_data.get("court", result.court),
-        court_id=case_data.get("court_id", ""),
-        date_filed=case_data.get("date_filed"),
-        docket_number=case_data.get("docket_number", ""),
-        cluster_id=case_data.get("cluster_id", result.cluster_id),
-        opinion_id=case_data.get("opinion_id"),
-        courtlistener_url=case_data.get("courtlistener_url", result.courtlistener_url),
+        case_name=cluster.get("case_name") or result.case_name,
+        citation=citation,
+        court=result.court,
+        court_id=court_id,
+        date_filed=date_filed,
+        docket_number=str(cluster.get("docket_number") or ""),
+        cluster_id=result.cluster_id,
+        opinion_id=opinion_id,
+        courtlistener_url=result.courtlistener_url
+        or (
+            f"https://www.courtlistener.com{cluster['absolute_url']}"
+            if cluster.get("absolute_url")
+            else ""
+        ),
         created_by=request.user,
         updated_by=request.user,
     )

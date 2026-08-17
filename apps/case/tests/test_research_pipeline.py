@@ -553,6 +553,57 @@ def test_results_view_splits_ruled_out(client, matter, user):
     assert "Keeper" in html
 
 
+def test_bookmark_saves_slip_opinion_by_cluster_id(client, matter, user, monkeypatch):
+    """A citation-less slip opinion saves via its cluster_id; the
+    citation-lookup API (which can't resolve it) is never called."""
+    from django.urls import reverse as dj_reverse
+
+    from apps.case.models import CaseLaw
+    from apps.case.research import views as research_views
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    query = ResearchQuery.objects.create(matter=matter, query_text="q", created_by=user)
+    result = ResearchResult.objects.create(
+        query=query,
+        position=1,
+        case_name="Birg v. Emory",
+        citation="",
+        court="Court of Appeals of Georgia",
+        cluster_id=9,
+        courtlistener_url="https://cl/birg",
+        relevance="high",
+    )
+    lookup_calls = []
+    monkeypatch.setattr(
+        research_views, "lookup_citation", lambda c: lookup_calls.append(c)
+    )
+    monkeypatch.setattr(
+        research_views,
+        "fetch_cluster",
+        lambda cid: {
+            "case_name": "Birg v. Emory Healthcare",
+            "citations": [],
+            "court": "https://api/courts/gactapp/",
+            "date_filed": "2026-06-15",
+            "sub_opinions": ["https://api/opinions/90/"],
+        },
+    )
+    monkeypatch.setattr(research_views, "generate_caselaw_summary", lambda cid: None)
+
+    url = dj_reverse("case:research-save-caselaw", args=[result.id])
+    response = client.post(url)
+    assert response.status_code == 200
+
+    saved = CaseLaw.objects.get(matter=matter, cluster_id=9)
+    assert saved.case_name == "Birg v. Emory Healthcare"
+    assert saved.citation == ""
+    assert saved.court == "Court of Appeals of Georgia"
+    assert saved.court_id == "gactapp"
+    assert str(saved.date_filed) == "2026-06-15"
+    assert saved.opinion_id == 90
+    assert lookup_calls == []
+
+
 # --------------------------------------------------------------------------- #
 # Refiner prompt
 # --------------------------------------------------------------------------- #
