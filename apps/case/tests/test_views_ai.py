@@ -318,9 +318,8 @@ class TestActivityLog:
     """Classic turns accumulate a live activity log like research does."""
 
     def test_worker_logs_pipeline_stages(self, client, matter, user, monkeypatch):
-        from django.core.cache import cache
-
         from apps.case.ai import tasks as ai_tasks
+        from apps.case.ai.status import status_cache as cache
 
         conversation = Conversation.objects.create(
             matter=matter, title="C", user=user, llm="gemini-pro-latest"
@@ -359,8 +358,9 @@ class TestActivityLog:
         cache.delete(cache_key)
 
     def test_status_poll_renders_activity_log(self, client, matter, user):
-        from django.core.cache import cache
         from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
 
         conversation = Conversation.objects.create(
             matter=matter, title="C", user=user, llm="gemini-pro-latest"
@@ -387,10 +387,10 @@ class TestActivityLog:
     def test_complete_persists_activity_log_on_message(
         self, client, matter, user, monkeypatch
     ):
-        from django.core.cache import cache
         from django.urls import reverse
 
         from apps.case.ai import tasks as ai_tasks
+        from apps.case.ai.status import status_cache as cache
 
         # Completion spawns a summary thread; keep it out of the test.
         monkeypatch.setattr(
@@ -429,8 +429,9 @@ class TestActivityLog:
         assert "Case file gathered: 1 fact" in html
 
     def test_missing_status_entry_reports_interruption(self, client, matter, user):
-        """A dead worker (reload killed the thread + LocMem cache) must not
-        poll 'Checking...' forever; the user gets told to re-send."""
+        """A dead run (the process died and the status entry expired with
+        no heartbeat left to refresh it) must not poll 'Checking...'
+        forever; the user gets told to re-send."""
         from django.urls import reverse
 
         conversation = Conversation.objects.create(

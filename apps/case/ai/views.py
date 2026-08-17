@@ -7,7 +7,6 @@ import threading
 import time
 
 from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
 from django.db.models import F, Max
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
@@ -35,6 +34,7 @@ from .context import (
 )
 from .filters import ConversationFilter
 from .models import Conversation, Message
+from .status import RUNNING_TTL, status_cache
 from .tasks import process_ai_request
 
 logger = logging.getLogger(__name__)
@@ -409,10 +409,10 @@ def send_message(request, matter_id):
 
     # Initialize status in cache
     cache_key = f"ai_status_{conversation.id}"
-    cache.set(
+    status_cache.set(
         cache_key,
         {"status": "starting", "message": "Starting..."},
-        timeout=600,
+        timeout=RUNNING_TTL,
     )
 
     # Start background thread — context assembly + AI processing
@@ -457,13 +457,14 @@ def ai_status(request, conv_id):
     conversation = get_object_or_404(Conversation, pk=conv_id)
 
     cache_key = f"ai_status_{conv_id}"
-    status_data = cache.get(cache_key)
+    status_data = status_cache.get(cache_key)
     if status_data is None:
         # send_message seeds this entry before spawning the worker thread,
-        # so a missing entry while an indicator is still polling means the
-        # run died with its process (the status cache is in-process
-        # LocMem, and a worker reload kills both the daemon thread and the
-        # cache). Say so plainly instead of polling "Checking..." forever.
+        # and the thread's heartbeat keeps re-touching it while its
+        # process is alive (see status.py). A missing entry while an
+        # indicator is still polling therefore means the run died with
+        # its process (deploy, reload, crash) and the entry expired. Say
+        # so plainly instead of polling "Checking..." forever.
         interrupted = Message.objects.create(
             conversation=conversation,
             role="assistant",
@@ -529,7 +530,7 @@ def ai_status(request, conv_id):
                 ).start()
 
         # Clear the cache
-        cache.delete(cache_key)
+        status_cache.delete(cache_key)
 
         # Return just the new assistant message (replaces status indicator)
         return render(
@@ -550,7 +551,7 @@ def ai_status(request, conv_id):
         )
 
         # Clear the cache
-        cache.delete(cache_key)
+        status_cache.delete(cache_key)
 
         # Return just the error message (replaces status indicator)
         return render(
@@ -602,7 +603,7 @@ def cancel_request(request, conv_id):
         return HttpResponse(status=405)
 
     cache_key = f"ai_status_{conv_id}"
-    status_data = cache.get(cache_key)
+    status_data = status_cache.get(cache_key)
 
     if status_data and status_data.get("status") not in (
         "complete",
@@ -610,7 +611,7 @@ def cancel_request(request, conv_id):
         "cancelled",
     ):
         # Set cancelled status
-        cache.set(
+        status_cache.set(
             cache_key,
             {
                 "status": "cancelled",
