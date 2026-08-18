@@ -1,6 +1,6 @@
 // Notes search palette (Ctrl+K) — open, keyboard nav, jump-to-match
-// handoff. Bound ONCE from the editor's DOMContentLoaded (never from
-// setupKeyboardShortcuts, which re-binds on every note switch).
+// handoff. Bound ONCE from the editor's DOMContentLoaded, on document,
+// which survives note switches.
 
 export function setupPalette() {
   const btn = document.getElementById("notes-palette-btn");
