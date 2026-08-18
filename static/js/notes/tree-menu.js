@@ -7,7 +7,7 @@
 // responses fire noteFoldersChanged, which notes-editor.js turns into a
 // tree refresh.
 
-import { refreshTree } from "./file-tree.js";
+import { refreshTree, openLaunchNote } from "./file-tree.js";
 import { broadcast } from "./broadcast.js";
 import { getCSRFToken } from "./state.js";
 import { setFolderExpanded, setMatterExpanded } from "./tab-state.js";
@@ -103,7 +103,7 @@ function deleteNote(li) {
     broadcast({ type: "tree-changed" });
     if (deletedOpenNote) {
       // The open document is gone; land on the most recent surviving note
-      window.location.assign(container.dataset.launchUrl);
+      openLaunchNote();
     } else {
       refreshTree();
     }

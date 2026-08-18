@@ -8,6 +8,7 @@
 import { state, getCSRFToken } from "./state.js";
 import { htmlToMarkdown } from "./markdown.js";
 import { broadcast } from "./broadcast.js";
+import { openLaunchNote } from "./file-tree.js";
 
 export function getMarkdownContent() {
   if (!state.editor) return "";
@@ -60,8 +61,7 @@ export function performAutosave() {
         // The note was deleted from another tab (e.g. a folder-cascade
         // delete, which has no per-note broadcast); land on launch like
         // a direct delete would
-        const container = document.getElementById("file-tree-container");
-        if (container) window.location.assign(container.dataset.launchUrl);
+        openLaunchNote();
         return null;
       }
       return r.json();
