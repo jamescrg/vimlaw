@@ -15,9 +15,11 @@ from .courtlistener import count_forward_citations
 from .jurisdictions import STATES
 from .models import CaseBrief, CitationVerification, ResearchQuery, ResearchResult
 from .tasks import (
+    _rank_candidates,
     assess_single_citation,
     generate_brief,
     generate_caselaw_summary,
+    process_brief_phase,
     process_research_query,
     reap_stale_queries,
     refine_research_query,
@@ -229,6 +231,16 @@ def research_results(request, matter_id, query_id):
         order_field
     )
 
+    # At the selection gate, the results area shows the ranked candidate
+    # list (with the pre-read signals) instead of result cards.
+    recommended_candidates = []
+    other_candidates = []
+    if query.status == "selecting":
+        pending = list(query.results.filter(relevance="pending").order_by("position"))
+        ordered, _ = _rank_candidates(pending)
+        recommended_candidates = [r for r in ordered if r.recommended]
+        other_candidates = [r for r in ordered if not r.recommended]
+
     session_key = f"research_results_{query_id}"
     pagination = CustomPaginator(
         results, per_page=5, request=request, session_key=session_key
@@ -260,6 +272,8 @@ def research_results(request, matter_id, query_id):
             "query": query,
             "results": results,
             "ruled_out": ruled_out,
+            "recommended_candidates": recommended_candidates,
+            "other_candidates": other_candidates,
             "matter": matter,
             "sort": sort,
             "pagination": pagination,
@@ -344,6 +358,75 @@ def research_confirm(request, matter_id, query_id):
 
     context = {"query": query, "results": query.results.all(), "matter": matter}
     return render(request, "case/research/refinement.html", context)
+
+
+@login_required
+def research_select_cases(request, matter_id, query_id):
+    """POST: run full-opinion briefs on the user-selected cases.
+
+    The second gate: reads are the expensive stage, so after search +
+    triage the user picks which cases get pulled (the pipeline's
+    recommendation arrives prechecked). Ruled-out rows may be selected
+    too - a wrong triage call is overridable by hand.
+    """
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    matter, _ = get_matter_from_url(request, matter_id)
+    query = get_object_or_404(
+        ResearchQuery, pk=query_id, matter=matter, created_by=request.user
+    )
+
+    selected_ids = [
+        int(key[5:])
+        for key in request.POST
+        if key.startswith("case_") and key[5:].isdigit()
+    ]
+    valid_ids = set(
+        query.results.filter(
+            relevance__in=["pending", "rejected", "low", "none"]
+        ).values_list("id", flat=True)
+    )
+    keep = [rid for rid in selected_ids if rid in valid_ids]
+
+    if not keep:
+        pending = list(query.results.filter(relevance="pending").order_by("position"))
+        ordered, _ = _rank_candidates(pending)
+        return render(
+            request,
+            "case/research/results.html",
+            {
+                "query": query,
+                "matter": matter,
+                "results": [],
+                "ruled_out": list(
+                    query.results.filter(relevance__in=["rejected", "low"]).order_by(
+                        "position"
+                    )
+                ),
+                "recommended_candidates": [r for r in ordered if r.recommended],
+                "other_candidates": [r for r in ordered if not r.recommended],
+                "selection_error": "Select at least one case to brief.",
+                "sort": "relevance",
+            },
+        )
+
+    # Unselected candidates step aside (still briefable later via the
+    # per-card button); selections - resurrected ruled-out rows included -
+    # join the briefing queue.
+    query.results.filter(relevance="pending").exclude(pk__in=keep).update(
+        relevance="none", status_message="Not selected"
+    )
+    query.results.filter(pk__in=keep).update(
+        relevance="pending", status_message="Queued for briefing"
+    )
+
+    query.status = "processing"
+    query.save(update_fields=["status"])
+
+    process_brief_phase(query.id)
+
+    return research_results(request, matter_id, query_id)
 
 
 @login_required

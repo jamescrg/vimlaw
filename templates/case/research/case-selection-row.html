@@ -1,0 +1,41 @@
+{% comment %}
+One selectable case on the selection screen, with every pre-read signal:
+citation/court/date, forward citations, cross-variant hit count, the
+snippet-stage promise score, and the triage reason. `checked` is set by
+the including group.
+{% endcomment %}
+<div class="research-selection-row">
+  <input type="checkbox"
+         name="case_{{ result.id }}"
+         id="case-{{ result.id }}"
+         {% if checked %}checked{% endif %}
+         onchange="researchSelCount(this.form)">
+  <div class="research-selection-main">
+    <div>
+      {% if result.cluster_id %}
+        <a href="{% url 'case:caselaw-viewer-cluster' result.query.matter.id result.cluster_id %}"
+           target="_blank">{{ result.case_name }}</a>
+      {% else %}
+        {{ result.case_name }}
+      {% endif %}
+      {% if result.cluster_id and not result.citation %}
+        <span class="app-badge app-badge-sm badge-orange"
+              title="No reporter citation yet: new and not yet settled law">Slip opinion</span>
+      {% endif %}
+    </div>
+    <div class="detail-text">
+      {% if result.citation %}{{ result.citation }} &middot;{% endif %}
+      {{ result.court }}
+      {% if result.date_filed %}({{ result.date_filed }}){% endif %}
+      {% if result.forward_citation_count %}
+        &middot; Cited {{ result.forward_citation_count }} time{{ result.forward_citation_count|pluralize }}
+      {% endif %}
+      {% if result.hit_count > 1 %}
+        &middot;
+        <span title="Surfaced by: {{ result.matched_variants|join:", " }}">Matched {{ result.hit_count }} queries</span>
+      {% endif %}
+      {% if result.triage_score is not None %}&middot; Promise {{ result.triage_score|floatformat:0 }}/10{% endif %}
+    </div>
+    {% if result.eval_reason %}<div class="research-selection-reason">{{ result.eval_reason }}</div>{% endif %}
+  </div>
+</div>

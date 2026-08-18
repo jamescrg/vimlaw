@@ -72,6 +72,8 @@ ANSWER_MODEL = "gemini-pro-latest"
 # was stranded by a restart; the reaper flags it for a re-run. Both
 # pipeline tasks finish well inside this window.
 RESEARCH_STALE_MINUTES = 30
+# "refined" and "selecting" are deliberately absent: both wait on the
+# user, indefinitely, and must never be reaped.
 ACTIVE_QUERY_STATUSES = [
     "pending",
     "refining",
@@ -521,8 +523,8 @@ def _process_query(query_id):
             )
 
         # ── Phase 2: Snippet Triage (Pass 1) ──
-        _update_query(query_id, status="processing")
-
+        # Status stays "searching": "processing" now means the post-gate
+        # briefing phase, and its banner says so.
         result_records = list(
             ResearchResult.objects.filter(query_id=query_id).order_by("position")
         )
@@ -542,7 +544,9 @@ def _process_query(query_id):
 
         # Rejected rows are kept (relevance="rejected", reason stored) so
         # the ruled-out list stays inspectable - a wrongly-triaged case
-        # used to vanish without a trace.
+        # used to vanish without a trace. Accepted rows keep their triage
+        # reason too: the selection screen shows it (the brief overwrites
+        # eval_reason with its own rationale later).
         for rid, (score, reason) in triage_results.items():
             if score < TRIAGE_REJECT_BELOW:
                 ResearchResult.objects.filter(pk=rid).update(
@@ -552,38 +556,88 @@ def _process_query(query_id):
                     status_message="Ruled out at triage",
                 )
             else:
-                ResearchResult.objects.filter(pk=rid).update(triage_score=score)
+                ResearchResult.objects.filter(pk=rid).update(
+                    triage_score=score,
+                    eval_reason=reason,
+                    status_message="Awaiting selection",
+                )
 
-        # ── Phase 3: Full-opinion briefing ──
+        # ── The selection gate ──
+        # Mark the pipeline's own picks, then pause for the user: reads
+        # are the expensive stage (2 CL credits + a full-opinion flash
+        # call each), so the user decides which cases get pulled, with
+        # the recommendation prechecked. Mirrors the query-variant gate.
         survivors = list(
             ResearchResult.objects.filter(
                 query_id=query_id, relevance="pending"
             ).order_by("position")
         )
-        # Brief slots go by cross-variant hit count, then snippet-stage
-        # promise, then CL's ordering - with a recency guarantee, because
-        # brand-new law is what keyword ranking most reliably buries.
-        survivors.sort(
-            key=lambda r: (-r.hit_count, -(r.triage_score or 5.0), r.position)
-        )
-        to_brief = survivors[:BRIEF_MAX]
-        chosen = {r.id for r in to_brief}
-        newest = sorted(survivors, key=lambda r: r.date_filed or "", reverse=True)[
-            :RECENT_GUARANTEE
-        ]
-        for recent in newest:
-            if recent.id in chosen or not to_brief:
-                continue
-            dropped = to_brief.pop()
-            chosen.discard(dropped.id)
-            to_brief.append(recent)
-            chosen.add(recent.id)
-        overflow = [r for r in survivors if r.id not in chosen]
-        if overflow:
-            ResearchResult.objects.filter(pk__in=[r.id for r in overflow]).update(
-                relevance="none", status_message="Not briefed (run cap)"
+        _, recommended_ids = _rank_candidates(survivors)
+        if recommended_ids:
+            ResearchResult.objects.filter(pk__in=recommended_ids).update(
+                recommended=True
             )
 
+        _reorder_results(query_id)
+
+    except Exception:
+        logger.exception("Error processing research query %s", query_id)
+        _update_query(
+            query_id, status="error", error_message="An unexpected error occurred."
+        )
+        return
+
+    _update_query(query_id, status="selecting")
+
+
+def _rank_candidates(survivors):
+    """Order briefing candidates and pick the recommended set.
+
+    Ranking: cross-variant hit count, then snippet-stage promise, then
+    CL's ordering - with a recency guarantee, because brand-new law is
+    what keyword ranking most reliably buries. Returns (ordered list,
+    recommended id set of at most BRIEF_MAX).
+    """
+    ordered = sorted(
+        survivors,
+        key=lambda r: (-r.hit_count, -(r.triage_score or 5.0), r.position),
+    )
+    picks = ordered[:BRIEF_MAX]
+    chosen = {r.id for r in picks}
+    newest = sorted(ordered, key=lambda r: r.date_filed or "", reverse=True)[
+        :RECENT_GUARANTEE
+    ]
+    for recent in newest:
+        if recent.id in chosen or not picks:
+            continue
+        dropped = picks.pop()
+        chosen.discard(dropped.id)
+        picks.append(recent)
+        chosen.add(recent.id)
+    return ordered, chosen
+
+
+def process_brief_phase(query_id):
+    """Queue full-opinion briefing of the user-selected cases."""
+    _queue("_run_brief_phase", query_id, "ResearchBriefs")
+
+
+def _run_brief_phase(query_id):
+    """Brief every selected (relevance=pending) case, then chain
+    enrichment. Runs after the user confirms the selection."""
+    try:
+        query = ResearchQuery.objects.get(pk=query_id)
+    except ResearchQuery.DoesNotExist:
+        return
+
+    try:
+        _update_query(query_id, status="processing")
+
+        to_brief = list(
+            ResearchResult.objects.filter(
+                query_id=query_id, relevance="pending"
+            ).order_by("position")
+        )
         if to_brief:
             ResearchResult.objects.filter(pk__in=[r.id for r in to_brief]).update(
                 status_message="Fetching opinion..."
@@ -604,18 +658,17 @@ def _process_query(query_id):
                             relevance="error", status_message="Briefing failed"
                         )
 
-        # ── Phase 4: Reorder (nothing is deleted; ruled-out rows sink) ──
         _reorder_results(query_id)
 
     except Exception:
-        logger.exception("Error processing research query %s", query_id)
+        logger.exception("Error briefing research query %s", query_id)
         _update_query(
             query_id, status="error", error_message="An unexpected error occurred."
         )
         return
 
-    # Chain the enrichment phase as its own qcluster task: the two
-    # halves together can exceed Q_CLUSTER's 600s timeout.
+    # Chain the enrichment phase as its own qcluster task: the phases
+    # together can exceed Q_CLUSTER's 600s timeout.
     _update_query(query_id, status="enriching")
     _queue("_run_enrichment", query_id, "ResearchEnrich")
 
