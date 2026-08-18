@@ -404,7 +404,16 @@ function setupToolbar() {
 
 // ─── Keyboard Shortcuts ──────────────────────────────────────────────────────
 
+// Bound ONCE on document, which survives note switches. initEditor runs on
+// every switch, so binding here each time stacked one listener per switch
+// and toggle shortcuts fired N times (cancelling out whenever N was even).
+// The handler reads state.editor per event, so one binding follows rebuilds.
+let shortcutsBound = false;
+
 function setupKeyboardShortcuts() {
+  if (shortcutsBound) return;
+  shortcutsBound = true;
+
   const HEADING_KEYS = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
   const FKEY_HEADINGS = { F2: 2, F3: 3, F4: 4 };
   const HIGHLIGHT_COLORS = {
@@ -417,6 +426,9 @@ function setupKeyboardShortcuts() {
   };
 
   document.addEventListener("keydown", (e) => {
+    // Mid-swap gap: the old editor is destroyed and initEditor is pending
+    if (!state.editor) return;
+
     const mod = e.ctrlKey || e.metaKey;
 
     // Tab inside code blocks
