@@ -34,6 +34,7 @@ import { state, getCSRFToken, bindClick } from "./notes/state.js";
 import {
   setupFileTree,
   refreshTree,
+  openLaunchNote,
   startFolderRename,
   updateTreeCollapseIcon,
 } from "./notes/file-tree.js";
@@ -948,7 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // do NOT re-reveal, so an explicit collapse of the chain sticks.
   revealActiveNote();
   // After expansion, put each pane back where this tab left it (full
-  // navigations — note creation, delete-to-launch — reset the DOM)
+  // page loads reset the DOM)
   restoreTreeScroll();
   setupTreeMenu();
   setupPalette();
@@ -1017,17 +1018,16 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     "note-deleted": (msg) => {
       if (msg.noteId !== window.NOTE_DATA.id) return;
-      const container = document.getElementById("file-tree-container");
-      if (container) window.location.assign(container.dataset.launchUrl);
+      openLaunchNote();
     },
   });
-  // Genuine HX-Redirect navigations remain (deleting the open note via
-  // the folder-delete modal lands on launch) — announce them to sibling
-  // tabs before this page unloads
-  document.body.addEventListener("htmx:afterRequest", (e) => {
-    if (e.detail.xhr && e.detail.xhr.getResponseHeader("HX-Redirect")) {
-      broadcast({ type: "tree-changed" });
-    }
+  // Folder-cascade delete that took the open note with it: the modal's
+  // response can't render a tree for a note that no longer exists, so it
+  // asks us to land on launch in place (sibling tabs learn over the
+  // broadcast channel, like every other folder CRUD)
+  document.body.addEventListener("openLaunchNote", () => {
+    broadcast({ type: "tree-changed" });
+    openLaunchNote();
   });
   // The conflict banner is re-rendered with every content swap, so its
   // reload button is wired by delegation

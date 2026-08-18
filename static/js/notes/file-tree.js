@@ -3,8 +3,9 @@
 // element) so bindings survive the htmx innerHTML refresh of the tree that
 // follows every move.
 
-import { getCSRFToken } from "./state.js";
+import { state, getCSRFToken } from "./state.js";
 import { broadcast } from "./broadcast.js";
+import { getMarkdownContent } from "./autosave.js";
 import {
   applyTreeState,
   setFolderExpanded,
@@ -361,6 +362,24 @@ function flashDropError(target, reason) {
   console.warn("Move rejected:", reason);
   target.classList.add("drop-error");
   setTimeout(() => target.classList.remove("drop-error"), DROP_ERROR_MS);
+}
+
+// The open note no longer exists (deleted here, in another tab, or by a
+// folder cascade). Land on the launch note through the normal htmx swap
+// instead of a full navigation, which rebuilds the page and re-expands
+// every tree. The dead buffer is marked clean first: the pre-swap
+// autosave flush would otherwise 404 against the deleted note and
+// itself trigger another landing.
+export function openLaunchNote() {
+  const container = document.getElementById("file-tree-container");
+  if (!container) return;
+  state.lastSavedContent = getMarkdownContent();
+  window.htmx
+    .ajax("GET", container.dataset.launchUrl, {
+      target: "#note-editor-container",
+      swap: "innerHTML",
+    })
+    .then(refreshTree);
 }
 
 export function refreshTree() {

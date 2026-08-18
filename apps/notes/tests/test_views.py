@@ -518,7 +518,7 @@ class TestFolderCrudEditorContext:
         folder.refresh_from_db()
         assert folder.name == "New"
 
-    def test_delete_open_note_redirects(self, client, user, matter):
+    def test_delete_open_note_lands_on_launch(self, client, user, matter):
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Doomed", matter=matter)
@@ -531,7 +531,8 @@ class TestFolderCrudEditorContext:
         )
         resp = client.delete(url)
         assert resp.status_code == 204
-        assert resp.headers.get("HX-Redirect") == reverse("notes:launch")
+        assert "openLaunchNote" in resp.headers.get("HX-Trigger", "")
+        assert "closeModal" in resp.headers.get("HX-Trigger", "")
         assert not Note.objects.filter(pk=note.id).exists()
 
     def test_delete_keeping_notes_refreshes(self, client, user, matter):
@@ -594,6 +595,18 @@ class TestNotesLaunch:
         assert note.title == "Untitled"
         assert note.matter_id is None
         assert resp.url == reverse("notes:note-view", args=[note.id])
+
+    def test_htmx_request_swaps_partial_in_place(self, client, user):
+        from apps.notes.models import NoteView
+
+        note = Note.objects.create(author=user, title="Landing")
+        resp = client.get(reverse("notes:launch"), HTTP_HX_REQUEST="true")
+        assert resp.status_code == 200
+        assert resp.headers.get("HX-Push-Url") == reverse(
+            "notes:note-view", args=[note.id]
+        )
+        assert b"window.NOTE_DATA" in resp.content
+        assert NoteView.objects.filter(user=user, note=note).exists()
 
 
 class TestAddIntoFolder:

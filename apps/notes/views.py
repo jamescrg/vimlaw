@@ -450,6 +450,18 @@ def notes_launch(request):
         )
     if note is None:
         note = Note.objects.create(title="Untitled", author=request.user, matter=None)
+    if request.headers.get("HX-Request"):
+        # Editor-context landing (the open note was just deleted): swap the
+        # content partial in place instead of redirecting to a full page
+        # load, which would rebuild and re-expand the whole tree panel.
+        record_note_view(request.user, note)
+        response = render(
+            request,
+            "notes/editor-content.html",
+            {"note": note, "matter": note.matter},
+        )
+        response["HX-Push-Url"] = reverse("notes:note-view", args=[note.id])
+        return response
     return redirect("notes:note-view", note.id)
 
 
@@ -909,7 +921,7 @@ def note_folder_delete(request, folder_id):
     folder.delete()
 
     # Editor context: if the open note went down with the folder, a plain
-    # refresh would 404 — send the user to the notes index instead.
+    # refresh would 404 — the client lands on the launch note in place.
     note_id = request.GET.get("note", "")
     if (
         request.GET.get("context") == "editor"
@@ -917,7 +929,10 @@ def note_folder_delete(request, folder_id):
         and not Note.objects.filter(pk=note_id).exists()
     ):
         return HttpResponse(
-            status=204, headers={"HX-Redirect": reverse("notes:launch")}
+            status=204,
+            headers={
+                "HX-Trigger": json.dumps({"openLaunchNote": True, "closeModal": True})
+            },
         )
 
     # Refresh the trees in place (a full HX-Refresh reload would dump the
