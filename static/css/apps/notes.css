@@ -368,6 +368,10 @@ body:has(.note-page.standalone) {
 
 .note-sidebar .file-tree-item {
   align-items: flex-start;
+  /* Every row is interactive (notes open, folders/matters toggle), so the
+     pointer covers the whole row — names, padding, and gaps alike. The
+     inline rename input opts back into a text cursor below. */
+  cursor: pointer;
   display: flex;
   flex-wrap: wrap;
   font-size: 1rem;
@@ -394,7 +398,6 @@ body:has(.note-page.standalone) {
 
 .note-sidebar .file-tree-note {
   color: var(--color-primary);
-  cursor: pointer;
 }
 
 .note-sidebar .file-tree-toggle,
@@ -405,7 +408,6 @@ body:has(.note-page.standalone) {
 
 .note-sidebar .file-tree-toggle {
   color: var(--color-muted);
-  cursor: pointer;
   /* Track .file-tree-name's vertical padding so the chevron stays on the
      name's first line (the row aligns flex-start). */
   padding-top: 0.25rem;
@@ -433,16 +435,13 @@ body:has(.note-page.standalone) {
   white-space: nowrap;
 }
 
-.note-sidebar .file-tree-folder > .file-tree-name {
-  cursor: pointer;
-}
-
 /* Inline rename (new-folder flow): sits where the name span was */
 .note-sidebar .file-tree-rename-input {
   background: var(--background-body);
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-xs);
   color: var(--color-primary);
+  cursor: text;
   flex: 1;
   font-size: 1rem;
   min-width: 0;
