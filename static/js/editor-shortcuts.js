@@ -9,6 +9,8 @@
 
 const HEADING_KEYS = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
 const FKEY_HEADINGS = { F2: 2, F3: 3, F4: 4 };
+// Letters are mnemonic; Alt+1-6 mirror the highlight menu's chip order
+// left to right (Alt+` clears, matching the row's leftmost chip).
 const HIGHLIGHT_COLORS = {
   y: null,
   g: "mark-green",
@@ -16,6 +18,12 @@ const HIGHLIGHT_COLORS = {
   p: "mark-purple",
   o: "mark-orange",
   a: "mark-gray",
+  1: "mark-gray",
+  2: null,
+  3: "mark-green",
+  4: "mark-red",
+  5: "mark-purple",
+  6: "mark-orange",
 };
 
 // Returns true when the event was handled (and defaultPrevented).
@@ -142,8 +150,8 @@ export function handleEditorShortcut(editor, e, actions = {}) {
     return true;
   }
 
-  // Remove highlight: Alt+C
-  if (e.altKey && !mod && lowerKey === "c") {
+  // Remove highlight: Alt+C or Alt+`
+  if (e.altKey && !mod && (lowerKey === "c" || e.key === "`")) {
     e.preventDefault();
     editor.chain().focus().unsetHighlight().run();
     return true;
