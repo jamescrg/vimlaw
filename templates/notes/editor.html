@@ -23,7 +23,17 @@
     <!-- Left Panel - Files / Matters -->
     <aside class="note-panel note-panel-left"
            data-active-pane="{{ active_pane }}">
+      {% comment %}
+      Both panel headers put the collapse chevron on the panel's OUTER
+      edge (the screen side) and everything else inboard of it, so the
+      two chevrons mirror each other across the editor.
+      {% endcomment %}
       <div class="panel-header">
+        <button class="panel-btn panel-toggle"
+                type="button"
+                title="Toggle files panel">
+          <i class="icon-chevron-left"></i>
+        </button>
         <div class="panel-tabs">
           <button type="button"
                   class="panel-tab{% if active_pane == 'files' %} active{% endif %}"
@@ -41,11 +51,6 @@
             <i class="icon-history"></i>
           </button>
         </div>
-        <button class="panel-btn panel-toggle"
-                type="button"
-                title="Toggle files panel">
-          <i class="icon-chevron-left"></i>
-        </button>
       </div>
       {% comment %}
       Obsidian-style action row: the tab bar above only switches panes;
@@ -290,14 +295,18 @@
     </main>
     <!-- Right Panel - Outline -->
     <aside class="note-panel note-panel-right">
+      {% comment %}
+      Chevron on the outer edge, label inboard — mirroring the left
+      panel's header.
+      {% endcomment %}
       <div class="panel-header">
+        {% comment %}Decorative mirror of the left panel's tab bar{% endcomment %}
+        <span class="panel-title" title="Outline"><i class="icon-list-tree"></i></span>
         <button class="panel-btn panel-toggle"
                 type="button"
                 title="Toggle outline panel">
           <i class="icon-chevron-right"></i>
         </button>
-        {% comment %}Decorative mirror of the left panel's tab bar{% endcomment %}
-        <span class="panel-title" title="Outline"><i class="icon-list-tree"></i></span>
       </div>
       <div class="panel-actions">
         <button type="button"
