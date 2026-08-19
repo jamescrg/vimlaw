@@ -609,8 +609,8 @@ const PANELS = [
     selector: ".note-panel-left",
     stateKey: "notes-editor-note-panel",
     widthKey: "notes-editor-panel-width",
-    closeIcon: "icon-chevron-left",
-    openIcon: "icon-chevron-right",
+    closeIcon: "icon-panel-left-close",
+    openIcon: "icon-panel-left-open",
     railBreakpoint: 1200,
     resizeDir: 1,
   },
@@ -618,15 +618,15 @@ const PANELS = [
     selector: ".note-panel-right",
     stateKey: "notes-editor-outline-panel",
     widthKey: "notes-editor-outline-panel-width",
-    closeIcon: "icon-chevron-right",
-    openIcon: "icon-chevron-left",
+    closeIcon: "icon-panel-right-close",
+    openIcon: "icon-panel-right-open",
     railBreakpoint: 1440,
     resizeDir: -1,
   },
 ];
 
-// Point the toggle's chevron at the action it will perform: an open
-// panel's chevron points toward the edge it will collapse into.
+// Show the toggle's next action: an open panel wears panel-*-close, a
+// collapsed one panel-*-open.
 function syncPanelIcon(cfg, isOpen) {
   const icon = document.querySelector(cfg.selector + " .panel-toggle i");
   if (icon) icon.className = isOpen ? cfg.closeIcon : cfg.openIcon;
