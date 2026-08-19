@@ -87,10 +87,12 @@
              data-folder-add-url="{% url 'notes:folder-add' %}"
              data-launch-url="{% url 'notes:launch' %}">{% include "notes/editor-trees.html" %}</div>
       </div>
-      <!-- Collapsed-rail shortcuts: expand the panel; search stays reachable -->
+      <!-- Collapsed-rail shortcuts: expand the panel; search stays reachable.
+           The top icon is the expand counterpart of the header's collapse
+           toggle, sitting in the same corner. -->
       <div class="panel-rail">
-        <button type="button" class="panel-btn" title="Notes panel">
-          <i class="icon-folders"></i>
+        <button type="button" class="panel-btn" title="Expand files panel">
+          <i class="icon-panel-left-open"></i>
         </button>
         <a href="#"
            class="panel-btn"
@@ -320,10 +322,11 @@
         <ul class="outline-list" id="outline-list">
         </ul>
       </div>
-      <!-- Collapsed-rail shortcut: expand the panel -->
+      <!-- Collapsed-rail shortcut: expand the panel. Same corner-for-corner
+           swap as the left rail's top icon. -->
       <div class="panel-rail">
-        <button type="button" class="panel-btn" title="Outline">
-          <i class="icon-list-tree"></i>
+        <button type="button" class="panel-btn" title="Expand outline panel">
+          <i class="icon-panel-right-open"></i>
         </button>
       </div>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>

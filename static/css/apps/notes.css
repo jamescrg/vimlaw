@@ -287,20 +287,24 @@ body:has(.note-page.standalone) {
   padding: 0.25rem 0.75rem;
 }
 
-/* Header/action icons (collapse-all etc.) match the 1rem title text
-   rather than the chunkier 1.25rem panel-btn default. */
+/* Header/action/rail icons (collapse-all etc.) match the 1rem title text
+   rather than the chunkier 1.25rem panel-btn default — the collapsed
+   rail must not read larger than the panel it stands in for. */
 .note-panel .panel-header .panel-btn,
-.note-panel .panel-actions .panel-btn {
+.note-panel .panel-actions .panel-btn,
+.note-panel .panel-rail .panel-btn {
   font-size: 1rem;
 }
 
 .note-panel .panel-header .panel-btn:hover,
-.note-panel .panel-actions .panel-btn:hover {
+.note-panel .panel-actions .panel-btn:hover,
+.note-panel .panel-rail .panel-btn:hover {
   background: var(--background-section);
 }
 
 .note-panel .panel-header .panel-btn i,
-.note-panel .panel-actions .panel-btn i {
+.note-panel .panel-actions .panel-btn i,
+.note-panel .panel-rail .panel-btn i {
   color: inherit;
 }
 
