@@ -11,12 +11,17 @@
       </div>
     </div>
     <div class="modal-body">
-      <div class="prompt-editor-toolbar format-toolbar">
-        {% include "components/format-toolbar.html" %}
-        <span class="toolbar-divider"></span>
+      {% comment %}
+      Same anatomy as the note editor's toolbar band: save sits left of the
+      format cluster behind a divider, and the whole band centers over the
+      editor column.
+      {% endcomment %}
+      <div class="prompt-editor-toolbar">
         <a href="#" id="save-status-btn" title="Saved" onclick="return false;">
           <i class="icon-save"></i>
         </a>
+        <span class="toolbar-divider"></span>
+        <div class="format-toolbar">{% include "components/format-toolbar.html" %}</div>
       </div>
       <div id="promptEditorContainer" class="prompt-editor-content"></div>
       <form id="promptEditorForm"
@@ -42,6 +47,7 @@
 </div>
 <script type="module">
   import { initPromptEditor, getMarkdownContent, destroyPromptEditor, hasContent, getHtmlContent, setHtmlContent, clearContent } from '{% static_v "js/prompt-editor.js" %}';
+  import { handleEditorShortcut } from '{% static_v "js/editor-shortcuts.js" %}';
 
   // Use conversation_id if available, otherwise use 'new-{matter_id}' for new conversations
   const convId = '{{ conversation_id }}' || 'new-{{ matter.id }}';
@@ -100,19 +106,33 @@
     }
   }
 
+  function saveDraftNow() {
+    const html = getHtmlContent();
+    if (html && html !== '<p></p>') {
+      localStorage.setItem(DRAFT_KEY, html);
+    } else {
+      localStorage.removeItem(DRAFT_KEY);
+    }
+    updateSaveStatus('saved');
+  }
+
   // Auto-save draft on content changes
   editor.on('update', () => {
     updateSaveStatus('unsaved');
     if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      const html = getHtmlContent();
-      if (html && html !== '<p></p>') {
-        localStorage.setItem(DRAFT_KEY, html);
-      } else {
-        localStorage.removeItem(DRAFT_KEY);
-      }
-      updateSaveStatus('saved');
-    }, 500);
+    saveTimer = setTimeout(saveDraftNow, 500);
+  });
+
+  // The notes editor's shortcut map (headings, lists, highlights, Ctrl+S
+  // flushes the draft). Bound on the modal root, so the listener leaves
+  // with the modal and never fires behind it.
+  document.querySelector('.prompt-editor-modal').addEventListener('keydown', (e) => {
+    handleEditorShortcut(editor, e, {
+      save: () => {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveDraftNow();
+      },
+    });
   });
 
   document.getElementById('promptEditorSubmit').addEventListener('click', function() {
