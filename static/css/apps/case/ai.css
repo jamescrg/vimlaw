@@ -1326,23 +1326,43 @@
   padding: 0;
 }
 
-/* Buttons and layout come from the shared .format-toolbar (interface.css);
-   only the modal's chrome lives here. */
+/* Buttons come from the shared .format-toolbar (format-toolbar.css); only
+   the modal's chrome lives here. Anatomy mirrors the note editor's band:
+   save, divider, then the format cluster, centered as one group. */
 .prompt-editor-toolbar {
+  align-items: center;
   background: var(--ai-raised);
-  border: none;
   border-bottom: 1px solid var(--border-medium);
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+/* The outer divider (save | formats) matches the cluster's own, whose rule
+   is scoped to .format-toolbar. */
+.prompt-editor-toolbar > .toolbar-divider {
+  background: var(--border-medium);
+  height: 1.25rem;
+  margin: 0 0.25rem;
+  width: 1px;
 }
 
 .prompt-editor-toolbar #save-status-btn {
   align-items: center;
-  color: var(--color-muted);
+  border-radius: var(--radius-xs);
+  color: var(--color-primary);
   display: flex;
   font-size: 1rem;
   justify-content: center;
-  margin-left: auto;
   padding: 0.25rem 0.5rem;
   text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.prompt-editor-toolbar #save-status-btn:hover {
+  background: var(--background-control);
+  color: var(--color-darker);
 }
 
 .prompt-editor-toolbar #save-status-btn.active {
@@ -1355,50 +1375,177 @@
   padding: 1rem;
 }
 
-/* ProseMirror editor styles */
+/* ProseMirror content — same typographic voice as the note editor
+   (notes-editor.css), minus the canvas-only moves (the h2/h3 gutter
+   outdents; the modal has no gutter) plus modal-fit tweaks (first-child
+   headings sit flush with the top). */
 .prompt-editor-content .ProseMirror {
   min-height: clamp(13rem, 58vh, 41rem);
   outline: none;
 }
 
-.prompt-editor-content .ProseMirror p {
-  margin: 0 0 0.75rem;
+.prompt-editor-content .ProseMirror > * + * {
+  margin-top: 1.25em;
 }
 
-.prompt-editor-content .ProseMirror p:last-child {
-  margin-bottom: 0;
+.prompt-editor-content .ProseMirror p {
+  color: var(--color-primary);
+  line-height: 1.75;
 }
 
 .prompt-editor-content .ProseMirror h1,
 .prompt-editor-content .ProseMirror h2,
 .prompt-editor-content .ProseMirror h3,
-.prompt-editor-content .ProseMirror h4 {
-  font-weight: 600;
+.prompt-editor-content .ProseMirror h4,
+.prompt-editor-content .ProseMirror h5 {
+  color: var(--color-primary);
+  letter-spacing: -0.01em;
   line-height: 1.3;
-  margin: 1rem 0 0.5rem;
-}
-
-.prompt-editor-content .ProseMirror h1:first-child,
-.prompt-editor-content .ProseMirror h2:first-child,
-.prompt-editor-content .ProseMirror h3:first-child,
-.prompt-editor-content .ProseMirror h4:first-child {
-  margin-top: 0;
 }
 
 .prompt-editor-content .ProseMirror h1 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 500;
+  margin-top: 2.5rem;
 }
 
 .prompt-editor-content .ProseMirror h2 {
-  font-size: 1.25rem;
+  border-bottom: 1px solid var(--border-medium);
+  font-size: 1.375rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  margin-top: 2.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .prompt-editor-content .ProseMirror h3 {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  margin-top: 2rem;
 }
 
 .prompt-editor-content .ProseMirror h4 {
+  font-size: 1.0625rem;
+  /* 550 renders genuinely on the variable font - a minor heading at body
+     scale without breaching the 500 ceiling (mirrors the notes editor). */
+  font-weight: 550;
+  margin-bottom: 1.25rem;
+  margin-top: 2rem;
+}
+
+.prompt-editor-content .ProseMirror h5 {
   font-size: 1rem;
+  font-weight: 500;
+  margin-top: 1.75rem;
+}
+
+.prompt-editor-content .ProseMirror > :is(h1, h2, h3, h4, h5):first-child {
+  margin-top: 0;
+}
+
+/* Reduce spacing for first paragraph after headings */
+.prompt-editor-content .ProseMirror :is(h1, h2, h3, h4, h5) + p {
+  margin-top: 0.25rem;
+}
+
+/* Minimize empty paragraphs (blank lines) - Tiptap adds br to empty p;
+   top-level only, not inside lists */
+.prompt-editor-content .ProseMirror > p:has(> br:only-child) {
+  line-height: 1;
+  margin-bottom: 0;
+  margin-top: 0.25rem;
+}
+
+.prompt-editor-content .ProseMirror strong {
+  font-weight: 600;
+}
+
+.prompt-editor-content .ProseMirror em {
+  font-style: italic;
+}
+
+.prompt-editor-content .ProseMirror s {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+.prompt-editor-content .ProseMirror ul,
+.prompt-editor-content .ProseMirror ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.prompt-editor-content .ProseMirror li ul,
+.prompt-editor-content .ProseMirror li ol {
+  margin: 0;
+}
+
+.prompt-editor-content .ProseMirror ul li {
+  line-height: 1.7;
+  list-style-type: disc;
+  margin: 0.5em 0;
+}
+
+.prompt-editor-content .ProseMirror ol li {
+  line-height: 1.7;
+  list-style-type: decimal;
+  margin: 0.5em 0;
+}
+
+.prompt-editor-content .ProseMirror li p {
+  margin: 0;
+}
+
+.prompt-editor-content .ProseMirror blockquote {
+  border-left: 3px solid var(--link);
+  color: var(--color-muted);
+  font-style: italic;
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+}
+
+.prompt-editor-content .ProseMirror blockquote blockquote {
+  margin: 0.5rem 0;
+}
+
+/* Tables (all tokens retint in dark themes; no structural dark rule needed) */
+.prompt-editor-content .ProseMirror table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  /* Content-sized columns (GitHub-style): pipe markdown can't store
+     dragged widths, so width comes from content, capped at the modal */
+  max-width: 100%;
+  width: auto;
+}
+
+.prompt-editor-content .ProseMirror th,
+.prompt-editor-content .ProseMirror td {
+  /* The global td/th fills (tables.css) leak in here; cells stay the
+     editor ground, only the header row gets a wash. */
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  min-width: 4rem;
+  padding: 0.25rem 0.5rem;
+  position: relative;
+  vertical-align: top;
+}
+
+.prompt-editor-content .ProseMirror th {
+  background: var(--background-td);
+  font-weight: 500;
+  text-align: left;
+}
+
+.prompt-editor-content .ProseMirror th p,
+.prompt-editor-content .ProseMirror td p {
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ProseMirror marks cell-selections with .selectedCell */
+.prompt-editor-content .ProseMirror .selectedCell {
+  background: var(--selected-background);
 }
 
 /* Highlights — same paper-highlighter fills as the notes editor (marks stay
@@ -1433,40 +1580,6 @@
 
 :is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .prompt-editor-content .ProseMirror :is(mark, .note-hl) {
   color: var(--stone-900);
-}
-
-.prompt-editor-content .ProseMirror ul,
-.prompt-editor-content .ProseMirror ol {
-  margin: 0 0 0.75rem;
-  padding-left: 1.5rem;
-}
-
-.prompt-editor-content .ProseMirror li {
-  margin-bottom: 0.25rem;
-}
-
-.prompt-editor-content .ProseMirror blockquote {
-  background: var(--ai-surface);
-  border-left: 3px solid var(--violet-400);
-  color: var(--color-primary);
-  margin: 0.75rem 0;
-  padding: 0.5rem 0.75rem;
-}
-
-.prompt-editor-content .ProseMirror blockquote p:last-child {
-  margin-bottom: 0;
-}
-
-.prompt-editor-content .ProseMirror strong {
-  font-weight: 600;
-}
-
-.prompt-editor-content .ProseMirror em {
-  font-style: italic;
-}
-
-.prompt-editor-content .ProseMirror s {
-  text-decoration: line-through;
 }
 
 /* Placeholder text */

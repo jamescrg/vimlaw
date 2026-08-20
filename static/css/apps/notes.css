@@ -210,12 +210,13 @@ body:has(.note-page.standalone) {
   padding: 0 0.75rem;
 }
 
-/* Quiet static label (right panel); the margin keeps the decorative
-   icon off the panel edge, mirroring the toggle's own button padding */
+/* Quiet static label (right panel), inboard of the toggle; the margin
+   keeps the decorative icon off the panel's inner edge, mirroring the
+   toggle's own button padding on the outer one */
 .note-panel .panel-title {
   color: var(--color-muted);
   font-size: 1rem;
-  margin-right: 0.5rem;
+  margin-left: 0.5rem;
   user-select: none;
 }
 
@@ -286,20 +287,24 @@ body:has(.note-page.standalone) {
   padding: 0.25rem 0.75rem;
 }
 
-/* Header/action icons (collapse-all etc.) match the 1rem title text
-   rather than the chunkier 1.25rem panel-btn default. */
+/* Header/action/rail icons (collapse-all etc.) match the 1rem title text
+   rather than the chunkier 1.25rem panel-btn default — the collapsed
+   rail must not read larger than the panel it stands in for. */
 .note-panel .panel-header .panel-btn,
-.note-panel .panel-actions .panel-btn {
+.note-panel .panel-actions .panel-btn,
+.note-panel .panel-rail .panel-btn {
   font-size: 1rem;
 }
 
 .note-panel .panel-header .panel-btn:hover,
-.note-panel .panel-actions .panel-btn:hover {
+.note-panel .panel-actions .panel-btn:hover,
+.note-panel .panel-rail .panel-btn:hover {
   background: var(--background-section);
 }
 
 .note-panel .panel-header .panel-btn i,
-.note-panel .panel-actions .panel-btn i {
+.note-panel .panel-actions .panel-btn i,
+.note-panel .panel-rail .panel-btn i {
   color: inherit;
 }
 

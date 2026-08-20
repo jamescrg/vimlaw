@@ -46,6 +46,7 @@ import {
 } from "./notes/tab-state.js";
 import { setupTreeMenu } from "./notes/tree-menu.js";
 import { connectFormatToolbar } from "./format-toolbar.js";
+import { handleEditorShortcut } from "./editor-shortcuts.js";
 import { markdownToHtml } from "./notes/markdown.js";
 import {
   TableAutoRender,
@@ -415,222 +416,23 @@ function setupKeyboardShortcuts() {
   if (shortcutsBound) return;
   shortcutsBound = true;
 
-  const HEADING_KEYS = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
-  const FKEY_HEADINGS = { F2: 2, F3: 3, F4: 4 };
-  const HIGHLIGHT_COLORS = {
-    y: null,
-    g: "mark-green",
-    r: "mark-red",
-    p: "mark-purple",
-    o: "mark-orange",
-    a: "mark-gray",
-  };
-
   document.addEventListener("keydown", (e) => {
     // Mid-swap gap: the old editor is destroyed and initEditor is pending
     if (!state.editor) return;
 
-    const mod = e.ctrlKey || e.metaKey;
-
-    // Tab inside code blocks
-    if (e.key === "Tab" && !mod && state.editor.isActive("codeBlock")) {
-      e.preventDefault();
-      if (e.shiftKey) {
-        const { $from } = state.editor.state.selection;
-        const lineStart = $from.pos - $from.parentOffset;
-        const textBefore = state.editor.state.doc.textBetween(
-          lineStart,
-          $from.pos,
-        );
-        let spacesToRemove = 0;
-        for (let si = 0; si < 4 && si < textBefore.length; si++) {
-          if (textBefore[textBefore.length - 1 - si] === " ") spacesToRemove++;
-          else break;
-        }
-        if (spacesToRemove) {
-          state.editor
-            .chain()
-            .focus()
-            .deleteRange({ from: $from.pos - spacesToRemove, to: $from.pos })
-            .run();
-        }
-      } else {
-        state.editor.chain().focus().insertContent("    ").run();
-      }
-      return;
-    }
-
-    // Save: Ctrl+S
-    if (mod && e.key === "s") {
-      e.preventDefault();
-      if (state.autosaveTimer) clearTimeout(state.autosaveTimer);
-      performAutosave();
-      return;
-    }
-
-    // Headings: Ctrl+1 through Ctrl+5
-    if (mod && !e.shiftKey && HEADING_KEYS[e.key]) {
-      e.preventDefault();
-      state.editor
-        .chain()
-        .focus()
-        .toggleHeading({ level: HEADING_KEYS[e.key] })
-        .run();
-      return;
-    }
-
-    // Clear formatting: Ctrl+0
-    if (mod && !e.shiftKey && e.key === "0") {
-      e.preventDefault();
-      state.editor.chain().focus().setParagraph().run();
-      return;
-    }
-
-    // F-key headings: F2, F3, F4
-    if (FKEY_HEADINGS[e.key]) {
-      e.preventDefault();
-      state.editor
-        .chain()
-        .focus()
-        .toggleHeading({ level: FKEY_HEADINGS[e.key] })
-        .run();
-      return;
-    }
-
-    // F7 for bullet list
-    if (e.key === "F7") {
-      e.preventDefault();
-      state.editor.chain().focus().toggleBulletList().run();
-      return;
-    }
-
-    // Bullet list: Ctrl+7
-    if (mod && !e.shiftKey && e.key === "7") {
-      e.preventDefault();
-      state.editor.chain().focus().toggleBulletList().run();
-      return;
-    }
-
-    // Blockquote: Ctrl+8
-    if (mod && !e.shiftKey && e.key === "8") {
-      e.preventDefault();
-      state.editor.chain().focus().toggleBlockquote().run();
-      return;
-    }
-
-    // Move list items: Ctrl+Up/Down
-    if (mod && e.key === "ArrowUp" && state.editor.isActive("listItem")) {
-      e.preventDefault();
-      moveListItem("up");
-      return;
-    }
-    if (mod && e.key === "ArrowDown" && state.editor.isActive("listItem")) {
-      e.preventDefault();
-      moveListItem("down");
-      return;
-    }
-
-    // Delete block: Ctrl+Delete or Ctrl+D
-    if (mod && (e.key === "Delete" || e.key === "d")) {
-      e.preventDefault();
-      state.editor.chain().focus().deleteNode("paragraph").run();
-      return;
-    }
-
-    // Insert source: Ctrl+;
-    if (mod && e.key === ";") {
-      e.preventDefault();
-      openReferencePicker();
-      return;
-    }
-
-    // Show shortcuts: Ctrl+?
-    if (mod && e.key === "?") {
-      e.preventDefault();
-      const btn = document.querySelector('[title="Keyboard shortcuts"]');
-      if (btn) btn.click();
-      return;
-    }
-
-    // Highlight shortcuts: Alt+key
-    const lowerKey = e.key.toLowerCase();
-    if (e.altKey && !mod && lowerKey in HIGHLIGHT_COLORS) {
-      e.preventDefault();
-      const color = HIGHLIGHT_COLORS[lowerKey];
-      if (color) {
-        state.editor.chain().focus().toggleHighlight({ color }).run();
-      } else {
-        state.editor.chain().focus().toggleHighlight().run();
-      }
-      return;
-    }
-
-    // Remove highlight: Alt+C
-    if (e.altKey && !mod && lowerKey === "c") {
-      e.preventDefault();
-      state.editor.chain().focus().unsetHighlight().run();
-      return;
-    }
-
-    // Search and replace: Ctrl+H
-    if (mod && e.key === "h") {
-      e.preventDefault();
-      toggleSearchBar();
-    }
+    handleEditorShortcut(state.editor, e, {
+      save: () => {
+        if (state.autosaveTimer) clearTimeout(state.autosaveTimer);
+        performAutosave();
+      },
+      openReferences: openReferencePicker,
+      toggleSearch: toggleSearchBar,
+      showShortcuts: () => {
+        const btn = document.querySelector('[title="Keyboard shortcuts"]');
+        if (btn) btn.click();
+      },
+    });
   });
-}
-
-// ─── List Item Reordering ────────────────────────────────────────────────────
-
-function moveListItem(direction) {
-  const { state: editorState, view } = state.editor;
-  const { $from } = editorState.selection;
-
-  let listItemPos = null;
-  let listItemNode = null;
-  let listItemDepth = null;
-
-  for (let d = $from.depth; d > 0; d--) {
-    if ($from.node(d).type.name === "listItem") {
-      listItemPos = $from.before(d);
-      listItemNode = $from.node(d);
-      listItemDepth = d;
-      break;
-    }
-  }
-
-  if (!listItemNode || listItemPos === null) return;
-
-  const parentList = $from.node(listItemDepth - 1);
-  const indexInParent = $from.index(listItemDepth - 1);
-
-  if (direction === "up" && indexInParent === 0) return;
-  if (direction === "down" && indexInParent >= parentList.childCount - 1)
-    return;
-
-  const tr = editorState.tr;
-  const listItemEnd = listItemPos + listItemNode.nodeSize;
-  let newCursorPos;
-
-  if (direction === "up") {
-    const prevItemSize = parentList.child(indexInParent - 1).nodeSize;
-    newCursorPos = $from.pos - prevItemSize;
-    const slice = tr.doc.slice(listItemPos, listItemEnd);
-    tr.delete(listItemPos, listItemEnd);
-    tr.insert(listItemPos - prevItemSize, slice.content);
-  } else {
-    const nextItemSize = parentList.child(indexInParent + 1).nodeSize;
-    newCursorPos = $from.pos + nextItemSize;
-    const nextItemPos = listItemEnd;
-    const nextSlice = tr.doc.slice(nextItemPos, nextItemPos + nextItemSize);
-    tr.delete(nextItemPos, nextItemPos + nextItemSize);
-    tr.insert(listItemPos, nextSlice.content);
-  }
-
-  tr.setSelection(
-    editorState.selection.constructor.near(tr.doc.resolve(newCursorPos)),
-  );
-  view.dispatch(tr.scrollIntoView());
 }
 
 // ─── Import/Export ───────────────────────────────────────────────────────────
@@ -807,8 +609,8 @@ const PANELS = [
     selector: ".note-panel-left",
     stateKey: "notes-editor-note-panel",
     widthKey: "notes-editor-panel-width",
-    closeIcon: "icon-chevron-left",
-    openIcon: "icon-chevron-right",
+    closeIcon: "icon-panel-left-close",
+    openIcon: "icon-panel-left-open",
     railBreakpoint: 1200,
     resizeDir: 1,
   },
@@ -816,15 +618,15 @@ const PANELS = [
     selector: ".note-panel-right",
     stateKey: "notes-editor-outline-panel",
     widthKey: "notes-editor-outline-panel-width",
-    closeIcon: "icon-chevron-right",
-    openIcon: "icon-chevron-left",
+    closeIcon: "icon-panel-right-close",
+    openIcon: "icon-panel-right-open",
     railBreakpoint: 1440,
     resizeDir: -1,
   },
 ];
 
-// Point the toggle's chevron at the action it will perform: an open
-// panel's chevron points toward the edge it will collapse into.
+// Show the toggle's next action: an open panel wears panel-*-close, a
+// collapsed one panel-*-open.
 function syncPanelIcon(cfg, isOpen) {
   const icon = document.querySelector(cfg.selector + " .panel-toggle i");
   if (icon) icon.className = isOpen ? cfg.closeIcon : cfg.openIcon;

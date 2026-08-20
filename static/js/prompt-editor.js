@@ -20,10 +20,18 @@ import {
   HardBreak,
   History,
   Placeholder,
+  Table,
+  TableRow,
 } from "./vendor/tiptap.bundle.js";
 
 import { connectFormatToolbar } from "./format-toolbar.js";
 import { HighlightMark } from "./highlight-mark.js";
+import {
+  NoteTableCell,
+  NoteTableHeader,
+  TableAutoRender,
+} from "./notes/tables.js";
+import { htmlToMarkdown } from "./notes/markdown.js";
 
 let promptEditor = null;
 
@@ -44,7 +52,7 @@ export function initPromptEditor(container) {
       Bold,
       Italic,
       Strike,
-      Heading.configure({ levels: [1, 2, 3, 4] }),
+      Heading.configure({ levels: [1, 2, 3, 4, 5] }),
       BulletList,
       OrderedList,
       ListItem,
@@ -52,6 +60,15 @@ export function initPromptEditor(container) {
       HardBreak,
       History,
       HighlightMark.configure({ multicolor: true }),
+      // Same table anatomy as the notes editor: no resizing or merging
+      // (pipe markdown can't express either), column alignment rides the
+      // extended cell types, and pasted pipe tables auto-render. The
+      // serialized prompt reaches the model as a GFM pipe table.
+      Table,
+      TableRow,
+      NoteTableHeader,
+      NoteTableCell,
+      TableAutoRender,
       Placeholder.configure({
         placeholder: "Compose your prompt here...",
       }),
@@ -60,132 +77,32 @@ export function initPromptEditor(container) {
   });
 
   // Wire the shared formatting toolbar to this editor instance
-  connectFormatToolbar(
-    document.querySelector(".prompt-editor-toolbar"),
-    promptEditor,
+  const toolbar = document.querySelector(
+    ".prompt-editor-toolbar .format-toolbar",
   );
+  connectFormatToolbar(toolbar, promptEditor);
 
-  return promptEditor;
-}
-
-/**
- * Convert HTML content to markdown
- */
-function htmlToMarkdown(html) {
-  const tempDiv = document.createElement("div");
-  tempDiv.innerHTML = html;
-
-  function processNode(node, listDepth, listType, listIndex) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent;
-    }
-
-    if (node.nodeType !== Node.ELEMENT_NODE) return "";
-
-    const tag = node.tagName.toLowerCase();
-
-    function getChildren() {
-      return Array.from(node.childNodes)
-        .map((child) => processNode(child, listDepth, null, 0))
-        .join("");
-    }
-
-    switch (tag) {
-      case "h1":
-        return "# " + getChildren() + "\n\n";
-      case "h2":
-        return "## " + getChildren() + "\n\n";
-      case "h3":
-        return "### " + getChildren() + "\n\n";
-      case "h4":
-        return "#### " + getChildren() + "\n\n";
-      case "p":
-        if (listDepth > 0) {
-          return getChildren();
-        }
-        return getChildren() + "\n\n";
-      case "strong":
-        return "**" + getChildren() + "**";
-      case "em":
-        return "*" + getChildren() + "*";
-      case "s":
-        return "~~" + getChildren() + "~~";
-      case "mark":
-      case "span": {
-        // Highlights render as span.note-hl (highlight-mark.js); legacy
-        // <mark> HTML serializes the same. Other spans pass through.
-        if (tag === "span" && !node.classList.contains("note-hl")) {
-          return getChildren();
-        }
-        // Same colored-highlight syntax the notes editor round-trips
-        const prefixes = {
-          "mark-green": "g==",
-          "mark-red": "r==",
-          "mark-purple": "p==",
-          "mark-orange": "o==",
-          "mark-gray": "a==",
-        };
-        const color = node.dataset.color || "";
-        return (prefixes[color] || "==") + getChildren() + "==";
-      }
-      case "blockquote":
-        return (
-          getChildren()
-            .trim()
-            .split("\n")
-            .map((line) => "> " + line)
-            .join("\n") + "\n\n"
-        );
-      case "ul":
-      case "ol":
-        let result = "";
-        let idx = 1;
-        Array.from(node.children).forEach((child) => {
-          if (child.tagName.toLowerCase() === "li") {
-            result += processNode(child, listDepth + 1, tag, idx);
-            idx++;
-          }
-        });
-        if (listDepth === 0) {
-          result += "\n";
-        }
-        return result;
-      case "li":
-        const indent = "  ".repeat(listDepth - 1);
-        let prefix;
-        if (listType === "ol") {
-          prefix = listIndex + ". ";
-        } else {
-          prefix = "- ";
-        }
-
-        let textContent = "";
-        let nestedLists = "";
-
-        Array.from(node.childNodes).forEach((child) => {
-          if (child.nodeType === Node.ELEMENT_NODE) {
-            const childTag = child.tagName.toLowerCase();
-            if (childTag === "ul" || childTag === "ol") {
-              nestedLists += processNode(child, listDepth, null, 0);
-            } else {
-              textContent += processNode(child, listDepth, null, 0);
-            }
-          } else {
-            textContent += processNode(child, listDepth, null, 0);
-          }
-        });
-
-        return indent + prefix + textContent.trim() + "\n" + nestedLists;
-      case "br":
-        return "\n";
-      default:
-        return getChildren();
-    }
+  // No table sub-toolbar here (that bar is the notes editor's); the table
+  // button inserts directly. Tab walks the cells and grows the table at
+  // the end (TipTap's Table keymap), which covers prompt-sized tables.
+  const tableBtn = toolbar && toolbar.querySelector("[data-table-toggle]");
+  if (tableBtn) {
+    tableBtn.onclick = () =>
+      promptEditor
+        .chain()
+        .focus()
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run();
+    const syncTableBtn = () => {
+      // No nested tables: insert flips off inside one
+      tableBtn.disabled = promptEditor.isActive("table");
+    };
+    promptEditor.on("selectionUpdate", syncTableBtn);
+    promptEditor.on("update", syncTableBtn);
+    syncTableBtn();
   }
 
-  let markdown = processNode(tempDiv, 0, null, 0);
-  markdown = markdown.replace(/\n{3,}/g, "\n\n").trim();
-  return markdown;
+  return promptEditor;
 }
 
 /**

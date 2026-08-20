@@ -23,7 +23,17 @@
     <!-- Left Panel - Files / Matters -->
     <aside class="note-panel note-panel-left"
            data-active-pane="{{ active_pane }}">
+      {% comment %}
+      Both panel headers put the collapse chevron on the panel's OUTER
+      edge (the screen side) and everything else inboard of it, so the
+      two chevrons mirror each other across the editor.
+      {% endcomment %}
       <div class="panel-header">
+        <button class="panel-btn panel-toggle"
+                type="button"
+                title="Toggle files panel">
+          <i class="icon-panel-left-close"></i>
+        </button>
         <div class="panel-tabs">
           <button type="button"
                   class="panel-tab{% if active_pane == 'files' %} active{% endif %}"
@@ -41,11 +51,6 @@
             <i class="icon-history"></i>
           </button>
         </div>
-        <button class="panel-btn panel-toggle"
-                type="button"
-                title="Toggle files panel">
-          <i class="icon-chevron-left"></i>
-        </button>
       </div>
       {% comment %}
       Obsidian-style action row: the tab bar above only switches panes;
@@ -82,10 +87,12 @@
              data-folder-add-url="{% url 'notes:folder-add' %}"
              data-launch-url="{% url 'notes:launch' %}">{% include "notes/editor-trees.html" %}</div>
       </div>
-      <!-- Collapsed-rail shortcuts: expand the panel; search stays reachable -->
+      <!-- Collapsed-rail shortcuts: expand the panel; search stays reachable.
+           The top icon is the expand counterpart of the header's collapse
+           toggle, sitting in the same corner. -->
       <div class="panel-rail">
-        <button type="button" class="panel-btn" title="Notes panel">
-          <i class="icon-folders"></i>
+        <button type="button" class="panel-btn" title="Expand files panel">
+          <i class="icon-panel-left-open"></i>
         </button>
         <a href="#"
            class="panel-btn"
@@ -290,14 +297,18 @@
     </main>
     <!-- Right Panel - Outline -->
     <aside class="note-panel note-panel-right">
+      {% comment %}
+      Chevron on the outer edge, label inboard — mirroring the left
+      panel's header.
+      {% endcomment %}
       <div class="panel-header">
+        {% comment %}Decorative mirror of the left panel's tab bar{% endcomment %}
+        <span class="panel-title" title="Outline"><i class="icon-list-tree"></i></span>
         <button class="panel-btn panel-toggle"
                 type="button"
                 title="Toggle outline panel">
-          <i class="icon-chevron-right"></i>
+          <i class="icon-panel-right-close"></i>
         </button>
-        {% comment %}Decorative mirror of the left panel's tab bar{% endcomment %}
-        <span class="panel-title" title="Outline"><i class="icon-list-tree"></i></span>
       </div>
       <div class="panel-actions">
         <button type="button"
@@ -311,10 +322,11 @@
         <ul class="outline-list" id="outline-list">
         </ul>
       </div>
-      <!-- Collapsed-rail shortcut: expand the panel -->
+      <!-- Collapsed-rail shortcut: expand the panel. Same corner-for-corner
+           swap as the left rail's top icon. -->
       <div class="panel-rail">
-        <button type="button" class="panel-btn" title="Outline">
-          <i class="icon-list-tree"></i>
+        <button type="button" class="panel-btn" title="Expand outline panel">
+          <i class="icon-panel-right-open"></i>
         </button>
       </div>
       <div class="panel-resizer" title="Drag to resize; double-click to reset"></div>

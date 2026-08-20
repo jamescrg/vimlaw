@@ -70,11 +70,16 @@ connectFormatToolbar() when the editor lacks the Highlight extension.
           title="Highlight color">
     <i class="icon-chevron-down"></i>
   </button>
+  {% comment %}
+  Chip order mirrors the Alt shortcut row: ` clears, then 1-6 left to
+  right (editor-shortcuts.js keeps the same map).
+  {% endcomment %}
   <div class="hl-menu" data-hl-menu hidden>
     <button type="button"
             class="hl-color"
             data-hl-color="none"
             title="Remove highlight"></button>
+    <button type="button" class="hl-color" data-hl-color="mark-gray" title="Gray"></button>
     <button type="button" class="hl-color" data-hl-color="" title="Yellow"></button>
     <button type="button"
             class="hl-color"
@@ -89,6 +94,5 @@ connectFormatToolbar() when the editor lacks the Highlight extension.
             class="hl-color"
             data-hl-color="mark-orange"
             title="Orange"></button>
-    <button type="button" class="hl-color" data-hl-color="mark-gray" title="Gray"></button>
   </div>
 </div>
