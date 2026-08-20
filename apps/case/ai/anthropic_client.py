@@ -77,6 +77,49 @@ def _roll_message_cache_marker(convo: list[dict]) -> None:
             last_block["cache_control"] = {"type": "ephemeral"}
 
 
+def _format_messages(messages: list[dict]) -> list[dict]:
+    """Reduce chat-history dicts to the role/content shape the API takes."""
+    return [{"role": msg["role"], "content": msg["content"]} for msg in messages]
+
+
+def count_claude_tokens(
+    system_context: str,
+    messages: list[dict],
+    model: str,
+) -> int | None:
+    """Exact prompt token count for the request send_to_claude would make.
+
+    Uses the Messages count_tokens endpoint, which runs the target model's
+    own tokenizer and is free of charge. The send-site size guard relies on
+    it because the chars-per-token heuristic in selector.estimate_tokens
+    under-counts dense legal material (OCR'd filings, citations, tables)
+    and the Opus 4.7+ tokenizer is denser still; a chat once cleared the
+    heuristic's 80%-of-window ceiling and was still rejected at 1.14M
+    tokens.
+
+    Returns None when the count cannot be obtained (no key, network, a
+    model the endpoint rejects) so callers fall back to the estimate
+    rather than failing the chat.
+    """
+    try:
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        # GA on current SDKs; the pinned 0.40.0 only has the beta method.
+        count_tokens = getattr(client.messages, "count_tokens", None) or (
+            client.beta.messages.count_tokens
+        )
+        result = count_tokens(
+            model=model,
+            system=_build_system(system_context),
+            messages=_format_messages(messages),
+        )
+    except Exception as exc:
+        logger.warning(
+            "Claude token count unavailable for %s (%s); using estimate", model, exc
+        )
+        return None
+    return result.input_tokens
+
+
 def send_to_claude(
     system_context: str,
     messages: list[dict],
@@ -111,10 +154,7 @@ def send_to_claude(
     """
     client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 
-    # Format messages for Anthropic API
-    formatted_messages = [
-        {"role": msg["role"], "content": msg["content"]} for msg in messages
-    ]
+    formatted_messages = _format_messages(messages)
 
     # Use streaming to allow cancellation
     response_parts = []

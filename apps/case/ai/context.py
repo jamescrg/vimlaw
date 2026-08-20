@@ -114,6 +114,12 @@ class ContextItem:
     def icon(self) -> str:
         return TYPE_ICONS.get(self.item_type, "•")
 
+    @property
+    def title(self) -> str:
+        """Short label for listings: the item's header line, unbolded."""
+        first = self.content.strip().split("\n", 1)[0].replace("**", "").strip()
+        return first[:120]
+
     def format(self) -> str:
         """Format this item for context output."""
         return f"{self.label} {self.icon} {self.content}"
@@ -911,8 +917,9 @@ def assemble_matter_context_with_selection(
     # request with a "prompt too long" error.
     hard_limit = MODEL_HARD_LIMITS.get(llm, 1_000_000)
     # 80% of the window so the chat history (added at send time) plus any
-    # under-counting in estimate_tokens (chars/4) still leaves room. The
-    # send-site guard in tasks.py is the final defense.
+    # remaining under-counting in estimate_tokens still leaves room. The
+    # send-site guard in tasks.py (exact count for Claude) is the final
+    # defense.
     safe_ceiling = int(hard_limit * 0.80)
     provisional = (
         f"{request_info}{legal_prompt}\n\n---\n{matter_context}"
@@ -948,6 +955,74 @@ def assemble_matter_context_with_selection(
                     f"({item.category}{date_str})"
                 )
             also_available = "\n".join(lines)
+
+    # If the always-included content alone is still over the ceiling,
+    # shed it tier by tier (reference first, then supporting, then high;
+    # critical items are never dropped) and list what was left out so the
+    # AI can name it in a follow-up. Without this the request went out
+    # anyway and the provider rejected it with a raw "prompt too long".
+    omitted_always = []
+    for tier in (
+        ImportanceTier.REFERENCE,
+        ImportanceTier.MEDIUM,
+        ImportanceTier.HIGH,
+    ):
+        provisional = (
+            f"{request_info}{legal_prompt}\n\n---\n{matter_context}"
+            f"{selected_section}{also_available}"
+        )
+        if estimate_tokens(provisional) <= safe_ceiling:
+            break
+        tier_items = [i for i in always_items if i.tier == tier]
+        if not tier_items:
+            continue
+        omitted_always.extend(tier_items)
+        always_items = [i for i in always_items if i.tier != tier]
+        sections[f"{tier.value.lower()}_items"] = (
+            f"{len(tier_items)} [{tier.value}] items omitted to keep the prompt "
+            "within the model's context window (listed under Omitted Materials)."
+        )
+        matter_context = MATTER_CONTEXT_TEMPLATE.format(
+            matter_name=matter.name,
+            critical_items=always_critical,
+            high_items=sections.get("high_items", always_high),
+            medium_items=sections.get("medium_items", always_medium),
+            reference_items=sections.get("reference_items", always_reference),
+            **{
+                k: v
+                for k, v in sections.items()
+                if k
+                not in (
+                    "critical_items",
+                    "high_items",
+                    "medium_items",
+                    "reference_items",
+                )
+            },
+        )
+        logger.warning(
+            "Assembled context still over safe ceiling for %s (%d); dropped "
+            "%d always-included %s items for matter %s.",
+            llm,
+            safe_ceiling,
+            len(tier_items),
+            tier.value,
+            matter.id,
+        )
+    if omitted_always:
+        emit(
+            f"Case file exceeds the model window; {len(omitted_always)} "
+            "always-included items omitted and listed instead"
+        )
+        lines = [
+            "\n\n## Omitted Materials",
+            "These always-included items were left out to keep the prompt "
+            "within the model's context window. Tell the user they were "
+            "omitted if they bear on the question, and ask which to load:",
+        ]
+        for item in omitted_always:
+            lines.append(f"- {item.item_type.title()}: {item.title}")
+        also_available += "\n".join(lines)
 
     assembled = (
         f"{request_info}{legal_prompt}\n\n---\n{matter_context}"
