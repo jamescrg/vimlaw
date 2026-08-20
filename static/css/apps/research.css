@@ -593,6 +593,52 @@
   justify-content: flex-end;
 }
 
+/* Selection gate: ranked candidates with pre-read signals; the user
+   picks which cases get full-opinion briefs. */
+.research-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.research-selection-heading {
+  color: var(--color-muted);
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.research-selection-row {
+  align-items: flex-start;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.research-selection-row input[type="checkbox"] {
+  margin-top: 0.25rem;
+}
+
+.research-selection-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.research-selection-reason {
+  color: var(--color-muted);
+  font-size: 1rem;
+}
+
+.research-selection-footer {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
 /* Full case brief on a result card: collapsed under the one-line
    relevance rationale so the card stays scannable. */
 .research-brief {

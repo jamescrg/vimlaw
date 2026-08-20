@@ -338,6 +338,10 @@ def test_pipeline_keeps_rejected_and_low_rows(
         matter=matter, query_text="fees after mooted motion", created_by=user
     )
     research_tasks._process_query(query.id)
+    query.refresh_from_db()
+    assert query.status == "selecting"
+    # Select-all at the gate: brief every pending candidate.
+    research_tasks._run_brief_phase(query.id)
 
     rows = {r.case_name: r for r in ResearchResult.objects.filter(query=query)}
     assert len(rows) == 3  # nothing deleted
@@ -398,6 +402,9 @@ def test_date_slice_and_citation_chases(matter, user, patch_pipeline, sync_qclus
         created_by=user,
     )
     research_tasks._process_query(query.id)
+    query.refresh_from_db()
+    assert query.status == "selecting"
+    research_tasks._run_brief_phase(query.id)
 
     searches = fake.searches
     assert searches[0]["order_by"] == "score desc"
@@ -578,6 +585,211 @@ def test_results_view_splits_ruled_out(client, matter, user):
     assert "Keeper" in html
 
 
+# --------------------------------------------------------------------------- #
+# The selection gate
+# --------------------------------------------------------------------------- #
+def test_search_phase_halts_at_selection_gate(matter, user, patch_pipeline):
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    fake = patch_pipeline(
+        FakePipelineCL(
+            [_row("Case One", 1), _row("Case Two", 2)],
+            clusters={},
+            opinions={},
+            reject_names=("Case Two",),
+        )
+    )
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="fees", created_by=user
+    )
+    research_tasks._process_query(query.id)
+    query.refresh_from_db()
+    assert query.status == "selecting"
+    # No opinions were fetched, no briefs written.
+    assert fake.brief_prompts == []
+    assert fake.opinion_fetches == []
+
+    rows = {r.case_name: r for r in ResearchResult.objects.filter(query=query)}
+    one = rows["Case One"]
+    assert one.relevance == "pending"
+    assert one.recommended is True
+    assert one.triage_score == 8.0
+    assert one.eval_reason == "Clearly unrelated."  # fake's canned reason
+    assert rows["Case Two"].relevance == "rejected"
+    assert rows["Case Two"].recommended is False
+
+
+def test_rank_candidates_ordering_and_recency(matter, user):
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    query = ResearchQuery.objects.create(matter=matter, query_text="q", created_by=user)
+
+    def make(name, position, hits, score, date):
+        return ResearchResult.objects.create(
+            query=query,
+            position=position,
+            case_name=name,
+            relevance="pending",
+            hit_count=hits,
+            triage_score=score,
+            date_filed=date,
+        )
+
+    multi = make("Multi Hit", 5, 3, 4.0, "2010-01-01")
+    promising = make("Promising", 2, 1, 9.0, "2012-01-01")
+    plain = make("Plain", 1, 1, 6.0, "2011-01-01")
+    ordered, chosen = research_tasks._rank_candidates([multi, promising, plain])
+    assert [r.case_name for r in ordered] == ["Multi Hit", "Promising", "Plain"]
+    assert chosen == {multi.id, promising.id, plain.id}
+
+    # Recency guarantee: with a full slate, the newest candidate swaps in.
+    extra = [
+        make(f"Filler {i}", 10 + i, 2, 8.0, "2015-01-01")
+        for i in range(research_tasks.BRIEF_MAX)
+    ]
+    newest = make("Brand New", 99, 1, 3.5, "2026-06-15")
+    ordered, chosen = research_tasks._rank_candidates(
+        [multi, promising, plain, newest] + extra
+    )
+    assert newest.id in chosen
+    assert len(chosen) == research_tasks.BRIEF_MAX
+
+
+def test_select_view_flips_statuses_and_queues_briefs(
+    client, matter, user, monkeypatch
+):
+    from django.urls import reverse as dj_reverse
+
+    from apps.case.research import views as research_views
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="q", status="selecting", created_by=user
+    )
+    picked = ResearchResult.objects.create(
+        query=query,
+        position=1,
+        case_name="Picked",
+        relevance="pending",
+        recommended=True,
+        cluster_id=1,
+    )
+    skipped = ResearchResult.objects.create(
+        query=query,
+        position=2,
+        case_name="Skipped",
+        relevance="pending",
+        cluster_id=2,
+    )
+    resurrected = ResearchResult.objects.create(
+        query=query,
+        position=3,
+        case_name="Resurrected",
+        relevance="rejected",
+        eval_reason="Wrongly triaged.",
+        cluster_id=3,
+    )
+    launched = []
+    monkeypatch.setattr(
+        research_views, "process_brief_phase", lambda qid: launched.append(qid)
+    )
+    url = dj_reverse("case:research-select", args=[matter.id, query.id])
+    response = client.post(
+        url, {f"case_{picked.id}": "on", f"case_{resurrected.id}": "on"}
+    )
+    assert response.status_code == 200
+
+    picked.refresh_from_db()
+    skipped.refresh_from_db()
+    resurrected.refresh_from_db()
+    query.refresh_from_db()
+    assert picked.relevance == "pending"
+    assert picked.status_message == "Queued for briefing"
+    assert resurrected.relevance == "pending"
+    assert skipped.relevance == "none"
+    assert skipped.status_message == "Not selected"
+    assert query.status == "processing"
+    assert launched == [query.id]
+
+
+def test_select_view_requires_a_selection(client, matter, user, monkeypatch):
+    from django.urls import reverse as dj_reverse
+
+    from apps.case.research import views as research_views
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="q", status="selecting", created_by=user
+    )
+    ResearchResult.objects.create(
+        query=query,
+        position=1,
+        case_name="Only",
+        relevance="pending",
+        recommended=True,
+        cluster_id=1,
+    )
+    launched = []
+    monkeypatch.setattr(
+        research_views, "process_brief_phase", lambda qid: launched.append(qid)
+    )
+    url = dj_reverse("case:research-select", args=[matter.id, query.id])
+    html = client.post(url, {}).content.decode()
+    assert "Select at least one case" in html
+    query.refresh_from_db()
+    assert query.status == "selecting"
+    assert launched == []
+
+
+def test_results_view_renders_selection_card(client, matter, user):
+    from django.urls import reverse as dj_reverse
+
+    from apps.case.research.models import ResearchQuery, ResearchResult
+
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="q", status="selecting", created_by=user
+    )
+    ResearchResult.objects.create(
+        query=query,
+        position=1,
+        case_name="Birg v. Emory",
+        relevance="pending",
+        recommended=True,
+        cluster_id=9,
+        hit_count=2,
+        matched_variants=["Colloquial", "Statutory"],
+        triage_score=7.0,
+        eval_reason="Directly addresses mooted-motion fees.",
+    )
+    url = dj_reverse("case:research-results", args=[matter.id, query.id])
+    html = client.get(url).content.decode()
+    assert "Recommended (1)" in html
+    assert "Promise 7/10" in html
+    assert "Matched 2 queries" in html
+    assert "Directly addresses mooted-motion fees." in html
+    assert "Run briefs" in html
+    # The gate must not poll: the container waits for the user.
+    assert 'hx-trigger="load delay' not in html
+
+
+def test_reaper_ignores_selection_gate(matter, user):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.case.research.models import ResearchQuery
+
+    waiting = ResearchQuery.objects.create(
+        matter=matter, query_text="waiting", status="selecting", created_by=user
+    )
+    ResearchQuery.objects.filter(pk=waiting.id).update(
+        updated_at=timezone.now() - timedelta(minutes=90)
+    )
+    research_tasks.reap_stale_queries(matter, user)
+    waiting.refresh_from_db()
+    assert waiting.status == "selecting"
+
+
 def test_bookmark_saves_slip_opinion_by_cluster_id(client, matter, user, monkeypatch):
     """A citation-less slip opinion saves via its cluster_id; the
     citation-lookup API (which can't resolve it) is never called."""
@@ -755,14 +967,46 @@ def test_refiner_falls_back_to_raw_question_variant(matter, monkeypatch):
     query = ResearchQuery.objects.create(
         matter=matter, query_text="Can I recover fees after a mooted motion?"
     )
-    monkeypatch.setattr(
-        research_tasks, "send_to_gemini", lambda s, m, **k: ("not json at all", 0, 0)
-    )
+    calls = []
+
+    def fake_gemini(s, m, **k):
+        calls.append(m)
+        return ("not json at all", 0, 0)
+
+    monkeypatch.setattr(research_tasks, "send_to_gemini", fake_gemini)
     research_tasks._refine_query(query.id)
     query.refresh_from_db()
+    # Unparseable output gets one corrective retry before the fallback.
+    assert len(calls) == 2
+    assert "not valid JSON" in calls[1][-1]["content"]
     assert len(query.query_variants) == 1
     assert query.query_variants[0]["label"] == "Search"
     assert "mooted motion" in query.query_variants[0]["query"]
+
+
+def test_refiner_retry_recovers_variants(matter, monkeypatch):
+    from apps.case.research.models import ResearchQuery
+
+    query = ResearchQuery.objects.create(
+        matter=matter, query_text="Can I recover fees after a mooted motion?"
+    )
+    responses = ["garbled {", VARIANTS_JSON]
+    monkeypatch.setattr(
+        research_tasks, "send_to_gemini", lambda s, m, **k: (responses.pop(0), 0, 0)
+    )
+    research_tasks._refine_query(query.id)
+    query.refresh_from_db()
+    assert [v["label"] for v in query.query_variants] == ["Colloquial", "Statutory"]
+
+
+def test_parse_variants_salvages_bare_array():
+    text = (
+        '```json\n[{"label": "Statutory", "query": "\\"9-11-37\\" AND fees"},'
+        ' {"label": "Broad", "query": "fees AND moot*"}]\n```'
+    )
+    variants = research_tasks._parse_variants(text)
+    assert [v["label"] for v in variants] == ["Statutory", "Broad"]
+    assert variants[0]["query"] == '"9-11-37" AND fees'
 
 
 def test_refiner_mines_library_notes(matter, monkeypatch):
@@ -901,8 +1145,13 @@ def test_variants_merge_with_hit_counts(matter, user, patch_pipeline):
     assert rows["Colloquial Only"].hit_count == 1
     # Four searches ran: score + date per variant.
     assert len([s for s in fake.searches if not s["query"].startswith("cites:")]) == 4
-    # All rows briefed (under cap) and scored at triage.
+    # All candidates scored at triage and offered at the gate.
     assert all(r.triage_score == 8.0 for r in rows.values())
+    query.refresh_from_db()
+    assert query.status == "selecting"
+    research_tasks._run_brief_phase(query.id)
+    rows = {r.case_name: r for r in ResearchResult.objects.filter(query=query)}
+    assert all(r.brief for r in rows.values())
 
 
 def test_triage_scores_below_threshold_reject(matter, user, patch_pipeline):

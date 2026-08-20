@@ -1,0 +1,62 @@
+{% comment %}
+The second gate. Searches and triage are done; full-opinion briefs (the
+expensive stage) wait for the user's pick. The pipeline's own
+recommendation arrives prechecked, other candidates and even
+triage-rejected rows are selectable, and every row carries its pre-read
+signals so the choice is informed. Mirrors the query-variant gate.
+{% endcomment %}
+<div class="research-selection">
+  <p class="research-review-label">
+    Searches and triage are done. Choose the cases to pull; each one is
+    a full opinion read and briefed against your question.
+  </p>
+  {% if selection_error %}
+    <div class="research-error">
+      <i class="icon-alert-triangle"></i>
+      {{ selection_error }}
+    </div>
+  {% endif %}
+  <form id="researchSelForm"
+        hx-post="{% url 'case:research-select' matter.id query.id %}"
+        hx-target="#research-results"
+        hx-swap="innerHTML">
+    {% if recommended_candidates %}
+      <h4 class="research-selection-heading">Recommended ({{ recommended_candidates|length }})</h4>
+      {% for result in recommended_candidates %}
+        {% include "case/research/case-selection-row.html" with checked=True %}
+      {% endfor %}
+    {% endif %}
+    {% if other_candidates %}
+      <h4 class="research-selection-heading">Other candidates ({{ other_candidates|length }})</h4>
+      {% for result in other_candidates %}
+        {% include "case/research/case-selection-row.html" with checked=False %}
+      {% endfor %}
+    {% endif %}
+    {% if ruled_out %}
+      <details class="research-ruled-out">
+        <summary>Ruled out at triage ({{ ruled_out|length }}) — selectable if the triage call looks wrong</summary>
+        {% for result in ruled_out %}
+          {% include "case/research/case-selection-row.html" with checked=False %}
+        {% endfor %}
+      </details>
+    {% endif %}
+    <div class="research-selection-footer">
+      <span class="detail-text"><span id="researchSelCount">0</span> cases selected</span>
+      <button type="submit" class="btn btn-success">
+        <i class="icon-play"></i> Run briefs
+      </button>
+    </div>
+  </form>
+</div>
+<script>
+  if (!window.researchSelCount) {
+    window.researchSelCount = function (form) {
+      const count = form.querySelectorAll('input[type="checkbox"]:checked').length;
+      const counter = document.getElementById('researchSelCount');
+      if (counter) counter.textContent = count;
+      const button = form.querySelector('button[type="submit"]');
+      if (button) button.disabled = count === 0;
+    };
+  }
+  researchSelCount(document.getElementById('researchSelForm'));
+</script>

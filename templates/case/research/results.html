@@ -79,8 +79,15 @@
          hx-target="#research-results"
          hx-swap="innerHTML">
       <i class="icon-loader spin"></i>
-      <span>Searching CourtListener...</span>
+      <span>Searching CourtListener and triaging results...</span>
     </div>
+  {% elif query.status == "selecting" %}
+    {% comment %}
+    The selection gate: no polling div in this branch, so the poll chain
+    ends here (the container is swapped wholesale each poll) and the form
+    waits for the user, exactly like the refinement screen.
+    {% endcomment %}
+    {% include "case/research/case-selection.html" %}
   {% elif query.status == "processing" or query.status == "enriching" or query.status == "synthesizing" %}
     <div class="research-processing-banner"
          hx-get="{% url 'case:research-results' matter.id query.id %}{% if sort %}?sort={{ sort }}{% endif %}"

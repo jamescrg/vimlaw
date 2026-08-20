@@ -72,6 +72,8 @@ ANSWER_MODEL = "gemini-pro-latest"
 # was stranded by a restart; the reaper flags it for a re-run. Both
 # pipeline tasks finish well inside this window.
 RESEARCH_STALE_MINUTES = 30
+# "refined" and "selecting" are deliberately absent: both wait on the
+# user, indefinitely, and must never be reaped.
 ACTIVE_QUERY_STATUSES = [
     "pending",
     "refining",
@@ -187,6 +189,40 @@ def _parse_json(text):
         return None
 
 
+def _parse_variants(response_text):
+    """Extract [{"label", "query"}] from a refiner response.
+
+    Accepts the contracted {"variants": [...]} object, or salvages a
+    bare JSON array. Queries are sanitized; empty ones dropped.
+    """
+    parsed = _parse_json(response_text) or {}
+    items = parsed.get("variants")
+    if not items:
+        cleaned = (response_text or "").strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        start = cleaned.find("[")
+        end = cleaned.rfind("]")
+        if start >= 0 and end > start:
+            try:
+                items = json.loads(cleaned[start : end + 1])
+            except json.JSONDecodeError:
+                items = []
+    variants = []
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        variant_query = sanitize_query(str(item.get("query", ""))[:300])
+        if not variant_query:
+            continue
+        variants.append(
+            {"label": str(item.get("label", "Search"))[:40], "query": variant_query}
+        )
+        if len(variants) == QUERY_VARIANT_MAX:
+            break
+    return variants
+
+
 def _library_listing():
     """One line per firm-library note, for the refiner's mining pass."""
     from apps.case.ai.selector import library_folder_path
@@ -300,24 +336,38 @@ def _refine_query(query_id):
     )
     user_prompt = library_section + "QUESTION: " + query.query_text
 
+    # One corrective retry: an unparseable response (truncated JSON, a
+    # bare array, an empty thinking-heavy reply) used to fall back to the
+    # raw question SILENTLY - run 33 shipped the user's sentence as the
+    # only "variant" with nothing in the logs.
     variants = []
-    try:
-        response_text, _, _ = send_to_gemini(
-            system_prompt, [{"role": "user", "content": user_prompt}]
+    messages = [{"role": "user", "content": user_prompt}]
+    for attempt in range(2):
+        try:
+            response_text, _, _ = send_to_gemini(system_prompt, messages)
+        except Exception:
+            logger.exception("Error refining query %s", query_id)
+            break
+        variants = _parse_variants(response_text)
+        if variants:
+            break
+        logger.warning(
+            "Refiner variants unparseable for query %s (attempt %s): %r",
+            query_id,
+            attempt + 1,
+            (response_text or "")[:400],
         )
-        parsed = _parse_json(response_text) or {}
-        for item in parsed.get("variants", [])[:QUERY_VARIANT_MAX]:
-            variant_query = sanitize_query(str(item.get("query", ""))[:300])
-            if not variant_query:
-                continue
-            variants.append(
-                {
-                    "label": str(item.get("label", "Search"))[:40],
-                    "query": variant_query,
-                }
-            )
-    except Exception:
-        logger.exception("Error refining query %s, falling back to raw text", query_id)
+        messages = messages + [
+            {"role": "assistant", "content": response_text or ""},
+            {
+                "role": "user",
+                "content": (
+                    "Your reply was not valid JSON in the required shape. "
+                    'Reply with ONLY the JSON object: {"variants": '
+                    '[{"label": "...", "query": "..."}, ...]}'
+                ),
+            },
+        ]
 
     if not variants:
         variants = [{"label": "Search", "query": sanitize_query(query.query_text)}]
@@ -473,8 +523,8 @@ def _process_query(query_id):
             )
 
         # ── Phase 2: Snippet Triage (Pass 1) ──
-        _update_query(query_id, status="processing")
-
+        # Status stays "searching": "processing" now means the post-gate
+        # briefing phase, and its banner says so.
         result_records = list(
             ResearchResult.objects.filter(query_id=query_id).order_by("position")
         )
@@ -494,7 +544,9 @@ def _process_query(query_id):
 
         # Rejected rows are kept (relevance="rejected", reason stored) so
         # the ruled-out list stays inspectable - a wrongly-triaged case
-        # used to vanish without a trace.
+        # used to vanish without a trace. Accepted rows keep their triage
+        # reason too: the selection screen shows it (the brief overwrites
+        # eval_reason with its own rationale later).
         for rid, (score, reason) in triage_results.items():
             if score < TRIAGE_REJECT_BELOW:
                 ResearchResult.objects.filter(pk=rid).update(
@@ -504,38 +556,88 @@ def _process_query(query_id):
                     status_message="Ruled out at triage",
                 )
             else:
-                ResearchResult.objects.filter(pk=rid).update(triage_score=score)
+                ResearchResult.objects.filter(pk=rid).update(
+                    triage_score=score,
+                    eval_reason=reason,
+                    status_message="Awaiting selection",
+                )
 
-        # ── Phase 3: Full-opinion briefing ──
+        # ── The selection gate ──
+        # Mark the pipeline's own picks, then pause for the user: reads
+        # are the expensive stage (2 CL credits + a full-opinion flash
+        # call each), so the user decides which cases get pulled, with
+        # the recommendation prechecked. Mirrors the query-variant gate.
         survivors = list(
             ResearchResult.objects.filter(
                 query_id=query_id, relevance="pending"
             ).order_by("position")
         )
-        # Brief slots go by cross-variant hit count, then snippet-stage
-        # promise, then CL's ordering - with a recency guarantee, because
-        # brand-new law is what keyword ranking most reliably buries.
-        survivors.sort(
-            key=lambda r: (-r.hit_count, -(r.triage_score or 5.0), r.position)
-        )
-        to_brief = survivors[:BRIEF_MAX]
-        chosen = {r.id for r in to_brief}
-        newest = sorted(survivors, key=lambda r: r.date_filed or "", reverse=True)[
-            :RECENT_GUARANTEE
-        ]
-        for recent in newest:
-            if recent.id in chosen or not to_brief:
-                continue
-            dropped = to_brief.pop()
-            chosen.discard(dropped.id)
-            to_brief.append(recent)
-            chosen.add(recent.id)
-        overflow = [r for r in survivors if r.id not in chosen]
-        if overflow:
-            ResearchResult.objects.filter(pk__in=[r.id for r in overflow]).update(
-                relevance="none", status_message="Not briefed (run cap)"
+        _, recommended_ids = _rank_candidates(survivors)
+        if recommended_ids:
+            ResearchResult.objects.filter(pk__in=recommended_ids).update(
+                recommended=True
             )
 
+        _reorder_results(query_id)
+
+    except Exception:
+        logger.exception("Error processing research query %s", query_id)
+        _update_query(
+            query_id, status="error", error_message="An unexpected error occurred."
+        )
+        return
+
+    _update_query(query_id, status="selecting")
+
+
+def _rank_candidates(survivors):
+    """Order briefing candidates and pick the recommended set.
+
+    Ranking: cross-variant hit count, then snippet-stage promise, then
+    CL's ordering - with a recency guarantee, because brand-new law is
+    what keyword ranking most reliably buries. Returns (ordered list,
+    recommended id set of at most BRIEF_MAX).
+    """
+    ordered = sorted(
+        survivors,
+        key=lambda r: (-r.hit_count, -(r.triage_score or 5.0), r.position),
+    )
+    picks = ordered[:BRIEF_MAX]
+    chosen = {r.id for r in picks}
+    newest = sorted(ordered, key=lambda r: r.date_filed or "", reverse=True)[
+        :RECENT_GUARANTEE
+    ]
+    for recent in newest:
+        if recent.id in chosen or not picks:
+            continue
+        dropped = picks.pop()
+        chosen.discard(dropped.id)
+        picks.append(recent)
+        chosen.add(recent.id)
+    return ordered, chosen
+
+
+def process_brief_phase(query_id):
+    """Queue full-opinion briefing of the user-selected cases."""
+    _queue("_run_brief_phase", query_id, "ResearchBriefs")
+
+
+def _run_brief_phase(query_id):
+    """Brief every selected (relevance=pending) case, then chain
+    enrichment. Runs after the user confirms the selection."""
+    try:
+        query = ResearchQuery.objects.get(pk=query_id)
+    except ResearchQuery.DoesNotExist:
+        return
+
+    try:
+        _update_query(query_id, status="processing")
+
+        to_brief = list(
+            ResearchResult.objects.filter(
+                query_id=query_id, relevance="pending"
+            ).order_by("position")
+        )
         if to_brief:
             ResearchResult.objects.filter(pk__in=[r.id for r in to_brief]).update(
                 status_message="Fetching opinion..."
@@ -556,18 +658,17 @@ def _process_query(query_id):
                             relevance="error", status_message="Briefing failed"
                         )
 
-        # ── Phase 4: Reorder (nothing is deleted; ruled-out rows sink) ──
         _reorder_results(query_id)
 
     except Exception:
-        logger.exception("Error processing research query %s", query_id)
+        logger.exception("Error briefing research query %s", query_id)
         _update_query(
             query_id, status="error", error_message="An unexpected error occurred."
         )
         return
 
-    # Chain the enrichment phase as its own qcluster task: the two
-    # halves together can exceed Q_CLUSTER's 600s timeout.
+    # Chain the enrichment phase as its own qcluster task: the phases
+    # together can exceed Q_CLUSTER's 600s timeout.
     _update_query(query_id, status="enriching")
     _queue("_run_enrichment", query_id, "ResearchEnrich")
 

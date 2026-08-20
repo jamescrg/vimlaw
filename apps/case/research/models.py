@@ -7,6 +7,7 @@ STATUS_CHOICES = [
     ("refining", "Refining"),
     ("refined", "Refined"),
     ("searching", "Searching"),
+    ("selecting", "Awaiting case selection"),
     ("processing", "Processing"),
     ("enriching", "Enriching"),
     ("synthesizing", "Synthesizing"),
@@ -114,6 +115,10 @@ class ResearchResult(AuditMixin):
     matched_variants = models.JSONField(default=list, blank=True)
     # Snippet-stage promise score (0-10) from triage; ranks brief slots.
     triage_score = models.FloatField(null=True, blank=True)
+    # The pipeline's own pick for a brief slot (top-ranked + recency
+    # guarantee) - prechecked on the selection screen so one click runs
+    # exactly what the code would have done unattended.
+    recommended = models.BooleanField(default=False)
     status_message = models.CharField(max_length=200, blank=True, default="")
     forward_citation_count = models.IntegerField(null=True, blank=True)
     verify_status = models.CharField(

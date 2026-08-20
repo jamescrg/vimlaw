@@ -32,18 +32,26 @@ snippet/8k-excerpt pipeline.
 3. **Triage** (flash, snippet-only): each candidate gets a 0-10 promise
    score plus reason from CL's keyword-context snippet (missing snippet
    scores a neutral 5 — slip opinions have none). Below 3 =
-   relevance=rejected WITH the reason — nothing is deleted; ruled-out
-   rows render in the collapsed "Ruled out" section. Brief slots then go
-   by (hit_count, triage score, CL order) with a recency guarantee (the
-   3 newest candidates always get slots).
-4. **Brief** (`_brief_result`, flash): each surviving case (≤BRIEF_MAX)
-   is briefed from its ENTIRE cluster — every sub-opinion concatenated,
+   relevance=rejected WITH the reason — nothing is deleted.
+4. **The selection gate** (status=selecting, `case-selection.html`): the
+   second human checkpoint, mirroring the variant gate — reads are the
+   expensive stage, so the user picks which cases get pulled. The card
+   shows every candidate with its pre-read signals (citation/court/date,
+   cite count, "Matched N queries", promise score, triage reason); the
+   pipeline's own pick (`recommended`: top-BRIEF_MAX by hit_count →
+   promise → CL order, with a 3-newest recency swap, via
+   `_rank_candidates`) arrives prechecked, and ruled-out rows are
+   selectable too so a wrong triage call can be overridden. Waits
+   indefinitely (never reaped, like "refined"); unselected candidates
+   become "Not selected" and stay briefable via the per-card button.
+5. **Brief** (`_run_brief_phase` → `_brief_result`, flash): each selected
+   case is briefed from its ENTIRE cluster — every sub-opinion concatenated,
    250k cap — using the structured abstract prompt in briefing.py
    (CASE/POSTURE/VEHICLE/HOLDING-verbatim/RELEVANCE/CAUTIONS/SCOPE +
    parseable RELEVANCE VERDICT and KEY AUTHORITIES). The verdict maps to
    relevance high/medium/low; the brief, rationale, and key authorities
    are stored on the row.
-5. **Enrich** (`_run_enrichment`, chained qcluster task): forward
+6. **Enrich** (`_run_enrichment`, chained qcluster task): forward
    `cites:()` searches from the 1-2 strongest HIGH cases (how slip
    opinions get found when they cite the line) and backward
    `lookup_citation` of the authorities the HIGH briefs rest on. NOTE:
@@ -51,8 +59,8 @@ snippet/8k-excerpt pipeline.
    silently returns zero results (verified live 2026-08-17). New clusters join as rows
    with provenance badges ("Citing case" / "Cited authority") and get
    the same full-opinion briefs.
-6. **Treatment**: `check_negative_treatment` on every HIGH row.
-7. **Answer** (`_generate_final_answer`, gemini-pro-latest): direct
+7. **Treatment**: `check_negative_treatment` on every HIGH row.
+8. **Answer** (`_generate_final_answer`, gemini-pro-latest): direct
    answer first (naming the exact vehicle), then per-case discussions
    under 200 words each, vehicle-matched; slip opinions / zero-cite
    cases flagged "new and not yet settled law"; unchecked or negative

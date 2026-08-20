@@ -808,6 +808,11 @@ urlpatterns = [
         name="research-confirm",
     ),
     path(
+        "case/<int:matter_id>/research/<int:query_id>/select/",
+        research.research_select_cases,
+        name="research-select",
+    ),
+    path(
         "case/<int:matter_id>/research/<int:query_id>/delete/",
         research.research_delete,
         name="research-delete",
