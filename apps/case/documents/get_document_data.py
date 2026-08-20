@@ -12,6 +12,7 @@ from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 
 from .filters import FilesFilter
+from .fingerprint import attach_duplicates
 
 
 def get_selected_matter(request):
@@ -76,8 +77,12 @@ def get_document_data(request, matter_id):
     selected_session_key = get_session_key("selected_documents", matter_id)
     selected_documents = get_selected_ids(request, selected_session_key)
 
+    # One object list for the page: the duplicate badges are attached in
+    # bulk here and the same instances are what the template renders.
+    objects = attach_duplicates(pagination.get_object_list())
+
     # Check if all visible documents are selected
-    visible_ids = [doc.id for doc in pagination.get_object_list()]
+    visible_ids = [doc.id for doc in objects]
     all_selected = all_visible_selected(selected_documents, visible_ids)
 
     # Get proceedings for the matter (for inline proceeding dropdown)
@@ -124,7 +129,7 @@ def get_document_data(request, matter_id):
         "pagination": pagination,
         "session_key": pagination_session_key,
         "trigger_key": "documentsChanged",
-        "objects": pagination.get_object_list(),
+        "objects": objects,
         "labels": label_list,
         "selected_category": selected_category,
         "selected_keyword": selected_keyword,

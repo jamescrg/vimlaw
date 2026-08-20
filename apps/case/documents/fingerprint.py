@@ -124,3 +124,41 @@ def find_duplicates(content_hash, page_fingerprint=None, exclude_pk=None):
     if exclude_pk:
         queryset = queryset.exclude(pk=exclude_pk)
     return queryset.order_by("-created_at")
+
+
+def attach_duplicates(documents):
+    """Set ``_duplicates`` on each document in one query.
+
+    Used by the documents table so every row can show its duplicate badge
+    without a query per row; ``Document.duplicates`` reads the attribute
+    and falls back to a per-document query when it is absent (single-row
+    re-renders).
+    """
+    from apps.case.models import Document
+
+    documents = list(documents)
+    hashes = {d.content_hash for d in documents if d.content_hash}
+    pages = {d.page_fingerprint for d in documents if d.page_fingerprint}
+    for doc in documents:
+        doc._duplicates = []
+    if not hashes and not pages:
+        return documents
+    query = Q()
+    if hashes:
+        query |= Q(content_hash__in=hashes)
+    if pages:
+        query |= Q(page_fingerprint__in=pages)
+    matches = list(
+        Document.objects.filter(query).select_related("matter").order_by("-created_at")
+    )
+    for doc in documents:
+        doc._duplicates = [
+            m
+            for m in matches
+            if m.pk != doc.pk
+            and (
+                (doc.content_hash and m.content_hash == doc.content_hash)
+                or (doc.page_fingerprint and m.page_fingerprint == doc.page_fingerprint)
+            )
+        ]
+    return documents

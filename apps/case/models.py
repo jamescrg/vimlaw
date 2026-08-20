@@ -175,6 +175,17 @@ class Document(AuditMixin, models.Model):
         )
 
     @property
+    def duplicates(self):
+        """Cached list of duplicates for templates (the row's badge).
+
+        The documents table pre-fills ``_duplicates`` in bulk; elsewhere
+        this runs one query per document.
+        """
+        if not hasattr(self, "_duplicates"):
+            self._duplicates = list(self.find_duplicates())
+        return self._duplicates
+
+    @property
     def citation(self):
         """Return abbreviated name for citation, using manual override or auto-generated."""
         if self.abbreviated_name:

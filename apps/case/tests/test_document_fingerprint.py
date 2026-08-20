@@ -143,3 +143,52 @@ def test_exact_duplicate_has_no_metadata_note(client_with_matter):
     body = response.content.decode()
     assert "already in the system" in body
     assert "different file metadata" not in body
+
+
+# ── duplicate badge in the documents table ───────────────────────────────
+
+
+def test_table_shows_duplicate_badge_linking_to_match(client_with_matter, user):
+    matter = client_with_matter.matter
+    first = Document(
+        matter=matter, name="Original", category="Evidence", created_by=user
+    )
+    first.save()
+    first.file.save("a.pdf", io.BytesIO(make_pdf()), save=True)
+    copy = Document(matter=matter, name="Copy", category="Evidence", created_by=user)
+    copy.save()
+    copy.file.save("b.pdf", io.BytesIO(make_pdf(title="Other")), save=True)
+
+    response = client_with_matter.get(f"/case/{matter.id}/documents/list/")
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert body.count("duplicate-badge") == 2
+    assert reverse("case:viewer", args=[first.id]) in body
+    assert reverse("case:viewer", args=[copy.id]) in body
+    assert "Same pages as &quot;Original&quot;" in body
+
+
+def test_table_without_duplicates_has_no_badge(client_with_matter, user):
+    matter = client_with_matter.matter
+    doc = Document(matter=matter, name="Only", category="Evidence", created_by=user)
+    doc.save()
+    doc.file.save("a.pdf", io.BytesIO(make_pdf()), save=True)
+    response = client_with_matter.get(f"/case/{matter.id}/documents/list/")
+    assert "duplicate-badge" not in response.content.decode()
+
+
+def test_duplicates_property_uses_bulk_attachment(
+    matter, user, django_assert_num_queries
+):
+    from apps.case.documents.fingerprint import attach_duplicates
+
+    docs = []
+    for i in range(3):
+        d = Document(matter=matter, name=f"D{i}", category="Evidence", created_by=user)
+        d.save()
+        d.file.save(f"{i}.pdf", io.BytesIO(make_pdf(text=f"T{i % 2}")), save=True)
+        docs.append(d)
+    with django_assert_num_queries(1):
+        attach_duplicates(docs)
+        assert [x.pk for x in docs[0].duplicates] == [docs[2].pk]
+        assert docs[1].duplicates == []
