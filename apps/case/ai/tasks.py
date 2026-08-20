@@ -5,7 +5,7 @@ Background tasks for AI chat processing.
 import logging
 import time
 
-from .anthropic_client import send_to_claude
+from .anthropic_client import count_claude_tokens, send_to_claude
 from .citations import citations_to_dict, verify_all_citations
 from .gemini_client import send_to_gemini, send_to_gemini_streaming
 from .selector import MODEL_HARD_LIMITS, estimate_tokens
@@ -35,6 +35,130 @@ GEMINI_MODELS = {
     "gemini-pro": "gemini-2.5-pro",
     "gemini-pro-latest": "gemini-pro-latest",
 }
+
+
+class PromptTooLargeError(Exception):
+    """The assembled prompt cannot fit the model's context window."""
+
+
+# Estimates at or above this share of the window get an exact count before
+# the Claude send; below it the conservative estimate is trusted and the
+# extra round trip (which re-uploads the whole prompt) is skipped.
+EXACT_COUNT_THRESHOLD = 0.5
+# Estimate-based send ceiling, as a share of the model window.
+ESTIMATE_CEILING = 0.80
+# Exact-count send ceiling; the remainder is headroom for the turn itself.
+EXACT_CEILING = 0.98
+
+
+def _trim_history(chat_history, context_tokens, ceiling):
+    """Drop the oldest messages until the estimate fits; keep the newest."""
+    dropped = 0
+
+    def total():
+        return context_tokens + sum(
+            estimate_tokens(m.get("content", "")) for m in chat_history
+        )
+
+    while len(chat_history) > 1 and total() > ceiling:
+        chat_history.pop(0)
+        dropped += 1
+    return dropped, total()
+
+
+def fit_prompt_to_window(context_text, chat_history, llm, log_activity):
+    """Make the prompt fit the model window, trimming chat history as needed.
+
+    Returns (chat_history, prompt_tokens). Trims against the conservative
+    estimate first; for Claude, when the estimate is within striking
+    distance of the window, asks the API for the exact count (the model's
+    own tokenizer) and trims again against that. Raises
+    PromptTooLargeError when the context alone cannot fit, with a message
+    meant for the chat.
+    """
+    hard_limit = MODEL_HARD_LIMITS.get(llm, 1_000_000)
+    context_tokens = estimate_tokens(context_text)
+    estimate_ceiling = int(hard_limit * ESTIMATE_CEILING)
+
+    dropped, prompt_tokens = _trim_history(
+        chat_history, context_tokens, estimate_ceiling
+    )
+    if dropped:
+        log_activity(f"Trimmed {dropped} oldest chat messages to fit the model window")
+        logger.warning(
+            "AI prompt over send ceiling for %s (%d); dropped %d oldest chat "
+            "messages, estimate now ~%d tokens.",
+            llm,
+            estimate_ceiling,
+            dropped,
+            prompt_tokens,
+        )
+
+    if llm in GEMINI_MODELS:
+        # No exact counter wired for Gemini; its tokenizer is also less
+        # dense than the estimate assumes, so an over-ceiling estimate here
+        # is logged and sent rather than refused.
+        if prompt_tokens > estimate_ceiling:
+            logger.error(
+                "AI prompt still over send ceiling for %s after trimming "
+                "(context alone ~%d tokens > %d); sending anyway.",
+                llm,
+                context_tokens,
+                estimate_ceiling,
+            )
+        return chat_history, prompt_tokens
+
+    if prompt_tokens < hard_limit * EXACT_COUNT_THRESHOLD:
+        return chat_history, prompt_tokens
+
+    model = CLAUDE_MODELS.get(llm, CLAUDE_FALLBACK_MODEL)
+    exact_ceiling = int(hard_limit * EXACT_CEILING)
+    exact = count_claude_tokens(context_text, chat_history, model)
+    if exact is None:
+        # Count unavailable; the estimate already passed the 80% ceiling.
+        return chat_history, prompt_tokens
+    log_activity(f"Exact prompt size: {exact:,} tokens")
+
+    # The exact count and the estimate disagree by some ratio; trim history
+    # against an estimate ceiling scaled by that ratio, then re-count. A
+    # couple of rounds converge; the loop is bounded regardless.
+    for _ in range(3):
+        if exact <= exact_ceiling:
+            return chat_history, exact
+        if len(chat_history) <= 1:
+            break
+        ratio = exact / max(prompt_tokens, 1)
+        scaled_ceiling = int(exact_ceiling / ratio)
+        dropped, prompt_tokens = _trim_history(
+            chat_history, context_tokens, scaled_ceiling
+        )
+        if not dropped:
+            break
+        log_activity(f"Trimmed {dropped} oldest chat messages to fit the model window")
+        recount = count_claude_tokens(context_text, chat_history, model)
+        if recount is None:
+            return chat_history, prompt_tokens
+        exact = recount
+    if exact <= exact_ceiling:
+        return chat_history, exact
+    logger.error(
+        "AI prompt cannot fit %s window: %d exact tokens > %d with %d history "
+        "messages.",
+        model,
+        exact,
+        exact_ceiling,
+        len(chat_history),
+    )
+    raise PromptTooLargeError(_too_large_message(exact, hard_limit))
+
+
+def _too_large_message(tokens, hard_limit):
+    return (
+        f"The case file is too large for this model (about {tokens:,} tokens "
+        f"against a {hard_limit:,} limit). Lower the AI context setting on "
+        "some always-included documents, case law or notes, or start a new "
+        "conversation."
+    )
 
 
 def process_ai_request(
@@ -188,56 +312,17 @@ def process_ai_request(
         # Timestamped history, with user names when multiple people chat
         chat_history = build_chat_history(conversation)
 
-        # Final size guard. estimate_tokens (chars/4) under-counts real
-        # tokenization, so apply the cap at 80% of the model window and
-        # treat the estimate generously. If the assembled prompt plus the
-        # chat history would still exceed the cap, drop the oldest chat
-        # messages until it fits — preserving the current user message and
-        # the most recent exchanges. Better than a 400 from the provider.
-        hard_limit = MODEL_HARD_LIMITS.get(llm, 1_000_000)
-        send_ceiling = int(hard_limit * 0.80)
-        context_tokens = estimate_tokens(context_text)
-
-        def _history_tokens(history):
-            return sum(estimate_tokens(m.get("content", "")) for m in history)
-
-        history_tokens = _history_tokens(chat_history)
-        if context_tokens + history_tokens > send_ceiling:
-            dropped = 0
-            # Trim from the front (oldest) while keeping at least the most
-            # recent message (the one we're responding to).
-            while (
-                len(chat_history) > 1
-                and context_tokens + _history_tokens(chat_history) > send_ceiling
-            ):
-                chat_history.pop(0)
-                dropped += 1
-            history_tokens = _history_tokens(chat_history)
-            log_activity(
-                f"Trimmed {dropped} oldest chat messages to fit the model window"
-            )
-            logger.warning(
-                "AI prompt over send ceiling for %s (~%d tokens > %d). "
-                "Dropped %d oldest chat messages; final estimate ~%d tokens.",
-                llm,
-                context_tokens + history_tokens + dropped,  # rough pre-trim figure
-                send_ceiling,
-                dropped,
-                context_tokens + history_tokens,
-            )
-            if context_tokens + history_tokens > send_ceiling:
-                logger.error(
-                    "AI prompt still over send ceiling after trimming chat "
-                    "history for conversation %s (context alone ~%d tokens > %d). "
-                    "Request will likely be rejected by the provider.",
-                    conversation_id,
-                    context_tokens,
-                    send_ceiling,
-                )
+        # Final size guard: trim the oldest chat messages (never the current
+        # one) until the prompt fits, then for Claude verify large prompts
+        # with an exact count. Raises PromptTooLargeError instead of
+        # sending a request the provider will reject.
+        chat_history, prompt_tokens = fit_prompt_to_window(
+            context_text, chat_history, llm, log_activity
+        )
 
         log_activity(
             f"History: {len(chat_history)} messages; "
-            f"sending ~{context_tokens + history_tokens:,} tokens total"
+            f"sending ~{prompt_tokens:,} tokens total"
         )
 
         # Set connecting status

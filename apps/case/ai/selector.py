@@ -94,9 +94,22 @@ class ManifestItem:
     importance: int
 
 
+# Characters per token for the size estimate. The folk figure is 4, and
+# that is what this used to be; measured against count_tokens on this
+# firm's actual material it under-counts badly. Opus 4.8 on the six
+# largest OCR'd documents on dev (2026-08-20): 2.23 chars/token overall,
+# worst 1.56; a full matter context: 2.29; plain prose: ~3. The Opus 4.7+
+# tokenizer is also up to ~1.35x denser than Sonnet/Opus 4.6. A prompt
+# that estimated under 800K at chars/4 was rejected by Anthropic at 1.14M
+# tokens. 2.5 keeps the estimate within the guards' 20% margin on
+# measured content; the Claude send path additionally verifies large
+# prompts with an exact count.
+CHARS_PER_TOKEN = 2.5
+
+
 def estimate_tokens(text: str) -> int:
-    """Estimate token count from text (1 token ~= 4 characters)."""
-    return len(text) // 4
+    """Estimate token count from text (conservative: 1 token ~= 2.5 chars)."""
+    return int(len(text) / CHARS_PER_TOKEN)
 
 
 def library_folder_path(folder):
