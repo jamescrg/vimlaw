@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
@@ -9,6 +11,8 @@ from apps.case.abbreviate import bluebook_abbreviate
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 from utils.models import AuditMixin
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -133,6 +137,15 @@ class Document(AuditMixin, models.Model):
         null=True,
         help_text="AI-generated summary for intelligent context selection",
     )
+    # Duplicate detection (apps.case.documents.fingerprint): SHA-256 of the
+    # stored bytes, and for PDFs a digest of the page content alone so a
+    # re-saved copy with different metadata still matches.
+    content_hash = models.CharField(
+        max_length=64, null=True, blank=True, db_index=True, editable=False
+    )
+    page_fingerprint = models.CharField(
+        max_length=64, null=True, blank=True, db_index=True, editable=False
+    )
     history = HistoricalRecords()
 
     def __str__(self):
@@ -141,6 +154,25 @@ class Document(AuditMixin, models.Model):
     @property
     def is_drive_synced(self):
         return bool(self.drive_file_id)
+
+    def set_fingerprints(self, fileobj, size=None):
+        """Compute content_hash / page_fingerprint from an open binary file."""
+        from apps.case.documents.fingerprint import fingerprint_file
+
+        is_pdf = (self.file.name or "").lower().endswith(".pdf") or (
+            getattr(fileobj, "name", "") or ""
+        ).lower().endswith(".pdf")
+        self.content_hash, self.page_fingerprint = fingerprint_file(
+            fileobj, is_pdf=is_pdf, size=size
+        )
+
+    def find_duplicates(self):
+        """Other documents with the same bytes or page content."""
+        from apps.case.documents.fingerprint import find_duplicates
+
+        return find_duplicates(
+            self.content_hash, self.page_fingerprint, exclude_pk=self.pk
+        )
 
     @property
     def citation(self):
@@ -169,6 +201,16 @@ class Document(AuditMixin, models.Model):
         # Set category to "Record" if proceeding is set (unless Discovery)
         if self.proceeding and self.category not in ("Record", "Discovery"):
             self.category = "Record"
+
+        # Safety net for creation paths that do not fingerprint explicitly:
+        # a file with no hash yet is read once here. Paths that replace the
+        # bytes must clear content_hash (or call set_fingerprints) first.
+        if self.file and not self.content_hash:
+            try:
+                self.file.open("rb")
+                self.set_fingerprints(self.file, size=self.file.size)
+            except Exception:
+                logger.exception("Could not fingerprint document %s", self.pk)
 
         super().save(*args, **kwargs)
 

@@ -21,6 +21,7 @@ from apps.management.selection import (
 )
 
 from .filters import FilesFilter
+from .fingerprint import find_duplicates, fingerprint_file
 from .forms import BulkFilesForm, FilesForm
 from .get_document_data import get_document_data
 
@@ -244,6 +245,20 @@ def document_importance(request, document_id, importance):
     return redirect("case:documents-list", matter_id=document.matter_id)
 
 
+def _describe_duplicates(duplicates, content_hash, limit=5):
+    """Rows for the duplicate warning: the matches plus how they matched."""
+    rows = []
+    for dup in duplicates[:limit]:
+        rows.append(
+            {
+                "document": dup,
+                # Byte-identical, or the same pages under different metadata.
+                "exact": dup.content_hash == content_hash,
+            }
+        )
+    return {"rows": rows, "total": duplicates.count()}
+
+
 @login_required
 def documents_add(request, matter_id):
     matter, matters = get_matter_from_url(request, matter_id)
@@ -344,6 +359,28 @@ def documents_add(request, matter_id):
 
             # Handle regular PDF files
             elif file_ext == "pdf":
+                # Duplicate check: same bytes or same page content as a
+                # document already in the system. Warn once; the form
+                # comes back with duplicate_ok set so a second Submit
+                # uploads anyway (the dropped file survives the re-render).
+                content_hash, page_fingerprint = fingerprint_file(
+                    uploaded_file, is_pdf=True, size=uploaded_file.size
+                )
+                duplicates = find_duplicates(content_hash, page_fingerprint)
+                if duplicates.exists() and not request.POST.get("duplicate_ok"):
+                    return render(
+                        request,
+                        "case/documents/form.html",
+                        {
+                            "form": form,
+                            "edit": False,
+                            "matter": matter,
+                            "duplicates": _describe_duplicates(
+                                duplicates, content_hash
+                            ),
+                        },
+                    )
+
                 # Two-phase save: first save without file to get PK
                 document = form.save(commit=False)
                 document.matter = matter
@@ -353,6 +390,8 @@ def documents_add(request, matter_id):
 
                 # Now save file with proper path using document.pk
                 document.file = uploaded_file
+                document.content_hash = content_hash
+                document.page_fingerprint = page_fingerprint
                 document.save()
 
                 # Verify file made it to storage
@@ -443,6 +482,25 @@ def documents_edit(request, document_id):
             form.add_error(None, "FILE_REQUIRED: Only PDF files are accepted.")
             uploaded_file = None  # Prevent processing invalid file
 
+        fingerprints = None
+        if form.is_valid() and uploaded_file:
+            fingerprints = fingerprint_file(
+                uploaded_file, is_pdf=True, size=uploaded_file.size
+            )
+            duplicates = find_duplicates(*fingerprints, exclude_pk=document.pk)
+            if duplicates.exists() and not request.POST.get("duplicate_ok"):
+                return render(
+                    request,
+                    "case/documents/form.html",
+                    {
+                        "form": form,
+                        "edit": True,
+                        "document": document,
+                        "matter": document.matter,
+                        "duplicates": _describe_duplicates(duplicates, fingerprints[0]),
+                    },
+                )
+
         if form.is_valid():
             old_file_path = document.file.name if document.file else None
 
@@ -455,6 +513,7 @@ def documents_edit(request, document_id):
                     default_storage.delete(old_file_path)
 
                 document.file = uploaded_file
+                document.content_hash, document.page_fingerprint = fingerprints
                 document.ocr_status = "pending"
                 document.ocr_text = None
                 document.ocr_error = None

@@ -76,6 +76,26 @@
               {% endif %}
             {% endfor %}
           {% endif %}
+          {% if duplicates %}
+            <div class="duplicate-notice">
+              <p>This file is already in the system. Matching documents:</p>
+              <ul>
+                {% for row in duplicates.rows %}
+                  <li>
+                    <a href="{% url 'case:viewer' row.document.id %}" target="_blank">{{ row.document.name }}</a>
+                    &middot; {{ row.document.matter.name }}
+                    {% if row.document.date %}&middot; {{ row.document.date|date:"M j, Y" }}{% endif %}
+                    {% if not row.exact %}&middot; same pages, different file metadata{% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+              {% if duplicates.total > duplicates.rows|length %}
+                <p>Showing {{ duplicates.rows|length }} of {{ duplicates.total }} matches.</p>
+              {% endif %}
+              <p>Press "Upload anyway" if you still want this copy.</p>
+              <input type="hidden" name="duplicate_ok" value="1">
+            </div>
+          {% endif %}
         </div>
       </form>
       {% if edit and document.ocr_status == 'extracted' %}
@@ -94,7 +114,13 @@
                 class="btn btn-secondary"
                 @click="$dispatch('close-modal')">Cancel</button>
       {% endif %}
-      <button type="submit" form="file-form" class="btn btn-success">Submit</button>
+      <button type="submit" form="file-form" class="btn btn-success">
+        {% if duplicates %}
+          Upload anyway
+        {% else %}
+          Submit
+        {% endif %}
+      </button>
     </div>
   </div>
 </div>
