@@ -99,16 +99,25 @@ class Document(AuditMixin, models.Model):
     file = models.FileField(upload_to=document_upload_path, max_length=500)
     labels = models.ManyToManyField(Label, related_name="documents", blank=True)
 
-    # Drive record-folder sync provenance (mirrors Note's drive_* fields).
-    # Set only on documents ingested from a proceeding's linked record
-    # folder; the sync upserts by drive_file_id and NEVER deletes — the
-    # record is append-only, so a Drive-side removal can't destroy OCR,
-    # highlights, or AI context.
+    # Drive sync provenance. Set only on documents ingested from a mapped
+    # folder of the matter's Drive folder; the sync upserts by drive_file_id
+    # and NEVER deletes — the mirror is append-only, so a Drive-side removal
+    # can't destroy OCR, highlights, or AI context.
     drive_file_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     drive_path = models.CharField(max_length=1024, null=True, blank=True)
     # RFC3339 modifiedTime snapshot; a mismatch triggers a file refresh.
     drive_modified = models.CharField(max_length=64, null=True, blank=True)
     drive_synced_at = models.DateTimeField(null=True, blank=True)
+    # The folder mapping this file arrived through; re-mapping that folder
+    # rewrites category/proceeding on exactly these documents. Nulled when
+    # the file moves out of every mapped folder (the document itself stays).
+    drive_mapping = models.ForeignKey(
+        "drive.DriveFolderMapping",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="documents",
+    )
 
     # OCR fields
     ocr_status = models.CharField(

@@ -45,7 +45,7 @@ def list_matter_odt_files(matter):
         root_id = google._find_root_folder(service)
         if not root_id:
             return []
-        folder = google._find_child_folder(service, root_id, matter.drive_folder)
+        folder = google.find_matter_folder(service, root_id, matter)
         if not folder:
             return []
 

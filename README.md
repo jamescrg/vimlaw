@@ -547,11 +547,19 @@ changes through the Drive Changes API.
 ### Connecting Drive and linking matters
 
 1. As an admin, go to **Settings → Integrations** and click **Connect** on
-   _Google Drive (Case Notes)_ — the same OAuth flow used for Calendar/Contacts.
-2. Open a matter's **Notes** tab and click **Link Drive Folder**, then choose
-   the matter's Drive folder from the list. Linking immediately syncs that
-   matter's notes; re-linking to a different folder removes the old notes and
-   syncs the new ones.
+   _Google Drive_ — the same OAuth flow used for Calendar/Contacts.
+2. Open a matter's **Documents** tab and click **Link Drive Folder**. Pick
+   the matter's folder under the Drive root, then map its top-level
+   subfolders to document categories (Correspondence, Discovery, Evidence,
+   Record) and, for Record or Discovery, to a proceeding. Folder names such
+   as `Corr`, `Discovery`, `Evidence`, `Record`, `Record - Appeal` or
+   `Discovery - Appeal` are suggested automatically; nothing syncs until you
+   save.
+3. PDFs anywhere under a mapped folder sync in with that category and
+   proceeding (append-only: deleting or moving a file in Drive never removes
+   a document). Re-mapping a folder later updates the documents already
+   synced from it. The button shows a count when new subfolders appear or a
+   proceeding has no record folder; reopen the modal to map them.
 
 ### Configuration
 
@@ -560,13 +568,11 @@ control the sync:
 
 - `DRIVE_NOTES_ROOT` — the parent Drive folder to scan (default
   `Matters - Open`).
-- `DRIVE_NOTES_DEBUG_DIR` — if set, also writes the converted Markdown to this
-  local directory for inspection (off by default; the database is canonical).
 - `DRIVE_SHARED_DRIVE_ID` — set only if the root folder lives in a Shared Drive.
 
-### Keeping notes in sync (Django-Q)
+### Keeping documents in sync (Django-Q)
 
-Linking a matter syncs it once. `python manage.py setup_schedules` adds an
+Saving a mapping syncs that folder once. `python manage.py setup_schedules` adds an
 incremental Drive sync every minute and a nightly full reconciliation to the
 same Django-Q cluster used by the rest of the app. No separate host timer is
 required. The jobs safely no-op until an admin connects Google Drive.

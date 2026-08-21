@@ -356,30 +356,25 @@
   {% endif %}
 </div>
 <div class="toolbar-right">
+  {% comment %}
+    One Drive button: link the matter's Drive folder and map its subfolders
+    to categories / proceedings in a single modal. The count is DB-only
+    (apps.drive.mappings.matter_drive_status): unmapped subfolders seen by
+    the last sync, proceedings without a record folder, mapped folders
+    missing in Drive.
+  {% endcomment %}
   <button type="button"
           class="btn-icon"
-          hx-get="{% url 'case:notes-drive-link-modal' matter.id %}"
+          hx-get="{% url 'case:documents-drive-modal' matter.id %}"
           hx-target="#htmx-modal-container"
           hx-trigger="click"
-          title="{% if matter.drive_folder %}Linked to the Drive folder that feeds this matter's document mirrors{% else %}Link this matter's Drive folder to feed its document mirrors{% endif %}">
-    <i class="icon-folder-cog with-text"></i>
-    {% if matter.drive_folder %}
-      {{ matter.drive_folder }}
+          title="{% if drive_status.linked %}Drive folder: {{ drive_status.folder }}. {{ drive_status.mapped }} folder{{ drive_status.mapped|pluralize }} mapped, {{ drive_status.unmapped }} not mapped, {{ drive_status.proceedings_without_folder }} proceeding{{ drive_status.proceedings_without_folder|pluralize }} without a record folder{% if drive_status.missing %}, {{ drive_status.missing }} mapped folder{{ drive_status.missing|pluralize }} missing in Drive{% endif %}{% if drive_status.folder_missing %}. The matter folder was not found in Drive{% endif %}.{% else %}Link this matter's Google Drive folder and map its subfolders to document categories{% endif %}">
+    <i class="icon-cloud with-text"></i>
+    {% if drive_status.linked %}
+      Drive Folder
+      {% if drive_status.attention %}&middot; {{ drive_status.attention }} to map{% endif %}
     {% else %}
       Link Drive Folder
-    {% endif %}
-  </button>
-  <button type="button"
-          class="btn-icon"
-          hx-get="{% url 'case:documents-record-link-modal' matter.id %}"
-          hx-target="#htmx-modal-container"
-          hx-trigger="click"
-          title="{% if linked_record_folder_count %}Drive record folders sync PDFs in as Record documents{% else %}Link Drive record folders to sync each proceeding's PDFs{% endif %}">
-    <i class="icon-cloud with-text"></i>
-    {% if linked_record_folder_count %}
-      {{ linked_record_folder_count }} Record Folder{{ linked_record_folder_count|pluralize }}
-    {% else %}
-      Link Record Folders
     {% endif %}
   </button>
 </div>

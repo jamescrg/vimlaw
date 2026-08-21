@@ -1,0 +1,96 @@
+{% comment %}
+  Drive Folder modal (Documents tab). One form, two steps: (1) the matter's
+  Drive folder, a radio list of folders under the Drive root (collapsed to
+  a summary once linked; "Change" reopens it and picking another radio
+  swaps step 2 via the rows partial), (2) the mapping table of that
+  folder's top-level subfolders (case/documents/drive-mapping-rows.html).
+  Save posts everything; 204 + HX-Refresh closes the modal and reloads the
+  tab. Validation problems come back as an error fragment into
+  #drive-folder-error.
+{% endcomment %}
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Drive Folder</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body"
+         x-data="{ picking: {{ picking|yesno:'true,false' }} }">
+      {% if not linked %}
+        <p class="detail-text">
+          Google Drive isn't connected. An admin can connect it under
+          <a href="{% url 'settings:integrations-index' %}">Settings &rsaquo; Integrations</a>.
+        </p>
+      {% else %}
+        <form id="drive-folder-form"
+              class="form-compact"
+              hx-post="{% url 'case:documents-drive-save' matter.id %}"
+              hx-target="#drive-folder-error"
+              hx-swap="innerHTML">
+          {% csrf_token %}
+          <section class="drive-step">
+            <div class="drive-step-heading">
+              <h2 class="drive-step-title">1. Matter folder</h2>
+              <span class="drive-step-current" x-show="!picking">
+                {{ current_folder_name }}
+                <button type="button" class="button-link" @click="picking = true">Change</button>
+              </span>
+            </div>
+            <div class="drive-folder-list" x-show="picking">
+              {% for f in root_folders %}
+                <label class="drive-folder-option{% if f.taken_by %} disabled{% endif %}">
+                  <input type="radio"
+                         name="matter_folder"
+                         value="{{ f.id }}"
+                         {% if f.id == current_folder_id %}checked{% endif %}
+                         {% if f.taken_by %}disabled{% endif %}
+                         hx-get="{% url 'case:documents-drive-rows' matter.id %}"
+                         hx-vals='{"matter_folder": "{{ f.id|escapejs }}", "folder_name": "{{ f.name|escapejs }}"}'
+                         hx-trigger="change"
+                         hx-target="#drive-mapping"
+                         hx-swap="innerHTML">
+                  <span class="drive-folder-name">{{ f.name }}</span>
+                  {% if f.taken_by %}<span class="drive-folder-taken">linked to {{ f.taken_by }}</span>{% endif %}
+                </label>
+              {% empty %}
+                <p class="detail-text">
+                  No folders were found under the Drive root. Check the Drive
+                  connection and the <code>DRIVE_NOTES_ROOT</code> setting.
+                </p>
+              {% endfor %}
+            </div>
+          </section>
+          <section class="drive-step">
+            <h2 class="drive-step-title">2. Folder mapping</h2>
+            <div id="drive-mapping">
+              {% if current_folder_id %}
+                {% include "case/documents/drive-mapping-rows.html" %}
+              {% else %}
+                <p class="detail-text">Pick the matter folder above to see its subfolders.</p>
+              {% endif %}
+            </div>
+          </section>
+        </form>
+      {% endif %}
+      <div id="drive-folder-error"></div>
+    </div>
+    <div class="modal-footer">
+      {% if current_folder_id %}
+        <button type="button"
+                class="btn btn-danger"
+                hx-post="{% url 'case:documents-drive-unlink' matter.id %}"
+                hx-confirm="Unlink this Drive folder from the matter? Synced documents stay in the app; nothing new syncs until a folder is linked again.">
+          Unlink
+        </button>
+      {% endif %}
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      {% if linked %}<button type="submit" form="drive-folder-form" class="btn btn-success">Save</button>{% endif %}
+    </div>
+  </div>
+</div>

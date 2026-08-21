@@ -8,7 +8,10 @@ from apps.case import (
 )
 from apps.case.ai import views as ai
 from apps.case.caselaws import views as caselaws
-from apps.case.documents import views as documents
+from apps.case.documents import (
+    drive,
+    views as documents,
+)
 from apps.case.facts import views as facts
 from apps.case.highlights import views as highlights
 from apps.case.labels import views as labels
@@ -519,31 +522,27 @@ urlpatterns = [
     ),
     # Notes (matter-scoped; per-note routes live under notes:)
     path("case/<int:matter_id>/notes/add/", notes.notes_add, name="notes-add"),
+    # Drive Folder modal (Documents tab): link the matter's Drive folder and
+    # map its subfolders to categories / proceedings.
     path(
-        "case/<int:matter_id>/notes/drive/link/",
-        notes.drive_link_modal,
-        name="notes-drive-link-modal",
+        "case/<int:matter_id>/documents/drive/",
+        drive.drive_folder_modal,
+        name="documents-drive-modal",
     ),
     path(
-        "case/<int:matter_id>/notes/drive/link/set/",
-        notes.drive_link,
-        name="notes-drive-link",
+        "case/<int:matter_id>/documents/drive/rows/",
+        drive.drive_mapping_rows,
+        name="documents-drive-rows",
     ),
     path(
-        "case/<int:matter_id>/notes/drive/unlink/",
-        notes.drive_unlink,
-        name="notes-drive-unlink",
-    ),
-    # Drive record-folder linking (Documents tab; one folder per proceeding)
-    path(
-        "case/<int:matter_id>/documents/drive/link/",
-        documents.record_link_modal,
-        name="documents-record-link-modal",
+        "case/<int:matter_id>/documents/drive/save/",
+        drive.drive_folder_save,
+        name="documents-drive-save",
     ),
     path(
-        "case/<int:matter_id>/documents/drive/link/set/",
-        documents.record_link,
-        name="documents-record-link",
+        "case/<int:matter_id>/documents/drive/unlink/",
+        drive.drive_folder_unlink,
+        name="documents-drive-unlink",
     ),
     # Draft links (a conversation pinned to a Drive ODT; edits apply via
     # the LibreOffice companion)

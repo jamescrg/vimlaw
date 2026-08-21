@@ -2,6 +2,7 @@ import pytest
 from django.test import Client
 
 from apps.accounts.models import CustomUser
+from apps.drive.models import DriveFolderMapping
 from apps.matters.models import Matter
 from apps.matters.proceedings.models import Proceeding
 
@@ -136,6 +137,18 @@ class FakeDriveService:
         }
         return self.files_by_id[fid]
 
+    def rename(self, fid, name):
+        self.files_by_id[fid]["name"] = name
+        return self.files_by_id[fid]
+
+    def move(self, fid, parent):
+        self.files_by_id[fid]["parents"] = [parent]
+        return self.files_by_id[fid]
+
+    def trash(self, fid):
+        self.files_by_id[fid]["trashed"] = True
+        return self.files_by_id[fid]
+
     def change_for(self, fid, removed=False):
         """A changes-feed entry for one file, as changes().list returns it."""
         if removed:
@@ -170,7 +183,10 @@ def client(user):
 @pytest.fixture
 def matter(db):
     return Matter.objects.create(
-        name="Smith v Jones", status="Open", drive_folder="Smith v. Jones"
+        name="Smith v Jones",
+        status="Open",
+        drive_folder="Smith v. Jones",
+        drive_folder_id="mf1",
     )
 
 
@@ -182,7 +198,18 @@ def proceeding(matter):
         forum="District Court",
         case_number="CV-2026-1",
         primary=True,
-        drive_folder="CA-2 Record",
+    )
+
+
+@pytest.fixture
+def record_mapping(matter, proceeding):
+    """CA-2 Record (rf1) mapped as Record on the primary proceeding."""
+    return DriveFolderMapping.objects.create(
+        matter=matter,
+        folder_id="rf1",
+        folder_path="CA-2 Record",
+        category="Record",
+        proceeding=proceeding,
     )
 
 

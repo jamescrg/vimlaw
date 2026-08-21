@@ -16,10 +16,8 @@ class Proceeding(AuditMixin, models.Model):
     nickname = models.CharField(max_length=50, blank=True, null=True)
     status = models.CharField(max_length=50, null=True)
     primary = models.BooleanField(default=False)
-    # Name of this proceeding's record subfolder inside the matter's Drive
-    # folder (Matter.drive_folder). PDFs filed there sync in as Record
-    # Documents. Set via the Documents tab's Link Record Folders modal.
-    drive_folder = models.CharField(max_length=255, null=True, blank=True)
+    # Drive record folders feeding this proceeding live in
+    # apps.drive.models.DriveFolderMapping (Documents tab, Drive Folder modal).
     history = HistoricalRecords()
 
     def __str__(self):
@@ -32,14 +30,6 @@ class Proceeding(AuditMixin, models.Model):
 
     class Meta:
         db_table = "app_proceeding"
-        constraints = [
-            # One record folder feeds one proceeding.
-            models.UniqueConstraint(
-                fields=["matter", "drive_folder"],
-                name="unique_proceeding_drive_folder_per_matter",
-                condition=models.Q(drive_folder__isnull=False),
-            )
-        ]
 
     def save(self, *args, **kwargs):
         # If this is the primary proceeding, set all other proceedings to not primary
