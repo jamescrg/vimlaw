@@ -62,7 +62,8 @@ def test_dry_run_deletes_nothing():
     assert Message.objects.count() == 2
 
 
-def test_close_unlinks_mirrors():
+@pytest.mark.parametrize("status", ["Closed", "Complete"])
+def test_close_unlinks_mirrors(status):
     from apps.drive.models import DriveFolderMapping, DriveMatterState
 
     matter = Matter.objects.create(
@@ -83,7 +84,7 @@ def test_close_unlinks_mirrors():
     )
     DriveMatterState.objects.create(matter=matter, unmapped_folders=[])
 
-    matter.status = "Closed"
+    matter.status = status
     matter.save()
 
     matter.refresh_from_db()

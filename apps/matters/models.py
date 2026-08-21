@@ -92,17 +92,24 @@ class Matter(AuditMixin, models.Model):
             models.Index(fields=["billing_type"]),
         ]
 
+    # Statuses under which work is no longer tracked: the file has moved out
+    # of the "Matters - Open" Drive/Gmail roots, so its mirrors are unlinked.
+    # "Complete" is the closing-out phase (usually waiting on a trust
+    # reimbursement); "Closed" is final and additionally starts the chat
+    # retention clock (apps/case/ai/purge.py).
+    INACTIVE_STATUSES = ("Complete", "Closed")
+
     def save(self, *args, **kwargs):
-        if self.status == "Closed":
+        if self.status in self.INACTIVE_STATUSES:
             from apps.matters.proceedings.models import Proceeding
 
-            # Mark all proceedings as concluded when matter is closed, and
-            # drop the matter's Drive folder mappings along with its Drive
-            # and Gmail links. Closed files move out of the "Matters - Open"
+            # Mark all proceedings as concluded when work ends, and drop the
+            # matter's Drive folder mappings along with its Drive and Gmail
+            # links. Closed-out files move out of the "Matters - Open"
             # Drive/Gmail roots, so stale links only produce missing-folder
             # and missing-label drift warnings (and automatic label setup
-            # would recreate a closed matter's Gmail labels). Synced rows
-            # all survive the unlink: record Documents are append-only and
+            # would recreate the matter's Gmail labels). Synced rows all
+            # survive the unlink: record Documents are append-only and
             # Email rows are only removed by label events on a still-mapped
             # matter.
             Proceeding.objects.filter(matter=self).update(status="Concluded")
