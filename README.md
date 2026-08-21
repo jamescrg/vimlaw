@@ -552,9 +552,9 @@ changes through the Drive Changes API.
    the matter's folder under the Drive root, then map its top-level
    subfolders to document categories (Correspondence, Discovery, Evidence,
    Record) and, for Record or Discovery, to a proceeding. Folder names such
-   as `Corr`, `Discovery`, `Evidence`, `Record`, `Record - Appeal` or
-   `Discovery - Appeal` are suggested automatically; nothing syncs until you
-   save.
+   as `Corr`, `Discovery`, `Record`, `Record - Appeal` or `Discovery - Appeal`
+   are suggested automatically; Evidence is never suggested (map it by hand,
+   only for curated folders). Nothing syncs until you save.
 3. PDFs anywhere under a mapped folder sync in with that category and
    proceeding (append-only: deleting or moving a file in Drive never removes
    a document). Re-mapping a folder later updates the documents already

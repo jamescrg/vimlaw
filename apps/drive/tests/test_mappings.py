@@ -22,8 +22,10 @@ def test_suggest_category_names(matter, proceeding):
     assert mappings.suggest_mapping("Corr", procs) == ("Correspondence", None)
     assert mappings.suggest_mapping("correspondence", procs) == ("Correspondence", None)
     assert mappings.suggest_mapping("Discovery", procs) == ("Discovery", proceeding)
-    assert mappings.suggest_mapping("Evidence", procs) == ("Evidence", None)
-    assert mappings.suggest_mapping("Key Documents", procs) == ("Evidence", None)
+    # Evidence is never suggested: mapping the bulk evidence pile is a
+    # by-hand decision (Save would otherwise carry a pre-filled row along).
+    assert mappings.suggest_mapping("Evidence", procs) is None
+    assert mappings.suggest_mapping("Key Documents", procs) is None
     assert mappings.suggest_mapping("Photos", procs) is None
 
 

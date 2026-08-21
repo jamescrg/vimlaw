@@ -29,13 +29,14 @@ VALID_CATEGORIES = {value for value, _ in MAPPING_CATEGORY_CHOICES}
 # nothing syncs until the user saves the row. Record and Discovery folders
 # follow the same per-proceeding pattern: a bare "Record" / "Discovery"
 # suggests the primary proceeding, "Record - Appeal" / "Discovery - Appeal"
-# (or "Appeal Record") the proceeding named.
+# (or "Appeal Record") the proceeding named. Evidence is deliberately NOT
+# suggested: a firm's "Evidence" folders are typically the bulk pile, and
+# because Save posts every row, a pre-filled Evidence would be mapped by a
+# user who only came to map Corr. Evidence is always a by-hand choice.
 _NAME_TO_CATEGORY = {
     "corr": "Correspondence",
     "correspondence": "Correspondence",
     "discovery": "Discovery",
-    "evidence": "Evidence",
-    "key documents": "Evidence",
     "record": "Record",
     "records": "Record",
 }
