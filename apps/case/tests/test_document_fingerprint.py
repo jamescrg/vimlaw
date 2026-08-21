@@ -192,3 +192,88 @@ def test_duplicates_property_uses_bulk_attachment(
         attach_duplicates(docs)
         assert [x.pk for x in docs[0].duplicates] == [docs[2].pk]
         assert docs[1].duplicates == []
+
+
+# ── dedupe_documents command ─────────────────────────────────────────────
+
+
+def _doc(matter, user, name, pdf_bytes, **fields):
+    doc = Document(
+        matter=matter, name=name, category="Evidence", created_by=user, **fields
+    )
+    doc.save()
+    doc.file.save(f"{doc.pk}.pdf", io.BytesIO(pdf_bytes), save=True)
+    return doc
+
+
+def _run_dedupe(*args):
+    from django.core.management import call_command
+
+    out = io.StringIO()
+    call_command("dedupe_documents", *args, stdout=out, stderr=io.StringIO())
+    return out.getvalue()
+
+
+def test_dedupe_dry_run_reports_without_deleting(matter, user):
+    _doc(matter, user, "A", make_pdf())
+    _doc(matter, user, "B", make_pdf(title="Copy"))
+    out = _run_dedupe()
+    assert "keep   " in out and "remove " in out
+    assert "Dry run" in out
+    assert Document.objects.count() == 2
+
+
+def test_dedupe_keeps_highlighted_copy_and_removes_file(matter, user):
+    from apps.case.models import Highlight
+
+    first = _doc(matter, user, "A", make_pdf())
+    second = _doc(matter, user, "B", make_pdf(title="Copy"))
+    Highlight.objects.create(
+        document=second, slug="hl", text="x", created_by=user, importance=4
+    )
+    storage, path = first.file.storage, first.file.name
+    assert storage.exists(path)
+
+    _run_dedupe("--apply")
+
+    assert list(Document.objects.values_list("pk", flat=True)) == [second.pk]
+    assert not storage.exists(path)
+
+
+def test_dedupe_keeps_oldest_when_nothing_referenced_and_moves_labels(
+    matter, user, label
+):
+    first = _doc(matter, user, "A", make_pdf())
+    second = _doc(matter, user, "B", make_pdf(title="Copy"))
+    second.labels.add(label)
+
+    _run_dedupe("--apply")
+
+    assert list(Document.objects.values_list("pk", flat=True)) == [first.pk]
+    assert list(first.labels.all()) == [label]
+
+
+def test_dedupe_leaves_cross_matter_copies(matter, user, contact, practice_area):
+    from apps.matters.models import Matter
+
+    other = Matter.objects.create(
+        name="Other", client=contact, practice_area=practice_area, status="Open"
+    )
+    _doc(matter, user, "A", make_pdf())
+    _doc(other, user, "A again", make_pdf())
+    out = _run_dedupe("--apply")
+    assert "Across matters (left alone)" in out
+    assert Document.objects.count() == 2
+
+
+def test_dedupe_keeps_every_referenced_copy(matter, user):
+    from apps.case.models import Highlight
+
+    a = _doc(matter, user, "A", make_pdf())
+    b = _doc(matter, user, "B", make_pdf(title="Copy"))
+    for d in (a, b):
+        Highlight.objects.create(
+            document=d, slug="hl", text="x", created_by=user, importance=4
+        )
+    _run_dedupe("--apply")
+    assert Document.objects.count() == 2
