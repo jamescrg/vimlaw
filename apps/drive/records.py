@@ -23,6 +23,7 @@ Contract (deliberately different from the notes mirror):
 changes feed and dispatches in-scope files here.
 """
 
+import io
 import logging
 import os
 import re
@@ -302,6 +303,7 @@ def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run,
         if existing.file:
             default_storage.delete(existing.file.name)
         existing.file.save(f"{existing.pk}.pdf", ContentFile(content), save=False)
+        existing.set_fingerprints(io.BytesIO(content), size=len(content))
         _reset_ocr(existing)
         if proceeding is not None:
             existing.proceeding = proceeding

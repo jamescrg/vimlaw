@@ -57,10 +57,26 @@
       </div>
     </div>
     {% if document.description %}<div class="document-description">{{ document.description }}</div>{% endif %}
-    {% if document.labels.count %}
+    {% if document.labels.count or document.duplicates %}
       <div class="document-labels">
         {% for label in document.labels.all %}
           {% include "case/labels/badge.html" with object_type="document" object=document %}
+        {% endfor %}
+        {% comment %}
+          Duplicate badge: styled like a label, one per matching document,
+          linking to that document's viewer. Byte-identical copies and
+          same-pages copies (different PDF metadata) are told apart in
+          the tooltip.
+        {% endcomment %}
+        {% for dup in document.duplicates %}
+          <span class="label-badge duplicate-badge">
+            <a href="{% url 'case:viewer' dup.id %}"
+               target="_blank"
+               class="app-badge label-yellow"
+               title="{% if dup.content_hash == document.content_hash %}Same file as{% else %}Same pages as{% endif %} &quot;{{ dup.name }}&quot; in {{ dup.matter.name }}{% if dup.date %} ({{ dup.date|date:"M j, Y" }}){% endif %}. Opens it in a new tab."><i class="icon-copy"></i>duplicate
+              {% if dup.matter_id != document.matter_id %}: {{ dup.matter.name }}{% endif %}
+            </a>
+          </span>
         {% endfor %}
       </div>
     {% endif %}

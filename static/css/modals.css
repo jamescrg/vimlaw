@@ -124,6 +124,25 @@
   padding: 0.75rem 1rem;
 }
 
+/* Duplicate-upload warning under the dropzone: the warning-toast wash
+   (theme tokens), a soft rail, room for the list of matching documents. */
+.modal-body .duplicate-notice {
+  background: var(--toast-warning-body-bg);
+  border: var(--toast-warning-rail);
+  border-radius: 0.25rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.modal-body .duplicate-notice p {
+  margin: 0;
+}
+
+.modal-body .duplicate-notice ul {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+}
+
 .modal-footer {
   align-items: center;
   border-top: 1px solid var(--border-medium);
