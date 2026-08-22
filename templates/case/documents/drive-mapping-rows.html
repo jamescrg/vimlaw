@@ -51,17 +51,41 @@
             </select>
           </td>
           <td>
-            <select name="proceeding_{{ row.key }}"
-                    :disabled="!['Record', 'Discovery'].includes(category)">
-              <option value="" x-text="category === 'Record' ? 'Required' : 'None'"></option>
-              {% for p in proceedings %}
-                <option value="{{ p.id }}"
-                        {% if p.id == row.proceeding_id %}selected{% endif %}>
-                  {{ p.display_name }}
-                  {% if p.case_number %}({{ p.case_number }}){% endif %}
+            {% comment %}
+              With no proceedings on the matter the select would hold only
+              its placeholder, which reads as a dropdown that will not open.
+              Say so instead, and point at the tab that fixes it. The
+              placeholder label is rendered server-side as well as bound, so
+              it is never blank before Alpine hydrates.
+            {% endcomment %}
+            {% if proceedings %}
+              <select name="proceeding_{{ row.key }}"
+                      :disabled="!['Record', 'Discovery'].includes(category)">
+                <option value=""
+                        x-text="category === 'Record' ? 'Required' : category === 'Discovery' ? 'None' : 'Not applicable'">
+                  {% if row.category == 'Record' %}
+                    Required
+                  {% elif row.category == 'Discovery' %}
+                    None
+                  {% else %}
+                    Not applicable
+                  {% endif %}
                 </option>
-              {% endfor %}
-            </select>
+                {% for p in proceedings %}
+                  <option value="{{ p.id }}"
+                          {% if p.id == row.proceeding_id %}selected{% endif %}>
+                    {{ p.display_name }}
+                    {% if p.case_number %}({{ p.case_number }}){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <span class="drive-mapping-note">
+                No proceedings yet. Add one on the
+                <a href="{% url 'matters:proceedings-index' id=matter.id %}">Proceedings tab</a>
+                to map a Record folder.
+              </span>
+            {% endif %}
           </td>
         </tr>
       {% endfor %}
