@@ -418,15 +418,12 @@ LAW_FIRM_ID = env("LAW_FIRM_ID", default="")
 # CourtListener API Configuration (for citation verification)
 COURTLISTENER_API_TOKEN = env("COURTLISTENER_API_KEY", default="")
 
-# Google Drive case-notes sync
-# Root Drive folder whose <matter>/Notes/** files are synced into Note records.
+# Google Drive document mirror
+# Root Drive folder holding one subfolder per matter (linked and mapped from
+# each matter's Documents tab).
 DRIVE_NOTES_ROOT = env("DRIVE_NOTES_ROOT", default="Matters - Open")
 # Optional: set if "Matters - Open" lives in a Shared Drive rather than My Drive.
 DRIVE_SHARED_DRIVE_ID = env("DRIVE_SHARED_DRIVE_ID", default="")
-# Any folder with this name inside a matter's Drive folder is a curated
-# ingestion point: its PDFs sync in as Evidence documents (drag a file in to
-# add it to the app). Convention-based; no per-matter linking. Blank disables.
-DRIVE_KEY_DOCUMENTS_FOLDER = env("DRIVE_KEY_DOCUMENTS_FOLDER", default="Key Documents")
 
 # Headless LibreOffice, used to apply AI-proposed edits to ODT drafts as
 # tracked changes (apps/drive/redline.py). UNO_PYTHON must be an interpreter

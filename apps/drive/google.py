@@ -1,27 +1,30 @@
-"""Google Drive document mirrors (changes-feed owner).
+"""Google Drive document mirror (changes-feed owner).
 
 Owns the single Drive Changes API cursor and dispatches to the document
-mirrors (apps/drive/records.py): PDFs under
-``<root>/<matter>/<linked record folder>/...`` become Record Documents on
-the linked proceeding, and PDFs under any convention-named "Key Documents"
-folder become Evidence documents (curation by drag). Both mirrors are
-append-only — removals and trashes in Drive never delete app rows.
+mirror (apps/drive/records.py): a matter's Drive folder has top-level
+subfolders mapped to document categories and proceedings
+(apps.drive.models.DriveFolderMapping, set in the Documents tab's Drive
+Folder modal), and PDFs anywhere under a mapped folder become Documents
+with that mapping's category and proceeding. The mirror is append-only —
+removals and trashes in Drive never delete app rows.
 
 Reuses the project's existing Google OAuth plumbing (see
-apps/calendar/google.py). A matter is resolved via ``Matter.drive_folder``
-(set by the link_drive_folders command or the notes-tab link modal);
+apps/calendar/google.py). A matter is resolved by ``Matter.drive_folder_id``
+(falling back to the folder name in ``Matter.drive_folder`` for links made
+before ids were stored, which are then upgraded in place); root-level
 folders with no matching Matter are recorded as unmatched.
 
 Flow:
-- bootstrap(): first run (no saved page token) crawls the linked record
-  folders and Key Documents folders, then stores a Changes API start token.
+- bootstrap(): first run (no saved page token) or the nightly full pass
+  crawls every mapped folder, refreshes cached names, flags missing
+  folders, records each matter's unmapped subfolders for the Documents-tab
+  badge, then stores a Changes API start token.
 - sync(): on each tick, consume the changes delta since the saved token.
 
-RETIRED (2026-08-11): the case-notes mirror. This module used to pull
-``<root>/<matter>/Notes/**`` files into ``Note`` rows and delete them when
-the Drive file vanished. Notes are app-owned now (the provenance fields on
-Note were dropped with the mirror); files under ``Notes/`` are ignored by
-the sync.
+RETIRED: the case-notes mirror (2026-08-11; files under ``Notes/`` are
+ignored) and the zero-config "Key Documents" convention (2026-08-21;
+legacy nested rows such as ``Evidence/Key Documents`` were converted into
+mappings and keep syncing until unmapped).
 """
 
 import json
@@ -30,6 +33,8 @@ from io import BytesIO
 
 import google.oauth2.credentials
 from django.conf import settings
+from django.db.models import Q
+from django.utils import timezone
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
@@ -37,8 +42,11 @@ from googleapiclient.http import MediaIoBaseDownload
 from apps.matters.models import Matter
 from utils.prepare_path import prepare_path
 
-from . import records
-from .models import DriveSyncState
+from . import (
+    mappings as mapping_rules,
+    records,
+)
+from .models import DriveFolderMapping, DriveMatterState, DriveSyncState
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +58,8 @@ GOOGLE_SHEET_MIME = "application/vnd.google-apps.spreadsheet"
 DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
-# The retired notes mirror's subtree; still skipped by the Key Documents
-# folder search.
+# The retired notes mirror's subtree; excluded from the mapping table and
+# the unmapped-folder nudge.
 NOTES_FOLDER_NAME = "Notes"
 
 # Fields requested for a file in changes/listing responses. createdTime and
@@ -164,11 +172,12 @@ def _list_children(service, parent_id):
 def _walk_to_root(service, file_meta, root_id, folder_cache):
     """Walk a file's parent chain up to root_id.
 
-    Returns the list of path parts from just under the root down to the file
-    (e.g. ["Smith v. Jones", "Notes", "intake.docx"]), or None if the root is
-    not an ancestor.
+    Returns the chain [(folder_id, name), ...] from just under the root down
+    to the file itself (e.g. [("mf1", "Smith v. Jones"), ("rf1", "Record"),
+    ("f1", "Complaint.pdf")]), or None if the root is not an ancestor, an
+    ancestor is trashed, or the chain can't be resolved.
     """
-    parts = [file_meta["name"]]
+    chain = [(file_meta["id"], file_meta["name"])]
     parents = file_meta.get("parents") or []
     current = parents[0] if parents else None
 
@@ -176,14 +185,14 @@ def _walk_to_root(service, file_meta, root_id, folder_cache):
     while current and guard < 50:
         guard += 1
         if current == root_id:
-            return parts
+            return chain
         if current not in folder_cache:
             try:
                 meta = (
                     service.files()
                     .get(
                         fileId=current,
-                        fields="id, name, parents",
+                        fields="id, name, parents, trashed",
                         supportsAllDrives=True,
                     )
                     .execute()
@@ -192,17 +201,21 @@ def _walk_to_root(service, file_meta, root_id, folder_cache):
                 return None
             folder_cache[current] = meta
         folder = folder_cache[current]
-        parts.insert(0, folder.get("name", ""))
+        if folder.get("trashed"):
+            return None
+        chain.insert(0, (folder.get("id", current), folder.get("name", "")))
         fparents = folder.get("parents") or []
         current = fparents[0] if fparents else None
 
     return None
 
 
-def _matters_by_folder():
-    """Map Matter.drive_folder -> Matter for all linked matters."""
-    qs = Matter.objects.exclude(drive_folder__isnull=True).exclude(drive_folder="")
-    return {m.drive_folder: m for m in qs}
+def _linked_matters():
+    """Matters linked to a Drive folder (by id, or by name for old links)."""
+    return Matter.objects.filter(
+        Q(drive_folder_id__isnull=False)
+        | (Q(drive_folder__isnull=False) & ~Q(drive_folder=""))
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -234,194 +247,211 @@ def _new_stats():
     return records.new_record_stats()
 
 
-def _walk_record_folder(service, record_folder, prefix, links, dry_run, stats):
-    """DFS one linked record folder, ingesting PDFs (append-only mirror)."""
-    stack = [(record_folder["id"], prefix)]
-    while stack:
-        folder_id, path = stack.pop()
-        for child in _list_children(service, folder_id):
-            if child.get("mimeType") == FOLDER_MIME:
-                stack.append((child["id"], path + [child["name"]]))
-                continue
-            if not records.is_pdf(child):
-                stats["records_non_pdf"] += 1
-                continue
-            try:
-                records.ingest_record(
-                    service, child, path + [child["name"]], links, dry_run, stats
-                )
-            except Exception:
-                stats["records_failed"] += 1
-                logger.exception("Failed to sync record %s", child.get("name"))
+def _walk_mapped_folder(service, folder, prefix, mapping, dry_run, stats, skip=()):
+    """DFS one mapped folder, ingesting PDFs (append-only mirror).
 
-
-def _walk_key_folder(service, key_folder, prefix, matter, dry_run, stats):
-    """DFS one Key Documents folder, ingesting PDFs as Evidence."""
-    stack = [(key_folder["id"], prefix)]
-    while stack:
-        folder_id, path = stack.pop()
-        for child in _list_children(service, folder_id):
-            if child.get("mimeType") == FOLDER_MIME:
-                stack.append((child["id"], path + [child["name"]]))
-                continue
-            if not records.is_pdf(child):
-                stats["records_non_pdf"] += 1
-                continue
-            try:
-                records.ingest_pdf(
-                    service,
-                    child,
-                    path + [child["name"]],
-                    matter,
-                    None,
-                    "Evidence",
-                    dry_run,
-                    stats,
-                )
-            except Exception:
-                stats["records_failed"] += 1
-                logger.exception("Failed to sync key document %s", child.get("name"))
-
-
-def _find_key_folders(service, matter_folder, children, links):
-    """Locate Key Documents folders anywhere inside a matter's folder.
-
-    Walks the folder tree only (never lists files outside the targets),
-    skipping the Notes subtree and linked record folders, which keep their
-    own semantics. Returns [(folder_meta, path_prefix_parts)].
+    ``prefix`` is the path parts down to and including this folder (matter
+    folder first); nested subfolders inherit the mapping, except folders in
+    ``skip`` (the matter's other mapped folder ids, e.g. a legacy nested
+    row), which their own mapping walks.
     """
-    key_name = records.key_folder_name()
-    if not key_name:
-        return []
-    matter_name = matter_folder["name"]
-    found = []
-    stack = [(child, [matter_name]) for child in children]
+    stack = [(folder["id"], list(prefix))]
     while stack:
-        folder, prefix = stack.pop()
-        name = folder.get("name")
-        if len(prefix) == 1 and name == NOTES_FOLDER_NAME:
+        folder_id, path = stack.pop()
+        for child in _list_children(service, folder_id):
+            if child.get("mimeType") == FOLDER_MIME:
+                if child["id"] in skip:
+                    continue
+                stack.append((child["id"], path + [child["name"]]))
+                continue
+            if not records.is_pdf(child):
+                stats["records_non_pdf"] += 1
+                continue
+            try:
+                records.ingest_mapped(
+                    service, child, path + [child["name"]], mapping, dry_run, stats
+                )
+            except Exception:
+                stats["records_failed"] += 1
+                logger.exception("Failed to sync %s", child.get("name"))
+
+
+def _refresh_mapping_path(mapping, live_name):
+    """Keep the cached path's last segment equal to the live folder name."""
+    head, _, _tail = mapping.folder_path.rpartition("/")
+    path = f"{head}/{live_name}" if head else live_name
+    if path != mapping.folder_path:
+        mapping.folder_path = path[:1024]
+        mapping.save(update_fields=["folder_path", "updated_at"])
+
+
+def _bootstrap_matter(service, matter_folder, matter, dry_run, stats):
+    """Crawl one linked matter: resolve its mappings, ingest, record state."""
+    top = list_child_folders(service, matter_folder["id"])
+    top_by_id = {f["id"]: f for f in top}
+    live_name = matter_folder["name"]
+
+    if not dry_run and (
+        matter.drive_folder_id != matter_folder["id"]
+        or matter.drive_folder != live_name
+    ):
+        # Upgrade a name-only link to the id, and follow a rename in Drive.
+        Matter.objects.filter(pk=matter.pk).update(
+            drive_folder_id=matter_folder["id"], drive_folder=live_name
+        )
+        matter.drive_folder_id = matter_folder["id"]
+        matter.drive_folder = live_name
+
+    # Resolve every mapping's folder first (legacy path rows get their id),
+    # so each walk can skip the folders the matter's other mappings own.
+    resolved = []
+    for mapping in DriveFolderMapping.objects.filter(matter=matter).select_related(
+        "matter", "proceeding"
+    ):
+        if mapping.folder_id:
+            folder = top_by_id.get(mapping.folder_id) or get_folder(
+                service, mapping.folder_id
+            )
+        else:
+            folder = _resolve_path(service, matter_folder["id"], mapping.folder_path)
+            if folder is not None and not dry_run:
+                mapping.folder_id = folder["id"]
+                mapping.save(update_fields=["folder_id", "updated_at"])
+        if folder is None:
+            if not dry_run:
+                records.mark_missing(mapping, True)
             continue
-        if (matter_name, name) in links and len(prefix) == 1:
-            continue
-        if name == key_name:
-            found.append((folder, prefix + [name]))
-            continue  # nested Key folders inside Key are just subfolders
-        for sub in _list_children(service, folder["id"]):
-            if sub.get("mimeType") == FOLDER_MIME:
-                stack.append((sub, prefix + [name]))
-    return found
+        if not dry_run:
+            records.mark_missing(mapping, False)
+            _refresh_mapping_path(mapping, folder["name"])
+        resolved.append((mapping, folder))
+
+    mapped_ids = {folder["id"] for _, folder in resolved}
+    for mapping, folder in resolved:
+        prefix = [live_name] + mapping.folder_path.split("/")
+        _walk_mapped_folder(
+            service,
+            folder,
+            prefix,
+            mapping,
+            dry_run,
+            stats,
+            skip=mapped_ids - {folder["id"]},
+        )
+
+    if not dry_run:
+        mapping_rules.record_matter_state(
+            matter, [f for f in top if f["name"] != NOTES_FOLDER_NAME]
+        )
 
 
-def bootstrap(service, root_id, matters, links, dry_run=False):
-    """Crawl every linked record folder's PDFs into Record Documents, and
-    every Key Documents folder's PDFs into Evidence.
+def bootstrap(service, root_id, dry_run=False):
+    """Crawl every linked matter's mapped folders into Documents.
 
-    Both mirrors are append-only; nothing is ever reconciled away. Returns
-    (stats, unmatched_folder_names, missing_record_folders).
+    Append-only; nothing is ever reconciled away. Returns
+    (stats, unmatched_folder_names).
     """
     stats = _new_stats()
     unmatched = set()
-    missing_records = set()
+
+    linked = list(_linked_matters())
+    by_id = {m.drive_folder_id: m for m in linked if m.drive_folder_id}
+    by_name = {m.drive_folder: m for m in linked if m.drive_folder}
+    seen = set()
 
     for matter_folder in _list_children(service, root_id):
         if matter_folder.get("mimeType") != FOLDER_MIME:
             continue
-        if matter_folder["name"] not in matters:
+        matter = by_id.get(matter_folder["id"]) or by_name.get(matter_folder["name"])
+        if matter is None:
             unmatched.add(matter_folder["name"])
             continue
+        if matter.pk in seen:
+            # A second root folder with a linked matter's old name: ignore.
+            continue
+        seen.add(matter.pk)
+        _bootstrap_matter(service, matter_folder, matter, dry_run, stats)
 
-        children = [
-            c
-            for c in _list_children(service, matter_folder["id"])
-            if c.get("mimeType") == FOLDER_MIME
-        ]
+    if not dry_run:
+        for matter in linked:
+            if matter.pk not in seen:
+                mapping_rules.record_matter_state(matter, [], folder_missing=True)
 
-        # Linked record folders for this matter.
-        for (m_folder, r_folder), _proceeding in links.items():
-            if m_folder != matter_folder["name"]:
-                continue
-            record_folder = next(
-                (c for c in children if c.get("name") == r_folder), None
-            )
-            if record_folder is None:
-                missing_records.add(f"{m_folder}/{r_folder}")
-                continue
-            _walk_record_folder(
-                service,
-                record_folder,
-                [m_folder, r_folder],
-                links,
-                dry_run,
-                stats,
-            )
+    return stats, unmatched
 
-        # Key Documents folders (convention-named curated evidence).
-        matter = matters[matter_folder["name"]]
-        for key_folder, prefix in _find_key_folders(
-            service, matter_folder, children, links
-        ):
-            _walk_key_folder(service, key_folder, prefix, matter, dry_run, stats)
 
-    return stats, unmatched, missing_records
+def _note_unmapped_folder(matter, folder_meta):
+    """A new subfolder appeared under a linked matter: nudge via the badge."""
+    state, _ = DriveMatterState.objects.get_or_create(matter=matter)
+    entry = {"id": folder_meta["id"], "name": folder_meta.get("name", "")}
+    if all(f.get("id") != entry["id"] for f in state.unmapped_folders):
+        state.unmapped_folders = [*state.unmapped_folders, entry]
+        state.checked_at = timezone.now()
+        state.save(update_fields=["unmapped_folders", "checked_at"])
 
 
 def _process_change(
     service,
     change,
     root_id,
-    matters,
-    links,
+    by_folder,
+    matters_by_folder_id,
     folder_cache,
     dry_run,
     stats,
-    unmatched,
 ):
     file_meta = change.get("file")
 
-    # Removal / trash: both mirrors are append-only, so a removed or trashed
-    # Drive file leaves its app rows (documents, notes) untouched.
+    # Removal / trash: the mirror is append-only, so a removed or trashed
+    # Drive file leaves its app rows untouched.
     if change.get("removed") or (file_meta and file_meta.get("trashed")):
         return
-
-    if not file_meta or file_meta.get("mimeType") == FOLDER_MIME:
-        # Folder renames/moves are reconciled by the periodic --full sync.
+    if not file_meta:
         return
 
-    parts = _walk_to_root(service, file_meta, root_id, folder_cache)
-
-    if records.in_record_scope(parts, links):
-        if not records.is_pdf(file_meta):
-            stats["records_non_pdf"] += 1
+    if file_meta.get("mimeType") == FOLDER_MIME:
+        # Folders: cheap bookkeeping only (renames of mapped folders, new
+        # subfolders under a linked matter); structure is reconciled by the
+        # nightly full pass.
+        if dry_run:
             return
-        try:
-            records.ingest_record(service, file_meta, parts, links, dry_run, stats)
-        except Exception:
-            stats["records_failed"] += 1
-            logger.exception("Failed to sync record %s", file_meta.get("name"))
-        return
-
-    if records.in_key_scope(parts, matters):
-        if not records.is_pdf(file_meta):
-            stats["records_non_pdf"] += 1
+        mapping = by_folder.get(file_meta["id"])
+        if mapping is not None:
+            _refresh_mapping_path(mapping, file_meta.get("name", mapping.folder_name))
             return
-        try:
-            records.ingest_pdf(
-                service,
-                file_meta,
-                parts,
-                matters[parts[0]],
-                None,
-                "Evidence",
-                dry_run,
-                stats,
-            )
-        except Exception:
-            stats["records_failed"] += 1
-            logger.exception("Failed to sync key document %s", file_meta.get("name"))
+        parents = file_meta.get("parents") or []
+        matter = matters_by_folder_id.get(parents[0]) if parents else None
+        if matter is not None and file_meta.get("name") != NOTES_FOLDER_NAME:
+            _note_unmapped_folder(matter, file_meta)
         return
 
-    # Out of every scope: nothing to do (dragging a file out of a mirrored
-    # folder leaves its app rows in place — both mirrors are append-only).
+    chain = _walk_to_root(service, file_meta, root_id, folder_cache)
+    if chain is None:
+        stats["records_unresolved"] += 1
+        return
+
+    mapping = mapping_rules.resolve_mapping(chain, by_folder)
+    if mapping is None:
+        # Out of every mapped folder (dragged out, or under an unmapped
+        # folder): the document stays, but it no longer belongs to a
+        # mapping, so a later re-map of that folder leaves it alone.
+        if not dry_run:
+            from apps.case.models import Document
+
+            Document.objects.filter(
+                drive_file_id=file_meta["id"], drive_mapping__isnull=False
+            ).update(drive_mapping=None)
+        return
+
+    if not records.is_pdf(file_meta):
+        stats["records_non_pdf"] += 1
+        return
+    try:
+        parts = [name for _, name in chain]
+        records.ingest_mapped(service, file_meta, parts, mapping, dry_run, stats)
+    except Exception:
+        stats["records_failed"] += 1
+        logger.exception("Failed to sync %s", file_meta.get("name"))
 
 
 def sync(dry_run=False, full=False):
@@ -439,36 +469,28 @@ def sync(dry_run=False, full=False):
         logger.warning("Drive root folder %r not found.", settings.DRIVE_NOTES_ROOT)
         return None
 
-    matters = _matters_by_folder()
-    links = records.proceedings_by_folder()
     state, _ = DriveSyncState.objects.get_or_create(pk=1)
 
     # First run or forced full: crawl everything, then capture a start token.
     if full or not state.page_token:
-        stats, unmatched, missing_records = bootstrap(
-            service, root_id, matters, links, dry_run
-        )
+        stats, unmatched = bootstrap(service, root_id, dry_run)
         token = service.changes().getStartPageToken(**_page_token_args()).execute()
         if not dry_run:
             state.page_token = token["startPageToken"]
             state.unmatched_folders = sorted(unmatched)
-            state.missing_record_folders = sorted(missing_records)
             state.save()
         logger.info(
-            "Drive bootstrap complete: %s (unmatched: %s, missing record folders: %s)",
-            stats,
-            sorted(unmatched),
-            sorted(missing_records),
+            "Drive bootstrap complete: %s (unmatched: %s)", stats, sorted(unmatched)
         )
-        return {
-            **stats,
-            "unmatched": sorted(unmatched),
-            "missing_record_folders": sorted(missing_records),
-        }
+        return {**stats, "unmatched": sorted(unmatched)}
 
     # Incremental: consume the changes delta.
     stats = _new_stats()
     unmatched = set(state.unmatched_folders or [])
+    by_folder = mapping_rules.mappings_by_folder_id()
+    matters_by_folder_id = {
+        m.drive_folder_id: m for m in _linked_matters() if m.drive_folder_id
+    }
     folder_cache = {}
     page_token = state.page_token
     try:
@@ -492,12 +514,11 @@ def sync(dry_run=False, full=False):
                     service,
                     change,
                     root_id,
-                    matters,
-                    links,
+                    by_folder,
+                    matters_by_folder_id,
                     folder_cache,
                     dry_run,
                     stats,
-                    unmatched,
                 )
 
             if "nextPageToken" in resp:
@@ -534,23 +555,24 @@ def get_sync_status():
     """Summary for the Settings > Integrations health panel (DB-only)."""
     from apps.case.models import Document
 
-    linked_matters = (
-        Matter.objects.exclude(drive_folder__isnull=True)
-        .exclude(drive_folder="")
-        .count()
-    )
-    state = DriveSyncState.objects.first()
+    missing = [
+        f"{m.matter.drive_folder}/{m.folder_path}"
+        for m in DriveFolderMapping.objects.exclude(missing_since__isnull=True)
+        .select_related("matter")
+        .order_by("matter__name", "folder_path")
+    ]
     return {
         "linked": check_credentials(),
-        "linked_matters": linked_matters,
+        "linked_matters": _linked_matters().count(),
         "synced_records": Document.objects.filter(drive_file_id__isnull=False).count(),
-        "linked_proceedings": len(records.proceedings_by_folder()),
-        "missing_record_folders": state.missing_record_folders if state else [],
+        "mapped_folders": DriveFolderMapping.objects.count(),
+        "missing_folders": missing,
+        "matters_needing_attention": mapping_rules.matters_needing_attention(),
     }
 
 
 # --------------------------------------------------------------------------- #
-# Per-matter folder linking (used by the Notes-tab "Link Drive Folder" UI)
+# Folder helpers (the Drive Folder modal, resync, drafts picker)
 # --------------------------------------------------------------------------- #
 def _find_child_folder(service, parent_id, name):
     """Return the child folder with the given name, or None (records resync)."""
@@ -560,8 +582,79 @@ def _find_child_folder(service, parent_id, name):
     return None
 
 
-def list_matter_folders():
-    """Return sorted folder names directly under the notes root.
+def get_folder(service, folder_id):
+    """Folder metadata by id, or None when it is gone or trashed."""
+    try:
+        meta = (
+            service.files()
+            .get(
+                fileId=folder_id,
+                fields="id, name, parents, trashed, mimeType",
+                supportsAllDrives=True,
+            )
+            .execute()
+        )
+    except HttpError:
+        return None
+    if meta.get("trashed"):
+        return None
+    return meta
+
+
+def list_child_folders(service, parent_id):
+    """Direct subfolders of a folder, as [{"id", "name"}] sorted by name."""
+    folders = [
+        {"id": child["id"], "name": child.get("name", "")}
+        for child in _list_children(service, parent_id)
+        if child.get("mimeType") == FOLDER_MIME
+    ]
+    return sorted(folders, key=lambda f: (f["name"].lower(), f["id"]))
+
+
+def _resolve_path(service, parent_id, path):
+    """Walk a cached "A/B" path under parent_id; the final folder or None."""
+    folder = None
+    current = parent_id
+    for segment in path.split("/"):
+        folder = _find_child_folder(service, current, segment)
+        if folder is None:
+            return None
+        current = folder["id"]
+    return folder
+
+
+def find_matter_folder(service, root_id, matter):
+    """The matter's Drive folder metadata (by id, else by name), or None.
+
+    A name-only link that resolves gets its id stored so later lookups
+    survive a rename in Drive.
+    """
+    if matter.drive_folder_id:
+        meta = get_folder(service, matter.drive_folder_id)
+        if meta is not None:
+            return meta
+    if matter.drive_folder:
+        meta = _find_child_folder(service, root_id, matter.drive_folder)
+        if meta is not None:
+            Matter.objects.filter(pk=matter.pk).update(drive_folder_id=meta["id"])
+            matter.drive_folder_id = meta["id"]
+            return meta
+    return None
+
+
+def resolve_mapping_folder(service, matter_folder_id, mapping):
+    """The mapped folder's metadata, resolving a legacy path to an id."""
+    if mapping.folder_id:
+        return get_folder(service, mapping.folder_id)
+    folder = _resolve_path(service, matter_folder_id, mapping.folder_path)
+    if folder is not None:
+        mapping.folder_id = folder["id"]
+        mapping.save(update_fields=["folder_id", "updated_at"])
+    return folder
+
+
+def list_root_folders():
+    """Folders directly under the Drive root, as [{"id", "name"}].
 
     Fails soft (returns []) if Drive is unlinked, the root is missing, or the
     Drive API errors (e.g. API not enabled / transient) so the picker modal
@@ -574,11 +667,7 @@ def list_matter_folders():
         root_id = _find_root_folder(service)
         if not root_id:
             return []
-        return sorted(
-            child["name"]
-            for child in _list_children(service, root_id)
-            if child.get("mimeType") == FOLDER_MIME
-        )
+        return list_child_folders(service, root_id)
     except HttpError:
-        logger.exception("Failed to list Drive matter folders")
+        logger.exception("Failed to list Drive root folders")
         return []

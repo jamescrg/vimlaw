@@ -62,25 +62,37 @@ def test_dry_run_deletes_nothing():
     assert Message.objects.count() == 2
 
 
-def test_close_unlinks_mirrors():
+@pytest.mark.parametrize("status", ["Closed", "Complete"])
+def test_close_unlinks_mirrors(status):
+    from apps.drive.models import DriveFolderMapping, DriveMatterState
+
     matter = Matter.objects.create(
         name="Linked",
         status="Open",
         drive_folder="Linked Folder",
+        drive_folder_id="mf9",
         gmail_label_id="Label_9",
         gmail_label_name="Matters - Open/Linked",
     )
-    proceeding = Proceeding.objects.create(
-        matter=matter, nickname="Main", drive_folder="Record"
+    proceeding = Proceeding.objects.create(matter=matter, nickname="Main")
+    DriveFolderMapping.objects.create(
+        matter=matter,
+        folder_id="rf9",
+        folder_path="Record",
+        category="Record",
+        proceeding=proceeding,
     )
+    DriveMatterState.objects.create(matter=matter, unmapped_folders=[])
 
-    matter.status = "Closed"
+    matter.status = status
     matter.save()
 
     matter.refresh_from_db()
     proceeding.refresh_from_db()
     assert matter.drive_folder is None
+    assert matter.drive_folder_id is None
     assert matter.gmail_label_id is None
     assert matter.gmail_label_name is None
-    assert proceeding.drive_folder is None
     assert proceeding.status == "Concluded"
+    assert not DriveFolderMapping.objects.filter(matter=matter).exists()
+    assert not DriveMatterState.objects.filter(matter=matter).exists()

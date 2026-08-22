@@ -7,9 +7,10 @@ import apps.drive.google as google
 
 class Command(BaseCommand):
     help = (
-        "Mirror linked Drive record folders' PDFs to Record Documents and "
-        "Key Documents folders' PDFs to Evidence (append-only). The "
-        "case-notes mirror is retired; files under Notes/ are ignored."
+        "Mirror PDFs under each matter's mapped Drive folders into Documents "
+        "(append-only; categories and proceedings follow the Documents tab's "
+        "Drive Folder mapping). The case-notes mirror is retired; files under "
+        "Notes/ are ignored."
     )
 
     def add_arguments(self, parser):

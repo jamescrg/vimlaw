@@ -1,0 +1,70 @@
+{% comment %}
+  Step 2 of the Drive Folder modal: one row per top-level subfolder of the
+  chosen matter folder (plus saved rows whose folder is gone or nested).
+  Each row posts category_<key> and proceeding_<key>; key is the Drive
+  folder id ("legacy-<pk>" for unresolved rows). Alpine keeps the
+  proceeding select enabled only for Record / Discovery; a disabled select
+  is not submitted, which the view reads as "no proceeding".
+{% endcomment %}
+{% if not live_ok %}
+  <p class="detail-text">
+    Drive could not list the subfolders of <code>{{ folder_name }}</code>.
+    Check the connection and reopen this dialog.
+  </p>
+{% elif not rows %}
+  <p class="detail-text">
+    No subfolders in <code>{{ folder_name }}</code> yet. Create them in
+    Drive (for example Corr, Discovery, Evidence, Record), then reopen this
+    dialog to map them.
+  </p>
+{% else %}
+  <p class="detail-text">
+    Map the top-level folders inside <code>{{ folder_name }}</code>. PDFs
+    anywhere under a mapped folder sync in with that category; unmapped
+    folders are ignored. Record folders need a proceeding and Discovery
+    folders may have one (name them "Record - Appeal" or "Discovery - Appeal"
+    to have it suggested). Evidence is never suggested: choose it by hand,
+    and only for a folder whose PDFs all belong in the app. Nothing syncs
+    until you save. Re-mapping a folder updates the documents already synced
+    from it. Files deleted in the app never come back.
+  </p>
+  <table class="table drive-mapping-table">
+    <thead>
+      <tr>
+        <th class="col-folder">Drive folder</th>
+        <th>Category</th>
+        <th>Proceeding</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr x-data="{ category: '{{ row.category|escapejs }}' }">
+          <td class="col-folder">
+            {{ row.name }}
+            {% if row.suggested %}<span class="drive-mapping-note">suggested</span>{% endif %}
+            {% if row.missing %}<span class="drive-mapping-note">not found in Drive</span>{% endif %}
+            {% if row.nested %}<span class="drive-mapping-note">nested (legacy)</span>{% endif %}
+          </td>
+          <td>
+            <select name="category_{{ row.key }}" x-model="category">
+              {% for value, label in categories %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+            </select>
+          </td>
+          <td>
+            <select name="proceeding_{{ row.key }}"
+                    :disabled="!['Record', 'Discovery'].includes(category)">
+              <option value="" x-text="category === 'Record' ? 'Required' : 'None'"></option>
+              {% for p in proceedings %}
+                <option value="{{ p.id }}"
+                        {% if p.id == row.proceeding_id %}selected{% endif %}>
+                  {{ p.display_name }}
+                  {% if p.case_number %}({{ p.case_number }}){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}

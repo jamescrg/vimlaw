@@ -23,9 +23,14 @@ class Matter(AuditMixin, models.Model):
 
     clio_matter_id = models.CharField(max_length=500, null=True, blank=True)
     client_reference_id = models.CharField(max_length=50, blank=True, null=True)
-    # Name of this matter's Google Drive folder under DRIVE_NOTES_ROOT, used to
-    # attach synced case notes. Set via the link_drive_folders command.
+    # This matter's Google Drive folder under DRIVE_NOTES_ROOT: the folder
+    # id is the link (renames in Drive keep working), the name is kept for
+    # display and the drafts picker. Set via the Documents tab's Drive
+    # Folder modal (or the link_drive_folders command); its mapped
+    # subfolders (apps.drive.models.DriveFolderMapping) feed the document
+    # mirror.
     drive_folder = models.CharField(max_length=255, null=True, blank=True)
+    drive_folder_id = models.CharField(max_length=255, null=True, blank=True)
     # Gmail label mapped to this matter for case-email sync. The label NAME
     # is the contract: every connected mailbox (GmailAccount) resolves it to
     # its own label id at sync time, so one link serves all mailboxes.
@@ -87,25 +92,36 @@ class Matter(AuditMixin, models.Model):
             models.Index(fields=["billing_type"]),
         ]
 
+    # Statuses under which work is no longer tracked: the file has moved out
+    # of the "Matters - Open" Drive/Gmail roots, so its mirrors are unlinked.
+    # "Complete" is the closing-out phase (usually waiting on a trust
+    # reimbursement); "Closed" is final and additionally starts the chat
+    # retention clock (apps/case/ai/purge.py).
+    INACTIVE_STATUSES = ("Complete", "Closed")
+
     def save(self, *args, **kwargs):
-        if self.status == "Closed":
+        if self.status in self.INACTIVE_STATUSES:
             from apps.matters.proceedings.models import Proceeding
 
-            # Mark all proceedings as concluded when matter is closed, and
-            # drop their record-folder links along with the matter's Drive
-            # and Gmail links. Closed files move out of the "Matters - Open"
+            # Mark all proceedings as concluded when work ends, and drop the
+            # matter's Drive folder mappings along with its Drive and Gmail
+            # links. Closed-out files move out of the "Matters - Open"
             # Drive/Gmail roots, so stale links only produce missing-folder
             # and missing-label drift warnings (and automatic label setup
-            # would recreate a closed matter's Gmail labels). Synced rows
-            # all survive the unlink: record Documents are append-only and
+            # would recreate the matter's Gmail labels). Synced rows all
+            # survive the unlink: record Documents are append-only and
             # Email rows are only removed by label events on a still-mapped
             # matter.
-            Proceeding.objects.filter(matter=self).update(
-                status="Concluded", drive_folder=None
-            )
+            Proceeding.objects.filter(matter=self).update(status="Concluded")
             self.gmail_label_id = None
             self.gmail_label_name = None
             self.drive_folder = None
+            self.drive_folder_id = None
+            if self.pk:
+                from apps.drive.models import DriveFolderMapping, DriveMatterState
+
+                DriveFolderMapping.objects.filter(matter=self).delete()
+                DriveMatterState.objects.filter(matter=self).delete()
 
         # (Client status is no longer maintained here — it's derived from a
         # contact's matters; see apps.contacts.models.derive_client_status.)

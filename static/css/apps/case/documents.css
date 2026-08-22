@@ -222,3 +222,88 @@ File labels container
 #documents-list .col-document {
   overflow: visible;
 }
+
+/* ------------------------------------------------
+Drive Folder modal (Documents tab): matter-folder picker and the
+subfolder mapping table. The .drive-folder-* picker classes are shared
+with the Gmail label-link modal.
+------------------------------------------------ */
+
+.drive-folder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.drive-folder-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border-light);
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.drive-folder-option:hover {
+  background: var(--background-section);
+}
+
+.drive-folder-option.disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.drive-folder-name {
+  flex: 1;
+}
+
+.drive-folder-taken {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.error-text {
+  margin-top: 0.5rem;
+  color: var(--error);
+}
+
+.drive-step {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.drive-step-heading {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.drive-step-title {
+  margin: 0;
+}
+
+.drive-step-current {
+  color: var(--color-muted);
+}
+
+.drive-mapping-table {
+  width: 100%;
+}
+
+.drive-mapping-table .col-folder {
+  width: 40%;
+}
+
+.drive-mapping-table td select {
+  width: 100%;
+}
+
+.drive-mapping-note {
+  color: var(--color-muted);
+  margin-left: 0.25rem;
+}

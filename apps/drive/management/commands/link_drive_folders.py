@@ -8,9 +8,9 @@ from apps.matters.models import Matter
 
 class Command(BaseCommand):
     help = (
-        "Link Google Drive matter folders (under the notes root) to Matter "
-        "records by setting Matter.drive_folder. Interactive; suggests matches "
-        "by name."
+        "Link Google Drive matter folders (under the Drive root) to Matter "
+        "records (Matter.drive_folder + drive_folder_id). Interactive; suggests "
+        "matches by name. Subfolder mapping happens in the Documents tab."
     )
 
     def add_arguments(self, parser):
@@ -39,18 +39,23 @@ class Command(BaseCommand):
             )
             return
 
-        drive_folders = sorted(
-            c["name"]
-            for c in google._list_children(service, root_id)
-            if c.get("mimeType") == google.FOLDER_MIME
+        drive_folders = google.list_child_folders(service, root_id)
+        linked_ids = set(
+            Matter.objects.exclude(drive_folder_id__isnull=True).values_list(
+                "drive_folder_id", flat=True
+            )
         )
-        linked = {
+        linked_names = {
             m.drive_folder
             for m in Matter.objects.exclude(drive_folder__isnull=True).exclude(
                 drive_folder=""
             )
         }
-        unmatched = [f for f in drive_folders if f not in linked]
+        unmatched = [
+            f
+            for f in drive_folders
+            if f["id"] not in linked_ids and f["name"] not in linked_names
+        ]
 
         if not unmatched:
             self.stdout.write(
@@ -61,13 +66,14 @@ class Command(BaseCommand):
         if options["list"]:
             self.stdout.write("Unmatched Drive folders:")
             for f in unmatched:
-                self.stdout.write(f"  - {f}")
+                self.stdout.write(f"  - {f['name']}")
             return
 
         matters = list(Matter.objects.all().order_by("name"))
         names = [m.name or "" for m in matters]
 
-        for folder in unmatched:
+        for entry in unmatched:
+            folder = entry["name"]
             self.stdout.write(f"\nDrive folder: {self.style.WARNING(folder)}")
             suggestion = difflib.get_close_matches(folder, names, n=1, cutoff=0.4)
             suggested = matters[names.index(suggestion[0])] if suggestion else None
@@ -92,7 +98,8 @@ class Command(BaseCommand):
                     continue
 
             matter.drive_folder = folder
-            matter.save(update_fields=["drive_folder"])
+            matter.drive_folder_id = entry["id"]
+            matter.save(update_fields=["drive_folder", "drive_folder_id"])
             self.stdout.write(
                 self.style.SUCCESS(
                     f"  Linked '{folder}' -> [{matter.id}] {matter.name}"

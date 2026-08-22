@@ -45,30 +45,32 @@
             {% if drive_status.linked_matters %}
               <p class="detail-text drive-sync-note">
                 {{ drive_status.linked_matters }} matter{{ drive_status.linked_matters|pluralize }}
-                linked to a Drive folder.
+                linked to a Drive folder, {{ drive_status.mapped_folders }}
+                folder{{ drive_status.mapped_folders|pluralize }} mapped,
+                {{ drive_status.synced_records }} document{{ drive_status.synced_records|pluralize }} synced.
               </p>
             {% else %}
               <p class="detail-text drive-sync-note">
                 No matters are linked to a Drive folder yet. Open a matter's
-                <strong>Notes</strong> tab and choose <strong>Link Drive Folder</strong>
-                to feed its document mirrors.
+                <strong>Documents</strong> tab and choose <strong>Link Drive Folder</strong>
+                to link it and map its subfolders.
               </p>
             {% endif %}
-            {% if drive_status.linked_proceedings %}
+            {% if drive_status.matters_needing_attention %}
               <p class="detail-text drive-sync-note">
-                {{ drive_status.synced_records }} record
-                document{{ drive_status.synced_records|pluralize }} synced
-                across {{ drive_status.linked_proceedings }} linked
-                proceeding{{ drive_status.linked_proceedings|pluralize }}.
+                {{ drive_status.matters_needing_attention }}
+                matter{{ drive_status.matters_needing_attention|pluralize }}
+                {{ drive_status.matters_needing_attention|pluralize:"has,have" }} unmapped or
+                missing Drive folders (see the Drive Folder button on each Documents tab).
               </p>
             {% endif %}
-            {% if drive_status.missing_record_folders %}
+            {% if drive_status.missing_folders %}
               <p class="detail-text drive-sync-note">
-                Warning: {{ drive_status.missing_record_folders|length }} linked
-                record folder{{ drive_status.missing_record_folders|length|pluralize }}
-                no longer exist{{ drive_status.missing_record_folders|length|pluralize:"s," }}
-                in Drive ({{ drive_status.missing_record_folders|join:", " }}).
-                Relink from the affected matter's Documents tab. Nothing was
+                Warning: {{ drive_status.missing_folders|length }} mapped
+                folder{{ drive_status.missing_folders|length|pluralize }}
+                no longer exist{{ drive_status.missing_folders|length|pluralize:"s," }}
+                in Drive ({{ drive_status.missing_folders|join:", " }}).
+                Re-map from the affected matter's Documents tab. Nothing was
                 deleted.
               </p>
             {% endif %}

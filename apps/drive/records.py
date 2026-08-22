@@ -1,23 +1,24 @@
-"""Google Drive document mirrors: record folders and Key Documents.
+"""Google Drive document mirror: mapped folders -> Documents.
 
-PDFs filed in a proceeding's linked record folder (``Proceeding.drive_folder``,
-a subfolder of the matter's Drive folder) sync in as Record ``Document`` rows
-on that matter+proceeding: OCR'd, searchable, highlightable, AI-visible.
+A matter's Drive folder has top-level subfolders mapped to document
+categories (and, for Record/Discovery, proceedings) via
+``apps.drive.models.DriveFolderMapping`` (the Documents tab's Drive Folder
+modal). PDFs anywhere under a mapped folder sync in as ``Document`` rows
+with that mapping's category and proceeding: OCR'd, searchable,
+highlightable, AI-visible. Unmapped folders are ignored.
 
-PDFs dragged into any folder named per settings.DRIVE_KEY_DOCUMENTS_FOLDER
-("Key Documents") inside a matter's folder sync in the same way as Evidence
-documents with no proceeding — the drag IS the curation gesture, so the
-evidence folder at large stays uningested noise while its keepers flow in.
-
-Contract (deliberately different from the notes mirror):
+Contract:
 - Append-only. Drive-side deletions, trashes and moves NEVER remove a
   Document; the record can only shrink through a deliberate in-app delete,
   which tombstones the Drive file id so the file doesn't boomerang back
   (``DriveRecordTombstone``, written by a pre_delete signal).
-- PDFs only. Anything else in a linked folder is counted, not ingested.
+- PDFs only. Anything else in a mapped folder is counted, not ingested.
 - Modified files are refreshed (bytes replaced, OCR reset and re-queued);
   user-set metadata (name, date, description, importance, labels, AI
-  settings, highlights) is never touched after the first ingest.
+  settings, highlights) is never touched after the first ingest. Category
+  and proceeding follow the mapping only when the file arrives through a
+  different mapping than before (moved between mapped folders, or a legacy
+  document not yet stamped); within one mapping, hand edits stand.
 
 ``apps.drive.google.sync()`` stays the single consumer of the drive-wide
 changes feed and dispatches in-scope files here.
@@ -29,17 +30,15 @@ import os
 import re
 from datetime import datetime
 
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from django.db import IntegrityError
 from django.utils import timezone
-from googleapiclient.errors import HttpError
 
 from apps.case.models import Document
-from apps.matters.proceedings.models import Proceeding
 
-from . import google
-from .models import DriveRecordTombstone
+from . import google, mappings
+from .models import DriveFolderMapping, DriveRecordTombstone
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +51,7 @@ RECORD_STAT_KEYS = (
     "records_unchanged",
     "records_non_pdf",
     "records_failed",
+    "records_unresolved",
 )
 
 # The filing convention the upload form also parses (file-upload-forms.js):
@@ -63,63 +63,10 @@ def new_record_stats():
     return {key: 0 for key in RECORD_STAT_KEYS}
 
 
-def proceedings_by_folder():
-    """Map (matter_folder, record_folder) -> Proceeding for linked pairs.
-
-    Only proceedings whose matter also has a linked Drive folder can be in
-    scope: the record folder lives inside the matter folder.
-    """
-    qs = (
-        Proceeding.objects.exclude(drive_folder__isnull=True)
-        .exclude(drive_folder="")
-        .select_related("matter")
-    )
-    return {
-        (p.matter.drive_folder, p.drive_folder): p
-        for p in qs
-        if p.matter and p.matter.drive_folder
-    }
-
-
 def is_pdf(file_meta):
     return (
         file_meta.get("mimeType") == PDF_MIME
         or os.path.splitext(file_meta.get("name", ""))[1].lower() == ".pdf"
-    )
-
-
-def in_record_scope(parts, links):
-    """True when path parts land inside a linked record folder.
-
-    Only the first two segments matter (matter folder / record folder), so
-    subfolders nested inside a record folder are included, same as the
-    notes scope test.
-    """
-    return bool(parts) and len(parts) >= 3 and (parts[0], parts[1]) in links
-
-
-def key_folder_name():
-    """The convention folder name for curated evidence ("Key Documents")."""
-    return settings.DRIVE_KEY_DOCUMENTS_FOLDER
-
-
-def in_key_scope(parts, matters):
-    """True when path parts land inside a matter's Key Documents folder.
-
-    Pure convention, no linking: any folder with the configured name, at
-    any depth inside a linked matter's folder (e.g. Evidence/Key
-    Documents), is a curated ingestion point — dragging a PDF in adds it
-    to the app as Evidence. Checked AFTER the notes and record scopes in
-    the dispatch, so a Key Documents folder nested inside those keeps
-    their semantics.
-    """
-    name = key_folder_name()
-    return (
-        bool(name)
-        and bool(parts)
-        and len(parts) >= 3
-        and parts[0] in matters
-        and name in parts[1:-1]
     )
 
 
@@ -216,31 +163,25 @@ def _queue_ocr(document_id):
         process_document_ocr(document_id)
 
 
-def ingest_record(service, file_meta, parts, links, dry_run, stats):
-    """Upsert one record-folder PDF (Record category, linked proceeding)."""
-    proceeding = links[(parts[0], parts[1])]
-    ingest_pdf(
-        service,
-        file_meta,
-        parts,
-        proceeding.matter,
-        proceeding,
-        "Record",
-        dry_run,
-        stats,
-    )
+def ingest_mapped(service, file_meta, parts, mapping, dry_run, stats):
+    """Upsert one PDF found under a mapped folder."""
+    ingest_pdf(service, file_meta, parts, mapping, dry_run, stats)
 
 
-def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run, stats):
+def ingest_pdf(service, file_meta, parts, mapping, dry_run, stats):
     """Upsert one Drive PDF as a Document (tombstoned ids are skipped).
 
-    ``proceeding`` may be None (Key Documents ingest: category Evidence,
-    no proceeding); a proceeding a user has assigned by hand is then never
-    overwritten on refresh.
+    ``mapping`` decides matter, category and proceeding. A document that
+    already arrived through this same mapping keeps whatever category and
+    proceeding it has (hand edits stand); one arriving through a different
+    mapping (moved between mapped folders, or never stamped) takes the
+    mapping's values, category and proceeding written together so
+    Document.save()'s coercion never fights the mapping.
     """
     fid = file_meta["id"]
     mtime = file_meta.get("modifiedTime")
     rel_path = "/".join(parts)[:1024]
+    matter = mapping.matter
 
     if DriveRecordTombstone.objects.filter(drive_file_id=fid).exists():
         return
@@ -249,26 +190,22 @@ def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run,
 
     if existing and existing.drive_modified == mtime:
         # Bytes unchanged; refresh provenance if the file merely moved
-        # between ingestion folders.
+        # between mapped folders (or a legacy document gets stamped).
+        drifted = existing.drive_mapping_id != mapping.id
         moved = (
-            existing.drive_path != rel_path
+            drifted
+            or existing.drive_path != rel_path
             or existing.matter_id != matter.id
-            or (proceeding is not None and existing.proceeding_id != proceeding.id)
         )
         if not dry_run and moved:
-            existing.drive_path = rel_path
-            existing.matter = matter
-            if proceeding is not None:
-                existing.proceeding = proceeding
-            existing.drive_synced_at = timezone.now()
-            existing.save(
-                update_fields=[
-                    "drive_path",
-                    "proceeding",
-                    "matter",
-                    "drive_synced_at",
-                ]
-            )
+            fields = {
+                "drive_path": rel_path,
+                "matter_id": matter.id,
+                "drive_synced_at": timezone.now(),
+            }
+            if drifted:
+                fields.update(mappings.apply_mapping_fields(mapping))
+            Document.objects.filter(pk=existing.pk).update(**fields)
         stats["records_unchanged"] += 1
         return
 
@@ -281,16 +218,17 @@ def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run,
     if not existing:
         # A manually-uploaded twin (same name, date and size) adopts the
         # Drive identity instead of becoming a duplicate: provenance is
-        # attached, bytes and finished OCR stay as they are.
+        # attached, bytes and finished OCR stay as they are; category and
+        # proceeding follow the folder it was found in.
         candidate = _adopt_candidate(matter, name, date, _meta_size(file_meta))
         if candidate:
-            if proceeding is not None:
-                candidate.proceeding = proceeding
-            candidate.drive_file_id = fid
-            candidate.drive_path = rel_path
-            candidate.drive_modified = mtime
-            candidate.drive_synced_at = timezone.now()
-            candidate.save()
+            Document.objects.filter(pk=candidate.pk).update(
+                drive_file_id=fid,
+                drive_path=rel_path,
+                drive_modified=mtime,
+                drive_synced_at=timezone.now(),
+                **mappings.apply_mapping_fields(mapping),
+            )
             stats["records_adopted"] += 1
             return
 
@@ -305,8 +243,10 @@ def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run,
         existing.file.save(f"{existing.pk}.pdf", ContentFile(content), save=False)
         existing.set_fingerprints(io.BytesIO(content), size=len(content))
         _reset_ocr(existing)
-        if proceeding is not None:
-            existing.proceeding = proceeding
+        if existing.drive_mapping_id != mapping.id:
+            existing.category = mapping.category
+            existing.proceeding_id = mapping.proceeding_id
+            existing.drive_mapping_id = mapping.id
         existing.matter = matter
         existing.drive_path = rel_path
         existing.drive_modified = mtime
@@ -318,8 +258,9 @@ def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run,
 
     document = Document(
         matter=matter,
-        proceeding=proceeding,
-        category=category,
+        proceeding_id=mapping.proceeding_id,
+        category=mapping.category,
+        drive_mapping=mapping,
         name=name,
         date=date,
         drive_file_id=fid,
@@ -327,7 +268,13 @@ def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run,
         drive_modified=mtime,
         drive_synced_at=timezone.now(),
     )
-    document.save()
+    try:
+        document.save()
+    except IntegrityError:
+        # Another sync pass created this file's row between our lookup and
+        # the insert (unique drive_file_id); it will be refreshed next tick.
+        stats["records_unchanged"] += 1
+        return
     document.file.save(f"{document.pk}.pdf", ContentFile(content), save=True)
 
     if not document.file.storage.exists(document.file.name):
@@ -342,18 +289,28 @@ def ingest_pdf(service, file_meta, parts, matter, proceeding, category, dry_run,
     stats["records_synced"] += 1
 
 
-def resync_proceeding(proceeding):
-    """Ingest one proceeding's linked record folder (link created/changed).
+def mark_missing(mapping, missing):
+    """Flag (or clear) a mapping whose Drive folder can't be found."""
+    if missing and mapping.missing_since is None:
+        mapping.missing_since = timezone.now()
+        mapping.save(update_fields=["missing_since", "updated_at"])
+    elif not missing and mapping.missing_since is not None:
+        mapping.missing_since = None
+        mapping.save(update_fields=["missing_since", "updated_at"])
 
-    Never deletes anything: unlinking a folder, or a folder that no longer
+
+def resync_mapping(mapping):
+    """Ingest one mapped folder now (mapping created or changed).
+
+    Never deletes anything: unmapping a folder, or a folder that no longer
     exists, leaves already-synced Documents in place. Returns a stats dict
     (with ``missing: True`` when the folder wasn't found), or None when
-    Drive or the link chain isn't set up.
+    Drive or the matter link isn't set up.
     """
-    matter = proceeding.matter
+    matter = mapping.matter
     if not google.check_credentials():
         return None
-    if not proceeding.drive_folder or matter is None or not matter.drive_folder:
+    if matter is None or not (matter.drive_folder or matter.drive_folder_id):
         return None
 
     service = google.build_service()
@@ -362,77 +319,40 @@ def resync_proceeding(proceeding):
         return None
 
     stats = new_record_stats()
-    matter_folder = google._find_child_folder(service, root_id, matter.drive_folder)
-    record_folder = (
-        google._find_child_folder(service, matter_folder["id"], proceeding.drive_folder)
+    matter_folder = google.find_matter_folder(service, root_id, matter)
+    folder = (
+        google.resolve_mapping_folder(service, matter_folder["id"], mapping)
         if matter_folder
         else None
     )
-    if record_folder is None:
+    if folder is None:
         logger.warning(
-            "Record folder %r not found for proceeding %s",
-            proceeding.drive_folder,
-            proceeding.pk,
+            "Mapped folder %r not found for matter %s", mapping.folder_path, matter.pk
         )
+        mark_missing(mapping, True)
         return {**stats, "missing": True}
 
-    links = {(matter.drive_folder, proceeding.drive_folder): proceeding}
-    stack = [(record_folder["id"], [matter.drive_folder, proceeding.drive_folder])]
-    while stack:
-        folder_id, prefix = stack.pop()
-        for child in google._list_children(service, folder_id):
-            if child.get("mimeType") == google.FOLDER_MIME:
-                stack.append((child["id"], prefix + [child["name"]]))
-                continue
-            if not is_pdf(child):
-                stats["records_non_pdf"] += 1
-                continue
-            try:
-                ingest_record(
-                    service, child, prefix + [child["name"]], links, False, stats
-                )
-            except Exception:
-                stats["records_failed"] += 1
-                logger.exception(
-                    "Failed to sync record %s for proceeding %s",
-                    child.get("name"),
-                    proceeding.pk,
-                )
+    mark_missing(mapping, False)
+    prefix = [matter_folder["name"]] + mapping.folder_path.split("/")
+    others = set(
+        DriveFolderMapping.objects.filter(matter=matter)
+        .exclude(pk=mapping.pk)
+        .exclude(folder_id__isnull=True)
+        .values_list("folder_id", flat=True)
+    )
+    google._walk_mapped_folder(
+        service, folder, prefix, mapping, False, stats, skip=others
+    )
     return stats
 
 
-def resync_proceeding_by_id(proceeding_id):
-    """async_task entry point for the record-link views."""
-    proceeding = (
-        Proceeding.objects.filter(pk=proceeding_id).select_related("matter").first()
+def resync_mapping_by_id(mapping_id):
+    """async_task entry point for the Drive Folder modal."""
+    mapping = (
+        DriveFolderMapping.objects.filter(pk=mapping_id)
+        .select_related("matter", "proceeding")
+        .first()
     )
-    if proceeding is None:
+    if mapping is None:
         return None
-    return resync_proceeding(proceeding)
-
-
-def list_record_subfolders(matter):
-    """Sorted names of the matter's Drive subfolders (Notes excluded).
-
-    Fails soft (returns []) when Drive is unlinked, the matter folder is
-    missing, or the API errors, so the link modal degrades gracefully.
-    """
-    if not google.check_credentials() or not matter.drive_folder:
-        return []
-    try:
-        service = google.build_service()
-        root_id = google._find_root_folder(service)
-        if not root_id:
-            return []
-        matter_folder = google._find_child_folder(service, root_id, matter.drive_folder)
-        if not matter_folder:
-            return []
-        return sorted(
-            child["name"]
-            for child in google._list_children(service, matter_folder["id"])
-            if child.get("mimeType") == google.FOLDER_MIME
-            and child.get("name") != google.NOTES_FOLDER_NAME
-        )
-    except HttpError:
-        logger.exception("Failed to list record subfolders for matter %s", matter.pk)
-        return []
+    return resync_mapping(mapping)
