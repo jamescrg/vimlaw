@@ -36,9 +36,14 @@
         <tr x-data="{ category: '{{ row.category|escapejs }}' }">
           <td class="col-folder">
             {{ row.name }}
-            {% if row.suggested %}<span class="drive-mapping-note">suggested</span>{% endif %}
-            {% if row.missing %}<span class="drive-mapping-note">not found in Drive</span>{% endif %}
-            {% if row.nested %}<span class="drive-mapping-note">nested (legacy)</span>{% endif %}
+            {% comment %}
+              Row status as label-style badges: the category is a guess from
+              the folder name, the folder is gone from Drive, or the row is
+              a converted nested folder the modal can no longer create.
+            {% endcomment %}
+            {% if row.suggested %}<span class="app-badge badge-blue">suggested</span>{% endif %}
+            {% if row.missing %}<span class="app-badge badge-yellow">not in Drive</span>{% endif %}
+            {% if row.nested %}<span class="app-badge badge-gray">nested</span>{% endif %}
           </td>
           <td>
             <select name="category_{{ row.key }}" x-model="category">
