@@ -86,6 +86,13 @@ def test_placeholder_label_rendered_server_side(
     assert "Not applicable" in body
 
 
+def test_hidden_folders_are_not_listed(client, matter, proceeding, tree):
+    tree.add_folder("hid1", ".claude", parent="mf1")
+    body = _modal(client, matter).content.decode()
+    assert ".claude" not in body
+    assert 'name="category_hid1"' not in body
+
+
 def test_modal_resolves_legacy_name_only_link(client, matter, proceeding, tree):
     Matter.objects.filter(pk=matter.pk).update(drive_folder_id=None)
     _modal(client, matter)

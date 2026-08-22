@@ -62,6 +62,23 @@ XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 # the unmapped-folder nudge.
 NOTES_FOLDER_NAME = "Notes"
 
+
+def is_hidden_folder(name):
+    """Folders the mirror never offers or walks.
+
+    Dot-prefixed folders are tooling's (".claude" and friends), and the
+    retired notes mirror's subtree stays out of the mapping table and the
+    unmapped-folder nudge.
+    """
+    name = name or ""
+    return name.startswith(".") or name == NOTES_FOLDER_NAME
+
+
+def visible_subfolders(folders):
+    """The subfolders worth showing or counting, in listing order."""
+    return [f for f in folders if not is_hidden_folder(f.get("name"))]
+
+
 # Fields requested for a file in changes/listing responses. createdTime and
 # size feed the record mirror (fallback date; duplicate-adoption check).
 FILE_FIELDS = "id, name, mimeType, parents, trashed, modifiedTime, createdTime, size"
@@ -260,7 +277,7 @@ def _walk_mapped_folder(service, folder, prefix, mapping, dry_run, stats, skip=(
         folder_id, path = stack.pop()
         for child in _list_children(service, folder_id):
             if child.get("mimeType") == FOLDER_MIME:
-                if child["id"] in skip:
+                if child["id"] in skip or is_hidden_folder(child.get("name")):
                     continue
                 stack.append((child["id"], path + [child["name"]]))
                 continue
@@ -340,9 +357,7 @@ def _bootstrap_matter(service, matter_folder, matter, dry_run, stats):
         )
 
     if not dry_run:
-        mapping_rules.record_matter_state(
-            matter, [f for f in top if f["name"] != NOTES_FOLDER_NAME]
-        )
+        mapping_rules.record_matter_state(matter, visible_subfolders(top))
 
 
 def bootstrap(service, root_id, dry_run=False):
@@ -421,7 +436,7 @@ def _process_change(
             return
         parents = file_meta.get("parents") or []
         matter = matters_by_folder_id.get(parents[0]) if parents else None
-        if matter is not None and file_meta.get("name") != NOTES_FOLDER_NAME:
+        if matter is not None and not is_hidden_folder(file_meta.get("name")):
             _note_unmapped_folder(matter, file_meta)
         return
 

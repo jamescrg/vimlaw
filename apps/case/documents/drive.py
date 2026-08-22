@@ -67,13 +67,15 @@ def _root_folder_rows(matter):
 
 
 def _live_subfolders(service, folder_id):
-    """Top-level subfolders of a matter folder, Notes excluded; None on error."""
+    """Mappable top-level subfolders of a matter folder; None on error.
+
+    Hidden folders (dot-prefixed, and the retired Notes mirror's) are left
+    out of the table and out of the unmapped-folder count.
+    """
     try:
-        return [
-            f
-            for f in drive_google.list_child_folders(service, folder_id)
-            if f["name"] != drive_google.NOTES_FOLDER_NAME
-        ]
+        return drive_google.visible_subfolders(
+            drive_google.list_child_folders(service, folder_id)
+        )
     except HttpError:
         logger.exception("Failed to list Drive subfolders of %s", folder_id)
         return None
