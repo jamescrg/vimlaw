@@ -8,18 +8,18 @@
 {% endcomment %}
 {% if not live_ok %}
   <p class="detail-text">
-    Drive could not list the subfolders of <code>{{ folder_name }}</code>.
+    Drive could not list the subfolders of {{ folder_name }}.
     Check the connection and reopen this dialog.
   </p>
 {% elif not rows %}
   <p class="detail-text">
-    No subfolders in <code>{{ folder_name }}</code> yet. Create them in
+    No subfolders in {{ folder_name }} yet. Create them in
     Drive (for example Corr, Discovery, Evidence, Record), then reopen this
     dialog to map them.
   </p>
 {% else %}
   <p class="detail-text">
-    PDFs anywhere under a mapped folder in <code>{{ folder_name }}</code> sync
+    PDFs anywhere under a mapped folder in {{ folder_name }} sync
     in with its category. Unmapped folders are ignored, and nothing syncs
     until you save.
   </p>
