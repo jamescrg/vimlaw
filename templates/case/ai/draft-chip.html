@@ -2,10 +2,9 @@
 The draft-link control in the chat composer. Swapped via #draftChip after
 link/unlink. In an unsaved conversation (no id yet) the paperclip first
 materializes the row via linkDraftForNewChat() (standalone window only),
-so a draft can be linked before the first prompt. Drafts only matter on
-Analysis turns (the research worker skips the edit protocol); the
-standalone window hides the #draftChip wrapper while the mode dropdown
-says Research, so no kind branch here.
+so a draft can be linked before the first prompt. Case chat is the only
+surface with drafts (the Research tab has its own), so no kind branch
+here.
 {% endcomment %}
 {% if not conversation.id %}
   <button type="button"
