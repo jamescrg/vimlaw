@@ -56,6 +56,25 @@
   margin-right: 0.75rem;
 }
 
+/* Notes-tab drag-and-drop (notes-library.js): the dragged row ghosts; the
+   folder / Inbox row that would take the drop wears the selected wash; a
+   rejected drop flashes red. Tokens only, so the dark themes need no
+   scoped rule. */
+.folder-item-container.dragging,
+.notes-list tr.dragging {
+  opacity: 0.5;
+}
+
+.folder-item-container.drop-target,
+.folder-item-container.drop-target a {
+  background: var(--selected-background);
+  color: var(--selected-color);
+}
+
+.folder-item-container.drop-error {
+  background: var(--btn-danger-bg);
+}
+
 /* Depth indentation */
 #note-folders .folder-depth-1 { padding-left: 1.125rem; }
 #note-folders .folder-depth-2 { padding-left: 2rem; }

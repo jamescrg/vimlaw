@@ -1,4 +1,14 @@
-<tr id="note-{{ note.id }}" class="importance-{{ note.importance }}">
+{% comment %}
+The row drags into the sidebar's folders / Inbox (a selected row drags the
+whole selection via bulk-move) and right-click opens the title's own
+dropdown at the cursor (notes-library.js).
+{% endcomment %}
+<tr id="note-{{ note.id }}"
+    class="importance-{{ note.importance }}"
+    draggable="true"
+    data-note-id="{{ note.id }}"
+    data-folder-id="{{ note.folder_id|default_if_none:'' }}"
+    data-move-url="{% url 'notes:note-move' note.id %}">
   <td class="col-select">
     {% url 'notes:toggle-select' note.id as toggle_url %}
     {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=note.id selected_ids=selected_notes %}
@@ -7,6 +17,7 @@
     <div class="dropdown" x-data="dropdown()">
       <a href="#"
          class="note-title-link"
+         draggable="false"
          x-ref="button"
          @click.prevent="toggle()">{{ note.title }}</a>
       <ul class="dropdown-menu" x-ref="menu" x-show="open">

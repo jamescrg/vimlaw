@@ -19,11 +19,39 @@
       </div>
     </div>
     <ul class="list-group">
-      <li class="folder-item-container list-group-item{% if not selected_note_folder and not all_folders_selected %} item-selected-highlight{% endif %}">
+      {% comment %}
+      Inbox = the root: drop target for folders and notes (notes-library.js)
+      and, on right-click, a menu to create at the root (no kebab: the
+      dropdown's button is hidden, openAt() places the menu at the cursor).
+      {% endcomment %}
+      <li class="folder-item-container list-group-item{% if not selected_note_folder and not all_folders_selected %} item-selected-highlight{% endif %}"
+          data-root="1">
         <div>
           <span class="folder-caret-placeholder"></span>
           <i class="icon-inbox"></i>
           <a href="{% url 'notes:folder-unsorted' %}">Inbox</a>
+        </div>
+        <div class="dropdown" x-data="dropdown()">
+          <button class="btn-icon menu-icon hidden"
+                  type="button"
+                  x-ref="button"
+                  @click="toggle()"
+                  :aria-expanded="open">
+            <i class="icon-ellipsis-vertical"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 data-post-open="{% url 'notes:add' %}?open=1"><i class="icon-square-pen"></i> New note</a>
+            </li>
+            <li>
+              <a class="dropdown-item"
+                 href="#"
+                 hx-get="{% url 'notes:folder-add' %}?context=tab&parent=root"
+                 hx-target="#htmx-modal-container"><i class="icon-folder-plus"></i> New folder</a>
+            </li>
+          </ul>
         </div>
       </li>
       <li class="folder-item-container list-group-item{% if all_folders_selected %} item-selected-highlight{% endif %}">

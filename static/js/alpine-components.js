@@ -42,6 +42,35 @@ document.addEventListener('alpine:init', () => {
       this.resetPosition();
     },
 
+    // Open at a pointer position (right-click context menus): the same
+    // menu and actions, anchored to the cursor instead of the button and
+    // kept inside the viewport.
+    openAt(x, y) {
+      document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+        menu.classList.remove('show');
+      });
+      this.open = true;
+      this.$nextTick(() => {
+        const menu = this.$refs.menu;
+        if (!menu) return;
+        menu.style.position = 'fixed';
+        menu.style.top = `${y}px`;
+        menu.style.left = `${x}px`;
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+        menu.classList.add('show');
+        this.$nextTick(() => {
+          const menuRect = menu.getBoundingClientRect();
+          if (menuRect.right > window.innerWidth - 8) {
+            menu.style.left = `${Math.max(8, window.innerWidth - 8 - menuRect.width)}px`;
+          }
+          if (menuRect.bottom > window.innerHeight - 8) {
+            menu.style.top = `${Math.max(8, window.innerHeight - 8 - menuRect.height)}px`;
+          }
+        });
+      });
+    },
+
     position() {
       const menu = this.$refs.menu;
       const button = this.$refs.button;

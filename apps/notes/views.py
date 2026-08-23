@@ -586,7 +586,7 @@ def note_folder_move(request, folder_id):
                 update_fields.append("name")
             folder.save(update_fields=update_fields)
             folder.update_descendant_depths()
-            return _notes_tab_sidebar_response(request)
+            return _notes_tab_sidebar_response()
 
     # Expand the ancestors of the current parent so the modal opens on it
     expanded_ids = {a.pk for a in folder.get_ancestors()} if folder.parent else set()
@@ -595,13 +595,28 @@ def note_folder_move(request, folder_id):
     return render(request, "note_folders/move.html", context)
 
 
-def _notes_tab_sidebar_response(request):
-    """Notes-tab folder CRUD success: re-render the sidebar into
-    #note-folders and close the modal."""
-    response = render(request, "note_folders/list.html", get_note_folders_data(request))
-    response.status_code = 202
-    response["HX-Trigger-After-Swap"] = "closeModal"
-    return response
+NOTE_FOLDERS_TRIGGER = "noteFoldersChanged"
+
+
+@login_required
+def notes_folders(request):
+    """HTMX partial: the Notes-tab folder sidebar (#note-folders re-fetches
+    it on noteFoldersChanged)."""
+    return render(request, "note_folders/list.html", get_note_folders_data(request))
+
+
+def _notes_tab_sidebar_response():
+    """Notes-tab folder CRUD success: the sidebar re-fetches itself, the
+    table re-fetches too (a folder's name heads it and its notes may have
+    gone with it), and the modal closes."""
+    return HttpResponse(
+        status=204,
+        headers={
+            "HX-Trigger": json.dumps(
+                {NOTE_FOLDERS_TRIGGER: True, NOTES_TRIGGER: True, "closeModal": True}
+            )
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1352,17 +1367,20 @@ def _note_folder_add_tab(request):
         form = NoteFolderForm(request.POST, matter=None)
         if form.is_valid():
             form.save()
-            return _notes_tab_sidebar_response(request)
+            return _notes_tab_sidebar_response()
     else:
         form = NoteFolderForm(matter=None)
-        # Pre-fill the parent with the selected folder
-        selected_folder_id = request.session.get("notes_selected_folder_id")
-        if selected_folder_id and selected_folder_id != "all":
-            selected = NoteFolder.objects.filter(
-                pk=selected_folder_id, matter__isnull=True
+        # Pre-fill the parent: ?parent=<id> (a sidebar row's New subfolder),
+        # ?parent=root (the Inbox's New folder), else the selected folder
+        parent_id = request.GET.get("parent", "")
+        if parent_id != "root" and not parent_id.isdigit():
+            parent_id = request.session.get("notes_selected_folder_id")
+        if parent_id and parent_id not in ("all", "root"):
+            parent = NoteFolder.objects.filter(
+                pk=parent_id, matter__isnull=True
             ).first()
-            if selected and selected.can_have_children():
-                form.initial["parent"] = selected.pk
+            if parent and parent.can_have_children():
+                form.initial["parent"] = parent.pk
 
     context = {
         "form": form,
@@ -1408,7 +1426,7 @@ def note_folder_edit(request, folder_id):
                 folder.update_descendant_depths()
             if editor:
                 return _editor_crud_response()
-            return _notes_tab_sidebar_response(request)
+            return _notes_tab_sidebar_response()
     else:
         form = NoteFolderForm(instance=folder, exclude_folder=folder)
 
@@ -1481,8 +1499,8 @@ def note_folder_delete(request, folder_id):
 
     if request.GET.get("context") != "editor":
         # Notes tab: both panes change (sidebar + whichever notes went with
-        # the folder), so reload the page
-        return HttpResponse(status=204, headers={"HX-Refresh": "true"})
+        # the folder); each re-fetches itself
+        return _notes_tab_sidebar_response()
 
     # Editor context: if the open note went down with the folder, a plain
     # refresh would 404 — the client lands on the launch note in place.

@@ -8,6 +8,13 @@ from django.utils import timezone
 
 from apps.notes.models import Note
 
+# Notes-tab folder CRUD success: both panes re-fetch themselves, modal closes
+TAB_FOLDER_TRIGGERS = {
+    "noteFoldersChanged": True,
+    "notesChanged": True,
+    "closeModal": True,
+}
+
 pytestmark = pytest.mark.django_db
 
 
@@ -1666,9 +1673,8 @@ class TestNotesTabFolders:
         assert resp.status_code == 200
         assert b"note-folder-form" in resp.content
         resp = client.post(url, {"name": "Fresh", "parent": ""})
-        assert resp.status_code == 202
-        assert resp.headers["HX-Trigger-After-Swap"] == "closeModal"
-        assert b"Fresh" in resp.content  # re-rendered sidebar
+        assert resp.status_code == 204
+        assert json.loads(resp.headers["HX-Trigger"]) == TAB_FOLDER_TRIGGERS
         assert NoteFolder.objects.get(name="Fresh").matter_id is None
 
     def test_tab_add_prefills_selected_parent(self, client):
@@ -1679,7 +1685,22 @@ class TestNotesTabFolders:
         resp = client.get(reverse("notes:folder-add") + "?context=tab")
         assert f'<option value="{folder.id}" selected'.encode() in resp.content
 
-    def test_tab_edit_rerenders_sidebar(self, client):
+    def test_tab_add_prefills_parent_param(self, client):
+        """The sidebar row's New subfolder passes ?parent=; the Inbox's New
+        folder passes ?parent=root to beat the selected folder."""
+        from apps.notes.models import NoteFolder
+
+        selected = NoteFolder.objects.create(name="Selected")
+        other = NoteFolder.objects.create(name="Other")
+        client.get(reverse("notes:folder-select", args=[selected.id]))
+        resp = client.get(
+            reverse("notes:folder-add") + f"?context=tab&parent={other.id}"
+        )
+        assert f'<option value="{other.id}" selected'.encode() in resp.content
+        resp = client.get(reverse("notes:folder-add") + "?context=tab&parent=root")
+        assert f'<option value="{selected.id}" selected'.encode() not in resp.content
+
+    def test_tab_edit_triggers_refresh(self, client):
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Old")
@@ -1687,19 +1708,19 @@ class TestNotesTabFolders:
             reverse("notes:folder-edit", args=[folder.id]),
             {"name": "New", "parent": ""},
         )
-        assert resp.status_code == 202
-        assert b"New" in resp.content
+        assert resp.status_code == 204
+        assert json.loads(resp.headers["HX-Trigger"]) == TAB_FOLDER_TRIGGERS
         folder.refresh_from_db()
         assert folder.name == "New"
 
-    def test_tab_delete_refreshes_and_clears_selection(self, client):
+    def test_tab_delete_triggers_refresh_and_clears_selection(self, client):
         from apps.notes.models import NoteFolder
 
         folder = NoteFolder.objects.create(name="Gone")
         client.get(reverse("notes:folder-select", args=[folder.id]))
         resp = client.delete(reverse("notes:folder-delete", args=[folder.id]))
         assert resp.status_code == 204
-        assert resp.headers["HX-Refresh"] == "true"
+        assert json.loads(resp.headers["HX-Trigger"]) == TAB_FOLDER_TRIGGERS
         assert client.session["notes_selected_folder_id"] is None
 
     def test_folder_move_modal_and_post(self, client):
@@ -1713,9 +1734,47 @@ class TestNotesTabFolders:
         resp = client.post(
             reverse("notes:folder-move", args=[b.id]), {"destination": a.id}
         )
-        assert resp.status_code == 202
+        assert resp.status_code == 204
+        assert json.loads(resp.headers["HX-Trigger"]) == TAB_FOLDER_TRIGGERS
         b.refresh_from_db()
         assert (b.parent_id, b.depth) == (a.id, 1)
+
+    def test_sidebar_partial(self, client):
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="Partial Folder")
+        resp = client.get(reverse("notes:folders"))
+        assert resp.status_code == 200
+        assert b"Partial Folder" in resp.content
+        assert b"<html" not in resp.content
+
+    def test_rows_carry_drag_and_menu_data(self, client, user):
+        """notes-library.js drives drag-and-drop and right-click off the
+        rows' data attributes; the kebab offers New note / New subfolder."""
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Draggable")
+        n = Note.objects.create(author=user, title="Row", folder=folder)
+        client.get(reverse("notes:folder-select", args=[folder.id]))
+        sidebar = client.get(reverse("notes:folders")).content.decode()
+        assert (
+            f'data-reparent-url="{reverse("notes:folder-reparent", args=[folder.id])}"'
+            in sidebar
+        )
+        assert 'draggable="true"' in sidebar and 'data-depth="0"' in sidebar
+        assert (
+            f'data-post-open="{reverse("notes:add")}?open=1&folder={folder.id}"'
+            in sidebar
+        )
+        assert f"context=tab&parent={folder.id}" in sidebar
+        assert 'data-root="1"' in sidebar  # Inbox row = root drop target + menu
+        table = client.get(reverse("notes:list")).content.decode()
+        assert f'data-move-url="{reverse("notes:note-move", args=[n.id])}"' in table
+        assert f'data-folder-id="{folder.id}"' in table
+        assert f'data-bulk-move-url="{reverse("notes:bulk-move")}"' in table
+        page = client.get(reverse("notes:index")).content.decode()
+        assert "notes-library.js" in page
+        assert 'hx-trigger="noteFoldersChanged from:body"' in page
 
     def test_folder_move_rejects_matter_folder(self, client, matter):
         from apps.notes.models import NoteFolder

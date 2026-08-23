@@ -11,8 +11,7 @@
     <div class="modal-body">
       <form id="note-folder-move-form"
             hx-post="{% url 'notes:folder-move' folder.id %}"
-            hx-target="#note-folders"
-            hx-swap="innerHTML"
+            hx-swap="none"
             role="form">
         {% csrf_token %}
         <input type="hidden"
