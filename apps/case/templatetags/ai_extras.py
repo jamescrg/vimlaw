@@ -59,3 +59,15 @@ def duration_short(value):
 @register.filter
 def agent_tool_icon(name):
     return TOOL_ICONS.get(name or "", "icon-wrench")
+
+
+@register.filter
+def turn_summary(step):
+    """One line for a turn divider: 12.3k in, 610 out, 11.9k cached, 9s."""
+    step = step or {}
+    parts = [f"{ktokens(step.get('input'))} in", f"{ktokens(step.get('output'))} out"]
+    if step.get("cache_read"):
+        parts.append(f"{ktokens(step['cache_read'])} cached")
+    if step.get("seconds"):
+        parts.append(duration_short(step["seconds"]))
+    return ", ".join(parts)

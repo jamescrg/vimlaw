@@ -5,6 +5,7 @@ from apps.case.templatetags.ai_extras import (
     duration_short,
     kchars,
     ktokens,
+    turn_summary,
 )
 
 
@@ -36,3 +37,14 @@ def test_agent_tool_icon():
     assert agent_tool_icon("search_materials") == "icon-file-search"
     assert agent_tool_icon("nope") == "icon-wrench"
     assert agent_tool_icon(None) == "icon-wrench"
+
+
+def test_turn_summary():
+    assert turn_summary({"input": 12_300, "output": 610}) == "12.3k in, 610 out"
+    assert (
+        turn_summary(
+            {"input": 12_300, "output": 610, "cache_read": 11_900, "seconds": 9}
+        )
+        == "12.3k in, 610 out, 11.9k cached, 9s"
+    )
+    assert turn_summary(None) == "0 in, 0 out"

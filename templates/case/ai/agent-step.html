@@ -16,10 +16,7 @@ trail. Step shapes: apps/case/ai/agent_state.py.
     <i class="icon-cpu"></i>
     <div>
       Turn {{ step.n }}
-      <span class="detail-text">{{ step.input|ktokens }} in, {{ step.output|ktokens }} out
-        {% if step.cache_read %}, {{ step.cache_read|ktokens }} cached{% endif %}
-        {% if step.seconds %}, {{ step.seconds|duration_short }}{% endif %}
-      </span>
+      <span class="detail-text">{{ step|turn_summary }}</span>
     </div>
   </li>
 {% elif step.type == "tool" %}
