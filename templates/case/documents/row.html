@@ -63,19 +63,17 @@
           {% include "case/labels/badge.html" with object_type="document" object=document %}
         {% endfor %}
         {% comment %}
-          Duplicate badge: styled like a label, one per matching document,
-          linking to that document's viewer. Byte-identical copies and
-          same-pages copies (different PDF metadata) are told apart in
-          the tooltip.
+          Duplicate badge: styled like a label, one per matching document
+          in this matter, linking to that document's viewer. Byte-identical
+          copies and same-pages copies (different PDF metadata) are told
+          apart in the tooltip. Copies on other matters are not badged.
         {% endcomment %}
         {% for dup in document.duplicates %}
           <span class="label-badge duplicate-badge">
             <a href="{% url 'case:viewer' dup.id %}"
                target="_blank"
                class="app-badge label-yellow"
-               title="{% if dup.content_hash == document.content_hash %}Same file as{% else %}Same pages as{% endif %} &quot;{{ dup.name }}&quot; in {{ dup.matter.name }}{% if dup.date %} ({{ dup.date|date:"M j, Y" }}){% endif %}. Opens it in a new tab."><i class="icon-copy"></i>duplicate
-              {% if dup.matter_id != document.matter_id %}: {{ dup.matter.name }}{% endif %}
-            </a>
+               title="{% if dup.content_hash == document.content_hash %}Same file as{% else %}Same pages as{% endif %} &quot;{{ dup.name }}&quot;{% if dup.date %} ({{ dup.date|date:"M j, Y" }}){% endif %}. Opens it in a new tab."><i class="icon-copy"></i>duplicate</a>
           </span>
         {% endfor %}
       </div>

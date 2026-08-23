@@ -109,8 +109,14 @@ def fingerprint_file(fileobj, *, is_pdf: bool, size: int | None = None):
     return content_hash, page_fingerprint
 
 
-def find_duplicates(content_hash, page_fingerprint=None, exclude_pk=None):
-    """Documents whose bytes or page content match, newest first."""
+def find_duplicates(
+    content_hash, page_fingerprint=None, exclude_pk=None, matter_id=None
+):
+    """Documents whose bytes or page content match, newest first.
+
+    System-wide by default (the upload warning); pass ``matter_id`` to
+    confine the search to one matter (the row badge).
+    """
     from apps.case.models import Document
 
     if not content_hash and not page_fingerprint:
@@ -121,6 +127,8 @@ def find_duplicates(content_hash, page_fingerprint=None, exclude_pk=None):
     if page_fingerprint:
         query |= Q(page_fingerprint=page_fingerprint)
     queryset = Document.objects.filter(query).select_related("matter")
+    if matter_id is not None:
+        queryset = queryset.filter(matter_id=matter_id)
     if exclude_pk:
         queryset = queryset.exclude(pk=exclude_pk)
     return queryset.order_by("-created_at")
@@ -132,7 +140,9 @@ def attach_duplicates(documents):
     Used by the documents table so every row can show its duplicate badge
     without a query per row; ``Document.duplicates`` reads the attribute
     and falls back to a per-document query when it is absent (single-row
-    re-renders).
+    re-renders). The badge only flags copies within the same matter; a
+    twin filed on another matter is the upload warning's concern, not
+    the row's.
     """
     from apps.case.models import Document
 
@@ -156,6 +166,7 @@ def attach_duplicates(documents):
             m
             for m in matches
             if m.pk != doc.pk
+            and m.matter_id == doc.matter_id
             and (
                 (doc.content_hash and m.content_hash == doc.content_hash)
                 or (doc.page_fingerprint and m.page_fingerprint == doc.page_fingerprint)
