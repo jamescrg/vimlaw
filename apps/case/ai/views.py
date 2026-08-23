@@ -46,6 +46,16 @@ logger = logging.getLogger(__name__)
 RETIRED_LLMS = ("claude", "gemini-pro")
 VALID_LLMS = {key for key, _ in Conversation.LLM_CHOICES} | set(RETIRED_LLMS)
 
+# Modes a new conversation may be created in. "research" is retired and
+# survives only on old rows; anything unknown falls back to classic. The
+# mode is fixed for the conversation's life, like the model.
+VALID_KINDS = ("classic", "agent")
+
+
+def _kind_param(source, default="classic"):
+    kind = source.get("kind", default)
+    return kind if kind in VALID_KINDS else "classic"
+
 
 def get_accessible_matters():
     """Get all matters accessible to logged-in users."""
@@ -234,10 +244,15 @@ def conversation_view(request, conv_id):
 
     messages = conversation.messages.select_related("user").all()
 
+    # A run still in flight (or finished but not yet collected by a poll)
+    # re-attaches the status box on reload instead of leaving a minutes-long
+    # agent turn invisible; the poll then collects a finished run's message.
+    live = status_cache.get(f"ai_status_{conversation.id}")
     context = {
         "matter": matter,
         "conversation": conversation,
         "messages": messages,
+        "is_processing": bool(live and live.get("status") != "cancelled"),
     }
 
     return render(request, "case/ai/conversation-standalone.html", context)
@@ -255,6 +270,11 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
+    # The mode chosen in the new-conversation prompt; remembered per session
+    # so the prompt's default follows the user's last choice.
+    kind = _kind_param(request.GET, request.session.get("ai_new_chat_kind", "classic"))
+    request.session["ai_new_chat_kind"] = kind
+
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
     # the display title; otherwise show the legacy "New Conversation" placeholder.
@@ -262,6 +282,7 @@ def new_conversation_view(request, matter_id):
         matter=matter,
         title=provided_title or "New Conversation",
         llm=llm,
+        kind=kind,
     )
 
     context = {
@@ -270,6 +291,7 @@ def new_conversation_view(request, matter_id):
         "messages": [],
         "is_new": True,
         "llm": llm,
+        "kind": kind,
         "provided_title": provided_title,
     }
 
@@ -294,6 +316,7 @@ def create_conversation(request, matter_id):
         matter=matter,
         title=request.POST.get("title", "").strip() or "New Conversation",
         llm=llm,
+        kind=_kind_param(request.POST),
         user=request.user,
     )
     return JsonResponse({"id": conversation.id})
@@ -314,6 +337,7 @@ def new_conversation_prompt(request, matter_id):
             "matter": matter,
             "llm": llm,
             "llm_choices": Conversation.LLM_CHOICES,
+            "default_kind": request.session.get("ai_new_chat_kind", "classic"),
         },
     )
 
@@ -391,6 +415,7 @@ def send_message(request, matter_id):
             matter=matter,
             title=title,
             llm=llm,
+            kind=_kind_param(request.POST),
             user=request.user,
         )
         is_new = True
@@ -535,6 +560,7 @@ def ai_status(request, conv_id):
             verified_citations=verified_citations,
             research_trail=status_data.get("research_trail", []),
             activity_log=status_data.get("activity_log", []),
+            agent_run=status_data.get("agent_run", {}),
         )
 
         # Update conversation timestamp
@@ -586,6 +612,8 @@ def ai_status(request, conv_id):
             role="assistant",
             content=f"Error: Unable to get response. {status_data['message']}",
             activity_log=status_data.get("activity_log", []),
+            # An agent run that failed keeps its partial trail inspectable.
+            agent_run=status_data.get("agent_run", {}),
         )
 
         # Clear the cache
@@ -624,6 +652,9 @@ def ai_status(request, conv_id):
             # Both modes accumulate a live log: research logs its
             # searches/reads, classic logs context assembly + cite check.
             "activity_log": status_data.get("activity_log"),
+            # Agent runs add token usage and typed steps (agent_state.py).
+            "usage": status_data.get("usage"),
+            "steps": status_data.get("steps"),
         },
     )
 
@@ -777,6 +808,9 @@ def clone_conversation(request, conv_id):
             input_tokens=message.input_tokens,
             output_tokens=message.output_tokens,
             verified_citations=message.verified_citations,
+            research_trail=message.research_trail,
+            activity_log=message.activity_log,
+            agent_run=message.agent_run,
         )
 
     # Trigger refresh of conversation list
@@ -835,6 +869,9 @@ def append_conversation(request, conv_id):
             input_tokens=message.input_tokens,
             output_tokens=message.output_tokens,
             verified_citations=message.verified_citations,
+            research_trail=message.research_trail,
+            activity_log=message.activity_log,
+            agent_run=message.agent_run,
         )
 
     # Delete source conversation
@@ -887,6 +924,9 @@ def split_conversation(request, message_id):
             input_tokens=msg.input_tokens,
             output_tokens=msg.output_tokens,
             verified_citations=msg.verified_citations,
+            research_trail=msg.research_trail,
+            activity_log=msg.activity_log,
+            agent_run=msg.agent_run,
         )
         msg.delete()
 
