@@ -2379,6 +2379,125 @@
   flex-wrap: wrap;
 }
 
+/* Agentic mode. The mode picker in the new-conversation modal (radio |
+   name | description rows), the Agentic badge (header and list, tinted
+   like the Claude model badge), the live agent log (typed rows: the
+   model's own prose, one row per tool read, a divider per model turn
+   with its token usage), the elapsed/token strip under it, and the
+   persisted trail's summary stats. Continuous with the status box and
+   trail above: same ground, border hue and type size. */
+.ai-kind-options {
+  align-items: baseline;
+  display: grid;
+  gap: 0.5rem 0.75rem;
+  grid-template-columns: auto auto 1fr;
+}
+
+.ai-kind-option {
+  display: contents;
+}
+
+.ai-kind-option input[type="radio"] {
+  cursor: pointer;
+  margin: 0;
+  width: auto;
+}
+
+.ai-kind-option .ai-kind-name,
+.ai-kind-option .detail-text {
+  cursor: pointer;
+}
+
+.ai-kind-agent {
+  background: var(--violet-100);
+  border: 1px solid var(--violet-300);
+  color: var(--color-primary);
+}
+
+.ai-kind-agent i {
+  font-size: 1rem;
+  margin-right: 0.25rem;
+}
+
+.ai-agent-log {
+  max-height: 18rem;
+  padding-left: 0;
+}
+
+.ai-agent-step {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ai-agent-step > i {
+  color: var(--color-muted);
+  flex: 0 0 auto;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+.ai-agent-step > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The model's prose keeps its paragraphs (the plain log inlines them). */
+.ai-agent-step p {
+  display: block;
+  margin: 0 0 0.25rem;
+}
+
+.ai-agent-step p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-agent-text > div {
+  color: var(--color-primary);
+}
+
+.ai-agent-turn {
+  border-top: 1px solid var(--border-medium);
+  color: var(--color-muted);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.ai-agent-turn:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.ai-agent-error > div {
+  color: var(--urgent);
+}
+
+.ai-agent-stats {
+  color: var(--color-muted);
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.ai-agent-stats > span + span::before {
+  color: var(--color-muted-more);
+  content: "\00b7";
+  margin-right: 0.75rem;
+}
+
+.ai-agent-stats i {
+  color: var(--color-muted);
+  font-size: 1rem;
+  margin-right: 0.25rem;
+}
+
+.ai-agent-summary-stats {
+  color: var(--color-muted-more);
+  flex-basis: auto;
+  margin-left: auto;
+}
+
 /* Conversation-list title cell: title left, kind badge pushed right so it
    never crowds the neighboring columns. */
 .ai-title-cell {
@@ -2463,4 +2582,13 @@
 .draft-link-btn:hover {
   background: var(--ai-raised);
   color: var(--color-primary);
+}
+
+/* Dark mode — the Agentic badge carries .app-badge, so the blanket outline
+   rule in badges.css strips its hue; restore it as a coloured outline like
+   the model badges. */
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .app-badge.ai-kind-agent {
+  background: transparent;
+  border-color: var(--label-purple-line);
+  color: var(--label-purple-line);
 }
