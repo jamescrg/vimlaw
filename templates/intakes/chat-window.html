@@ -6,6 +6,7 @@
     <meta charset="UTF-8" content="" />
     <title>{{ intake.name|truncatechars:40 }} - Intake Chat</title>
     <link rel="icon"
+          data-favicon="ai"
           type="image/x-icon"
           href="{% static_v 'images/ai-favicon.svg' %}" />
     <meta name="viewport" content="width = device-width, initial-scale = 1" />
@@ -253,5 +254,6 @@
       }
     });
     </script>
+    <script src="{% static_v 'js/theme.js' %}"></script>
   </body>
 </html>
