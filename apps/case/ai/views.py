@@ -449,6 +449,30 @@ def send_message(request, matter_id):
     return response
 
 
+def _terminal(response):
+    """Mark a status-poll response as the poller's last.
+
+    status.html polls itself with hx-swap="morph" (idiomorph), and the
+    protocol ends the every-1s interval by answering with a DIFFERENT
+    root element, which morph replaces rather than patches. That only
+    holds where idiomorph is loaded; without it htmx falls back to
+    innerHTML, the reply lands INSIDE the indicator, and the interval
+    runs on (2026-08-23: the intake chat window). HX-Reswap forces an
+    outerHTML replacement of the poller whatever the page's swap
+    support, so a terminal answer always takes the poller with it.
+    """
+    response["HX-Reswap"] = "outerHTML"
+    return response
+
+
+def _poll_ended():
+    """Empty terminal response: an empty div under a DIFFERENT id than the
+    poller, so a morph swap replaces the element (a same-id root would be
+    patched in place, keeping its interval alive), plus HX-Reswap for
+    pages without morph."""
+    return _terminal(HttpResponse('<div id="ai-status-ended"></div>'))
+
+
 @login_required
 def ai_status(request, conv_id):
     """Return current AI processing status for polling."""
@@ -465,6 +489,16 @@ def ai_status(request, conv_id):
         # indicator is still polling therefore means the run died with
         # its process (deploy, reload, crash) and the entry expired. Say
         # so plainly instead of polling "Checking..." forever.
+        #
+        # But only when a reply is actually outstanding, i.e. the latest
+        # message is the user's. A poll that lands after the reply (or
+        # an earlier interruption note) was already written must not add
+        # another: a poller that outlived its swap (2026-08-23, the intake
+        # window lacked idiomorph, so "morph" fell back to innerHTML and
+        # the indicator never went away) wrote one of these per second.
+        latest = conversation.messages.order_by("-created_at").first()
+        if latest is None or latest.role != "user":
+            return _poll_ended()
         interrupted = Message.objects.create(
             conversation=conversation,
             role="assistant",
@@ -473,10 +507,12 @@ def ai_status(request, conv_id):
                 "server restarted mid-run). Please re-send your message."
             ),
         )
-        return render(
-            request,
-            "case/ai/message-single.html",
-            {"message": interrupted},
+        return _terminal(
+            render(
+                request,
+                "case/ai/message-single.html",
+                {"message": interrupted},
+            )
         )
 
     if status_data["status"] == "complete":
@@ -533,12 +569,14 @@ def ai_status(request, conv_id):
         status_cache.delete(cache_key)
 
         # Return just the new assistant message (replaces status indicator)
-        return render(
-            request,
-            "case/ai/message-single.html",
-            {
-                "message": assistant_message,
-            },
+        return _terminal(
+            render(
+                request,
+                "case/ai/message-single.html",
+                {
+                    "message": assistant_message,
+                },
+            )
         )
 
     if status_data["status"] == "error":
@@ -554,22 +592,20 @@ def ai_status(request, conv_id):
         status_cache.delete(cache_key)
 
         # Return just the error message (replaces status indicator)
-        return render(
-            request,
-            "case/ai/message-single.html",
-            {
-                "message": error_message,
-            },
+        return _terminal(
+            render(
+                request,
+                "case/ai/message-single.html",
+                {
+                    "message": error_message,
+                },
+            )
         )
 
     if status_data["status"] == "cancelled":
-        # Return an empty div under a DIFFERENT id: the poll swaps with
-        # morph, and a same-id root would be patched in place, keeping the
-        # element (and its every-1s interval) alive forever. A mismatched
-        # root forces a replacement, which ends the polling with the node.
         # Keep cache entry (don't delete) so background thread's
         # is_cancelled() check continues to see "cancelled" status.
-        return HttpResponse('<div id="ai-status-ended"></div>')
+        return _poll_ended()
 
     # Calculate elapsed time if available
     elapsed_seconds = None

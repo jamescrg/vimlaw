@@ -437,10 +437,67 @@ class TestActivityLog:
         conversation = Conversation.objects.create(
             matter=matter, title="C", user=user, llm="gemini-pro-latest"
         )
+        Message.objects.create(
+            conversation=conversation, role="user", content="Hello?", user=user
+        )
         response = client.get(reverse("case:ai-status", args=[conversation.id]))
         html = response.content.decode()
         assert "interrupted" in html
         message = conversation.messages.get(role="assistant")
         assert "re-send" in message.content
-        # Terminal: the response is a message, not a polling indicator.
+        # Terminal: the response is a message, not a polling indicator, and
+        # it replaces the poller outright even where morph is unavailable.
         assert "every 1s" not in html
+        assert response["HX-Reswap"] == "outerHTML"
+
+        # A poller that somehow survives must not write a second note.
+        again = client.get(reverse("case:ai-status", args=[conversation.id]))
+        assert conversation.messages.filter(role="assistant").count() == 1
+        assert 'id="ai-status-ended"' in again.content.decode()
+        assert again["HX-Reswap"] == "outerHTML"
+
+    def test_missing_entry_after_reply_is_not_an_interruption(
+        self, client, matter, user
+    ):
+        """Once the reply is on record a late poll (the entry is cleared
+        on completion) just ends the poller; it must not write an
+        'interrupted' message on top of a delivered answer (the intake
+        window did this once a second, 2026-08-23)."""
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        Message.objects.create(
+            conversation=conversation, role="user", content="Hello?", user=user
+        )
+        Message.objects.create(
+            conversation=conversation, role="assistant", content="Hi there."
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        assert conversation.messages.count() == 2
+        assert 'id="ai-status-ended"' in response.content.decode()
+        assert response["HX-Reswap"] == "outerHTML"
+
+    def test_complete_poll_is_terminal_for_any_swap(self, client, matter, user):
+        """The completion response tells htmx to replace the poller."""
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="C", user=user, llm="gemini-pro-latest"
+        )
+        status_cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "complete",
+                "message": "Complete",
+                "response": "Done.",
+                "citations": [],
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        assert response["HX-Reswap"] == "outerHTML"
+        assert conversation.messages.get(role="assistant").content == "Done."
