@@ -146,43 +146,22 @@ body:has(.note-page.standalone) {
   padding: 0.75rem 0;
 }
 
-/* Staggered auto-rail on smaller screens: the Outline yields first, the
-   Files panel holds on longer. The JS restore-expanded gates
-   (railBreakpoint in notes-editor.js) mirror these breakpoints. */
-@media (width <= 1439px) {
-  .note-panel-right:not(.expanded) {
+/* Auto-rail on small screens only: both panels start railed below the
+   breakpoint (a rail click still expands them, .expanded wins); above it
+   they open by default (setupPanel in notes-editor.js relies on this). */
+@media (width <= 1023px) {
+  .note-panel:not(.expanded) {
     width: 3rem;
   }
 
-  .note-panel-right:not(.expanded) .panel-header,
-  .note-panel-right:not(.expanded) .panel-actions,
-  .note-panel-right:not(.expanded) .panel-pane,
-  .note-panel-right:not(.expanded) .panel-resizer {
+  .note-panel:not(.expanded) .panel-header,
+  .note-panel:not(.expanded) .panel-actions,
+  .note-panel:not(.expanded) .panel-pane,
+  .note-panel:not(.expanded) .panel-resizer {
     display: none;
   }
 
-  .note-panel-right:not(.expanded) .panel-rail {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-  }
-}
-
-@media (width <= 1199px) {
-  .note-panel-left:not(.expanded) {
-    width: 3rem;
-  }
-
-  .note-panel-left:not(.expanded) .panel-header,
-  .note-panel-left:not(.expanded) .panel-actions,
-  .note-panel-left:not(.expanded) .panel-pane,
-  .note-panel-left:not(.expanded) .panel-resizer {
-    display: none;
-  }
-
-  .note-panel-left:not(.expanded) .panel-rail {
+  .note-panel:not(.expanded) .panel-rail {
     align-items: center;
     display: flex;
     flex-direction: column;
