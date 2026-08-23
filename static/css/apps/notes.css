@@ -944,12 +944,17 @@ body:has(.note-page.standalone) {
   border-bottom: 1px solid rgb(0 0 0 / 8%);
   border-radius: 0;
   color: var(--color-primary);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   padding: 1rem 0.5rem;
   width: 100%;
 }
 
+/* The picker is a floating palette: the global input:focus ring
+   (forms.css) would box the search field inside it, so keep only the
+   bottom divider. */
 .note-page .sources-picker > input[type="search"]:focus {
+  border-color: rgb(0 0 0 / 8%);
+  box-shadow: none;
   outline: none;
 }
 
