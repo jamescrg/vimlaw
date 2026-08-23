@@ -118,7 +118,7 @@ without crowding the dialogue.
         </li>
       {% elif event.type == "library_read" %}
         <li class="ai-research-step">
-          <i class="icon-notebook-pen"></i>
+          <i class="icon-book-open"></i>
           <div>
             Read library note
             <a href="{% url 'notes:note-view' event.note_id %}" target="_blank">{{ event.title|default:event.note_id }}</a>
