@@ -103,11 +103,7 @@ def count_claude_tokens(
     """
     try:
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        # GA on current SDKs; the pinned 0.40.0 only has the beta method.
-        count_tokens = getattr(client.messages, "count_tokens", None) or (
-            client.beta.messages.count_tokens
-        )
-        result = count_tokens(
+        result = client.messages.count_tokens(
             model=model,
             system=_build_system(system_context),
             messages=_format_messages(messages),
