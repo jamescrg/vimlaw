@@ -10,10 +10,18 @@ instead of being re-billed at full input price.
 """
 
 import logging
+import time
 from typing import Callable
 
 import anthropic
 from django.conf import settings
+
+from .agent_types import (
+    FORCED_ANSWER_NOTE,
+    LoopResult,
+    TurnUsage,
+    batch_is_all_budget_errors,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +36,7 @@ logger = logging.getLogger(__name__)
 _ANTHROPIC_CACHE_MIN_CHARS = 5000
 
 
-def _build_system(system_context: str):
+def _build_system(system_context):
     """Return the `system=` argument for messages.stream.
 
     For large prompts, returns a content block list with an ephemeral
@@ -36,7 +44,22 @@ def _build_system(system_context: str):
     subsequent identical prefixes pay ~10% of the input rate. For smaller
     prompts, returns the plain string (no caching — the cache-write premium
     isn't justified below the minimum cacheable length).
+
+    A list of segments (the agent turn's stable orientation followed by
+    its per-turn tail) becomes one text block per segment, each marked
+    when it is large enough, so the stable prefix keeps hitting the cache
+    while the tail changes.
     """
+    if isinstance(system_context, (list, tuple)):
+        blocks = []
+        for segment in system_context:
+            if not segment:
+                continue
+            block = {"type": "text", "text": segment}
+            if len(segment) >= _ANTHROPIC_CACHE_MIN_CHARS:
+                block["cache_control"] = {"type": "ephemeral"}
+            blocks.append(block)
+        return blocks
     if system_context and len(system_context) >= _ANTHROPIC_CACHE_MIN_CHARS:
         return [
             {
@@ -190,3 +213,207 @@ def send_to_claude(
 
     response_text = "".join(response_parts)
     return response_text, input_tokens, output_tokens
+
+
+# ── Agent tool loop ──────────────────────────────────────────────────────────
+
+
+def _thinking_for(model: str) -> dict:
+    """Adaptive thinking; a readable summary where the model offers one.
+
+    Opus 4.8 defaults to omitting the summary text, so ask for it (it is
+    what the live status line shows while the model reasons). Opus 4.6
+    and Sonnet 4.6 already summarize and do not take the display key.
+    """
+    if "-4-6" in model:
+        return {"type": "adaptive"}
+    return {"type": "adaptive", "display": "summarized"}
+
+
+def send_to_claude_with_tools(
+    system_context,
+    messages: list[dict],
+    tools: list[dict],
+    execute_batch,
+    model: str = "claude-opus-4-8",
+    *,
+    max_turns: int = 30,
+    is_cancelled: Callable[[], bool] | None = None,
+    on_text: Callable[[str], None] | None = None,
+    on_thinking: Callable[[str], None] | None = None,
+    on_turn: Callable[[TurnUsage], None] | None = None,
+    on_note: Callable[[str], None] | None = None,
+    effort: str = "high",
+    max_tokens: int = 16_000,
+) -> LoopResult:
+    """Agentic variant of send_to_claude: a manual tool-use loop.
+
+    Each model turn streams; its tool_use blocks are executed together by
+    ``execute_batch(calls) -> outcomes`` (agent_tools) and answered in one
+    user message of tool_result blocks in block order. The assistant turn
+    is echoed back verbatim, thinking blocks included, which is what
+    makes the next turn valid. Loops until the model stops calling tools.
+
+    Callbacks: ``on_text(text_so_far)`` for the turn's prose as it
+    streams, ``on_thinking(summary_so_far)`` for the thinking summary,
+    ``on_turn(TurnUsage)`` when a turn's usage is known, ``on_note(text)``
+    when the loop intervenes (forced answer, retried turn). Cancellation
+    raises InterruptedError, same as send_to_claude.
+
+    The system prompt and tools stay byte-stable across turns and a
+    rolling breakpoint follows the newest message, so each turn reads the
+    prior turns from the prompt cache.
+    """
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    convo = _format_messages(messages)
+    # Block form on the newest message so the rolling marker can land on
+    # it; plain-string history would leave the first tool turn unmarked
+    # and the second turn re-billed in full.
+    if convo and isinstance(convo[-1]["content"], str):
+        convo[-1] = {
+            "role": convo[-1]["role"],
+            "content": [{"type": "text", "text": convo[-1]["content"]}],
+        }
+    system = _build_system(system_context)
+
+    result = LoopResult()
+    budget_strikes = 0
+    force_answer = False
+    retried_overflow = False
+
+    for turn in range(1, max_turns + 2):
+        _roll_message_cache_marker(convo)
+        kwargs = dict(
+            model=model,
+            max_tokens=max_tokens,
+            system=system,
+            tools=tools,
+            messages=convo,
+            thinking=_thinking_for(model),
+            output_config={"effort": effort},
+        )
+        if force_answer:
+            kwargs["tool_choice"] = {"type": "none"}
+
+        text_parts: list[str] = []
+        thinking_parts: list[str] = []
+        started = time.time()
+        with client.messages.stream(**kwargs) as stream:
+            for event in stream:
+                if is_cancelled and is_cancelled():
+                    raise InterruptedError("Request cancelled")
+                if getattr(event, "type", "") != "content_block_delta":
+                    continue
+                delta = event.delta
+                delta_type = getattr(delta, "type", "")
+                if delta_type == "text_delta":
+                    text_parts.append(delta.text)
+                    if on_text:
+                        on_text("".join(text_parts))
+                elif delta_type == "thinking_delta":
+                    thinking_parts.append(delta.thinking)
+                    if on_thinking and delta.thinking.strip():
+                        on_thinking("".join(thinking_parts))
+            final = stream.get_final_message()
+
+        usage = final.usage
+        tool_blocks = [b for b in final.content if getattr(b, "type", "") == "tool_use"]
+        turn_usage = TurnUsage(
+            turn=turn,
+            input=usage.input_tokens or 0,
+            output=usage.output_tokens or 0,
+            cache_read=getattr(usage, "cache_read_input_tokens", 0) or 0,
+            cache_write=getattr(usage, "cache_creation_input_tokens", 0) or 0,
+            tool_calls=len(tool_blocks),
+            seconds=round(time.time() - started, 2),
+            stop_reason=final.stop_reason or "",
+        )
+        result.add_turn(turn_usage)
+        if on_turn:
+            on_turn(turn_usage)
+        if turn_usage.cache_read or turn_usage.cache_write:
+            logger.info(
+                "Claude agent cache created=%d read=%d turn_input=%d model=%s",
+                turn_usage.cache_write,
+                turn_usage.cache_read,
+                turn_usage.input,
+                model,
+            )
+
+        result.text = "".join(text_parts)
+        result.stop_reason = final.stop_reason or ""
+
+        if final.stop_reason == "refusal":
+            details = getattr(final, "stop_details", None)
+            if details is not None:
+                result.stop_details = {
+                    "category": getattr(details, "category", None),
+                    "explanation": getattr(details, "explanation", None),
+                }
+            break
+
+        if final.stop_reason == "max_tokens" and tool_blocks and not retried_overflow:
+            # The turn ran out of room mid tool calls; they are unusable.
+            # Ask for a shorter turn once instead of echoing a broken one.
+            retried_overflow = True
+            if on_note:
+                on_note("The turn hit the output limit; asking for a shorter one")
+            convo.append(
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Your last turn hit the output limit and its "
+                                "tool calls were discarded. Make fewer calls "
+                                "per turn and keep prose short."
+                            ),
+                        }
+                    ],
+                }
+            )
+            continue
+
+        if final.stop_reason != "tool_use" or not tool_blocks:
+            break
+
+        # Echo the assistant turn back verbatim (text, thinking, tool_use).
+        convo.append(
+            {
+                "role": "assistant",
+                "content": [
+                    block.model_dump(exclude_unset=True) for block in final.content
+                ],
+            }
+        )
+
+        if is_cancelled and is_cancelled():
+            raise InterruptedError("Request cancelled")
+        if hasattr(execute_batch, "set_turn"):
+            execute_batch.set_turn(turn)
+        calls = [{"id": b.id, "name": b.name, "input": b.input} for b in tool_blocks]
+        outcomes = execute_batch(calls)
+        results = [
+            {
+                "type": "tool_result",
+                "tool_use_id": outcome["id"],
+                "content": outcome["content"],
+                "is_error": bool(outcome.get("is_error")),
+            }
+            for outcome in outcomes
+        ]
+
+        budget_strikes = (
+            budget_strikes + 1 if batch_is_all_budget_errors(outcomes) else 0
+        )
+        if budget_strikes >= 2 or turn >= max_turns:
+            force_answer = True
+            result.forced_answer = True
+            results.append({"type": "text", "text": FORCED_ANSWER_NOTE})
+            if on_note:
+                on_note("Tool budget exhausted; asking for the answer")
+        convo.append({"role": "user", "content": results})
+
+    return result

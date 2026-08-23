@@ -9,6 +9,7 @@ the reduced-input-token rate.
 """
 
 import hashlib
+import json
 import logging
 import time
 from typing import Callable
@@ -18,6 +19,14 @@ from django.core.cache import cache as django_cache
 from google.genai import types
 
 from google import genai
+
+from .agent_types import (
+    FORCED_ANSWER_NOTE,
+    AgentProviderError,
+    LoopResult,
+    TurnUsage,
+    batch_is_all_budget_errors,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -265,3 +274,204 @@ def send_to_gemini(
         on_thought=None,
         conversation_id=conversation_id,
     )
+
+
+# ── Agent tool loop ──────────────────────────────────────────────────────────
+
+
+def _finish_name(candidate) -> str:
+    reason = getattr(candidate, "finish_reason", None)
+    if reason is None:
+        return ""
+    return getattr(reason, "name", None) or str(reason)
+
+
+def send_to_gemini_with_tools(
+    system_context,
+    messages: list[dict],
+    tools: list[dict],
+    execute_batch,
+    model: str = "gemini-pro-latest",
+    *,
+    max_turns: int = 30,
+    is_cancelled: Callable[[], bool] | None = None,
+    on_text: Callable[[str], None] | None = None,
+    on_thinking: Callable[[str], None] | None = None,
+    on_turn: Callable[[TurnUsage], None] | None = None,
+    on_note: Callable[[str], None] | None = None,
+    max_tokens: int = 16_000,
+) -> LoopResult:
+    """Agentic variant of send_to_gemini_streaming: manual function calling.
+
+    Mirrors anthropic_client.send_to_claude_with_tools: same tool specs,
+    executor contract, callbacks, budget and cancellation semantics, so the
+    agent turn treats providers interchangeably. Thought summaries surface
+    via ``on_thinking``. The cachedContents optimization is skipped here:
+    contents mutate every turn (Gemini's implicit cache still reports
+    through cached_content_token_count).
+    """
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+    if isinstance(system_context, (list, tuple)):
+        system_context = "\n\n".join(s for s in system_context if s)
+
+    declarations = [
+        types.FunctionDeclaration(
+            name=tool["name"],
+            description=tool["description"],
+            parameters=tool["input_schema"],
+        )
+        for tool in tools
+    ]
+
+    def make_config(force_answer: bool):
+        tool_config = None
+        if force_answer:
+            tool_config = types.ToolConfig(
+                function_calling_config=types.FunctionCallingConfig(
+                    mode=types.FunctionCallingConfigMode.NONE
+                )
+            )
+        return types.GenerateContentConfig(
+            system_instruction=system_context,
+            tools=[types.Tool(function_declarations=declarations)],
+            tool_config=tool_config,
+            thinking_config=types.ThinkingConfig(include_thoughts=True),
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                disable=True
+            ),
+            http_options=types.HttpOptions(timeout=300_000),
+            max_output_tokens=max_tokens,
+        )
+
+    contents = []
+    for msg in messages:
+        role = "user" if msg["role"] == "user" else "model"
+        contents.append(
+            types.Content(role=role, parts=[types.Part(text=msg["content"])])
+        )
+
+    result = LoopResult()
+    budget_strikes = 0
+    force_answer = False
+    retried_malformed = False
+
+    for turn in range(1, max_turns + 2):
+        text_parts: list[str] = []
+        thought_parts: list[str] = []
+        function_calls = []
+        # Original Part objects, in arrival order, echoed back VERBATIM as
+        # the model turn: Gemini requires the thought_signature that rides
+        # on function_call (and some text) parts, and rebuilding parts by
+        # hand drops it -> 400 INVALID_ARGUMENT on the next turn.
+        echo_parts = []
+        turn_input = turn_output = turn_thoughts = turn_cached = 0
+        finish = ""
+        started = time.time()
+
+        for chunk in client.models.generate_content_stream(
+            model=model, contents=contents, config=make_config(force_answer)
+        ):
+            if is_cancelled and is_cancelled():
+                raise InterruptedError("Request cancelled")
+
+            if chunk.usage_metadata:
+                meta = chunk.usage_metadata
+                turn_input = meta.prompt_token_count or 0
+                turn_output = meta.candidates_token_count or 0
+                turn_thoughts = getattr(meta, "thoughts_token_count", 0) or 0
+                turn_cached = getattr(meta, "cached_content_token_count", 0) or 0
+
+            if not chunk.candidates:
+                continue
+            candidate = chunk.candidates[0]
+            finish = _finish_name(candidate) or finish
+            content = getattr(candidate, "content", None)
+            for part in (content.parts if content else None) or []:
+                if part.function_call:
+                    function_calls.append(part.function_call)
+                    echo_parts.append(part)
+                elif part.text:
+                    if part.thought:
+                        thought_parts.append(part.text)
+                        if on_thinking:
+                            on_thinking("".join(thought_parts))
+                    else:
+                        text_parts.append(part.text)
+                        echo_parts.append(part)
+                        if on_text:
+                            on_text("".join(text_parts))
+
+        turn_usage = TurnUsage(
+            turn=turn,
+            input=turn_input,
+            output=turn_output + turn_thoughts,
+            cache_read=turn_cached,
+            cache_write=0,
+            tool_calls=len(function_calls),
+            seconds=round(time.time() - started, 2),
+            stop_reason=finish,
+        )
+        result.add_turn(turn_usage)
+        if on_turn:
+            on_turn(turn_usage)
+
+        result.text = "".join(text_parts)
+        result.stop_reason = finish
+
+        if not function_calls:
+            if result.text or finish in ("", "STOP", "MAX_TOKENS"):
+                break
+            if finish == "MALFORMED_FUNCTION_CALL" and not retried_malformed:
+                retried_malformed = True
+                if on_note:
+                    on_note("The model sent a malformed call; asking again")
+                contents.append(
+                    types.Content(
+                        role="user",
+                        parts=[
+                            types.Part(
+                                text=(
+                                    "Your last function call was malformed. "
+                                    "Call again with valid JSON arguments."
+                                )
+                            )
+                        ],
+                    )
+                )
+                continue
+            raise AgentProviderError(f"Gemini stopped the turn: {finish}")
+
+        # Echo the model turn as received, then answer every call in one
+        # user turn of function responses.
+        contents.append(types.Content(role="model", parts=echo_parts))
+
+        if is_cancelled and is_cancelled():
+            raise InterruptedError("Request cancelled")
+        if hasattr(execute_batch, "set_turn"):
+            execute_batch.set_turn(turn)
+        calls = [
+            {"id": f"gemini_{turn}_{i}", "name": fc.name, "input": dict(fc.args or {})}
+            for i, fc in enumerate(function_calls)
+        ]
+        outcomes = execute_batch(calls)
+        response_parts = [
+            types.Part.from_function_response(
+                name=outcome["name"],
+                response={"result": json.loads(outcome["content"])},
+            )
+            for outcome in outcomes
+        ]
+
+        budget_strikes = (
+            budget_strikes + 1 if batch_is_all_budget_errors(outcomes) else 0
+        )
+        if budget_strikes >= 2 or turn >= max_turns:
+            force_answer = True
+            result.forced_answer = True
+            response_parts.append(types.Part(text=FORCED_ANSWER_NOTE))
+            if on_note:
+                on_note("Tool budget exhausted; asking for the answer")
+        contents.append(types.Content(role="user", parts=response_parts))
+
+    return result
