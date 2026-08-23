@@ -20,14 +20,16 @@ class Conversation(AuditMixin, models.Model):
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
     ]
 
-    # Chat modes: "classic" (shown as Analysis) is the original
-    # single-completion chat; "research" runs an agentic CourtListener tool
-    # loop (searches, reads opinions, cites only what it retrieved). The
-    # mode is picked per turn via the chat-header dropdown; `kind` holds
-    # the mode of the latest turn (and the default for the next one).
+    # Chat modes, fixed when the conversation is created. "classic" is the
+    # original single-completion chat over a preloaded matter context;
+    # "agent" runs a tool loop that reads matter materials on demand and
+    # narrates each step (apps/case/ai/agent.py). "research" was the
+    # retired CourtListener research loop; it is not creatable any more
+    # but its conversations still render.
     KIND_CHOICES = [
-        ("classic", "Analysis"),
+        ("classic", "Classic"),
         ("research", "Research"),
+        ("agent", "Agentic"),
     ]
     EFFORT_CHOICES = [
         ("low", "Low"),
@@ -163,6 +165,12 @@ class Message(AuditMixin, models.Model):
     # stay inspectable. Rendered as a collapsible section like the trail;
     # research answers show their richer trail instead.
     activity_log = models.JSONField(default=list, blank=True)
+
+    # Agent-kind assistant messages: the run record (typed steps, per-turn
+    # token usage, elapsed time, stop reason) rendered as a collapsible
+    # trail above the answer, and mined by later turns for the materials
+    # already read. Shape documented in docs/agent-chat.md.
+    agent_run = models.JSONField(default=dict, blank=True)
 
     history = HistoricalRecords()
 
