@@ -92,6 +92,12 @@ class ManifestItem:
     description: str
     word_count: int
     importance: int
+    # Agent index extras (build_manifest(include_always=True)): the read
+    # handle the tools take, whether the attorney pinned the item
+    # (ai_context="always"), and its size in characters.
+    handle: str = ""
+    pinned: bool = False
+    size_chars: int = 0
 
 
 # Characters per token for the size estimate. The folk figure is 4, and
@@ -119,9 +125,15 @@ def library_folder_path(folder):
     return "/".join(f.name for f in folder.get_ancestors() + [folder])
 
 
-def build_manifest(matter, current_conversation=None, include_library=True):
+def build_manifest(
+    matter, current_conversation=None, include_library=True, include_always=False
+):
     """
     Build a lightweight manifest of all ai_context="auto" items.
+
+    With ``include_always`` the "always" documents, cases and emails are
+    listed too (flagged ``pinned``): the agent turn's material index covers
+    everything the model may read, since nothing is preloaded there.
 
     Returns:
         tuple: (manifest_items, content_map)
@@ -130,9 +142,10 @@ def build_manifest(matter, current_conversation=None, include_library=True):
     """
     manifest_items = []
     content_map = {}
+    listed = ("auto", "always") if include_always else ("auto",)
 
     # Documents with ai_context="auto"
-    for doc in Document.objects.filter(matter=matter, ai_context="auto"):
+    for doc in Document.objects.filter(matter=matter, ai_context__in=listed):
         if not doc.ocr_text or doc.ocr_status not in ("completed", "extracted"):
             continue
 
@@ -158,6 +171,9 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                 description=desc,
                 word_count=word_count,
                 importance=doc.importance,
+                handle=f"doc:{doc.id}",
+                pinned=doc.ai_context == "always",
+                size_chars=len(doc.ocr_text),
             )
         )
 
@@ -194,6 +210,8 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                 description=desc,
                 word_count=len(content_text.split()),
                 importance=note.importance,
+                handle=f"note:{note.id}",
+                size_chars=len(content_text),
             )
         )
 
@@ -207,7 +225,7 @@ def build_manifest(matter, current_conversation=None, include_library=True):
         content_map[("note", note.id)] = "\n".join(content_parts)
 
     # Case law with ai_context="auto"
-    for caselaw in CaseLaw.objects.filter(matter=matter, ai_context="auto"):
+    for caselaw in CaseLaw.objects.filter(matter=matter, ai_context__in=listed):
         if caselaw.notes:
             desc = caselaw.notes[:200]
         elif caselaw.summary:
@@ -227,6 +245,9 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                 description=desc,
                 word_count=0,
                 importance=caselaw.importance,
+                handle=f"case:{caselaw.id}",
+                pinned=caselaw.ai_context == "always",
+                size_chars=len(caselaw.summary or "") + len(caselaw.notes or ""),
             )
         )
 
@@ -272,6 +293,8 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                 description=desc,
                 word_count=total_words,
                 importance=3,
+                handle=f"conv:{conv.id}",
+                size_chars=sum(len(m.content) for m in messages),
             )
         )
 
@@ -298,7 +321,7 @@ def build_manifest(matter, current_conversation=None, include_library=True):
     # the thread, a stable integer key.
     # dedup: a message synced from two mailboxes appears once.
     auto_emails = (
-        Email.objects.filter(matter=matter, ai_context="auto")
+        Email.objects.filter(matter=matter, ai_context__in=listed)
         .dedup()
         .prefetch_related("attachment_files")
     )
@@ -327,6 +350,9 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                 description=first.snippet or first.body_text[:200].strip(),
                 word_count=total_words,
                 importance=max(e.importance for e in thread_emails),
+                handle=f"thread:{first.thread_id or first.gmail_id}",
+                pinned=any(e.ai_context == "always" for e in thread_emails),
+                size_chars=sum(len(e.body_text or "") for e in thread_emails),
             )
         )
         content_map[("email", item_id)] = format_email_thread(thread_emails)
@@ -347,6 +373,7 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                 ),
                 word_count=200,  # rough estimate; resolved on demand
                 importance=1,
+                handle=f"inv:{invoice.id}",
             )
         )
         # Resolved lazily via _resolve_content to avoid extra aggregation
@@ -383,6 +410,8 @@ def build_manifest(matter, current_conversation=None, include_library=True):
                     description=desc,
                     word_count=len(content_text.split()),
                     importance=note.importance,
+                    handle=f"lib:{note.id}",
+                    size_chars=len(content_text),
                 )
             )
             content_map[("library", note.id)] = (
