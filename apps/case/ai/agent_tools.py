@@ -313,6 +313,31 @@ def _snippet(text: str, query: str, width: int = SNIPPET_CHARS) -> str:
     return piece
 
 
+PENDING_LABELS = {
+    "search_materials": 'Searching "{query}"...',
+    "read_document": "Reading document {doc_id}...",
+    "read_email_thread": "Reading email thread {thread_id}...",
+    "read_note": "Reading note {note_id}...",
+    "read_caselaw": "Reading saved case {caselaw_id}...",
+    "read_conversation": "Reading conversation {conversation_id}...",
+    "read_invoice": "Reading invoice {invoice_id}...",
+    "read_matter_section": "Reading the {section} section...",
+}
+
+
+def _pending_label(name: str, tool_input: dict) -> str:
+    """The status line while a call runs, before its result names it."""
+    template = PENDING_LABELS.get(name)
+    if not template:
+        return f"Running {name}..."
+    try:
+        return template.format(
+            **{k: str(v)[:60] for k, v in (tool_input or {}).items()}
+        )
+    except (KeyError, IndexError):
+        return f"Running {name}..."
+
+
 def _canonical(name: str, tool_input: dict) -> str:
     return name + ":" + json.dumps(tool_input or {}, sort_keys=True, default=str)
 
@@ -838,7 +863,7 @@ def make_agent_executor(
             "turn": state["turn"],
             "ts": time.time(),
             "seconds": 0.0,
-            "label": f"Running {name}",
+            "label": _pending_label(name, tool_input),
             "pending": True,
             "error": None,
             "repeat": False,

@@ -159,7 +159,8 @@ class TestClaudeLoop:
 
         assert result.text == "The answer."
         assert result.turns == 2 and result.stop_reason == "end_turn"
-        assert result.input_tokens == 400 and result.output_tokens == 70
+        # Prompt totals: 100 + 90 written, then 300 + 90 read from cache.
+        assert result.input_tokens == 580 and result.output_tokens == 70
         assert result.cache_write == 90 and result.cache_read == 90
         assert [u.turn for u in turns if not isinstance(u, tuple)] == [1, 2]
         assert ("set", 1) in turns

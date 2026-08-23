@@ -319,12 +319,17 @@ def send_to_claude_with_tools(
 
         usage = final.usage
         tool_blocks = [b for b in final.content if getattr(b, "type", "") == "tool_use"]
+        cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+        cache_write = getattr(usage, "cache_creation_input_tokens", 0) or 0
         turn_usage = TurnUsage(
             turn=turn,
-            input=usage.input_tokens or 0,
+            # Anthropic reports the uncached part alone; "input" here is
+            # the whole prompt, like Gemini's prompt_token_count, with the
+            # cached portion broken out beside it.
+            input=(usage.input_tokens or 0) + cache_read + cache_write,
             output=usage.output_tokens or 0,
-            cache_read=getattr(usage, "cache_read_input_tokens", 0) or 0,
-            cache_write=getattr(usage, "cache_creation_input_tokens", 0) or 0,
+            cache_read=cache_read,
+            cache_write=cache_write,
             tool_calls=len(tool_blocks),
             seconds=round(time.time() - started, 2),
             stop_reason=final.stop_reason or "",
@@ -334,10 +339,10 @@ def send_to_claude_with_tools(
             on_turn(turn_usage)
         if turn_usage.cache_read or turn_usage.cache_write:
             logger.info(
-                "Claude agent cache created=%d read=%d turn_input=%d model=%s",
+                "Claude agent cache created=%d read=%d uncached=%d model=%s",
                 turn_usage.cache_write,
                 turn_usage.cache_read,
-                turn_usage.input,
+                usage.input_tokens or 0,
                 model,
             )
 

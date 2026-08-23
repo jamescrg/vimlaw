@@ -317,6 +317,20 @@ def process_ai_request(
     from .context import assemble_matter_context_with_selection, build_chat_history
     from .models import Conversation
 
+    # Agentic conversations take the tool-loop turn instead; everything
+    # around it (thread, status key, poller, cancellation) is shared.
+    kind = (
+        Conversation.objects.filter(id=conversation_id)
+        .values_list("kind", flat=True)
+        .first()
+    )
+    if kind == "agent":
+        from . import agent
+
+        return agent.run_agent_request(
+            conversation_id, matter_id, user_message, user_id, llm
+        )
+
     cache_key = f"ai_status_{conversation_id}"
     started_at = time.time()
 
