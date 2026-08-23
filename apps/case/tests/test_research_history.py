@@ -97,10 +97,12 @@ def _prompt_html(client, matter, llm="claude-opus"):
     return response.content.decode()
 
 
-def test_modal_has_no_mode_controls(client, matter):
+def test_modal_offers_classic_and_agentic_only(client, matter):
     html = _prompt_html(client, matter)
-    assert 'name="kind"' not in html
+    assert 'value="classic"' in html and 'value="agent"' in html
+    assert 'value="research"' not in html
     assert "research-depth" not in html
+    assert "kind=${encodeURIComponent(kind)}" in html
 
 
 def test_modal_keeps_requested_llm(client, matter):

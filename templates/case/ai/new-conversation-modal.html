@@ -21,6 +21,27 @@
           </select>
         </div>
         <div class="form-group">
+          <label>Mode</label>
+          <div class="ai-kind-options">
+            <label class="ai-kind-option">
+              <input type="radio"
+                     name="kind"
+                     value="classic"
+                     {% if default_kind != "agent" %}checked{% endif %}>
+              <span class="ai-kind-name">Classic</span>
+              <span class="detail-text">Gathers the case file up front and answers in one pass.</span>
+            </label>
+            <label class="ai-kind-option">
+              <input type="radio"
+                     name="kind"
+                     value="agent"
+                     {% if default_kind == "agent" %}checked{% endif %}>
+              <span class="ai-kind-name">Agentic</span>
+              <span class="detail-text">Reads matter materials as it works and narrates each step. Slower, better on large matters.</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
           <label for="new-conversation-title">Name</label>
           <input type="text"
                  id="new-conversation-title"
@@ -49,7 +70,9 @@
     }
     const baseUrl = '{% url "case:ai-new-conversation-view" matter.id %}';
     const llm = document.getElementById('new-conversation-llm').value;
-    const url = `${baseUrl}?llm=${encodeURIComponent(llm)}&title=${encodeURIComponent(title)}`;
+    const kindInput = document.querySelector('#new-conversation-form input[name="kind"]:checked');
+    const kind = kindInput ? kindInput.value : 'classic';
+    const url = `${baseUrl}?llm=${encodeURIComponent(llm)}&kind=${encodeURIComponent(kind)}&title=${encodeURIComponent(title)}`;
     window.open(url, '_blank');
     window.dispatchEvent(new CustomEvent('close-modal'));
     return false;

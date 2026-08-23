@@ -156,6 +156,9 @@
     {% elif agenda %}
       <p>Your agenda is being prepared.</p>
       <p class="text-muted">I can see open matters, tasks, events, recent work, and intakes.</p>
+    {% elif conversation.kind == "agent" %}
+      <p>Start an agentic conversation about this matter.</p>
+      <p class="text-muted">I will read the documents, notes, and timeline I need as I go, and show each step here.</p>
     {% else %}
       <p>Start a conversation about this matter.</p>
       <p class="text-muted">I have access to all documents, contacts, timeline, and case information.</p>
