@@ -303,3 +303,50 @@ def test_dedupe_keeps_every_referenced_copy(matter, user):
         )
     _run_dedupe("--apply")
     assert Document.objects.count() == 2
+
+
+def test_dedupe_hands_drive_identity_to_the_kept_manual_copy(matter, user):
+    """The manual upload is referenced (kept); its Drive-mirrored twin is
+    removed, but the matter keeps tracking the Drive file: the identity
+    moves to the survivor and no tombstone is written (2026-08-03 bucket
+    outage made the mirror miss its adoption)."""
+    from apps.case.models import Highlight
+    from apps.drive.models import DriveRecordTombstone
+
+    manual = _doc(matter, user, "Operating Agreement", make_pdf())
+    Highlight.objects.create(
+        document=manual, slug="hl", text="x", created_by=user, importance=4
+    )
+    mirrored = _doc(
+        matter,
+        user,
+        "Operating Agreement",
+        make_pdf(),
+        drive_file_id="drive-oa",
+        drive_path="Evidence/Operating Agreement.pdf",
+        drive_modified="2025-01-01T00:00:00.000Z",
+    )
+
+    out = _run_dedupe("--apply")
+    assert f"remove #{mirrored.pk}" in out
+    assert f"Drive identity moves to #{manual.pk}" in out
+    assert list(Document.objects.values_list("pk", flat=True)) == [manual.pk]
+    manual.refresh_from_db()
+    assert manual.drive_file_id == "drive-oa"
+    assert manual.drive_path == "Evidence/Operating Agreement.pdf"
+    assert manual.drive_modified == "2025-01-01T00:00:00.000Z"
+    assert not DriveRecordTombstone.objects.filter(drive_file_id="drive-oa").exists()
+
+
+def test_dedupe_tombstones_when_no_survivor_can_take_the_drive_identity(matter, user):
+    """Two Drive-synced twins (two Drive files with the same bytes): the
+    removed one is tombstoned as before, the kept one keeps its own id."""
+    from apps.drive.models import DriveRecordTombstone
+
+    first = _doc(matter, user, "A", make_pdf(), drive_file_id="drive-1")
+    _doc(matter, user, "A", make_pdf(), drive_file_id="drive-2")
+    _run_dedupe("--apply")
+    assert list(Document.objects.values_list("pk", flat=True)) == [first.pk]
+    first.refresh_from_db()
+    assert first.drive_file_id == "drive-1"
+    assert DriveRecordTombstone.objects.filter(drive_file_id="drive-2").exists()
