@@ -1,4 +1,4 @@
-<button class="accent-link"
+<button class="time-action"
         hx-get="/activity/time/add/{{ matter.id }}/{% if mode == 'case' %}case{% else %}matters{% endif %}"
         hx-target="#htmx-modal-container"
         data-bs-toggle="modal"
@@ -7,7 +7,7 @@
         aria-label="Add time">
   + <i class="icon-clock"></i>
 </button>
-<button class="accent-link expense-action"
+<button class="expense-action"
         hx-get="/activity/expenses/add/{{ matter.id }}/{% if mode == 'case' %}case{% else %}matters{% endif %}"
         hx-target="#htmx-modal-container"
         data-bs-toggle="modal"
