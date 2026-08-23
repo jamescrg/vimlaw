@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from apps.case.models import CaseLaw, Document, Fact, Highlight, Label
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.matters.models import Matter
+from apps.notes.models import Note
 
 from .filters import LabelsFilter
 from .forms import LabelsForm
@@ -198,6 +199,11 @@ def _get_object_for_labels(object_type, object_id, view=None):
         matter = obj.matter
         row_template = "case/facts/fact-row.html"
         context_key = "fact"
+    elif object_type == "note":
+        obj = get_object_or_404(Note, id=object_id)
+        matter = obj.matter
+        row_template = "case/notes/note-row.html"
+        context_key = "note"
     elif object_type == "caselaw":
         obj = get_object_or_404(CaseLaw, id=object_id)
         matter = obj.matter

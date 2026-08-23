@@ -15,8 +15,86 @@ urlpatterns = [
         name="api-note-write",
     ),
     path("notes/api/search/", api.api_search, name="api-search"),
-    # List views
+    # Notes tab (folder sidebar + table of general notes)
+    path("notes/", views.notes_index, name="index"),
+    path("notes/list/", views.notes_list, name="list"),
     path("notes/add/", views.notes_add, name="add"),
+    path("notes/filter/", views.notes_filter, name="filter"),
+    path("notes/filter/keyword/", views.notes_filter_keyword, name="filter-keyword"),
+    path(
+        "notes/filter/category/<str:category>/",
+        views.notes_filter_category,
+        name="filter-category",
+    ),
+    path(
+        "notes/filter/category/",
+        views.notes_filter_category_clear,
+        name="filter-category-clear",
+    ),
+    path(
+        "notes/filter/topic/<str:topic>/",
+        views.notes_filter_topic,
+        name="filter-topic",
+    ),
+    path(
+        "notes/filter/topic/",
+        views.notes_filter_topic_clear,
+        name="filter-topic-clear",
+    ),
+    path(
+        "notes/filter/importance/<int:importance>/",
+        views.notes_filter_importance,
+        name="filter-importance",
+    ),
+    path("notes/order-by/<str:order>/", views.notes_order_by, name="order-by"),
+    path(
+        "notes/<int:note_id>/category/<str:value>/",
+        views.note_category,
+        name="note-category",
+    ),
+    path(
+        "notes/<int:note_id>/importance/<int:value>/",
+        views.note_importance,
+        name="note-importance",
+    ),
+    path("notes/<int:note_id>/edit/", views.note_edit, name="edit"),
+    path(
+        "notes/folders/select/<int:folder_id>/",
+        views.note_folder_select,
+        name="folder-select",
+    ),
+    path("notes/folders/unsorted/", views.note_folder_unsorted, name="folder-unsorted"),
+    path("notes/folders/all/", views.note_folder_all, name="folder-all"),
+    path(
+        "notes/folders/move/<int:folder_id>/",
+        views.note_folder_move,
+        name="folder-move",
+    ),
+    path(
+        "notes/folders/toggle/<int:folder_id>/",
+        views.note_folder_toggle,
+        name="folder-toggle",
+    ),
+    path(
+        "notes/folders/toggle-all/",
+        views.note_folder_toggle_all,
+        name="folder-toggle-all",
+    ),
+    # Notes tab multi-select
+    path(
+        "notes/toggle-select/<int:note_id>/",
+        views.notes_toggle_select,
+        name="toggle-select",
+    ),
+    path("notes/select-all/", views.notes_select_all, name="select-all"),
+    path("notes/clear-selection/", views.notes_clear_selection, name="clear-selection"),
+    path(
+        "notes/bulk-set-importance/",
+        views.notes_bulk_set_importance,
+        name="bulk-set-importance",
+    ),
+    path("notes/bulk-move/", views.notes_bulk_move, name="bulk-move"),
+    path("notes/bulk-delete/", views.notes_bulk_delete, name="bulk-delete"),
     # Editor views
     path("notes/launch/", views.notes_launch, name="launch"),
     path("notes/palette/", views.notes_search_palette, name="search-palette"),

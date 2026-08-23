@@ -1,0 +1,46 @@
+<li id="note-folder-{{ node.folder.id }}"
+    class="folder-item-container list-group-item folder-depth-{{ node.level }}{% if selected_note_folder and selected_note_folder.id == node.folder.id %} item-selected-highlight{% endif %}{% if not node.is_visible %} folder-hidden{% endif %}"
+    data-folder-id="{{ node.folder.id }}"
+    data-parent-id="{{ node.parent_id|default:'root' }}">
+  <div>
+    {% if node.has_children %}
+      <span class="folder-caret"
+            onclick="toggleNoteFolder({{ node.folder.id }}, event)">
+        <i class="caret-icon icon-chevron-{% if node.is_expanded %}down{% else %}right{% endif %}"></i>
+      </span>
+    {% else %}
+      <span class="folder-caret-placeholder"></span>
+    {% endif %}
+    <i class="icon-folder"></i>
+    <a href="{% url 'notes:folder-select' folder_id=node.folder.id %}">{{ node.folder.name|truncatechars:28 }}</a>
+  </div>
+  <div class="dropdown" x-data="dropdown()">
+    <button class="btn-icon menu-icon"
+            type="button"
+            x-ref="button"
+            @click="toggle()"
+            :aria-expanded="open">
+      <i class="icon-ellipsis-vertical"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'notes:folder-edit' folder_id=node.folder.id %}"
+           hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Edit</a>
+      </li>
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'notes:folder-move' folder_id=node.folder.id %}"
+           hx-target="#htmx-modal-container"><i class="icon-arrow-right"></i> Move</a>
+      </li>
+      <li>
+        <a class="dropdown-item"
+           href="#"
+           hx-get="{% url 'notes:folder-delete-confirm' folder_id=node.folder.id %}"
+           hx-target="#htmx-modal-container"><i class="icon-trash-2"></i> Delete</a>
+      </li>
+    </ul>
+  </div>
+</li>

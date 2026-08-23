@@ -1,0 +1,111 @@
+<tr id="note-{{ note.id }}" class="importance-{{ note.importance }}">
+  <td class="col-select">
+    {% url 'notes:toggle-select' note.id as toggle_url %}
+    {% include "selection/checkbox.html" with toggle_url=toggle_url obj_id=note.id selected_ids=selected_notes %}
+  </td>
+  <td class="title">
+    <div class="dropdown" x-data="dropdown()">
+      <a href="#"
+         class="note-title-link"
+         x-ref="button"
+         @click.prevent="toggle()">{{ note.title }}</a>
+      <ul class="dropdown-menu" x-ref="menu" x-show="open">
+        <li>
+          <a class="dropdown-item"
+             href="{% url 'notes:note-view' note.id %}"
+             target="_blank"><i class="icon-external-link"></i> Open</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'notes:edit' note.id %}"
+             hx-target="#htmx-modal-container"><i class="icon-pencil"></i> Rename</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'notes:note-move' note.id %}"
+             hx-target="#htmx-modal-container"><i class="icon-arrow-right"></i> Move</a>
+        </li>
+        <li>
+          <a class="dropdown-item urgent"
+             href="#"
+             hx-confirm="Are you sure you want to delete this note?"
+             hx-post="{% url 'notes:delete' note.id %}"><i class="icon-trash-2"></i> Delete</a>
+        </li>
+      </ul>
+    </div>
+  </td>
+  <td class="user">{{ note.author.get_short_name|default:note.author.username|default:"—" }}</td>
+  <td class="created">{{ note.created_at|date:"Y-m-d" }}</td>
+  <td class="updated">{{ note.updated_at|date:"Y-m-d" }}</td>
+  <td class="importance dropdown-cell">
+    <div class="dropdown" x-data="dropdown()">
+      <button class="button-link"
+              type="button"
+              x-ref="button"
+              @click="toggle()"
+              :aria-expanded="open">
+        {% if note.importance == 7 %}
+          <i class="icon-chevrons-up"></i>
+        {% elif note.importance == 6 %}
+          <i class="icon-chevron-up"></i>
+        {% elif note.importance == 5 %}
+          <i class="icon-chevron-up"></i>
+        {% elif note.importance == 4 %}
+          <i class="icon-equal"></i>
+        {% elif note.importance == 3 %}
+          <i class="icon-chevron-down"></i>
+        {% elif note.importance == 2 %}
+          <i class="icon-chevron-down"></i>
+        {% else %}
+          <i class="icon-chevrons-down"></i>
+        {% endif %}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'notes:note-importance' note.id 7 %}"
+             hx-target="#notes"><i class="icon-chevrons-up importance-7"></i> Highest</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'notes:note-importance' note.id 6 %}"
+             hx-target="#notes"><i class="icon-chevron-up importance-6"></i> Higher</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'notes:note-importance' note.id 5 %}"
+             hx-target="#notes"><i class="icon-chevron-up importance-5"></i> High</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'notes:note-importance' note.id 4 %}"
+             hx-target="#notes"><i class="icon-equal"></i> Normal</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'notes:note-importance' note.id 3 %}"
+             hx-target="#notes"><i class="icon-chevron-down importance-3"></i> Low</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'notes:note-importance' note.id 2 %}"
+             hx-target="#notes"><i class="icon-chevron-down importance-2"></i> Lower</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-post="{% url 'notes:note-importance' note.id 1 %}"
+             hx-target="#notes"><i class="icon-chevrons-down importance-1"></i> Lowest</a>
+        </li>
+      </ul>
+    </div>
+  </td>
+</tr>

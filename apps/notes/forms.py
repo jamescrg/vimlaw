@@ -1,6 +1,23 @@
 from django import forms
 
-from .models import NoteFolder
+from config.settings import CustomFormRendererCompact
+
+from .models import Note, NoteFolder
+
+
+class NoteForm(forms.ModelForm):
+    """Notes-tab rename modal: the title is the file name, so it stays
+    unique among siblings (checked in the view against the note's own
+    folder, case-insensitively)."""
+
+    default_renderer = CustomFormRendererCompact
+
+    class Meta:
+        model = Note
+        fields = ["title"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "span2"}),
+        }
 
 
 class NoteFolderForm(forms.ModelForm):
@@ -66,3 +83,12 @@ class NoteFolderForm(forms.ModelForm):
             if clash.exists():
                 self.add_error("name", f'A folder named "{name}" already exists here.')
         return cleaned
+
+
+class NoteFolderMoveForm(forms.Form):
+    destination = forms.ModelChoiceField(
+        queryset=NoteFolder.objects.none(),
+        required=False,
+        empty_label="Root level",
+        widget=forms.RadioSelect,
+    )

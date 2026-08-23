@@ -15,15 +15,96 @@ from django.views.decorators.http import require_POST
 from watson import search as watson
 
 from apps.accounts.access import filter_matters_for_user
+from apps.management.pagination import CustomPaginator
+from apps.management.selection import (
+    all_visible_selected,
+    clear_selected_ids,
+    get_selected_ids,
+    get_session_key,
+    select_all_ids,
+    selection_response,
+    toggle_id,
+)
 from apps.matters.models import Matter
 
-from .forms import NoteFolderForm
+from .filters import NotesFilter
+from .forms import NoteFolderForm, NoteFolderMoveForm, NoteForm
 from .models import Note, NoteFolder, NoteView
-from .tasks import queue_note_summary
+from .tasks import queue_library_summary_sweep, queue_note_summary
+
+NOTES_TRIGGER = "notesChanged"
 
 # ---------------------------------------------------------------------------
 # Tree-building utilities
 # ---------------------------------------------------------------------------
+
+
+def build_note_folder_tree_flat(folders_qs, expanded_ids):
+    """Flat DFS list of tree nodes for the Notes tab sidebar and the move
+    modals (the editor's nested trees come from _build_tree).
+
+    Returns list of dicts:
+        {"folder": f, "level": 0-3, "parent_id": int|None,
+         "has_children": bool, "is_expanded": bool, "is_visible": bool}
+    """
+    folders = list(folders_qs.select_related("parent").order_by("name"))
+
+    children_map = {}
+    for f in folders:
+        children_map.setdefault(f.parent_id, []).append(f)
+
+    result = []
+
+    def _walk(parent_id, parent_visible):
+        for f in children_map.get(parent_id, []):
+            is_expanded = f.pk in expanded_ids
+            result.append(
+                {
+                    "folder": f,
+                    "level": f.depth,
+                    "parent_id": f.parent_id,
+                    "has_children": f.pk in children_map,
+                    "is_expanded": is_expanded,
+                    "is_visible": parent_visible,
+                }
+            )
+            _walk(f.pk, parent_visible and is_expanded)
+
+    _walk(None, True)  # Root folders always visible
+    return result
+
+
+def get_note_folders_data(request):
+    """Notes-tab sidebar: the general folder tree plus the selected folder.
+
+    Expansion is session-kept (note_folders_expanded) like the contacts and
+    checklist sidebars; the editor keeps its own per-tab state client-side.
+    Matter trees live in the editor's Matters pane, not here.
+    """
+    folders = NoteFolder.objects.filter(matter__isnull=True)
+    expanded_ids = set(request.session.get("note_folders_expanded", []))
+    selected_folder_id = request.session.get("notes_selected_folder_id")
+
+    tree = build_note_folder_tree_flat(folders, expanded_ids)
+
+    if selected_folder_id == "all":
+        selected_folder = None
+    elif selected_folder_id:
+        try:
+            selected_folder = NoteFolder.objects.get(
+                pk=selected_folder_id, matter__isnull=True
+            )
+        except NoteFolder.DoesNotExist:
+            selected_folder = None
+            request.session["notes_selected_folder_id"] = None
+    else:
+        selected_folder = None
+
+    return {
+        "note_folder_tree": tree,
+        "selected_note_folder": selected_folder,
+        "all_folders_selected": selected_folder_id == "all",
+    }
 
 
 def _folder_subtree_height(folder):
@@ -184,13 +265,450 @@ def _sibling_folder_exists(name, matter, parent, exclude_pk=None):
     return qs.exists()
 
 
+# ---------------------------------------------------------------------------
+# Notes tab (general notes: folder sidebar + table)
+# ---------------------------------------------------------------------------
+
+IMPORTANCE_LABELS = {
+    7: "Highest",
+    6: "Higher",
+    5: "High",
+    4: "Normal",
+    3: "Low",
+    2: "Lower",
+    1: "Lowest",
+}
+NOTES_FILTER_KEY = "standalone_notes_filter"
+
+
+def get_notes_data(request):
+    """General notes with the session folder selection, filters, pagination
+    and multi-select state applied."""
+    filter_data = request.session.get(NOTES_FILTER_KEY, {})
+
+    queryset = Note.objects.filter(matter__isnull=True).order_by("-updated_at")
+
+    selected_folder_id = request.session.get("notes_selected_folder_id")
+    if selected_folder_id == "all":
+        pass  # every general note, whatever its folder
+    elif selected_folder_id:
+        queryset = queryset.filter(folder_id=selected_folder_id)
+    else:
+        queryset = queryset.filter(folder_id__isnull=True)  # Inbox
+
+    if filter_data:
+        notes = NotesFilter(filter_data, queryset=queryset).qs
+    else:
+        notes = queryset
+
+    current_order = filter_data.get("order_by", "-updated_at")
+    if isinstance(current_order, list):
+        current_order = current_order[0] if current_order else "-updated_at"
+
+    keyword = filter_data.get("keyword", "")
+    if isinstance(keyword, list):
+        keyword = keyword[0] if keyword else ""
+
+    importance_value = filter_data.get("importance")
+    importance_value = (
+        int(importance_value) if importance_value not in (None, "", 0) else None
+    )
+
+    category_key = filter_data.get("category", "")
+    selected_category = dict(Note.CATEGORY_CHOICES).get(category_key, "")
+
+    selected_topic = filter_data.get("topic", "")
+    topics = (
+        Note.objects.filter(matter__isnull=True)
+        .exclude(topic__isnull=True)
+        .exclude(topic="")
+        .values_list("topic", flat=True)
+        .distinct()
+        .order_by("topic")
+    )
+
+    notes_list = list(notes)
+    pagination = CustomPaginator(
+        notes_list, per_page=20, request=request, session_key="standalone_notes_page"
+    )
+
+    session_key = get_session_key("selected_notes")
+    selected_notes = get_selected_ids(request, session_key)
+    visible_ids = [n.id for n in pagination.get_object_list()]
+
+    return {
+        "notes": pagination.get_object_list(),
+        "pagination": pagination,
+        "session_key": "standalone_notes_page",
+        "trigger_key": NOTES_TRIGGER,
+        "number_notes": len(notes_list),
+        "current_order": current_order.lstrip("-"),
+        "keyword": keyword,
+        "importances": list(range(7, 0, -1)),
+        "importance_value": importance_value,
+        "selected_importance": IMPORTANCE_LABELS.get(importance_value, ""),
+        "category_choices": Note.CATEGORY_CHOICES,
+        "selected_category": selected_category,
+        "selected_category_key": category_key,
+        "topics": topics,
+        "selected_topic": selected_topic,
+        "selected_notes": selected_notes,
+        "all_selected": all_visible_selected(selected_notes, visible_ids),
+    }
+
+
+@login_required
+def notes_index(request):
+    """The Notes tab."""
+    context = (
+        {"app": "notes"} | get_notes_data(request) | get_note_folders_data(request)
+    )
+    return render(request, "notes/main.html", context)
+
+
+@login_required
+def notes_list(request):
+    """HTMX partial: the Notes tab's right pane (toolbar + table)."""
+    context = (
+        {"app": "notes"} | get_notes_data(request) | get_note_folders_data(request)
+    )
+    return render(request, "notes/list.html", context)
+
+
+def _update_notes_filter(request, **changes):
+    """Merge keys into the session filter dict; None pops the key."""
+    filter_data = request.session.get(NOTES_FILTER_KEY, {})
+    for key, value in changes.items():
+        if value is None:
+            filter_data.pop(key, None)
+        else:
+            filter_data[key] = value
+    request.session[NOTES_FILTER_KEY] = filter_data
+    request.session.modified = True
+    return filter_data
+
+
+@login_required
+def notes_filter(request):
+    """Filter modal; POST stores the whole form in the session."""
+    if request.method == "POST":
+        request.session[NOTES_FILTER_KEY] = {
+            key: value
+            for key, value in request.POST.items()
+            if key != "csrfmiddlewaretoken"
+        }
+        request.session.modified = True
+        return HttpResponse(status=204, headers={"HX-Trigger": NOTES_TRIGGER})
+
+    filter_data = request.session.get(NOTES_FILTER_KEY, {})
+    queryset = Note.objects.filter(matter__isnull=True)
+    filter_obj = NotesFilter(filter_data, queryset=queryset)
+    return render(request, "notes/filter.html", {"filter": filter_obj})
+
+
+@login_required
+def notes_order_by(request, order):
+    """Column sort; a second click on the same column flips direction."""
+    filter_data = request.session.get(NOTES_FILTER_KEY, {})
+    current_order = filter_data.get("order_by", "")
+    if current_order == order:
+        new_order = f"-{order}" if not current_order.startswith("-") else order
+    else:
+        new_order = order
+    _update_notes_filter(request, order_by=new_order)
+    return redirect("notes:list")
+
+
+@login_required
+def notes_filter_keyword(request):
+    """Live keyword search (title match) from the toolbar input."""
+    keyword = request.GET.get("keyword", "").strip()
+    _update_notes_filter(request, keyword=keyword or None)
+    context = (
+        {"app": "notes"} | get_notes_data(request) | get_note_folders_data(request)
+    )
+    return render(request, "notes/list.html", context)
+
+
+@login_required
+def notes_filter_category(request, category):
+    _update_notes_filter(request, category=category)
+    return redirect("notes:list")
+
+
+@login_required
+def notes_filter_category_clear(request):
+    _update_notes_filter(request, category=None)
+    return redirect("notes:list")
+
+
+@login_required
+def notes_filter_topic(request, topic):
+    _update_notes_filter(request, topic=topic)
+    return redirect("notes:list")
+
+
+@login_required
+def notes_filter_topic_clear(request):
+    _update_notes_filter(request, topic=None)
+    return redirect("notes:list")
+
+
+@login_required
+def notes_filter_importance(request, importance):
+    """Importance-at-least filter; 0 clears it."""
+    _update_notes_filter(request, importance="" if importance == 0 else importance)
+    return redirect("notes:list")
+
+
+@login_required
+@require_POST
+def note_category(request, note_id, value):
+    """Inline category change from the table row."""
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note.category = value
+    note.save(update_fields=["category"])
+    return redirect("notes:list")
+
+
+@login_required
+@require_POST
+def note_importance(request, note_id, value):
+    """Inline importance change from the table row."""
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    note.importance = value
+    note.save(update_fields=["importance"])
+    return redirect("notes:list")
+
+
+@login_required
+def note_edit(request, note_id):
+    """Rename modal from the table row (the title is the file name, so the
+    new name must be free among the note's siblings)."""
+    note = get_object_or_404(Note, pk=note_id, matter__isnull=True)
+
+    if request.method == "POST":
+        form = NoteForm(request.POST, instance=note, use_required_attribute=False)
+        if form.is_valid():
+            title = form.cleaned_data["title"].strip()
+            if _sibling_note_exists(title, note.matter, note.folder, note.pk):
+                form.add_error(
+                    "title", f'A note named "{title}" already exists in this folder.'
+                )
+            else:
+                form.save()
+                return HttpResponse(status=204, headers={"HX-Trigger": NOTES_TRIGGER})
+    else:
+        form = NoteForm(instance=note, use_required_attribute=False)
+
+    context = {"app": "notes", "note": note, "form": form, "action": "Rename"}
+    return render(request, "notes/form.html", context)
+
+
+@login_required
+def note_folder_select(request, folder_id):
+    """Sidebar click: filter the table to a folder (click again to go back
+    to the Inbox)."""
+    if folder_id == request.session.get("notes_selected_folder_id"):
+        request.session["notes_selected_folder_id"] = None
+    else:
+        request.session["notes_selected_folder_id"] = folder_id
+    return redirect("notes:index")
+
+
+@login_required
+def note_folder_unsorted(request):
+    """Inbox: general notes in no folder."""
+    request.session["notes_selected_folder_id"] = None
+    return redirect("notes:index")
+
+
+@login_required
+def note_folder_all(request):
+    """All Folders: every general note."""
+    request.session["notes_selected_folder_id"] = "all"
+    return redirect("notes:index")
+
+
+@login_required
+@require_POST
+def note_folder_toggle(request, folder_id):
+    """Sidebar caret: flip a folder's expanded state in the session."""
+    expanded = request.session.get("note_folders_expanded", [])
+    if folder_id in expanded:
+        expanded.remove(folder_id)
+    else:
+        expanded.append(folder_id)
+    request.session["note_folders_expanded"] = expanded
+    request.session.modified = True
+    return HttpResponse(status=204)
+
+
+@login_required
+@require_POST
+def note_folder_toggle_all(request):
+    """Sidebar expand/collapse-all (?expand=true|false) over the general tree."""
+    expand = request.GET.get("expand") == "true"
+    general_ids = list(
+        NoteFolder.objects.filter(matter__isnull=True).values_list("pk", flat=True)
+    )
+    request.session["note_folders_expanded"] = general_ids if expand else []
+    request.session.modified = True
+    return HttpResponse(status=204)
+
+
+@login_required
+def note_folder_move(request, folder_id):
+    """Sidebar kebab: move a general folder under another (or to the root)
+    via a modal tree."""
+    folder = get_object_or_404(NoteFolder, pk=folder_id, matter__isnull=True)
+    valid_targets = get_valid_move_targets(folder)
+
+    if request.method == "POST":
+        form = NoteFolderMoveForm(request.POST)
+        form.fields["destination"].queryset = valid_targets
+        if form.is_valid():
+            destination = form.cleaned_data["destination"]
+            error = validate_folder_move(folder, destination)
+            if error:
+                return HttpResponse(error, status=400)
+            folder.parent = destination
+            folder.depth = destination.depth + 1 if destination else 0
+            update_fields = ["parent", "depth"]
+            siblings = (
+                NoteFolder.objects.filter(matter=None, parent=destination)
+                .exclude(pk=folder.pk)
+                .values_list("name", flat=True)
+            )
+            suffixed = _next_untitled(siblings, base=folder.name)
+            if suffixed != folder.name:
+                folder.name = suffixed
+                update_fields.append("name")
+            folder.save(update_fields=update_fields)
+            folder.update_descendant_depths()
+            return _notes_tab_sidebar_response(request)
+
+    # Expand the ancestors of the current parent so the modal opens on it
+    expanded_ids = {a.pk for a in folder.get_ancestors()} if folder.parent else set()
+    tree = build_note_folder_tree_flat(valid_targets, expanded_ids)
+    context = {"folder": folder, "move_targets": tree, "valid_targets": valid_targets}
+    return render(request, "note_folders/move.html", context)
+
+
+def _notes_tab_sidebar_response(request):
+    """Notes-tab folder CRUD success: re-render the sidebar into
+    #note-folders and close the modal."""
+    response = render(request, "note_folders/list.html", get_note_folders_data(request))
+    response.status_code = 202
+    response["HX-Trigger-After-Swap"] = "closeModal"
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Notes tab multi-select
+# ---------------------------------------------------------------------------
+
+
+@login_required
+@require_POST
+def notes_toggle_select(request, note_id):
+    get_object_or_404(Note, pk=note_id, matter__isnull=True)
+    toggle_id(request, get_session_key("selected_notes"), note_id)
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+@require_POST
+def notes_select_all(request):
+    """Select or deselect every note on the current page."""
+    visible_ids = [n.id for n in get_notes_data(request)["notes"]]
+    select_all_ids(request, get_session_key("selected_notes"), visible_ids)
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+@require_POST
+def notes_clear_selection(request):
+    clear_selected_ids(request, get_session_key("selected_notes"))
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+@require_POST
+def notes_bulk_set_importance(request):
+    key = get_session_key("selected_notes")
+    selected = get_selected_ids(request, key)
+    if not selected:
+        return HttpResponse(status=400, content="No notes selected.")
+
+    importance = request.POST.get("importance")
+    if importance:
+        Note.objects.filter(id__in=selected, matter__isnull=True).update(
+            importance=int(importance)
+        )
+        clear_selected_ids(request, key)
+    return selection_response(NOTES_TRIGGER)
+
+
+@login_required
+def notes_bulk_move(request):
+    """Move the selected general notes into a general folder (modal tree)."""
+    key = get_session_key("selected_notes")
+    selected = get_selected_ids(request, key)
+    if not selected:
+        return HttpResponse(status=400, content="No notes selected.")
+
+    if request.method == "POST":
+        folder_id = request.POST.get("destination")
+        if folder_id:
+            # General notes only, so the destination must be a general folder
+            folder = get_object_or_404(NoteFolder, pk=folder_id, matter__isnull=True)
+        else:
+            folder = None
+        # Same-named siblings at the destination get serial suffixes, like
+        # the single-note move
+        for note in Note.objects.filter(id__in=selected, matter__isnull=True):
+            siblings = (
+                Note.objects.filter(matter=None, folder=folder)
+                .exclude(pk=note.pk)
+                .values_list("title", flat=True)
+            )
+            note.folder = folder
+            note.title = _next_untitled(siblings, base=note.title)
+            note.save(update_fields=["folder", "title"])
+        clear_selected_ids(request, key)
+        queue_library_summary_sweep()
+        return HttpResponse(status=204, headers={"HX-Trigger": NOTES_TRIGGER})
+
+    tree = build_note_folder_tree_flat(
+        NoteFolder.objects.filter(matter__isnull=True), set()
+    )
+    context = {"selected_count": len(selected), "move_targets": tree}
+    return render(request, "notes/bulk-move.html", context)
+
+
+@login_required
+@require_POST
+def notes_bulk_delete(request):
+    key = get_session_key("selected_notes")
+    selected = get_selected_ids(request, key)
+    if not selected:
+        return HttpResponse(status=400, content="No notes selected.")
+
+    Note.objects.filter(id__in=selected, matter__isnull=True).delete()
+    clear_selected_ids(request, key)
+    return selection_response(NOTES_TRIGGER)
+
+
 @login_required
 @require_POST
 def notes_add(request):
     """Create a general note instantly (no modal), optionally into a folder
-    (?folder=<id>), auto-named among its siblings. The noteCreated
-    trigger opens
-    the new note in the editor.
+    (?folder=<id>), auto-named among its siblings.
+
+    Editor: the noteCreated trigger opens the new note in place. Notes tab:
+    ?open=1 (a plain form post into a new tab) redirects straight to the
+    editor instead.
     """
     folder = None
     folder_id = request.GET.get("folder", "")
@@ -208,6 +726,8 @@ def notes_add(request):
         matter=None,
         folder=folder,
     )
+    if request.GET.get("open"):
+        return redirect("notes:note-view", note.id)
     # No navigation: the client refreshes the trees in place and opens
     # the new note through the normal row-click swap (notes-editor.js)
     return HttpResponse(
@@ -782,15 +1302,22 @@ def _editor_crud_response():
 
 
 @login_required
-@require_POST
 def note_folder_add(request):
-    """Create a folder instantly (no modal), auto-named among its siblings.
+    """Create a folder.
 
+    Editor (POST): instantly, no modal, auto-named among its siblings.
     ?parent=<id> creates a subfolder (matter inherited from the parent);
     ?matter=<id> creates at a matter's root; neither means the general
     root. The folderCreated trigger starts an Obsidian-style inline
     rename on the new row once the refreshed tree settles.
+
+    Notes tab (?context=tab): a name + parent modal over the general tree,
+    re-rendering the sidebar on success.
     """
+    if request.GET.get("context") == "tab":
+        return _note_folder_add_tab(request)
+    if request.method != "POST":
+        return HttpResponse(status=405)
     parent_id = request.GET.get("parent", "")
     matter_id = request.GET.get("matter", "")
     parent = matter = None
@@ -820,6 +1347,32 @@ def note_folder_add(request):
     )
 
 
+def _note_folder_add_tab(request):
+    if request.method == "POST":
+        form = NoteFolderForm(request.POST, matter=None)
+        if form.is_valid():
+            form.save()
+            return _notes_tab_sidebar_response(request)
+    else:
+        form = NoteFolderForm(matter=None)
+        # Pre-fill the parent with the selected folder
+        selected_folder_id = request.session.get("notes_selected_folder_id")
+        if selected_folder_id and selected_folder_id != "all":
+            selected = NoteFolder.objects.filter(
+                pk=selected_folder_id, matter__isnull=True
+            ).first()
+            if selected and selected.can_have_children():
+                form.initial["parent"] = selected.pk
+
+    context = {
+        "form": form,
+        "action": reverse("notes:folder-add") + "?context=tab",
+        "edit": False,
+        "editor_context": False,
+    }
+    return render(request, "note_folders/form.html", context)
+
+
 @login_required
 @require_POST
 def note_folder_rename(request, folder_id):
@@ -837,8 +1390,10 @@ def note_folder_rename(request, folder_id):
 
 @login_required
 def note_folder_edit(request, folder_id):
-    """Edit a note folder (editor modal)."""
+    """Edit a note folder (editor context menu with ?context=editor, or the
+    Notes-tab sidebar kebab)."""
     folder = get_object_or_404(NoteFolder, pk=folder_id)
+    editor = request.GET.get("context") == "editor"
 
     if request.method == "POST":
         form = NoteFolderForm(request.POST, instance=folder, exclude_folder=folder)
@@ -851,7 +1406,9 @@ def note_folder_edit(request, folder_id):
             folder = form.save()
             if folder.parent_id != old_parent_id:
                 folder.update_descendant_depths()
-            return _editor_crud_response()
+            if editor:
+                return _editor_crud_response()
+            return _notes_tab_sidebar_response(request)
     else:
         form = NoteFolderForm(instance=folder, exclude_folder=folder)
 
@@ -861,8 +1418,8 @@ def note_folder_edit(request, folder_id):
         "action": f"/notes/folders/edit/{folder_id}" + (f"?{query}" if query else ""),
         "edit": True,
         "folder": folder,
-        "editor_context": True,
-        "extra_qs": query,
+        "editor_context": editor,
+        "extra_qs": query if editor else "",
     }
     return render(request, "note_folders/form.html", context)
 
@@ -917,8 +1474,15 @@ def note_folder_delete(request, folder_id):
             Note.objects.filter(folder=folder).delete()
 
     # Clear selected folder if it was this one
+    if request.session.get("notes_selected_folder_id") == folder_id:
+        request.session["notes_selected_folder_id"] = None
 
     folder.delete()
+
+    if request.GET.get("context") != "editor":
+        # Notes tab: both panes change (sidebar + whichever notes went with
+        # the folder), so reload the page
+        return HttpResponse(status=204, headers={"HX-Refresh": "true"})
 
     # Editor context: if the open note went down with the folder, a plain
     # refresh would 404 — the client lands on the launch note in place.
@@ -974,14 +1538,20 @@ def note_folder_reparent(request, folder_id):
 
 
 @login_required
-@require_POST
 def note_move(request, note_id):
-    """Move a note to a different folder (editor drag-and-drop).
+    """Move a note to a different folder (editor drag-and-drop, or the
+    Notes-tab row's Move modal on GET).
 
     Serves general AND matter notes; the destination must live in the
     note's own tree. note.matter is never written here.
     """
-    note = get_object_or_404(Note, pk=note_id)
+    note = _get_note(request, note_id)
+
+    if request.method != "POST":
+        tree = build_note_folder_tree_flat(
+            NoteFolder.objects.filter(matter=note.matter), set()
+        )
+        return render(request, "notes/move.html", {"note": note, "move_targets": tree})
 
     folder_id = request.POST.get("destination")
     if folder_id:

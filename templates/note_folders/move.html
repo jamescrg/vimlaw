@@ -1,0 +1,60 @@
+<div class="modal-dialog modal-md move-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title">Move: {{ folder.name }}</h1>
+      <div>
+        <button type="button" @click="$dispatch('close-modal')">
+          <i class="icon-x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="note-folder-move-form"
+            hx-post="{% url 'notes:folder-move' folder.id %}"
+            hx-target="#note-folders"
+            hx-swap="innerHTML"
+            role="form">
+        {% csrf_token %}
+        <input type="hidden"
+               name="destination"
+               id="move-destination"
+               value="{{ folder.parent_id|default:'' }}">
+        <ul class="list-group move-tree">
+          <li class="move-tree-item list-group-item{% if not folder.parent_id %} move-current move-selected{% endif %}"
+              onclick="selectMoveTarget(this, '')">
+            <div>
+              <span class="folder-caret-placeholder"></span>
+              <i class="icon-folder"></i>
+              Root level
+            </div>
+          </li>
+          {% for node in move_targets %}
+            <li class="move-tree-item list-group-item move-depth-{{ node.level }}{% if folder.parent_id == node.folder.id %} move-current move-selected{% endif %}{% if not node.is_visible %} folder-hidden{% endif %}"
+                data-move-folder-id="{{ node.folder.id }}"
+                data-move-parent-id="{{ node.parent_id|default:'root' }}"
+                onclick="selectMoveTarget(this, '{{ node.folder.id }}')">
+              <div>
+                {% if node.has_children %}
+                  <span class="folder-caret"
+                        onclick="toggleMoveFolder({{ node.folder.id }}, event)">
+                    <i class="caret-icon icon-chevron-{% if node.is_expanded %}down{% else %}right{% endif %}"></i>
+                  </span>
+                {% else %}
+                  <span class="folder-caret-placeholder"></span>
+                {% endif %}
+                <i class="icon-folder"></i>
+                {{ node.folder.name }}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              @click="$dispatch('close-modal')">Cancel</button>
+      <button type="submit" form="note-folder-move-form" class="btn btn-success">Move</button>
+    </div>
+  </div>
+</div>

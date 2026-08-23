@@ -1,0 +1,47 @@
+<div class="table-container">
+  <table id="notes-list" class="table notes-list">
+    <tr>
+      <th class="category">Category</th>
+      <th class="title">
+        Title
+        <button class="btn-sort {% if 'title' in current_order %}active{% endif %}"
+                hx-get="{% url 'case:notes-sort' matter.id 'title' %}"
+                hx-target="#notes">
+          <i class="icon-chevrons-up-down"></i>
+        </button>
+      </th>
+      <th class="user">Author</th>
+      <th class="created">
+        Created
+        <button class="btn-sort {% if 'created_at' in current_order %}active{% endif %}"
+                hx-get="{% url 'case:notes-sort' matter.id 'created_at' %}"
+                hx-target="#notes">
+          <i class="icon-chevrons-up-down"></i>
+        </button>
+      </th>
+      <th class="updated">
+        Updated
+        <button class="btn-sort {% if 'updated_at' in current_order %}active{% endif %}"
+                hx-get="{% url 'case:notes-sort' matter.id 'updated_at' %}"
+                hx-target="#notes">
+          <i class="icon-chevrons-up-down"></i>
+        </button>
+      </th>
+      <th class="importance">
+        <button class="btn-sort {% if 'importance' in current_order %}active{% endif %}"
+                hx-get="{% url 'case:notes-sort' matter.id '-importance' %}"
+                hx-target="#notes"
+                title="Sort by importance">
+          <i class="icon-flag"></i>
+        </button>
+      </th>
+    </tr>
+    {% for note in notes %}
+      {% include "case/notes/note-row.html" %}
+    {% empty %}
+      <tr>
+        <td colspan="6" class="empty-message">No notes found for this matter.</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>

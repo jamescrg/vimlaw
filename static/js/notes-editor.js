@@ -601,9 +601,13 @@ const PANEL_RAIL_PX = 64;
 const PANEL_MIN_WIDTH = 180;
 const PANEL_MAX_WIDTH = 560;
 
-// The left panel keeps its pre-split storage keys so existing user state
-// survives. railBreakpoint mirrors each panel's auto-rail media query in
-// notes.css; resizeDir is the drag direction that widens the panel.
+// Panels DEFAULT OPEN on every fresh editor load: open/closed is page
+// state only (toggles hold across note switches, which swap the canvas
+// and leave the panels standing), never stored — a collapse remembered
+// across sessions made later openings from the Library read as "closed
+// by default". Only the dragged widths persist. stateKey names the
+// retired localStorage key, cleared on load. Below 1024px (the notes.css
+// auto-rail media query) both panels start railed.
 const PANELS = [
   {
     selector: ".note-panel-left",
@@ -611,7 +615,6 @@ const PANELS = [
     widthKey: "notes-editor-panel-width",
     closeIcon: "icon-panel-left-close",
     openIcon: "icon-panel-left-open",
-    railBreakpoint: 1200,
     resizeDir: 1,
   },
   {
@@ -620,7 +623,6 @@ const PANELS = [
     widthKey: "notes-editor-outline-panel-width",
     closeIcon: "icon-panel-right-close",
     openIcon: "icon-panel-right-open",
-    railBreakpoint: 1440,
     resizeDir: -1,
   },
 ];
@@ -648,7 +650,6 @@ function togglePanel(cfg) {
   const isVisible = panel.offsetWidth > PANEL_RAIL_PX;
   panel.classList.toggle("collapsed", isVisible);
   panel.classList.toggle("expanded", !isVisible);
-  localStorage.setItem(cfg.stateKey, isVisible ? "collapsed" : "expanded");
   syncPanelIcon(cfg, !isVisible);
 }
 
@@ -658,7 +659,6 @@ function openPanel(cfg) {
 
   panel.classList.remove("collapsed");
   panel.classList.add("expanded");
-  localStorage.setItem(cfg.stateKey, "expanded");
   syncPanelIcon(cfg, true);
 }
 
@@ -706,12 +706,9 @@ function setupPanel(cfg) {
   const panel = document.querySelector(cfg.selector);
   if (!panel) return;
 
-  // Restore stored state; only re-apply "expanded" above the panel's own
-  // auto-rail breakpoint so small screens still start railed.
-  const stored = localStorage.getItem(cfg.stateKey);
-  if (stored === "collapsed") panel.classList.add("collapsed");
-  else if (stored === "expanded" && window.innerWidth >= cfg.railBreakpoint)
-    panel.classList.add("expanded");
+  // Fresh load = open (the CSS default), railed only below 1024px;
+  // nothing to restore beyond dropping the retired persisted state
+  localStorage.removeItem(cfg.stateKey);
 
   const toggle = panel.querySelector(".panel-toggle");
   if (toggle) toggle.addEventListener("click", () => togglePanel(cfg));
