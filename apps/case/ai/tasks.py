@@ -66,7 +66,9 @@ def _trim_history(chat_history, context_tokens, ceiling):
     return dropped, total()
 
 
-def fit_prompt_to_window(context_text, chat_history, llm, log_activity):
+def fit_prompt_to_window(
+    context_text, chat_history, llm, log_activity, ceiling_share=ESTIMATE_CEILING
+):
     """Make the prompt fit the model window, trimming chat history as needed.
 
     Returns (chat_history, prompt_tokens). Trims against the conservative
@@ -74,11 +76,13 @@ def fit_prompt_to_window(context_text, chat_history, llm, log_activity):
     distance of the window, asks the API for the exact count (the model's
     own tokenizer) and trims again against that. Raises
     PromptTooLargeError when the context alone cannot fit, with a message
-    meant for the chat.
+    meant for the chat. ``ceiling_share`` is the share of the window the
+    estimate may fill; the agent loop passes a lower one to leave room
+    for the tool results it appends during the turn.
     """
     hard_limit = MODEL_HARD_LIMITS.get(llm, 1_000_000)
     context_tokens = estimate_tokens(context_text)
-    estimate_ceiling = int(hard_limit * ESTIMATE_CEILING)
+    estimate_ceiling = int(hard_limit * ceiling_share)
 
     dropped, prompt_tokens = _trim_history(
         chat_history, context_tokens, estimate_ceiling
@@ -159,6 +163,131 @@ def _too_large_message(tokens, hard_limit):
         "some always-included documents, case law or notes, or start a new "
         "conversation."
     )
+
+
+def armed_write_protocols(conversation, user_message):
+    """The write protocols the recent user messages call for.
+
+    The AI can record timeline facts, witnesses and notes when directed;
+    the fenced blocks it emits are applied after the response arrives.
+    Each protocol is included only when the recent user messages actually
+    point at that kind of work, so unrelated conversations carry no
+    standing write instructions. Returns (protocol_text, names) where
+    protocol_text is ready to append to the system context ("" when
+    nothing is armed). Shared by the classic and agent turns.
+    """
+    from .fact_blocks import FACTS_PROTOCOL, FACTS_TRIGGER_RE
+    from .note_blocks import NOTES_PROTOCOL, NOTES_TRIGGER_RE
+    from .witness_blocks import WITNESS_TRIGGER_RE, WITNESSES_PROTOCOL
+
+    # Current message plus a few before it, so follow-up directives
+    # ("also add the crash date") keep the protocol from a turn or
+    # two after the one that named the timeline.
+    recent_user_text = "\n".join(
+        [user_message]
+        + list(
+            conversation.messages.filter(role="user")
+            .order_by("-created_at")
+            .values_list("content", flat=True)[:4]
+        )
+    )
+    text = ""
+    names = []
+    if FACTS_TRIGGER_RE.search(recent_user_text):
+        text += "\n\n" + FACTS_PROTOCOL
+        names.append("facts")
+    if WITNESS_TRIGGER_RE.search(recent_user_text):
+        text += "\n\n" + WITNESSES_PROTOCOL
+        names.append("witnesses")
+    if NOTES_TRIGGER_RE.search(recent_user_text):
+        text += "\n\n" + NOTES_PROTOCOL
+        names.append("notes")
+    return text, names
+
+
+def finalize_response(
+    response_text, matter, user, conversation, draft_link, update_status, log_activity
+):
+    """Post-process a model reply before it is stored.
+
+    Applies draft edits and the fenced write blocks (each replaced by
+    confirmation lines), resolves leaked source handles into links, then
+    verifies case citations. Returns (response_text, citations_data).
+    Shared by the classic and agent turns so both modes write through
+    exactly one path.
+    """
+    from .fact_blocks import FACT_BLOCK_RE, apply_fact_blocks
+    from .handles import HANDLE_RE, resolve_handles_for_chat
+    from .note_blocks import (
+        NOTE_BLOCKS_RE,
+        apply_note_blocks,
+        strip_fake_note_confirmations,
+    )
+    from .witness_blocks import WITNESS_BLOCK_RE, apply_witness_blocks
+
+    # Apply draft edits before citation verification, so the stored
+    # message carries the outcome text instead of the raw block.
+    if draft_link:
+        from apps.drafts import chat as drafts_chat
+
+        if drafts_chat.DRAFT_EDITS_RE.search(response_text):
+            update_status("applying", "Applying edits to the draft...")
+            response_text = drafts_chat.apply_edit_blocks(response_text, draft_link)
+            log_activity("Draft edits applied")
+
+    # Create any facts and witnesses the AI was directed to record,
+    # replacing each block with confirmation lines before the message
+    # is stored.
+    if FACT_BLOCK_RE.search(response_text):
+        update_status("applying", "Adding facts to the timeline...")
+        response_text = apply_fact_blocks(response_text, matter, user)
+        log_activity("Facts recorded on the timeline")
+    if WITNESS_BLOCK_RE.search(response_text):
+        update_status("applying", "Adding witnesses...")
+        response_text = apply_witness_blocks(response_text, matter, user)
+        log_activity("Witnesses recorded")
+    # Order matters: imitation confirmations are scrubbed from the raw
+    # response first (only model-written lines can match at this
+    # point), then real blocks are applied and produce the genuine
+    # confirmation lines.
+    response_text = strip_fake_note_confirmations(response_text)
+    if NOTE_BLOCKS_RE.search(response_text):
+        update_status("applying", "Writing notes...")
+        response_text = apply_note_blocks(response_text, matter, user)
+        log_activity("Notes written")
+
+    # Any raw [doc:]/[hl:]/[note:] handles the model leaked into prose
+    # become human-readable markdown links (hallucinated ids are
+    # omitted). Runs after the write blocks so their content has
+    # already been consumed.
+    if HANDLE_RE.search(response_text):
+        response_text = resolve_handles_for_chat(response_text, matter)
+
+    # Verify citations in the response
+    update_status("verifying", "Verifying citations...")
+    log_activity("Checking citations against CourtListener...")
+    logger.info("Starting citation verification for conversation %s", conversation.id)
+    try:
+        verified_citations = verify_all_citations(response_text)
+        citations_data = citations_to_dict(verified_citations)
+        if citations_data:
+            log_activity(f"{len(citations_data)} citations checked")
+        else:
+            log_activity("No case citations to check")
+        logger.info(
+            "Citation verification complete for conversation %s: %d citations found",
+            conversation.id,
+            len(citations_data),
+        )
+    except Exception as e:
+        logger.exception(
+            "Citation verification failed for conversation %s: %s",
+            conversation.id,
+            e,
+        )
+        citations_data = []
+        log_activity("Citation check failed; skipped")
+    return response_text, citations_data
 
 
 def process_ai_request(
@@ -252,56 +381,16 @@ def process_ai_request(
             context_text += drafts_chat.build_draft_section(draft_link)
             log_activity(f"Linked draft loaded: {draft_link.name}")
 
-        # The AI can record timeline facts and witnesses when directed;
-        # the fenced blocks it emits are applied after the response arrives.
         # SOURCE_LINKING (inline source links for prose) always rides
-        # along, but each write protocol is included only when the recent
-        # user messages actually point at timeline or witness work, so
-        # unrelated conversations carry no standing write instructions.
+        # along; the write protocols only when the recent user messages
+        # call for them (see armed_write_protocols).
         from .context import SOURCE_LINKING
-        from .fact_blocks import (
-            FACT_BLOCK_RE,
-            FACTS_PROTOCOL,
-            FACTS_TRIGGER_RE,
-            apply_fact_blocks,
-        )
-        from .note_blocks import (
-            NOTE_BLOCKS_RE,
-            NOTES_PROTOCOL,
-            NOTES_TRIGGER_RE,
-            apply_note_blocks,
-            strip_fake_note_confirmations,
-        )
-        from .witness_blocks import (
-            WITNESS_BLOCK_RE,
-            WITNESS_TRIGGER_RE,
-            WITNESSES_PROTOCOL,
-            apply_witness_blocks,
-        )
 
         context_text += "\n\n" + SOURCE_LINKING
-
-        # Current message plus a few before it, so follow-up directives
-        # ("also add the crash date") keep the protocol from a turn or
-        # two after the one that named the timeline.
-        recent_user_text = "\n".join(
-            [user_message]
-            + list(
-                conversation.messages.filter(role="user")
-                .order_by("-created_at")
-                .values_list("content", flat=True)[:4]
-            )
+        protocol_text, armed_protocols = armed_write_protocols(
+            conversation, user_message
         )
-        armed_protocols = []
-        if FACTS_TRIGGER_RE.search(recent_user_text):
-            context_text += "\n\n" + FACTS_PROTOCOL
-            armed_protocols.append("facts")
-        if WITNESS_TRIGGER_RE.search(recent_user_text):
-            context_text += "\n\n" + WITNESSES_PROTOCOL
-            armed_protocols.append("witnesses")
-        if NOTES_TRIGGER_RE.search(recent_user_text):
-            context_text += "\n\n" + NOTES_PROTOCOL
-            armed_protocols.append("notes")
+        context_text += protocol_text
         if armed_protocols:
             log_activity("Write protocols included: " + ", ".join(armed_protocols))
 
@@ -383,72 +472,17 @@ def process_ai_request(
             f"{int(time.time() - started_at)}s)"
         )
 
-        # Apply draft edits before citation verification, so the stored
-        # message carries the outcome text instead of the raw block.
-        if draft_link:
-            from apps.drafts import chat as drafts_chat
-
-            if drafts_chat.DRAFT_EDITS_RE.search(response_text):
-                update_status("applying", "Applying edits to the draft...")
-                response_text = drafts_chat.apply_edit_blocks(response_text, draft_link)
-                log_activity("Draft edits applied")
-
-        # Create any facts and witnesses the AI was directed to record,
-        # replacing each block with confirmation lines before the message
-        # is stored.
-        if FACT_BLOCK_RE.search(response_text):
-            update_status("applying", "Adding facts to the timeline...")
-            response_text = apply_fact_blocks(response_text, matter, user)
-            log_activity("Facts recorded on the timeline")
-        if WITNESS_BLOCK_RE.search(response_text):
-            update_status("applying", "Adding witnesses...")
-            response_text = apply_witness_blocks(response_text, matter, user)
-            log_activity("Witnesses recorded")
-        # Order matters: imitation confirmations are scrubbed from the raw
-        # response first (only model-written lines can match at this
-        # point), then real blocks are applied and produce the genuine
-        # confirmation lines.
-        response_text = strip_fake_note_confirmations(response_text)
-        if NOTE_BLOCKS_RE.search(response_text):
-            update_status("applying", "Writing notes...")
-            response_text = apply_note_blocks(response_text, matter, user)
-            log_activity("Notes written")
-
-        # Any raw [doc:]/[hl:]/[note:] handles the model leaked into prose
-        # become human-readable markdown links (hallucinated ids are
-        # omitted). Runs after the write blocks so their content has
-        # already been consumed.
-        from .handles import HANDLE_RE, resolve_handles_for_chat
-
-        if HANDLE_RE.search(response_text):
-            response_text = resolve_handles_for_chat(response_text, matter)
-
-        # Verify citations in the response
-        update_status("verifying", "Verifying citations...")
-        log_activity("Checking citations against CourtListener...")
-        logger.info(
-            "Starting citation verification for conversation %s", conversation_id
+        # Write blocks, handle links and the citation check, shared with
+        # the agent turn.
+        response_text, citations_data = finalize_response(
+            response_text,
+            matter,
+            user,
+            conversation,
+            draft_link,
+            update_status,
+            log_activity,
         )
-        try:
-            verified_citations = verify_all_citations(response_text)
-            citations_data = citations_to_dict(verified_citations)
-            if citations_data:
-                log_activity(f"{len(citations_data)} citations checked")
-            else:
-                log_activity("No case citations to check")
-            logger.info(
-                "Citation verification complete for conversation %s: %d citations found",
-                conversation_id,
-                len(citations_data),
-            )
-        except Exception as e:
-            logger.exception(
-                "Citation verification failed for conversation %s: %s",
-                conversation_id,
-                e,
-            )
-            citations_data = []
-            log_activity("Citation check failed; skipped")
 
         # Set complete status with response data (unless cancelled)
         if is_cancelled():
