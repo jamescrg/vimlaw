@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
+from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
@@ -750,19 +751,18 @@ class TestEditorRecents:
         assert reverse("notes:note-view", args=[mnote.id]) in listing
 
 
-class TestValidTabsFallback:
-    def test_stale_notes_tab_session_falls_back(self, client_with_matter):
-        """Sessions that stored the retired "notes" case tab land on the
-        default tab instead of 404ing."""
+class TestCaseNotesTabSession:
+    def test_notes_tab_is_remembered(self, client_with_matter):
+        """The Notes sub-tab is a valid case tab again: it sticks as the
+        last-viewed tab and case-index lands on it."""
         matter = client_with_matter.matter
-        session = client_with_matter.session
-        session[f"case_tab_{matter.id}"] = "notes"
-        session.save()
+        resp = client_with_matter.get(reverse("case:notes-index", args=[matter.id]))
+        assert resp.status_code == 200
+        assert client_with_matter.session[f"case_tab_{matter.id}"] == "notes"
 
         resp = client_with_matter.get(reverse("case:case-index"), follow=True)
         assert resp.status_code == 200
-        # get_last_tab sanitized the stale value to the default (documents)
-        assert resp.request["PATH_INFO"].endswith("/documents/")
+        assert resp.request["PATH_INFO"].endswith("/notes/")
 
 
 class TestSearchPalette:
@@ -1431,3 +1431,351 @@ class TestNoteAiWriteToggle:
         other.get("/dash/")
         response = other.post(reverse("notes:note-ai-write", args=[note.id]))
         assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Notes tab (practice-wide list page) — restored 2026-08-23
+# ---------------------------------------------------------------------------
+
+
+class TestNotesIndex:
+    def test_notes_index_requires_login(self):
+        resp = Client().get(reverse("notes:index"))
+        assert resp.status_code == 302
+
+    def test_notes_index_loads(self, client):
+        resp = client.get(reverse("notes:index"))
+        assert resp.status_code == 200
+        assert b'id="note-folders"' in resp.content
+        assert b'id="notes-table"' in resp.content
+
+    def test_notes_index_shows_inbox_notes(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        Note.objects.create(author=user, title="Loose Note")
+        folder = NoteFolder.objects.create(name="Filed")
+        Note.objects.create(author=user, title="Filed Note", folder=folder)
+        resp = client.get(reverse("notes:index"))
+        assert b"Loose Note" in resp.content
+        assert b"Filed Note" not in resp.content  # Inbox = no folder
+
+    def test_all_folders_shows_everything(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        Note.objects.create(author=user, title="Loose Note")
+        folder = NoteFolder.objects.create(name="Filed")
+        Note.objects.create(author=user, title="Filed Note", folder=folder)
+        client.get(reverse("notes:folder-all"))
+        resp = client.get(reverse("notes:index"))
+        assert b"Loose Note" in resp.content
+        assert b"Filed Note" in resp.content
+
+    def test_folder_select_filters_and_toggles(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        Note.objects.create(author=user, title="Loose Note")
+        folder = NoteFolder.objects.create(name="Filed")
+        Note.objects.create(author=user, title="Filed Note", folder=folder)
+        resp = client.get(reverse("notes:folder-select", args=[folder.id]), follow=True)
+        assert b"Filed Note" in resp.content
+        assert b"Loose Note" not in resp.content
+        # Second click on the same folder goes back to the Inbox
+        resp = client.get(reverse("notes:folder-select", args=[folder.id]), follow=True)
+        assert b"Loose Note" in resp.content
+
+    def test_matter_notes_excluded(self, client, note):
+        client.get(reverse("notes:folder-all"))
+        resp = client.get(reverse("notes:index"))
+        assert note.title.encode() not in resp.content
+
+    def test_sidebar_excludes_matter_folders(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="General Only")
+        NoteFolder.objects.create(name="Matter Only", matter=matter)
+        resp = client.get(reverse("notes:index"))
+        assert b"General Only" in resp.content
+        assert b"Matter Only" not in resp.content
+
+    def test_row_opens_editor(self, client, user):
+        n = Note.objects.create(author=user, title="Openable")
+        resp = client.get(reverse("notes:index"))
+        assert reverse("notes:note-view", args=[n.id]).encode() in resp.content
+
+
+class TestNotesList:
+    def test_notes_list_htmx_partial(self, client, user):
+        Note.objects.create(author=user, title="Partial Note")
+        resp = client.get(reverse("notes:list"))
+        assert resp.status_code == 200
+        assert b"Partial Note" in resp.content
+        assert b"<html" not in resp.content
+
+    def test_keyword_filter(self, client, user):
+        Note.objects.create(author=user, title="Alpha")
+        Note.objects.create(author=user, title="Beta")
+        resp = client.get(reverse("notes:filter-keyword"), {"keyword": "alp"})
+        assert b"Alpha" in resp.content
+        assert b"Beta" not in resp.content
+        # Clearing the keyword shows both again
+        resp = client.get(reverse("notes:filter-keyword"), {"keyword": ""})
+        assert b"Beta" in resp.content
+
+    def test_importance_filter_and_clear(self, client, user):
+        Note.objects.create(author=user, title="Urgent", importance=7)
+        Note.objects.create(author=user, title="Meh", importance=2)
+        resp = client.get(reverse("notes:filter-importance", args=[5]), follow=True)
+        assert b"Urgent" in resp.content
+        assert b"Meh" not in resp.content
+        resp = client.get(reverse("notes:filter-importance", args=[0]), follow=True)
+        assert b"Meh" in resp.content
+
+    def test_order_by_toggles_direction(self, client, user):
+        client.get(reverse("notes:order-by", args=["title"]))
+        assert client.session["standalone_notes_filter"]["order_by"] == "title"
+        client.get(reverse("notes:order-by", args=["title"]))
+        assert client.session["standalone_notes_filter"]["order_by"] == "-title"
+
+    def test_filter_modal_get_and_post(self, client, user):
+        resp = client.get(reverse("notes:filter"))
+        assert resp.status_code == 200
+        resp = client.post(reverse("notes:filter"), {"category": "research"})
+        assert resp.status_code == 204
+        assert client.session["standalone_notes_filter"]["category"] == "research"
+
+
+class TestNotesTabAdd:
+    def test_open_redirects_into_editor(self, client):
+        resp = client.post(reverse("notes:add") + "?open=1")
+        note = Note.objects.get(title="Untitled")
+        assert resp.status_code == 302
+        assert resp.url == reverse("notes:note-view", args=[note.id])
+
+    def test_open_into_selected_folder(self, client):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Target")
+        resp = client.post(reverse("notes:add") + f"?open=1&folder={folder.id}")
+        assert resp.status_code == 302
+        assert Note.objects.get(title="Untitled").folder_id == folder.id
+
+    def test_case_open_redirects_into_editor(self, client_with_matter, matter):
+        url = reverse("case:notes-add", args=[matter.id]) + "?open=1"
+        resp = client_with_matter.post(url)
+        note = Note.objects.get(title="Untitled", matter=matter)
+        assert resp.status_code == 302
+        assert resp.url == reverse("notes:note-view", args=[note.id])
+
+
+class TestNoteEdit:
+    def test_note_edit_get(self, client, user):
+        n = Note.objects.create(author=user, title="Before")
+        resp = client.get(reverse("notes:edit", args=[n.id]))
+        assert resp.status_code == 200
+        assert b"Rename Note" in resp.content
+
+    def test_note_edit_post(self, client, user):
+        n = Note.objects.create(author=user, title="Before")
+        resp = client.post(reverse("notes:edit", args=[n.id]), {"title": "After"})
+        assert resp.status_code == 204
+        assert resp.headers["HX-Trigger"] == "notesChanged"
+        n.refresh_from_db()
+        assert n.title == "After"
+
+    def test_note_edit_rejects_sibling_clash(self, client, user):
+        Note.objects.create(author=user, title="Taken")
+        n = Note.objects.create(author=user, title="Free")
+        resp = client.post(reverse("notes:edit", args=[n.id]), {"title": "taken"})
+        assert resp.status_code == 200  # form re-rendered with the error
+        assert b"already exists" in resp.content
+        n.refresh_from_db()
+        assert n.title == "Free"
+
+    def test_matter_note_not_editable_here(self, client, note):
+        assert client.get(reverse("notes:edit", args=[note.id])).status_code == 404
+
+
+class TestNotesTabRowActions:
+    def test_importance_and_category(self, client, user):
+        n = Note.objects.create(author=user, title="Row")
+        resp = client.post(reverse("notes:note-importance", args=[n.id, 7]))
+        assert resp.status_code == 302
+        resp = client.post(reverse("notes:note-category", args=[n.id, "research"]))
+        assert resp.status_code == 302
+        n.refresh_from_db()
+        assert (n.importance, n.category) == (7, "research")
+
+    def test_move_modal_get_then_post(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Dest")
+        n = Note.objects.create(author=user, title="Mover")
+        resp = client.get(reverse("notes:note-move", args=[n.id]))
+        assert resp.status_code == 200
+        assert b"Dest" in resp.content
+        resp = client.post(
+            reverse("notes:note-move", args=[n.id]), {"destination": folder.id}
+        )
+        assert resp.status_code == 204
+        n.refresh_from_db()
+        assert n.folder_id == folder.id
+
+    def test_move_modal_tree_scoped_to_matter(self, client_with_matter, note, matter):
+        from apps.notes.models import NoteFolder
+
+        NoteFolder.objects.create(name="General Folder")
+        NoteFolder.objects.create(name="Matter Folder", matter=matter)
+        resp = client_with_matter.get(reverse("notes:note-move", args=[note.id]))
+        assert b"Matter Folder" in resp.content
+        assert b"General Folder" not in resp.content
+
+
+class TestNotesTabFolders:
+    def test_toggle_and_toggle_all(self, client):
+        from apps.notes.models import NoteFolder
+
+        a = NoteFolder.objects.create(name="A")
+        b = NoteFolder.objects.create(name="B")
+        resp = client.post(reverse("notes:folder-toggle", args=[a.id]))
+        assert resp.status_code == 204
+        assert client.session["note_folders_expanded"] == [a.id]
+        client.post(reverse("notes:folder-toggle", args=[a.id]))
+        assert client.session["note_folders_expanded"] == []
+        client.post(reverse("notes:folder-toggle-all") + "?expand=true")
+        assert set(client.session["note_folders_expanded"]) == {a.id, b.id}
+        client.post(reverse("notes:folder-toggle-all") + "?expand=false")
+        assert client.session["note_folders_expanded"] == []
+
+    def test_expanded_children_render_visible(self, client):
+        from apps.notes.models import NoteFolder
+
+        parent = NoteFolder.objects.create(name="Parent")
+        child = NoteFolder.objects.create(name="Child", parent=parent)
+        resp = client.get(reverse("notes:index"))
+        assert f'id="note-folder-{child.id}"'.encode() in resp.content
+        assert b"folder-hidden" in resp.content
+        client.post(reverse("notes:folder-toggle", args=[parent.id]))
+        resp = client.get(reverse("notes:index"))
+        assert b"folder-hidden" not in resp.content
+
+    def test_tab_add_modal_and_post(self, client):
+        from apps.notes.models import NoteFolder
+
+        url = reverse("notes:folder-add") + "?context=tab"
+        resp = client.get(url)
+        assert resp.status_code == 200
+        assert b"note-folder-form" in resp.content
+        resp = client.post(url, {"name": "Fresh", "parent": ""})
+        assert resp.status_code == 202
+        assert resp.headers["HX-Trigger-After-Swap"] == "closeModal"
+        assert b"Fresh" in resp.content  # re-rendered sidebar
+        assert NoteFolder.objects.get(name="Fresh").matter_id is None
+
+    def test_tab_add_prefills_selected_parent(self, client):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Selected")
+        client.get(reverse("notes:folder-select", args=[folder.id]))
+        resp = client.get(reverse("notes:folder-add") + "?context=tab")
+        assert f'<option value="{folder.id}" selected'.encode() in resp.content
+
+    def test_tab_edit_rerenders_sidebar(self, client):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Old")
+        resp = client.post(
+            reverse("notes:folder-edit", args=[folder.id]),
+            {"name": "New", "parent": ""},
+        )
+        assert resp.status_code == 202
+        assert b"New" in resp.content
+        folder.refresh_from_db()
+        assert folder.name == "New"
+
+    def test_tab_delete_refreshes_and_clears_selection(self, client):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Gone")
+        client.get(reverse("notes:folder-select", args=[folder.id]))
+        resp = client.delete(reverse("notes:folder-delete", args=[folder.id]))
+        assert resp.status_code == 204
+        assert resp.headers["HX-Refresh"] == "true"
+        assert client.session["notes_selected_folder_id"] is None
+
+    def test_folder_move_modal_and_post(self, client):
+        from apps.notes.models import NoteFolder
+
+        a = NoteFolder.objects.create(name="A")
+        b = NoteFolder.objects.create(name="B")
+        resp = client.get(reverse("notes:folder-move", args=[b.id]))
+        assert resp.status_code == 200
+        assert b'name="destination"' in resp.content
+        resp = client.post(
+            reverse("notes:folder-move", args=[b.id]), {"destination": a.id}
+        )
+        assert resp.status_code == 202
+        b.refresh_from_db()
+        assert (b.parent_id, b.depth) == (a.id, 1)
+
+    def test_folder_move_rejects_matter_folder(self, client, matter):
+        from apps.notes.models import NoteFolder
+
+        f = NoteFolder.objects.create(name="M", matter=matter)
+        assert client.get(reverse("notes:folder-move", args=[f.id])).status_code == 404
+
+
+class TestNotesTabBulk:
+    def test_select_bulk_importance_and_delete(self, client, user):
+        a = Note.objects.create(author=user, title="A")
+        b = Note.objects.create(author=user, title="B")
+        client.post(reverse("notes:toggle-select", args=[a.id]))
+        client.post(reverse("notes:toggle-select", args=[b.id]))
+        resp = client.get(reverse("notes:list"))
+        assert b"bulk-clear-icon" in resp.content
+        resp = client.post(reverse("notes:bulk-set-importance"), {"importance": "6"})
+        assert resp.status_code == 204
+        a.refresh_from_db()
+        assert a.importance == 6
+        # Selection cleared after the bulk action
+        client.post(reverse("notes:select-all"))
+        resp = client.post(reverse("notes:bulk-delete"))
+        assert resp.status_code == 204
+        assert Note.objects.filter(matter__isnull=True).count() == 0
+
+    def test_bulk_move_into_general_folder(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Bucket")
+        a = Note.objects.create(author=user, title="A")
+        client.post(reverse("notes:toggle-select", args=[a.id]))
+        resp = client.get(reverse("notes:bulk-move"))
+        assert resp.status_code == 200
+        assert b"Bucket" in resp.content
+        resp = client.post(reverse("notes:bulk-move"), {"destination": folder.id})
+        assert resp.status_code == 204
+        a.refresh_from_db()
+        assert a.folder_id == folder.id
+
+    def test_bulk_move_rejects_matter_folder(self, client, user, matter):
+        from apps.notes.models import NoteFolder
+
+        mf = NoteFolder.objects.create(name="Matter Bucket", matter=matter)
+        a = Note.objects.create(author=user, title="A")
+        client.post(reverse("notes:toggle-select", args=[a.id]))
+        resp = client.post(reverse("notes:bulk-move"), {"destination": mf.id})
+        assert resp.status_code == 404
+
+    def test_bulk_move_suffixes_duplicates(self, client, user):
+        from apps.notes.models import NoteFolder
+
+        folder = NoteFolder.objects.create(name="Bucket")
+        Note.objects.create(author=user, title="Same", folder=folder)
+        a = Note.objects.create(author=user, title="Same")
+        client.post(reverse("notes:toggle-select", args=[a.id]))
+        client.post(reverse("notes:bulk-move"), {"destination": folder.id})
+        a.refresh_from_db()
+        assert a.title == "Same 1"
+
+    def test_bulk_actions_require_selection(self, client):
+        assert client.post(reverse("notes:bulk-delete")).status_code == 400
+        assert client.get(reverse("notes:bulk-move")).status_code == 400
