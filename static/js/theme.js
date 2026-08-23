@@ -37,23 +37,49 @@
     '75.48 25.89 67.14Q25.89 49.91 25.89 40.36Q25.89 30.82 25.80 28.69Q25.71 ' +
     '26.56 25.48 24.66Q25.24 22.76 24.78 21.00Z';
 
+  // Lucide "sparkles" (stroked), the AI chat windows' favicon.
+  var SPARKLES_PATHS =
+    '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 ' +
+    '0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 ' +
+    '0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 ' +
+    '14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>' +
+    '<path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>';
+
   // The favicon is its own document: it can see prefers-color-scheme but not
-  // data-theme or the page's tokens. So the brand icon is repainted here from
-  // the resolved theme — ground = --brand-ink (what the sidebar mark wears),
-  // glyph = --background-body — and handed over as a data URI. Only icons
-  // marked data-favicon="brand" opt in; the dev mark and the per-app icons
-  // (notes, viewer, AI) keep their fixed colours.
+  // data-theme or the page's tokens. So themed icons are repainted here from
+  // the resolved theme and handed over as a data URI. Only icons marked
+  // data-favicon opt in: "brand" is the Kosmos mark (ground = --brand-ink,
+  // what the sidebar mark wears; glyph = --background-body) and "ai" is the
+  // sparkles the AI chat windows carry, stroked in --brand-ink. The dev mark
+  // and the other per-app icons (notes, viewer) keep their fixed colours.
+  function faviconSvg(kind, ink, ground) {
+    if (kind === 'brand') {
+      return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+        '<rect width="100" height="100" rx="18" style="fill:' + ink + '"/>' +
+        '<path d="' + MARK_PATH + '" style="fill:' + ground + '"/></svg>'
+      );
+    }
+    if (kind === 'ai') {
+      return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ' +
+        'fill="none" stroke-width="2" stroke-linecap="round" ' +
+        'stroke-linejoin="round" style="stroke:' + ink + '">' +
+        SPARKLES_PATHS + '</svg>'
+      );
+    }
+    return null;
+  }
+
   function paintFavicon() {
-    var link = document.querySelector('link[rel="icon"][data-favicon="brand"]');
+    var link = document.querySelector('link[rel="icon"][data-favicon]');
     if (!link) return;
     var style = getComputedStyle(document.documentElement);
     var ink = style.getPropertyValue('--brand-ink').trim();
     var ground = style.getPropertyValue('--background-body').trim();
     if (!ink || !ground) return;
-    var svg =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
-      '<rect width="100" height="100" rx="18" style="fill:' + ink + '"/>' +
-      '<path d="' + MARK_PATH + '" style="fill:' + ground + '"/></svg>';
+    var svg = faviconSvg(link.getAttribute('data-favicon'), ink, ground);
+    if (!svg) return;
     link.setAttribute('href', 'data:image/svg+xml,' + encodeURIComponent(svg));
   }
 

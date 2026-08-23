@@ -16,6 +16,7 @@
     {% else %}
       <link rel="icon"
             type="image/svg+xml"
+            data-favicon="brand"
             href="{% static_v 'images/kosmos-mark.svg' %}" />
     {% endif %}
   {% endblock favicon %}
@@ -84,4 +85,5 @@
   <script src="{% static_v 'js/htmx-focus.js' %}"></script>
   <script src="{% static_v 'js/main.js' %}"></script>
   <script src="{% static_v 'js/file-upload-forms.js' %}" defer></script>
+  <script src="{% static_v 'js/theme.js' %}"></script>
 </body>
