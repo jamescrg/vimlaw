@@ -77,6 +77,7 @@ import {
   refreshReferenceCitations,
   setupReferencePicker,
   openReferencePicker,
+  toggleReferencePicker,
 } from "./notes/references.js";
 import {
   buildOutline,
@@ -402,6 +403,17 @@ function setupToolbar() {
   if (readOnly) return;
 
   connectFormatToolbar(cluster, state.editor);
+
+  // Source-chip button (shared include; format-toolbar.js only shows/hides
+  // it). onclick assignment, not addEventListener: the element survives
+  // note switches and this runs on every one.
+  const refBtn = cluster.querySelector("[data-ref-insert]");
+  if (refBtn) {
+    refBtn.onclick = (e) => {
+      e.preventDefault();
+      toggleReferencePicker();
+    };
+  }
 }
 
 // ─── Keyboard Shortcuts ──────────────────────────────────────────────────────

@@ -299,6 +299,14 @@ export function openReferencePicker() {
   setTimeout(() => searchInput.focus({ preventScroll: true }), 10);
 }
 
+// Toolbar button: open, or close when it is already showing (the picker's
+// outside-mousedown handler ignores the button so the click reaches here).
+export function toggleReferencePicker() {
+  const picker = document.getElementById("reference-picker");
+  if (picker && picker.classList.contains("active")) closeReferencePicker();
+  else openReferencePicker();
+}
+
 function closeReferencePicker() {
   const picker = document.getElementById("reference-picker");
   if (picker) picker.classList.remove("active");

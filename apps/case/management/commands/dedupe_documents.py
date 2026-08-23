@@ -12,6 +12,12 @@ Only copies within the same matter are considered: the same filing held
 in two matters is each matter's own record, so cross-matter pairs are
 reported and left alone.
 
+When the removed copy is the Drive-synced one and the kept copy is not,
+the Drive identity (file id, path, mtime, mapping) moves to the kept
+copy rather than being tombstoned: the matter keeps tracking the Drive
+file, through the record that the highlights and facts point at. This is
+the adoption the mirror itself performs when it meets a manual twin.
+
 Dry run by default; pass --apply to delete. Storage files of removed
 copies are deleted too (each copy has its own stored file).
 """
@@ -83,8 +89,12 @@ class Command(BaseCommand):
                 for d in keep:
                     self.stdout.write(f"  keep   {_label(d)}  [{_why_kept(d)}]")
                 for d in drop:
-                    self.stdout.write(f"  remove {_label(d)}")
-                    survivors[d.pk] = keep[0]
+                    survivor = _survivor_for(d, keep)
+                    survivors[d.pk] = survivor
+                    handover = ""
+                    if d.drive_file_id and not survivor.drive_file_id:
+                        handover = f"  (Drive identity moves to #{survivor.pk})"
+                    self.stdout.write(f"  remove {_label(d)}{handover}")
                 to_delete.extend(drop)
 
         self.stdout.write(
@@ -103,6 +113,8 @@ class Command(BaseCommand):
             if survivor is not None:
                 for label in d.labels.all():
                     survivor.labels.add(label)
+                if d.drive_file_id and not survivor.drive_file_id:
+                    _hand_over_drive_identity(d, survivor)
             path = d.file.name if d.file else None
             storage = d.file.storage if d.file else None
             d.delete()
@@ -163,6 +175,41 @@ class Command(BaseCommand):
             keep = [min(drive or docketed or group, key=lambda d: (d.created_at, d.pk))]
         keep_ids = {d.pk for d in keep}
         return keep, [d for d in group if d.pk not in keep_ids]
+
+
+def _survivor_for(d, keep):
+    """The kept copy that inherits a removed copy's labels and (if it has
+    none of its own) Drive identity: prefer a kept copy without Drive
+    provenance, so a handover has somewhere to land; else the first."""
+    for k in keep:
+        if not k.drive_file_id:
+            return k
+    return keep[0]
+
+
+DRIVE_FIELDS = (
+    "drive_file_id",
+    "drive_path",
+    "drive_modified",
+    "drive_synced_at",
+    "drive_mapping_id",
+)
+
+
+def _hand_over_drive_identity(removed, survivor):
+    """Move Drive provenance from the copy being removed onto the survivor.
+
+    Cleared on the removed row FIRST: drive_file_id is unique, and the
+    pre_delete tombstone (apps/drive/signals.py) must not fire for a
+    Drive file that is still represented. Category and proceeding are
+    the survivor's own (hand edits stand), as with mirror adoption.
+    """
+    values = {f: getattr(removed, f) for f in DRIVE_FIELDS}
+    Document.objects.filter(pk=removed.pk).update(**{f: None for f in DRIVE_FIELDS})
+    removed.drive_file_id = None
+    Document.objects.filter(pk=survivor.pk).update(**values)
+    for f, v in values.items():
+        setattr(survivor, f, v)
 
 
 def _is_referenced(d):
