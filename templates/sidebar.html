@@ -63,9 +63,9 @@
         </a>
       </li>
       <li {% if app == 'notes' %}class="active"{% endif %}>
-        <a id="nav-notes" href="{% url 'notes:index' %}" data-tooltip="Notes">
+        <a id="nav-notes" href="{% url 'notes:index' %}" data-tooltip="Library">
           <i class="icon-notebook-pen"></i>
-          <span class="sidebar-label">Notes</span>
+          <span class="sidebar-label">Library</span>
         </a>
       </li>
       {% if user.is_admin or user.perm_financial %}
