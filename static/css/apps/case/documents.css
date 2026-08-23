@@ -307,3 +307,18 @@ with the Gmail label-link modal.
   color: var(--color-muted);
   margin-left: 0.25rem;
 }
+
+.drive-mapping-table .col-folder .app-badge {
+  margin-left: 0.25rem;
+}
+
+/* Folder and setting names sit inside sentences here, but the global rule
+   (typeography.css) makes code a block with a left margin, which drops the
+   name onto its own line and breaks the sentence in two. */
+.drive-step code {
+  display: inline;
+  margin-left: 0;
+  /* Wrap and collapse like the surrounding prose; the global rule keeps
+     whitespace verbatim, which belongs to code blocks, not folder names. */
+  white-space: normal;
+}

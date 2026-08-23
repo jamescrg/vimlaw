@@ -8,25 +8,20 @@
 {% endcomment %}
 {% if not live_ok %}
   <p class="detail-text">
-    Drive could not list the subfolders of <code>{{ folder_name }}</code>.
+    Drive could not list the subfolders of {{ folder_name }}.
     Check the connection and reopen this dialog.
   </p>
 {% elif not rows %}
   <p class="detail-text">
-    No subfolders in <code>{{ folder_name }}</code> yet. Create them in
+    No subfolders in {{ folder_name }} yet. Create them in
     Drive (for example Corr, Discovery, Evidence, Record), then reopen this
     dialog to map them.
   </p>
 {% else %}
   <p class="detail-text">
-    Map the top-level folders inside <code>{{ folder_name }}</code>. PDFs
-    anywhere under a mapped folder sync in with that category; unmapped
-    folders are ignored. Record folders need a proceeding and Discovery
-    folders may have one (name them "Record - Appeal" or "Discovery - Appeal"
-    to have it suggested). Evidence is never suggested: choose it by hand,
-    and only for a folder whose PDFs all belong in the app. Nothing syncs
-    until you save. Re-mapping a folder updates the documents already synced
-    from it. Files deleted in the app never come back.
+    PDFs anywhere under a mapped folder in {{ folder_name }} sync
+    in with its category. Unmapped folders are ignored, and nothing syncs
+    until you save.
   </p>
   <table class="table drive-mapping-table">
     <thead>
@@ -41,9 +36,14 @@
         <tr x-data="{ category: '{{ row.category|escapejs }}' }">
           <td class="col-folder">
             {{ row.name }}
-            {% if row.suggested %}<span class="drive-mapping-note">suggested</span>{% endif %}
-            {% if row.missing %}<span class="drive-mapping-note">not found in Drive</span>{% endif %}
-            {% if row.nested %}<span class="drive-mapping-note">nested (legacy)</span>{% endif %}
+            {% comment %}
+              Row status as label-style badges: the category is a guess from
+              the folder name, the folder is gone from Drive, or the row is
+              a converted nested folder the modal can no longer create.
+            {% endcomment %}
+            {% if row.suggested %}<span class="app-badge badge-blue">suggested</span>{% endif %}
+            {% if row.missing %}<span class="app-badge badge-yellow">not in Drive</span>{% endif %}
+            {% if row.nested %}<span class="app-badge badge-gray">nested</span>{% endif %}
           </td>
           <td>
             <select name="category_{{ row.key }}" x-model="category">
@@ -51,17 +51,41 @@
             </select>
           </td>
           <td>
-            <select name="proceeding_{{ row.key }}"
-                    :disabled="!['Record', 'Discovery'].includes(category)">
-              <option value="" x-text="category === 'Record' ? 'Required' : 'None'"></option>
-              {% for p in proceedings %}
-                <option value="{{ p.id }}"
-                        {% if p.id == row.proceeding_id %}selected{% endif %}>
-                  {{ p.display_name }}
-                  {% if p.case_number %}({{ p.case_number }}){% endif %}
+            {% comment %}
+              With no proceedings on the matter the select would hold only
+              its placeholder, which reads as a dropdown that will not open.
+              Say so instead, and point at the tab that fixes it. The
+              placeholder label is rendered server-side as well as bound, so
+              it is never blank before Alpine hydrates.
+            {% endcomment %}
+            {% if proceedings %}
+              <select name="proceeding_{{ row.key }}"
+                      :disabled="!['Record', 'Discovery'].includes(category)">
+                <option value=""
+                        x-text="category === 'Record' ? 'Required' : category === 'Discovery' ? 'None' : 'Not applicable'">
+                  {% if row.category == 'Record' %}
+                    Required
+                  {% elif row.category == 'Discovery' %}
+                    None
+                  {% else %}
+                    Not applicable
+                  {% endif %}
                 </option>
-              {% endfor %}
-            </select>
+                {% for p in proceedings %}
+                  <option value="{{ p.id }}"
+                          {% if p.id == row.proceeding_id %}selected{% endif %}>
+                    {{ p.display_name }}
+                    {% if p.case_number %}({{ p.case_number }}){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <span class="drive-mapping-note">
+                No proceedings yet. Add one on the
+                <a href="{% url 'matters:proceedings-index' id=matter.id %}">Proceedings tab</a>
+                to map a Record folder.
+              </span>
+            {% endif %}
           </td>
         </tr>
       {% endfor %}

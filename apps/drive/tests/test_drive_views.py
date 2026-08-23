@@ -65,6 +65,34 @@ def test_modal_prefills_suggestions_and_saved_rows(
     assert "Notes" not in body.split("2. Folder mapping")[1]
 
 
+def test_matter_without_proceedings_gets_a_hint_not_an_empty_select(
+    client, matter, tree
+):
+    """An empty proceeding select reads as a dropdown that will not open."""
+    body = _modal(client, matter).content.decode()
+    assert 'name="proceeding_cf1"' not in body
+    assert "No proceedings yet" in body
+    assert reverse("matters:proceedings-index", args=[matter.id]) in body
+
+
+def test_placeholder_label_rendered_server_side(
+    client, matter, proceeding, record_mapping, tree
+):
+    """The placeholder must read correctly before Alpine hydrates."""
+    body = " ".join(_modal(client, matter).content.decode().split())
+    assert 'name="proceeding_rf1"' in body
+    # Record row placeholder, and a not-applicable one for an unmapped row.
+    assert "Required" in body
+    assert "Not applicable" in body
+
+
+def test_hidden_folders_are_not_listed(client, matter, proceeding, tree):
+    tree.add_folder("hid1", ".claude", parent="mf1")
+    body = _modal(client, matter).content.decode()
+    assert ".claude" not in body
+    assert 'name="category_hid1"' not in body
+
+
 def test_modal_resolves_legacy_name_only_link(client, matter, proceeding, tree):
     Matter.objects.filter(pk=matter.pk).update(drive_folder_id=None)
     _modal(client, matter)

@@ -44,6 +44,32 @@ def test_each_category_ingests_with_its_rule(matter, proceeding, tree):
     assert (by_id["e1"].category, by_id["e1"].proceeding) == ("Evidence", None)
 
 
+def test_hidden_folders_never_offered_or_walked(matter, proceeding, tree):
+    """Dot-prefixed tooling folders (and Notes) stay out of the table, the
+    nudge count, and the walk inside a mapped folder."""
+    tree.add_folder("hid1", ".claude", parent="mf1")
+    tree.add_file("h1", "prompt.pdf", "hid1")
+    _map(matter, "cf1", "Corr", "Correspondence")
+    tree.add_folder("hid2", ".cache", parent="cf1")
+    tree.add_file("h2", "junk.pdf", "hid2")
+    tree.add_file("c1", "Letter.pdf", "cf1")
+
+    stats = google.sync(full=True)
+
+    assert stats["records_synced"] == 1
+    assert Document.objects.get().drive_file_id == "c1"
+    state = DriveMatterState.objects.get(matter=matter)
+    names = [f["name"] for f in state.unmapped_folders]
+    assert ".claude" not in names and "Notes" not in names
+
+    # A hidden folder appearing later is not nudged either.
+    tree.add_folder("hid3", ".tmp", parent="mf1")
+    tree.change_feed = [tree.change_for("hid3")]
+    google.sync()
+    state.refresh_from_db()
+    assert ".tmp" not in [f["name"] for f in state.unmapped_folders]
+
+
 def test_unmapped_sibling_ignored_and_nudged(matter, proceeding, tree):
     _map(matter, "cf1", "Corr", "Correspondence")
     tree.add_file("e1", "Photo.pdf", "ef1")
