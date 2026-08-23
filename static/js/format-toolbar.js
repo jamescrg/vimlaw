@@ -63,6 +63,16 @@ function wireTable(toolbar, editor) {
     typeof editor.commands.insertTable === "function" ? "" : "none";
 }
 
+// The source-chip button opens the notes reference picker; that wiring
+// lives with the picker (notes/references.js + notes-editor.js). Here we
+// just hide the button on surfaces whose editor lacks the NoteRef node
+// (the AI compose-prompt modal).
+function wireReferences(toolbar, editor) {
+  const btn = toolbar.querySelector("[data-ref-insert]");
+  if (!btn) return;
+  btn.style.display = editor.schema.nodes.noteRef ? "" : "none";
+}
+
 // The last-used highlight color, shared across surfaces so the swatch the
 // user picked in one editor greets them in the next ("" = default yellow).
 const HL_STORAGE_KEY = "format-toolbar-hl-color";
@@ -149,6 +159,7 @@ export function connectFormatToolbar(toolbar, editor) {
   );
   const hlToggleBtn = wireHighlight(toolbar, editor);
   wireTable(toolbar, editor);
+  wireReferences(toolbar, editor);
 
   const update = () => {
     for (const btn of buttons) {

@@ -123,8 +123,15 @@ export function handleEditorShortcut(editor, e, actions = {}) {
     return true;
   }
 
-  // Insert source: Ctrl+;
-  if (mod && e.key === ";" && actions.openReferences) {
+  // Insert source: Ctrl+; — matched on the physical key so Ctrl+Shift+;
+  // works too. GTK's input method (Firefox on Linux) swallows plain Ctrl+;
+  // and Ctrl+. for the system emoji picker before the page sees them; the
+  // shifted chord slips past it.
+  if (
+    mod &&
+    (e.key === ";" || e.code === "Semicolon") &&
+    actions.openReferences
+  ) {
     e.preventDefault();
     actions.openReferences();
     return true;

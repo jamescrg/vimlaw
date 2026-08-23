@@ -50,6 +50,18 @@ connectFormatToolbar() when the editor lacks the Table extension.
 <button type="button" class="btn-icon" data-table-toggle title="Table">
   <i class="icon-table"></i>
 </button>
+{% comment %}
+Opens the reference picker to insert a source chip (wired by the notes
+editor; connectFormatToolbar() hides it when the editor lacks the NoteRef
+node, i.e. the AI compose-prompt modal).
+{% endcomment %}
+<button type="button"
+        class="btn-icon"
+        id="insert-source-btn"
+        data-ref-insert
+        title="Insert source (Ctrl+;)">
+  <i class="icon-link-2"></i>
+</button>
 <span class="toolbar-divider"></span>
 {% comment %}
 LibreOffice-style split button: the main half toggles the current highlight
