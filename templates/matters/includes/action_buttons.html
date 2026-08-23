@@ -2,9 +2,17 @@
         hx-get="/activity/time/add/{{ matter.id }}/{% if mode == 'case' %}case{% else %}matters{% endif %}"
         hx-target="#htmx-modal-container"
         data-bs-toggle="modal"
-        data-bs-target="#htmx-modal-container">+ Time</button>
+        data-bs-target="#htmx-modal-container"
+        title="Add time"
+        aria-label="Add time">
+  <i class="icon-clock"></i>
+</button>
 <button class="accent-link expense-action"
         hx-get="/activity/expenses/add/{{ matter.id }}/{% if mode == 'case' %}case{% else %}matters{% endif %}"
         hx-target="#htmx-modal-container"
         data-bs-toggle="modal"
-        data-bs-target="#htmx-modal-container">+ Expense</button>
+        data-bs-target="#htmx-modal-container"
+        title="Add expense"
+        aria-label="Add expense">
+  <i class="icon-receipt"></i>
+</button>
