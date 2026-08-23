@@ -601,6 +601,10 @@ class TestAgentKind:
         message = conversation.messages.get(role="assistant")
         assert message.agent_run == run
         assert message.activity_log == ["Oriented"]
+        html = response.content.decode()
+        assert "Agent run (1 step)" in html
+        assert "ai-agent-summary-stats" in html
+        assert 'id="agent-turn-1"' not in html  # persisted rows carry no live ids
 
     def test_in_flight_poll_passes_usage_and_steps(self, client, matter, user):
         from django.urls import reverse
@@ -626,6 +630,98 @@ class TestAgentKind:
         assert response.context["usage"]["tool_calls"] == 1
         assert response.context["steps"][0]["text"] == "Reading the complaint."
         assert "every 1s" in response.content.decode()
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_agent_poll_renders_rows_and_stats(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "reading",
+                "message": "Reading document 12...",
+                "started_at": 0,
+                "activity_log": ["Oriented"],
+                "usage": {
+                    "input": 48_231,
+                    "output": 3_100,
+                    "cache_read": 41_000,
+                    "tool_calls": 7,
+                    "tool_calls_max": 25,
+                    "chars_read": 210_000,
+                },
+                "steps": [
+                    {"type": "text", "n": 1, "text": "Reading the complaint first."},
+                    {
+                        "type": "turn",
+                        "n": 1,
+                        "input": 12_300,
+                        "output": 610,
+                        "seconds": 9,
+                    },
+                    {
+                        "type": "tool",
+                        "tool": "read_document",
+                        "n": 1,
+                        "label": "Read *Complaint* (41k chars)",
+                        "pending": False,
+                        "seconds": 0.2,
+                    },
+                    {
+                        "type": "tool",
+                        "tool": "search_materials",
+                        "n": 2,
+                        "label": 'Searching "spoliation"...',
+                        "pending": True,
+                        "seconds": 0,
+                    },
+                ],
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert 'id="ai-agent-stats"' in html
+        assert "48.2k in" in html and "3.1k out" in html and "41.0k cached" in html
+        assert "7/25 tools" in html and "210.0k read" in html
+        assert 'id="agent-text-1"' in html and "Reading the complaint first." in html
+        assert 'id="agent-turn-1"' in html and "12.3k in, 610 out" in html
+        assert 'id="agent-tool-1"' in html and "<em>Complaint</em>" in html
+        assert 'id="agent-tool-2"' in html and "icon-file-search pulse" in html
+        assert ">running<" in html
+        assert "ai-status-elapsed" not in html
+        assert "every 1s" in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_classic_poll_has_no_agent_strip(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(matter=matter, title="C", user=user)
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "thinking",
+                "message": "Thinking...",
+                "started_at": 0,
+                "activity_log": ["Context assembled"],
+                "usage": {"input": 1},
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert "ai-agent-stats" not in html
+        assert "Context assembled" in html
+        assert "ai-status-elapsed" in html
         cache.delete(f"ai_status_{conversation.id}")
 
     def test_clone_copies_agent_run(self, client, matter, user):

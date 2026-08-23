@@ -109,7 +109,9 @@
     </div>
     <div class="ai-message-content">
       {% if message.role == "assistant" %}
-        {% if message.research_trail %}
+        {% if message.agent_run %}
+          {% include "case/ai/agent-trail.html" with message=message %}
+        {% elif message.research_trail %}
           {% include "case/ai/research-trail.html" with message=message %}
         {% elif message.activity_log %}
           {% include "case/ai/activity-log.html" with message=message %}

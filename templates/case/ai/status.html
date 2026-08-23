@@ -14,6 +14,8 @@ the interval.
 Layout: the activity log rows come FIRST and the live status line sits
 at the BOTTOM of the box, so the newest log line and the current status
 read as one continuous stream (no eye-jumping between bottom and top).
+Agentic conversations swap the plain log for agent-status.html (typed
+rows plus the token/elapsed strip); the pin script serves both.
 {% endcomment %}
 <div id="ai-status-indicator"
      hx-get="{% url 'case:ai-status' conversation.id %}"
@@ -22,21 +24,37 @@ read as one continuous stream (no eye-jumping between bottom and top).
      hx-ext="morph"
      hx-swap="morph">
   <div class="ai-status-content">
-    {% if activity_log %}
+    {% if conversation.kind == "agent" %}
+      {% include "case/ai/agent-status.html" %}
+    {% elif activity_log %}
       <ul class="ai-research-log" id="ai-research-log">
         {% for line in activity_log %}<li>{{ line|render_markdown }}</li>{% endfor %}
       </ul>
+    {% endif %}
+    {% if activity_log or conversation.kind == "agent" %}
       {% comment %}
       Pin the log's scroll to the bottom so the newest step stays in
-      view. Morph swaps don't re-execute an unchanged script tag, so the
-      first render installs a document-level listener that re-pins after
-      every settle; the direct call below covers that first render.
+      view, unless the reader scrolled up to look at earlier rows (the
+      flag lives on the list element, which morph preserves). Morph swaps
+      don't re-execute an unchanged script tag, so the first render
+      installs a document-level listener that re-pins after every settle;
+      the direct call below covers that first render.
       {% endcomment %}
       <script>
         (function () {
+          function watchLog(log) {
+            if (log.dataset.watched) return;
+            log.dataset.watched = "1";
+            log.addEventListener("scroll", function () {
+              var gap = log.scrollHeight - log.scrollTop - log.clientHeight;
+              log.dataset.unpinned = gap < 40 ? "0" : "1";
+            });
+          }
           function pinLog() {
             var log = document.getElementById("ai-research-log");
-            if (log) log.scrollTop = log.scrollHeight;
+            if (!log) return;
+            watchLog(log);
+            if (log.dataset.unpinned !== "1") log.scrollTop = log.scrollHeight;
           }
           if (!window._aiLogScrollPinned) {
             window._aiLogScrollPinned = true;
@@ -53,7 +71,7 @@ read as one continuous stream (no eye-jumping between bottom and top).
     {% elif status == "thinking" %}
       <i class="icon-lightbulb pulse"></i>
     {% elif status == "generating" %}
-      <i class="icon-pencil-square pulse"></i>
+      <i class="icon-square-pen pulse"></i>
     {% elif status == "verifying" %}
       <i class="icon-scale pulse"></i>
     {% elif status == "planning" %}
@@ -68,7 +86,9 @@ read as one continuous stream (no eye-jumping between bottom and top).
       <i class="icon-hourglass spin"></i>
     {% endif %}
     <span class="ai-status-message">{{ message|render_markdown }}</span>
-    {% if elapsed_seconds %}<span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>{% endif %}
+    {% if elapsed_seconds and conversation.kind != "agent" %}
+      <span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>
+    {% endif %}
     {% if status != "cancelled" %}
       <button type="button"
               class="ai-cancel-btn"

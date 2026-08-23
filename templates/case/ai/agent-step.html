@@ -1,0 +1,44 @@
+{% load markdown_extras ai_extras %}
+{% comment %}
+One row of an agent run, shared by the live status box (live=True: rows
+carry stable ids so idiomorph patches them in place) and the persisted
+trail. Step shapes: apps/case/ai/agent_state.py.
+{% endcomment %}
+{% if step.type == "text" %}
+  <li class="ai-agent-step ai-agent-text"
+      {% if live %}id="agent-text-{{ step.n }}"{% endif %}>
+    <i class="icon-bot"></i>
+    <div>{{ step.text|render_markdown }}</div>
+  </li>
+{% elif step.type == "turn" %}
+  <li class="ai-agent-step ai-agent-turn"
+      {% if live %}id="agent-turn-{{ step.n }}"{% endif %}>
+    <i class="icon-cpu"></i>
+    <div>
+      Turn {{ step.n }}
+      <span class="detail-text">{{ step.input|ktokens }} in, {{ step.output|ktokens }} out
+        {% if step.cache_read %}, {{ step.cache_read|ktokens }} cached{% endif %}
+        {% if step.seconds %}, {{ step.seconds|duration_short }}{% endif %}
+      </span>
+    </div>
+  </li>
+{% elif step.type == "tool" %}
+  <li class="ai-agent-step ai-agent-tool{% if step.error %} ai-agent-error{% endif %}"
+      {% if live %}id="agent-tool-{{ step.n }}"{% endif %}>
+    <i class="{{ step.tool|agent_tool_icon }}{% if step.pending %} pulse{% endif %}"></i>
+    <div>
+      {{ step.label|render_markdown }}
+      {% if step.pending %}
+        <span class="detail-text">running</span>
+      {% elif step.seconds > 1 %}
+        <span class="detail-text">{{ step.seconds|duration_short }}</span>
+      {% endif %}
+    </div>
+  </li>
+{% elif step.type == "note" %}
+  <li class="ai-agent-step ai-agent-note"
+      {% if live %}id="agent-note-{{ index }}"{% endif %}>
+    <i class="icon-hash"></i>
+    <div>{{ step.label }}</div>
+  </li>
+{% endif %}
