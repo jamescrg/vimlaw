@@ -175,23 +175,31 @@ class Document(AuditMixin, models.Model):
             fileobj, is_pdf=is_pdf, size=size
         )
 
-    def find_duplicates(self):
-        """Other documents with the same bytes or page content."""
+    def find_duplicates(self, same_matter=False):
+        """Other documents with the same bytes or page content.
+
+        System-wide unless ``same_matter`` confines it to this matter.
+        """
         from apps.case.documents.fingerprint import find_duplicates
 
         return find_duplicates(
-            self.content_hash, self.page_fingerprint, exclude_pk=self.pk
+            self.content_hash,
+            self.page_fingerprint,
+            exclude_pk=self.pk,
+            matter_id=self.matter_id if same_matter else None,
         )
 
     @property
     def duplicates(self):
-        """Cached list of duplicates for templates (the row's badge).
+        """Cached list of same-matter duplicates for the row's badge.
 
         The documents table pre-fills ``_duplicates`` in bulk; elsewhere
-        this runs one query per document.
+        this runs one query per document. Copies on other matters are
+        left out: the badge flags clutter within this matter, while the
+        upload warning covers the system-wide check.
         """
         if not hasattr(self, "_duplicates"):
-            self._duplicates = list(self.find_duplicates())
+            self._duplicates = list(self.find_duplicates(same_matter=True))
         return self._duplicates
 
     @property

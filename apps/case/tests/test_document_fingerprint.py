@@ -177,6 +177,32 @@ def test_table_without_duplicates_has_no_badge(client_with_matter, user):
     assert "duplicate-badge" not in response.content.decode()
 
 
+def test_cross_matter_copy_is_not_badged(
+    client_with_matter, user, contact, practice_area
+):
+    """A twin filed on another matter is the upload warning's concern;
+    the row badge only flags copies within this matter."""
+    from apps.matters.models import Matter
+
+    matter = client_with_matter.matter
+    other = Matter.objects.create(
+        name="Other", client=contact, practice_area=practice_area, status="Open"
+    )
+    here = Document(matter=matter, name="Here", category="Evidence", created_by=user)
+    here.save()
+    here.file.save("a.pdf", io.BytesIO(make_pdf()), save=True)
+    there = Document(matter=other, name="There", category="Evidence", created_by=user)
+    there.save()
+    there.file.save("b.pdf", io.BytesIO(make_pdf()), save=True)
+
+    # Both the per-document property and the bulk table path leave it out...
+    assert here.duplicates == []
+    response = client_with_matter.get(f"/case/{matter.id}/documents/list/")
+    assert "duplicate-badge" not in response.content.decode()
+    # ...while the system-wide check (the upload warning) still sees it.
+    assert list(here.find_duplicates()) == [there]
+
+
 def test_duplicates_property_uses_bulk_attachment(
     matter, user, django_assert_num_queries
 ):
