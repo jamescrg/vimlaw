@@ -13,6 +13,13 @@
   border-color: var(--border-medium-dark);
 }
 
+/* The Editor button's book glyph sits a hair high against its label
+   (same optical nudge as .bulk-clear-icon) */
+.notes-toolbar .icon-book-open.with-text {
+  position: relative;
+  top: 1px;
+}
+
 /* =============================================================================
    Notes List Layout (Sidebar + Content)
    ============================================================================= */
