@@ -58,6 +58,7 @@ urlpatterns = [
         name="note-importance",
     ),
     path("notes/<int:note_id>/edit/", views.note_edit, name="edit"),
+    path("notes/folders/", views.notes_folders, name="folders"),
     path(
         "notes/folders/select/<int:folder_id>/",
         views.note_folder_select,

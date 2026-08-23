@@ -1,9 +1,21 @@
 {% extends "base.html" %}
+{% load cache_buster %}
 {# djlint:off #}{% block body_class %}notes-page has-subnav{% endblock body_class %}{# djlint:on #}
 {% block content %}
+  {% comment %}
+  Library tab: the folder sidebar filters the table. Each pane re-fetches
+  itself: the sidebar on noteFoldersChanged, the table on notesChanged and
+  whenever this tab becomes visible again (notes are created and edited in
+  the editor in another tab). notes-library.js adds drag-and-drop (rows
+  into folders / the Inbox) and right-click menus on both panes.
+  {% endcomment %}
   <div id="content" class="container content">
     <div class="notes-layout">
-      <div id="note-folders" class="notes-sidebar">{% include "note_folders/list.html" %}</div>
+      <div id="note-folders"
+           class="notes-sidebar"
+           hx-trigger="noteFoldersChanged from:body"
+           hx-get="{% url 'notes:folders' %}"
+           hx-target="this">{% include "note_folders/list.html" %}</div>
       <div id="notes"
            class="card"
            hx-trigger="notesChanged from:body, visibilitychange[document.visibilityState === 'visible'] from:document"
@@ -11,4 +23,5 @@
            hx-target="this">{% include "notes/list.html" %}</div>
     </div>
   </div>
+  <script src="{% static_v 'js/notes-library.js' %}" defer></script>
 {% endblock content %}

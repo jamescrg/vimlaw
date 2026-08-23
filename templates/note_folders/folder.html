@@ -1,7 +1,18 @@
+{% comment %}
+One row of the Notes-tab folder sidebar (flat DFS list; depth via the
+folder-depth-N class, expansion session-kept via the caret). The row is a
+drag source and a drop target (notes-library.js: folders re-parent onto
+folders / the Inbox, table rows move into folders), and right-click opens
+this same kebab menu at the cursor. data-depth lets the client pre-check
+the depth cap; the server re-validates every move.
+{% endcomment %}
 <li id="note-folder-{{ node.folder.id }}"
     class="folder-item-container list-group-item folder-depth-{{ node.level }}{% if selected_note_folder and selected_note_folder.id == node.folder.id %} item-selected-highlight{% endif %}{% if not node.is_visible %} folder-hidden{% endif %}"
+    draggable="true"
     data-folder-id="{{ node.folder.id }}"
-    data-parent-id="{{ node.parent_id|default:'root' }}">
+    data-parent-id="{{ node.parent_id|default:'root' }}"
+    data-depth="{{ node.level }}"
+    data-reparent-url="{% url 'notes:folder-reparent' node.folder.id %}">
   <div>
     {% if node.has_children %}
       <span class="folder-caret"
@@ -12,7 +23,8 @@
       <span class="folder-caret-placeholder"></span>
     {% endif %}
     <i class="icon-folder"></i>
-    <a href="{% url 'notes:folder-select' folder_id=node.folder.id %}">{{ node.folder.name|truncatechars:28 }}</a>
+    <a href="{% url 'notes:folder-select' folder_id=node.folder.id %}"
+       draggable="false">{{ node.folder.name|truncatechars:28 }}</a>
   </div>
   <div class="dropdown" x-data="dropdown()">
     <button class="btn-icon menu-icon"
@@ -23,6 +35,25 @@
       <i class="icon-ellipsis-vertical"></i>
     </button>
     <ul class="dropdown-menu dropdown-menu-end" x-ref="menu" x-show="open">
+      <li>
+        {% comment %}
+        Instant create into this folder, opened in the editor in a new tab:
+        notes-library.js posts data-post-open as a plain form with
+        target=_blank (so the browser opens the redirect there), like the
+        table toolbar's + button.
+        {% endcomment %}
+        <a class="dropdown-item"
+           href="#"
+           data-post-open="{% url 'notes:add' %}?open=1&folder={{ node.folder.id }}"><i class="icon-square-pen"></i> New note</a>
+      </li>
+      {% if node.level < 3 %}
+        <li>
+          <a class="dropdown-item"
+             href="#"
+             hx-get="{% url 'notes:folder-add' %}?context=tab&parent={{ node.folder.id }}"
+             hx-target="#htmx-modal-container"><i class="icon-folder-plus"></i> New subfolder</a>
+        </li>
+      {% endif %}
       <li>
         <a class="dropdown-item"
            href="#"
