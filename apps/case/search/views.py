@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from watson import search as watson
 
+from apps.case.ai.semantic import semantic_entries
 from apps.case.models import Document, Fact, Highlight, Label
 from apps.case.views import get_matter_from_url, get_session_key, set_last_tab
 from apps.notes.models import Note
@@ -86,6 +87,68 @@ def get_search_data(request, matter, matter_id):
 
             if result_item:
                 results.append(result_item)
+
+        # Meaning matches from the semantic index (apps/case/ai/semantic.py):
+        # material the keywords missed, appended after the keyword hits and
+        # labeled in the row. Every filter below applies to them too.
+        scope_kinds = [
+            kind
+            for scope, kind in (
+                ("documents", "document"),
+                ("highlights", "highlight"),
+                ("facts", "fact"),
+                ("notes", "note"),
+            )
+            if scope in active_scopes
+        ]
+        seen_keys = {(r["type"], r["object"].pk) for r in results}
+        semantic_rows = semantic_entries([query], matter, scope_kinds, 20)
+        rows = semantic_rows[0] if semantic_rows else []
+        loaders = {
+            "document": lambda ids: Document.objects.filter(
+                pk__in=ids, matter=matter
+            ).defer("ocr_text", "search_vector"),
+            "highlight": lambda ids: Highlight.objects.filter(
+                pk__in=ids
+            ).select_related("document"),
+            "fact": lambda ids: Fact.objects.filter(pk__in=ids, matter=matter),
+            "note": lambda ids: Note.objects.filter(pk__in=ids, matter=matter),
+        }
+        by_kind = {}
+        for row in rows:
+            by_kind.setdefault(row["kind"], []).append(row["object_id"])
+        objects = {}
+        for kind, ids in by_kind.items():
+            for obj in loaders[kind](ids):
+                objects[(kind, obj.pk)] = obj
+        for row in rows:
+            kind = row["kind"]
+            obj = objects.get((kind, row["object_id"]))
+            if obj is None or (kind, obj.pk) in seen_keys:
+                continue
+            if kind == "highlight" and not obj.document_id:
+                continue  # the row template renders document highlights only
+            date = None
+            if kind == "document":
+                date = obj.date
+            elif kind == "highlight":
+                date = obj.document.date
+            elif kind == "fact":
+                date = obj.date
+            elif kind == "note":
+                date = obj.created_at.date() if obj.created_at else None
+            results.append(
+                {
+                    "type": kind,
+                    "object": obj,
+                    "rank": row["similarity"],
+                    "date": date,
+                    "semantic": True,
+                    "similarity": row["similarity"],
+                    "snippet": (row["text"] or "")[:240],
+                }
+            )
+            seen_keys.add((kind, obj.pk))
 
         category = filter_data.get("category", "")
         if category:
