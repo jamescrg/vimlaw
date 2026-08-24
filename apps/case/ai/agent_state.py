@@ -52,16 +52,27 @@ class AgentRunState:
         # Set once the executor exists; reports tool calls and chars read.
         self.tool_usage = lambda: {}
         self._text_step: dict | None = None
+        # Streamed characters of the current turn (prose and thinking),
+        # so the output count ticks between turns instead of jumping when
+        # the provider reports real usage at each turn's end.
+        self._stream_prose_chars = 0
+        self._stream_thinking_chars = 0
 
     @property
     def current_turn(self) -> int:
         """The model turn now streaming (turn usage arrives when it ends)."""
         return len(self.per_turn) + 1
 
+    @property
+    def _stream_estimate(self) -> int:
+        """Rough output tokens for the text streamed this turn (~4 chars
+        per token of prose); replaced by the turn's real usage."""
+        return int((self._stream_prose_chars + self._stream_thinking_chars) / 4)
+
     def usage(self) -> dict:
         usage = {
             "input": sum(u.input for u in self.per_turn),
-            "output": sum(u.output for u in self.per_turn),
+            "output": sum(u.output for u in self.per_turn) + self._stream_estimate,
             "cache_read": sum(u.cache_read for u in self.per_turn),
             "cache_write": sum(u.cache_write for u in self.per_turn),
             "turns": len(self.per_turn),
@@ -83,7 +94,11 @@ class AgentRunState:
             self._text_step = step
         else:
             step["text"] = text
+        self._stream_prose_chars = len(text)
         return step
+
+    def record_thinking(self, text: str) -> None:
+        self._stream_thinking_chars = len(text)
 
     def drop_answer_text(self, answer: str) -> None:
         """Remove the final prose step when it is the answer itself.
@@ -98,6 +113,8 @@ class AgentRunState:
 
     def add_turn(self, usage: TurnUsage) -> dict:
         self.per_turn.append(usage)
+        self._stream_prose_chars = 0
+        self._stream_thinking_chars = 0
         step = {
             "type": "turn",
             "n": usage.turn,
@@ -207,6 +224,7 @@ class AgentStatusWriter:
 
     def thinking(self, text: str) -> None:
         """on_thinking: the thinking summary, streamed."""
+        self.state.record_thinking(text)
         if self._throttled():
             return
         self.set("thinking", _tail(text, THINKING_TAIL_CHARS))

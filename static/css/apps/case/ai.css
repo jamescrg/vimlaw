@@ -2451,18 +2451,27 @@
    (matter and model live in the header badges). Never wraps: right
    segments drop by priority as width shrinks. */
 .ai-chat-statusbar-row {
-  align-items: center;
   /* Match the transcript and composer surface: a truly transparent row
      would show the darker window body between them. */
   background: var(--ai-surface);
   border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
-  display: flex;
   font-size: 1rem;
-  gap: 0.75rem;
   min-height: 1.75rem;
-  overflow: hidden;
   padding: 0.25rem 1rem;
+}
+
+/* The line's content shares the composer's centered column, so its
+   left-most text aligns with the prompt input's left edge (the 0.5rem
+   lead mirrors the input row's draft-chip gap). */
+.ai-chat-statusbar-inner {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin: 0 auto;
+  max-width: 52rem;
+  overflow: hidden;
+  padding-left: 0.5rem;
   white-space: nowrap;
 }
 

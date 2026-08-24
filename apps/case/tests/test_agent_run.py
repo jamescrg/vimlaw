@@ -270,3 +270,23 @@ class TestDispatch:
         )
         ai_tasks.process_ai_request(conv.id, matter.id, "q", user.id, "claude-opus")
         assert seen["built"]
+
+
+class TestLiveTokenEstimate:
+    """The output count ticks from streamed text between turns and snaps
+    to the provider's real usage when each turn ends."""
+
+    def test_streamed_text_ticks_then_resets(self):
+        from apps.case.ai.agent_state import AgentRunState
+        from apps.case.ai.agent_tools import DEFAULT_BUDGET
+
+        state = AgentRunState(1, "claude-opus", "claude-opus-4-8", DEFAULT_BUDGET)
+        state.update_text("x" * 400)
+        state.record_thinking("y" * 200)
+        assert state.usage()["output"] == 150
+
+        state.add_turn(TurnUsage(turn=1, input=1000, output=90))
+        assert state.usage()["output"] == 90
+
+        state.update_text("z" * 40)
+        assert state.usage()["output"] == 100
