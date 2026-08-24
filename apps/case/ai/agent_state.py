@@ -85,6 +85,17 @@ class AgentRunState:
             step["text"] = text
         return step
 
+    def drop_answer_text(self, answer: str) -> None:
+        """Remove the final prose step when it is the answer itself.
+
+        Live, the answer streams as the last text row (worth watching);
+        persisted, it would only duplicate the message below the trail.
+        """
+        step = self._text_step
+        if step is not None and step.get("text") == answer:
+            self.steps = [s for s in self.steps if s is not step]
+            self._text_step = None
+
     def add_turn(self, usage: TurnUsage) -> dict:
         self.per_turn.append(usage)
         step = {

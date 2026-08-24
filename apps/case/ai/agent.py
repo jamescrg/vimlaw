@@ -182,6 +182,7 @@ def run_agent_request(
         if writer.is_cancelled():
             return
 
+        state.drop_answer_text(result.text)
         writer.complete(
             {
                 "status": "complete",

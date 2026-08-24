@@ -107,17 +107,12 @@ class TestRun:
         assert run["budget"] == {"max_tool_calls": 25, "max_chars": 600_000}
         assert run["elapsed_seconds"] >= 0
 
+        # The answer itself streamed as the last text row; persisted, it
+        # would only duplicate the message, so it is dropped.
         kinds = [(s["type"], s.get("n")) for s in run["steps"]]
-        assert kinds == [
-            ("text", 1),
-            ("turn", 1),
-            ("tool", 1),
-            ("text", 2),
-            ("turn", 2),
-        ]
+        assert kinds == [("text", 1), ("turn", 1), ("tool", 1), ("turn", 2)]
         text_steps = [s for s in run["steps"] if s["type"] == "text"]
         assert text_steps[0]["text"] == "Reading the overview."
-        assert text_steps[1]["text"] == "The answer."
         tool_step = run["steps"][2]
         assert tool_step["tool"] == "read_matter_section"
         assert tool_step["turn"] == 1 and not tool_step["pending"]
