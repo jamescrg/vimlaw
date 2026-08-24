@@ -2451,10 +2451,10 @@
    (matter and model live in the header badges). Never wraps: right
    segments drop by priority as width shrinks. */
 .ai-chat-statusbar-row {
-  /* Match the transcript and composer surface: a truly transparent row
-     would show the darker window body between them. */
+  /* Match the transcript and composer surface (a transparent row would
+     show the darker window body between them); no border, so the line
+     sits directly on the chat surface. */
   background: var(--ai-surface);
-  border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
   font-size: 1rem;
   min-height: 1.75rem;
