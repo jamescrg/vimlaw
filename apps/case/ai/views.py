@@ -57,6 +57,19 @@ def _kind_param(source, default="classic"):
     return kind if kind in VALID_KINDS else "classic"
 
 
+# Models only agentic conversations may use (premium pricing tier); a
+# classic create that names one falls back to the default Claude pick.
+# Mirrors the retired research chat's server-side model gate.
+AGENT_ONLY_LLMS = {"claude-fable"}
+AGENT_ONLY_FALLBACK = "claude-opus-5"
+
+
+def _llm_for_kind(llm, kind):
+    if kind != "agent" and llm in AGENT_ONLY_LLMS:
+        return AGENT_ONLY_FALLBACK
+    return llm
+
+
 def get_accessible_matters():
     """Get all matters accessible to logged-in users."""
     return Matter.objects.all()
@@ -271,6 +284,7 @@ def new_conversation_view(request, matter_id):
     provided_title = request.GET.get("title", "").strip()
 
     kind = _kind_param(request.GET)
+    llm = _llm_for_kind(llm, kind)
 
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
@@ -309,11 +323,12 @@ def create_conversation(request, matter_id):
     llm = request.POST.get("llm", "gemini-pro-latest")
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
+    kind = _kind_param(request.POST)
     conversation = Conversation.objects.create(
         matter=matter,
         title=request.POST.get("title", "").strip() or "New Conversation",
-        llm=llm,
-        kind=_kind_param(request.POST),
+        llm=_llm_for_kind(llm, kind),
+        kind=kind,
         user=request.user,
     )
     return JsonResponse({"id": conversation.id})
@@ -407,11 +422,12 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
+        kind = _kind_param(request.POST)
         conversation = Conversation.objects.create(
             matter=matter,
             title=title,
-            llm=llm,
-            kind=_kind_param(request.POST),
+            llm=_llm_for_kind(llm, kind),
+            kind=kind,
             user=request.user,
         )
         is_new = True
@@ -1331,6 +1347,8 @@ def context_preview(request, matter_id):
             "context_limit": 1_000_000,
         },
         {"name": "Claude Sonnet 4.6", "input_price": 3.00, "context_limit": 1_000_000},
+        {"name": "Claude Opus 5", "input_price": 5.00, "context_limit": 1_000_000},
+        {"name": "Claude Fable 5", "input_price": 10.00, "context_limit": 1_000_000},
         {"name": "Claude Opus 4.8", "input_price": 5.00, "context_limit": 1_000_000},
         {"name": "Claude Opus 4.6", "input_price": 5.00, "context_limit": 1_000_000},
     ]

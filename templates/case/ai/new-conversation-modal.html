@@ -23,7 +23,9 @@
           <label for="new-conversation-llm">Model</label>
           <select id="new-conversation-llm">
             {% for key, label in llm_choices %}
-              <option value="{{ key }}" {% if key == llm %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ key }}"
+                      {% if key == "claude-fable" %}data-agent-only="true"{% endif %}
+                      {% if key == llm %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
@@ -46,6 +48,23 @@
   </div>
 </div>
 <script>
+  (function () {
+    // Fable is offered for agentic conversations only; the server enforces
+    // the same rule (views._llm_for_kind), this just keeps the picker honest.
+    const kindSelect = document.getElementById('new-conversation-kind');
+    const modelSelect = document.getElementById('new-conversation-llm');
+    function syncAgentOnlyModels() {
+      const agentic = kindSelect.value === 'agent';
+      let switched = false;
+      modelSelect.querySelectorAll('option[data-agent-only]').forEach(function (opt) {
+        opt.disabled = !agentic;
+        if (!agentic && opt.selected) { opt.selected = false; switched = true; }
+      });
+      if (switched) modelSelect.value = 'claude-opus-5';
+    }
+    kindSelect.addEventListener('change', syncAgentOnlyModels);
+    syncAgentOnlyModels();
+  })();
   window.aiLaunchNewConversation = function(event) {
     event.preventDefault();
     const input = document.getElementById('new-conversation-title');

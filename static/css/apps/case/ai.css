@@ -487,7 +487,9 @@
 
 .ai-llm-claude,
 .ai-llm-claude-opus,
-.ai-llm-claude-opus-4-6 {
+.ai-llm-claude-opus-4-6,
+.ai-llm-claude-opus-5,
+.ai-llm-claude-fable {
   background: var(--violet-100);
   border: 1px solid var(--violet-300);
   color: var(--color-primary);
@@ -504,7 +506,7 @@
 /* Dark mode — these LLM badges carry .app-badge, so the blanket outline rule in
    badges.css strips their hue; restore it as a coloured outline (.app-badge.X
    out-specifies the blanket [data-theme] .app-badge rule). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .app-badge:is(.ai-llm-claude, .ai-llm-claude-opus, .ai-llm-claude-opus-4-6) {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .app-badge:is(.ai-llm-claude, .ai-llm-claude-opus, .ai-llm-claude-opus-4-6, .ai-llm-claude-opus-5, .ai-llm-claude-fable) {
   background: transparent;
   border-color: var(--label-purple-line);
   color: var(--label-purple-line);

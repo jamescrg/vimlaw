@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 # started on it still send.
 CLAUDE_MODELS = {
     "claude": "claude-sonnet-4-6",
+    "claude-opus-5": "claude-opus-5",
+    "claude-fable": "claude-fable-5",
     "claude-opus": "claude-opus-4-8",
     "claude-opus-4-6": "claude-opus-4-6",
 }
