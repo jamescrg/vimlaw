@@ -47,10 +47,10 @@ every later out-of-band swap to innerHTML.
             <i class="icon-x"></i>
           </button>
         {% else %}
-          {% if cost %}<span class="ai-statusbar-cost">{{ cost.last|usd }} last · {{ cost.total|usd }} total</span>{% endif %}
           {% if totals %}
             <span class="ai-statusbar-tokens">{{ totals.input|ktokens }} in · {{ totals.output|ktokens }} out</span>
           {% endif %}
+          {% if cost %}<span class="ai-statusbar-cost">{{ cost.last|usd }} last · {{ cost.total|usd }} total</span>{% endif %}
         {% endif %}
       </span>
     </div>
