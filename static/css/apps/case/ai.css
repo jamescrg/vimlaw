@@ -2444,13 +2444,12 @@
   margin-bottom: 0.5rem;
 }
 
-/* Persistent status bar: the window's last flex child, one quiet line
-   under the composer. Ambient chrome, not content: hairline top border,
-   muted text, reserved height even when there is little to say. Left is
-   where am I (matter, jurisdiction); right is what the system is doing
-   (live run strip while an agent works, otherwise citation state, token
-   totals, model). Never wraps: the left side truncates with an ellipsis
-   and right-hand segments drop by priority as width shrinks. */
+/* Persistent status line: one quiet row floating above the composer.
+   Ambient chrome, not content: hairline top border, muted text,
+   reserved height even when there is little to say. Citation state on
+   the left; cost, token totals, and the live run strip on the right
+   (matter and model live in the header badges). Never wraps: right
+   segments drop by priority as width shrinks. */
 .ai-chat-statusbar-row {
   align-items: center;
   background: var(--ai-frame);
@@ -2485,10 +2484,6 @@
   font-size: 1rem;
 }
 
-.ai-statusbar-model {
-  color: var(--color-muted-more);
-}
-
 .ai-cites-ok {
   color: var(--color-muted);
 }
@@ -2504,12 +2499,6 @@
 /* Priority drop, never wrap. */
 @media (max-width: 44rem) {
   .ai-statusbar-tokens {
-    display: none;
-  }
-}
-
-@media (max-width: 34rem) {
-  .ai-statusbar-model {
     display: none;
   }
 }

@@ -71,3 +71,30 @@ def turn_summary(step):
     if step.get("seconds"):
         parts.append(duration_short(step["seconds"]))
     return ", ".join(parts)
+
+
+@register.filter
+def usd(value):
+    """$0.55 style; sub-cent amounts show as <$0.01; None renders empty."""
+    if value is None:
+        return ""
+    value = float(value)
+    if 0 < value < 0.01:
+        return "<$0.01"
+    return f"${value:,.2f}"
+
+
+@register.simple_tag
+def usage_cost(usage, llm):
+    """Estimated cost of a live run's usage so far, formatted, or ""."""
+    from apps.case.ai.pricing import estimate_cost
+
+    usage = usage or {}
+    cost = estimate_cost(
+        llm,
+        usage.get("input"),
+        usage.get("output"),
+        usage.get("cache_read"),
+        usage.get("cache_write"),
+    )
+    return usd(cost) if cost is not None else ""

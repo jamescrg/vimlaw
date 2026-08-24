@@ -550,6 +550,11 @@ def _statusbar_idle_context(conversation):
     cite_state = _cite_state(conversation)
     if cite_state:
         context["cite_state"] = cite_state
+    from .pricing import conversation_cost
+
+    cost = conversation_cost(conversation)
+    if cost:
+        context["cost"] = cost
     return context
 
 

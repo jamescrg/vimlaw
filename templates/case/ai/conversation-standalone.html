@@ -111,6 +111,7 @@
                hx-trigger="messagesUpdated from:body"
                hx-swap="innerHTML">{% include "case/ai/messages.html" %}</div>
         </div>
+        {% include "case/ai/chat-statusbar.html" with oob=False live=bar_live %}
         <div class="ai-input-container">
           <div class="ai-input-row">
             <span id="draftChip">{% include "case/ai/draft-chip.html" %}</span>
@@ -144,7 +145,6 @@
             </button>
           </div>
         </div>
-        {% include "case/ai/chat-statusbar.html" with oob=False live=bar_live %}
       </main>
     </div>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>

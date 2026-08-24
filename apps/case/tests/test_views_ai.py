@@ -706,7 +706,9 @@ class TestAgentKind:
         ).content.decode()
         assert 'id="ai-agent-stats"' in html
         assert "48.2k in" in html and "3.1k out" in html and "41.0k cached" in html
-        assert "7/25 tools" in html and "210.0k read" in html
+        # chars-read gave its slot to the running turn cost (gemini-pro
+        # rates over the seeded usage).
+        assert "7/25 tools" in html and "$0.05 turn" in html
         # The pinned bar rides the same response as an out-of-band morph.
         assert 'id="ai-chat-statusbar"' in html
         assert 'hx-swap-oob="morph"' in html
@@ -946,21 +948,56 @@ class TestStatusBarIdleContent:
             reverse("case:ai-conversation-view", args=[conversation.id])
         ).content.decode()
 
-    def test_matter_totals_and_model(self, client, matter, user):
+    def test_totals_and_cost(self, client, matter, user):
         conversation = Conversation.objects.create(
-            matter=matter, title="A", user=user, kind="agent", llm="claude-fable"
+            matter=matter, title="A", user=user, kind="agent", llm="claude-opus"
         )
         Message.objects.create(
             conversation=conversation,
             role="assistant",
             content="x",
-            input_tokens=48_231,
-            output_tokens=3_100,
+            input_tokens=100_000,
+            output_tokens=2_000,
         )
         html = self._bar(client, conversation)
-        assert "ai-statusbar-left" in html and "Test Matter" in html
-        assert "48.2k in" in html and "3.1k out" in html
-        assert "Claude Fable 5" in html
+        assert "48.2k in" not in html  # no stray numbers
+        assert "100.0k in" in html and "2.0k out" in html
+        assert "$0.55 last" in html and "$0.55 total" in html
+        # Matter and model live in the header badges, not the bar.
+        assert "ai-statusbar-model" not in html
+
+    def test_live_strip_shows_turn_cost(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent", llm="claude-opus"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "reading",
+                "message": "...",
+                "started_at": 0,
+                "usage": {
+                    "input": 100_000,
+                    "output": 2_000,
+                    "cache_read": 0,
+                    "cache_write": 0,
+                    "tool_calls": 1,
+                    "tool_calls_max": 25,
+                    "chars_read": 10,
+                },
+                "steps": [],
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert "$0.55 turn" in html
+        cache.delete(f"ai_status_{conversation.id}")
 
     def test_cite_states(self, client, matter, user):
         conversation = Conversation.objects.create(
