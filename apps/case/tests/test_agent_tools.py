@@ -20,6 +20,13 @@ from apps.notes.models import Note, NoteFolder
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def _no_semantic_pass(monkeypatch):
+    """These tests exercise the keyword and fuzzy paths; the semantic
+    pass is faked out (test_semantic.py covers it)."""
+    monkeypatch.setattr("apps.case.ai.agent_tools.semantic_entries", lambda *a, **k: [])
+
+
 def call(name, **kwargs):
     return {"id": f"call_{name}", "name": name, "input": kwargs}
 

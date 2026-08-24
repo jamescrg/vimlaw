@@ -398,6 +398,10 @@ ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 # Google Gemini API Configuration
 GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
 
+# Save-time semantic re-indexing (apps/case/ai/semantic.py); tests turn
+# it off so every model save does not enqueue an embedding task.
+SEMANTIC_AUTO_INDEX = env.bool("SEMANTIC_AUTO_INDEX", default=True)
+
 # Shared Google integration configuration. Keeping credentials beneath one
 # configurable directory makes host, container, and secret-volume layouts use
 # the same code paths.

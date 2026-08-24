@@ -14,6 +14,12 @@ def django_db_setup(django_db_setup, django_db_blocker):
 
 
 @pytest.fixture(autouse=True)
+def _no_semantic_auto_index(settings):
+    """Model saves must not enqueue embedding tasks during tests."""
+    settings.SEMANTIC_AUTO_INDEX = False
+
+
+@pytest.fixture(autouse=True)
 def use_local_storage(settings, tmp_path):
     """Use local file system storage for tests instead of S3.
 

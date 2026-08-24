@@ -32,6 +32,8 @@ from django.core.cache import cache as django_cache
 from django.db import connections
 from django.db.models import Q
 
+from .semantic import semantic_entries
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,9 +107,11 @@ def build_agent_tools(budget: AgentBudget = DEFAULT_BUDGET) -> list[dict]:
         {
             "name": "search_materials",
             "description": (
-                "Full-text search across this matter's materials: documents "
+                "Hybrid search across this matter's materials: documents "
                 "(OCR text), matter notes, firm library notes, synced emails, "
-                "highlights and timeline facts. Words are stemmed and ANDed; "
+                "highlights and timeline facts. Matches by meaning as well as "
+                "by words (semantic neighbors are merged with the keyword "
+                "hits). Keyword side: words are stemmed and ANDed; "
                 'use "quoted phrases" for exact wording, OR between '
                 "alternatives, and -word to exclude. Prefer `queries` with 2 "
                 "to 4 differently phrased variants (synonyms, terms of art, "
@@ -677,6 +681,99 @@ def make_agent_executor(
                 )
         return hits
 
+    def _semantic_hits(rows):
+        """Semantic rows -> hit dicts shaped like the keyword hits."""
+        from apps.mail.models import Email
+
+        loaders = {
+            "document": lambda ids: Document.objects.filter(pk__in=ids).defer(
+                "ocr_text", "search_vector"
+            ),
+            "note": lambda ids: Note.objects.filter(pk__in=ids),
+            "library": lambda ids: Note.objects.filter(pk__in=ids).select_related(
+                "folder"
+            ),
+            "email": lambda ids: Email.objects.filter(pk__in=ids),
+            "highlight": lambda ids: Highlight.objects.filter(
+                pk__in=ids
+            ).select_related("document", "caselaw"),
+            "fact": lambda ids: Fact.objects.filter(pk__in=ids),
+        }
+        by_kind = {}
+        for row in rows:
+            by_kind.setdefault(row["kind"], []).append(row["object_id"])
+        objects = {}
+        for kind, ids in by_kind.items():
+            for obj in loaders[kind](ids):
+                objects[(kind, obj.pk)] = obj
+
+        hits = []
+        for row in rows:
+            obj = objects.get((row["kind"], row["object_id"]))
+            if obj is None:
+                continue
+            kind = row["kind"]
+            snippet = _snippet(row["text"], row["query"])
+            base = {
+                "kind": kind,
+                "matched": [row["query"]],
+                "similarity": row["similarity"],
+                "snippet": snippet,
+            }
+            if kind == "document":
+                base.update(
+                    id=obj.id,
+                    handle=f"doc:{obj.id}",
+                    name=obj.name,
+                    category=obj.category,
+                    date=str(obj.date) if obj.date else None,
+                )
+            elif kind in ("note", "library"):
+                library = obj.matter_id is None
+                base["kind"] = "library" if library else "note"
+                base.update(
+                    id=obj.id,
+                    handle=f"{'lib' if library else 'note'}:{obj.id}",
+                    name=obj.title,
+                    category=(
+                        f"Library: {library_folder_path(obj.folder)}"
+                        if library
+                        else obj.get_category_display()
+                    ),
+                    date=str(obj.updated_at.date()) if obj.updated_at else None,
+                )
+            elif kind == "email":
+                key = obj.thread_id or obj.gmail_id
+                base.update(
+                    id=key,
+                    handle=f"thread:{key}",
+                    name=obj.subject or "(no subject)",
+                    category="Email thread",
+                    date=f"{obj.date:%Y-%m-%d}" if obj.date else None,
+                )
+            elif kind == "highlight":
+                base.update(
+                    id=obj.id,
+                    handle=f"hl:{obj.id}",
+                    name=obj.citation,
+                    category=obj.color,
+                    date=None,
+                )
+                if obj.document_id:
+                    base["document_id"] = obj.document_id
+                elif obj.caselaw_id:
+                    base["caselaw_id"] = obj.caselaw_id
+            else:  # fact
+                base.update(
+                    id=obj.id,
+                    handle=f"fact:{obj.id}",
+                    name=obj.description or "",
+                    category="timeline",
+                    date=str(obj.date) if obj.date else None,
+                )
+            hits.append(base)
+        return hits
+
     def _search(tool_input):
         raw = tool_input.get("queries") or []
         if isinstance(raw, str):
@@ -699,37 +796,67 @@ def make_agent_executor(
         limit = max(1, min(limit, SEARCH_MAX_LIMIT))
 
         scopes = _search_scopes(kinds)
+
         merged = {}
+        score = {}
+
+        def _fuse(hit_lists, source):
+            for hits_list in hit_lists:
+                for position, hit in enumerate(hits_list):
+                    key = hit["handle"]
+                    kept = merged.get(key)
+                    if kept is None:
+                        hit["matched"] = list(hit.get("matched") or [])
+                        hit["_sources"] = {source}
+                        merged[key] = hit
+                        kept = hit
+                    else:
+                        kept["_sources"].add(source)
+                    for matched_query in hit.get("matched") or []:
+                        if matched_query not in kept["matched"]:
+                            kept["matched"].append(matched_query)
+                    # Reciprocal rank fusion across every list.
+                    score[key] = score.get(key, 0.0) + 1.0 / (60 + position)
+
+        keyword_lists = []
         for query in queries:
-            for hit in _entry_hits(
+            hits_list = _entry_hits(
                 _fulltext_entries(query, scopes, limit * 2), scopes, query
-            ):
-                key = hit["handle"]
-                kept = merged.get(key)
-                if kept is None:
-                    hit["matched"] = [query]
-                    merged[key] = hit
-                else:
-                    if query not in kept["matched"]:
-                        kept["matched"].append(query)
-                    kept["rank"] = max(kept["rank"], hit["rank"])
+            )
+            for hit in hits_list:
+                hit["matched"] = [query]
+                hit.pop("rank", None)
+            keyword_lists.append(hits_list)
+        _fuse(keyword_lists, "keyword")
+
+        semantic_lists = [
+            _semantic_hits(rows)
+            for rows in semantic_entries(queries, matter, kinds, limit)
+        ]
+        _fuse(semantic_lists, "semantic")
 
         fuzzy = False
         if not merged:
             fuzzy = True
+            fuzzy_lists = []
             for query in queries:
-                for hit in _entry_hits(
+                hits_list = _entry_hits(
                     _fuzzy_entries(query, scopes, limit), scopes, query
-                ):
-                    key = hit["handle"]
-                    if key not in merged:
-                        hit["matched"] = [query]
-                        hit["fuzzy"] = True
-                        merged[key] = hit
+                )
+                for hit in hits_list:
+                    hit["matched"] = [query]
+                    hit["fuzzy"] = True
+                    hit.pop("rank", None)
+                fuzzy_lists.append(hits_list)
+            _fuse(fuzzy_lists, "fuzzy")
 
-        hits = sorted(merged.values(), key=lambda h: -h["rank"])[:limit]
+        hits = sorted(merged.values(), key=lambda h: -score[h["handle"]])[:limit]
         for hit in hits:
-            hit.pop("rank", None)
+            sources = hit.pop("_sources", set())
+            if sources == {"semantic"}:
+                # Found by meaning alone: worth the agent knowing the
+                # words themselves may not appear in the text.
+                hit["semantic"] = True
 
         seen_count = 0
         with lock:
