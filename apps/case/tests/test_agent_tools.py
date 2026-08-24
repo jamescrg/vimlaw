@@ -169,7 +169,9 @@ class TestSearch:
         assert any(h["seen"] for h in again["hits"])
 
     def test_email_hits(self, executor, matter):
-        Email.objects.create(
+        from watson import search as watson
+
+        email = Email.objects.create(
             matter=matter,
             gmail_id="m1",
             thread_id="t1",
@@ -179,11 +181,69 @@ class TestSearch:
             body_text="How about the spoliation letter on Tuesday?",
             date=timezone.now(),
         )
+        watson.default_search_engine.update_obj_index(email)
         payload, _ = run(
             executor, "search_materials", query="spoliation", kinds=["email"]
         )
         assert payload["hits"][0]["handle"] == "thread:t1"
         assert payload["hits"][0]["name"] == "Depo dates"
+        assert "spoliation" in payload["hits"][0]["snippet"]
+
+    def test_phrase_or_and_variants(self, executor, matter, user):
+        from watson import search as watson
+
+        note_a = Note.objects.create(
+            matter=matter,
+            title="Deposit memo",
+            content="The earnest money deposit was returned to the buyer.",
+        )
+        note_b = Note.objects.create(
+            matter=matter,
+            title="Wire note",
+            content="Money for the deposit arrived by wire.",
+        )
+        for note in (note_a, note_b):
+            watson.default_search_engine.update_obj_index(note)
+
+        phrase, _ = run(
+            executor, "search_materials", query='"earnest money"', kinds=["note"]
+        )
+        assert [h["id"] for h in phrase["hits"]] == [note_a.id]
+
+        either, _ = run(
+            executor, "search_materials", query="earnest OR wire", kinds=["note"]
+        )
+        assert {h["id"] for h in either["hits"]} == {note_a.id, note_b.id}
+
+        merged, outcome = run(
+            executor,
+            "search_materials",
+            queries=["earnest money", "deposit arrived"],
+            kinds=["note"],
+        )
+        by_id = {h["id"]: h for h in merged["hits"]}
+        assert by_id[note_a.id]["matched"] == ["earnest money"]
+        assert by_id[note_b.id]["matched"] == ["deposit arrived"]
+        step = executor.events[-1]
+        assert step["title"] == 'Searched "earnest money" and 1 more'
+        assert "2 hits" in step["detail"]
+
+    def test_fuzzy_fallback_on_typo(self, executor, matter, user):
+        from watson import search as watson
+
+        note = Note.objects.create(
+            matter=matter,
+            title="Spoliation Letter",
+            content="Preservation demand sent to opposing counsel.",
+        )
+        watson.default_search_engine.update_obj_index(note)
+        payload, outcome = run(
+            executor, "search_materials", query="spoilation leter", kinds=["note"]
+        )
+        assert not outcome["is_error"]
+        assert "near matches" in payload["note"]
+        assert payload["hits"][0]["id"] == note.id
+        assert payload["hits"][0]["fuzzy"] is True
 
     def test_empty_query(self, executor):
         payload, outcome = run(executor, "search_materials", query="  ")

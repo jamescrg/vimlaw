@@ -52,6 +52,9 @@ DEFAULT_BUDGET = AgentBudget()
 SEARCH_KINDS = ("document", "note", "library", "email", "highlight", "fact")
 SEARCH_DEFAULT_LIMIT = 15
 SEARCH_MAX_LIMIT = 40
+SEARCH_MAX_QUERIES = 5
+# word_similarity floor for the typo-tolerant fallback.
+SEARCH_FUZZY_FLOOR = 0.4
 SNIPPET_CHARS = 300
 SECTION_CAP = 150_000
 OPINION_CACHE_SECONDS = 3600
@@ -104,17 +107,29 @@ def build_agent_tools(budget: AgentBudget = DEFAULT_BUDGET) -> list[dict]:
             "description": (
                 "Full-text search across this matter's materials: documents "
                 "(OCR text), matter notes, firm library notes, synced emails, "
-                "highlights and timeline facts. Returns ranked hits with a "
-                "short snippet and the handle to read the full item. Use it "
-                "to find which materials to read when the index alone does "
-                "not tell you; do not repeat a search with the same words."
+                "highlights and timeline facts. Words are stemmed and ANDed; "
+                'use "quoted phrases" for exact wording, OR between '
+                "alternatives, and -word to exclude. Prefer `queries` with 2 "
+                "to 4 differently phrased variants (synonyms, terms of art, "
+                "statute numbers): one call runs them all, merges the ranked "
+                "hits, and flags which variants matched. When nothing "
+                "matches, near-miss titles come back as fuzzy hits. Each hit "
+                "carries a snippet and the handle to read the full item."
             ),
             "input_schema": {
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "Search terms (a few specific words).",
+                        "description": "A single search (prefer queries).",
+                    },
+                    "queries": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": (
+                            "Two to four differently phrased searches, run "
+                            "together and merged."
+                        ),
                     },
                     "kinds": {
                         "type": "array",
@@ -131,7 +146,6 @@ def build_agent_tools(budget: AgentBudget = DEFAULT_BUDGET) -> list[dict]:
                         ),
                     },
                 },
-                "required": ["query"],
             },
         },
         {
@@ -388,7 +402,7 @@ def make_agent_executor(
     """
     from apps.case.models import CaseLaw, Document, Fact, Highlight
     from apps.invoicing.invoices.models import Invoice
-    from apps.mail.ai import format_email_thread, group_by_thread, thread_subject
+    from apps.mail.ai import format_email_thread, thread_subject
     from apps.notes.models import Note, get_library_notes
 
     from .models import Conversation
@@ -449,12 +463,233 @@ def make_agent_executor(
 
     # -- handlers: return (payload, step_fields) ---------------------------
 
-    def _search(tool_input):
-        from watson import search as watson
+    def _search_scopes(kinds):
+        """kind -> (ContentType, scoped pk queryset) for the watson table."""
+        from django.contrib.contenttypes.models import ContentType
 
-        query = str(tool_input.get("query") or "").strip()
-        if not query:
-            return {"error": "query is required."}, {}
+        from apps.mail.models import Email
+
+        scopes = {}
+        if "document" in kinds:
+            scopes["document"] = (
+                ContentType.objects.get_for_model(Document),
+                Document.objects.filter(matter=matter).exclude(ai_context="never"),
+            )
+        if "highlight" in kinds:
+            scopes["highlight"] = (
+                ContentType.objects.get_for_model(Highlight),
+                Highlight.objects.filter(
+                    Q(document__matter=matter) | Q(caselaw__matter=matter)
+                ),
+            )
+        if "fact" in kinds:
+            scopes["fact"] = (
+                ContentType.objects.get_for_model(Fact),
+                Fact.objects.filter(matter=matter),
+            )
+        note_ct = ContentType.objects.get_for_model(Note)
+        if "note" in kinds:
+            scopes["note"] = (note_ct, Note.objects.filter(matter=matter).values("pk"))
+        if "library" in kinds:
+            scopes["library"] = (note_ct, get_library_notes().values("pk"))
+        if "email" in kinds:
+            scopes["email"] = (
+                ContentType.objects.get_for_model(Email),
+                Email.objects.filter(matter=matter).exclude(ai_context="never"),
+            )
+        return scopes
+
+    def _scope_filter(scopes):
+        # Join on the text object_id: watson always writes it, while
+        # object_id_int stays NULL for BigAutoField primary keys.
+        scope_q = Q(pk__in=[])
+        for content_type, id_qs in scopes.values():
+            ids = [str(pk) for pk in id_qs.values_list("pk", flat=True)]
+            scope_q |= Q(content_type=content_type, object_id__in=ids)
+        return scope_q
+
+    def _fulltext_entries(query, scopes, cap):
+        """websearch_to_tsquery over the watson index, ranked, scoped."""
+        from django.db.models import FloatField
+        from django.db.models.expressions import RawSQL
+        from watson.models import SearchEntry
+
+        return list(
+            SearchEntry.objects.filter(_scope_filter(scopes))
+            .extra(
+                where=[
+                    "watson_searchentry.search_tsv @@ "
+                    "websearch_to_tsquery('pg_catalog.english', %s)"
+                ],
+                params=[query],
+            )
+            .annotate(
+                rank=RawSQL(
+                    "ts_rank_cd(watson_searchentry.search_tsv, "
+                    "websearch_to_tsquery('pg_catalog.english', %s))",
+                    (query,),
+                    output_field=FloatField(),
+                )
+            )
+            .order_by("-rank")[:cap]
+        )
+
+    def _fuzzy_entries(query, scopes, cap):
+        """Typo-tolerant fallback: near-miss titles and descriptions by
+        trigram word similarity (pg_trgm), when no variant matched."""
+        from django.contrib.postgres.search import TrigramWordSimilarity
+        from django.db.models.functions import Greatest
+        from watson.models import SearchEntry
+
+        return list(
+            SearchEntry.objects.filter(_scope_filter(scopes))
+            .annotate(
+                rank=Greatest(
+                    TrigramWordSimilarity(query, "title"),
+                    TrigramWordSimilarity(query, "description"),
+                )
+            )
+            .filter(rank__gt=SEARCH_FUZZY_FLOOR)
+            .order_by("-rank")[:cap]
+        )
+
+    def _entry_hits(entries, scopes, query):
+        """SearchEntry rows -> hit dicts (emails grouped by thread)."""
+        from apps.mail.models import Email
+
+        def _oid(entry):
+            if entry.object_id_int is not None:
+                return entry.object_id_int
+            try:
+                return int(entry.object_id)
+            except (TypeError, ValueError):
+                return None
+
+        by_ct = {}
+        for entry in entries:
+            by_ct.setdefault(entry.content_type_id, []).append(entry)
+        objects = {}
+        loaders = {
+            Document: lambda ids: Document.objects.filter(pk__in=ids).defer(
+                "ocr_text", "search_vector"
+            ),
+            Highlight: lambda ids: Highlight.objects.filter(pk__in=ids).select_related(
+                "document", "caselaw"
+            ),
+            Fact: lambda ids: Fact.objects.filter(pk__in=ids),
+            Note: lambda ids: Note.objects.filter(pk__in=ids).select_related("folder"),
+            Email: lambda ids: Email.objects.filter(pk__in=ids),
+        }
+        cts = {ct.id: ct for ct, _ in scopes.values()}
+        for ct_id, ct_entries in by_ct.items():
+            content_type = cts.get(ct_id)
+            model = content_type.model_class() if content_type else None
+            loader = loaders.get(model)
+            if loader is None:
+                continue
+            ids = [oid for oid in (_oid(e) for e in ct_entries) if oid is not None]
+            for obj in loader(ids):
+                objects[(ct_id, obj.pk)] = obj
+
+        hits = []
+        for entry in entries:
+            obj = objects.get((entry.content_type_id, _oid(entry)))
+            if obj is None:
+                continue
+            snippet = _snippet(entry.content or entry.description or "", query)
+            rank = float(getattr(entry, "rank", 0) or 0)
+            if isinstance(obj, Document):
+                hits.append(
+                    {
+                        "kind": "document",
+                        "id": obj.id,
+                        "handle": f"doc:{obj.id}",
+                        "name": obj.name,
+                        "category": obj.category,
+                        "date": str(obj.date) if obj.date else None,
+                        "snippet": snippet,
+                        "rank": rank,
+                    }
+                )
+            elif isinstance(obj, Highlight):
+                hit = {
+                    "kind": "highlight",
+                    "id": obj.id,
+                    "handle": f"hl:{obj.id}",
+                    "name": obj.citation,
+                    "category": obj.color,
+                    "date": None,
+                    "snippet": _snippet(obj.text, query),
+                    "rank": rank,
+                }
+                if obj.document_id:
+                    hit["document_id"] = obj.document_id
+                    hit["date"] = str(obj.document.date) if obj.document.date else None
+                elif obj.caselaw_id:
+                    hit["caselaw_id"] = obj.caselaw_id
+                hits.append(hit)
+            elif isinstance(obj, Fact):
+                hits.append(
+                    {
+                        "kind": "fact",
+                        "id": obj.id,
+                        "handle": f"fact:{obj.id}",
+                        "name": obj.description or "",
+                        "category": "timeline",
+                        "date": str(obj.date) if obj.date else None,
+                        "snippet": obj.description or "",
+                        "rank": rank,
+                    }
+                )
+            elif isinstance(obj, Note):
+                library = obj.matter_id is None
+                hits.append(
+                    {
+                        "kind": "library" if library else "note",
+                        "id": obj.id,
+                        "handle": f"{'lib' if library else 'note'}:{obj.id}",
+                        "name": obj.title,
+                        "category": (
+                            f"Library: {library_folder_path(obj.folder)}"
+                            if library
+                            else obj.get_category_display()
+                        ),
+                        "date": (
+                            str(obj.updated_at.date()) if obj.updated_at else None
+                        ),
+                        "snippet": _snippet(obj.content or "", query),
+                        "rank": rank,
+                    }
+                )
+            else:  # Email -> one hit per thread
+                key = obj.thread_id or obj.gmail_id
+                hits.append(
+                    {
+                        "kind": "email",
+                        "id": key,
+                        "handle": f"thread:{key}",
+                        "name": obj.subject or "(no subject)",
+                        "category": "Email thread",
+                        "date": f"{obj.date:%Y-%m-%d}" if obj.date else None,
+                        "snippet": snippet,
+                        "rank": rank,
+                    }
+                )
+        return hits
+
+    def _search(tool_input):
+        raw = tool_input.get("queries") or []
+        if isinstance(raw, str):
+            raw = [raw]
+        single = str(tool_input.get("query") or "").strip()
+        queries = []
+        for candidate in ([single] if single else []) + [str(x) for x in raw]:
+            candidate = candidate.strip()
+            if candidate and candidate.lower() not in [q.lower() for q in queries]:
+                queries.append(candidate)
+        queries = queries[:SEARCH_MAX_QUERIES]
+        if not queries:
+            return {"error": "Provide query or queries."}, {}
         kinds = tool_input.get("kinds") or list(SEARCH_KINDS)
         kinds = [k for k in kinds if k in SEARCH_KINDS] or list(SEARCH_KINDS)
         try:
@@ -463,120 +698,38 @@ def make_agent_executor(
             limit = SEARCH_DEFAULT_LIMIT
         limit = max(1, min(limit, SEARCH_MAX_LIMIT))
 
-        querysets = []
-        if "document" in kinds:
-            querysets.append(
-                Document.objects.filter(matter=matter).exclude(ai_context="never")
-            )
-        if "highlight" in kinds:
-            # Scoped through a subquery so the outer queryset carries no
-            # join: watson's SQL selects a bare "id" from it.
-            scoped = Highlight.objects.filter(
-                Q(document__matter=matter) | Q(caselaw__matter=matter)
-            ).values("pk")
-            querysets.append(Highlight.objects.filter(pk__in=scoped))
-        if "fact" in kinds:
-            querysets.append(Fact.objects.filter(matter=matter))
-        if "note" in kinds:
-            querysets.append(Note.objects.filter(matter=matter))
-        if "library" in kinds:
-            querysets.append(get_library_notes())
+        scopes = _search_scopes(kinds)
+        merged = {}
+        for query in queries:
+            for hit in _entry_hits(
+                _fulltext_entries(query, scopes, limit * 2), scopes, query
+            ):
+                key = hit["handle"]
+                kept = merged.get(key)
+                if kept is None:
+                    hit["matched"] = [query]
+                    merged[key] = hit
+                else:
+                    if query not in kept["matched"]:
+                        kept["matched"].append(query)
+                    kept["rank"] = max(kept["rank"], hit["rank"])
 
-        hits = []
-        if querysets:
-            for result in watson.search(query, models=tuple(querysets))[:limit]:
-                obj = result.object
-                if obj is None:
-                    continue
-                if isinstance(obj, Document):
-                    hits.append(
-                        {
-                            "kind": "document",
-                            "id": obj.id,
-                            "handle": f"doc:{obj.id}",
-                            "name": obj.name,
-                            "category": obj.category,
-                            "date": str(obj.date) if obj.date else None,
-                            "snippet": _snippet(obj.ocr_text or "", query),
-                        }
-                    )
-                elif isinstance(obj, Highlight):
-                    source = obj.document or obj.caselaw
-                    hit = {
-                        "kind": "highlight",
-                        "id": obj.id,
-                        "handle": f"hl:{obj.id}",
-                        "name": obj.citation,
-                        "category": obj.color,
-                        "date": None,
-                        "snippet": _snippet(obj.text, query),
-                    }
-                    if obj.document_id:
-                        hit["document_id"] = obj.document_id
-                        hit["date"] = str(source.date) if source.date else None
-                    elif obj.caselaw_id:
-                        hit["caselaw_id"] = obj.caselaw_id
-                    hits.append(hit)
-                elif isinstance(obj, Fact):
-                    hits.append(
-                        {
-                            "kind": "fact",
-                            "id": obj.id,
-                            "handle": f"fact:{obj.id}",
-                            "name": obj.description or "",
-                            "category": "timeline",
-                            "date": str(obj.date) if obj.date else None,
-                            "snippet": obj.description or "",
-                        }
-                    )
-                elif isinstance(obj, Note):
-                    library = obj.matter_id is None
-                    hits.append(
-                        {
-                            "kind": "library" if library else "note",
-                            "id": obj.id,
-                            "handle": f"{'lib' if library else 'note'}:{obj.id}",
-                            "name": obj.title,
-                            "category": (
-                                f"Library: {library_folder_path(obj.folder)}"
-                                if library
-                                else obj.get_category_display()
-                            ),
-                            "date": (
-                                str(obj.updated_at.date()) if obj.updated_at else None
-                            ),
-                            "snippet": _snippet(obj.content or "", query),
-                        }
-                    )
+        fuzzy = False
+        if not merged:
+            fuzzy = True
+            for query in queries:
+                for hit in _entry_hits(
+                    _fuzzy_entries(query, scopes, limit), scopes, query
+                ):
+                    key = hit["handle"]
+                    if key not in merged:
+                        hit["matched"] = [query]
+                        hit["fuzzy"] = True
+                        merged[key] = hit
 
-        if "email" in kinds and len(hits) < limit:
-            emails = (
-                matter.emails.filter(
-                    Q(subject__icontains=query) | Q(body_text__icontains=query)
-                )
-                .exclude(ai_context="never")
-                .dedup()
-            )
-            for thread_emails in group_by_thread(emails):
-                if len(hits) >= limit:
-                    break
-                first, last = thread_emails[0], thread_emails[-1]
-                key = first.thread_id or first.gmail_id
-                match = next(
-                    (e for e in thread_emails if query.lower() in e.body_text.lower()),
-                    last,
-                )
-                hits.append(
-                    {
-                        "kind": "email",
-                        "id": key,
-                        "handle": f"thread:{key}",
-                        "name": thread_subject(thread_emails),
-                        "category": f"Email thread, {len(thread_emails)} messages",
-                        "date": f"{last.date:%Y-%m-%d}" if last.date else None,
-                        "snippet": _snippet(match.body_text or match.snippet, query),
-                    }
-                )
+        hits = sorted(merged.values(), key=lambda h: -h["rank"])[:limit]
+        for hit in hits:
+            hit.pop("rank", None)
 
         seen_count = 0
         with lock:
@@ -585,19 +738,30 @@ def make_agent_executor(
                 hit["seen"] = key in seen_hits
                 seen_count += hit["seen"]
                 seen_hits.add(key)
-        payload = {"query": query, "hits": hits, "total": len(hits)}
-        if len(hits) >= 3 and seen_count / len(hits) >= OVERLAP_SHARE:
+        payload = {"queries": queries, "hits": hits, "total": len(hits)}
+        if fuzzy:
+            payload["note"] = (
+                "No exact matches for any variant; these are near matches "
+                "by title similarity. Check the names before relying on them."
+            )
+        elif len(hits) >= 3 and seen_count / len(hits) >= OVERLAP_SHARE:
             payload["note"] = (
                 "Most of these hits came back from an earlier search this "
                 "turn. Use different terms, or read what you already found."
             )
+        more = f" and {len(queries) - 1} more" if len(queries) > 1 else ""
         seen = f", {seen_count} seen before" if seen_count else ""
-        label = f'Searched "{query}" ({len(hits)} hits{seen})'
+        fuzz = ", near matches" if fuzzy else ""
+        label = (
+            f'Searched "{queries[0]}"{more} ({len(hits)} hit'
+            f"{'s' if len(hits) != 1 else ''}{seen}{fuzz})"
+        )
         return payload, {
             "label": label,
-            "title": f'Searched "{query}"',
-            "detail": f"{len(hits)} hits{seen}",
-            "query": query,
+            "title": f'Searched "{queries[0]}"{more}',
+            "detail": f"{len(hits)} hits{seen}{fuzz}",
+            "query": queries[0],
+            "queries": queries,
             "kinds": kinds,
             "hits": len(hits),
             "seen": seen_count,
