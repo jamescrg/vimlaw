@@ -65,6 +65,8 @@ class TestReadDocument:
         step = executor.events[-1]
         assert step["type"] == "tool" and not step["pending"]
         assert step["label"].startswith("Read *Test Document*")
+        assert step["title"] == "Read *Test Document*"
+        assert step["detail"].endswith("chars")
         assert step["chars"] == len(text_document.ocr_text)
 
     def test_parts(self, matter, text_document):
@@ -93,6 +95,8 @@ class TestReadDocument:
         payload, outcome = run(executor, "read_document", doc_id=999_999)
         assert outcome["is_error"]
         assert executor.events[-1]["error"]
+        # The elbow line carries the error; the call line keeps its title.
+        assert executor.events[-1]["title"].startswith("Reading document")
 
     def test_no_text(self, executor, document):
         payload, outcome = run(executor, "read_document", doc_id=document.id)
@@ -108,6 +112,7 @@ class TestBudget:
         assert "already made this exact call" in payload["note"]
         assert payload["text"] == text_document.ocr_text
         assert executor.events[-1]["repeat"] is True
+        assert executor.events[-1]["detail"].endswith("repeat, not charged")
         usage = executor.usage()
         assert usage["tool_calls"] == 1
         assert usage["chars_read"] == len(text_document.ocr_text)
@@ -157,6 +162,8 @@ class TestSearch:
         assert "spoliation" in doc_hit["snippet"]
         assert doc_hit["seen"] is False
         assert executor.events[-1]["label"].startswith('Searched "spoliation"')
+        assert executor.events[-1]["title"] == 'Searched "spoliation"'
+        assert "hits" in executor.events[-1]["detail"]
 
         again, _ = run(executor, "search_materials", query="spoliation letter")
         assert any(h["seen"] for h in again["hits"])

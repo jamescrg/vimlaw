@@ -435,13 +435,17 @@ def make_agent_executor(
         }
         return fields, len(chunk)
 
-    def _part_label(verb: str, name: str, fields: dict) -> str:
+    def _part_detail(fields: dict) -> str:
+        """The outcome half of a read: size, or the slice read."""
         total = fields["total_chars"]
         if fields["offset"] == 0 and not fields["truncated"]:
-            return f"{verb} *{name}* ({_k(total)} chars)"
+            return f"{_k(total)} chars"
         start = fields["offset"]
         end = start + len(fields["text"])
-        return f"{verb} *{name}* (chars {start:,} to {end:,} of {_k(total)})"
+        return f"chars {start:,} to {end:,} of {_k(total)}"
+
+    def _part_label(verb: str, name: str, fields: dict) -> str:
+        return f"{verb} *{name}* ({_part_detail(fields)})"
 
     # -- handlers: return (payload, step_fields) ---------------------------
 
@@ -591,6 +595,8 @@ def make_agent_executor(
         label = f'Searched "{query}" ({len(hits)} hits{seen})'
         return payload, {
             "label": label,
+            "title": f'Searched "{query}"',
+            "detail": f"{len(hits)} hits{seen}",
             "query": query,
             "kinds": kinds,
             "hits": len(hits),
@@ -623,6 +629,8 @@ def make_agent_executor(
         }
         return payload, {
             "label": _part_label("Read", doc.name, fields),
+            "title": f"Read *{doc.name}*",
+            "detail": _part_detail(fields),
             "kind": "document",
             "id": doc.id,
             "name": doc.name,
@@ -660,6 +668,8 @@ def make_agent_executor(
         }
         return payload, {
             "label": _part_label("Read thread", subject, fields),
+            "title": f"Read thread *{subject}*",
+            "detail": _part_detail(fields),
             "kind": "email",
             "id": thread_id,
             "name": subject,
@@ -700,6 +710,12 @@ def make_agent_executor(
             "label": _part_label(
                 "Read library note" if library else "Read note", note.title, fields
             ),
+            "title": (
+                f"Read library note *{note.title}*"
+                if library
+                else f"Read note *{note.title}*"
+            ),
+            "detail": _part_detail(fields),
             "kind": "library" if library else "note",
             "id": note.id,
             "name": note.title,
@@ -745,6 +761,8 @@ def make_agent_executor(
         }
         return payload, {
             "label": _part_label("Read", caselaw.case_name, fields),
+            "title": f"Read *{caselaw.case_name}*",
+            "detail": _part_detail(fields),
             "kind": "caselaw",
             "id": caselaw.id,
             "name": caselaw.case_name,
@@ -775,6 +793,8 @@ def make_agent_executor(
         payload = {"conversation_id": conv.id, "title": name, **fields}
         return payload, {
             "label": _part_label("Read conversation", name, fields),
+            "title": f"Read conversation *{name}*",
+            "detail": _part_detail(fields),
             "kind": "conversation",
             "id": conv.id,
             "name": name,
@@ -794,6 +814,8 @@ def make_agent_executor(
         name = f"Invoice #{invoice.id}"
         return {"invoice_id": invoice.id, "text": text}, {
             "label": f"Read *{name}*",
+            "title": f"Read *{name}*",
+            "detail": f"{_k(len(text))} chars",
             "kind": "invoice",
             "id": invoice.id,
             "name": name,
@@ -812,6 +834,8 @@ def make_agent_executor(
         text = SECTIONS[section](matter)[:SECTION_CAP]
         return {"section": section, "text": text}, {
             "label": f"Read the {section} section ({_k(len(text))} chars)",
+            "title": f"Read the {section} section",
+            "detail": f"{_k(len(text))} chars",
             "kind": "section",
             "id": section,
             "name": section,
@@ -864,6 +888,8 @@ def make_agent_executor(
             "ts": time.time(),
             "seconds": 0.0,
             "label": _pending_label(name, tool_input),
+            "title": _pending_label(name, tool_input),
+            "detail": "",
             "pending": True,
             "error": None,
             "repeat": False,
@@ -903,6 +929,10 @@ def make_agent_executor(
             payload["note"] = REPEAT_NOTE
             fields = dict(cached["step"])
             fields["label"] = fields.get("label", name) + " (repeat, not charged)"
+            detail = fields.get("detail") or ""
+            fields["detail"] = (
+                f"{detail}, repeat, not charged" if detail else "repeat, not charged"
+            )
             fields["chars"] = 0
             return finish(payload, fields, cached["is_error"])
         if exhausted:

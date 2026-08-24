@@ -2399,9 +2399,139 @@
   margin-right: 0.25rem;
 }
 
-.ai-agent-log {
-  max-height: 18rem;
-  padding-left: 0;
+/* Live agent stream: flat rows flowing in the message area where the
+   answer will land, Claude Code transcript style. No box, no inner
+   scroll cap; hierarchy comes from muted tool lines with elbow outcome
+   lines against full-strength prose, and the outer chat scroll follows
+   growth. The persisted trail (agent-trail.html) reuses the same rows
+   under a flat, foldable summary line. */
+.ai-agent-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.ai-agent-tool > div {
+  color: var(--color-muted);
+}
+
+/* The elbow outcome line under a tool call: size, duration, or the
+   error. U+2514 (a box-drawing corner every font carries) plays the
+   part of Claude Code's elbow glyph. */
+.ai-agent-elbow {
+  color: var(--color-muted-more);
+}
+
+.ai-agent-elbow::before {
+  content: "\2514  ";
+  white-space: pre;
+}
+
+.ai-agent-elbow-error {
+  color: var(--urgent);
+}
+
+/* Flat fold handle above a finished run's steps. */
+.ai-agent-trail > summary {
+  align-items: center;
+  color: var(--color-muted-more);
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Persistent status bar: the window's last flex child, one quiet line
+   under the composer. Ambient chrome, not content: hairline top border,
+   muted text, reserved height even when there is little to say. Left is
+   where am I (matter, jurisdiction); right is what the system is doing
+   (live run strip while an agent works, otherwise citation state, token
+   totals, model). Never wraps: the left side truncates with an ellipsis
+   and right-hand segments drop by priority as width shrinks. */
+.ai-chat-statusbar-row {
+  align-items: center;
+  background: var(--ai-frame);
+  border-top: 1px solid var(--border-medium);
+  color: var(--color-muted);
+  display: flex;
+  font-size: 1rem;
+  gap: 0.75rem;
+  min-height: 1.75rem;
+  overflow: hidden;
+  padding: 0.25rem 1rem;
+  white-space: nowrap;
+}
+
+.ai-statusbar-left {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-statusbar-right {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  gap: 0.75rem;
+}
+
+.ai-statusbar-right i {
+  color: var(--icon-muted);
+  font-size: 1rem;
+}
+
+.ai-statusbar-model {
+  color: var(--color-muted-more);
+}
+
+.ai-cites-ok {
+  color: var(--color-muted);
+}
+
+.ai-cites-bad {
+  color: var(--amber-700);
+}
+
+.ai-cites-checking {
+  color: var(--color-muted-more);
+}
+
+/* Priority drop, never wrap. */
+@media (max-width: 44rem) {
+  .ai-statusbar-tokens {
+    display: none;
+  }
+}
+
+@media (max-width: 34rem) {
+  .ai-statusbar-model {
+    display: none;
+  }
+}
+
+/* Transient tail of the live agent stream: the current thinking or
+   finishing state, pulsing at the bottom of the transcript and aging
+   away as real rows replace it. Tool rows persist as provenance. */
+.ai-agent-stream-tail {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ai-agent-stream-tail i {
+  color: var(--violet-600);
+  font-size: 1rem;
+}
+
+.ai-agent-stream-tail p {
+  display: inline;
+  margin: 0;
 }
 
 .ai-agent-step {
@@ -2436,16 +2566,7 @@
 }
 
 .ai-agent-turn {
-  border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-}
-
-.ai-agent-turn:first-child {
-  border-top: none;
-  margin-top: 0;
-  padding-top: 0;
 }
 
 .ai-agent-error > div {

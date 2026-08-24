@@ -616,6 +616,12 @@ class TestAgentKind:
         assert "Agent run (1 step)" in html
         assert "ai-agent-summary-stats" in html
         assert 'id="agent-turn-1"' not in html  # persisted rows carry no live ids
+        assert '<details class="ai-agent-trail" open>' in html
+        assert "ai-research-trail" not in html
+        # The terminal response resets the bar to idle out-of-band.
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html
+        assert "icon-timer" not in html
 
     def test_in_flight_poll_passes_usage_and_steps(self, client, matter, user):
         from django.urls import reverse
@@ -701,6 +707,17 @@ class TestAgentKind:
         assert 'id="ai-agent-stats"' in html
         assert "48.2k in" in html and "3.1k out" in html and "41.0k cached" in html
         assert "7/25 tools" in html and "210.0k read" in html
+        # The pinned bar rides the same response as an out-of-band morph.
+        assert 'id="ai-chat-statusbar"' in html
+        assert 'hx-swap-oob="morph"' in html
+        assert "icon-timer" in html
+        # The transient action line is out of the bar; with a tool running
+        # the pending row itself is the transient state, so no tail either.
+        assert "Reading document 12" not in html
+        assert "agent-stream-tail" not in html
+        assert "ai-status-content" not in html
+        assert "ai-research-trail" not in html
+        assert "ai-agent-elbow" in html
         assert 'id="agent-text-1"' in html and "Reading the complaint first." in html
         assert 'id="agent-turn-1"' in html and "12.3k in, 610 out" in html
         assert 'id="agent-tool-1"' in html and "<em>Complaint</em>" in html
@@ -733,6 +750,8 @@ class TestAgentKind:
         assert "ai-agent-stats" not in html
         assert "Context assembled" in html
         assert "ai-status-elapsed" in html
+        assert "ai-chat-statusbar" not in html
+        assert "hx-swap-oob" not in html
         cache.delete(f"ai_status_{conversation.id}")
 
     def test_clone_copies_agent_run(self, client, matter, user):
@@ -764,14 +783,260 @@ class TestAgentKind:
             matter=matter, title="A", user=user, kind="agent"
         )
         url = reverse("case:ai-conversation-view", args=[conversation.id])
-        assert "ai-status-indicator" not in client.get(url).content.decode()
+        idle = client.get(url).content.decode()
+        assert "ai-status-indicator" not in idle
+        # The standing bar is always present and populated (reserved height).
+        assert 'id="ai-chat-statusbar"' in idle
+        assert "ai-chat-statusbar-row" in idle
+        assert "icon-timer" not in idle
 
         cache.set(
             f"ai_status_{conversation.id}",
-            {"status": "thinking", "message": "Thinking...", "started_at": 0},
+            {
+                "status": "thinking",
+                "message": "Thinking...",
+                "started_at": 0,
+                "usage": {"input": 10, "tool_calls": 0, "tool_calls_max": 25},
+            },
             timeout=60,
         )
         html = client.get(url).content.decode()
         assert 'id="ai-status-indicator"' in html
         assert "every 1s" in html
+        # Mid-run reload renders the live strip, not one tick late.
+        assert "ai-chat-statusbar-row" in html
+        assert "icon-timer" in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+
+class TestAgentStatusBar:
+    """The pinned bar above the composer: fed out-of-band by every poll,
+    emptied by every terminal response, agent-kind only."""
+
+    @pytest.fixture
+    def _no_worker(self, monkeypatch):
+        monkeypatch.setattr(
+            "apps.case.ai.views.process_ai_request", lambda *a, **k: None
+        )
+
+    def test_send_message_carries_starting_bar(self, client, matter, _no_worker):
+        from django.urls import reverse
+
+        html = client.post(
+            reverse("case:ai-send", args=[matter.id]),
+            {"message": "Hello", "llm": "claude-fable", "kind": "agent"},
+        ).content.decode()
+        assert 'hx-swap-oob="morph"' in html
+        assert "ai-chat-statusbar-row" in html
+
+        Conversation.objects.all().delete()
+        html = client.post(
+            reverse("case:ai-send", args=[matter.id]),
+            {"message": "Hello", "llm": "claude-opus-5", "kind": "classic"},
+        ).content.decode()
+        # Classic sends carry the idle bar (no live strip).
+        assert "ai-chat-statusbar-row" in html
+        assert "icon-timer" not in html
+
+    def test_cancel_empties_bar_for_agent_only(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        agent = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{agent.id}", {"status": "reading", "message": "..."}, timeout=60
+        )
+        html = client.post(reverse("case:ai-cancel", args=[agent.id])).content.decode()
+        assert 'id="ai-status-indicator"' in html
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+        cache.delete(f"ai_status_{agent.id}")
+
+        classic = Conversation.objects.create(
+            matter=matter, title="C", user=user, kind="classic"
+        )
+        cache.set(
+            f"ai_status_{classic.id}",
+            {"status": "thinking", "message": "..."},
+            timeout=60,
+        )
+        html = client.post(
+            reverse("case:ai-cancel", args=[classic.id])
+        ).content.decode()
+        # Classic case chats share the persistent bar (idle content).
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+        cache.delete(f"ai_status_{classic.id}")
+
+    def test_cancelled_poll_empties_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {"status": "cancelled", "message": "Request cancelled"},
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert response["HX-Reswap"] == "outerHTML"
+        assert 'id="ai-status-ended"' in html
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_interruption_empties_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        Message.objects.create(
+            conversation=conversation, role="user", content="Hello", user=user
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert "interrupted" in html
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+
+    def test_message_list_reattaches_poller_and_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        url = reverse("case:ai-messages", args=[matter.id])
+        idle = client.get(url, {"conversation_id": conversation.id}).content.decode()
+        assert "ai-status-indicator" not in idle
+
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "reading",
+                "message": "Reading...",
+                "started_at": 0,
+                "usage": {"input": 10, "tool_calls": 1, "tool_calls_max": 25},
+                "steps": [],
+            },
+            timeout=60,
+        )
+        live = client.get(url, {"conversation_id": conversation.id}).content.decode()
+        assert "every 1s" in live
+        assert 'hx-swap-oob="morph"' in live
+        assert "ai-chat-statusbar-row" in live
+        cache.delete(f"ai_status_{conversation.id}")
+
+
+class TestStatusBarIdleContent:
+    """Idle bar segments: matter left; cites, totals, model right."""
+
+    def _bar(self, client, conversation):
+        from django.urls import reverse
+
+        return client.get(
+            reverse("case:ai-conversation-view", args=[conversation.id])
+        ).content.decode()
+
+    def test_matter_totals_and_model(self, client, matter, user):
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent", llm="claude-fable"
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="x",
+            input_tokens=48_231,
+            output_tokens=3_100,
+        )
+        html = self._bar(client, conversation)
+        assert "ai-statusbar-left" in html and "Test Matter" in html
+        assert "48.2k in" in html and "3.1k out" in html
+        assert "Claude Fable 5" in html
+
+    def test_cite_states(self, client, matter, user):
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="classic"
+        )
+        message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="x",
+            verified_citations=[{"citation_type": "case", "is_valid": True}],
+        )
+        assert "cites ok" in self._bar(client, conversation)
+
+        message.verified_citations = [
+            {"citation_type": "case", "is_valid": True},
+            {"citation_type": "case", "is_valid": False},
+        ]
+        message.save(update_fields=["verified_citations"])
+        assert "1 unverified" in self._bar(client, conversation)
+
+        message.verified_citations = [
+            {
+                "citation_type": "case",
+                "is_valid": True,
+                "vetting": {"status": "pending"},
+            }
+        ]
+        message.save(update_fields=["verified_citations"])
+        assert "checking cites" in self._bar(client, conversation)
+
+    def test_vetting_poll_refreshes_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="classic"
+        )
+        message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="x",
+            verified_citations=[
+                {
+                    "citation_type": "case",
+                    "is_valid": True,
+                    "vetting": {"status": "completed", "verdict": "supports"},
+                }
+            ],
+        )
+        html = client.get(
+            reverse("case:ai-message-vetting-status", args=[message.id])
+        ).content.decode()
+        assert 'hx-swap-oob="morph"' in html
+        assert "cites ok" in html
+
+    def test_agent_thinking_status_shows_stream_tail(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "thinking",
+                "message": "Weighing the pleadings",
+                "started_at": 0,
+                "usage": {"input": 10, "tool_calls": 0, "tool_calls_max": 25},
+                "steps": [],
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert 'id="agent-stream-tail"' in html
+        assert "Weighing the pleadings" in html
         cache.delete(f"ai_status_{conversation.id}")

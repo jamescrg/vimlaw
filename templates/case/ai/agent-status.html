@@ -1,23 +1,14 @@
 {% load ai_extras %}
 {% comment %}
-Live agent log inside the status box (status.html), replacing the classic
-activity list: the model's own prose, one row per tool read, a divider
-per model turn with its token usage, then the elapsed/token strip. Rows
-keep stable ids so the 1s morph patches them in place. The list reuses
-the ai-research-log id so status.html's pin script finds it.
+The live agent stream: the run's typed rows (the model's own prose, one
+row per tool read, a divider per model turn with its token usage),
+flowing inline where the answer will land. Rows keep stable ids so the
+1s morph patches them in place. Status, elapsed, tokens and cancel live
+in the pinned bar (agent-statusbar.html); live rows and finished rows
+share agent-step.html so they look identical.
 {% endcomment %}
-<ol class="ai-research-log ai-agent-log" id="ai-research-log">
+<ol class="ai-agent-steps" id="ai-agent-stream-log">
   {% for step in steps %}
     {% include "case/ai/agent-step.html" with step=step live=True index=forloop.counter %}
   {% endfor %}
 </ol>
-{% if usage %}
-  <div class="ai-agent-stats" id="ai-agent-stats">
-    <span><i class="icon-timer"></i>{{ elapsed_seconds|duration_short }}</span>
-    <span>{{ usage.input|ktokens }} in</span>
-    <span>{{ usage.output|ktokens }} out</span>
-    {% if usage.cache_read %}<span>{{ usage.cache_read|ktokens }} cached</span>{% endif %}
-    <span>{{ usage.tool_calls }}/{{ usage.tool_calls_max }} tools</span>
-    <span>{{ usage.chars_read|kchars }} read</span>
-  </div>
-{% endif %}

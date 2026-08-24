@@ -1,0 +1,56 @@
+{% load ai_extras %}
+{% comment %}
+The persistent status bar: the case-chat window's last flex child, one
+quiet line under the composer. Left is where am I (matter,
+jurisdiction); right is what the system is doing: the live run strip
+plus cancel while an agentic turn works, otherwise citation state,
+conversation token totals and the model. Transient activity never
+appears here; it lives at the tail of the transcript.
+
+One template plays both roles: oob=False renders the standing container
+(conversation-standalone.html), oob=True is the fragment the views
+append to htmx responses (views._statusbar_html; case chats only, other
+surfaces have no target). The container and fragment must carry
+identical class/hx-ext attributes: a morph syncs attributes, and
+dropping hx-ext="morph" from the live element would silently downgrade
+every later out-of-band swap to innerHTML.
+{% endcomment %}
+<div id="ai-chat-statusbar"
+     class="ai-chat-statusbar"
+     hx-ext="morph"
+     {% if oob %}hx-swap-oob="morph"{% endif %}>
+  <div class="ai-chat-statusbar-row">
+    <span class="ai-statusbar-left">{{ matter.name }}
+      {% if matter.jurisdiction %}· {{ matter.jurisdiction }}{% endif %}
+    </span>
+    <span class="ai-statusbar-right">
+      {% if live %}
+        {% if usage %}
+          <span class="ai-agent-stats" id="ai-agent-stats">
+            <span><i class="icon-timer"></i>{{ elapsed_seconds|duration_short }}</span>
+            <span>{{ usage.input|ktokens }} in</span>
+            <span>{{ usage.output|ktokens }} out</span>
+            {% if usage.cache_read %}<span>{{ usage.cache_read|ktokens }} cached</span>{% endif %}
+            <span>{{ usage.tool_calls }}/{{ usage.tool_calls_max }} tools</span>
+            <span>{{ usage.chars_read|kchars }} read</span>
+          </span>
+        {% endif %}
+        <button type="button"
+                class="ai-cancel-btn"
+                data-cancel-url="{% url 'case:ai-cancel' conversation.id %}"
+                onclick="var u=this.dataset.cancelUrl; var el=document.getElementById('ai-status-indicator'); if(el){htmx.trigger(el,'htmx:abort'); el.outerHTML='<div id=&quot;ai-status-indicator&quot;></div>';} htmx.ajax('POST',u,{target:'#ai-status-indicator',swap:'outerHTML'});"
+                title="Cancel request">
+          <i class="icon-x"></i>
+        </button>
+      {% else %}
+        {% if cite_state %}
+          <span class="ai-statusbar-cites ai-cites-{{ cite_state.kind }}">{{ cite_state.text }}</span>
+        {% endif %}
+        {% if totals %}
+          <span class="ai-statusbar-tokens">{{ totals.input|ktokens }} in · {{ totals.output|ktokens }} out</span>
+        {% endif %}
+        <span class="ai-statusbar-model">{{ conversation.get_llm_display }}</span>
+      {% endif %}
+    </span>
+  </div>
+</div>

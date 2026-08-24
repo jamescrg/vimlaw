@@ -1,8 +1,10 @@
 {% load markdown_extras ai_extras %}
 {% comment %}
-One row of an agent run, shared by the live status box (live=True: rows
-carry stable ids so idiomorph patches them in place) and the persisted
-trail. Step shapes: apps/case/ai/agent_state.py.
+One row of an agent run, shared by the live inline stream (live=True:
+rows carry stable ids so idiomorph patches them in place) and the
+persisted trail. Claude Code transcript style: flat rows, muted tool
+lines with an elbow outcome line under the call, full-strength prose,
+whisper-quiet turn lines. Step shapes: apps/case/ai/agent_state.py.
 {% endcomment %}
 {% if step.type == "text" %}
   <li class="ai-agent-step ai-agent-text"
@@ -14,21 +16,27 @@ trail. Step shapes: apps/case/ai/agent_state.py.
   <li class="ai-agent-step ai-agent-turn"
       {% if live %}id="agent-turn-{{ step.n }}"{% endif %}>
     <i class="icon-cpu"></i>
-    <div>
-      Turn {{ step.n }}
-      <span class="detail-text">{{ step|turn_summary }}</span>
-    </div>
+    <div class="detail-text">Turn {{ step.n }} · {{ step|turn_summary }}</div>
   </li>
 {% elif step.type == "tool" %}
   <li class="ai-agent-step ai-agent-tool{% if step.error %} ai-agent-error{% endif %}"
       {% if live %}id="agent-tool-{{ step.n }}"{% endif %}>
     <i class="{{ step.tool|agent_tool_icon }}{% if step.pending %} pulse{% endif %}"></i>
     <div>
-      {{ step.label|render_markdown }}
-      {% if step.pending %}
-        <span class="detail-text">running</span>
-      {% elif step.seconds > 1 %}
-        <span class="detail-text">{{ step.seconds|duration_short }}</span>
+      {% if step.title %}
+        {{ step.title|render_markdown }}
+      {% else %}
+        {{ step.label|render_markdown }}
+      {% endif %}
+      {% if step.error %}
+        <div class="ai-agent-elbow ai-agent-elbow-error">{{ step.error }}</div>
+      {% elif step.pending %}
+        <div class="ai-agent-elbow">running</div>
+      {% elif step.detail %}
+        <div class="ai-agent-elbow">
+          {{ step.detail }}
+          {% if step.seconds > 1 %}, {{ step.seconds|duration_short }}{% endif %}
+        </div>
       {% endif %}
     </div>
   </li>

@@ -11,11 +11,14 @@ hx-sync drops a tick if the previous request is still in flight. The
 completion response swaps in the message (different root), which ends
 the interval.
 
-Layout: the activity log rows come FIRST and the live status line sits
-at the BOTTOM of the box, so the newest log line and the current status
-read as one continuous stream (no eye-jumping between bottom and top).
-Agentic conversations swap the plain log for agent-status.html (typed
-rows plus the token/elapsed strip); the pin script serves both.
+Two shapes share the poller. Classic (and the intake/agenda windows):
+the one-box indicator, log rows first, live status line at the bottom.
+Agentic: an in-progress assistant message whose flat step rows flow
+inline where the answer will land, Claude Code style (no box; muted
+tool lines with elbow outcome lines, full-strength prose); the status
+line, elapsed time, token counts and cancel button live in the pinned
+bar above the composer, updated out-of-band by the same poll
+(agent-statusbar.html).
 {% endcomment %}
 <div id="ai-status-indicator"
      hx-get="{% url 'case:ai-status' conversation.id %}"
@@ -23,80 +26,111 @@ rows plus the token/elapsed strip); the pin script serves both.
      hx-sync="this:drop"
      hx-ext="morph"
      hx-swap="morph">
-  <div class="ai-status-content">
-    {% if conversation.kind == "agent" %}
-      {% include "case/ai/agent-status.html" %}
-    {% elif activity_log %}
-      <ul class="ai-research-log" id="ai-research-log">
-        {% for line in activity_log %}<li>{{ line|render_markdown }}</li>{% endfor %}
-      </ul>
-    {% endif %}
-    {% if activity_log or conversation.kind == "agent" %}
-      {% comment %}
-      Pin the log's scroll to the bottom so the newest step stays in
-      view, unless the reader scrolled up to look at earlier rows (the
-      flag lives on the list element, which morph preserves). Morph swaps
-      don't re-execute an unchanged script tag, so the first render
-      installs a document-level listener that re-pins after every settle;
-      the direct call below covers that first render.
-      {% endcomment %}
-      <script>
-        (function () {
-          function watchLog(log) {
-            if (log.dataset.watched) return;
-            log.dataset.watched = "1";
-            log.addEventListener("scroll", function () {
-              var gap = log.scrollHeight - log.scrollTop - log.clientHeight;
-              log.dataset.unpinned = gap < 40 ? "0" : "1";
-            });
-          }
-          function pinLog() {
-            var log = document.getElementById("ai-research-log");
-            if (!log) return;
-            watchLog(log);
-            if (log.dataset.unpinned !== "1") log.scrollTop = log.scrollHeight;
-          }
-          if (!window._aiLogScrollPinned) {
-            window._aiLogScrollPinned = true;
-            document.body.addEventListener("htmx:afterSettle", pinLog);
-          }
-          pinLog();
-        })();
-      </script>
-    {% endif %}
-    {% if status == "context" %}
-      <i class="icon-sparkles pulse"></i>
-    {% elif status == "connecting" %}
-      <i class="icon-cloud-upload spin"></i>
-    {% elif status == "thinking" %}
-      <i class="icon-lightbulb pulse"></i>
-    {% elif status == "generating" %}
-      <i class="icon-square-pen pulse"></i>
-    {% elif status == "verifying" %}
-      <i class="icon-scale pulse"></i>
-    {% elif status == "planning" %}
-      <i class="icon-list-checks pulse"></i>
-    {% elif status == "searching" %}
-      <i class="icon-search pulse"></i>
-    {% elif status == "reading" %}
-      <i class="icon-book-open pulse"></i>
-    {% elif status == "cancelled" %}
-      <i class="icon-circle-x"></i>
-    {% else %}
-      <i class="icon-hourglass spin"></i>
-    {% endif %}
-    <span class="ai-status-message">{{ message|render_markdown }}</span>
-    {% if elapsed_seconds and conversation.kind != "agent" %}
-      <span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>
-    {% endif %}
-    {% if status != "cancelled" %}
-      <button type="button"
-              class="ai-cancel-btn"
-              data-cancel-url="{% url 'case:ai-cancel' conversation.id %}"
-              onclick="var u=this.dataset.cancelUrl; var el=document.getElementById('ai-status-indicator'); if(el){htmx.trigger(el,'htmx:abort'); el.outerHTML='<div id=&quot;ai-status-indicator&quot;></div>';} htmx.ajax('POST',u,{target:'#ai-status-indicator',swap:'outerHTML'});"
-              title="Cancel request">
-        <i class="icon-x"></i>
-      </button>
-    {% endif %}
-  </div>
+  {% if conversation.kind == "agent" %}
+    <div class="ai-message ai-message-assistant ai-agent-stream">
+      <div class="ai-message-header">
+        <i class="icon-bot"></i>
+        <span>Assistant</span>
+      </div>
+      <div class="ai-message-content">
+        {% include "case/ai/agent-status.html" %}
+        {% comment %}
+        Transient tail: the current state while no tool row is carrying
+        it (thinking, connecting, finishing). Morphs each tick and ages
+        away as real rows land; tool rows persist as the provenance.
+        {% endcomment %}
+        {% if status != "reading" and status != "searching" %}
+          <div class="ai-agent-stream-tail" id="agent-stream-tail">
+            {% if status == "context" %}
+              <i class="icon-sparkles pulse"></i>
+            {% elif status == "connecting" %}
+              <i class="icon-cloud-upload spin"></i>
+            {% elif status == "thinking" %}
+              <i class="icon-lightbulb pulse"></i>
+            {% elif status == "generating" %}
+              <i class="icon-square-pen pulse"></i>
+            {% elif status == "verifying" %}
+              <i class="icon-scale pulse"></i>
+            {% elif status == "planning" %}
+              <i class="icon-list-checks pulse"></i>
+            {% else %}
+              <i class="icon-hourglass spin"></i>
+            {% endif %}
+            <span>{{ message|render_markdown }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="ai-status-content">
+      {% if activity_log %}
+        <ul class="ai-research-log" id="ai-research-log">
+          {% for line in activity_log %}<li>{{ line|render_markdown }}</li>{% endfor %}
+        </ul>
+        {% comment %}
+        Pin the log's scroll to the bottom so the newest step stays in
+        view, unless the reader scrolled up to look at earlier rows (the
+        flag lives on the list element, which morph preserves). Morph swaps
+        don't re-execute an unchanged script tag, so the first render
+        installs a document-level listener that re-pins after every settle;
+        the direct call below covers that first render.
+        {% endcomment %}
+        <script>
+          (function () {
+            function watchLog(log) {
+              if (log.dataset.watched) return;
+              log.dataset.watched = "1";
+              log.addEventListener("scroll", function () {
+                var gap = log.scrollHeight - log.scrollTop - log.clientHeight;
+                log.dataset.unpinned = gap < 40 ? "0" : "1";
+              });
+            }
+            function pinLog() {
+              var log = document.getElementById("ai-research-log");
+              if (!log) return;
+              watchLog(log);
+              if (log.dataset.unpinned !== "1") log.scrollTop = log.scrollHeight;
+            }
+            if (!window._aiLogScrollPinned) {
+              window._aiLogScrollPinned = true;
+              document.body.addEventListener("htmx:afterSettle", pinLog);
+            }
+            pinLog();
+          })();
+        </script>
+      {% endif %}
+      {% if status == "context" %}
+        <i class="icon-sparkles pulse"></i>
+      {% elif status == "connecting" %}
+        <i class="icon-cloud-upload spin"></i>
+      {% elif status == "thinking" %}
+        <i class="icon-lightbulb pulse"></i>
+      {% elif status == "generating" %}
+        <i class="icon-square-pen pulse"></i>
+      {% elif status == "verifying" %}
+        <i class="icon-scale pulse"></i>
+      {% elif status == "planning" %}
+        <i class="icon-list-checks pulse"></i>
+      {% elif status == "searching" %}
+        <i class="icon-search pulse"></i>
+      {% elif status == "reading" %}
+        <i class="icon-book-open pulse"></i>
+      {% elif status == "cancelled" %}
+        <i class="icon-circle-x"></i>
+      {% else %}
+        <i class="icon-hourglass spin"></i>
+      {% endif %}
+      <span class="ai-status-message">{{ message|render_markdown }}</span>
+      {% if elapsed_seconds %}<span class="ai-status-elapsed">({{ elapsed_seconds }}s)</span>{% endif %}
+      {% if status != "cancelled" %}
+        <button type="button"
+                class="ai-cancel-btn"
+                data-cancel-url="{% url 'case:ai-cancel' conversation.id %}"
+                onclick="var u=this.dataset.cancelUrl; var el=document.getElementById('ai-status-indicator'); if(el){htmx.trigger(el,'htmx:abort'); el.outerHTML='<div id=&quot;ai-status-indicator&quot;></div>';} htmx.ajax('POST',u,{target:'#ai-status-indicator',swap:'outerHTML'});"
+                title="Cancel request">
+          <i class="icon-x"></i>
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
 </div>
