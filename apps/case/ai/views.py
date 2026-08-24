@@ -270,10 +270,7 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
-    # The mode chosen in the new-conversation prompt; remembered per session
-    # so the prompt's default follows the user's last choice.
-    kind = _kind_param(request.GET, request.session.get("ai_new_chat_kind", "classic"))
-    request.session["ai_new_chat_kind"] = kind
+    kind = _kind_param(request.GET)
 
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
@@ -337,7 +334,6 @@ def new_conversation_prompt(request, matter_id):
             "matter": matter,
             "llm": llm,
             "llm_choices": Conversation.LLM_CHOICES,
-            "default_kind": request.session.get("ai_new_chat_kind", "classic"),
         },
     )
 

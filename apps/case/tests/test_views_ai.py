@@ -540,7 +540,7 @@ class TestAgentKind:
         conversation.refresh_from_db()
         assert conversation.kind == "classic"
 
-    def test_new_view_carries_kind_and_remembers_it(self, client, matter):
+    def test_new_view_carries_kind(self, client, matter):
         from django.urls import reverse
 
         response = client.get(
@@ -549,16 +549,27 @@ class TestAgentKind:
         )
         assert response.context["conversation"].kind == "agent"
         assert response.context["kind"] == "agent"
-        prompt = client.get(
-            reverse("case:ai-new-conversation-prompt", args=[matter.id])
-        )
-        assert prompt.context["default_kind"] == "agent"
 
         response = client.get(
             reverse("case:ai-new-conversation-view", args=[matter.id]),
             {"kind": "research", "llm": "claude-opus", "title": "T"},
         )
         assert response.context["conversation"].kind == "classic"
+
+    def test_modal_defaults_to_classic(self, client, matter):
+        import re
+
+        from django.urls import reverse
+
+        html = client.get(
+            reverse("case:ai-new-conversation-prompt", args=[matter.id])
+        ).content.decode()
+        # First option, no selected attribute anywhere on the mode select.
+        mode_select = re.search(
+            r'<select id="new-conversation-kind">(.*?)</select>', html, re.DOTALL
+        ).group(1)
+        assert "selected" not in mode_select
+        assert mode_select.index('value="classic"') < mode_select.index('value="agent"')
 
     def test_create_conversation_honors_kind(self, client, matter):
         from django.urls import reverse
