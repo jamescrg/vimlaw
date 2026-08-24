@@ -2452,7 +2452,7 @@
    segments drop by priority as width shrinks. */
 .ai-chat-statusbar-row {
   align-items: center;
-  background: var(--ai-frame);
+  background: transparent;
   border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
   display: flex;
@@ -2465,7 +2465,6 @@
 }
 
 .ai-statusbar-left {
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
