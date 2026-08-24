@@ -1347,6 +1347,7 @@ def context_preview(request, matter_id):
             "context_limit": 1_000_000,
         },
         {"name": "Claude Sonnet 4.6", "input_price": 3.00, "context_limit": 1_000_000},
+        {"name": "Claude Sonnet 5", "input_price": 3.00, "context_limit": 1_000_000},
         {"name": "Claude Opus 5", "input_price": 5.00, "context_limit": 1_000_000},
         {"name": "Claude Fable 5", "input_price": 10.00, "context_limit": 1_000_000},
         {"name": "Claude Opus 4.8", "input_price": 5.00, "context_limit": 1_000_000},

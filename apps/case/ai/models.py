@@ -16,12 +16,13 @@ class Conversation(AuditMixin, models.Model):
     # "claude-fable" (Fable 5, double Opus pricing) is offered for agentic
     # conversations only; the views fall a classic create back to Opus 5.
     LLM_CHOICES = [
-        ("claude-opus-5", "Claude Opus 5"),
         ("claude-fable", "Claude Fable 5"),
+        ("claude-opus-5", "Claude Opus 5"),
         ("claude-opus", "Claude Opus 4.8"),
         ("claude-opus-4-6", "Claude Opus 4.6"),
-        ("gemini-flash", "Gemini 2.5 Flash"),
+        ("claude-sonnet-5", "Claude Sonnet 5"),
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
+        ("gemini-flash", "Gemini 2.5 Flash"),
     ]
 
     # Chat modes, fixed when the conversation is created. "classic" is the
