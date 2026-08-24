@@ -13,33 +13,19 @@
             class="form-compact"
             onsubmit="return aiLaunchNewConversation(event);">
         <div class="form-group">
+          <label for="new-conversation-kind">Mode</label>
+          <select id="new-conversation-kind">
+            <option value="classic" {% if default_kind != "agent" %}selected{% endif %}>Classic</option>
+            <option value="agent" {% if default_kind == "agent" %}selected{% endif %}>Agentic</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label for="new-conversation-llm">Model</label>
           <select id="new-conversation-llm">
             {% for key, label in llm_choices %}
               <option value="{{ key }}" {% if key == llm %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
-        </div>
-        <div class="form-group">
-          <label>Mode</label>
-          <div class="ai-kind-options">
-            <label class="ai-kind-option">
-              <input type="radio"
-                     name="kind"
-                     value="classic"
-                     {% if default_kind != "agent" %}checked{% endif %}>
-              <span class="ai-kind-name">Classic</span>
-              <span class="detail-text">Gathers the case file up front and answers in one pass.</span>
-            </label>
-            <label class="ai-kind-option">
-              <input type="radio"
-                     name="kind"
-                     value="agent"
-                     {% if default_kind == "agent" %}checked{% endif %}>
-              <span class="ai-kind-name">Agentic</span>
-              <span class="detail-text">Reads matter materials as it works and narrates each step. Slower, better on large matters.</span>
-            </label>
-          </div>
         </div>
         <div class="form-group">
           <label for="new-conversation-title">Name</label>
@@ -70,8 +56,7 @@
     }
     const baseUrl = '{% url "case:ai-new-conversation-view" matter.id %}';
     const llm = document.getElementById('new-conversation-llm').value;
-    const kindInput = document.querySelector('#new-conversation-form input[name="kind"]:checked');
-    const kind = kindInput ? kindInput.value : 'classic';
+    const kind = document.getElementById('new-conversation-kind').value;
     const url = `${baseUrl}?llm=${encodeURIComponent(llm)}&kind=${encodeURIComponent(kind)}&title=${encodeURIComponent(title)}`;
     window.open(url, '_blank');
     window.dispatchEvent(new CustomEvent('close-modal'));

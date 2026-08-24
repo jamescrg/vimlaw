@@ -2379,35 +2379,12 @@
   flex-wrap: wrap;
 }
 
-/* Agentic mode. The mode picker in the new-conversation modal (radio |
-   name | description rows), the Agentic badge (header and list, tinted
+/* Agentic mode. The Agentic badge (header and list, tinted
    like the Claude model badge), the live agent log (typed rows: the
    model's own prose, one row per tool read, a divider per model turn
    with its token usage), the elapsed/token strip under it, and the
    persisted trail's summary stats. Continuous with the status box and
    trail above: same ground, border hue and type size. */
-.ai-kind-options {
-  align-items: baseline;
-  display: grid;
-  gap: 0.5rem 0.75rem;
-  grid-template-columns: auto auto 1fr;
-}
-
-.ai-kind-option {
-  display: contents;
-}
-
-.ai-kind-option input[type="radio"] {
-  cursor: pointer;
-  margin: 0;
-  width: auto;
-}
-
-.ai-kind-option .ai-kind-name,
-.ai-kind-option .detail-text {
-  cursor: pointer;
-}
-
 .ai-kind-agent {
   background: var(--violet-100);
   border: 1px solid var(--violet-300);
