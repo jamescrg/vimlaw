@@ -2452,7 +2452,9 @@
    segments drop by priority as width shrinks. */
 .ai-chat-statusbar-row {
   align-items: center;
-  background: transparent;
+  /* Match the transcript and composer surface: a truly transparent row
+     would show the darker window body between them. */
+  background: var(--ai-surface);
   border-top: 1px solid var(--border-medium);
   color: var(--color-muted);
   display: flex;
