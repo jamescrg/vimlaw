@@ -85,8 +85,8 @@ All read-only; results are JSON objects and every one carries
 
 | tool | reads |
 |---|---|
-| `search_materials` | watson full text over documents, highlights, facts, matter notes, library notes (scoped to the matter, `never` excluded) plus `icontains` over emails grouped by thread; hits already returned this turn are flagged `seen`, and a mostly-seen repeat gets a note |
-| `read_document` | `Document.ocr_text` when OCR finished; `never` refused |
+| `search_materials` | hybrid search over documents, highlights, facts, matter notes, library notes and emails (scoped to the matter, `never` excluded; emails grouped by thread): watson `websearch_to_tsquery` keyword pass fused with a pgvector semantic pass (`semantic_entries`) by reciprocal rank, trigram fuzzy fallback when nothing matches; document and library hits carry the AI `summary` when set; hits already returned this turn are flagged `seen`, and a mostly-seen repeat gets a note |
+| `read_document` | `Document.ocr_text` when OCR finished, with `description` and AI `summary` when set; `never` refused |
 | `read_email_thread` | the thread via `format_email_thread`, `gmail_id` fallback |
 | `read_note` | a matter note or a library note (`get_library_notes`) |
 | `read_caselaw` | saved case notes, summary and the opinion (`_fetch_caselaw_opinion_text`, cached 1h) |

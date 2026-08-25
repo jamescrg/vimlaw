@@ -110,6 +110,26 @@ class TestReadDocument:
         assert outcome["is_error"]
         assert "no extracted text" in payload["error"]
 
+    def test_summary_and_description_in_payload(self, executor, text_document):
+        text_document.description = "Letter to opposing counsel"
+        text_document.summary = "A preservation demand covering the ESI at issue."
+        text_document.save(update_fields=["description", "summary"])
+        payload, outcome = run(executor, "read_document", doc_id=text_document.id)
+        assert not outcome["is_error"]
+        assert payload["description"] == "Letter to opposing counsel"
+        assert payload["summary"] == (
+            "A preservation demand covering the ESI at issue."
+        )
+
+    def test_blank_summary_and_description_omitted(self, executor, text_document):
+        text_document.description = ""
+        text_document.summary = None
+        text_document.save(update_fields=["description", "summary"])
+        payload, outcome = run(executor, "read_document", doc_id=text_document.id)
+        assert not outcome["is_error"]
+        assert "description" not in payload
+        assert "summary" not in payload
+
 
 class TestBudget:
     def test_repeat_is_free_and_flagged(self, executor, text_document):
@@ -167,6 +187,7 @@ class TestSearch:
         doc_hit = next(h for h in payload["hits"] if h["kind"] == "document")
         assert doc_hit["handle"] == f"doc:{text_document.id}"
         assert "spoliation" in doc_hit["snippet"]
+        assert "summary" not in doc_hit
         assert doc_hit["seen"] is False
         assert executor.events[-1]["label"].startswith('Searched "spoliation"')
         assert executor.events[-1]["title"] == 'Searched "spoliation"'
@@ -234,6 +255,30 @@ class TestSearch:
         step = executor.events[-1]
         assert step["title"] == 'Searched "earnest money" and 1 more'
         assert "2 hits" in step["detail"]
+
+    def test_document_and_library_summaries_in_hits(
+        self, executor, matter, user, text_document
+    ):
+        from watson import search as watson
+
+        text_document.summary = "A preservation demand covering the ESI at issue."
+        text_document.save(update_fields=["summary"])
+        watson.default_search_engine.update_obj_index(text_document)
+        root = NoteFolder.objects.create(name="Firm Library")
+        lib = Note.objects.create(
+            author=user,
+            folder=root,
+            title="Spoliation guide",
+            content="How to send a spoliation letter.",
+            summary="Checklist for preservation demands.",
+        )
+        watson.default_search_engine.update_obj_index(lib)
+        payload, _ = run(executor, "search_materials", query="spoliation")
+        by_kind = {h["kind"]: h for h in payload["hits"]}
+        assert by_kind["document"]["summary"] == (
+            "A preservation demand covering the ESI at issue."
+        )
+        assert by_kind["library"]["summary"] == ("Checklist for preservation demands.")
 
     def test_fuzzy_fallback_on_typo(self, executor, matter, user):
         from watson import search as watson
