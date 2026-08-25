@@ -155,7 +155,11 @@ class Document(AuditMixin, models.Model):
     page_fingerprint = models.CharField(
         max_length=64, null=True, blank=True, db_index=True, editable=False
     )
-    history = HistoricalRecords()
+    # The blobs stay out of history: a status-only save was snapshotting
+    # a 2.6MB ocr_text into case_historicaldocument on every write (250MB
+    # a day during the 2026-08 OCR retry loop). History still records
+    # every other field change.
+    history = HistoricalRecords(excluded_fields=["ocr_text", "search_vector"])
 
     def __str__(self):
         return self.name
