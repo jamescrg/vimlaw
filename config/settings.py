@@ -93,6 +93,10 @@ Q_CLUSTER = {
     "recycle": 500,
     "timeout": 600,  # 10 minutes for OCR tasks
     "retry": 900,
+    # A failing task stops after this many attempts instead of looping
+    # forever (an OCR task retried every 15 minutes for days on prod,
+    # 2026-08-25, snowballing history writes until the disk filled).
+    "max_attempts": 10,
     "queue_limit": 50,
     "bulk": 10,
     "orm": "default",

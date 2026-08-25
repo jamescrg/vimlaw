@@ -243,9 +243,13 @@ def process_document_ocr(document_id, force=False):
                 f"OCR completed for document {document_id}: {len(final_text)} chars"
             )
 
-        # Update search vector
+        # Update search vector. Postgres rejects to_tsvector input over
+        # 1MB (a 2.6MB OCR text hit it on prod, 2026-08-25); the first
+        # 900k characters carry the searchable substance.
+        from django.db.models.functions import Left
+
         Document.objects.filter(id=document_id).update(
-            search_vector=SearchVector("name", "description", "ocr_text")
+            search_vector=SearchVector("name", "description", Left("ocr_text", 900_000))
         )
 
         # Queue AI summary generation
