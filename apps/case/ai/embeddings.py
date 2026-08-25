@@ -25,7 +25,11 @@ def embed_texts(texts, task_type="RETRIEVAL_DOCUMENT"):
     texts = [t if t.strip() else " " for t in texts]
     if not texts:
         return []
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    # A wedged connection must fail, not hang a backfill or a search.
+    client = genai.Client(
+        api_key=settings.GEMINI_API_KEY,
+        http_options=types.HttpOptions(timeout=60_000),
+    )
     vectors = []
     for start in range(0, len(texts), EMBED_BATCH):
         result = client.models.embed_content(

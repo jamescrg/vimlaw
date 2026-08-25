@@ -31,6 +31,11 @@ class Command(BaseCommand):
                 chunks = index_object(kind, obj)
                 totals["objects"] += 1
                 totals["chunks"] += chunks
+                if totals["objects"] % 100 == 0:
+                    self.stdout.write(
+                        f"  ...{totals['objects']} objects, "
+                        f"{totals['chunks']} chunks so far"
+                    )
 
         if not options["library"]:
             matters = Matter.objects.filter(status="Open")
