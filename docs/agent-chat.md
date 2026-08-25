@@ -51,7 +51,11 @@ provider cache keeps hitting):
 1. `docs/ai-prompt.md` (the legal instructions, jurisdiction substituted)
 2. the working method (orient from the index, read before relying, pinned
    first, batch independent reads, budget, one-sentence narration before
-   each batch, answer rules)
+   each batch, answer rules), then the legal research method
+   (`RESEARCH_PROTOCOL`: factual predicate before searching, anchor
+   mining via grep + citation lookup, a dedicated counter-authority
+   pass, currency check, statutory text from ≥2 quoting opinions,
+   published-authority preference, "could not verify" beats fabrication)
 3. `SOURCE_LINKING` (the citing rules)
 4. the matter overview, contacts, witnesses, proceedings
 5. highlights and timeline inline when their combined text is under 40k
@@ -71,7 +75,16 @@ and least-recently-read items are evicted first. Kept items render in
 first-read order so the segment grows append-only, keeping the
 prompt-cache prefix stable. Deleted or newly `never`-flagged items just
 drop out. Caselaw carries the opinion only when the 1h `read_caselaw`
-cache still holds it (a prompt build never fetches over the network).
+cache still holds it, and CourtListener opinions only while the 24h
+`agent_opinion_cluster_{id}` cache holds them (a prompt build never
+fetches over the network).
+
+The `save-caselaw` fenced write (`caselaw_blocks.py`, agent
+conversations only) is the authority ledger: when directed, the agent
+persists verified cases to the matter's Saved case law with the cited
+proposition in `notes`, deduped on the `(matter, cluster_id)`
+constraint (an existing row gets the proposition appended), then the
+usual 200-word summary is queued.
 
 Segment B, per turn: today's date and requester (`build_request_info`),
 any armed write protocols (`tasks.armed_write_protocols`), a linked draft.
@@ -106,8 +119,12 @@ All read-only; results are JSON objects and every one carries
 | `read_conversation` | an earlier conversation's transcript |
 | `read_invoice` | `format_invoice` |
 | `read_matter_section` | `apps.case.api.SECTIONS[section](matter)`, capped 150k |
+| `search_caselaw` | CourtListener opinion search (`research.courtlistener.search_opinions` + `sanitize_query`), court filter from `get_court_ids` (state defaults from the matter's jurisdiction), optional `filed_after`; ≤3 query variants merged on cluster_id, `published` flag = has reporter citations |
+| `lookup_citation` | `courtlistener.lookup_citation` — exact citation → case/cluster; not-found is a normal payload, not an error |
+| `read_opinion` | full cluster text (majority + concurrences/dissents, capped 250k) via `_opinion_for_cluster`, cached 24h at `agent_opinion_cluster_{id}`; sliced like every read |
+| `search_in_opinions` | literal case-insensitive grep across ≤10 cached/fetched opinions, ≤8 excerpt windows each with char offsets; per-id error isolation |
 
-Budget per turn (`AgentBudget`): 25 calls, 600k chars read, 30 model
+Budget per turn (`AgentBudget`): 40 calls, 600k chars read, 30 model
 turns, 4 parallel workers. Calls are reserved before dispatch under a
 lock; an exact repeat of a call (same name and input) is served from the
 run cache, uncharged, with a note. Once the budget is gone the executor

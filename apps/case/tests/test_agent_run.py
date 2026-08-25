@@ -104,7 +104,7 @@ class TestRun:
         assert run["usage"]["tool_calls"] == 1
         assert run["usage"]["cache_read"] == 900
         assert run["usage"]["chars_read"] > 0
-        assert run["budget"] == {"max_tool_calls": 25, "max_chars": 600_000}
+        assert run["budget"] == {"max_tool_calls": 40, "max_chars": 600_000}
         assert run["elapsed_seconds"] >= 0
 
         # The answer itself streamed as the last text row; persisted, it

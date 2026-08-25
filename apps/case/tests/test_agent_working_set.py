@@ -218,3 +218,34 @@ class TestSystemIntegration:
         note = history[-1]["content"]
         assert "Gone (doc:999999)" in note
         assert text_document.name not in note
+
+
+class TestOpinionCarry:
+    def test_opinion_carried_from_cache_only(self, conversation, matter, user):
+        django_cache.set(
+            "agent_opinion_cluster_777",
+            {
+                "cluster_id": 777,
+                "case_name": "Dollar Concrete v. Watson",
+                "citation": "207 Ga. App. 452 (1993)",
+                "date_filed": "1993-02-01",
+                "url": "",
+                "text": "The joinder rule text.",
+            },
+            60,
+        )
+        add_turn(
+            conversation,
+            user,
+            [
+                read_step("opinion", 777, "Dollar Concrete v. Watson"),
+                read_step("opinion", 778, "Uncached v. Case"),
+            ],
+        )
+        working = build_working_set(conversation, matter)
+        assert (
+            "### Opinion [cluster:777]: Dollar Concrete v. Watson, "
+            "207 Ga. App. 452 (1993)" in working.text
+        )
+        assert "The joinder rule text." in working.text
+        assert working.carried == {("opinion", "777")}
