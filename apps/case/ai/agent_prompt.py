@@ -7,9 +7,11 @@ method, the citing rules, the matter's core sections, the highlights and
 timeline when they are small, and an index of every material with the
 handle the tools take. The model opens what it needs from there.
 
-Two segments come back from ``build_agent_system``: segment A is
+Three segments come back from ``build_agent_system``: segment A is
 byte-stable across turns while the matter is unchanged (so the provider
-cache keeps hitting), segment B carries what changes per turn (today's
+cache keeps hitting), the middle segment is the conversation's working
+set (materials read in earlier turns, carried forward verbatim —
+agent_working_set), and segment B carries what changes per turn (today's
 date, the requester, armed write protocols, a linked draft).
 """
 
@@ -18,6 +20,11 @@ import logging
 from apps.settings.models import Firm
 
 from .agent_tools import DEFAULT_BUDGET, AgentBudget
+from .agent_working_set import (
+    WORKING_SET_MAX_CHARS,
+    build_working_set,
+    reads_from_steps,
+)
 from .context import (
     SOURCE_LINKING,
     build_chat_history,
@@ -28,7 +35,12 @@ from .context import (
     format_witnesses,
     load_legal_prompt,
 )
-from .selector import ManifestItem, build_manifest, estimate_tokens
+from .selector import (
+    MODEL_HARD_LIMITS,
+    ManifestItem,
+    build_manifest,
+    estimate_tokens,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +51,6 @@ INDEX_MAX_CHARS = 120_000
 INDEX_DESCRIPTION_CHARS = 160
 EARLIER_READS_MAX = 30
 
-READ_KINDS = ("document", "email", "note", "library", "caselaw", "conversation")
-
 AGENT_PROTOCOL_TEMPLATE = """## Working Method
 
 You are working in agentic mode on this matter. Instead of the whole case
@@ -50,9 +60,12 @@ tools to read them. Work the way a careful associate works a file:
 1. Orient first. Read the sections and the index, then decide which
    materials bear on the question.
 2. Read before you rely. Never characterize or quote a document, email,
-   note, case or conversation you have not read in this turn or an earlier
-   turn of this conversation. Use search_materials when the index does not
-   tell you where something is; do not repeat a search with the same words.
+   note, case or conversation you have not read. Materials under
+   "Materials in View" were read in earlier turns and are carried in this
+   prompt: they count as read. Anything read earlier but not carried
+   there must be read again first. Use search_materials when the index
+   does not tell you where something is; do not repeat a search with the
+   same words.
 3. Pinned materials are the ones the attorney marked always relevant; read
    them first when they bear on the question. Read a document in full when
    the question turns on it, in parts when it is long.
@@ -202,8 +215,15 @@ def build_agent_system(
     user_message: str,
     budget: AgentBudget = DEFAULT_BUDGET,
     log=None,
-) -> list[str]:
-    """The two system segments for one agent turn (see module docstring)."""
+    llm: str = "",
+) -> tuple[list[str], set]:
+    """The three system segments for one agent turn (see module docstring).
+
+    Returns (segments, carried) where carried is the set of
+    (kind, str(id)) keys in the working-set segment; the caller passes it
+    to build_agent_history so the earlier-reads note covers only what is
+    NOT carried.
+    """
     from .tasks import armed_write_protocols
 
     company = Firm.objects.first()
@@ -233,6 +253,25 @@ def build_agent_system(
         ]
     )
 
+    # The working set may fill what the history ceiling leaves after the
+    # orientation, up to its own cap. All current windows are 1M tokens
+    # (MODEL_HARD_LIMITS), so this only bites on a pathological matter.
+    # 0.45 mirrors agent.AGENT_HISTORY_CEILING (importing it would cycle).
+    window_chars = MODEL_HARD_LIMITS.get(llm, 1_000_000) * 2.5
+    room = int(window_chars * 0.45) - len(segment_a) - 100_000
+    working = build_working_set(
+        conversation, matter, max_chars=max(0, min(room, WORKING_SET_MAX_CHARS))
+    )
+    if log and (working.carried or working.evicted):
+        count = len(working.carried)
+        evicted_note = (
+            f", {working.evicted} evicted for size" if working.evicted else ""
+        )
+        log(
+            f"Carrying {count} material{'s' if count != 1 else ''} in view "
+            f"(~{len(working.text) // 1000}k chars{evicted_note})"
+        )
+
     tail = [build_request_info(user)]
     if conversation is not None and getattr(conversation, "pk", None):
         protocol_text, armed = armed_write_protocols(conversation, user_message)
@@ -254,31 +293,25 @@ def build_agent_system(
         pinned_note = f", {pinned} pinned" if pinned else ""
         log(
             f"Oriented on the case file: {len(items)} materials in the index"
-            f"{pinned_note}, ~{estimate_tokens(segment_a + segment_b):,} tokens"
+            f"{pinned_note}, "
+            f"~{estimate_tokens(segment_a + working.text + segment_b):,} tokens"
         )
-    return [segment_a, segment_b]
+    return [segment_a, working.text, segment_b], working.carried
 
 
-def earlier_reads_note(conversation) -> str:
+def earlier_reads_note(conversation, exclude=()) -> str:
     """One line naming what earlier turns read, for the newest message.
 
     Prior turns' tool calls are not replayed into the history (only the
     answers carry over), so the model is told what it already opened and
-    that the text is not in the prompt.
+    that the text is not in the prompt. Reads carried in the working-set
+    segment are passed as ``exclude`` — their text IS in the prompt.
     """
-    if conversation is None or not getattr(conversation, "pk", None):
-        return ""
-    seen = {}
-    for message in conversation.messages.filter(role="assistant").order_by(
-        "created_at"
-    ):
-        for step in (message.agent_run or {}).get("steps", []):
-            if step.get("type") != "tool" or step.get("error"):
-                continue
-            if step.get("kind") not in READ_KINDS:
-                continue
-            key = (step["kind"], str(step.get("id")))
-            seen.setdefault(key, step.get("name") or str(step.get("id")))
+    seen = {
+        key: entry["name"]
+        for key, entry in reads_from_steps(conversation).items()
+        if key not in exclude
+    }
     if not seen:
         return ""
     handle_prefix = {
@@ -304,10 +337,10 @@ def earlier_reads_note(conversation) -> str:
     )
 
 
-def build_agent_history(conversation) -> list[dict]:
+def build_agent_history(conversation, exclude_reads=()) -> list[dict]:
     """The chat history for the agent turn: answers only, plus the note."""
     history = build_chat_history(conversation)
-    note = earlier_reads_note(conversation)
+    note = earlier_reads_note(conversation, exclude=exclude_reads)
     if note and history and history[-1]["role"] == "user":
         history[-1] = {
             "role": "user",

@@ -21,7 +21,7 @@ and agenda chats stay classic.
 new-conversation modal (Classic | Agentic) -> ?kind=agent -> hidden form field
 send_message (kind on create only) -> daemon thread -> tasks.process_ai_request
   -> kind == "agent": agent.run_agent_request
-       system   = agent_prompt.build_agent_system     two segments, see below
+       system   = agent_prompt.build_agent_system     three segments, see below
        history  = agent_prompt.build_agent_history    answers only + earlier-reads note
        tools    = agent_tools.build_agent_tools
        executor = agent_tools.make_agent_executor     budget, dedupe, parallel batches
@@ -61,6 +61,18 @@ provider cache keeps hitting):
    chars it drops descriptions, then collapses the conversation and
    invoice groups to counts.
 
+The middle segment is the conversation's **working set**
+(`agent_working_set.py`): the full text of materials read in earlier
+turns, re-fetched from the database each turn and carried forward
+verbatim under a `## Materials in View` header. Reads come from prior
+`Message.agent_run` steps; each item is capped at 60k chars, the
+segment at 200k (or what the history ceiling leaves after segment A),
+and least-recently-read items are evicted first. Kept items render in
+first-read order so the segment grows append-only, keeping the
+prompt-cache prefix stable. Deleted or newly `never`-flagged items just
+drop out. Caselaw carries the opinion only when the 1h `read_caselaw`
+cache still holds it (a prompt build never fetches over the network).
+
 Segment B, per turn: today's date and requester (`build_request_info`),
 any armed write protocols (`tasks.armed_write_protocols`), a linked draft.
 
@@ -70,11 +82,12 @@ carries `handle` (`doc:12`, `thread:<id>`, `note:5`, `lib:9`, `case:3`,
 `conv:8`, `inv:4`), `pinned` and `size_chars` for it.
 
 **Prior turns' tool calls are not replayed.** The history is the
-conversation's user messages and answers; a system note on the newest
-message lists what earlier turns read (from prior `Message.agent_run`
-steps) and says the text is not in the prompt. Bounded prompt, stable
-cache prefix, no signed thinking blocks or `thought_signature`s to
-persist. The cost: a follow-up may re-read a document.
+conversation's user messages and answers; what earlier turns read is
+carried instead by the working-set segment, and a system note on the
+newest message lists only the reads NOT carried there (evicted or
+never fetched), saying their text is not in the prompt. Bounded prompt,
+stable cache prefix, no signed thinking blocks or `thought_signature`s
+to persist.
 
 ## Tools (`agent_tools.py`)
 

@@ -128,10 +128,11 @@ class TestRun:
             for line in log
         )
 
-        # The loop got the two-segment system and the real tool specs.
-        assert len(recorder["system"]) == 2
+        # The loop got the three-segment system and the real tool specs.
+        assert len(recorder["system"]) == 3
         assert "## Working Method" in recorder["system"][0]
-        assert "Today is" in recorder["system"][1]
+        assert recorder["system"][1] == ""  # no earlier reads: empty working set
+        assert "Today is" in recorder["system"][2]
         assert recorder["history"][-1]["content"].endswith("What happened?")
         assert "search_materials" in recorder["tools"]
         assert "Test Matter" in recorder["outcomes"][0]["content"]

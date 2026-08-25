@@ -93,13 +93,19 @@ def run_agent_request(
         conversation = Conversation.objects.get(id=conversation_id)
         draft_link = getattr(conversation, "draft_link", None)
 
-        system = build_agent_system(
-            matter, user, conversation, user_message, budget=budget, log=writer.log
+        system, carried_reads = build_agent_system(
+            matter,
+            user,
+            conversation,
+            user_message,
+            budget=budget,
+            log=writer.log,
+            llm=llm,
         )
         if writer.is_cancelled():
             return
 
-        history = build_agent_history(conversation)
+        history = build_agent_history(conversation, exclude_reads=carried_reads)
         history, prompt_tokens = fit_prompt_to_window(
             "\n\n".join(system),
             history,
