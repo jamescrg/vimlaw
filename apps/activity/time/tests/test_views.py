@@ -1,7 +1,6 @@
-from datetime import date
-
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from pytest_django.asserts import assertTemplateUsed
 
 from apps.activity.time.models import TimeEntry
@@ -91,7 +90,7 @@ def test_filter_quick(client):
     response = client.get("/activity/time/filter/quick/today")
     assert response.status_code == 204
     response = client.get("/activity/time/filter")
-    assert client.session["time_filter"]["date_min"] == date.today().isoformat()
+    assert client.session["time_filter"]["date_min"] == timezone.localdate().isoformat()
 
 
 def test_filter_matter(client, matter):

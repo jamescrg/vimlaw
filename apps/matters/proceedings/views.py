@@ -1,8 +1,7 @@
-from datetime import date
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from apps.accounts.access import matter_access_required
 from apps.matters.ledger.get_ledger_data import get_ledger_data
@@ -85,7 +84,7 @@ def add(request, id):
 
     # if no post data has been submitted, show the proceeding form
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         # If no proceedings exist, default to "Main" nickname and primary=True
         if proceeding is None:
             initial = {"date_filed": today, "nickname": "Main", "primary": True}

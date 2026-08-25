@@ -14,6 +14,7 @@ dimensions (status, importance, completion dates). The coverage focuses on:
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 pytestmark = pytest.mark.django_db
 
@@ -66,15 +67,13 @@ def test_user_filter_does_not_light_filter_button(client, matter, user):
 
 
 def test_quick_filter_sets_label_and_window(client, matter):
-    from datetime import date
-
     response = client.post(
         reverse("matters:tasks-filter-quick", args=[matter.id, "today"])
     )
     assert response.status_code == 204
     session_filter = _session_for(client, "matter_tasks_filter")
     assert session_filter["filter_label"] == "today"
-    assert session_filter["date_due_max"] == str(date.today())
+    assert session_filter["date_due_max"] == str(timezone.localdate())
     assert session_filter["date_due_min"] == ""
     assert session_filter["matter"] == matter.id
 

@@ -1,7 +1,6 @@
-from datetime import date
-
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone
 
 
 class DailyDashCheckMiddleware:
@@ -41,7 +40,7 @@ class DailyDashCheckMiddleware:
         ):
             return self.get_response(request)
 
-        today = date.today()
+        today = timezone.localdate()
         dash_url = reverse("dash:index")
 
         # If already on dash page, mark as checked and continue

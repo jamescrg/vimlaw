@@ -1,8 +1,7 @@
-from datetime import date
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from apps.accounts.access import matter_access_required
 from apps.matters.models import Matter
@@ -65,7 +64,7 @@ def add(request, id):
 
     # if no post data has been submitted, show the entry form
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         form = SettlementEntryForm(
             initial={"date": today}, use_required_attribute=False
         )

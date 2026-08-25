@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
@@ -15,6 +15,7 @@ from django.db.models import (
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
 
 from apps.accounts.access import filter_matters_for_user
 from apps.activity.expenses.models import ExpenseEntry
@@ -47,7 +48,7 @@ def dash_events_context(request):
     gaps) edge-to-edge; the event-cards row scrolls horizontally for any that
     don't fit (e.g. when the sidebar is expanded). See static/css/apps/dash.css.
     """
-    today = date.today()
+    today = timezone.localdate()
     return {
         "upcoming_events": Event.objects.filter(
             status="Pending", date__isnull=False

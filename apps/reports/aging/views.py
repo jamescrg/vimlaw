@@ -1,15 +1,14 @@
-from datetime import date
-
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.utils import timezone
 
 from apps.invoicing.invoices.models import Invoice
 
 
 def _get_aging_data(sort_by="client_name", sort_direction="asc"):
     """Build AR aging data from outstanding invoices."""
-    today = date.today()
+    today = timezone.localdate()
 
     invoices = (
         Invoice.objects.filter(status="SENT")

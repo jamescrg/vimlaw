@@ -1,9 +1,9 @@
 import csv
-from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 import apps.trust.trust as trust
 from apps.contacts.models import Contact
@@ -70,7 +70,7 @@ def history_csv(request):
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = (
-        f'attachment; filename="trust-ledger-{date.today():%Y-%m-%d}.csv"'
+        f'attachment; filename="trust-ledger-{timezone.localdate():%Y-%m-%d}.csv"'
     )
     writer = csv.writer(response)
     writer.writerow(
@@ -234,7 +234,7 @@ def add(request, client_id=None):
                 return HttpResponse(status=204, headers={"HX-Trigger": "trustChanged"})
 
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
 
         if client_id:
             client = Contact.objects.get(pk=client_id)

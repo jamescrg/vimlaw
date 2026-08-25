@@ -1,6 +1,7 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from apps.contacts.models import Contact
 from apps.trust.models import Transaction
@@ -130,7 +131,7 @@ def get_client_history(contact_id):
 
 
 def get_account_history(interval):
-    today = date.today()
+    today = timezone.localdate()
     thirty_days = today - timedelta(days=30)
     sixty_days = today - timedelta(days=60)
 

@@ -1,10 +1,11 @@
 import json
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from dateutil import parser
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 import apps.calendar.google as google
@@ -41,7 +42,7 @@ def _event_change_response(
 def events_index(request):
     from apps.accounts.models import CustomUser
 
-    today = date.today()
+    today = timezone.localdate()
     third_day = today + timedelta(days=3)
 
     view_mode = request.session.get("events_view_mode", "calendar")
@@ -109,7 +110,7 @@ def events_list(request):
     """Returns the appropriate view (list or calendar) based on session."""
     from apps.accounts.models import CustomUser
 
-    today = date.today()
+    today = timezone.localdate()
     third_day = today + timedelta(days=3)
 
     view_mode = request.session.get("events_view_mode", "calendar")
@@ -337,7 +338,9 @@ def events_add(request, matter_id=None, origin="events"):
 
             # Auto-set end_time to 1 hour after start_time if only start_time provided
             if event.start_time and not event.end_time:
-                start_datetime = datetime.combine(date.today(), event.start_time)
+                start_datetime = datetime.combine(
+                    timezone.localdate(), event.start_time
+                )
                 end_datetime = start_datetime + timedelta(hours=1)
                 event.end_time = end_datetime.time()
 
@@ -358,9 +361,9 @@ def events_add(request, matter_id=None, origin="events"):
             try:
                 initial_date = datetime.strptime(date_param, "%Y-%m-%d").date()
             except ValueError:
-                initial_date = date.today()
+                initial_date = timezone.localdate()
         else:
-            initial_date = date.today()
+            initial_date = timezone.localdate()
 
         if matter_id:
             form = EventForm(
@@ -389,7 +392,7 @@ def events_add(request, matter_id=None, origin="events"):
 
     google_connected = google.check_credentials()
 
-    today = date.today().strftime("%Y-%m-%d")
+    today = timezone.localdate().strftime("%Y-%m-%d")
 
     context = {
         "app": "events",
@@ -438,7 +441,9 @@ def events_edit(request, id, origin="events"):
 
             # Auto-set end_time to 1 hour after start_time if only start_time provided
             if event.start_time and not event.end_time:
-                start_datetime = datetime.combine(date.today(), event.start_time)
+                start_datetime = datetime.combine(
+                    timezone.localdate(), event.start_time
+                )
                 end_datetime = start_datetime + timedelta(hours=1)
                 event.end_time = end_datetime.time()
 
@@ -553,7 +558,7 @@ def events_deadline_results(request, matter_id=None):
 
 @login_required
 def events_deadline_form(request):
-    today = date.today()
+    today = timezone.localdate()
     today = today.strftime("%Y-%m-%d")
     context = {
         "today": today,
@@ -563,7 +568,7 @@ def events_deadline_form(request):
 
 @login_required
 def events_deadline_modal(request):
-    today = date.today().strftime("%Y-%m-%d")
+    today = timezone.localdate().strftime("%Y-%m-%d")
     context = {"today": today}
     return render(request, "calendar/deadline-calculator-modal.html", context)
 
@@ -571,7 +576,7 @@ def events_deadline_modal(request):
 @login_required
 def events_calendar(request):
     """Render the calendar view partial."""
-    today = date.today()
+    today = timezone.localdate()
     third_day = today + timedelta(days=3)
 
     events_filter = request.session.get("events_filter", {})
@@ -603,12 +608,12 @@ def events_api(request, matter_id=None):
     if start_param:
         start_date = datetime.fromisoformat(start_param.replace("Z", "+00:00")).date()
     else:
-        start_date = date.today() - timedelta(days=30)
+        start_date = timezone.localdate() - timedelta(days=30)
 
     if end_param:
         end_date = datetime.fromisoformat(end_param.replace("Z", "+00:00")).date()
     else:
-        end_date = date.today() + timedelta(days=60)
+        end_date = timezone.localdate() + timedelta(days=60)
 
     if matter_id:
         events = Event.objects.filter(matter_id=matter_id)

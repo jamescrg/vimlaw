@@ -1,6 +1,7 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
+from django.utils import timezone
 
 from apps.calendar.models import Event
 from apps.dash.views import dash_events_context
@@ -13,7 +14,7 @@ def _event(**kwargs):
 
 
 def test_past_due_pending_events_stay_visible():
-    today = date.today()
+    today = timezone.localdate()
     past = _event(status="Pending", date=today - timedelta(days=1))
     upcoming = _event(status="Pending", date=today + timedelta(days=3))
 
@@ -22,7 +23,7 @@ def test_past_due_pending_events_stay_visible():
 
 
 def test_resolved_and_undated_events_hidden():
-    today = date.today()
+    today = timezone.localdate()
     _event(status="Complete", date=today - timedelta(days=1))
     _event(status="Missed", date=today - timedelta(days=2))
     _event(status="Pending", date=None)
@@ -31,7 +32,7 @@ def test_resolved_and_undated_events_hidden():
 
 
 def test_context_dates():
-    today = date.today()
+    today = timezone.localdate()
     context = dash_events_context(None)
     assert context["today"] == today
     assert context["tomorrow"] == today + timedelta(days=1)
