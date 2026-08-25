@@ -487,7 +487,10 @@
 
 .ai-llm-claude,
 .ai-llm-claude-opus,
-.ai-llm-claude-opus-4-6 {
+.ai-llm-claude-opus-4-6,
+.ai-llm-claude-opus-5,
+.ai-llm-claude-sonnet-5,
+.ai-llm-claude-fable {
   background: var(--violet-100);
   border: 1px solid var(--violet-300);
   color: var(--color-primary);
@@ -504,7 +507,7 @@
 /* Dark mode — these LLM badges carry .app-badge, so the blanket outline rule in
    badges.css strips their hue; restore it as a coloured outline (.app-badge.X
    out-specifies the blanket [data-theme] .app-badge rule). */
-:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .app-badge:is(.ai-llm-claude, .ai-llm-claude-opus, .ai-llm-claude-opus-4-6) {
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .app-badge:is(.ai-llm-claude, .ai-llm-claude-opus, .ai-llm-claude-opus-4-6, .ai-llm-claude-opus-5, .ai-llm-claude-sonnet-5, .ai-llm-claude-fable) {
   background: transparent;
   border-color: var(--label-purple-line);
   color: var(--label-purple-line);
@@ -2379,6 +2382,222 @@
   flex-wrap: wrap;
 }
 
+/* Agentic mode. The Agentic badge (header and list, tinted
+   like the Claude model badge), the live agent log (typed rows: the
+   model's own prose, one row per tool read, a divider per model turn
+   with its token usage), the elapsed/token strip under it, and the
+   persisted trail's summary stats. Continuous with the status box and
+   trail above: same ground, border hue and type size. */
+.ai-kind-agent {
+  background: var(--violet-100);
+  border: 1px solid var(--violet-300);
+  color: var(--color-primary);
+}
+
+.ai-kind-agent i {
+  font-size: 1rem;
+  margin-right: 0.25rem;
+}
+
+/* Live agent stream: flat rows flowing in the message area where the
+   answer will land, Claude Code transcript style. No box, no inner
+   scroll cap; hierarchy comes from muted tool lines with elbow outcome
+   lines against full-strength prose, and the outer chat scroll follows
+   growth. The persisted trail (agent-trail.html) reuses the same rows
+   under a flat, foldable summary line. */
+.ai-agent-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.ai-agent-tool > div {
+  color: var(--color-muted);
+}
+
+/* The elbow outcome line under a tool call: size, duration, or the
+   error. U+2514 (a box-drawing corner every font carries) plays the
+   part of Claude Code's elbow glyph. */
+.ai-agent-elbow {
+  color: var(--color-muted-more);
+}
+
+.ai-agent-elbow::before {
+  content: "\2514  ";
+  white-space: pre;
+}
+
+.ai-agent-elbow-error {
+  color: var(--urgent);
+}
+
+/* Flat fold handle above a finished run's steps. */
+.ai-agent-trail > summary {
+  align-items: center;
+  color: var(--color-muted-more);
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Persistent status line: one quiet row floating above the composer.
+   Ambient chrome, not content: hairline top border, muted text,
+   reserved height even when there is little to say. Citation state on
+   the left; cost, token totals, and the live run strip on the right
+   (matter and model live in the header badges). Never wraps: right
+   segments drop by priority as width shrinks. */
+.ai-chat-statusbar-row {
+  /* Match the transcript and composer surface (a transparent row would
+     show the darker window body between them); no border, so the line
+     sits directly on the chat surface. */
+  background: var(--ai-surface);
+  color: var(--color-muted);
+  font-size: 1rem;
+  min-height: 1.75rem;
+  padding: 0.25rem 1rem;
+}
+
+/* The line's content shares the composer's centered column, so its
+   left-most text aligns with the prompt input's left edge (the 0.5rem
+   lead mirrors the input row's draft-chip gap). */
+.ai-chat-statusbar-inner {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin: 0 auto;
+  max-width: 52rem;
+  overflow: hidden;
+  padding-left: 0.5rem;
+  white-space: nowrap;
+}
+
+.ai-statusbar-left {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-statusbar-right {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  gap: 0.75rem;
+}
+
+.ai-statusbar-right i {
+  color: var(--icon-muted);
+  font-size: 1rem;
+}
+
+.ai-cites-ok {
+  color: var(--color-muted);
+}
+
+.ai-cites-bad {
+  color: var(--amber-700);
+}
+
+.ai-cites-checking {
+  color: var(--color-muted-more);
+}
+
+/* Priority drop, never wrap. */
+@media (max-width: 44rem) {
+  .ai-statusbar-tokens {
+    display: none;
+  }
+}
+
+/* Transient tail of the live agent stream: the current thinking or
+   finishing state, pulsing at the bottom of the transcript and aging
+   away as real rows replace it. Tool rows persist as provenance. */
+.ai-agent-stream-tail {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ai-agent-stream-tail i {
+  color: var(--violet-600);
+  font-size: 1rem;
+}
+
+.ai-agent-stream-tail p {
+  display: inline;
+  margin: 0;
+}
+
+.ai-agent-step {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ai-agent-step > i {
+  color: var(--color-muted);
+  flex: 0 0 auto;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+.ai-agent-step > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The model's prose keeps its paragraphs (the plain log inlines them). */
+.ai-agent-step p {
+  display: block;
+  margin: 0 0 0.25rem;
+}
+
+.ai-agent-step p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-agent-text > div {
+  color: var(--color-primary);
+}
+
+.ai-agent-turn {
+  color: var(--color-muted);
+}
+
+.ai-agent-error > div {
+  color: var(--urgent);
+}
+
+.ai-agent-stats {
+  color: var(--color-muted);
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.ai-agent-stats > span + span::before {
+  color: var(--color-muted-more);
+  content: "\00b7";
+  margin-right: 0.75rem;
+}
+
+.ai-agent-stats i {
+  color: var(--color-muted);
+  font-size: 1rem;
+  margin-right: 0.25rem;
+}
+
+.ai-agent-summary-stats {
+  color: var(--color-muted-more);
+  flex-basis: auto;
+  margin-left: auto;
+}
+
 /* Conversation-list title cell: title left, kind badge pushed right so it
    never crowds the neighboring columns. */
 .ai-title-cell {
@@ -2463,4 +2682,13 @@
 .draft-link-btn:hover {
   background: var(--ai-raised);
   color: var(--color-primary);
+}
+
+/* Dark mode — the Agentic badge carries .app-badge, so the blanket outline
+   rule in badges.css strips its hue; restore it as a coloured outline like
+   the model badges. */
+:is([data-theme="dark"], [data-theme="cosmic"], [data-theme="everforest"]) .app-badge.ai-kind-agent {
+  background: transparent;
+  border-color: var(--label-purple-line);
+  color: var(--label-purple-line);
 }

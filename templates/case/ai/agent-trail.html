@@ -1,0 +1,26 @@
+{% load ai_extras %}
+{% comment %}
+The persisted agent run above an answer: open by default (the steps stay
+visible in the transcript, Claude Code style), foldable per message via
+the summary line, the same rows the live stream showed (agent-step.html).
+{% endcomment %}
+{% with run=message.agent_run %}
+  <details class="ai-agent-trail" open>
+    <summary>
+      <i class="icon-workflow"></i>
+      <span>Agent run ({{ run.steps|length }} step{{ run.steps|length|pluralize }})</span>
+      <span class="ai-agent-stats ai-agent-summary-stats">
+        <span>{{ run.elapsed_seconds|duration_short }}</span>
+        <span>{{ run.usage.input|ktokens }} in</span>
+        <span>{{ run.usage.output|ktokens }} out</span>
+        {% if run.usage.cache_read %}<span>{{ run.usage.cache_read|ktokens }} cached</span>{% endif %}
+        <span>{{ run.usage.tool_calls }} tool{{ run.usage.tool_calls|pluralize }}</span>
+      </span>
+    </summary>
+    <ol class="ai-agent-steps">
+      {% for step in run.steps %}
+        {% include "case/ai/agent-step.html" with step=step live=False index=forloop.counter %}
+      {% endfor %}
+    </ol>
+  </details>
+{% endwith %}

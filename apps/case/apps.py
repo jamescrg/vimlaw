@@ -8,3 +8,6 @@ class CaseConfig(AppConfig):
     def ready(self):
         import apps.case.documents.signals  # noqa: F401
         import apps.case.search_config  # noqa: F401
+        from apps.case.ai.semantic import connect_signals
+
+        connect_signals()

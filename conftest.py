@@ -4,10 +4,19 @@ from django.core.management import call_command
 
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
-    """The ai_status cache table comes from createcachetable, not a
-    migration, so the test database needs it created explicitly."""
+    """Two pieces of schema come from commands, not migrations: the
+    ai_status cache table (createcachetable) and watson's search_tsv
+    column and trigger (installwatson), which the agent's search_materials
+    queries directly."""
     with django_db_blocker.unblock():
         call_command("createcachetable")
+        call_command("installwatson", verbosity=0)
+
+
+@pytest.fixture(autouse=True)
+def _no_semantic_auto_index(settings):
+    """Model saves must not enqueue embedding tasks during tests."""
+    settings.SEMANTIC_AUTO_INDEX = False
 
 
 @pytest.fixture(autouse=True)

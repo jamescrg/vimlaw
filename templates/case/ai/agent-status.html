@@ -1,0 +1,14 @@
+{% load ai_extras %}
+{% comment %}
+The live agent stream: the run's typed rows (the model's own prose, one
+row per tool read, a divider per model turn with its token usage),
+flowing inline where the answer will land. Rows keep stable ids so the
+1s morph patches them in place. Status, elapsed, tokens and cancel live
+in the pinned bar (agent-statusbar.html); live rows and finished rows
+share agent-step.html so they look identical.
+{% endcomment %}
+<ol class="ai-agent-steps" id="ai-agent-stream-log">
+  {% for step in steps %}
+    {% include "case/ai/agent-step.html" with step=step live=True index=forloop.counter %}
+  {% endfor %}
+</ol>

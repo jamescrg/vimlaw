@@ -1,0 +1,58 @@
+{% load ai_extras %}
+{% comment %}
+The persistent status line: one quiet row floating above the composer.
+Matter and model live in the header badges, so this carries only the
+numbers: citation state on the left; on the right the estimated cost
+(last exchange and conversation total), token totals, and, while an
+agentic turn works, the live run strip with cancel. Transient activity
+never appears here; it lives at the tail of the transcript.
+
+One template plays both roles: oob=False renders the standing container
+(conversation-standalone.html), oob=True is the fragment the views
+append to htmx responses (views._statusbar_html; case chats only, other
+surfaces have no target). The container and fragment must carry
+identical class/hx-ext attributes: a morph syncs attributes, and
+dropping hx-ext="morph" from the live element would silently downgrade
+every later out-of-band swap to innerHTML.
+{% endcomment %}
+<div id="ai-chat-statusbar"
+     class="ai-chat-statusbar"
+     hx-ext="morph"
+     {% if oob %}hx-swap-oob="morph"{% endif %}>
+  <div class="ai-chat-statusbar-row">
+    <div class="ai-chat-statusbar-inner">
+      <span class="ai-statusbar-left">
+        {% if cite_state %}
+          <span class="ai-statusbar-cites ai-cites-{{ cite_state.kind }}">{{ cite_state.text }}</span>
+        {% endif %}
+      </span>
+      <span class="ai-statusbar-right">
+        {% if live %}
+          {% if usage %}
+            <span class="ai-agent-stats" id="ai-agent-stats">
+              <span><i class="icon-timer"></i>{{ elapsed_seconds|duration_short }}</span>
+              <span>{{ usage.input|ktokens }} in</span>
+              <span>{{ usage.output|ktokens }} out</span>
+              {% if usage.cache_read %}<span>{{ usage.cache_read|ktokens }} cached</span>{% endif %}
+              <span>{{ usage.tool_calls }}/{{ usage.tool_calls_max }} tools</span>
+              {% usage_cost usage conversation.llm as turn_cost %}
+              {% if turn_cost %}<span>{{ turn_cost }} turn</span>{% endif %}
+            </span>
+          {% endif %}
+          <button type="button"
+                  class="ai-cancel-btn"
+                  data-cancel-url="{% url 'case:ai-cancel' conversation.id %}"
+                  onclick="var u=this.dataset.cancelUrl; var el=document.getElementById('ai-status-indicator'); if(el){htmx.trigger(el,'htmx:abort'); el.outerHTML='<div id=&quot;ai-status-indicator&quot;></div>';} htmx.ajax('POST',u,{target:'#ai-status-indicator',swap:'outerHTML'});"
+                  title="Cancel request">
+            <i class="icon-x"></i>
+          </button>
+        {% else %}
+          {% if totals %}
+            <span class="ai-statusbar-tokens">{{ totals.input|ktokens }} in · {{ totals.output|ktokens }} out</span>
+          {% endif %}
+          {% if cost %}<span class="ai-statusbar-cost">{{ cost.last|usd }} last · {{ cost.total|usd }} total</span>{% endif %}
+        {% endif %}
+      </span>
+    </div>
+  </div>
+</div>

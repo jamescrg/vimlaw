@@ -11,6 +11,7 @@ from django.db.models import F, Max
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import CustomUser
@@ -45,6 +46,29 @@ logger = logging.getLogger(__name__)
 # a model to LLM_CHOICES doesn't have to be mirrored in each request handler.
 RETIRED_LLMS = ("claude", "gemini-pro")
 VALID_LLMS = {key for key, _ in Conversation.LLM_CHOICES} | set(RETIRED_LLMS)
+
+# Modes a new conversation may be created in. "research" is retired and
+# survives only on old rows; anything unknown falls back to classic. The
+# mode is fixed for the conversation's life, like the model.
+VALID_KINDS = ("classic", "agent")
+
+
+def _kind_param(source, default="classic"):
+    kind = source.get("kind", default)
+    return kind if kind in VALID_KINDS else "classic"
+
+
+# Models only agentic conversations may use (premium pricing tier); a
+# classic create that names one falls back to the default Claude pick.
+# Mirrors the retired research chat's server-side model gate.
+AGENT_ONLY_LLMS = {"claude-fable"}
+AGENT_ONLY_FALLBACK = "claude-opus-5"
+
+
+def _llm_for_kind(llm, kind):
+    if kind != "agent" and llm in AGENT_ONLY_LLMS:
+        return AGENT_ONLY_FALLBACK
+    return llm
 
 
 def get_accessible_matters():
@@ -234,11 +258,34 @@ def conversation_view(request, conv_id):
 
     messages = conversation.messages.select_related("user").all()
 
+    # A run still in flight (or finished but not yet collected by a poll)
+    # re-attaches the status box on reload instead of leaving a minutes-long
+    # agent turn invisible; the poll then collects a finished run's message.
+    live = status_cache.get(f"ai_status_{conversation.id}")
+    is_processing = bool(live and live.get("status") != "cancelled")
+    bar_live = is_processing and conversation.kind == "agent"
     context = {
         "matter": matter,
         "conversation": conversation,
         "messages": messages,
+        "is_processing": is_processing,
+        "bar_live": bar_live,
     }
+    # Idle bar segments (token totals, citation state) for the standing
+    # include (chat-statusbar.html, oob=False).
+    context.update(_statusbar_idle_context(conversation))
+    if bar_live:
+        # A reload mid-run shows the live strip, not one tick late.
+        context.update(
+            {
+                "usage": live.get("usage"),
+                "elapsed_seconds": (
+                    int(time.time() - live["started_at"])
+                    if "started_at" in live
+                    else None
+                ),
+            }
+        )
 
     return render(request, "case/ai/conversation-standalone.html", context)
 
@@ -255,6 +302,9 @@ def new_conversation_view(request, matter_id):
 
     provided_title = request.GET.get("title", "").strip()
 
+    kind = _kind_param(request.GET)
+    llm = _llm_for_kind(llm, kind)
+
     # Create a dummy conversation object for template (not saved). When the
     # user named the chat from the new-conversation prompt, use that name as
     # the display title; otherwise show the legacy "New Conversation" placeholder.
@@ -262,6 +312,7 @@ def new_conversation_view(request, matter_id):
         matter=matter,
         title=provided_title or "New Conversation",
         llm=llm,
+        kind=kind,
     )
 
     context = {
@@ -270,6 +321,7 @@ def new_conversation_view(request, matter_id):
         "messages": [],
         "is_new": True,
         "llm": llm,
+        "kind": kind,
         "provided_title": provided_title,
     }
 
@@ -290,10 +342,12 @@ def create_conversation(request, matter_id):
     llm = request.POST.get("llm", "gemini-pro-latest")
     if llm not in VALID_LLMS:
         llm = "gemini-pro-latest"
+    kind = _kind_param(request.POST)
     conversation = Conversation.objects.create(
         matter=matter,
         title=request.POST.get("title", "").strip() or "New Conversation",
-        llm=llm,
+        llm=_llm_for_kind(llm, kind),
+        kind=kind,
         user=request.user,
     )
     return JsonResponse({"id": conversation.id})
@@ -340,15 +394,39 @@ def message_list(request, matter_id):
         conversation.messages.select_related("user").all() if conversation else []
     )
 
-    return render(
+    # A refresh mid-run must re-attach the poller (and, for agent runs,
+    # the pinned bar): without this, any messagesUpdated swap while a
+    # turn was in flight silently dropped the status indicator.
+    live = status_cache.get(f"ai_status_{conversation.id}") if conversation else None
+    is_processing = bool(live and live.get("status") != "cancelled")
+
+    response = render(
         request,
         "case/ai/messages.html",
         {
             "messages": messages,
             "conversation": conversation,
             "matter": matter,
+            "is_processing": is_processing,
         },
     )
+    if is_processing and conversation.kind == "agent":
+        elapsed = None
+        if "started_at" in live:
+            elapsed = int(time.time() - live["started_at"])
+        response.write(
+            _statusbar_html(
+                conversation,
+                live=True,
+                ctx={
+                    "elapsed_seconds": elapsed,
+                    "usage": live.get("usage"),
+                },
+            )
+        )
+    else:
+        response.write(_statusbar_html(conversation, live=False))
+    return response
 
 
 @login_required
@@ -387,10 +465,12 @@ def send_message(request, matter_id):
             title = user_message[:50]
             if len(user_message) > 50:
                 title += "..."
+        kind = _kind_param(request.POST)
         conversation = Conversation.objects.create(
             matter=matter,
             title=title,
-            llm=llm,
+            llm=_llm_for_kind(llm, kind),
+            kind=kind,
             user=request.user,
         )
         is_new = True
@@ -446,7 +526,84 @@ def send_message(request, matter_id):
         response["HX-Trigger"] = "conversationCreated"
         response["X-Conversation-Id"] = str(conversation.id)
 
+    # The status bar refreshes the instant the prompt is sent; agentic
+    # runs flip its right side to the live strip.
+    response.write(_statusbar_html(conversation, live=conversation.kind == "agent"))
     return response
+
+
+def _statusbar_idle_context(conversation):
+    """Token totals and citation state for the bar's idle segments."""
+    if not getattr(conversation, "pk", None):
+        return {}
+    from django.db.models import Sum
+
+    totals = conversation.messages.filter(role="assistant").aggregate(
+        input=Sum("input_tokens"), output=Sum("output_tokens")
+    )
+    context = {}
+    if totals.get("input") or totals.get("output"):
+        context["totals"] = {
+            "input": totals.get("input") or 0,
+            "output": totals.get("output") or 0,
+        }
+    cite_state = _cite_state(conversation)
+    if cite_state:
+        context["cite_state"] = cite_state
+    from .pricing import conversation_cost
+
+    cost = conversation_cost(conversation)
+    if cost:
+        context["cost"] = cost
+    return context
+
+
+def _cite_state(conversation):
+    """The latest answer's citation state: checking, N unverified, or ok."""
+    from .vetting import has_pending_vetting
+
+    latest = (
+        conversation.messages.filter(role="assistant")
+        .exclude(verified_citations=[])
+        .order_by("-created_at")
+        .first()
+    )
+    if latest is None or not latest.verified_citations:
+        return None
+    citations = latest.verified_citations
+    if has_pending_vetting(citations):
+        return {"kind": "checking", "text": "checking cites"}
+    bad = sum(1 for c in citations if c.get("is_valid") is False)
+    if bad:
+        return {"kind": "bad", "text": f"{bad} unverified"}
+    if any(c.get("is_valid") is True for c in citations):
+        return {"kind": "ok", "text": "cites ok"}
+    return None
+
+
+def _statusbar_html(conversation, live, ctx=None):
+    """Out-of-band fragment for the persistent chat status bar.
+
+    Case chats only: the intake/agenda windows have no #ai-chat-statusbar
+    target, and an unmatched out-of-band fragment logs an htmx error.
+    Appended to htmx responses with response.write; htmx plucks it out
+    before the main swap and morphs it into the standing container
+    (conversation-standalone.html). Idle segments (token totals,
+    citation state) are computed here so every emission point stays one
+    line.
+    """
+    if conversation is None or not getattr(conversation, "matter_id", None):
+        return ""
+    context = {
+        "conversation": conversation,
+        "matter": conversation.matter,
+        "live": live,
+        "oob": True,
+    }
+    context.update(_statusbar_idle_context(conversation))
+    if ctx:
+        context.update(ctx)
+    return render_to_string("case/ai/chat-statusbar.html", context)
 
 
 def _terminal(response):
@@ -465,12 +622,16 @@ def _terminal(response):
     return response
 
 
-def _poll_ended():
+def _poll_ended(conversation=None):
     """Empty terminal response: an empty div under a DIFFERENT id than the
     poller, so a morph swap replaces the element (a same-id root would be
     patched in place, keeping its interval alive), plus HX-Reswap for
-    pages without morph."""
-    return _terminal(HttpResponse('<div id="ai-status-ended"></div>'))
+    pages without morph. With a conversation, the agent status bar is
+    emptied in the same response."""
+    response = _terminal(HttpResponse('<div id="ai-status-ended"></div>'))
+    if conversation is not None:
+        response.write(_statusbar_html(conversation, live=False))
+    return response
 
 
 @login_required
@@ -498,7 +659,7 @@ def ai_status(request, conv_id):
         # the indicator never went away) wrote one of these per second.
         latest = conversation.messages.order_by("-created_at").first()
         if latest is None or latest.role != "user":
-            return _poll_ended()
+            return _poll_ended(conversation)
         interrupted = Message.objects.create(
             conversation=conversation,
             role="assistant",
@@ -507,13 +668,15 @@ def ai_status(request, conv_id):
                 "server restarted mid-run). Please re-send your message."
             ),
         )
-        return _terminal(
+        response = _terminal(
             render(
                 request,
                 "case/ai/message-single.html",
                 {"message": interrupted},
             )
         )
+        response.write(_statusbar_html(conversation, live=False))
+        return response
 
     if status_data["status"] == "complete":
         # Get verified citations from status data
@@ -535,6 +698,7 @@ def ai_status(request, conv_id):
             verified_citations=verified_citations,
             research_trail=status_data.get("research_trail", []),
             activity_log=status_data.get("activity_log", []),
+            agent_run=status_data.get("agent_run", {}),
         )
 
         # Update conversation timestamp
@@ -568,8 +732,9 @@ def ai_status(request, conv_id):
         # Clear the cache
         status_cache.delete(cache_key)
 
-        # Return just the new assistant message (replaces status indicator)
-        return _terminal(
+        # Return just the new assistant message (replaces status indicator);
+        # the same response empties the pinned agent bar out-of-band.
+        response = _terminal(
             render(
                 request,
                 "case/ai/message-single.html",
@@ -578,6 +743,8 @@ def ai_status(request, conv_id):
                 },
             )
         )
+        response.write(_statusbar_html(conversation, live=False))
+        return response
 
     if status_data["status"] == "error":
         # Save error as assistant message
@@ -586,13 +753,15 @@ def ai_status(request, conv_id):
             role="assistant",
             content=f"Error: Unable to get response. {status_data['message']}",
             activity_log=status_data.get("activity_log", []),
+            # An agent run that failed keeps its partial trail inspectable.
+            agent_run=status_data.get("agent_run", {}),
         )
 
         # Clear the cache
         status_cache.delete(cache_key)
 
         # Return just the error message (replaces status indicator)
-        return _terminal(
+        response = _terminal(
             render(
                 request,
                 "case/ai/message-single.html",
@@ -601,19 +770,22 @@ def ai_status(request, conv_id):
                 },
             )
         )
+        response.write(_statusbar_html(conversation, live=False))
+        return response
 
     if status_data["status"] == "cancelled":
         # Keep cache entry (don't delete) so background thread's
         # is_cancelled() check continues to see "cancelled" status.
-        return _poll_ended()
+        return _poll_ended(conversation)
 
     # Calculate elapsed time if available
     elapsed_seconds = None
     if "started_at" in status_data:
         elapsed_seconds = int(time.time() - status_data["started_at"])
 
-    # Still processing - return status indicator with continued polling
-    return render(
+    # Still processing - return status indicator with continued polling.
+    # Agent runs also refresh the pinned bar out-of-band in the same poll.
+    response = render(
         request,
         "case/ai/status.html",
         {
@@ -624,8 +796,23 @@ def ai_status(request, conv_id):
             # Both modes accumulate a live log: research logs its
             # searches/reads, classic logs context assembly + cite check.
             "activity_log": status_data.get("activity_log"),
+            # Agent runs add token usage and typed steps (agent_state.py).
+            "usage": status_data.get("usage"),
+            "steps": status_data.get("steps"),
         },
     )
+    if conversation.kind == "agent":
+        response.write(
+            _statusbar_html(
+                conversation,
+                live=True,
+                ctx={
+                    "elapsed_seconds": elapsed_seconds,
+                    "usage": status_data.get("usage"),
+                },
+            )
+        )
+    return response
 
 
 @login_required
@@ -661,9 +848,11 @@ def cancel_request(request, conv_id):
         if last_message and last_message.role == "user":
             last_message.delete()
 
-    # Return empty indicator (no polling) and trigger message list refresh
+    # Return empty indicator (no polling) and trigger message list refresh;
+    # for agent runs the same response empties the pinned bar out-of-band.
     return HttpResponse(
-        '<div id="ai-status-indicator"></div>',
+        '<div id="ai-status-indicator"></div>'
+        + _statusbar_html(conversation, live=False),
         headers={"HX-Trigger": "messagesUpdated"},
     )
 
@@ -777,6 +966,9 @@ def clone_conversation(request, conv_id):
             input_tokens=message.input_tokens,
             output_tokens=message.output_tokens,
             verified_citations=message.verified_citations,
+            research_trail=message.research_trail,
+            activity_log=message.activity_log,
+            agent_run=message.agent_run,
         )
 
     # Trigger refresh of conversation list
@@ -835,6 +1027,9 @@ def append_conversation(request, conv_id):
             input_tokens=message.input_tokens,
             output_tokens=message.output_tokens,
             verified_citations=message.verified_citations,
+            research_trail=message.research_trail,
+            activity_log=message.activity_log,
+            agent_run=message.agent_run,
         )
 
     # Delete source conversation
@@ -887,6 +1082,9 @@ def split_conversation(request, message_id):
             input_tokens=msg.input_tokens,
             output_tokens=msg.output_tokens,
             verified_citations=msg.verified_citations,
+            research_trail=msg.research_trail,
+            activity_log=msg.activity_log,
+            agent_run=msg.agent_run,
         )
         msg.delete()
 
@@ -976,11 +1174,14 @@ def message_vetting_status(request, message_id):
         conversation__matter__in=get_accessible_matters(),
     )
 
-    return render(
+    response = render(
         request,
         "case/ai/vetting-wrapper.html",
         {"message": message},
     )
+    # The bar's citation segment resolves as vetting lands.
+    response.write(_statusbar_html(message.conversation, live=False))
+    return response
 
 
 @login_required
@@ -1295,6 +1496,9 @@ def context_preview(request, matter_id):
             "context_limit": 1_000_000,
         },
         {"name": "Claude Sonnet 4.6", "input_price": 3.00, "context_limit": 1_000_000},
+        {"name": "Claude Sonnet 5", "input_price": 3.00, "context_limit": 1_000_000},
+        {"name": "Claude Opus 5", "input_price": 5.00, "context_limit": 1_000_000},
+        {"name": "Claude Fable 5", "input_price": 10.00, "context_limit": 1_000_000},
         {"name": "Claude Opus 4.8", "input_price": 5.00, "context_limit": 1_000_000},
         {"name": "Claude Opus 4.6", "input_price": 5.00, "context_limit": 1_000_000},
     ]

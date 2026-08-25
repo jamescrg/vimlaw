@@ -1,4 +1,4 @@
-<article class="search-result-row result-{{ result.type }}">
+<article class="search-result-row result-{{ result.type }}{% if result.semantic %} result-semantic{% endif %}">
   {% if result.type == "document" %}
     <span class="app-badge app-badge-lg badge-gray"><i class="icon-file-text urgent"></i></span>
   {% elif result.type == "highlight" %}
@@ -51,6 +51,13 @@
         <span class="result-date">{{ result.object.updated_at|date:"M j, Y" }}</span>
       </div>
       {% if result.object.content %}<div class="result-text">{{ result.object.content|truncatewords:25 }}</div>{% endif %}
+    {% endif %}
+    {% if result.semantic %}
+      <div class="result-meta">
+        <span class="app-badge badge-purple"
+              title="Matched by meaning, not exact words (similarity {{ result.similarity }})">meaning match</span>
+      </div>
+      {% if result.snippet %}<div class="result-text">{{ result.snippet }}</div>{% endif %}
     {% endif %}
     {% if result.object.labels.exists %}
       <div class="result-labels">

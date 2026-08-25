@@ -88,6 +88,9 @@
           <span class="app-badge badge-purple">{{ matter.name }}</span>
           <h1 id="conversationTitle">{{ conversation.title }}</h1>
           <span class="app-badge badge-lg ai-llm-{{ conversation.llm }}">{{ conversation.get_llm_display }}</span>
+          {% if conversation.kind == "agent" %}
+            <span class="app-badge badge-lg ai-kind-badge ai-kind-agent"><i class="icon-workflow"></i> Agentic</span>
+          {% endif %}
           {% comment %}
             The vet-citations toggle was removed from the header: vetting
             defaults on and nobody ever turned it off. The backend flag,
@@ -108,6 +111,7 @@
                hx-trigger="messagesUpdated from:body"
                hx-swap="innerHTML">{% include "case/ai/messages.html" %}</div>
         </div>
+        {% include "case/ai/chat-statusbar.html" with oob=False live=bar_live %}
         <div class="ai-input-container">
           <div class="ai-input-row">
             <span id="draftChip">{% include "case/ai/draft-chip.html" %}</span>
@@ -120,6 +124,7 @@
                      id="conversationId"
                      value="{% if not is_new %}{{ conversation.id }}{% endif %}">
               <input type="hidden" name="llm" value="{{ conversation.llm }}">
+              <input type="hidden" name="kind" value="{{ conversation.kind }}">
               <input type="hidden"
                      name="title"
                      id="conversationTitleInput"
@@ -234,6 +239,7 @@
       const form = document.getElementById('chatForm');
       const params = new URLSearchParams();
       params.set('llm', form.querySelector('[name="llm"]').value);
+      params.set('kind', form.querySelector('[name="kind"]').value);
       params.set('title', document.getElementById('conversationTitleInput').value);
       fetch('{% url "case:ai-create-conversation" matter.id %}', {
         method: 'POST',

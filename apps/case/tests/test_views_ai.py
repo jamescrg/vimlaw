@@ -501,3 +501,579 @@ class TestActivityLog:
         response = client.get(reverse("case:ai-status", args=[conversation.id]))
         assert response["HX-Reswap"] == "outerHTML"
         assert conversation.messages.get(role="assistant").content == "Done."
+
+
+class TestAgentKind:
+    """Agentic conversations: the mode is fixed at creation and the run
+    record rides the completion payload onto the message."""
+
+    @pytest.fixture
+    def _no_worker(self, monkeypatch):
+        monkeypatch.setattr(
+            "apps.case.ai.views.process_ai_request", lambda *a, **k: None
+        )
+
+    def test_send_creates_agent_conversation(self, client, matter, _no_worker):
+        from django.urls import reverse
+
+        client.post(
+            reverse("case:ai-send", args=[matter.id]),
+            {"message": "Hello", "llm": "claude-opus", "kind": "agent"},
+        )
+        assert Conversation.objects.get().kind == "agent"
+
+    def test_send_never_changes_an_existing_kind(
+        self, client, matter, user, _no_worker
+    ):
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(matter=matter, title="C", user=user)
+        client.post(
+            reverse("case:ai-send", args=[matter.id]),
+            {
+                "message": "Hello",
+                "llm": "claude-opus",
+                "kind": "agent",
+                "conversation_id": conversation.id,
+            },
+        )
+        conversation.refresh_from_db()
+        assert conversation.kind == "classic"
+
+    def test_new_view_carries_kind(self, client, matter):
+        from django.urls import reverse
+
+        response = client.get(
+            reverse("case:ai-new-conversation-view", args=[matter.id]),
+            {"kind": "agent", "llm": "claude-opus", "title": "T"},
+        )
+        assert response.context["conversation"].kind == "agent"
+        assert response.context["kind"] == "agent"
+
+        response = client.get(
+            reverse("case:ai-new-conversation-view", args=[matter.id]),
+            {"kind": "research", "llm": "claude-opus", "title": "T"},
+        )
+        assert response.context["conversation"].kind == "classic"
+
+    def test_modal_defaults_to_classic(self, client, matter):
+        import re
+
+        from django.urls import reverse
+
+        html = client.get(
+            reverse("case:ai-new-conversation-prompt", args=[matter.id])
+        ).content.decode()
+        # First option, no selected attribute anywhere on the mode select.
+        mode_select = re.search(
+            r'<select id="new-conversation-kind">(.*?)</select>', html, re.DOTALL
+        ).group(1)
+        assert "selected" not in mode_select
+        assert mode_select.index('value="classic"') < mode_select.index('value="agent"')
+
+    def test_create_conversation_honors_kind(self, client, matter):
+        from django.urls import reverse
+
+        response = client.post(
+            reverse("case:ai-create-conversation", args=[matter.id]),
+            {"llm": "claude-opus", "title": "T", "kind": "agent"},
+        )
+        assert Conversation.objects.get(pk=response.json()["id"]).kind == "agent"
+
+    def test_complete_persists_agent_run(self, client, matter, user, monkeypatch):
+        from django.urls import reverse
+
+        from apps.case.ai import tasks as ai_tasks
+        from apps.case.ai.status import status_cache as cache
+
+        monkeypatch.setattr(
+            ai_tasks, "generate_conversation_summary", lambda conv_id: None
+        )
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent", vet_citations=False
+        )
+        run = {"version": 1, "usage": {"turns": 2}, "steps": [{"type": "turn", "n": 1}]}
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "complete",
+                "message": "Complete",
+                "response": "Answer",
+                "input_tokens": 10,
+                "output_tokens": 2,
+                "citations": [],
+                "activity_log": ["Oriented"],
+                "agent_run": run,
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        assert response["HX-Reswap"] == "outerHTML"
+        message = conversation.messages.get(role="assistant")
+        assert message.agent_run == run
+        assert message.activity_log == ["Oriented"]
+        html = response.content.decode()
+        assert "Agent run (1 step)" in html
+        assert "ai-agent-summary-stats" in html
+        assert 'id="agent-turn-1"' not in html  # persisted rows carry no live ids
+        assert '<details class="ai-agent-trail" open>' in html
+        assert "ai-research-trail" not in html
+        # The terminal response resets the bar to idle out-of-band.
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html
+        assert "icon-timer" not in html
+
+    def test_in_flight_poll_passes_usage_and_steps(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "reading",
+                "message": "Reading the complaint...",
+                "started_at": 0,
+                "activity_log": ["Oriented"],
+                "usage": {"input": 100, "tool_calls": 1, "tool_calls_max": 25},
+                "steps": [{"type": "text", "n": 1, "text": "Reading the complaint."}],
+            },
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        assert response.context["usage"]["tool_calls"] == 1
+        assert response.context["steps"][0]["text"] == "Reading the complaint."
+        assert "every 1s" in response.content.decode()
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_agent_poll_renders_rows_and_stats(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "reading",
+                "message": "Reading document 12...",
+                "started_at": 0,
+                "activity_log": ["Oriented"],
+                "usage": {
+                    "input": 48_231,
+                    "output": 3_100,
+                    "cache_read": 41_000,
+                    "tool_calls": 7,
+                    "tool_calls_max": 25,
+                    "chars_read": 210_000,
+                },
+                "steps": [
+                    {"type": "text", "n": 1, "text": "Reading the complaint first."},
+                    {
+                        "type": "turn",
+                        "n": 1,
+                        "input": 12_300,
+                        "output": 610,
+                        "seconds": 9,
+                    },
+                    {
+                        "type": "tool",
+                        "tool": "read_document",
+                        "n": 1,
+                        "label": "Read *Complaint* (41k chars)",
+                        "pending": False,
+                        "seconds": 0.2,
+                    },
+                    {
+                        "type": "tool",
+                        "tool": "search_materials",
+                        "n": 2,
+                        "label": 'Searching "spoliation"...',
+                        "pending": True,
+                        "seconds": 0,
+                    },
+                ],
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert 'id="ai-agent-stats"' in html
+        assert "48.2k in" in html and "3.1k out" in html and "41.0k cached" in html
+        # chars-read gave its slot to the running turn cost (gemini-pro
+        # rates over the seeded usage).
+        assert "7/25 tools" in html and "$0.05 turn" in html
+        # The pinned bar rides the same response as an out-of-band morph.
+        assert 'id="ai-chat-statusbar"' in html
+        assert 'hx-swap-oob="morph"' in html
+        assert "icon-timer" in html
+        # The transient action line is out of the bar; with a tool running
+        # the pending row itself is the transient state, so no tail either.
+        assert "Reading document 12" not in html
+        assert "agent-stream-tail" not in html
+        assert "ai-status-content" not in html
+        assert "ai-research-trail" not in html
+        assert "ai-agent-elbow" in html
+        assert 'id="agent-text-1"' in html and "Reading the complaint first." in html
+        assert 'id="agent-turn-1"' in html and "12.3k in, 610 out" in html
+        assert 'id="agent-tool-1"' in html and "<em>Complaint</em>" in html
+        assert 'id="agent-tool-2"' in html and "icon-file-search pulse" in html
+        assert ">running<" in html
+        assert "ai-status-elapsed" not in html
+        assert "every 1s" in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_classic_poll_has_no_agent_strip(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(matter=matter, title="C", user=user)
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "thinking",
+                "message": "Thinking...",
+                "started_at": 0,
+                "activity_log": ["Context assembled"],
+                "usage": {"input": 1},
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert "ai-agent-stats" not in html
+        assert "Context assembled" in html
+        assert "ai-status-elapsed" in html
+        assert "ai-chat-statusbar" not in html
+        assert "hx-swap-oob" not in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_clone_copies_agent_run(self, client, matter, user):
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="Answer",
+            agent_run={"version": 1},
+            activity_log=["x"],
+        )
+        client.post(reverse("case:ai-clone-conversation", args=[conversation.id]))
+        clone = Conversation.objects.exclude(pk=conversation.pk).get()
+        assert clone.kind == "agent"
+        copied = clone.messages.get()
+        assert copied.agent_run == {"version": 1}
+        assert copied.activity_log == ["x"]
+
+    def test_conversation_view_reattaches_a_live_poller(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        url = reverse("case:ai-conversation-view", args=[conversation.id])
+        idle = client.get(url).content.decode()
+        assert "ai-status-indicator" not in idle
+        # The standing bar is always present and populated (reserved height).
+        assert 'id="ai-chat-statusbar"' in idle
+        assert "ai-chat-statusbar-row" in idle
+        assert "icon-timer" not in idle
+
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "thinking",
+                "message": "Thinking...",
+                "started_at": 0,
+                "usage": {"input": 10, "tool_calls": 0, "tool_calls_max": 25},
+            },
+            timeout=60,
+        )
+        html = client.get(url).content.decode()
+        assert 'id="ai-status-indicator"' in html
+        assert "every 1s" in html
+        # Mid-run reload renders the live strip, not one tick late.
+        assert "ai-chat-statusbar-row" in html
+        assert "icon-timer" in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+
+class TestAgentStatusBar:
+    """The pinned bar above the composer: fed out-of-band by every poll,
+    emptied by every terminal response, agent-kind only."""
+
+    @pytest.fixture
+    def _no_worker(self, monkeypatch):
+        monkeypatch.setattr(
+            "apps.case.ai.views.process_ai_request", lambda *a, **k: None
+        )
+
+    def test_send_message_carries_starting_bar(self, client, matter, _no_worker):
+        from django.urls import reverse
+
+        html = client.post(
+            reverse("case:ai-send", args=[matter.id]),
+            {"message": "Hello", "llm": "claude-fable", "kind": "agent"},
+        ).content.decode()
+        assert 'hx-swap-oob="morph"' in html
+        assert "ai-chat-statusbar-row" in html
+
+        Conversation.objects.all().delete()
+        html = client.post(
+            reverse("case:ai-send", args=[matter.id]),
+            {"message": "Hello", "llm": "claude-opus-5", "kind": "classic"},
+        ).content.decode()
+        # Classic sends carry the idle bar (no live strip).
+        assert "ai-chat-statusbar-row" in html
+        assert "icon-timer" not in html
+
+    def test_cancel_empties_bar_for_agent_only(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        agent = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{agent.id}", {"status": "reading", "message": "..."}, timeout=60
+        )
+        html = client.post(reverse("case:ai-cancel", args=[agent.id])).content.decode()
+        assert 'id="ai-status-indicator"' in html
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+        cache.delete(f"ai_status_{agent.id}")
+
+        classic = Conversation.objects.create(
+            matter=matter, title="C", user=user, kind="classic"
+        )
+        cache.set(
+            f"ai_status_{classic.id}",
+            {"status": "thinking", "message": "..."},
+            timeout=60,
+        )
+        html = client.post(
+            reverse("case:ai-cancel", args=[classic.id])
+        ).content.decode()
+        # Classic case chats share the persistent bar (idle content).
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+        cache.delete(f"ai_status_{classic.id}")
+
+    def test_cancelled_poll_empties_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {"status": "cancelled", "message": "Request cancelled"},
+            timeout=60,
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert response["HX-Reswap"] == "outerHTML"
+        assert 'id="ai-status-ended"' in html
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_interruption_empties_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        Message.objects.create(
+            conversation=conversation, role="user", content="Hello", user=user
+        )
+        response = client.get(reverse("case:ai-status", args=[conversation.id]))
+        html = response.content.decode()
+        assert "interrupted" in html
+        assert 'id="ai-chat-statusbar"' in html
+        assert "ai-chat-statusbar-row" in html and "icon-timer" not in html
+
+    def test_message_list_reattaches_poller_and_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        url = reverse("case:ai-messages", args=[matter.id])
+        idle = client.get(url, {"conversation_id": conversation.id}).content.decode()
+        assert "ai-status-indicator" not in idle
+
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "reading",
+                "message": "Reading...",
+                "started_at": 0,
+                "usage": {"input": 10, "tool_calls": 1, "tool_calls_max": 25},
+                "steps": [],
+            },
+            timeout=60,
+        )
+        live = client.get(url, {"conversation_id": conversation.id}).content.decode()
+        assert "every 1s" in live
+        assert 'hx-swap-oob="morph"' in live
+        assert "ai-chat-statusbar-row" in live
+        cache.delete(f"ai_status_{conversation.id}")
+
+
+class TestStatusBarIdleContent:
+    """Idle bar segments: matter left; cites, totals, model right."""
+
+    def _bar(self, client, conversation):
+        from django.urls import reverse
+
+        return client.get(
+            reverse("case:ai-conversation-view", args=[conversation.id])
+        ).content.decode()
+
+    def test_totals_and_cost(self, client, matter, user):
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent", llm="claude-opus"
+        )
+        Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="x",
+            input_tokens=100_000,
+            output_tokens=2_000,
+        )
+        html = self._bar(client, conversation)
+        assert "48.2k in" not in html  # no stray numbers
+        assert "100.0k in" in html and "2.0k out" in html
+        assert "$0.55 last" in html and "$0.55 total" in html
+        # Matter and model live in the header badges, not the bar.
+        assert "ai-statusbar-model" not in html
+
+    def test_live_strip_shows_turn_cost(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent", llm="claude-opus"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "reading",
+                "message": "...",
+                "started_at": 0,
+                "usage": {
+                    "input": 100_000,
+                    "output": 2_000,
+                    "cache_read": 0,
+                    "cache_write": 0,
+                    "tool_calls": 1,
+                    "tool_calls_max": 25,
+                    "chars_read": 10,
+                },
+                "steps": [],
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert "$0.55 turn" in html
+        cache.delete(f"ai_status_{conversation.id}")
+
+    def test_cite_states(self, client, matter, user):
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="classic"
+        )
+        message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="x",
+            verified_citations=[{"citation_type": "case", "is_valid": True}],
+        )
+        assert "cites ok" in self._bar(client, conversation)
+
+        message.verified_citations = [
+            {"citation_type": "case", "is_valid": True},
+            {"citation_type": "case", "is_valid": False},
+        ]
+        message.save(update_fields=["verified_citations"])
+        assert "1 unverified" in self._bar(client, conversation)
+
+        message.verified_citations = [
+            {
+                "citation_type": "case",
+                "is_valid": True,
+                "vetting": {"status": "pending"},
+            }
+        ]
+        message.save(update_fields=["verified_citations"])
+        assert "checking cites" in self._bar(client, conversation)
+
+    def test_vetting_poll_refreshes_bar(self, client, matter, user):
+        from django.urls import reverse
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="classic"
+        )
+        message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="x",
+            verified_citations=[
+                {
+                    "citation_type": "case",
+                    "is_valid": True,
+                    "vetting": {"status": "completed", "verdict": "supports"},
+                }
+            ],
+        )
+        html = client.get(
+            reverse("case:ai-message-vetting-status", args=[message.id])
+        ).content.decode()
+        assert 'hx-swap-oob="morph"' in html
+        assert "cites ok" in html
+
+    def test_agent_thinking_status_shows_stream_tail(self, client, matter, user):
+        from django.urls import reverse
+
+        from apps.case.ai.status import status_cache as cache
+
+        conversation = Conversation.objects.create(
+            matter=matter, title="A", user=user, kind="agent"
+        )
+        cache.set(
+            f"ai_status_{conversation.id}",
+            {
+                "status": "thinking",
+                "message": "Weighing the pleadings",
+                "started_at": 0,
+                "usage": {"input": 10, "tool_calls": 0, "tool_calls_max": 25},
+                "steps": [],
+            },
+            timeout=60,
+        )
+        html = client.get(
+            reverse("case:ai-status", args=[conversation.id])
+        ).content.decode()
+        assert 'id="agent-stream-tail"' in html
+        assert "Weighing the pleadings" in html
+        cache.delete(f"ai_status_{conversation.id}")

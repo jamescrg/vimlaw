@@ -1,4 +1,5 @@
 from django.db import models
+from pgvector.django import HnswIndex, VectorField
 from simple_history.models import HistoricalRecords
 
 from apps.accounts.models import CustomUser
@@ -13,21 +14,28 @@ class Conversation(AuditMixin, models.Model):
     # Note: "claude" (Sonnet 4.6) and "gemini-pro" (Gemini 2.5 Pro) were
     # retired from the picker but remain supported in the dispatch/selector
     # plumbing so existing conversations on those models keep working.
+    # "claude-fable" (Fable 5, double Opus pricing) is offered for agentic
+    # conversations only; the views fall a classic create back to Opus 5.
     LLM_CHOICES = [
+        ("claude-fable", "Claude Fable 5"),
+        ("claude-opus-5", "Claude Opus 5"),
         ("claude-opus", "Claude Opus 4.8"),
         ("claude-opus-4-6", "Claude Opus 4.6"),
-        ("gemini-flash", "Gemini 2.5 Flash"),
+        ("claude-sonnet-5", "Claude Sonnet 5"),
         ("gemini-pro-latest", "Gemini Pro (Latest)"),
+        ("gemini-flash", "Gemini 2.5 Flash"),
     ]
 
-    # Chat modes: "classic" (shown as Analysis) is the original
-    # single-completion chat; "research" runs an agentic CourtListener tool
-    # loop (searches, reads opinions, cites only what it retrieved). The
-    # mode is picked per turn via the chat-header dropdown; `kind` holds
-    # the mode of the latest turn (and the default for the next one).
+    # Chat modes, fixed when the conversation is created. "classic" is the
+    # original single-completion chat over a preloaded matter context;
+    # "agent" runs a tool loop that reads matter materials on demand and
+    # narrates each step (apps/case/ai/agent.py). "research" was the
+    # retired CourtListener research loop; it is not creatable any more
+    # but its conversations still render.
     KIND_CHOICES = [
-        ("classic", "Analysis"),
+        ("classic", "Classic"),
         ("research", "Research"),
+        ("agent", "Agentic"),
     ]
     EFFORT_CHOICES = [
         ("low", "Low"),
@@ -164,6 +172,12 @@ class Message(AuditMixin, models.Model):
     # research answers show their richer trail instead.
     activity_log = models.JSONField(default=list, blank=True)
 
+    # Agent-kind assistant messages: the run record (typed steps, per-turn
+    # token usage, elapsed time, stop reason) rendered as a collapsible
+    # trail above the answer, and mined by later turns for the materials
+    # already read. Shape documented in docs/agent-chat.md.
+    agent_run = models.JSONField(default=dict, blank=True)
+
     history = HistoricalRecords()
 
     def cited_authorities(self):
@@ -205,3 +219,58 @@ class Message(AuditMixin, models.Model):
 
     def __str__(self):
         return f"{self.role}: {self.content[:50]}..."
+
+
+class MaterialChunk(models.Model):
+    """A chunk of matter material embedded for semantic search.
+
+    Written by apps/case/ai/semantic.py (chunking, hashing, save-time
+    re-indexing) and queried by the agent's search_materials via cosine
+    distance. Library notes carry no matter.
+    """
+
+    KIND_CHOICES = [
+        ("document", "Document"),
+        ("note", "Note"),
+        ("library", "Library note"),
+        ("email", "Email"),
+        ("highlight", "Highlight"),
+        ("fact", "Fact"),
+    ]
+
+    matter = models.ForeignKey(
+        Matter,
+        on_delete=models.CASCADE,
+        related_name="ai_chunks",
+        null=True,
+        blank=True,
+    )
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES)
+    object_id = models.IntegerField()
+    chunk_index = models.PositiveIntegerField(default=0)
+    text = models.TextField()
+    content_hash = models.CharField(max_length=32)
+    embedding = VectorField(dimensions=768)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "matters_material_chunk"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["kind", "object_id", "chunk_index"],
+                name="uniq_material_chunk",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["matter", "kind"]),
+            HnswIndex(
+                name="material_chunk_emb_hnsw",
+                fields=["embedding"],
+                m=16,
+                ef_construction=64,
+                opclasses=["vector_cosine_ops"],
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.kind}:{self.object_id}#{self.chunk_index}"
