@@ -110,7 +110,8 @@ class TestSystem:
         )
         assert working_set == "" and carried == set()
         assert "## Working Method" in segment_a
-        assert "at most 25 tool calls and 600,000 characters" in segment_a
+        assert "at most 40 tool calls and 600,000 characters" in segment_a
+        assert "## Legal Research Method" in segment_a
         assert "CITING SOURCES" in segment_a
         assert "## Current Matter: Test Matter" in segment_a
         assert f"[doc:{pinned_document.id}] Test Document" in segment_a

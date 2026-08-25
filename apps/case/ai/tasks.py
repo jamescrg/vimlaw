@@ -179,6 +179,7 @@ def armed_write_protocols(conversation, user_message):
     protocol_text is ready to append to the system context ("" when
     nothing is armed). Shared by the classic and agent turns.
     """
+    from .caselaw_blocks import CASELAW_PROTOCOL, CASELAW_TRIGGER_RE
     from .fact_blocks import FACTS_PROTOCOL, FACTS_TRIGGER_RE
     from .note_blocks import NOTES_PROTOCOL, NOTES_TRIGGER_RE
     from .witness_blocks import WITNESS_TRIGGER_RE, WITNESSES_PROTOCOL
@@ -205,6 +206,13 @@ def armed_write_protocols(conversation, user_message):
     if NOTES_TRIGGER_RE.search(recent_user_text):
         text += "\n\n" + NOTES_PROTOCOL
         names.append("notes")
+    # Only the agent turn has the research tools that produce cluster
+    # ids, so the save protocol stays out of classic conversations.
+    if getattr(conversation, "kind", "") == "agent" and CASELAW_TRIGGER_RE.search(
+        recent_user_text
+    ):
+        text += "\n\n" + CASELAW_PROTOCOL
+        names.append("caselaw")
     return text, names
 
 
@@ -219,6 +227,7 @@ def finalize_response(
     Shared by the classic and agent turns so both modes write through
     exactly one path.
     """
+    from .caselaw_blocks import CASELAW_BLOCK_RE, apply_caselaw_blocks
     from .fact_blocks import FACT_BLOCK_RE, apply_fact_blocks
     from .handles import HANDLE_RE, resolve_handles_for_chat
     from .note_blocks import (
@@ -249,6 +258,10 @@ def finalize_response(
         update_status("applying", "Adding witnesses...")
         response_text = apply_witness_blocks(response_text, matter, user)
         log_activity("Witnesses recorded")
+    if CASELAW_BLOCK_RE.search(response_text):
+        update_status("applying", "Saving authorities to case law...")
+        response_text = apply_caselaw_blocks(response_text, matter, user)
+        log_activity("Authorities saved to case law")
     # Order matters: imitation confirmations are scrubbed from the raw
     # response first (only model-written lines can match at this
     # point), then real blocks are applied and produce the genuine

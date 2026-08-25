@@ -21,7 +21,15 @@ from django.core.cache import cache as django_cache
 
 logger = logging.getLogger(__name__)
 
-READ_KINDS = ("document", "email", "note", "library", "caselaw", "conversation")
+READ_KINDS = (
+    "document",
+    "email",
+    "note",
+    "library",
+    "caselaw",
+    "conversation",
+    "opinion",
+)
 
 WORKING_SET_MAX_CHARS = 200_000
 # Matches AgentBudget.default_read_chars: an item carries at most one
@@ -201,6 +209,19 @@ def _fetch_conversation(matter, conversation, ident):
     return "\n\n".join(lines)
 
 
+def _fetch_opinion(matter, conversation, ident):
+    # Cache only, never the network (same rule as caselaw): read_opinion
+    # fills agent_opinion_cluster_{id}; an expired entry just falls back
+    # to the earlier-reads note.
+    data = django_cache.get(f"agent_opinion_cluster_{_int(ident)}")
+    if not data or not data.get("text"):
+        return ""
+    head = f"### Opinion [cluster:{data['cluster_id']}]: {data['case_name']}"
+    if data.get("citation"):
+        head += f", {data['citation']}"
+    return head + "\n\n" + data["text"]
+
+
 _FETCHERS = {
     "document": _fetch_document,
     "email": _fetch_email_thread,
@@ -208,6 +229,7 @@ _FETCHERS = {
     "library": _fetch_library_note,
     "caselaw": _fetch_caselaw,
     "conversation": _fetch_conversation,
+    "opinion": _fetch_opinion,
 }
 
 

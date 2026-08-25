@@ -68,7 +68,7 @@ class TestReadDocument:
         assert not outcome["is_error"]
         assert payload["text"] == text_document.ocr_text
         assert payload["next_offset"] is None
-        assert payload["budget"]["calls_left"] == 24
+        assert payload["budget"]["calls_left"] == 39
         step = executor.events[-1]
         assert step["type"] == "tool" and not step["pending"]
         assert step["label"].startswith("Read *Test Document*")
@@ -431,3 +431,191 @@ class TestBatchRunner:
             "call_read_matter_section",
             "call_read_document",
         ]
+
+
+class TestResearchTools:
+    def _cache_opinion(self, cluster_id, text, case_name="Smith v. Jones"):
+        from django.core.cache import cache as django_cache
+
+        django_cache.set(
+            f"agent_opinion_cluster_{cluster_id}",
+            {
+                "cluster_id": cluster_id,
+                "case_name": case_name,
+                "citation": "278 Ga. App. 206 (2006)",
+                "date_filed": "2006-03-01",
+                "url": "",
+                "text": text,
+            },
+            60,
+        )
+
+    def test_search_caselaw_merges_and_flags_published(
+        self, executor, matter, monkeypatch
+    ):
+        matter.jurisdiction = "State of Georgia"
+        matter.save(update_fields=["jurisdiction"])
+        calls = []
+
+        def fake_search(
+            query, court="", limit=5, order_by="score desc", filed_after=""
+        ):
+            calls.append({"query": query, "court": court, "filed_after": filed_after})
+            return [
+                {
+                    "case_name": "Valdosta Hotel Props. v. White",
+                    "citation": ["278 Ga. App. 206", "628 S.E.2d 642"],
+                    "court": "Georgia Court of Appeals",
+                    "date_filed": "2006-03-17",
+                    "cluster_id": 111,
+                    "snippet": "<mark>joinder</mark> under 9-11-21",
+                    "score": 1.0,
+                    "cite_count": 40,
+                    "courtlistener_url": "",
+                },
+                {
+                    "case_name": "Slip Op. v. Recent",
+                    "citation": [],
+                    "court": "Georgia Court of Appeals",
+                    "date_filed": "2026-06-01",
+                    "cluster_id": 222,
+                    "snippet": "",
+                    "score": 0.5,
+                    "cite_count": 0,
+                    "courtlistener_url": "",
+                },
+            ], 200
+
+        monkeypatch.setattr(
+            "apps.case.research.courtlistener.search_opinions", fake_search
+        )
+        payload, outcome = run(
+            executor,
+            "search_caselaw",
+            queries=['"9-11-21" "9-11-15"', '"9-11-21" joinder'],
+            filed_after="2000-01-01",
+        )
+        assert not outcome["is_error"]
+        # Both variants hit the same clusters: merged, matched flags both.
+        assert payload["total"] == 2
+        assert payload["state"] == "ga"
+        assert all(call["court"] == "ga gactapp" for call in calls)
+        assert all(call["filed_after"] == "2000-01-01" for call in calls)
+        anchor = payload["hits"][0]
+        assert anchor["published"] is True
+        assert anchor["citation"] == "278 Ga. App. 206, 628 S.E.2d 642"
+        assert "<mark>" not in anchor["snippet"]
+        assert anchor["matched"] == ['"9-11-21" "9-11-15"', '"9-11-21" joinder']
+        assert payload["hits"][1]["published"] is False
+
+    def test_search_caselaw_all_queries_failed(self, executor, monkeypatch):
+        monkeypatch.setattr(
+            "apps.case.research.courtlistener.search_opinions",
+            lambda *a, **k: ([], 400),
+        )
+        payload, outcome = run(executor, "search_caselaw", query="bad query")
+        assert outcome["is_error"]
+        assert "failed" in payload["error"]
+
+    def test_lookup_citation_found_and_not(self, executor, monkeypatch):
+        from apps.case.courtlistener import CaseLookupResult
+
+        results = {
+            "267 Ga. App. 431": CaseLookupResult(
+                found=True,
+                case_name="Bircoll v. Rosenthal",
+                citation="267 Ga. App. 431",
+                court="Georgia Court of Appeals",
+                cluster_id=333,
+            ),
+            "1 Fake 1": CaseLookupResult(found=False, error="not found"),
+        }
+        monkeypatch.setattr(
+            "apps.case.courtlistener.lookup_citation", lambda c: results[c]
+        )
+        payload, outcome = run(executor, "lookup_citation", citation="267 Ga. App. 431")
+        assert not outcome["is_error"]
+        assert payload["found"] and payload["cluster_id"] == 333
+        payload, outcome = run(executor, "lookup_citation", citation="1 Fake 1")
+        assert not outcome["is_error"]
+        assert payload["found"] is False and "note" in payload
+
+    def test_read_opinion_fetches_once_then_caches(self, executor, monkeypatch):
+        from django.core.cache import cache as django_cache
+
+        django_cache.delete("agent_opinion_cluster_444")
+        fetches = []
+
+        def fake_cluster(cluster_id):
+            fetches.append(cluster_id)
+            return {
+                "case_name": "Dollar Concrete v. Watson",
+                "citations": [
+                    {"volume": 207, "reporter": "Ga. App.", "page": "452", "type": 1}
+                ],
+                "date_filed": "1993-02-01",
+                "sub_opinions": ["https://x/api/rest/v4/opinions/9001/"],
+                "absolute_url": "/opinion/444/x/",
+            }
+
+        from apps.case.courtlistener import OpinionResult
+
+        monkeypatch.setattr("apps.case.courtlistener.fetch_cluster", fake_cluster)
+        monkeypatch.setattr(
+            "apps.case.courtlistener.fetch_opinion",
+            lambda oid: OpinionResult(
+                found=True, opinion_id=oid, plain_text="OPINION " * 30
+            ),
+        )
+        payload, outcome = run(executor, "read_opinion", cluster_id=444)
+        assert not outcome["is_error"]
+        assert payload["case_name"] == "Dollar Concrete v. Watson"
+        assert "OPINION" in payload["text"]
+        assert outcome["is_error"] is False
+        assert fetches == [444]
+
+        # Second, different call (offset) is served from the cache.
+        payload, _ = run(executor, "read_opinion", cluster_id=444, offset=8)
+        assert fetches == [444]
+        assert payload["offset"] == 8
+
+    def test_read_opinion_unknown_cluster(self, executor, monkeypatch):
+        from django.core.cache import cache as django_cache
+
+        django_cache.delete("agent_opinion_cluster_555")
+        monkeypatch.setattr("apps.case.courtlistener.fetch_cluster", lambda cid: {})
+        payload, outcome = run(executor, "read_opinion", cluster_id=555)
+        assert outcome["is_error"]
+
+    def test_search_in_opinions_isolation_and_offsets(self, executor, monkeypatch):
+        from django.core.cache import cache as django_cache
+
+        text = (
+            "pad " * 100 + "the joinder rule" + " pad" * 100 + " the joinder rule again"
+        )
+        self._cache_opinion(666, text)
+        django_cache.delete("agent_opinion_cluster_667")
+        monkeypatch.setattr("apps.case.courtlistener.fetch_cluster", lambda cid: {})
+        payload, outcome = run(
+            executor,
+            "search_in_opinions",
+            cluster_ids=[666, 667],
+            query="the joinder rule",
+            snippet_size=120,
+        )
+        assert not outcome["is_error"]
+        by_id = {r["cluster_id"]: r for r in payload["results"]}
+        good = by_id[666]
+        assert good["match_count"] == 2
+        assert all("the joinder rule" in s["text"] for s in good["snippets"])
+        first = good["snippets"][0]["position"]
+        assert text[first : first + len("the joinder rule")] == "the joinder rule"
+        assert "error" in by_id[667]
+
+    def test_search_in_opinions_zero_matches_ok(self, executor):
+        self._cache_opinion(668, "nothing relevant here")
+        payload, outcome = run(
+            executor, "search_in_opinions", cluster_ids=[668], query="spoliation"
+        )
+        assert not outcome["is_error"]
+        assert payload["results"][0]["match_count"] == 0
