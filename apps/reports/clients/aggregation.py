@@ -7,11 +7,11 @@ totals (no date filter) so a clients overview isn't all zeros; the date filter
 still scopes it. Also builds a top-4-clients-by-billings donut (+ "All others").
 """
 
-from datetime import date
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.db.models import Sum
+from django.utils import timezone
 
 from apps.activity.time.models import TimeEntry
 from apps.contacts.models import Contact
@@ -33,7 +33,7 @@ DEFAULT_PERIOD = "3m"
 
 def _period_range(period):
     """Trailing (date_min, date_max): the last N months ending today."""
-    today = date.today()
+    today = timezone.localdate()
     months = _PERIOD_MONTHS.get(period, _PERIOD_MONTHS[DEFAULT_PERIOD])
     return today - relativedelta(months=months), today
 

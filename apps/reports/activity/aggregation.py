@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.db.models import Count, F, Sum
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.activity.time.models import TimeEntry
@@ -30,7 +31,7 @@ WINDOW_MONTHS = 6
 def resolve_end(session_value):
     """Parse the session's stored end month ("YYYY-MM"), clamped to the current
     month. Returns (end_first_of_month, current_first_of_month)."""
-    current_first = date.today().replace(day=1)
+    current_first = timezone.localdate().replace(day=1)
     try:
         year, month = (int(part) for part in session_value.split("-"))
         end = date(year, month, 1)

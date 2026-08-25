@@ -7,7 +7,7 @@ billable WIP). `build_wip_context` groups this by user and by matter for the
 two donut charts + tables. It's a snapshot — no date window.
 """
 
-from datetime import date, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -20,6 +20,7 @@ from django.db.models import (
     Value,
     When,
 )
+from django.utils import timezone
 
 from apps.activity.time.models import TimeEntry
 
@@ -80,7 +81,7 @@ WIP_PERIODS = [
 
 def wip_period_range(label):
     """Map a quick-filter label to (date_min, date_max); (None, None) for all."""
-    today = date.today()
+    today = timezone.localdate()
     if label == "today":
         return today, today
     if label == "yesterday":

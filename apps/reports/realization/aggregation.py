@@ -29,6 +29,7 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import DecimalField, F, Sum
+from django.utils import timezone
 
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
@@ -43,7 +44,7 @@ def resolve_realization_end(session_value):
     PREVIOUS (completed) month: the current month has barely any realization yet
     (no time to collect) and would skew the trend toward 0%. Returns
     (end_first_of_month, latest_complete_first_of_month)."""
-    latest = date.today().replace(day=1) - relativedelta(months=1)
+    latest = timezone.localdate().replace(day=1) - relativedelta(months=1)
     try:
         year, month = (int(part) for part in session_value.split("-"))
         end = date(year, month, 1)

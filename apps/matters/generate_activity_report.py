@@ -1,8 +1,8 @@
-from datetime import date
 from tempfile import NamedTemporaryFile
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.template.loader import render_to_string
+from django.utils import timezone
 from weasyprint import HTML
 
 from apps.activity.expenses.models import ExpenseEntry
@@ -69,7 +69,7 @@ def generate_activity_report(
         "comp_flat_fees": comp_flat_fees,
         "net_flat_fees": net_flat_fees,
         "matter_total": matter_total,
-        "current_date": date.today(),
+        "current_date": timezone.localdate(),
         "company": Firm.objects.first(),
     }
 

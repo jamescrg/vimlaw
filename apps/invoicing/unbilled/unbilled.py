@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.db.models import DateField, DecimalField, F, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 
 from apps.activity.expenses.models import ExpenseEntry
 from apps.activity.flat_fees.models import FlatFeeEntry
@@ -40,12 +41,12 @@ def get_unbilled_data(request):
 
     # Apply activity period date cutoff
     if activity_period == "prior_month":
-        cutoff = date.today().replace(day=1)
+        cutoff = timezone.localdate().replace(day=1)
         time_filters["date__lt"] = cutoff
         expense_filters["date__lt"] = cutoff
         flat_fee_filters["date__lt"] = cutoff
     elif activity_period == "current_month":
-        cutoff = date.today().replace(day=1)
+        cutoff = timezone.localdate().replace(day=1)
         time_filters["date__gte"] = cutoff
         expense_filters["date__gte"] = cutoff
         flat_fee_filters["date__gte"] = cutoff

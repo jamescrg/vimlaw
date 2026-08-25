@@ -1,4 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
+
+from django.utils import timezone
 
 from apps.calendar.models import Event
 from apps.matters.proceedings.models import Proceeding
@@ -6,7 +8,7 @@ from apps.matters.proceedings.models import Proceeding
 
 def get_event_data(request, matter):
     proceeding = Proceeding.objects.filter(matter=matter.id, primary=True).first()
-    third_day = date.today() + timedelta(days=3)
+    third_day = timezone.localdate() + timedelta(days=3)
 
     # Get filter status from session, default to "Pending"
     status_session_key = f"matter_events_filter_{matter.id}"

@@ -9,6 +9,7 @@ from datetime import date, timedelta
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.activity.presets import detect_filter_label as _detect_filter_label
 
@@ -154,7 +155,7 @@ def test_modal_keyword_lights_filter_button(client):
 
 
 def test_modal_with_preset_dates_resolves_to_preset_label(client):
-    today = date.today()
+    today = timezone.localdate()
     response = client.post(
         reverse("activity:time-filter"),
         {"date_min": str(today), "date_max": str(today)},

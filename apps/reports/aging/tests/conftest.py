@@ -1,7 +1,8 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 from apps.activity.time.models import TimeEntry
@@ -73,7 +74,7 @@ def matter_beta(practice_area, contact_beta):
 
 def _create_sent_invoice(user, matter, days_old, amount_hours, rate):
     """Helper to create a SENT invoice aged a given number of days."""
-    today = date.today()
+    today = timezone.localdate()
     issued = today - timedelta(days=days_old)
     invoice = Invoice.objects.create(
         created_by=user,

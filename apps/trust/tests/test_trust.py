@@ -1,7 +1,8 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
+from django.utils import timezone
 
 from apps.trust.models import Transaction
 from apps.trust.trust import (
@@ -493,7 +494,7 @@ class TestGetClientHistory:
 # -----------------------------------------------------------
 class TestGetAccountHistory:
     def test_30days_default(self, contact):
-        today = date.today()
+        today = timezone.localdate()
         Transaction.objects.create(
             contact=contact,
             date=today - timedelta(days=10),
@@ -510,7 +511,7 @@ class TestGetAccountHistory:
         assert len(result) == 1
 
     def test_60days(self, contact):
-        today = date.today()
+        today = timezone.localdate()
         Transaction.objects.create(
             contact=contact,
             date=today - timedelta(days=10),
@@ -533,7 +534,7 @@ class TestGetAccountHistory:
         assert len(result) == 2
 
     def test_all(self, contact):
-        today = date.today()
+        today = timezone.localdate()
         Transaction.objects.create(
             contact=contact,
             date=today - timedelta(days=10),
@@ -550,7 +551,7 @@ class TestGetAccountHistory:
         assert len(result) == 2
 
     def test_ordered_newest_first(self, contact):
-        today = date.today()
+        today = timezone.localdate()
         Transaction.objects.create(
             contact=contact,
             date=today - timedelta(days=5),
@@ -570,7 +571,7 @@ class TestGetAccountHistory:
         assert result[1].description == "Older"
 
     def test_unknown_interval_defaults_to_30days(self, contact):
-        today = date.today()
+        today = timezone.localdate()
         Transaction.objects.create(
             contact=contact,
             date=today - timedelta(days=10),

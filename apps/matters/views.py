@@ -1,9 +1,8 @@
-from datetime import date
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.accounts.access import filter_matters_for_user, matter_access_required
 from apps.calendar.models import Event
@@ -198,7 +197,7 @@ def _matter_overview_context(request, matter):
 
     company = Firm.objects.first()
     show_financial = request.user.is_admin or request.user.perm_financial
-    today = date.today()
+    today = timezone.localdate()
 
     # Upcoming events for the Events table (this matter's calendar, pending,
     # today forward), chronological.
@@ -513,7 +512,7 @@ def add(request):
 
     # if no post data has been submitted, show the matter form
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         form = MatterForm(initial={"date_start": today}, use_required_attribute=False)
 
     context = {

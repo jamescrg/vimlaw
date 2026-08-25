@@ -1,9 +1,10 @@
 import os
-from datetime import date, datetime
+from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from apps.accounts.access import matter_access_required
 from apps.case.facts.filters import FactsFilter
@@ -72,7 +73,7 @@ def add(request, id):
 
     # if no post data has been submitted, show the fact form
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         form = FactForm(initial={"date_filed": today}, use_required_attribute=False)
 
     context = {

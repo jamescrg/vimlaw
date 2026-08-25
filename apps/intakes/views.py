@@ -1,10 +1,11 @@
-from datetime import date, datetime
+from datetime import datetime
 
 import markdown
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from apps.contacts.models import Contact
 from apps.intakes.assess import assessment_html
@@ -194,7 +195,7 @@ def add(request):
             return HttpResponse(status=204, headers={"HX-Trigger": "intakesChanged"})
 
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         form = IntakeForm(initial={"date": today}, use_required_attribute=False)
 
     context = {
@@ -262,7 +263,7 @@ def add_note(request, id):
 
     # if no post data has been submitted, show the intake form
     else:
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         now = datetime.now().time()
         form = NoteForm(
             initial={"date": today, "time": now}, use_required_attribute=False

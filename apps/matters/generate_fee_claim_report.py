@@ -3,6 +3,7 @@ from tempfile import NamedTemporaryFile
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.template.loader import render_to_string
+from django.utils import timezone
 from weasyprint import HTML
 
 from apps.activity.expenses.models import ExpenseEntry
@@ -126,7 +127,7 @@ def build_fee_claim_context(
         "unclaimed_totals": rollup(unclaimed_sections),
         "grand_totals": rollup(sections),
         "has_unclaimed": bool(unclaimed_sections),
-        "current_date": date.today(),
+        "current_date": timezone.localdate(),
         "company": Firm.objects.first(),
     }
 
