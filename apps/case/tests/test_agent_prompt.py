@@ -82,13 +82,18 @@ class TestIndex:
         )
         assert text.index("New high") < text.index("Old high") < text.index("Old low")
 
-    def test_cap_drops_descriptions_then_collapses(self):
+    def test_cap_keeps_document_descriptions_longest_then_collapses(self):
         items = [item("conversation", i) for i in range(30)] + [item("document", 1)]
         full = format_material_index(items)
         assert "A description of the item." in full
         trimmed = format_material_index(items, max_chars=len(full) - 1)
-        assert "A description of the item." not in trimmed
-        assert "[conversation:3]" in trimmed
+        docs_part, convs_part = trimmed.split("### Earlier AI conversations")
+        assert "A description of the item." in docs_part
+        assert "A description of the item." not in convs_part
+        assert "[conversation:3]" in convs_part
+        bare = format_material_index(items, max_chars=len(trimmed) - 1)
+        assert "A description of the item." not in bare
+        assert "[conversation:3]" in bare
         collapsed = format_material_index(items, max_chars=600)
         assert "30 items, not listed" in collapsed
         assert "[document:1]" in collapsed

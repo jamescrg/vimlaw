@@ -120,7 +120,7 @@ def _item_line(item: ManifestItem, with_description: bool) -> str:
     return line
 
 
-def _render_index(items, with_description, collapsed) -> str:
+def _render_index(items, desc_kinds, collapsed) -> str:
     parts = [INDEX_HEADER]
     for kind, title in GROUPS:
         group = [i for i in items if i.item_type == kind]
@@ -136,24 +136,33 @@ def _render_index(items, with_description, collapsed) -> str:
         group.sort(key=lambda i: i.date or "", reverse=True)
         group.sort(key=lambda i: -i.importance)
         parts.append(
-            f"### {title}\n" + "\n".join(_item_line(i, with_description) for i in group)
+            f"### {title}\n"
+            + "\n".join(_item_line(i, kind in desc_kinds) for i in group)
         )
     if len(parts) == 1:
         parts.append("No materials on this matter yet.")
     return "\n\n".join(parts)
 
 
+ALL_KINDS = tuple(kind for kind, _ in GROUPS)
+
+
 def format_material_index(items: list[ManifestItem], max_chars=INDEX_MAX_CHARS) -> str:
     """The index as prompt text, degrading gracefully on huge matters:
-    descriptions go first, then the conversation and invoice groups
-    collapse to a count with a search pointer."""
-    text = _render_index(items, True, ())
-    if len(text) <= max_chars:
-        return text
-    text = _render_index(items, False, ())
-    if len(text) <= max_chars:
-        return text
-    return _render_index(items, False, COLLAPSIBLE)
+    non-document descriptions go first (document summaries are the agent's
+    main triage signal, so they survive longest), then all descriptions,
+    then the conversation and invoice groups collapse to a count with a
+    search pointer."""
+    for desc_kinds, collapsed in (
+        (ALL_KINDS, ()),
+        (("document",), ()),
+        ((), ()),
+        ((), COLLAPSIBLE),
+    ):
+        text = _render_index(items, desc_kinds, collapsed)
+        if len(text) <= max_chars:
+            return text
+    return text
 
 
 def build_material_index(matter, conversation) -> list[ManifestItem]:

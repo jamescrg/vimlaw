@@ -118,7 +118,9 @@ def build_agent_tools(budget: AgentBudget = DEFAULT_BUDGET) -> list[dict]:
                 "statute numbers): one call runs them all, merges the ranked "
                 "hits, and flags which variants matched. When nothing "
                 "matches, near-miss titles come back as fuzzy hits. Each hit "
-                "carries a snippet and the handle to read the full item."
+                "carries a snippet and the handle to read the full item; "
+                "document and library hits also carry an AI summary when one "
+                "exists, useful for triage before reading."
             ),
             "input_schema": {
                 "type": "object",
@@ -603,18 +605,19 @@ def make_agent_executor(
             snippet = _snippet(entry.content or entry.description or "", query)
             rank = float(getattr(entry, "rank", 0) or 0)
             if isinstance(obj, Document):
-                hits.append(
-                    {
-                        "kind": "document",
-                        "id": obj.id,
-                        "handle": f"doc:{obj.id}",
-                        "name": obj.name,
-                        "category": obj.category,
-                        "date": str(obj.date) if obj.date else None,
-                        "snippet": snippet,
-                        "rank": rank,
-                    }
-                )
+                hit = {
+                    "kind": "document",
+                    "id": obj.id,
+                    "handle": f"doc:{obj.id}",
+                    "name": obj.name,
+                    "category": obj.category,
+                    "date": str(obj.date) if obj.date else None,
+                    "snippet": snippet,
+                    "rank": rank,
+                }
+                if obj.summary:
+                    hit["summary"] = obj.summary
+                hits.append(hit)
             elif isinstance(obj, Highlight):
                 hit = {
                     "kind": "highlight",
@@ -647,24 +650,23 @@ def make_agent_executor(
                 )
             elif isinstance(obj, Note):
                 library = obj.matter_id is None
-                hits.append(
-                    {
-                        "kind": "library" if library else "note",
-                        "id": obj.id,
-                        "handle": f"{'lib' if library else 'note'}:{obj.id}",
-                        "name": obj.title,
-                        "category": (
-                            f"Library: {library_folder_path(obj.folder)}"
-                            if library
-                            else obj.get_category_display()
-                        ),
-                        "date": (
-                            str(obj.updated_at.date()) if obj.updated_at else None
-                        ),
-                        "snippet": _snippet(obj.content or "", query),
-                        "rank": rank,
-                    }
-                )
+                hit = {
+                    "kind": "library" if library else "note",
+                    "id": obj.id,
+                    "handle": f"{'lib' if library else 'note'}:{obj.id}",
+                    "name": obj.title,
+                    "category": (
+                        f"Library: {library_folder_path(obj.folder)}"
+                        if library
+                        else obj.get_category_display()
+                    ),
+                    "date": (str(obj.updated_at.date()) if obj.updated_at else None),
+                    "snippet": _snippet(obj.content or "", query),
+                    "rank": rank,
+                }
+                if library and obj.summary:
+                    hit["summary"] = obj.summary
+                hits.append(hit)
             else:  # Email -> one hit per thread
                 key = obj.thread_id or obj.gmail_id
                 hits.append(
@@ -728,6 +730,8 @@ def make_agent_executor(
                     category=obj.category,
                     date=str(obj.date) if obj.date else None,
                 )
+                if obj.summary:
+                    base["summary"] = obj.summary
             elif kind in ("note", "library"):
                 library = obj.matter_id is None
                 base["kind"] = "library" if library else "note"
@@ -742,6 +746,8 @@ def make_agent_executor(
                     ),
                     date=str(obj.updated_at.date()) if obj.updated_at else None,
                 )
+                if library and obj.summary:
+                    base["summary"] = obj.summary
             elif kind == "email":
                 key = obj.thread_id or obj.gmail_id
                 base.update(
@@ -918,6 +924,10 @@ def make_agent_executor(
             "date": str(doc.date) if doc.date else None,
             **fields,
         }
+        if doc.description:
+            payload["description"] = doc.description
+        if doc.summary:
+            payload["summary"] = doc.summary
         return payload, {
             "label": _part_label("Read", doc.name, fields),
             "title": f"Read *{doc.name}*",
