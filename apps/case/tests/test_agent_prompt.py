@@ -105,9 +105,10 @@ class TestIndex:
 class TestSystem:
     def test_segments(self, matter, user, pinned_document):
         logs = []
-        segment_a, segment_b = build_agent_system(
+        (segment_a, working_set, segment_b), carried = build_agent_system(
             matter, user, None, "What happened?", log=logs.append
         )
+        assert working_set == "" and carried == set()
         assert "## Working Method" in segment_a
         assert "at most 25 tool calls and 600,000 characters" in segment_a
         assert "CITING SOURCES" in segment_a
@@ -125,7 +126,7 @@ class TestSystem:
             matter=matter, user=user, kind="agent", title="T"
         )
         logs = []
-        segment_a, segment_b = build_agent_system(
+        (segment_a, _, segment_b), _ = build_agent_system(
             matter,
             user,
             conversation,
@@ -138,7 +139,7 @@ class TestSystem:
 
     def test_large_sections_become_pointers(self, matter, user, monkeypatch):
         monkeypatch.setattr(agent_prompt, "INLINE_SECTIONS_MAX_CHARS", 5)
-        segment_a, _ = build_agent_system(matter, user, None, "q")
+        (segment_a, _, _), _ = build_agent_system(matter, user, None, "q")
         assert "Too large to include here" in segment_a
         assert "## Timeline" not in segment_a
 
